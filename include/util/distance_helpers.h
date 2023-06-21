@@ -1,7 +1,6 @@
 #ifndef GOMA_DISTANCE_HELPERS_H
 #define GOMA_DISTANCE_HELPERS_H
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif

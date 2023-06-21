@@ -102,7 +102,7 @@ void noahs_raven(void) {
    *  -> Note, every item in this structure is of fixed length
    *     Therefore, just broadcast the structure.
    */
-  
+
   ddd_add_member2(upd, 1, sizeof(UPD_STRUCT));
   ddd_set_commit2();
 
@@ -193,7 +193,7 @@ void raven_landing(void) {
    * required size information has been communicated via the raven.
    */
 
-  upd->turbulent_info = calloc(1,sizeof(turbulent_information));
+  upd->turbulent_info = calloc(1, sizeof(turbulent_information));
 
   /*
    * Instead of communicating all efv, just this bit, the remainder in
@@ -209,7 +209,6 @@ void raven_landing(void) {
   for (i = 0; i < MAX_NUMBER_MATLS; i++) {
     pd_glob[i]->TimeIntegration = TimeIntegration;
   }
-
 
   if (Num_BC > 0) {
     BC_Types =
@@ -3444,11 +3443,13 @@ void noahs_dove(void) {
 
   // turbulence info
   if (upd->turbulent_info->num_node_sets > 0) {
-    ddd_add_member(n, upd->turbulent_info->node_set_ids, upd->turbulent_info->num_node_sets, MPI_INT);
+    ddd_add_member(n, upd->turbulent_info->node_set_ids, upd->turbulent_info->num_node_sets,
+                   MPI_INT);
   }
 
   if (upd->turbulent_info->num_side_sets > 0) {
-    ddd_add_member(n, upd->turbulent_info->side_set_ids, upd->turbulent_info->num_side_sets, MPI_INT);
+    ddd_add_member(n, upd->turbulent_info->side_set_ids, upd->turbulent_info->num_side_sets,
+                   MPI_INT);
   }
 
   for (i = 0; i < Num_BC; i++) {

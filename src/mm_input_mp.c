@@ -1544,7 +1544,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           }
         }
       } else {
-        GOMA_EH(GOMA_ERROR, "You need an external field DIST to use TURBULENT_SA model without internal distance calculations");
+        GOMA_EH(GOMA_ERROR, "You need an external field DIST to use TURBULENT_SA model without "
+                            "internal distance calculations");
       }
     }
 

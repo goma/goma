@@ -3261,7 +3261,7 @@ void rd_turbulent_specs(FILE *ifp, char *input) {
 
   int iread;
 
-  upd->turbulent_info = calloc(1,sizeof(turbulent_information));
+  upd->turbulent_info = calloc(1, sizeof(turbulent_information));
   upd->turbulent_info->use_internal_wall_distance = false;
   iread = look_for_optional(ifp, "Turbulence Calculate Wall Distance", input, '=');
   if (iread == 1) {
@@ -10695,7 +10695,7 @@ int read_constants_int(FILE *imp,            /* pointer to file */
 {
   char line[255];
   char *arguments[MAX_NUMBER_PARAMS];
-  int num_const=0, i;
+  int num_const = 0, i;
 
   if (User_constants == NULL) {
     GOMA_EH(GOMA_ERROR, "User Defined not allowed yet");

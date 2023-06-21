@@ -306,12 +306,11 @@ double viscosity(struct Generalized_Newtonian *gn_local,
 
     /* Calculate contribution from turbulent viscosity */
     if ((gn_local->ConstitutiveEquation == TURBULENT_SA) ||
-    (gn_local->ConstitutiveEquation == TURBULENT_SA_DYNAMIC)) {
+        (gn_local->ConstitutiveEquation == TURBULENT_SA_DYNAMIC)) {
       dbl scale = 1.0;
       DENSITY_DEPENDENCE_STRUCT d_rho;
       if (TURBULENT_SA_DYNAMIC) {
         scale = density(&d_rho, tran->time_value);
-
       }
       int negative_mu_e = FALSE;
       if (fv_old->eddy_nu < 0) {
@@ -340,7 +339,6 @@ double viscosity(struct Generalized_Newtonian *gn_local,
           }
         }
       }
-
     }
 
   } /* end Newtonian section */

@@ -233,7 +233,7 @@ extern "C" goma_error find_current_distances(Exo_DB *exo,
         my_side_coordinates[i * dim + j] = coordinates[local_side_nodes[i]][j];
       }
     }
-MPI_Allgather(my_side_coordinates.data(), max_count * dim, MPI_DOUBLE,
+    MPI_Allgather(my_side_coordinates.data(), max_count * dim, MPI_DOUBLE,
                   global_coordinates.data(), max_count * dim, MPI_DOUBLE, MPI_COMM_WORLD);
 
     side_coordinates.resize(total_count);
@@ -255,17 +255,6 @@ MPI_Allgather(my_side_coordinates.data(), max_count * dim, MPI_DOUBLE,
       }
     }
   }
-    std::string proc_name     =
-        "proc_" + std::to_string(dpi->rank) + "_" + std::to_string(dpi->num_proc);
-    std::fstream file("side_coordinates_" + proc_name + ".txt", std::ios::out);
-    file << "x,y,i" << std::endl;
-    for (size_t i = 0; i < side_coordinates.size(); i++) {
-      for (int j = 0; j < dim; j++) {
-        file << side_coordinates[i][j] << ",";
-      }
-      file << i;
-      file << std::endl;
-    }
 
   std::vector<double> distance_vector(exo->num_nodes);
   if (dim == 3) {
