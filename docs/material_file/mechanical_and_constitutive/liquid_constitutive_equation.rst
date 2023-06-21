@@ -278,6 +278,18 @@ HERSCHEL_BULKLEY
     model will take relatively more iterations to converge to an answer. The user should expect    
     this and not be too troubled (it’s alright to be troubled a little).                           
 
+TURBULENT_SA     
+    Spalart Allmaras turbulence model. This model is a one-equation model.
+    The viscosity term is the kinematic viscosity, thus density should be 1.
+
+    Wall functions are expected to be provided in an external field DIST or
+    see turbulence documentation on how to calculate wall distance in goma.
+
+TURBULENT_SA_DYNAMIC
+    Same as TURBULENT_SA but multiplies kinematic viscosity by density in
+    the momentum equation to get a dynamic viscosity.
+
+
 --------
 Examples
 --------
