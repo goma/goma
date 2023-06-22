@@ -177,11 +177,6 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
 
   int status = 0;
 
-  int transient_run = FALSE;
-  if (pd->TimeIntegration != STEADY) {
-    transient_run = true;
-  }
-
   eqn = EDDY_NU;
   double d_area = fv->wt * bf[eqn]->detJ * fv->h3;
 
@@ -189,12 +184,21 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   double mu_e = fv->eddy_nu;
 
   int negative_sa = false;
-  // Use old values for equation switching for transient runs
-  // Seems to work reasonably well.
-  if (transient_run && (fv_old->eddy_nu < 0)) {
-    negative_sa = true;
-  } else if (!transient_run && (mu_e < 0)) {
-    // Kris thinks it might work with switching equations in steady state
+  // Previous workaround, see comment for negative_Se below
+  //
+  //   int transient_run = FALSE;
+  //   if (pd->TimeIntegration != STEADY) {
+  //     transient_run = true;
+  //   }
+  //   // Use old values for equation switching for transient runs
+  //   // Seems to work reasonably well.
+  //   if (transient_run && (fv_old->eddy_nu < 0)) {
+  //     negative_sa = true;
+  //   } else if (!transient_run && (mu_e < 0)) {
+  //     // Kris thinks it might work with switching equations in steady state
+  //     negative_sa = true;
+  //   }
+  if (mu_e < 0) {
     negative_sa = true;
   }
 
@@ -245,13 +249,20 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   if (negative_sa) {
     fn = (cn1 + pow(chi, 3.0)) / (cn1 - pow(chi, 3));
   }
-  double Sbar_old = (fv_old->eddy_nu * fv2) / (kappa * kappa * d * d);
   double Sbar = (mu_e * fv2) / (kappa * kappa * d * d);
   int negative_Se = false;
-  if (transient_run && (Sbar_old < -cv2 * S_old)) {
-    negative_Se = true;
-  } else if (!transient_run && (Sbar < -cv2 * S)) {
-    // See above comment about switching equations in steady state
+  // I tried to use the old values for equation switching for transient runs but
+  // I end up getting floating point errors. because of Se going very far below
+  // zero I'm trying to use current values instead and hope that Newton's method
+  // will converge with the switching equations
+  // previously:
+  // . double Sbar_old = (fv_old->eddy_nu * fv2) / (kappa * kappa * d * d);
+  //   if (transient_run && (Sbar_old < -cv2 * S_old)) {
+  //     negative_Se = true;
+  //   } else if (!transient_run && (Sbar < -cv2 * S)) {
+  // .   negative_Se = true;
+  //   }
+  if (Sbar < -cv2 * S) {
     negative_Se = true;
   }
   double S_e = S + Sbar;
@@ -260,13 +271,19 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   }
   double r_max = 10.0;
   double r = 0.0;
-  if (fabs(S_e) > 1.0e-12) {
+  if (fabs(S_e) > 1.0e-6) {
     r = mu_e / (kappa * kappa * d * d * S_e);
   } else {
     r = r_max;
   }
   if (r >= r_max) {
     r = r_max;
+  }
+  // Arbitrary limit to avoid floating point errors should only hit this when
+  // S_e is very small and either mu_e or S_e are negative.  Which means we are
+  // already trying to alleviate the issue.
+  if (r < -100) {
+    r = -100;
   }
   double g = r + cw2 * (pow(r, 6) - r);
   double fw_inside = (1.0 + pow(cw3, 6)) / (pow(g, 6) + pow(cw3, 6));
@@ -304,11 +321,13 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   double dr_dS = 0;
   double dg_dS = 0;
   double dfw_dS = 0;
-  if (fabs(S_e) > 1.0e-12) {
+  if (fabs(S_e) > 1.0e-6) {
     dr_dS = -(mu_e * kappa * kappa * d * d) / (kappa * kappa * d * d * S_e) /
             (kappa * kappa * d * d * S_e);
   }
   if (r == r_max)
+    dr_dS = 0.0;
+  if (r < -100)
     dr_dS = 0.0;
   dg_dS = dg_dr * dr_dS;
   dfw_dS = dfw_dg * dg_dS;
