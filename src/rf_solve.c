@@ -1847,10 +1847,14 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           if (ls->Num_Var_Init > 0)
             ls_var_initialization(&x, exo, dpi, cx);
         }
+        x_save = realloc(x_save, sizeof(double) * numProcUnknowns);
+        xdot_save = realloc(xdot_save, sizeof(double) * numProcUnknowns);
         exchange_dof(cx[0], dpi, x, 0);
         dcopy1(numProcUnknowns, x, x_old);
+        dcopy1(numProcUnknowns, x, x_save);
         dcopy1(numProcUnknowns, x_old, x_older);
         dcopy1(numProcUnknowns, x_older, x_oldest);
+        dcopy1(numProcUnknowns, xdot, xdot_save);
         realloc_dbl_1(&x_pred, numProcUnknowns, 0);
         realloc_dbl_1(&gvec, Num_Node, 0);
         realloc_dbl_1(&xdot_older, numProcUnknowns, 0);
