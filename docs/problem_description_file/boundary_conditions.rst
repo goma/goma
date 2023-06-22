@@ -231,4 +231,5 @@ some sections of interspersed comments accompany each boundary condition categor
    boundary_conditions/level_set
    boundary_conditions/shell
    boundary_conditions/acoustic
+   boundary_conditions/turbulence
    boundary_conditions/end_of_bc
