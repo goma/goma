@@ -82,31 +82,11 @@ set(GOMA_COMPILER_OVERRIDE
       "allow goma to compile with different compilers than TPLs, use with caution"
 )
 
-if (${Trilinos_VERSION} LESS 14)
 # Trilinos required packages
 foreach(package Amesos AztecOO Epetra)
   list(FIND Trilinos_PACKAGE_LIST ${package} trilinos_package_index)
   if(${trilinos_package_index} LESS 0)
     message(FATAL_ERROR "Trilinos not built with ${package} a required package")
-  endif()
-endforeach()
-
-# Trilinos required TPLs
-foreach(package MPI)
-  list(FIND Trilinos_TPL_LIST ${package} trilinos_package_index)
-  if(${trilinos_package_index} LESS 0)
-    message(FATAL_ERROR "Trilinos not built with TPL ${package} a required TPL")
-  endif()
-endforeach()
-
-# Trilinos extra TPLs
-foreach(package SuperLUDist MUMPS)
-  list(FIND Trilinos_TPL_LIST ${package} trilinos_package_index)
-  if(${trilinos_package_index} LESS 0)
-    message(
-      WARNING
-        "Trilinos not built with TPL ${package} some features of Goma won't work"
-    )
   endif()
 endforeach()
 
@@ -125,19 +105,6 @@ if(${stratimikos_package_index} GREATER_EQUAL 0)
         list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TEKO)
       endif()
     endif()
-  endif()
-endif()
-else() # Trilinos > 13
-  option(ENABLE_STRATIMIKOS "ENABLE_STRATIMIKOS" ON)
-  option(ENABLE_TEKO "ENABLE_TEKO" ON)
-  if(ENABLE_STRATIMIKOS)
-    message(STATUS "Stratimikos enabled set with -DENABLE_STRATIMIKOS=ON/OFF")
-    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_STRATIMIKOS)
-      option(ENABLE_TEKO "ENABLE_TEKO" ON)
-      if(ENABLE_TEKO)
-    message(STATUS "TEKO enabled set with -DENABLE_TEKO=ON/OFF")
-        list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TEKO)
-      endif()
   endif()
 endif()
 
@@ -376,7 +343,8 @@ if(ARPACK_FOUND)
   endif()
   if(EIGEN_PARALLEL)
     find_package(PARPACK)
-    set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${PARPACK_LIBRARIES} ${ARPACK_LIBRARIES})
+    set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${PARPACK_LIBRARIES}
+                           ${ARPACK_LIBRARIES})
     if(NOT ARPACK_FOUND)
       message(FATAL_ERROR "Cannot use EIGEN_PARALLEL without ARPACK Library")
     endif()
@@ -758,8 +726,9 @@ set(GOMA_USER_SOURCES
     src/user_print.c
     src/user_senkin.F)
 
-set(GOMA_UTIL_INCLUDES include/bc/rotate_util.h include/mm_eh.h
-                       include/util/goma_normal.h include/util/aprepro_helper.h include/util/distance_helpers.h)
+set(GOMA_UTIL_INCLUDES
+    include/bc/rotate_util.h include/mm_eh.h include/util/goma_normal.h
+    include/util/aprepro_helper.h include/util/distance_helpers.h)
 
 set(GOMA_UTIL_SOURCES src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c
                       src/util/aprepro_helper.cpp src/util/distance_helpers.cpp)
@@ -1040,7 +1009,8 @@ if(ENABLE_WARNINGS)
 endif()
 
 add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
-target_include_directories(goma_util PUBLIC include ${PROJECT_SOURCE_DIR}/tpls/nanoflann/include)
+target_include_directories(
+  goma_util PUBLIC include ${PROJECT_SOURCE_DIR}/tpls/nanoflann/include)
 target_include_directories(goma_util SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_libraries(goma_util PUBLIC ${GOMA_TPL_LIBRARIES} gds)
 target_link_directories(goma_util PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
