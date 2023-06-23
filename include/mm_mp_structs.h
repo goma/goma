@@ -290,8 +290,14 @@ struct Material_Properties {
   int DilationalViscosityModel;
   int dilationalViscosity_tableid;
 
+  /* Integer for wall distance external field index */
+  int dist_wall_ext_field_index;
+
   int Mwt_funcModel;
   dbl Mwt_func;
+
+  int SAwt_funcModel;
+  dbl SAwt_func;
 
   dbl surface_tension;
   int len_u_surface_tension;

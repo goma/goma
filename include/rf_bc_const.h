@@ -900,6 +900,8 @@
 #define VELO_SLIP_FLUID_BC     964900000
 #define VELO_SLIP_ROT_FLUID_BC 964910000
 
+#define EDDY_NU_BC 966666666
+
 /* Structural Shells */
 #define SH_K_BC             970000000
 #define SH_TENS_BC          970000001

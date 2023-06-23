@@ -137,12 +137,20 @@ void get_metric_tensor_deriv(dbl B[DIM][DIM],
   }
 }
 
-void supg_tau_momentum_shakib(SUPG_momentum_terms *supg_terms, int dim, dbl dt) {
+void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int pspg_scale) {
   dbl G[DIM][DIM];
   dbl gamma[DIM][DIM];
   dbl mu;
+  dbl inv_rho = 1.0;
+  DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+  DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
+
+  if (pspg_scale) {
+    dbl rho = density(d_rho, dt);
+    inv_rho = 1.0 / rho;
+  }
 
   int interp_eqn = VELOCITY1;
   get_metric_tensor(bf[interp_eqn]->B, dim, ei[pg->imtrx]->ielem_type, G);
@@ -184,18 +192,18 @@ void supg_tau_momentum_shakib(SUPG_momentum_terms *supg_terms, int dim, dbl dt) 
   }
 
   if (pd->TimeIntegration != STEADY) {
-    supg_terms->supg_tau = 1.0 / (sqrt(4 / (dt * dt) + v_d_gv + diff_g_g));
+    tau_terms->tau = inv_rho / (sqrt(4 / (dt * dt) + v_d_gv + diff_g_g));
   } else {
-    supg_terms->supg_tau = 1.0 / (sqrt(v_d_gv + diff_g_g) + 1e-14);
+    tau_terms->tau = inv_rho / (sqrt(v_d_gv + diff_g_g) + 1e-14);
   }
 
   dbl d_diff_g_g_dmu = 2.0 * diff_g_g / mu;
-  dbl supg_tau_cubed = supg_terms->supg_tau * supg_terms->supg_tau * supg_terms->supg_tau;
+  dbl supg_tau_cubed = tau_terms->tau * tau_terms->tau * tau_terms->tau;
 
   for (int a = 0; a < dim; a++) {
     for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
-      supg_terms->d_supg_tau_dv[a][k] =
-          -0.5 * (d_v_d_gv[a][k] + (d_diff_g_g_dmu * d_mu->v[a][k])) * supg_tau_cubed;
+      tau_terms->d_tau_dv[a][k] =
+          inv_rho * -0.5 * (d_v_d_gv[a][k] + (d_diff_g_g_dmu * d_mu->v[a][k])) * supg_tau_cubed;
     }
   }
 
@@ -218,35 +226,43 @@ void supg_tau_momentum_shakib(SUPG_momentum_terms *supg_terms, int dim, dbl dt) 
             diff_g_g_dx += 2 * coeff * dG[i][j][a][k] * G[i][j];
           }
         }
-        supg_terms->d_supg_tau_dX[a][k] =
-            -0.5 * (v_d_gv_dx + diff_g_g_dx + d_mu->X[a][k] * d_diff_g_g_dmu) * supg_tau_cubed;
+        tau_terms->d_tau_dX[a][k] = inv_rho * -0.5 *
+                                    (v_d_gv_dx + diff_g_g_dx + d_mu->X[a][k] * d_diff_g_g_dmu) *
+                                    supg_tau_cubed;
       }
     }
   }
   if (pd->e[pg->imtrx][TEMPERATURE]) {
     for (int k = 0; k < ei[pg->imtrx]->dof[TEMPERATURE]; k++) {
-      supg_terms->d_supg_tau_dT[k] = -0.5 * (d_mu->T[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+      tau_terms->d_tau_dT[k] = inv_rho * -0.5 * (d_mu->T[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }
   if (pd->e[pg->imtrx][PRESSURE]) {
     for (int k = 0; k < ei[pg->imtrx]->dof[PRESSURE]; k++) {
-      supg_terms->d_supg_tau_dP[k] = -0.5 * (d_mu->P[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+      tau_terms->d_tau_dP[k] = inv_rho * -0.5 * (d_mu->P[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }
   if (pd->e[pg->imtrx][FILL]) {
     for (int k = 0; k < ei[pg->imtrx]->dof[FILL]; k++) {
-      supg_terms->d_supg_tau_dF[k] = -0.5 * (d_mu->F[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+      tau_terms->d_tau_dF[k] = inv_rho * -0.5 * (d_mu->F[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }
   if (pd->e[pg->imtrx][BOND_EVOLUTION]) {
     for (int k = 0; k < ei[pg->imtrx]->dof[BOND_EVOLUTION]; k++) {
-      supg_terms->d_supg_tau_dnn[k] = -0.5 * (d_mu->nn[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+      tau_terms->d_tau_dnn[k] = inv_rho * -0.5 * (d_mu->nn[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+    }
+  }
+  if (pd->e[pg->imtrx][EDDY_NU]) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[EDDY_NU]; k++) {
+      tau_terms->d_tau_dEDDY_NU[k] =
+          inv_rho * -0.5 * (d_mu->eddy_nu[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }
   if (pd->e[pg->imtrx][MASS_FRACTION]) {
     for (int w = 0; w < pd->Num_Species_Eqn; w++) {
       for (int k = 0; k < ei[pg->imtrx]->dof[MASS_FRACTION]; k++) {
-        supg_terms->d_supg_tau_dC[w][k] = -0.5 * (d_mu->C[w][k] * d_diff_g_g_dmu) * supg_tau_cubed;
+        tau_terms->d_tau_dC[w][k] =
+            inv_rho * -0.5 * (d_mu->C[w][k] * d_diff_g_g_dmu) * supg_tau_cubed;
       }
     }
   }
@@ -847,6 +863,8 @@ int calc_pspg(dbl pspg[DIM],
   /*** Density ***/
   rho = density(d_rho, time_value);
 
+  momentum_tau_terms pspg_tau;
+
   if (pspg_global) {
 
     /* Now calculate the element Reynolds number based on a global
@@ -860,6 +878,7 @@ int calc_pspg(dbl pspg[DIM],
     } else if (Re > 3.0) {
       tau_pspg = PS_scaling * h_elem / (2.0 * rho * U_norm);
     }
+    pspg_tau.tau = tau_pspg;
   } else if (pspg_local) {
     hh_siz = 0.;
     for (p = 0; p < dim; p++) {
@@ -881,14 +900,17 @@ int calc_pspg(dbl pspg[DIM],
     }
     tau_pspg = PS_scaling / sqrt(tau_pspg1);
 
+    pspg_tau.tau = tau_pspg;
+
     // tau_pspg derivatives wrt v from vv_speed
     if (d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1]) {
       for (b = 0; b < dim; b++) {
         var = VELOCITY1 + b;
         if (pd->v[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            d_tau_pspg_dv[b][j] = -tau_pspg / tau_pspg1;
-            d_tau_pspg_dv[b][j] *= rho_avg * rho_avg / hh_siz * v_avg[b] * pg_data->dv_dnode[b][j];
+            pspg_tau.d_tau_dv[b][j] = -tau_pspg / tau_pspg1;
+            pspg_tau.d_tau_dv[b][j] *=
+                rho_avg * rho_avg / hh_siz * v_avg[b] * pg_data->dv_dnode[b][j];
           }
         }
       }
@@ -900,117 +922,17 @@ int calc_pspg(dbl pspg[DIM],
         var = MESH_DISPLACEMENT1 + b;
         if (pd->v[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            d_tau_pspg_dX[b][j] = tau_pspg / tau_pspg1;
-            d_tau_pspg_dX[b][j] *=
+            pspg_tau.d_tau_dX[b][j] = tau_pspg / tau_pspg1;
+            pspg_tau.d_tau_dX[b][j] *=
                 (rho_avg * rho_avg * vv_speed + 18.0 * mu_avg * mu_avg / hh_siz) /
                 (hh_siz * hh_siz);
-            d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b] * pg_data->dhv_dxnode[b][j] / ((dbl)dim);
+            pspg_tau.d_tau_dX[b][j] *= pg_data->hhv[b][b] * pg_data->dhv_dxnode[b][j] / ((dbl)dim);
           }
         }
       }
     }
   } else if (PSPG == 3) { // shakib
-
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
-        gamma[a][b] = fv_old->grad_v[a][b] + fv_old->grad_v[b][a];
-      }
-    }
-
-    // check if rho exists, otherwise set to 1 for pspg_tau
-    dbl pspg_rho = rho;
-    if (!DOUBLE_NONZERO(rho)) {
-      pspg_rho = 1.0;
-    }
-
-    mu = viscosity(gn, gamma, NULL);
-
-    dbl mup[MAX_MODES];
-    if (pd->gv[POLYMER_STRESS11]) {
-      for (int mode = 0; mode < vn->modes; mode++) {
-        mup[mode] = viscosity(ve[mode]->gn, gamma, NULL);
-      }
-    }
-
-    dbl G[DIM][DIM];
-    get_metric_tensor(bf[pd->ShapeVar]->B, pd->Num_Dim, ei[pg->imtrx]->ielem_type, G);
-
-    dbl tau_time = 0;
-    // time term
-    if (pd->TimeIntegration != STEADY) {
-      tau_time += 4 * pspg_rho * pspg_rho / (dt * dt);
-    }
-
-    // advection
-    dbl tau_adv = 0;
-    for (int i = 0; i < dim; i++) {
-      for (int j = 0; j < dim; j++) {
-        // tau_adv += rho * rho * fv->v[i] * G[i][j] * fv->v[j];
-        tau_adv += pspg_rho * pspg_rho * fv_old->v[i] * G[i][j] * fv_old->v[j];
-      }
-    }
-
-    // diffusion
-    dbl tau_diff = 0;
-    dbl mu_total = mu;
-    for (int mode = 0; mode < vn->modes; mode++) {
-      mu_total += mup[mode];
-    }
-    dbl coeff = 12 * (mu_total * mu_total);
-    for (int i = 0; i < dim; i++) {
-      for (int j = 0; j < dim; j++) {
-        tau_diff += coeff * G[i][j] * G[i][j];
-      }
-    }
-
-    tau_pspg = PS_scaling * pspg_rho / sqrt(tau_time + tau_adv + tau_diff);
-
-    // d/dx 1/sqrt(f(x)) => - f'(x) / (2 * f(x)^(3/2))
-    if (d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1]) {
-      for (b = 0; b < dim; b++) {
-        var = VELOCITY1 + b;
-        if (pd->v[pg->imtrx][var]) {
-          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            dbl tau_adv_dv = 0;
-            for (int a = 0; a < dim; a++) {
-              tau_adv_dv += pspg_rho * pspg_rho * bf[var]->phi[j] * G[b][a] * fv->v[a];
-              tau_adv_dv += pspg_rho * pspg_rho * bf[var]->phi[j] * G[a][b] * fv->v[a];
-            }
-
-            // d_tau_pspg_dv[b][j] = -PS_scaling * pspg_rho * 0.5 * tau_pspg * tau_pspg * tau_pspg *
-            // tau_adv_dv;
-            d_tau_pspg_dv[b][j] =
-                -PS_scaling * pspg_rho * 0.5 * (tau_adv_dv)*tau_pspg * tau_pspg * tau_pspg;
-          }
-        }
-      }
-    }
-    if (d_pspg != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-      dbl dG[DIM][DIM][DIM][MDE];
-      get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim,
-                              MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
-      for (b = 0; b < dim; b++) {
-        var = MESH_DISPLACEMENT1 + b;
-        if (pd->v[pg->imtrx][var]) {
-          for (int k = 0; k < ei[pg->imtrx]->dof[var]; k++) {
-            dbl tau_adv_dx = 0;
-            for (int i = 0; i < dim; i++) {
-              for (int j = 0; j < dim; j++) {
-                tau_adv_dx += pspg_rho * pspg_rho * fv->v[i] * dG[i][j][b][k] * fv->v[j];
-              }
-            }
-            dbl tau_diff_dx = 0;
-            for (int i = 0; i < dim; i++) {
-              for (int j = 0; j < dim; j++) {
-                tau_diff_dx += coeff * 2 * dG[i][j][b][k] * G[i][j];
-              }
-            }
-            d_tau_pspg_dX[b][k] = -PS_scaling * pspg_rho * 0.5 * (tau_adv_dx + tau_diff_dx) *
-                                  tau_pspg * tau_pspg * tau_pspg;
-          }
-        }
-      }
-    }
+    tau_momentum_shakib(&pspg_tau, pd->Num_Dim, dt, TRUE);
   }
 
   for (a = 0; a < VIM; a++)
@@ -1233,7 +1155,7 @@ int calc_pspg(dbl pspg[DIM],
     }
 
     momentum[a] = mass + advection + diffusion + source + porous;
-    pspg[a] = tau_pspg * momentum[a];
+    pspg[a] = pspg_tau.tau * momentum[a];
 
     if (d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1]) {
       for (b = 0; b < WIM; b++) {
@@ -1277,8 +1199,8 @@ int calc_pspg(dbl pspg[DIM],
             }
             porous *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_POROUS_BRINK)];
           }
-          d_pspg->v[a][b][j] = tau_pspg * (mass + advection + diffusion + source + porous) +
-                               d_tau_pspg_dv[b][j] * momentum[a];
+          d_pspg->v[a][b][j] = pspg_tau.tau * (mass + advection + diffusion + source + porous) +
+                               pspg_tau.d_tau_dv[b][j] * momentum[a];
         }
       }
     }
@@ -1317,8 +1239,8 @@ int calc_pspg(dbl pspg[DIM],
             source -= df->X[a][b][j] * pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_SOURCE)];
           }
 
-          d_pspg->X[a][b][j] =
-              tau_pspg * (advection + diffusion + source) + d_tau_pspg_dX[b][j] * momentum[a];
+          d_pspg->X[a][b][j] = pspg_tau.tau * (advection + diffusion + source) +
+                               pspg_tau.d_tau_dX[b][j] * momentum[a];
         }
       }
     }
@@ -1364,7 +1286,8 @@ int calc_pspg(dbl pspg[DIM],
           porous = v[a] * (d_rho_t_dT * sc * speed / sqrt(per) + dvis_dT[j] / per);
           porous *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_POROUS_BRINK)];
         }
-        d_pspg->T[a][j] = tau_pspg * (mass + advection + diffusion + source + porous);
+        d_pspg->T[a][j] = pspg_tau.tau * (mass + advection + diffusion + source + porous) +
+                          pspg_tau.d_tau_dT[j] * momentum[a];
       }
     }
 
@@ -1377,7 +1300,14 @@ int calc_pspg(dbl pspg[DIM],
           diffusion *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_DIFFUSION)];
         }
 
-        d_pspg->P[a][j] = tau_pspg * (diffusion);
+        d_pspg->P[a][j] = pspg_tau.tau * (diffusion);
+      }
+    }
+
+    var = EDDY_NU;
+    if (d_pspg != NULL && pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        d_pspg->eddy_nu[a][j] = pspg_tau.d_tau_dEDDY_NU[j] * momentum[a];
       }
     }
 
@@ -1426,7 +1356,8 @@ int calc_pspg(dbl pspg[DIM],
             porous = v[a] * (d_rho_t_dC * sc * speed / sqrt(per));
             porous *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_POROUS_BRINK)];
           }
-          d_pspg->C[a][w][j] = tau_pspg * (mass + advection + diffusion + source + porous);
+          d_pspg->C[a][w][j] = pspg_tau.tau * (mass + advection + diffusion + source + porous) +
+                               pspg_tau.d_tau_dC[w][j] * momentum[a];
         }
       }
     }
@@ -1456,7 +1387,7 @@ int calc_pspg(dbl pspg[DIM],
                 diffusion *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_DIFFUSION)];
               }
 
-              d_pspg->S[a][mode][b][c][j] = tau_pspg * diffusion;
+              d_pspg->S[a][mode][b][c][j] = pspg_tau.tau * diffusion;
             }
           }
         }
@@ -1488,7 +1419,7 @@ int calc_pspg(dbl pspg[DIM],
               diffusion *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_DIFFUSION)];
             }
 
-            d_pspg->g[a][b][c][j] = tau_pspg * diffusion;
+            d_pspg->g[a][b][c][j] = pspg_tau.tau * diffusion;
           }
         }
       }

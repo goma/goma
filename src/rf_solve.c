@@ -300,10 +300,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
    * (MSR format.  See "SPARSKIT: a basic tool kit for sparse matrix
    * computations" by Youcef Saad)
    */
-  int *ija = NULL;         /* column pointer array                     */
-  double *a = NULL;        /* nonzero array                            */
-  double *a_old = NULL;    /* nonzero array                            */
-  static double *x = NULL; /* solution vector                          */
+  int *ija = NULL;              /* column pointer array                     */
+  double *a = NULL;             /* nonzero array                            */
+  double *a_old = NULL;         /* nonzero array                            */
+  static double *x = NULL;      /* solution vector                          */
+  static double *x_save = NULL; /* solution vector for reset */
 
   int iAC;                              /* Counter                                  */
   static double *x_AC = NULL;           /* Solution vector of extra unknowns          */
@@ -327,6 +328,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   static double *x_older = NULL;    /* older solution vector             */
   static double *x_oldest = NULL;   /* oldest solution vector saved      */
   static double *xdot = NULL;       /* current time derivative of soln   */
+  static double *xdot_save = NULL;  /* current time derivative of soln for reset  */
   static double *xdot_old = NULL;   /* old time derivative of soln       */
   static double *xdot_older = NULL; /* old time derivative of soln       */
 
@@ -668,10 +670,12 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
   /* Allocate solution arrays on first call only */
   if (callnum == 1) {
+    x_save = alloc_dbl_1(numProcUnknowns, 0.0);
     x = alloc_dbl_1(numProcUnknowns, 0.0);
     x_old = alloc_dbl_1(numProcUnknowns, 0.0);
     x_older = alloc_dbl_1(numProcUnknowns, 0.0);
     x_oldest = alloc_dbl_1(numProcUnknowns, 0.0);
+    xdot_save = alloc_dbl_1(numProcUnknowns, 0.0);
     xdot = alloc_dbl_1(numProcUnknowns, 0.0);
     xdot_old = alloc_dbl_1(numProcUnknowns, 0.0);
     xdot_older = alloc_dbl_1(numProcUnknowns, 0.0);
@@ -1843,10 +1847,14 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           if (ls->Num_Var_Init > 0)
             ls_var_initialization(&x, exo, dpi, cx);
         }
+        x_save = realloc(x_save, sizeof(double) * numProcUnknowns);
+        xdot_save = realloc(xdot_save, sizeof(double) * numProcUnknowns);
         exchange_dof(cx[0], dpi, x, 0);
         dcopy1(numProcUnknowns, x, x_old);
+        dcopy1(numProcUnknowns, x, x_save);
         dcopy1(numProcUnknowns, x_old, x_older);
         dcopy1(numProcUnknowns, x_older, x_oldest);
+        dcopy1(numProcUnknowns, xdot, xdot_save);
         realloc_dbl_1(&x_pred, numProcUnknowns, 0);
         realloc_dbl_1(&gvec, Num_Node, 0);
         realloc_dbl_1(&xdot_older, numProcUnknowns, 0);
@@ -1877,6 +1885,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
        *  set the flag, converged, to true on return. If not
        *  set the flag to false.
        */
+      dcopy1(numProcUnknowns, x, x_save);
+      dcopy1(numProcUnknowns, xdot, xdot_save);
       err = solve_nonlinear_problem(ams[JAC], x, delta_t, theta, x_old, x_older, xdot, xdot_old,
                                     resid_vector, x_update, scale, &converged, &nprint, tev,
                                     tev_post, gv, rd, gindex, p_gsize, gvec, gvec_elem, time1, exo,
@@ -1896,6 +1906,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
       exchange_dof(cx[0], dpi, x, 0);
       exchange_dof(cx[0], dpi, xdot, 0);
+
+      if (!converged) {
+        dcopy1(numProcUnknowns, x_save, x);
+        dcopy1(numProcUnknowns, xdot_save, xdot);
+      }
 
       if (converged)
         af->Sat_hyst_reevaluate = TRUE; /*see load_saturation */
@@ -2588,6 +2603,8 @@ free_and_clear:
   safer_free((void **)&x_pred);
 
   if (last_call) {
+    safer_free((void **)&x_save);
+    safer_free((void **)&xdot_save);
     safer_free((void **)&x_old);
     safer_free((void **)&x_older);
     safer_free((void **)&x_oldest);

@@ -100,6 +100,7 @@ struct Distributed_Processing_Information {
   int *global_elem_block_ids;
   int *global_elem_block_counts;
 
+  int rank;
   int num_proc;
   int num_proc_in_file;
   char ftype;
