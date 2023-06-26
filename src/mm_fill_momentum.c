@@ -1092,6 +1092,99 @@ int assemble_momentum(dbl time,       /* current time */
           }
 
           /*
+           * J_m_EDDY_NU
+           */
+
+          if (pdv[EDDY_NU]) {
+            var = EDDY_NU;
+            pvar = upd->vp[pg->imtrx][var];
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              phi_j = bf[var]->phi[j];
+
+              mass = 0.;
+              advection = 0.;
+              source = 0.0;
+              if (supg != 0.) {
+                dbl d_wt_func = 0;
+                for (p = 0; p < dim; p++) {
+                  d_wt_func += supg * supg_terms.d_tau_dEDDY_NU[j] * v[p] * bfm->grad_phi[i][p];
+                }
+                if (transient_run) {
+                  if (mass_on) {
+                    mass = v_dot[a] * rho;
+                    mass *= -d_wt_func * d_area;
+                    mass *= mass_etm;
+                  }
+
+                  if (porous_brinkman_on) {
+                    mass /= por;
+                  }
+
+                  if (particle_momentum_on) {
+                    mass *= ompvf;
+                  }
+                }
+
+                if (advection_on) {
+#ifdef DO_NO_UNROLL
+                  for (p = 0; p < WIM; p++) {
+                    advection += (v[p] - x_dot[p]) * grad_v[p][a];
+                  }
+#else
+                  advection += (v[0] - x_dot[0]) * grad_v[0][a];
+                  advection += (v[1] - x_dot[1]) * grad_v[1][a];
+                  if (WIM == 3)
+                    advection += (v[2] - x_dot[2]) * grad_v[2][a];
+#endif
+
+                  if (upd->PSPG_advection_correction) {
+                    advection -= pspg[0] * grad_v[0][a];
+                    advection -= pspg[1] * grad_v[1][a];
+                    if (WIM == 3)
+                      advection -= pspg[2] * grad_v[2][a];
+                  }
+
+                  advection *= rho;
+                  advection *= -d_wt_func * d_area;
+                  advection *= advection_etm;
+
+                  if (porous_brinkman_on) {
+                    por2 = por * por;
+                    advection /= por2;
+                  }
+
+                  if (particle_momentum_on) {
+                    advection *= ompvf;
+                  }
+                }
+
+                /*
+                 * Source term...
+                 */
+
+                if (source_on) {
+                  source += f[a];
+                  source *= d_wt_func * d_area;
+                  source *= source_etm;
+                }
+              }
+
+              diffusion = 0.;
+              if (diffusion_on) {
+                for (p = 0; p < VIM; p++) {
+                  for (q = 0; q < VIM; q++) {
+                    diffusion += grad_phi_i_e_a[p][q] * d_Pi->eddy_nu[q][p][j];
+                  }
+                }
+                diffusion *= -d_area;
+                diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+              }
+
+              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += mass + advection + diffusion + source;
+            }
+          }
+
+          /*
            * J_m_F
            */
 
@@ -2787,6 +2880,17 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
       }
     }
 
+    var = EDDY_NU;
+    if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+      for (p = 0; p < VIM; p++) {
+        for (q = 0; q < VIM; q++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mu->eddy_nu[j] = mu_num * d_mu->eddy_nu[j];
+          }
+        }
+      }
+    }
+
     var = PRESSURE;
     if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -3325,6 +3429,17 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
               d_Pi->C[p][q][w][j] -= evss_f * (d_mu->C[w][j] - d_mus->C[w][j]) * gamma_cont[p][q];
             }
           }
+        }
+      }
+    }
+  }
+
+  var = EDDY_NU;
+  if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_Pi->eddy_nu[p][q][j] = d_mu->eddy_nu[j] * gamma[p][q];
         }
       }
     }
