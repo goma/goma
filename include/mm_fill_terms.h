@@ -54,16 +54,6 @@ EXTERN int assemble_energy /* mm_fill_terms.c                           */
      double,               /* dt - current time step size        */
      const PG_DATA *);     /* dvc_dnode                                 */
 
-EXTERN int assemble_momentum /* mm_fill_terms.c                           */
-    (double,                 /* time - present time value                 */
-     dbl,                    /* tt - parm to vary time integration from
-                              * explicit (tt = 1) to implicit (tt = 0)    */
-     dbl,                    /* dt - current time step size               */
-     dbl,                    /* h_elem_avg - average global element size  */
-     const PG_DATA *,        /* dvc_dnode                                 */
-     dbl xi[DIM],            /* Local stu coords */
-     const Exo_DB *exo);     /* ExodusII database struct pointer */
-
 EXTERN int assemble_continuity /* mm_fill_terms.c                           */
     (dbl,                      /* time_value */
      dbl,                      /* tt - to vary time integration from
@@ -363,13 +353,6 @@ ls_modulate_heatcapacity(double, double, double, double, double, HEAT_CAPACITY_D
 
 EXTERN int
 ls_modulate_heatsource(double *, double, double, double, double, HEAT_SOURCE_DEPENDENCE_STRUCT *);
-
-EXTERN void fluid_stress(double[DIM][DIM],            /* Pi[DIM][DIM] */
-                         STRESS_DEPENDENCE_STRUCT *); /* d_Pi         */
-
-EXTERN void fluid_stress_conf(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi);
-
-void fluid_stress_sqrt_conf(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi);
 
 EXTERN void heat_flux(double[DIM],                   /* q[DIM] */
                       HEAT_FLUX_DEPENDENCE_STRUCT *, /* dq     */

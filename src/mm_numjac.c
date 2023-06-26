@@ -563,9 +563,10 @@ int numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
       /*needed for saturation hyst. func. */
       PRS_mat_ielem = ielem - exo->eb_ptr[ebn];
 
-      int err = matrix_fill(ams, x_1, resid_vector_1, x_old, x_older, xdot, xdot_old, x_update,
-                            &delta_t, &theta, first_elem_side_BC_array, &time_value, exo, dpi,
-                            &ielem, &num_total_nodes, h_elem_avg, U_norm, NULL, zeroCA);
+      int err =
+          matrix_fill_stress(ams, x_1, resid_vector_1, x_old, x_older, xdot, xdot_old, x_update,
+                             &delta_t, &theta, first_elem_side_BC_array, &time_value, exo, dpi,
+                             &ielem, &num_total_nodes, h_elem_avg, U_norm, NULL, zeroCA);
       if (err)
         retval = -1;
       zeroCA = -1;
