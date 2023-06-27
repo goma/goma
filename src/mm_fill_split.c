@@ -16,10 +16,12 @@
 
 /* GOMA include files */
 #define GOMA_MM_FILL_SPLIT_C
+#include "density.h"
 #include "el_elm.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_momentum.h"
 #include "mm_fill_split.h"
 #include "mm_fill_terms.h"
 #include "mm_mp.h"

@@ -30,6 +30,7 @@
 /* GOMA include files */
 
 #define GOMA_MM_FILL_SPECIES_C
+#include "density.h"
 #include "el_elm.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
@@ -37,6 +38,7 @@
 #include "mm_chemkin.h"
 #include "mm_eh.h"
 #include "mm_elem_block_structs.h"
+#include "mm_fill_energy.h"
 #include "mm_fill_ls.h"
 #include "mm_fill_population.h"
 #include "mm_fill_solid.h"

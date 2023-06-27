@@ -17,6 +17,7 @@
  */
 
 /* Standard include files */
+#include "load_field_variables.h"
 #include <complex.h>
 #undef I
 #include <math.h>
@@ -32,6 +33,7 @@
 #include "ac_stability.h"
 #include "ac_stability_util.h"
 #include "bc_colloc.h"
+#include "density.h"
 #include "dpi.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
@@ -47,6 +49,7 @@
 #include "mm_fill_aux.h"
 #include "mm_fill_common.h"
 #include "mm_fill_em.h"
+#include "mm_fill_energy.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
 #include "mm_fill_momentum.h"

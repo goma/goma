@@ -35,6 +35,7 @@
 
 #include "el_elm.h"
 #include "mm_as_structs.h"
+#include "mm_fill_energy.h"
 #include "rf_fem_const.h"
 #include "std.h"
 #include "wr_side_data.h"
@@ -51,6 +52,7 @@ EXTERN int get_foam_pbe_indices(int *index_W,
                                 int *index_BA_g,
                                 int *index_CO2_l,
                                 int *index_CO2_g);
+
 EXTERN double foam_pbe_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                                    double tt,  /* parameter to vary time integration from
                                                 * explicit (tt = 1) to implicit (tt = 0) */

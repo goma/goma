@@ -40,6 +40,7 @@
 #include "el_elm_info.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "load_field_variables.h"
 #include "md_timer.h"
 #include "mm_as.h"
 #include "mm_as_alloc.h"
@@ -98,6 +99,9 @@
 #ifdef GOMA_ENABLE_PETSC
 #include "sl_petsc.h"
 #endif
+#include "density.h"
+#include "mm_fill_continuity.h"
+#include "mm_fill_energy.h"
 #include "mm_fill_split.h"
 #include "sl_petsc_complex.h"
 #include "stdbool.h"

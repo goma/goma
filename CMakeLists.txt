@@ -426,6 +426,7 @@ set(GOMA_INCLUDES
     include/bc_special.h
     include/bc_surfacedomain.h
     include/decomp_interface.h
+    include/density.h
     include/dp_comm.h
     include/dpi.h
     include/dp_map_comm_vec.h
@@ -439,6 +440,7 @@ set(GOMA_INCLUDES
     include/el_quality.h
     include/exo_conn.h
     include/exo_struct.h
+    include/load_field_variables.h
     include/loca_const.h
     include/loca_util_const.h
     include/md_timer.h
@@ -454,11 +456,14 @@ set(GOMA_INCLUDES
     include/mm_elem_block_structs.h
     include/mm_fill_aux.h
     include/mm_fill_common.h
+    include/mm_fill_continuity.h
     include/mm_fill_em.h
+    include/mm_fill_energy.h
     include/mm_fill_fill.h
     include/mm_fill.h
     include/mm_fill_jac.h
     include/mm_fill_ls.h
+    include/mm_fill_ls_capillary_bcs.h
     include/mm_fill_momentum.h
     include/mm_fill_population.h
     include/mm_fill_porous.h
@@ -575,6 +580,7 @@ set(GOMA_SOURCES
     src/bc_special.c
     src/bc_surfacedomain.c
     src/decomp_interface.c
+    src/density.c
     src/dp_comm.c
     src/dp_map_comm_vec.c
     src/dp_utils.c
@@ -584,6 +590,7 @@ set(GOMA_SOURCES
     src/el_quality.c
     src/exo_conn.c
     src/globals.c
+    src/load_field_variables.c
     src/loca_bord.c
     src/loca_eigen_c2f.F
     src/loca_eigen_cayley.F
@@ -602,11 +609,14 @@ set(GOMA_SOURCES
     src/mm_fill_aux.c
     src/mm_fill.c
     src/mm_fill_common.c
+    src/mm_fill_continuity.c
     src/mm_fill_em.c
+    src/mm_fill_energy.c
     src/mm_fill_fill.c
     src/mm_fill_interface.c
     src/mm_fill_jac.c
     src/mm_fill_ls.c
+    src/mm_fill_ls_capillary_bcs.c
     src/mm_fill_momentum.c
     src/mm_fill_population.c
     src/mm_fill_porous.c

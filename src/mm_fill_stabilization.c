@@ -2,10 +2,12 @@
 #include <math.h>
 #include <string.h>
 
+#include "density.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
+#include "mm_fill_momentum.h"
 #include "mm_fill_stabilization.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_terms.h"

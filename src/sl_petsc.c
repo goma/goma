@@ -1,3 +1,4 @@
+#include "load_field_variables.h"
 #include <mpi.h>
 #include <stddef.h>
 #ifdef GOMA_ENABLE_PETSC
@@ -11,6 +12,7 @@
 #undef I
 #endif
 
+#include "density.h"
 #include "dp_comm.h"
 #include "dpi.h"
 #include "el_geom.h"

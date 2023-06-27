@@ -36,6 +36,7 @@
 #include "exo_conn.h"
 #include "exo_struct.h"
 #include "exodusII.h"
+#include "load_field_variables.h"
 #include "mm_as_alloc.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_fill.h"

@@ -51,4 +51,9 @@ EXTERN void fluid_stress(double[DIM][DIM],            /* Pi[DIM][DIM] */
 void ve_polymer_stress(double gamma[DIM][DIM],
                        double stress[DIM][DIM],
                        STRESS_DEPENDENCE_STRUCT *d_stress);
+
+int momentum_source_term /* mm_fill_terms.c                           */
+    (dbl[DIM],           /* f - Body force.                           */
+     MOMENTUM_SOURCE_DEPENDENCE_STRUCT *,
+     double);
 #endif /* GOMA_MM_FILL_MOMENTUM_H */

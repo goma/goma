@@ -26,6 +26,7 @@
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
+#include "load_field_variables.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"

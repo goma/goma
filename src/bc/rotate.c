@@ -27,6 +27,7 @@
 #include "el_geom.h"
 #include "exo_struct.h"
 #include "gds/gds_vector.h"
+#include "load_field_variables.h"
 #include "mm_as.h"
 #include "mm_as_alloc.h"
 #include "mm_as_const.h"

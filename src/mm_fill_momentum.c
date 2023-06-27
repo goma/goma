@@ -1,3 +1,7 @@
+#include "load_field_variables.h"
+#include "mm_fill_energy.h"
+#include "mm_fill_ls_capillary_bcs.h"
+#include "mm_fill_terms.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +15,7 @@
 #include "az_aztec.h"
 #include "bc_colloc.h"
 #include "bc_contact.h"
+#include "density.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
@@ -237,7 +242,7 @@ int assemble_momentum(dbl time,       /* current time */
   dbl wt_func;
 
   /* SUPG variables */
-  SUPG_momentum_terms supg_terms;
+  momentum_tau_terms supg_terms;
 
   // Continuity stabilization
   dbl continuity_stabilization;
@@ -286,7 +291,7 @@ int assemble_momentum(dbl time,       /* current time */
   rho = density(d_rho, time);
 
   if (supg != 0.) {
-    supg_tau_momentum_shakib(&supg_terms, dim, dt);
+    tau_momentum_shakib(&supg_terms, dim, dt, FALSE);
   }
   /* end Petrov-Galerkin addition */
 
@@ -509,7 +514,7 @@ int assemble_momentum(dbl time,       /* current time */
           /* add Petrov-Galerkin terms as necessary */
           if (supg != 0.) {
             for (p = 0; p < dim; p++) {
-              wt_func += supg * supg_terms.supg_tau * v[p] * bfm->grad_phi[i][p];
+              wt_func += supg * supg_terms.tau * v[p] * bfm->grad_phi[i][p];
             }
           }
           grad_phi_i_e_a = bfm->grad_phi_e[i][a];
@@ -728,7 +733,7 @@ int assemble_momentum(dbl time,       /* current time */
           /* add Petrov-Galerkin terms as necessary */
           if (supg != 0.) {
             for (p = 0; p < dim; p++) {
-              wt_func += supg * supg_terms.supg_tau * v[p] * bfm->grad_phi[i][p];
+              wt_func += supg * supg_terms.tau * v[p] * bfm->grad_phi[i][p];
             }
           }
 
@@ -750,7 +755,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func += supg * supg_terms.d_supg_tau_dT[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_tau_dT[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -990,7 +995,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func += supg * supg_terms.d_supg_tau_dnn[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_tau_dnn[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -1205,7 +1210,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func += supg * supg_terms.d_supg_tau_dF[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_tau_dF[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -1390,10 +1395,10 @@ int assemble_momentum(dbl time,       /* current time */
                 phi_j = phi_j_vector[j];
                 double d_wt_func = 0;
                 if (supg != 0.) {
-                  d_wt_func = supg * supg_terms.supg_tau * phi_j * bfm->grad_phi[i][b];
+                  d_wt_func = supg * supg_terms.tau * phi_j * bfm->grad_phi[i][b];
 
                   for (p = 0; p < dim; p++) {
-                    d_wt_func += supg * supg_terms.d_supg_tau_dv[b][j] * v[p] * bfm->grad_phi[i][p];
+                    d_wt_func += supg * supg_terms.d_tau_dv[b][j] * v[p] * bfm->grad_phi[i][p];
                   }
                 }
 
@@ -3470,4 +3475,305 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
       }
     }
   }
+} /******************************************************************************
+   * momentum_source_term(): Computes the body force term for the momentum balance.
+   *
+   * Input
+   * -----
+   *   f    == Body force
+   *   df->T == Derivative w.r.t. temperature
+   *   df->X == Derivative w.r.t. mesh displacements
+   *   df->C == Derivative w.r.t. concentration
+   *   df->v == Derivative w.r.t. velocity
+   *   df->F == Derivative w.r.t. FILL
+   *   df->E == Derivative w.r.t. electric field
+   *
+   ******************************************************************************/
+int momentum_source_term(dbl f[DIM], /* Body force. */
+                         MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df,
+                         dbl time) {
+  int j, a, b, w;
+  int eqn, var, var_offset;
+  int err;
+  const int dim = pd->Num_Dim;
+  int siz;
+  int status = 0;
+  double *phi;
+  struct Level_Set_Data *ls_old;
+
+  /* initialize everything to zero */
+  siz = sizeof(double) * DIM;
+  memset(f, 0, siz);
+
+  if (df != NULL) {
+    siz = sizeof(double) * DIM * MDE;
+    memset(df->T, 0, siz);
+    memset(df->F, 0, siz);
+    memset(df->ars, 0, siz);
+
+    siz = sizeof(double) * DIM * DIM * MDE;
+    memset(df->X, 0, siz);
+    memset(df->v, 0, siz);
+    memset(df->E, 0, siz);
+
+    siz = sizeof(double) * DIM * MAX_CONC * MDE;
+    memset(df->C, 0, siz);
+  }
+
+  /****Momentum Source Model******/
+  if (mp->MomentumSourceModel == USER) {
+    err = usr_momentum_source(mp->u_momentum_source);
+
+    for (a = 0; a < dim; a++) {
+      eqn = R_MOMENTUM1 + a;
+      if (pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE) {
+        f[a] = mp->momentum_source[a];
+        var = TEMPERATURE;
+        if (df != NULL && pd->v[pg->imtrx][var]) {
+          phi = bf[var]->phi;
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            df->T[a][j] = mp->d_momentum_source[a][var] * phi[j];
+          }
+        }
+        if (df != NULL && pd->v[pg->imtrx][FILL]) {
+          var = FILL;
+          phi = bf[var]->phi;
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            df->F[a][j] = mp->d_momentum_source[a][var] * phi[j];
+          }
+        }
+        if (df != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+          for (b = 0; b < dim; b++) {
+            var = MESH_DISPLACEMENT1 + b;
+            phi = bf[var]->phi;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              df->X[a][b][j] = mp->d_momentum_source[a][var] * phi[j];
+            }
+          }
+        }
+
+        if (df != NULL && pd->v[pg->imtrx][MASS_FRACTION]) {
+          for (w = 0; w < pd->Num_Species_Eqn; w++) {
+            var = MASS_FRACTION;
+            var_offset = MAX_VARIABLE_TYPES + w;
+            phi = bf[var]->phi;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              df->C[a][w][j] = mp->d_momentum_source[a][var_offset] * phi[j];
+            }
+          }
+        }
+
+        if (df != NULL && pd->v[pg->imtrx][VELOCITY1]) {
+          for (b = 0; b < DIM; b++) {
+            var = VELOCITY1 + b;
+            phi = bf[var]->phi;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              df->v[a][b][j] = mp->d_momentum_source[a][var] * phi[j];
+            }
+          }
+        }
+      }
+    }
+  } else if (mp->MomentumSourceModel == CONSTANT) {
+    int force_dim = dim;
+    if (pd->CoordinateSystem == CARTESIAN_2pt5D) {
+      force_dim = 3;
+    }
+    for (a = 0; a < force_dim; a++) {
+      eqn = R_MOMENTUM1 + a;
+      if (pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE) {
+        f[a] = mp->momentum_source[a];
+      }
+    }
+  } else if (mp->MomentumSourceModel == VARIABLE_DENSITY) {
+    if (mp->DensityModel == SOLVENT_POLYMER) {
+      DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
+      DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+      double rho = density(d_rho, time);
+      for (a = 0; a < dim; a++) {
+        eqn = R_MOMENTUM1 + a;
+        if (pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE) {
+          f[a] = rho * mp->momentum_source[a];
+        }
+        if (df != NULL && pd->v[pg->imtrx][MASS_FRACTION]) {
+          for (w = 0; w < pd->Num_Species_Eqn; w++) {
+            var = MASS_FRACTION;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              df->C[a][w][j] = d_rho->C[w][j] * mp->momentum_source[a];
+            }
+          }
+        }
+      }
+    } else if (mp->DensityModel == DENSITY_FOAM_PMDI_10 || mp->DensityModel == DENSITY_FOAM_PBE ||
+               mp->DensityModel == DENSITY_FOAM || mp->DensityModel == DENSITY_FOAM_TIME ||
+               mp->DensityModel == DENSITY_FOAM_TIME_TEMP ||
+               mp->DensityModel == DENSITY_MOMENT_BASED) {
+      DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
+      DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+      double rho = density(d_rho, time);
+      for (a = 0; a < dim; a++) {
+        eqn = R_MOMENTUM1 + a;
+        if (pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE) {
+          f[a] = rho * mp->momentum_source[a];
+        }
+        if (df != NULL && pd->v[pg->imtrx][MASS_FRACTION]) {
+          for (w = 0; w < pd->Num_Species_Eqn; w++) {
+            var = MASS_FRACTION;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              df->C[a][w][j] = d_rho->C[w][j] * mp->momentum_source[a];
+            }
+          }
+        }
+        if (df != NULL && pd->v[pg->imtrx][TEMPERATURE]) {
+          var = TEMPERATURE;
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            df->T[a][j] = d_rho->T[j] * mp->momentum_source[a];
+          }
+        }
+        if (df != NULL && pd->v[pg->imtrx][FILL]) {
+          var = FILL;
+          phi = bf[var]->phi;
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            df->F[a][j] = d_rho->F[j] * mp->momentum_source[a];
+          }
+        }
+      }
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown density model for variable density");
+    }
+
+  } else if (mp->MomentumSourceModel == VARIABLE_DENSITY_NO_GAS) {
+    if (mp->DensityModel == DENSITY_FOAM_PMDI_10 || mp->DensityModel == DENSITY_FOAM_PBE ||
+        mp->DensityModel == DENSITY_FOAM || mp->DensityModel == DENSITY_FOAM_TIME ||
+        mp->DensityModel == DENSITY_FOAM_TIME_TEMP || mp->DensityModel == DENSITY_MOMENT_BASED) {
+      DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
+      DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+      double rho = density(d_rho, time);
+      load_lsi(ls->Length_Scale);
+      double Heaviside;
+      if (mp->mp2nd->densitymask[0] == 0) {
+        Heaviside = 1 - lsi->H;
+      } else {
+        Heaviside = lsi->H;
+      }
+      for (a = 0; a < dim; a++) {
+        eqn = R_MOMENTUM1 + a;
+        if (pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE) {
+          f[a] = Heaviside * rho * mp->momentum_source[a];
+        }
+        if (df != NULL && pd->v[pg->imtrx][MASS_FRACTION]) {
+          for (w = 0; w < pd->Num_Species_Eqn; w++) {
+            var = MASS_FRACTION;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              df->C[a][w][j] = Heaviside * d_rho->C[w][j] * mp->momentum_source[a];
+            }
+          }
+        }
+        if (df != NULL && pd->v[pg->imtrx][TEMPERATURE]) {
+          var = TEMPERATURE;
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            df->T[a][j] = Heaviside * d_rho->T[j] * mp->momentum_source[a];
+          }
+        }
+        if (df != NULL && pd->v[pg->imtrx][FILL]) {
+          var = FILL;
+          phi = bf[var]->phi;
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            df->F[a][j] = Heaviside * d_rho->F[j] * mp->momentum_source[a];
+          }
+        }
+      }
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown density model for variable density no gas");
+    }
+
+  } else if (mp->MomentumSourceModel == SUSPENSION_PM) {
+    err = suspension_pm_fluid_momentum_source(f, df);
+    GOMA_EH(err, "Problems in suspension_pm_fluid_momentum_source");
+  } else if (mp->MomentumSourceModel == SUSPEND || mp->MomentumSourceModel == SUSPENSION) {
+    err = suspend_momentum_source(f, df);
+    GOMA_EH(err, "Problems in suspend_momentum_source");
+  } else if (mp->MomentumSourceModel == BOUSS) {
+    err = bouss_momentum_source(f, df, 0, TRUE);
+    GOMA_EH(err, "Problems in bouss_momentum_source");
+  } else if (mp->MomentumSourceModel == BOUSS_JXB) {
+    err = bouss_momentum_source(f, df, 1, FALSE);
+    GOMA_EH(err, "Problems in bouss_momentum_source");
+  } else if (mp->MomentumSourceModel == BOUSSINESQ) {
+    err = bouss_momentum_source(f, df, 0, FALSE);
+    GOMA_EH(err, "Problems in bouss_momentum_source");
+  } else if (mp->MomentumSourceModel == EHD_POLARIZATION) {
+    err = EHD_POLARIZATION_source(f, df);
+    GOMA_EH(err, "Problems in EHD_POLARIZATION force routine");
+  } else if (mp->MomentumSourceModel == GRAV_VIBRATIONAL) {
+    err = gravity_vibrational_source(f, df, time);
+    GOMA_EH(err, "Problems in GRAV_VIBRATIONAL force routine");
+  } else if (mp->MomentumSourceModel == FILL_SRC) {
+    err = fill_momentum_source(f);
+  } else if (mp->MomentumSourceModel == LEVEL_SET && pd->gv[FILL]) {
+    DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
+    DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+    double rho = density(d_rho, time);
+
+    for (a = 0; a < pd->Num_Dim; a++) {
+      f[a] = mp->momentum_source[a] * rho;
+      if (df != NULL) {
+        for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++)
+          df->F[a][j] = mp->momentum_source[a] * d_rho->F[j];
+      }
+    }
+  } else if (mp->MomentumSourceModel == LEVEL_SET && pd->gv[PHASE1]) {
+    DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
+    DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+    double rho = density(d_rho, time);
+
+    for (a = 0; a < pd->Num_Dim; a++) {
+      f[a] = mp->momentum_source[a] * rho;
+
+      if (df != NULL) {
+        for (b = 0; b < pfd->num_phase_funcs; b++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[PHASE1]; j++) {
+            df->pf[a][b][j] = mp->momentum_source[a] * d_rho->pf[b][j];
+          }
+        }
+      }
+    }
+  } else if (mp->MomentumSourceModel == ACOUSTIC) {
+    for (a = 0; a < dim; a++) {
+      eqn = R_MOMENTUM1 + a;
+      if (pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE) {
+        /*  Graviational piece	*/
+        f[a] = mp->momentum_source[a];
+        /*  Acoustic Reynolds Stress piece	*/
+        f[a] += mp->u_momentum_source[0] * fv->grad_ars[a];
+      }
+      if (df != NULL && pd->v[pg->imtrx][ACOUS_REYN_STRESS]) {
+        var = ACOUS_REYN_STRESS;
+        phi = bf[var]->phi;
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          df->ars[a][j] = mp->u_momentum_source[0] * bf[var]->grad_phi[j][a];
+        }
+      }
+    }
+  } else {
+    GOMA_EH(GOMA_ERROR, "No such Navier-Stokes Source Model");
+  }
+
+  if (ls != NULL && mp->mp2nd != NULL && mp->MomentumSourceModel != LEVEL_SET &&
+      mp->mp2nd->MomentumSourceModel == CONSTANT && (pd->e[pg->imtrx][R_MOMENTUM1] & T_SOURCE)) {
+    /* kludge for solidification tracking with phase function 0 */
+    if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
+      ls_old = ls;
+      ls = pfd->ls[0];
+      ls_modulate_momentumsource(f, mp->mp2nd->momentumsource_phase[0], ls->Length_Scale,
+                                 (double)mp->mp2nd->momentumsourcemask[0],
+                                 (double)mp->mp2nd->momentumsourcemask[1], df);
+      ls = ls_old;
+    }
+    ls_modulate_momentumsource(f, mp->mp2nd->momentumsource, ls->Length_Scale,
+                               (double)mp->mp2nd->momentumsourcemask[0],
+                               (double)mp->mp2nd->momentumsourcemask[1], df);
+  }
+
+  return (status);
 }

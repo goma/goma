@@ -47,6 +47,7 @@
 #include "user_mp.h"
 
 #define GOMA_MM_STD_MODELS_C
+#include "density.h"
 #include "mm_std_models.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************

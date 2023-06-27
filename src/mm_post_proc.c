@@ -18,6 +18,7 @@
 
 /* Standard include files */
 
+#include "load_field_variables.h"
 #include "mm_fill_em.h"
 #include "rf_solve.h"
 #include <math.h>
@@ -33,6 +34,7 @@
 #include "ac_particles.h"
 #include "bc/rotate.h"
 #include "bc_contact.h"
+#include "density.h"
 #include "dpi.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
