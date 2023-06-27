@@ -8976,7 +8976,6 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
 
   dbl saramitoCoeff = 1.;
 
-  dbl d_mup_dv_pj;
   dbl d_mup_dmesh_pj;
 
   /*  shift function */
@@ -8986,7 +8985,6 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
 
   /* constitutive equation parameters */
   dbl Z = 1.0; /* This is the factor appearing in front of the stress tensor in PTT */
-  dbl dZ_dtrace = 0.0;
 
   /* advective terms are precalculated */
   dbl v_dot_del_s[DIM][DIM];
@@ -9224,20 +9222,6 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
       GOMA_EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
     }
 
-    Z = 1.0;
-    dZ_dtrace = 0;
-    if (vn->ConstitutiveEquation == PTT) {
-      if (vn->ptt_type == PTT_LINEAR) {
-        Z = 1 + eps * lambda * trace / mup;
-        dZ_dtrace = eps * lambda / mup;
-      } else if (vn->ptt_type == PTT_EXPONENTIAL) {
-        Z = exp(eps * lambda * trace / mup);
-        dZ_dtrace = Z * eps * lambda / mup;
-      } else {
-        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
-      }
-    }
-
     /* get tensor dot products for future use */
 
     if (DOUBLE_NONZERO(alpha))
@@ -9447,7 +9431,6 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                   pvar = upd->vp[pg->imtrx][var];
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
-                    d_mup_dv_pj = d_mup->v[p][j];
 
                     mass = 0.;
 
