@@ -16,6 +16,7 @@
  * FLUX AND/OR DATA PARAMETER AND/OR CONTINUATION PARAMETER
  */
 
+#include "bc_contact.h"
 #include "sl_epetra_interface.h"
 #include "sl_util_structs.h"
 
@@ -78,6 +79,7 @@
 #include "sl_umf.h"
 #include "sl_util.h"
 #include "std.h"
+#include "util/distance_helpers.h"
 #include "wr_exo.h"
 #include "wr_side_data.h"
 
@@ -705,6 +707,27 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
   if (Num_ROT == 0 /*&& inewton == 0*/ && exo->num_dim == 3) {
     setup_rotated_bc_nodes(exo, dpi, BC_Types, Num_BC, x);
+  }
+
+  // Setup turbulence information
+  if (upd->turbulent_info->use_internal_wall_distance) {
+    bool already_setup = true;
+    if (upd->turbulent_info->wall_distances == NULL) {
+      upd->turbulent_info->wall_distances = (double *)malloc(sizeof(double) * exo->num_nodes);
+      already_setup = false;
+    }
+
+    bool apply_displacements = false;
+    if (upd->matrix_index[R_MESH1] != -1) {
+      apply_displacements = true;
+    }
+
+    if (!already_setup || apply_displacements) {
+      find_current_distances(exo, dpi, x, apply_displacements, upd->turbulent_info->num_node_sets,
+                             upd->turbulent_info->node_set_ids, upd->turbulent_info->num_side_sets,
+                             upd->turbulent_info->side_set_ids,
+                             upd->turbulent_info->wall_distances);
+    }
   }
 
   /*********************************************************************************

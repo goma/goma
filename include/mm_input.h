@@ -136,6 +136,10 @@ extern void rd_levelset_specs /* mm_input.c                                */
     (FILE *,                  /* ifp                                       */
      char *);                 /* input                                     */
 
+extern void rd_turbulent_specs /* mm_input.c                                */
+    (FILE *,                   /* ifp                                       */
+     char *);                  /* input                                     */
+
 extern void rd_elem_quality_specs /* mm_input.c                        */
     (FILE *,                      /* ifp                                       */
      char *);                     /* input                                     */
@@ -231,6 +235,10 @@ extern int look_for_modal_prop /* mm_input.c                                */
      int *,                    /* MaterialModel - int material model  (out) */
      dbl *,                    /* modal_const - modal data            (out) */
      char *);                  /*      echo string char array              (out) */
+
+extern int read_constants_int /* mm_input.c                                */
+    (FILE *,                  /* imp - pointer to (open) file stream       */
+     int **);                 /* User_constants - array of user mat props  */
 
 extern int read_constants /* mm_input.c                                */
     (FILE *,              /* imp - pointer to (open) file stream       */

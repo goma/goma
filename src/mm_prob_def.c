@@ -282,8 +282,8 @@ int setup_pd(void) {
                    (ce == R_EM_H2_REAL) || (ce == R_EM_H3_REAL) || (ce == R_EM_H1_IMAG) ||
                    (ce == R_EM_H2_IMAG) || (ce == R_EM_H3_IMAG) || (ce == R_SHELL_FILMP) ||
                    (ce == R_SHELL_FILMH) || (ce == R_SHELL_PARTC) || (ce == R_SHELL_ENERGY) ||
-                   (ce == R_MOMENT0) || (ce == R_MOMENT1) || (ce == R_MOMENT2) ||
-                   (ce == R_MOMENT3)) {
+                   (ce == R_EDDY_NU) || (ce == R_MOMENT0) || (ce == R_MOMENT1) ||
+                   (ce == R_MOMENT2) || (ce == R_MOMENT3)) {
           if (pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0.) {
             pd_glob[mn]->e[imtrx][ce] |= T_MASS;
           }

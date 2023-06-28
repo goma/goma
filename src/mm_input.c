@@ -219,6 +219,8 @@ void read_input_file(struct Command_line_command **clc, int nclc) {
 
       rd_levelset_specs(ifp, input);
 
+      rd_turbulent_specs(ifp, input);
+
       rd_elem_quality_specs(ifp, input);
 
       rd_track_specs(ifp, input);
@@ -3253,6 +3255,75 @@ void rd_levelset_specs(FILE *ifp, char *input) {
   }
 }
 
+void rd_turbulent_specs(FILE *ifp, char *input) {
+  char echo_string[MAX_CHAR_ECHO_INPUT] = "\0";
+  char *echo_file = Echo_Input_File;
+
+  int iread;
+
+  upd->turbulent_info = calloc(1, sizeof(turbulent_information));
+  upd->turbulent_info->use_internal_wall_distance = false;
+  iread = look_for_optional(ifp, "Turbulence Calculate Wall Distance", input, '=');
+  if (iread == 1) {
+
+    if (fscanf(ifp, "%s", input) != 1) {
+      GOMA_EH(GOMA_ERROR, "Error reading Turbulence Calculate Wall Distance");
+    }
+
+    strip(input);
+    stringup(input);
+
+    if ((strcmp(input, "ON") == 0) || (strcmp(input, "YES") == 0)) {
+      upd->turbulent_info->use_internal_wall_distance = true;
+    }
+
+    ECHO("\n***Turbulence Information***\n", echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Turbulence Calculate Wall Distance",
+             input);
+    ECHO(echo_string, echo_file);
+  }
+
+  if (upd->turbulent_info->use_internal_wall_distance) {
+    bool read_internal_sides = false;
+
+    iread = look_for_optional(ifp, "Turbulence Wall Side Sets", input, '=');
+    if (iread == 1) {
+      read_internal_sides = true;
+      upd->turbulent_info->num_side_sets =
+          read_constants_int(ifp, &upd->turbulent_info->side_set_ids);
+      if (upd->turbulent_info->num_side_sets < 1) {
+        GOMA_EH(GOMA_ERROR, "Error reading Turbulence Wall Side Sets");
+      }
+
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s", "Turbulence Wall Side Sets");
+      for (int i = 0; i < upd->turbulent_info->num_side_sets; i++) {
+        SPF(endofstring(echo_string), " %d", upd->turbulent_info->side_set_ids[i]);
+      }
+      ECHO(echo_string, echo_file);
+    }
+
+    iread = look_for_optional(ifp, "Turbulence Wall Node Sets", input, '=');
+    if (iread == 1) {
+      read_internal_sides = true;
+      upd->turbulent_info->num_node_sets =
+          read_constants_int(ifp, &upd->turbulent_info->node_set_ids);
+      if (upd->turbulent_info->num_node_sets < 1) {
+        GOMA_EH(GOMA_ERROR, "Error reading Turbulence Wall Node Sets");
+      }
+
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s", "Turbulence Wall Node Sets");
+      for (int i = 0; i < upd->turbulent_info->num_side_sets; i++) {
+        SPF(endofstring(echo_string), " %d", upd->turbulent_info->side_set_ids[i]);
+      }
+      ECHO(echo_string, echo_file);
+    }
+
+    if (!read_internal_sides) {
+      GOMA_EH(GOMA_ERROR, "Turbulence Calculate Wall Distance is ON but no wall sidesets or "
+                          "nodesets were specified");
+    }
+  }
+}
 /*
  * rd_elem_quality_specs -- read input file for element quality specifications
  *
@@ -8299,6 +8370,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         ce = set_eqn(R_MAX_STRAIN, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "cur_strain")) {
         ce = set_eqn(R_CUR_STRAIN, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "eddy_visc")) {
+        ce = set_eqn(R_EDDY_NU, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "shell_diff_flux")) {
         ce = set_eqn(R_SHELL_DIFF_FLUX, mtrx_index0, pd_ptr);
         pd_ptr->Do_Surf_Geometry = 1;
@@ -8798,6 +8871,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         cv = set_var(GRAD_S_V_DOT_N2, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "gamma3_3")) {
         cv = set_var(GRAD_S_V_DOT_N3, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "EDDY_NU")) {
+        cv = set_var(EDDY_NU, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "APR")) {
         cv = set_var(ACOUS_PREAL, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "API")) {
@@ -9599,6 +9674,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       case R_EM_H1_IMAG:
       case R_EM_H2_IMAG:
       case R_EM_H3_IMAG:
+      case R_EDDY_NU:
 
         if (fscanf(ifp, "%lf %lf %lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
@@ -10613,6 +10689,36 @@ int read_constants(FILE *imp,            /* pointer to file */
   return num_const;
 }
 /* end of read_constants */
+int read_constants_int(FILE *imp,            /* pointer to file */
+                       int **User_constants) /* array of int constants */
+
+{
+  char line[255];
+  char *arguments[MAX_NUMBER_PARAMS];
+  int num_const = 0, i;
+
+  if (User_constants == NULL) {
+    GOMA_EH(GOMA_ERROR, "User Defined not allowed yet");
+  }
+  if (fgets(line, 255, imp) != NULL) {
+    strip(line);
+    /*
+     * If there are any more parameters, allocate space
+     * and parse remainder of the line for additional parameters.
+     */
+    if ((num_const = count_parameters(line)) > 0) {
+      User_constants[0] = alloc_int_1(num_const, 0.0);
+
+      tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);
+      for (i = 0; i < num_const; i++) {
+        User_constants[0][i] = atoi(arguments[i]);
+      }
+    }
+  } else {
+    GOMA_EH(GOMA_ERROR, "Could not read line for read_constants_int");
+  }
+  return num_const;
+}
 /********************************************************************************/
 /********************************************************************************/
 /********************************************************************************/

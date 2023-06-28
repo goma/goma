@@ -6273,6 +6273,18 @@ void flow_n_dot_T_nobc(double func[DIM],
       }
     }
 
+    var = EDDY_NU;
+    if (pd->v[pg->imtrx][var]) {
+
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (q = 0; q < pd->Num_Dim; q++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_func[p][var][j] += fv->snormal[q] * d_Pi->eddy_nu[p][q][j];
+          }
+        }
+      }
+    }
+
     var = RESTIME;
     if (pd->v[pg->imtrx][var]) {
 

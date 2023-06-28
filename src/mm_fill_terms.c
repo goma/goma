@@ -2238,7 +2238,7 @@ int assemble_momentum(dbl time,       /* current time */
   dbl wt_func;
 
   /* SUPG variables */
-  SUPG_momentum_terms supg_terms;
+  momentum_tau_terms supg_terms;
 
   // Continuity stabilization
   dbl continuity_stabilization;
@@ -2287,7 +2287,7 @@ int assemble_momentum(dbl time,       /* current time */
   rho = density(d_rho, time);
 
   if (supg != 0.) {
-    supg_tau_momentum_shakib(&supg_terms, dim, dt);
+    tau_momentum_shakib(&supg_terms, dim, dt, FALSE);
   }
   /* end Petrov-Galerkin addition */
 
@@ -2513,7 +2513,7 @@ int assemble_momentum(dbl time,       /* current time */
           /* add Petrov-Galerkin terms as necessary */
           if (supg != 0.) {
             for (p = 0; p < dim; p++) {
-              wt_func += supg * supg_terms.supg_tau * v[p] * bfm->grad_phi[i][p];
+              wt_func += supg * supg_terms.tau * v[p] * bfm->grad_phi[i][p];
             }
           }
           grad_phi_i_e_a = bfm->grad_phi_e[i][a];
@@ -2732,7 +2732,7 @@ int assemble_momentum(dbl time,       /* current time */
           /* add Petrov-Galerkin terms as necessary */
           if (supg != 0.) {
             for (p = 0; p < dim; p++) {
-              wt_func += supg * supg_terms.supg_tau * v[p] * bfm->grad_phi[i][p];
+              wt_func += supg * supg_terms.tau * v[p] * bfm->grad_phi[i][p];
             }
           }
 
@@ -2754,7 +2754,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func += supg * supg_terms.d_supg_tau_dT[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_tau_dT[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -2994,7 +2994,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func += supg * supg_terms.d_supg_tau_dnn[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_tau_dnn[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -3096,6 +3096,99 @@ int assemble_momentum(dbl time,       /* current time */
           }
 
           /*
+           * J_m_EDDY_NU
+           */
+
+          if (pdv[EDDY_NU]) {
+            var = EDDY_NU;
+            pvar = upd->vp[pg->imtrx][var];
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              phi_j = bf[var]->phi[j];
+
+              mass = 0.;
+              advection = 0.;
+              source = 0.0;
+              if (supg != 0.) {
+                dbl d_wt_func = 0;
+                for (p = 0; p < dim; p++) {
+                  d_wt_func += supg * supg_terms.d_tau_dEDDY_NU[j] * v[p] * bfm->grad_phi[i][p];
+                }
+                if (transient_run) {
+                  if (mass_on) {
+                    mass = v_dot[a] * rho;
+                    mass *= -d_wt_func * d_area;
+                    mass *= mass_etm;
+                  }
+
+                  if (porous_brinkman_on) {
+                    mass /= por;
+                  }
+
+                  if (particle_momentum_on) {
+                    mass *= ompvf;
+                  }
+                }
+
+                if (advection_on) {
+#ifdef DO_NO_UNROLL
+                  for (p = 0; p < WIM; p++) {
+                    advection += (v[p] - x_dot[p]) * grad_v[p][a];
+                  }
+#else
+                  advection += (v[0] - x_dot[0]) * grad_v[0][a];
+                  advection += (v[1] - x_dot[1]) * grad_v[1][a];
+                  if (WIM == 3)
+                    advection += (v[2] - x_dot[2]) * grad_v[2][a];
+#endif
+
+                  if (upd->PSPG_advection_correction) {
+                    advection -= pspg[0] * grad_v[0][a];
+                    advection -= pspg[1] * grad_v[1][a];
+                    if (WIM == 3)
+                      advection -= pspg[2] * grad_v[2][a];
+                  }
+
+                  advection *= rho;
+                  advection *= -d_wt_func * d_area;
+                  advection *= advection_etm;
+
+                  if (porous_brinkman_on) {
+                    por2 = por * por;
+                    advection /= por2;
+                  }
+
+                  if (particle_momentum_on) {
+                    advection *= ompvf;
+                  }
+                }
+
+                /*
+                 * Source term...
+                 */
+
+                if (source_on) {
+                  source += f[a];
+                  source *= d_wt_func * d_area;
+                  source *= source_etm;
+                }
+              }
+
+              diffusion = 0.;
+              if (diffusion_on) {
+                for (p = 0; p < VIM; p++) {
+                  for (q = 0; q < VIM; q++) {
+                    diffusion += grad_phi_i_e_a[p][q] * d_Pi->eddy_nu[q][p][j];
+                  }
+                }
+                diffusion *= -d_area;
+                diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+              }
+
+              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += mass + advection + diffusion + source;
+            }
+          }
+
+          /*
            * J_m_F
            */
 
@@ -3116,7 +3209,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func += supg * supg_terms.d_supg_tau_dF[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_tau_dF[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -3301,10 +3394,10 @@ int assemble_momentum(dbl time,       /* current time */
                 phi_j = phi_j_vector[j];
                 double d_wt_func = 0;
                 if (supg != 0.) {
-                  d_wt_func = supg * supg_terms.supg_tau * phi_j * bfm->grad_phi[i][b];
+                  d_wt_func = supg * supg_terms.tau * phi_j * bfm->grad_phi[i][b];
 
                   for (p = 0; p < dim; p++) {
-                    d_wt_func += supg * supg_terms.d_supg_tau_dv[b][j] * v[p] * bfm->grad_phi[i][p];
+                    d_wt_func += supg * supg_terms.d_tau_dv[b][j] * v[p] * bfm->grad_phi[i][p];
                   }
                 }
 
@@ -4857,6 +4950,30 @@ int assemble_continuity(dbl time_value, /* current time */
                    pressure_stabilization, h_flux);
 #endif
           }
+        }
+      }
+
+      var = EDDY_NU;
+      if (PSPG && pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          pvar = upd->vp[pg->imtrx][var];
+
+          phi_j = bf[var]->phi[j];
+
+          /* add Pressure-Stabilized Petrov-Galerkin term
+           * if desired.
+           */
+          pressure_stabilization = 0.;
+
+          for (a = 0; a < WIM; a++) {
+            meqn = R_MOMENTUM1 + a;
+            if (pd->e[pg->imtrx][meqn]) {
+              pressure_stabilization += grad_phi[i][a] * d_pspg->eddy_nu[a][j];
+            }
+          }
+          pressure_stabilization *= d_area * ls_disable_pspg;
+
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += pressure_stabilization;
         }
       }
 
@@ -7628,6 +7745,15 @@ int load_fv(void)
                    &(fv_old->cur_strain));
     stateVector[CUR_STRAIN] = fv->cur_strain;
   }
+
+  if (pdgv[EDDY_NU]) {
+    v = EDDY_NU;
+    scalar_fv_fill(esp->eddy_nu, esp_dot->eddy_nu, esp_old->eddy_nu, bf[v]->phi,
+                   ei[upd->matrix_index[v]]->dof[v], &(fv->eddy_nu), &(fv_dot->eddy_nu),
+                   &(fv_old->eddy_nu));
+    stateVector[EDDY_NU] = fv->eddy_nu;
+  }
+
   if (pdgv[LIGHT_INTP]) {
     v = LIGHT_INTP;
     scalar_fv_fill(esp->poynt[0], esp_dot->poynt[0], esp_old->poynt[0], bf[v]->phi,
@@ -8557,6 +8683,19 @@ int load_fv(void)
     }
   }
 
+  // internal wall distance calculations
+  if (upd->turbulent_info->use_internal_wall_distance) {
+    fv->wall_distance = 0.;
+    if (pdgv[pd->ShapeVar]) {
+      dofs = ei[pg->imtrx]->dof[pd->ShapeVar];
+      for (i = 0; i < dofs; i++) {
+        fv->wall_distance +=
+            upd->turbulent_info->wall_distances[ei[pg->imtrx]->gnn_list[pd->ShapeVar][i]] *
+            bf[pd->ShapeVar]->phi[i];
+      }
+    }
+  }
+
   /*
    * External...
    */
@@ -8644,6 +8783,11 @@ int load_fv(void)
         fv_old->pF[0] = fv_old->external_field[w];
         fv_dot->pF[0] = fv_dot->external_field[w];
       }
+    }
+    if (!upd->turbulent_info->use_internal_wall_distance) {
+      int i_d_wall = mp->dist_wall_ext_field_index;
+      double d = fv->external_field[i_d_wall];
+      fv->wall_distance = d;
     }
   } else {
     for (w = 0; w < efv->Num_external_field; w++) {
@@ -9960,6 +10104,25 @@ int load_fv_grads(void)
   } else if (zero_unused_grads && upd->vp[pg->imtrx][SHELL_DIFF_FLUX] == -1) {
     for (p = 0; p < VIM; p++)
       fv->grad_sh_J[p] = 0.0;
+  }
+
+  /* grad(EDDY_NU)
+   *
+   */
+  if (pd->gv[EDDY_NU]) {
+    v = EDDY_NU;
+    bfn = bf[v];
+    dofs = ei[upd->matrix_index[v]]->dof[v];
+    for (p = 0; p < VIM; p++) {
+      fv->grad_eddy_nu[p] = 0.0;
+      for (i = 0; i < dofs; i++) {
+        fv->grad_eddy_nu[p] += *esp->eddy_nu[i] * bfn->grad_phi[i][p];
+      }
+    }
+  } else if (zero_unused_grads && upd->vp[pg->imtrx][EDDY_NU] == -1) {
+    for (p = 0; p < VIM; p++) {
+      fv->grad_eddy_nu[p] = 0.0;
+    }
   }
 
   /*
@@ -11581,6 +11744,63 @@ int load_fv_mesh_derivs(int okToZero)
   } else if (upd->vp[pg->imtrx][SHELL_TEMPERATURE] != -1) {
     siz = sizeof(double) * DIM * DIM * MDE;
     memset(&(fv->d_grad_sh_t_dmesh[0][0][0]), 0, siz);
+  }
+
+  if (pd->gv[EDDY_NU]) {
+    v = EDDY_NU;
+    bfv = bf[v];
+    vdofs = ei[upd->matrix_index[v]]->dof[v];
+#ifdef DO_NOT_UNROLL
+    siz = sizeof(double) * DIM * DIM * MDE;
+    memset(&(fv->d_grad_eddy_nu_dmesh[0][0][0]), 0, siz);
+    for (i = 0; i < vdofs; i++) {
+      T_i = *esp->eddy_nu[i];
+      for (p = 0; p < dimNonSym; p++) {
+        for (b = 0; b < dim; b++) {
+          for (j = 0; j < mdofs; j++) {
+            fv->d_grad_eddy_nu_dmesh[p][b][j] += T_i * bfv->d_grad_phi_dmesh[i][p][b][j];
+          }
+        }
+      }
+    }
+#else
+    for (j = 0; j < mdofs; j++) {
+      T_i = *esp->eddy_nu[0];
+
+      fv->d_grad_eddy_nu_dmesh[0][0][j] = T_i * bfv->d_grad_phi_dmesh[0][0][0][j];
+      fv->d_grad_eddy_nu_dmesh[1][1][j] = T_i * bfv->d_grad_phi_dmesh[0][1][1][j];
+      fv->d_grad_eddy_nu_dmesh[1][0][j] = T_i * bfv->d_grad_phi_dmesh[0][1][0][j];
+      fv->d_grad_eddy_nu_dmesh[0][1][j] = T_i * bfv->d_grad_phi_dmesh[0][0][1][j];
+
+      if (dimNonSym == 3) {
+        fv->d_grad_eddy_nu_dmesh[2][2][j] = T_i * bfv->d_grad_phi_dmesh[0][2][2][j];
+        fv->d_grad_eddy_nu_dmesh[2][0][j] = T_i * bfv->d_grad_phi_dmesh[0][2][0][j];
+        fv->d_grad_eddy_nu_dmesh[2][1][j] = T_i * bfv->d_grad_phi_dmesh[0][2][1][j];
+        fv->d_grad_eddy_nu_dmesh[0][2][j] = T_i * bfv->d_grad_phi_dmesh[0][0][2][j];
+        fv->d_grad_eddy_nu_dmesh[1][2][j] = T_i * bfv->d_grad_phi_dmesh[0][1][2][j];
+      }
+
+      for (i = 1; i < vdofs; i++) {
+        T_i = *esp->eddy_nu[i];
+
+        fv->d_grad_eddy_nu_dmesh[0][0][j] += T_i * bfv->d_grad_phi_dmesh[i][0][0][j];
+        fv->d_grad_eddy_nu_dmesh[1][1][j] += T_i * bfv->d_grad_phi_dmesh[i][1][1][j];
+        fv->d_grad_eddy_nu_dmesh[1][0][j] += T_i * bfv->d_grad_phi_dmesh[i][1][0][j];
+        fv->d_grad_eddy_nu_dmesh[0][1][j] += T_i * bfv->d_grad_phi_dmesh[i][0][1][j];
+
+        if (dimNonSym == 3) {
+          fv->d_grad_eddy_nu_dmesh[2][2][j] += T_i * bfv->d_grad_phi_dmesh[i][2][2][j];
+          fv->d_grad_eddy_nu_dmesh[2][0][j] += T_i * bfv->d_grad_phi_dmesh[i][2][0][j];
+          fv->d_grad_eddy_nu_dmesh[2][1][j] += T_i * bfv->d_grad_phi_dmesh[i][2][1][j];
+          fv->d_grad_eddy_nu_dmesh[0][2][j] += T_i * bfv->d_grad_phi_dmesh[i][0][2][j];
+          fv->d_grad_eddy_nu_dmesh[1][2][j] += T_i * bfv->d_grad_phi_dmesh[i][1][2][j];
+        }
+      }
+    }
+#endif
+  } else if (upd->vp[pg->imtrx][EDDY_NU] != -1) {
+    siz = sizeof(double) * DIM * DIM * MDE;
+    memset(&(fv->d_grad_eddy_nu_dmesh[0][0][0]), 0, siz);
   }
 
   if (pd->gv[LIGHT_INTP]) {
@@ -27479,6 +27699,17 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
     }
   }
 
+  var = EDDY_NU;
+  if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_Pi->eddy_nu[p][q][j] = d_mu->eddy_nu[j] * gamma[p][q];
+        }
+      }
+    }
+  }
+
   var = PRESSURE;
   if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
     for (p = 0; p < VIM; p++) {
@@ -28099,6 +28330,17 @@ void fluid_stress_sqrt_conf(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi)
                   evss_f * (d_mu->pf[a][j] - d_mus->pf[a][j]) * gamma_cont[p][q];
             }
           }
+        }
+      }
+    }
+  }
+
+  var = EDDY_NU;
+  if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_Pi->eddy_nu[p][q][j] = d_mu->eddy_nu[j] * gamma[p][q];
         }
       }
     }
