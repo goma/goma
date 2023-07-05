@@ -114,10 +114,10 @@ message(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
 
 option(ENABLE_APREPRO_LIB "ENABLE_APREPRO_LIB" ON)
 if(ENABLE_APREPRO_LIB)
-  find_package(SEACASAprepro HINTS ${SEACASExodus_DIR}/../SEACASAprepro)
-  if(SEACASAprepro_FOUND)
+  find_package(SEACASAprepro_lib HINTS ${SEACASExodus_DIR}/../SEACASAprepro_lib)
+  if(SEACASAprepro_lib_FOUND)
     message(STATUS "Aprepro Library found, enabling")
-    message(STATUS "SEACASAprepro_DIR = ${SEACASAprepro_DIR}")
+    message(STATUS "SEACASAprepro_lib_DIR = ${SEACASAprepro_lib_DIR}")
   endif()
 endif()
 
@@ -369,7 +369,7 @@ if(PRINT_STACK_TRACE_ON_EH)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 endif()
 
-if(ENABLE_APREPRO_LIB AND SEACASAprepro_FOUND)
+if(ENABLE_APREPRO_LIB AND SEACASAprepro_lib_FOUND)
   list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_APREPRO_LIB)
 endif()
 
@@ -930,15 +930,15 @@ set(GOMA_TPL_INCLUDES
     ${Sparse_INCLUDES}
     ${SEACASExodus_INCLUDE_DIRS}
     ${SEACASExodus_TPL_INCLUDE_DIRS}
-    ${SEACASAprepro_INCLUDE_DIRS}
-    ${SEACASAprepro_TPL_INCLUDE_DIRS}
+    ${SEACASAprepro_lib_INCLUDE_DIRS}
+    ${SEACASAprepro_lib_TPL_INCLUDE_DIRS}
     ${Trilinos_INCLUDE_DIRS}
     ${Trilinos_TPL_INCLUDE_DIRS}
     ${MPI_C_INCLUDE_PATH})
 
 set(GOMA_TPL_LIBRARY_DIRS
     ${SEACASExodus_LIBRARY_DIRS} ${SEACASExodus_TPL_LIBRARY_DIRS}
-    ${SEACASAprepro_LIBRARY_DIRS} ${SEACASAprepro_TPL_LIBRARY_DIRS}
+    ${SEACASAprepro_lib_LIBRARY_DIRS} ${SEACASAprepro_lib_TPL_LIBRARY_DIRS}
     ${Trilinos_LIBRARY_DIRS} ${Trilinos_TPL_LIBRARY_DIRS})
 if(ENABLE_PETSC AND PETSC_FOUND)
   set(GOMA_TPL_LIBRARY_DIRS ${GOMA_TPL_LIBRARY_DIRS}
@@ -948,8 +948,8 @@ endif()
 set(GOMA_TPL_LIBRARIES
     ${SEACASExodus_LIBRARIES}
     ${SEACASExodus_TPL_LIBRARIES}
-    ${SEACASAprepro_LIBRARIES}
-    ${SEACASAprepro_TPL_LIBRARIES}
+    ${SEACASAprepro_lib_LIBRARIES}
+    ${SEACASAprepro_lib_TPL_LIBRARIES}
     ${GOMA_TPL_LIBRARIES}
     ${Trilinos_LIBRARIES}
     ${Trilinos_TPL_LIBRARIES}
