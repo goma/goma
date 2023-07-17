@@ -17,6 +17,7 @@
  */
 
 /* Standard include files */
+#include "load_field_variables.h"
 #include <complex.h>
 #undef I
 #include <math.h>
@@ -32,6 +33,7 @@
 #include "ac_stability.h"
 #include "ac_stability_util.h"
 #include "bc_colloc.h"
+#include "density.h"
 #include "dpi.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
@@ -47,8 +49,10 @@
 #include "mm_fill_aux.h"
 #include "mm_fill_common.h"
 #include "mm_fill_em.h"
+#include "mm_fill_energy.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_momentum.h"
 #include "mm_fill_porous.h"
 #include "mm_fill_ptrs.h"
 #include "mm_fill_rs.h"
@@ -124,8 +128,8 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                      const dbl time_value,   /* current time */
                      const int print_flag)   /*  flag for printing results,1=print*/
 {
-  int j;    /* local index loop counter                 */
-  int i, r; /* Index for the local node number - row    */
+  int j; /* local index loop counter                 */
+  int i; /* Index for the local node number - row    */
   int ip = 0, a, b, c, p, w = -1;
   int mn;
   int var;
@@ -740,67 +744,12 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
              */
             memset(ves, 0, sizeof(dbl) * DIM * DIM);
             if (pd->gv[POLYMER_STRESS11]) {
-              dbl log_c[DIM][DIM];
-              dbl exp_s[DIM][DIM];
-              dbl R1[DIM][DIM];
-              dbl eig_values[DIM];
-              dbl mup = 0.;
-              dbl lambda = 0.;
-              if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) {
-                for (ve_mode = 0; ve_mode < vn->modes; ve_mode++) {
-                  for (p = 0; p < WIM; p++) {
-                    for (r = 0; r < WIM; r++) {
-                      log_c[p][r] = fv->S[ve_mode][p][r];
-                    }
-                  }
-#ifdef ANALEIG_PLEASE
-                  analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
-#else
-                  compute_exp_s(log_c, exp_s, eig_values, R1);
-#endif
-                  mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
-                  if (ve[ve_mode]->time_constModel == CONSTANT) {
-                    lambda = ve[ve_mode]->time_const;
-                  }
-                  for (a = 0; a < WIM; a++) {
-                    for (b = 0; b < WIM; b++) {
-                      ves[a][b] += mup / lambda * (exp_s[a][b] - (double)delta(a, b));
-                    }
-                  }
-                }
-              } else if (vn->evssModel == SQRT_CONF) {
-                for (ve_mode = 0; ve_mode < vn->modes; ve_mode++) {
-                  dbl bdotb[DIM][DIM];
-                  dbl b_tensor[DIM][DIM];
-                  for (int ii = 0; ii < VIM; ii++) {
-                    for (int jj = 0; jj < VIM; jj++) {
-                      if (ii <= jj) {
-                        b_tensor[ii][jj] = fv->S[ve_mode][ii][jj];
-                        b_tensor[jj][ii] = b_tensor[ii][jj];
-                      }
-                    }
-                  }
-
-                  tensor_dot(b_tensor, b_tensor, bdotb, VIM);
-                  mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
-                  if (ve[ve_mode]->time_constModel == CONSTANT) {
-                    lambda = ve[ve_mode]->time_const;
-                  }
-                  for (a = 0; a < WIM; a++) {
-                    for (b = 0; b < WIM; b++) {
-                      ves[a][b] += mup / lambda * (bdotb[a][b] - (double)delta(a, b));
-                    }
-                  }
-                }
-              } else {
-                for (a = 0; a < WIM; a++) {
-                  for (b = 0; b < WIM; b++) {
-                    for (ve_mode = 0; ve_mode < vn->modes; ve_mode++) {
-                      ves[a][b] += fv->S[ve_mode][a][b];
-                    }
-                  }
+              for (a = 0; a < WIM; a++) {
+                for (b = 0; b < WIM; b++) {
+                  gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
                 }
               }
+              ve_polymer_stress(gamma, ves, NULL);
             } // if pd->gv[POLYMER_STRESS11]
 
             /*

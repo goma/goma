@@ -24,6 +24,7 @@
 
 #include "mm_fill_rs.h"
 
+#include "density.h"
 #include "el_elm.h"
 #include "exo_struct.h"
 #include "mm_as.h"

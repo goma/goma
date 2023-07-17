@@ -33,6 +33,7 @@
 
 #include "el_elm.h"
 #include "mm_as_structs.h"
+#include "mm_fill_energy.h"
 #include "mm_fill_population.h"
 #include "mm_fill_solid.h"
 #include "rf_bc_const.h"

@@ -22,6 +22,7 @@
 
 #include "mm_fill_potential.h"
 
+#include "density.h"
 #include "el_elm.h"
 #include "mm_as.h"
 #include "mm_as_const.h"

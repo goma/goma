@@ -1,3 +1,10 @@
+## Changes in version 7.5.0
+
+- Addition of Rolie-Poly Viscoelastic Model [goma#433](https://github.com/goma/goma/pull/433)
+- Spalart Allmaras turbulence model [goma#432](https://github.com/goma/goma/pull/432)
+- Various cleanup [goma#431](https://github.com/goma/goma/pull/431)
+  [goma#430](https://github.com/goma/goma/pull/430)
+
 ## Changes in version 7.4.5
 
 - Bugfix for CA conditions [goma#429](https://github.com/goma/goma/pull/429)

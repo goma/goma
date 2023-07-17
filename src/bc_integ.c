@@ -21,6 +21,7 @@
 
 /* Standard include files */
 
+#include "load_field_variables.h"
 #include <complex.h>
 #undef I
 #include <math.h>
