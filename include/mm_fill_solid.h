@@ -250,7 +250,9 @@ EXTERN int load_elastic_properties /* mm_fill_solid.c                        */
      double[MAX_VARIABLE_TYPES + MAX_CONC], /* d_thermexp_dx             */
      double[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC], /* d_speciesexp_dx   */
      double[MAX_VARIABLE_TYPES + MAX_CONC],           /* d_viscos_dx               */
-     double[MAX_VARIABLE_TYPES + MAX_CONC]);          /* d_dilviscos_dx            */
+     double[MAX_VARIABLE_TYPES + MAX_CONC],          /* d_dilviscos_dx            */
+     double *,                                        /* ortho_thermexp            */
+     double[MAX_VARIABLE_TYPES + MAX_CONC]); /* d_ortho_thermexp_dx             */
 
 EXTERN int load_plastic_properties /* mm_fill_solid.c                        */
     (double[MAX_CONC][MDE],        /* d_plastic_mu_dc                           */

@@ -15215,6 +15215,7 @@ void qrad_surf(double func[DIM],
   int j_id;
   int var;
   double phi_j;
+  double T_offset = 273.15;  /*  Kelvin-to-Celsius Conversion */
 
   /***************************** EXECUTION BEGINS *******************************/
 
@@ -15229,13 +15230,14 @@ void qrad_surf(double func[DIM],
     for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
       phi_j = bf[var]->phi[j_id];
       d_func[0][var][j_id] -= heat_tran_coeff * phi_j;
-      d_func[0][var][j_id] -= 4. * epsilon * sigma * pow(fv->T, 3.0) * phi_j;
+      d_func[0][var][j_id] -= 4. * epsilon * sigma * pow(fv->T + T_offset, 3.0) * phi_j;
     }
   }
 
   /* Calculate the residual contribution					     */
 
-  *func += heat_tran_coeff * (T_c - fv->T) + epsilon * sigma * (pow(T_c, 4.0) - pow(fv->T, 4.0));
+  *func += heat_tran_coeff * (T_c - fv->T) +
+           epsilon * sigma * (pow(T_c + T_offset, 4.0) - pow(fv->T + T_offset, 4.0));
 
   return;
 } /* END of routine qrad_surf                                                */

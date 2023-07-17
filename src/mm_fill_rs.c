@@ -838,9 +838,10 @@ int solid_stress_tensor(dbl TT[DIM][DIM],
   int a = 0, b, j, p, q, dim, var, w, v, dofs, err;
   int SPECIES = MAX_VARIABLE_TYPES;
 
-  dbl thermexp = 0.;
+  dbl thermexp = 0., ortho_thermexp = 0;
   dbl speciesexp[MAX_CONC];
   dbl d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
+  dbl d_ortho_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
   dbl d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
   dbl viscos = 0., dil_viscos = 0;
   dbl d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
@@ -859,6 +860,7 @@ int solid_stress_tensor(dbl TT[DIM][DIM],
   memset(d_mu_drs, 0, sizeof(double) * DIM * MDE);
   memset(d_lambda_drs, 0, sizeof(double) * DIM * MDE);
   memset(d_thermexp_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
+  memset(d_ortho_thermexp_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
   memset(d_speciesexp_dx, 0, sizeof(double) * MAX_CONC * (MAX_VARIABLE_TYPES + MAX_CONC));
   memset(d_viscos_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
   memset(d_dilviscos_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
@@ -866,7 +868,7 @@ int solid_stress_tensor(dbl TT[DIM][DIM],
 
   err = load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
                                 d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
-                                d_dilviscos_dx);
+                                d_dilviscos_dx, &ortho_thermexp, d_ortho_thermexp_dx);
   GOMA_EH(err, " Problem in loading up real-solid elastic constants");
 
   for (p = 0; p < dim; p++) {

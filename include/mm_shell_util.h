@@ -23,6 +23,8 @@
 #include "exo_struct.h"
 #include "rf_fem_const.h"
 
+struct Generalized_Newtonian;
+
 extern int **elem_friends;
 extern int *num_elem_friends;
 extern int num_shell_blocks;
@@ -181,4 +183,59 @@ extern int lub_viscosity_integrate(const double strs,
                                    double *srate,
                                    double *pre_P,
                                    double *mu_star);
+
+extern double lub_viscos_fcn(const struct Generalized_Newtonian *gn,
+                             const double gammadot,
+                             double *visd);
+
+extern double lub2D_crsrate(const struct Generalized_Newtonian *gn_local,
+                            const double rate,
+                            const double strs,
+                            const double tolerance);
+
+extern int lub2D_viscint_2D(const struct Generalized_Newtonian *gn_local,
+                            const double rate0,
+                            const double rate1,
+                            const double Kconst,
+                            double *xint1,
+                            double *xint2,
+                            double *xint1dK,
+                            double *xint2dK,
+                            const double tolerance);
+
+extern double lub2D_flowint_2D(const struct Generalized_Newtonian *gn_loc,
+                               const double rate0,
+                               const double rate1,
+                               const double Kconst,
+                               const double tolerance);
+
+extern int lub2D_numjac(const double h,
+                        const double pgrad,
+                        const double rate0,
+                        const double rate1,
+                        const double Kconst,
+                        const double epstol,
+                        const double ev[DIM],
+                        const double fv[DIM],
+                        const double veloU[DIM],
+                        const double veloL[DIM],
+                        struct Generalized_Newtonian *gn_loc,
+                        double xj[3][3]);
+
+extern int lub2D_flow2D(struct Generalized_Newtonian *gn_loc,
+                        const double gradp[DIM],
+                        const double ev[DIM],
+                        const double dev_dpg[DIM][DIM],
+                        double qfl[DIM],
+                        double dqfl_dp[DIM][DIM],
+                        double dqfl_depg[DIM][DIM],
+                        double dqfl_dh[DIM],
+                        const double h,
+                        double *wrate,
+                        const double veloL[DIM],
+                        const double veloU[DIM],
+                        int iguess,
+                        double *wstrs,
+                        double relax_rate);
+
 #endif /* GOMA_MM_FILL_SHELL_H */

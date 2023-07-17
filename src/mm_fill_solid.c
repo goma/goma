@@ -694,7 +694,8 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
 
       /* PLANE STRAIN CASES */
       if (cr->MeshFluxModel == NONLINEAR || cr->MeshFluxModel == INCOMP_PSTRAIN ||
-          cr->MeshFluxModel == HOOKEAN_PSTRAIN || cr->MeshFluxModel == KELVIN_VOIGT) {
+          cr->MeshFluxModel == HOOKEAN_PSTRAIN || cr->MeshFluxModel == KELVIN_VOIGT ||
+          cr->MeshFluxModel == ZENER_SLS) {
         fv->volume_change = det2d;
         fv_old->volume_change = det2d_old;
         fv->volume_strain = 3. * (pow(det2d, 1. / 3.) - 1.);
@@ -869,7 +870,8 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
   /*******************************************************************************/
 
   if (cr->MeshFluxModel == LINEAR || cr->MeshFluxModel == NONLINEAR ||
-      cr->MeshFluxModel == HOOKEAN_PSTRAIN || cr->MeshFluxModel == KELVIN_VOIGT) {
+      cr->MeshFluxModel == HOOKEAN_PSTRAIN || cr->MeshFluxModel == KELVIN_VOIGT ||
+      cr->MeshFluxModel == ZENER_SLS) {
 #ifdef DO_NO_UNROLL
     for (p = 0; p < VIM; p++) {
       for (q = 0; q < VIM; q++) {
@@ -1391,7 +1393,8 @@ void force_n_dot_f_bc(double func[DIM],
             TT[2][2] = (1. - fv->volume_change) * elast_modulus;
           } else {
             if (cr->MeshFluxModel == NONLINEAR || cr->MeshFluxModel == KELVIN_VOIGT ||
-                cr->MeshFluxModel == HOOKEAN_PSTRAIN || cr->MeshFluxModel == INCOMP_PSTRAIN)
+                cr->MeshFluxModel == ZENER_SLS || cr->MeshFluxModel == HOOKEAN_PSTRAIN ||
+                cr->MeshFluxModel == INCOMP_PSTRAIN)
               TT[2][2] = (1. - pow(fv->volume_change, 2. / 3.)) * elast_modulus - fv->P;
             /*              if (cr->MeshFluxModel == INCOMP_PSTRESS) */
             else
@@ -1446,7 +1449,8 @@ void force_n_dot_f_bc(double func[DIM],
       if (dim == 2) {
         elast_modulus = elc_rs->lame_mu;
         if (cr->RealSolidFluxModel == NONLINEAR || cr->RealSolidFluxModel == KELVIN_VOIGT ||
-            cr->RealSolidFluxModel == HOOKEAN_PSTRAIN || cr->RealSolidFluxModel == INCOMP_PSTRAIN)
+            cr->RealSolidFluxModel == ZENER_SLS || cr->RealSolidFluxModel == HOOKEAN_PSTRAIN ||
+            cr->RealSolidFluxModel == INCOMP_PSTRAIN)
           TT[2][2] = (1. - pow(fv->volume_change, 2. / 3.)) * elast_modulus - fv->P;
         /*              if (cr->MeshFluxModel == INCOMP_PSTRESS) */
         else
@@ -3095,9 +3099,10 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
   int SPECIES = MAX_VARIABLE_TYPES;
   dbl p_gas_star = 0.0;
 
-  dbl thermexp = 0, delta_thermexp = 0, Tref = elc->solid_reference_temp;
+  dbl thermexp = 0, ortho_thermexp = 0;
   dbl speciesexp[MAX_CONC];
   dbl d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
+  dbl d_ortho_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
   dbl d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
   dbl viscos = 0, dil_viscos = 0;
   dbl d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
@@ -3110,6 +3115,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
   memset(d_mu_dx, 0, sizeof(double) * DIM * MDE);
   memset(d_lambda_dx, 0, sizeof(double) * DIM * MDE);
   memset(d_thermexp_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
+  memset(d_ortho_thermexp_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
   memset(d_speciesexp_dx, 0, sizeof(double) * MAX_CONC * (MAX_VARIABLE_TYPES + MAX_CONC));
   memset(d_viscos_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
   memset(d_dilviscos_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
@@ -3125,19 +3131,15 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 
   err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
                                 d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
-                                d_dilviscos_dx);
+                                d_dilviscos_dx, &ortho_thermexp, d_ortho_thermexp_dx);
   GOMA_EH(err, " Problem in loading up elastic constants");
-  if (elc->thermal_expansion_model == THERMAL_HEAT) {
-    Tref = elc->u_thermal_expansion[4];
-  }
+
   if (elc->thermal_expansion_model == ORTHOTROPIC) {
     if (efv->Num_external_field >= dim) {
       for (p = 0; p < dim; p++) {
         orient[p] = fv->external_field[p];
       }
     }
-    delta_thermexp = elc->u_thermal_expansion[5];
-    Tref = elc->u_thermal_expansion[4];
   }
 
   /* Here we will simple use our cadre of Elastic models if no Viscoplastic
@@ -3151,7 +3153,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
       }
     }
 
-    if (TimeIntegration != STEADY && cr->MeshFluxModel == KELVIN_VOIGT) {
+    if (TimeIntegration != STEADY &&
+        (cr->MeshFluxModel == KELVIN_VOIGT || cr->MeshFluxModel == ZENER_SLS)) {
       for (p = 0; p < VIM; p++) {
         for (q = 0; q < VIM; q++) {
           TT[p][q] +=
@@ -3177,24 +3180,19 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
     /*  add thermo-elasticity  */
     if (pd->e[pg->imtrx][R_ENERGY]) {
       if (elc->thermal_expansion_model == CONSTANT ||
-          elc->thermal_expansion_model == THERMAL_HEAT || elc->thermal_expansion_model == USER) {
+          elc->thermal_expansion_model == THERMAL_HEAT || elc->thermal_expansion_model == USER ||
+          elc->thermal_expansion_model == IDEAL_GAS) {
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
-            TT[p][q] -= (2. * mu + 3. * lambda) * thermexp * (fv->T - Tref) * delta(p, q);
+            TT[p][q] -= (2. * mu + 3. * lambda) * thermexp * delta(p, q);
           }
         }
       } else if (elc->thermal_expansion_model == ORTHOTROPIC) {
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
-            TT[p][q] -= (2. * mu + 3. * lambda) *
-                        (thermexp * delta(p, q) + delta_thermexp * orient[p] * orient[q]) *
-                        (fv->T - Tref);
-          }
-        }
-      } else if (elc->thermal_expansion_model == IDEAL_GAS) {
-        for (p = 0; p < VIM; p++) {
-          for (q = 0; q < VIM; q++) {
-            TT[p][q] -= (2. * mu + 3. * lambda) / (thermexp + fv->T) * (fv->T - Tref) * delta(p, q);
+            TT[p][q] -=
+                (2. * mu + 3. * lambda) * (thermexp * (delta(p, q) - orient[p] * orient[q]) +
+                                           ortho_thermexp * orient[p] * orient[q]);
           }
         }
       } else {
@@ -3230,7 +3228,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                 dTT_dx[p][q][b][j] += d_lambda_dx[b][j] * fv->volume_strain * delta(p, q) +
                                       2. * d_mu_dx[b][j] * fv->strain[p][q];
 
-                if (TimeIntegration != STEADY && cr->MeshFluxModel == KELVIN_VOIGT) {
+                if (TimeIntegration != STEADY &&
+                    (cr->MeshFluxModel == KELVIN_VOIGT || cr->MeshFluxModel == ZENER_SLS)) {
                   dTT_dx[p][q][b][j] +=
                       dil_viscos * fv_dot->d_volume_strain_dx[b][j] * delta(p, q) +
                       2. * viscos * fv_dot->d_strain_dx[p][q][b][j];
@@ -3243,18 +3242,21 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                   if (elc->thermal_expansion_model == CONSTANT ||
                       elc->thermal_expansion_model == THERMAL_HEAT ||
                       elc->thermal_expansion_model == IDEAL_GAS) {
-                    dTT_dx[p][q][b][j] -= (2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) * thermexp *
-                                          (fv->T - Tref) * delta(p, q);
+                    dTT_dx[p][q][b][j] -=
+                        (2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) * thermexp * delta(p, q);
                   } else if (elc->thermal_expansion_model == ORTHOTROPIC) {
                     dTT_dx[p][q][b][j] -=
-                        (2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) *
-                        (thermexp * delta(p, q) + delta_thermexp * orient[p] * orient[q]) *
-                        (fv->T - Tref);
+                        ((2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) *
+                             (thermexp * (delta(p, q) - orient[p] * orient[q]) +
+                              ortho_thermexp * orient[p] * orient[q]) +
+                         (2. * mu + 3. * lambda) * bf[v]->phi[j] *
+                             (d_thermexp_dx[v] * (delta(p, q) - orient[p] * orient[q]) +
+                              d_ortho_thermexp_dx[v] * orient[p] * orient[q]));
                   } else if (elc->thermal_expansion_model == USER) {
                     dTT_dx[p][q][b][j] -=
                         ((2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) * thermexp +
                          (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j]) *
-                        (fv->T - Tref) * delta(p, q);
+                        delta(p, q);
                   }
                 }
                 if (pd->e[pg->imtrx][R_MASS]) {
@@ -3284,7 +3286,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                   (elc->d_lame_lambda[TEMPERATURE] * fv->volume_strain * delta(p, q)) *
                   bf[v]->phi[j];
             }
-            if (TimeIntegration != STEADY && cr->MeshFluxModel == KELVIN_VOIGT) {
+            if (TimeIntegration != STEADY &&
+                (cr->MeshFluxModel == KELVIN_VOIGT || cr->MeshFluxModel == ZENER_SLS)) {
               for (j = 0; j < dofs; j++) {
                 dTT_dT[p][q][j] +=
                     d_dilviscos_dx[v] * bf[v]->phi[j] * fv_dot->volume_strain * delta(p, q) +
@@ -3294,27 +3297,31 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 
             if (elc->thermal_expansion_model == CONSTANT) {
               for (j = 0; j < dofs; j++) {
-                dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) * thermexp * bf[v]->phi[j] * delta(p, q);
-              }
-            } else if (elc->thermal_expansion_model == IDEAL_GAS) {
-              for (j = 0; j < dofs; j++) {
-                dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) *
-                                   (thermexp + elc->solid_reference_temp) /
-                                   SQUARE(fv->T + thermexp) * bf[v]->phi[j] * delta(p, q);
+                dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j] * delta(p, q);
+                dTT_dT[p][q][j] -=
+                    (2. * elc->d_lame_mu[TEMPERATURE] + 3. * elc->d_lame_lambda[TEMPERATURE]) *
+                    thermexp * bf[v]->phi[j] * delta(p, q);
               }
             } else if (elc->thermal_expansion_model == THERMAL_HEAT ||
-                       elc->thermal_expansion_model == USER) {
+                       elc->thermal_expansion_model == USER ||
+                       elc->thermal_expansion_model == IDEAL_GAS) {
               for (j = 0; j < dofs; j++) {
-                dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) *
-                                   (thermexp + (fv->T - Tref) * d_thermexp_dx[TEMPERATURE]) *
+                dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) * d_thermexp_dx[v] *
                                    bf[v]->phi[j] * delta(p, q);
+                dTT_dT[p][q][j] -=
+                    (2. * elc->d_lame_mu[v] + 3. * elc->d_lame_lambda[v]) *
+                    thermexp * bf[v]->phi[j] * delta(p, q);
               }
             } else if (elc->thermal_expansion_model == ORTHOTROPIC) {
               for (j = 0; j < dofs; j++) {
                 dTT_dT[p][q][j] -=
                     (2. * mu + 3. * lambda) *
-                    ((thermexp + (fv->T - Tref) * d_thermexp_dx[TEMPERATURE]) * delta(p, q) +
-                     delta_thermexp * orient[p] * orient[q]) *
+                    (d_thermexp_dx[v] * (delta(p, q) - orient[p] * orient[q]) +
+                     d_ortho_thermexp_dx[v] * orient[p] * orient[q]) * bf[v]->phi[j];
+                dTT_dT[p][q][j] -=
+                    (2. * elc->d_lame_mu[v] + 3. * elc->d_lame_lambda[v]) *
+                    (thermexp * (delta(p, q) - orient[p] * orient[q]) +
+                     ortho_thermexp * orient[p] * orient[q]) *
                     bf[v]->phi[j];
               }
             }
@@ -3720,9 +3727,10 @@ int get_evp_stress_tensor(double TT[DIM][DIM],
   double d_plastic_mu_dc[MAX_CONC][MDE];
   double d_yield_dc[MAX_CONC][MDE];
   int a, b, i, j = -1, p, q, m, n, dim, v, v1, var, dofs, dofs1, err, F_vp_flag;
-  double thermexp = 0;
+  double thermexp = 0, ortho_thermexp = 0;
   double speciesexp[MAX_CONC];
   double d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
+  double d_ortho_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
   double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
   double viscos = 0, dil_viscos = 0;
   double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
@@ -3848,6 +3856,7 @@ int get_evp_stress_tensor(double TT[DIM][DIM],
   memset(dF_vp_dx, 0, sizeof(double) * DIM * DIM * DIM * MDE);
   memset(dF_vp_dc, 0, sizeof(double) * DIM * DIM * MAX_CONC * MDE);
   memset(d_thermexp_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
+  memset(d_ortho_thermexp_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
   memset(d_speciesexp_dx, 0, sizeof(double) * MAX_CONC * (MAX_VARIABLE_TYPES + MAX_CONC));
   memset(d_viscos_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
   memset(d_dilviscos_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
@@ -3860,7 +3869,7 @@ int get_evp_stress_tensor(double TT[DIM][DIM],
 
   err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
                                 d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
-                                d_dilviscos_dx);
+                                d_dilviscos_dx, &ortho_thermexp, d_ortho_thermexp_dx);
   GOMA_EH(err, " Problem in loading up elastic constants");
 
   /* will not need plastic_mu nor yield from the routine;
@@ -4614,7 +4623,9 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
                             double d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC],
                             double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC],
                             double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC],
-                            double d_dilviscos_dx[MAX_VARIABLE_TYPES + MAX_CONC])
+                            double d_dilviscos_dx[MAX_VARIABLE_TYPES + MAX_CONC],
+                            double *ortho_thermexp,
+                            double d_ortho_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC])
 
 /*
  *  This function calculates the the elastic properties
@@ -4626,6 +4637,7 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
  *  matrix_fill
  *
  *  Created by P. R. Schunk, 2/21/99
+ *  adding temperature dependent & orthotropic thermal expansion - RBS, 6/15/2023
  */
 {
   /*local variables */
@@ -4644,7 +4656,7 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   dim = ei[pg->imtrx]->ielem_dim;
 
   if (elc_ptr->lame_mu_model == USER) {
-    err = usr_lame_mu(elc_ptr, elc_ptr->u_mu);
+    err = usr_lame_mu(elc_ptr, elc_ptr->u_mu, elc_ptr->len_u_mu);
     GOMA_EH(err, "bad user mu model");
     *mu = elc_ptr->lame_mu;
     /* put displacement derivatives in d_mu_dx */
@@ -4955,7 +4967,7 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
     } else {
       /* This is where we should come for non-FAUX_PLASTIC lame_mu tables */
       apply_table_mp(&elc_ptr->lame_mu, table_local);
-      *mu = elc_ptr->lame_mu * table_local->yscale;
+      *mu = elc_ptr->lame_mu *= table_local->yscale;
 
       for (i = 0; i < table_local->columns - 1; i++) {
         var = table_local->t_index[i];
@@ -4978,7 +4990,7 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   }
 
   /*If needed, hit lame_mu with temperature shift */
-  if (elc_ptr->lameTempShiftModel == CONSTANT) {
+  if (elc_ptr->lameTempShiftModel == CONSTANT && elc_ptr->lame_mu_model != USER && elc_ptr->lame_mu_model != TABLE) {
     *mu *= elc_ptr->lame_TempShift;
     elc_ptr->lame_mu *= elc_ptr->lame_TempShift;
     elc_ptr->d_lame_mu[TEMPERATURE] = 0.;
@@ -5077,7 +5089,7 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
     */
     dbl nu = elc_ptr->u_lambda[0];
 
-    *lambda = elc_ptr->lame_lambda = 2 * elc_ptr->lame_mu * nu / (1.0 - 2 * nu);
+    *lambda = elc_ptr->lame_lambda = 2 * (*mu) * nu / (1.0 - 2 * nu);
 
     for (i = 0; i < MAX_VARIABLE_TYPES + MAX_CONC; i++) {
       elc_ptr->d_lame_lambda[i] = 2 * elc_ptr->d_lame_mu[i] * nu / (1.0 - 2 * nu);
@@ -5108,42 +5120,83 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   }
 
   /*  thermal expansion	*/
+  double Tref = elc_ptr->solid_reference_temp, tmp;
+  double exp_arg = 0., exp_therm = 1., d_arg_dT = 0.;
   if (elc_ptr->thermal_expansion_model == CONSTANT) {
-    *thermexp = elc_ptr->thermal_expansion;
-  } else if (elc_ptr->thermal_expansion_model == THERMAL_HEAT ||
-             elc_ptr->thermal_expansion_model == ORTHOTROPIC) {
-    double Tref, tmp;
+/*    *thermexp = elc_ptr->thermal_expansion;  */
+    exp_arg = elc_ptr->thermal_expansion * (fv->T - Tref);
+    d_arg_dT = elc_ptr->thermal_expansion;
+
+  } else if (elc_ptr->thermal_expansion_model == THERMAL_HEAT) {
     Tref = elc_ptr->u_thermal_expansion[4];
     tmp = fv->T - Tref;
-    *thermexp =
-        elc_ptr->u_thermal_expansion[0] +
-        tmp * (elc_ptr->u_thermal_expansion[1] +
-               tmp * (elc_ptr->u_thermal_expansion[2] + tmp * elc_ptr->u_thermal_expansion[3]));
-    d_thermexp_dx[TEMPERATURE] =
-        (elc_ptr->u_thermal_expansion[1] +
-         tmp * (2. * elc_ptr->u_thermal_expansion[2] + tmp * 3. * elc->u_thermal_expansion[3]));
+    exp_arg = tmp * (elc_ptr->u_thermal_expansion[0] +
+                     tmp * (0.5 * elc_ptr->u_thermal_expansion[1] +
+                            tmp * (elc_ptr->u_thermal_expansion[2] / 3. +
+                                   tmp * 0.25 * elc_ptr->u_thermal_expansion[3])));
+    d_arg_dT =
+        (elc_ptr->u_thermal_expansion[0] +
+         tmp * (elc_ptr->u_thermal_expansion[1] +
+             tmp * (elc_ptr->u_thermal_expansion[2] + tmp * elc_ptr->u_thermal_expansion[3])));
+
   } else if (elc_ptr->thermal_expansion_model == SHRINKAGE) {
-    *thermexp = elc_ptr->u_thermal_expansion[0];
+    exp_arg = elc_ptr->u_thermal_expansion[0] * (fv->T - Tref);
+    d_arg_dT = elc_ptr->u_thermal_expansion[0];
+
   } else if (elc_ptr->thermal_expansion_model == IDEAL_GAS) {
-    *thermexp = elc_ptr->u_thermal_expansion[0];
+    exp_arg = log((elc_ptr->u_thermal_expansion[0] + fv->T)/(elc_ptr->u_thermal_expansion[0] + Tref));
+    d_arg_dT = 1./(elc_ptr->u_thermal_expansion[0] + fv->T);
+
   } else if (elc_ptr->thermal_expansion_model == USER) {
     if (pd->MeshMotion == TOTAL_ALE)
       GOMA_EH(GOMA_ERROR, "No TALE Real-solid jacobian entries for USER");
-    err = usr_expansion(elc_ptr->u_thermal_expansion, &value, d_thermexp_dx,
-                        elc_ptr->len_u_thermal_expansion);
-    *thermexp = value;
+    err = usr_expansion(elc_ptr->u_thermal_expansion, &exp_arg, d_thermexp_dx,
+                        elc_ptr->len_u_thermal_expansion, elc_ptr->solid_reference_temp);
+    d_arg_dT = d_thermexp_dx[TEMPERATURE];
+
+  } else if (elc_ptr->thermal_expansion_model == ORTHOTROPIC) {
+    double ortho_exp_arg;
+    if (pd->MeshMotion == TOTAL_ALE)
+      GOMA_EH(GOMA_ERROR, "No TALE Real-solid jacobian entries for USER");
+    err = usr_expansion(elc_ptr->u_thermal_expansion, &exp_arg, d_thermexp_dx,
+                        elc_ptr->len_u_thermal_expansion, elc_ptr->solid_reference_temp);
+    d_arg_dT = d_thermexp_dx[TEMPERATURE];
+    err = usr_expansion(&elc_ptr->u_thermal_expansion[6], &ortho_exp_arg, d_ortho_thermexp_dx,
+                        elc_ptr->len_u_thermal_expansion, elc_ptr->solid_reference_temp);
+    exp_therm = exp(ortho_exp_arg);
+    if( exp_arg > 0.1) {
+      *ortho_thermexp = exp_therm -1.;
+    } else {
+      *ortho_thermexp =
+          ortho_exp_arg *
+          (1. + ortho_exp_arg * (0.5 + ortho_exp_arg * (1. / 6. + ortho_exp_arg / 24.)));
+    }
+    d_ortho_thermexp_dx[TEMPERATURE] *= exp_therm;
   } else if (elc_ptr->thermal_expansion_model == TABLE) {
+/*  Currently the table would have to be for the exponential
+    argument, i.e. integral(alpha_V*dT) from Tref to T  */
     struct Data_Table *table_local;
     table_local = MP_Tables[elc_ptr->thermal_expansion_tableid];
     apply_table_mp(&elc_ptr->thermal_expansion, table_local);
-    *thermexp = elc_ptr->thermal_expansion * table_local->yscale;
+    exp_arg = elc_ptr->thermal_expansion * table_local->yscale;
     for (i = 0; i < table_local->columns - 1; i++) {
       var = table_local->t_index[i];
       d_thermexp_dx[var] = table_local->slope[i] * table_local->yscale;
     }
+    d_arg_dT = d_thermexp_dx[TEMPERATURE];
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognized thermal expansion model");
   }
+  /*  Form exponential part -- i.e., dln(V) = alpha*dT  */
+  exp_therm = exp(exp_arg);
+  if( exp_arg > 0.1) {
+    *thermexp = exp_therm -1.;
+  } else {
+    *thermexp = exp_arg*(1.+exp_arg*(0.5+exp_arg*(1./6.+exp_arg/24.)));
+  }
+  d_thermexp_dx[TEMPERATURE] = d_arg_dT * exp_therm;
+/*fprintf(stderr,"ortho %g %g %g\n",*thermexp, d_thermexp_dx[TEMPERATURE], fv->T); 
+fprintf(stderr,"user %g %g %g\n",exp_arg, d_arg_dT, exp_therm-1.); */
 
   /*  species expansion	*/
   if (pd->e[pg->imtrx][R_MASS] &&
