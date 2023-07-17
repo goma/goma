@@ -26,6 +26,7 @@
 #include "az_aztec.h"
 #include "el_elm_info.h"
 #include "exo_struct.h"
+#include "load_field_variables.h"
 #include "mm_bc.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_fill.h"

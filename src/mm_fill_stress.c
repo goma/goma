@@ -34,6 +34,7 @@
 #include "el_elm_info.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "load_field_variables.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
@@ -2739,7 +2740,7 @@ int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data) {
 
   SUPG_terms supg_terms;
   if (supg != 0.0) {
-    supg_tau(&supg_terms, dim, 1e-8, pg_data, dt, true, eqn);
+    supg_tau(&supg_terms, dim, 0, pg_data, dt, true, eqn);
   }
 
   dbl dcdd_factor = 0.0;
@@ -4993,11 +4994,6 @@ void load_modal_pointers(int ve_mode, /* mode number */
   int a, b, p, q; /* indeces for dimensions */
   int j;          /* indeces for dofs */
   int var;
-  size_t siz;
-
-  siz = sizeof(double) * DIM * DIM * DIM * DIM * MDE;
-  memset(d_grad_s_dm, 0, siz);
-
   /* load up things we need in the assembly routine for each mode in turn*/
 
   /* put stress in a nice working array */
@@ -8708,6 +8704,173 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   return (status);
 }
 
+int conf_source(int mode,
+                dbl c[DIM][DIM],
+                dbl source_term[DIM][DIM],
+                dbl d_source_term_dc[DIM][DIM][DIM][DIM]) {
+  bool compute_derivatives = d_source_term_dc != NULL && af->Assemble_Jacobian;
+  switch (vn->ConstitutiveEquation) {
+  case OLDROYDB: {
+    for (int ii = 0; ii < VIM; ii++) {
+      for (int jj = 0; jj < VIM; jj++) {
+        source_term[ii][jj] = -(c[ii][jj] - delta(ii, jj));
+      }
+    }
+    if (compute_derivatives) {
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              d_source_term_dc[ii][jj][p][q] = -delta(ii, p) * delta(jj, q);
+            }
+          }
+        }
+      }
+    }
+  } break;
+  case PTT: {
+
+    dbl d_trace_dc[DIM][DIM] = {{0.0}};
+
+    dbl trace = 0;
+    for (int i = 0; i < VIM; i++) {
+      trace += c[i][i];
+    }
+
+    if (compute_derivatives) {
+      for (int p = 0; p < VIM; p++) {
+        for (int q = 0; q < VIM; q++) {
+          d_trace_dc[p][q] = 0.0;
+          for (int i = 0; i < VIM; i++) {
+            for (int j = 0; j < VIM; j++) {
+              d_trace_dc[p][q] += 2.0 * c[i][i] * (delta(p, i) * delta(q, j));
+            }
+          }
+        }
+      }
+    }
+
+    dbl Z = 1.0;
+    dbl dZ_dtrace = 0;
+
+    // PTT exponent
+    eps = ve[mode]->eps;
+
+    if (vn->ptt_type == PTT_LINEAR) {
+      Z = 1 + eps * (trace - (double)VIM);
+      dZ_dtrace = eps;
+    } else if (vn->ptt_type == PTT_EXPONENTIAL) {
+      Z = exp(eps * (trace - (double)VIM));
+      dZ_dtrace = eps * Z;
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
+    }
+
+    for (int ii = 0; ii < VIM; ii++) {
+      for (int jj = 0; jj < VIM; jj++) {
+        source_term[ii][jj] = -Z * (c[ii][jj] - delta(ii, jj));
+      }
+    }
+    if (compute_derivatives) {
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              d_source_term_dc[ii][jj][p][q] =
+                  -Z * (delta(ii, p) * delta(jj, q)) -
+                  dZ_dtrace * d_trace_dc[p][q] * (c[ii][jj] - delta(ii, jj));
+            }
+          }
+        }
+      }
+    }
+  } break;
+  case ROLIE_POLY:
+  case ROLIE_POLY_FE: {
+
+    dbl d_trace_dc[DIM][DIM] = {{0.0}};
+
+    dbl trace = 1e-16;
+    for (int i = 0; i < VIM; i++) {
+      trace += c[i][i];
+    }
+
+    dbl tau_D = ve[mode]->time_const;
+    dbl tau_R = ve[mode]->stretch_time;
+    dbl beta = ve[mode]->CCR_coefficient;
+    dbl n = ve[mode]->polymer_exponent;
+    dbl lambda_max = ve[mode]->maximum_stretch_ratio;
+
+    dbl lambda_s = sqrt(trace / 3);
+
+    dbl k = 1.0;
+    if (vn->ConstitutiveEquation == ROLIE_POLY_FE) {
+      k = ((3 - lambda_s * lambda_s / (lambda_max * lambda_max)) *
+           (1 - 1 / (lambda_max * lambda_max))) /
+          (1 -
+           lambda_s * lambda_s / (lambda_max * lambda_max) * (3 - 1 / (lambda_max * lambda_max)));
+    }
+
+    for (int ii = 0; ii < VIM; ii++) {
+      for (int jj = 0; jj < VIM; jj++) {
+        source_term[ii][jj] = -(c[ii][jj] - delta(ii, jj));
+        source_term[ii][jj] += -(2.0 * tau_D / tau_R) * k * (1 - sqrt(3 / (trace))) *
+                               (c[ii][jj] + beta * pow(trace / 3, n) * (c[ii][jj] - delta(ii, jj)));
+      }
+    }
+
+    if (compute_derivatives) {
+      for (int p = 0; p < VIM; p++) {
+        for (int q = 0; q < VIM; q++) {
+          d_trace_dc[p][q] = 0.0;
+          for (int i = 0; i < VIM; i++) {
+            d_trace_dc[p][q] += delta(i, p) * delta(i, q);
+          }
+        }
+      }
+      dbl d_k[DIM][DIM] = {{0.}};
+      if (vn->ConstitutiveEquation == ROLIE_POLY_FE) {
+        dbl d_k_dlamda_s = 4 * lambda_s * lambda_max * lambda_max * (lambda_max * lambda_max - 1) /
+                           (pow(lambda_s * lambda_s - lambda_max * lambda_max, 2.0) *
+                            (3 * lambda_max * lambda_max - 1));
+
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            d_k[p][q] = d_k_dlamda_s * d_trace_dc[p][q];
+          }
+        }
+      }
+
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              d_source_term_dc[ii][jj][p][q] = -(delta(ii, p) * delta(jj, q));
+              d_source_term_dc[ii][jj][p][q] +=
+                  -(2.0 * tau_D / tau_R) * d_k[p][q] * (1 - sqrt(3 / (trace))) *
+                      (c[ii][jj] + beta * pow(trace / 3, n) * (c[ii][jj] - delta(ii, jj))) -
+                  (2.0 * tau_D / tau_R) * k * d_trace_dc[p][q] * sqrt(3) / 2.0 *
+                      pow(1 / (trace), 3.0 / 2.0) *
+                      (c[ii][jj] + beta * pow(trace / 3, n) * (c[ii][jj] - delta(ii, jj))) -
+                  (2.0 * tau_D / tau_R) * k * (1 - sqrt(3 / (trace))) *
+                      ((delta(ii, p) * delta(jj, q)) +
+                       d_trace_dc[p][q] * (n / 3) * beta * pow(trace / 3, n - 1) *
+                           (c[ii][jj] - delta(ii, jj)) +
+                       beta * pow(trace / 3, n) * ((delta(ii, p) * delta(jj, q))));
+            }
+          }
+        }
+      }
+    }
+  } break;
+  default:
+    GOMA_EH(GOMA_ERROR, "Unknown Constitutive equation form for SQRT_CONF");
+    break;
+  }
+
+  return GOMA_SUCCESS;
+}
+
 int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                                   * explicit (tt = 1) to implicit (tt = 0) */
                          dbl dt, /* current time step size */
@@ -8813,7 +8976,6 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
 
   dbl saramitoCoeff = 1.;
 
-  dbl d_mup_dv_pj;
   dbl d_mup_dmesh_pj;
 
   /*  shift function */
@@ -8823,7 +8985,6 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
 
   /* constitutive equation parameters */
   dbl Z = 1.0; /* This is the factor appearing in front of the stress tensor in PTT */
-  dbl dZ_dtrace = 0.0;
 
   /* advective terms are precalculated */
   dbl v_dot_del_s[DIM][DIM];
@@ -9061,20 +9222,6 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
       GOMA_EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
     }
 
-    Z = 1.0;
-    dZ_dtrace = 0;
-    if (vn->ConstitutiveEquation == PTT) {
-      if (vn->ptt_type == PTT_LINEAR) {
-        Z = 1 + eps * lambda * trace / mup;
-        dZ_dtrace = eps * lambda / mup;
-      } else if (vn->ptt_type == PTT_EXPONENTIAL) {
-        Z = exp(eps * lambda * trace / mup);
-        dZ_dtrace = Z * eps * lambda / mup;
-      } else {
-        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
-      }
-    }
-
     /* get tensor dot products for future use */
 
     if (DOUBLE_NONZERO(alpha))
@@ -9093,6 +9240,9 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
      * Residuals_________________________________________________________________
      */
 
+    dbl source_term[DIM][DIM];
+    dbl d_source_term_dc[DIM][DIM][DIM][DIM];
+    conf_source(mode, s, source_term, d_source_term_dc);
     if (af->Assemble_Residual) {
       /*
        * Assemble each component "ab" of the polymer stress equation...
@@ -9123,7 +9273,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
               if (pd->TimeIntegration != STEADY) {
                 if (pd->e[pg->imtrx][eqn] & T_MASS) {
                   mass = s_dot[a][b];
-                  mass *= wt_func * at * lambda * det_J * wt;
+                  mass *= wt_func * at * det_J * wt;
                   mass *= h3;
                   mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
                 }
@@ -9139,7 +9289,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                   if (lcwt != 0.)
                     advection += lcwt * (s_dot_gt[a][b] + g_dot_s[a][b]);
 
-                  advection *= wt_func * at * lambda * det_J * wt * h3;
+                  advection *= wt_func * at * det_J * wt * h3;
                   advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                 }
               }
@@ -9157,9 +9307,8 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
               source = 0.;
               if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                 // consider whether saramitoCoeff should multiply here
-                source -= (delta(a, b) - s[a][b]);
-
-                source *= wt_func * det_J * h3 * wt;
+                source -= source_term[a][b];
+                source *= (1 / lambda) * wt_func * det_J * h3 * wt;
 
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
               }
@@ -9181,7 +9330,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
      * Jacobian terms...
      */
 
-    if (0 && af->Assemble_Jacobian) {
+    if (af->Assemble_Jacobian) {
       dbl R_source, R_advection; /* Places to put the raw residual portions
                                     instead of constantly recalcing them */
       for (a = 0; a < VIM; a++) {
@@ -9282,7 +9431,6 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                   pvar = upd->vp[pg->imtrx][var];
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
-                    d_mup_dv_pj = d_mup->v[p][j];
 
                     mass = 0.;
 
@@ -9299,8 +9447,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                           mass *= s_dot[a][b];
                         }
 
-                        mass *=
-                            pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * at * lambda * det_J * wt * h3;
+                        mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * at * det_J * wt * h3;
                       }
                     }
 
@@ -9363,7 +9510,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                         }
 
                         advection = advection_a + advection_b + advection_c;
-                        advection *= at * lambda * det_J * wt * h3;
+                        advection *= at * det_J * wt * h3;
                         advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                       }
                     }
@@ -9377,40 +9524,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                     source = 0.;
 
                     if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-                      source_c = -at * d_mup_dv_pj * (g[a][b] + gt[a][b]);
-                      if (evss_gradv) {
-                        if (pd->CoordinateSystem != CYLINDRICAL) {
-                          source_c -= at * mup *
-                                      (bf[VELOCITY1 + a]->grad_phi_e[j][p][a][b] +
-                                       bf[VELOCITY1 + b]->grad_phi_e[j][p][b][a]);
-                        } else {
-                          source_c -= at * mup *
-                                      (bf[VELOCITY1]->grad_phi_e[j][p][a][b] +
-                                       bf[VELOCITY1]->grad_phi_e[j][p][b][a]);
-                        }
-                      }
-                      source_c *= wt_func;
-
-                      source_a = 0.;
-                      if (DOUBLE_NONZERO(alpha)) {
-                        source_a = -s_dot_s[a][b] / (mup * mup);
-                        source_a *= wt_func * saramitoCoeff * alpha * lambda * d_mup_dv_pj;
-                      }
-
-                      source_b = 0.;
-                      if (supg != 0.) {
-                        source_b = supg * supg_terms.supg_tau * phi_j * bf[eqn]->grad_phi[i][p];
-
-                        for (w = 0; w < dim; w++) {
-                          source_b += supg * supg_terms.d_supg_tau_dv[p][j] * v[w] *
-                                      bf[eqn]->grad_phi[i][w];
-                        }
-
-                        source_b *= R_source;
-                      }
-
-                      source = source_a + source_b + source_c;
-                      source *= det_J * wt * h3;
+                      source = 0;
                       source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                     }
 
@@ -9646,8 +9760,8 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
 
                             advection *= phi_j * h3 * det_J;
 
-                            advection *= wt_func * wt * at * lambda *
-                                         pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                            advection *=
+                                wt_func * wt * at * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                           }
                         }
 
@@ -9666,14 +9780,6 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                          */
 
                         source = 0.;
-
-                        if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-                          source = -at * mup * phi_j *
-                                   ((double)delta(a, p) * (double)delta(b, q) +
-                                    (double)delta(b, p) * (double)delta(a, q));
-                          source *=
-                              det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-                        }
 
                         lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection + diffusion + source;
                       }
@@ -9779,7 +9885,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                           mass = (1. + 2. * tt) * phi_j / dt * (double)delta(a, p) *
                                  (double)delta(b, q);
                           mass *= h3 * det_J;
-                          mass *= wt_func * at * lambda * wt * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                          mass *= wt_func * at * wt * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
                         }
                       }
 
@@ -9801,8 +9907,8 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
 
                           advection *= h3 * det_J;
 
-                          advection *= wt_func * wt * at * lambda *
-                                       pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                          advection *=
+                              wt_func * wt * at * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                         }
                       }
 
@@ -9824,28 +9930,8 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                       source = 0.;
 
                       if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-                        source_a = Z * (double)delta(a, p) * (double)delta(b, q);
-                        if (p == q)
-                          source_a += s[a][b] * dZ_dtrace;
-                        source_a *= saramitoCoeff;
-                        // sensitivities for saramito model:
-                        if (p <= q) {
-                          source_a += d_saramito->s[p][q] * s[a][b] * Z;
-                        }
-
-                        source_b = 0.;
-                        if (DOUBLE_NONZERO(alpha)) {
-                          source_b =
-                              alpha * lambda * saramitoCoeff *
-                              (s[q][b] * (double)delta(a, p) + s[a][p] * (double)delta(b, q)) / mup;
-                          if (p <= q) {
-                            source_b +=
-                                d_saramito->s[p][q] * alpha * lambda * (s_dot_s[a][b] / mup);
-                          }
-                        }
-
-                        source = source_a + source_b;
-                        source *= phi_j * det_J * h3 * wt_func * wt *
+                        source -= d_source_term_dc[a][b][p][q];
+                        source *= (1 / lambda) * phi_j * det_J * h3 * wt_func * wt *
                                   pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                       }
 

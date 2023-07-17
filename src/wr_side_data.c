@@ -22,6 +22,7 @@
  */
 
 /* Needed to declare POSIX function drand48 */
+#include "load_field_variables.h"
 #define _XOPEN_SOURCE
 
 #include <math.h>

@@ -3099,57 +3099,6 @@ struct dilViscosity_dependence {
 };
 typedef struct dilViscosity_dependence DILVISCOSITY_DEPENDENCE_STRUCT;
 
-/* struct for d_rho */
-struct density_dependence {
-  double T[MDE];
-  double C[MAX_CONC][MDE];
-  double F[MDE];
-  double pf[MAX_PHASE_FUNC][MDE]; /* phase function */
-  double moment[MAX_MOMENTS][MDE];
-  double rho[MDE];
-};
-typedef struct density_dependence DENSITY_DEPENDENCE_STRUCT;
-
-/* struct for d_Cp */
-struct heat_capacity_dependence {
-  double v[DIM][MDE];      /* velocity dependence. */
-  double X[DIM][MDE];      /* mesh dependence. */
-  double T[MDE];           /* temperature dependence. */
-  double C[MAX_CONC][MDE]; /* conc dependence. */
-  double V[MDE];           /* voltage dependence. */
-  double F[MDE];           /* FILL dependence. */
-};
-typedef struct heat_capacity_dependence HEAT_CAPACITY_DEPENDENCE_STRUCT;
-
-/* struct for d_h */
-struct heat_source_dependence {
-  double v[DIM][MDE];                 /* velocity dependence. */
-  double X[DIM][MDE];                 /* mesh dependence. */
-  double T[MDE];                      /* temperature dependence. */
-  double C[MAX_CONC][MDE];            /* conc dependence. */
-  double V[MDE];                      /* voltage dependence. */
-  double S[MAX_MODES][DIM][DIM][MDE]; /* stress mode dependence. */
-  double F[MDE];                      /* level set field dependence */
-  double P[MDE];                      /* acoustic pressure dependence  */
-  double APR[MDE];                    /* acoustic pressure dependence  */
-  double API[MDE];                    /* acoustic pressure dependence  */
-  double INT[MDE];                    /* acoustic pressure dependence  */
-  double EM_ER[DIM][MDE];             /* time-harmonic electromagnetic dependence */
-  double EM_EI[DIM][MDE];             /* time-harmonic electromagnetic dependence */
-  double rst[MDE];                    /* residence time field dependence  */
-};
-typedef struct heat_source_dependence HEAT_SOURCE_DEPENDENCE_STRUCT;
-
-/* struct for d_k */
-struct conductivity_dependence {
-  double X[DIM][MDE];      /* mesh dependence. */
-  double T[MDE];           /* temperature dependence. */
-  double C[MAX_CONC][MDE]; /* conc dependence. */
-  double F[MDE];           /* FILL dependence. */
-  double moment[MAX_MOMENTS][MDE];
-};
-typedef struct conductivity_dependence CONDUCTIVITY_DEPENDENCE_STRUCT;
-
 /* struct for d_vconv */
 struct convection_velocity_dependence {
   double X[DIM][DIM][MDE];      /* mesh dependence. */

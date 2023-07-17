@@ -30,12 +30,14 @@ static char rcsid[] = "$Id: mm_fill_shell.c,v 5.62 2010-07-30 21:14:52 prschun E
 #include <stdlib.h>
 #include <string.h>
 #define _MM_FILL_SHELL_C
+#include "density.h"
 #include "el_elm.h"
 #include "el_geom.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
+#include "mm_fill_energy.h"
 #include "mm_fill_ptrs.h"
 #include "mm_fill_rs.h"
 #include "mm_fill_shell.h"

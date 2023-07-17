@@ -992,10 +992,8 @@ void convert_omega_h_to_goma(
                   surface_set_vec.size(), MPI_INT, MPI_COMM_WORLD);
 
     for (size_t i = 0; i < surface_set_vec.size(); i++) {
-      size_t count = 0;
       int max = 0;
       for (int j = 0; j < Num_Proc; j++) {
-        count += all_sizes[j * surface_set_vec.size()];
         max = std::max(all_sizes[j * surface_set_vec.size() + i], max);
       }
       std::vector<int> ns_global_nodes(max);

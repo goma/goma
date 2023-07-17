@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "density.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"

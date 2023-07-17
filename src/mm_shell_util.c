@@ -24,6 +24,7 @@ static char rcsid[] = "$Id: mm_shell_util.c,v 5.17 2010-07-21 16:39:27 hkmoffa E
 #define GOMA_MM_SHELL_UTIL_C
 #include "mm_shell_util.h"
 #include "az_aztec.h"
+#include "density.h"
 #include "el_elm.h"
 #include "el_geom.h"
 #include "mm_as.h"
