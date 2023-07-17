@@ -87,7 +87,7 @@ double user_mat_init(const int var,
     ht = p[DIM + 2];
     T_below = p[DIM + 3];
     T_init = init_value;
-    e_time = 0.;   /* negative elapsed time since deposition  */
+    e_time = 0.; /* negative elapsed time since deposition  */
     for (dir = 0; dir < DIM; dir++) {
       e_time += efv->ext_fld_ndl_val[dir][node] * (xpt[dir] - xpt0[dir]);
     }
@@ -97,13 +97,13 @@ double user_mat_init(const int var,
     for (nt = 0; nt < n_terms; nt++) {
       xn = 0.5 + ((double)nt);
       exp_arg = e_time * alpha * SQUARE(xn * M_PIE / ht);
-      exp_arg = fmin(exp_arg,0.0);  /* avoid big exp arguments for t < 0 */
-      distz = xpt0[2] + 0.5 * ht - xpt[2];  /* distance from top */
+      exp_arg = fmin(exp_arg, 0.0);        /* avoid big exp arguments for t < 0 */
+      distz = xpt0[2] + 0.5 * ht - xpt[2]; /* distance from top */
       sum += exp(exp_arg) * cos(M_PIE / ht * distz * xn) * pow(-1., nt) / xn;
     }
-    sum *= 2./ M_PIE;
+    sum *= 2. / M_PIE;
     value = fmin(T_below - (T_below - T_init) * sum, T_init);
-    value = fmax(value, T_below);  /* Bound to physically realistic values */
+    value = fmax(value, T_below); /* Bound to physically realistic values */
   } else if (var == TEMPERATURE && 0) {
     /* 2D Heat Equation of whole slab with T_amb on 3 sides */
     double xpt0[DIM], e_time, distv, distz, T_below, T_init, T_amb;
@@ -115,33 +115,33 @@ double user_mat_init(const int var,
     alpha = p[DIM];
     speed = p[DIM + 1];
     ht = p[DIM + 2];
-    width = p[DIM +3];
+    width = p[DIM + 3];
     T_amb = p[DIM + 4];
     T_below = p[DIM + 5];
     T_init = init_value;
 
-    e_time = 0.;   /* negative elapsed time since deposition  */
+    e_time = 0.; /* negative elapsed time since deposition  */
     for (dir = 0; dir < DIM; dir++) {
       e_time += efv->ext_fld_ndl_val[dir][node] * (xpt[dir] - xpt0[dir]);
     }
     e_time /= speed;
     /*  "y-coord" value */
     distv = -efv->ext_fld_ndl_val[1][node] * (xpt[0] - xpt0[0]) +
-            +efv->ext_fld_ndl_val[0][node] * (xpt[1] - xpt0[1]) + 0.5*width;
-    distz = xpt[2] - xpt0[2] + 0.5*ht;   /*  distance from bottom  */
+            +efv->ext_fld_ndl_val[0][node] * (xpt[1] - xpt0[1]) + 0.5 * width;
+    distz = xpt[2] - xpt0[2] + 0.5 * ht; /*  distance from bottom  */
     /* homogeneous boundary solution */
     sum = 0.;
     for (nt = 0; nt < n_terms; nt++) {
       xn = 0.5 + ((double)nt);
       for (mt = 0; mt < n_terms; mt++) {
         xm = 0.5 + ((double)mt);
-        exp_arg = e_time * 2. * alpha *SQUARE(M_PIE) * (SQUARE(xn / ht) + SQUARE(xm / width));
+        exp_arg = e_time * 2. * alpha * SQUARE(M_PIE) * (SQUARE(xn / ht) + SQUARE(xm / width));
         exp_arg = fmin(exp_arg, 0.0);
         sum += exp(exp_arg) * sin(2. * M_PIE * xn * distz / ht) *
                sin(2. * M_PIE * xm * distv / width) / (xn * xm);
       }
     }
-    sum *= 4./SQUARE(M_PIE);
+    sum *= 4. / SQUARE(M_PIE);
     /* Add heterogeneous BC on bottom, i.e. SS solution */
     sum1 = 0.;
     for (nt = 0; nt < n_terms; nt++) {
@@ -149,7 +149,7 @@ double user_mat_init(const int var,
       sum1 += sin(2. * M_PIE * xn * distv / width) * sinh(2. * M_PIE * xn * (1. - distz / ht)) /
               sinh(2. * M_PIE * xn * width / ht);
     }
-    sum1 *= 2./ M_PIE * (T_amb - T_below);
+    sum1 *= 2. / M_PIE * (T_amb - T_below);
     value = fmin(T_amb - (T_amb - T_init) * (sum + sum1), T_init);
     value = fmax(value, T_amb);
   } else if (var >= MESH_DISPLACEMENT1 && var <= MESH_DISPLACEMENT3) {
@@ -160,7 +160,7 @@ double user_mat_init(const int var,
     }
     alpha = p[DIM + 1];
     dir = var - MESH_DISPLACEMENT1;
-    if(dir == 0) {
+    if (dir == 0) {
       value = alpha * (xpt[dir] - 125.0);
     } else {
       value = alpha * xpt[dir];

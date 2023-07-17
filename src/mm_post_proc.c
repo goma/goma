@@ -1770,8 +1770,8 @@ static int calc_standard_fields(double **post_proc_vect,
     if (pd->e[pg->imtrx][R_ENERGY] && USER_POST != -1 && len_u_post_proc > 2) {
       double q_mag = 0., sign = 0.;
       double radius = u_post_proc[1], overlap = u_post_proc[2];
-      int dir = 0, alternate_off;  
-/*      int dir = 0, alternate_off = 0; */
+      int dir = 0, alternate_off;
+      /*      int dir = 0, alternate_off = 0; */
       alternate_off = (int)u_post_proc[0];
       /*alternate_off = 0; radius = 0.79375; overlap = 0.1;*/
       if (cr->HeatFluxModel == CR_HF_FOURIER_0) {
@@ -3053,7 +3053,7 @@ static int calc_standard_fields(double **post_proc_vect,
     /* Define parameters */
     double mu;
     double lambda;
-    double thermexp = 0, ortho_thermexp = 0;;
+    double thermexp = 0, ortho_thermexp = 0;
     double speciesexp[MAX_CONC];
     double viscos = 0, dil_viscos = 0;
     double d_mu_dx[DIM][MDE];
@@ -3096,7 +3096,7 @@ static int calc_standard_fields(double **post_proc_vect,
     /* Define parameters */
     double mu;
     double lambda;
-    double thermexp = 0, ortho_thermexp = 0;;
+    double thermexp = 0, ortho_thermexp = 0;
     double speciesexp[MAX_CONC];
     double viscos = 0, dil_viscos = 0;
     double d_mu_dx[DIM][MDE];
@@ -7818,7 +7818,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
       } else {
         u_post_proc = dummy;
       }
-    ECHO(echo_string, echo_file);
+      ECHO(echo_string, echo_file);
     }
   }
 

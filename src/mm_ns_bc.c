@@ -15215,7 +15215,7 @@ void qrad_surf(double func[DIM],
   int j_id;
   int var;
   double phi_j;
-  double T_offset = 273.15;  /*  Kelvin-to-Celsius Conversion */
+  double T_offset = 273.15; /*  Kelvin-to-Celsius Conversion */
 
   /***************************** EXECUTION BEGINS *******************************/
 

@@ -43,11 +43,11 @@
 #include "mm_fill_aux.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
 #include "mm_fill_stabilization.h"
 #include "mm_fill_terms.h"
 #include "mm_fill_util.h"
-#include "mm_fill_solid.h"
-#include "mm_fill_species.h"
 #include "mm_mp.h"
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
@@ -9983,9 +9983,9 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
  *
  */
 
-int assemble_stress_vesolid(const double tt,       /* parameter to vary time integration from
-                                     explicit (tt = 1) to implicit (tt = 0) */
-                            const double dt,       /* current time step size */
+int assemble_stress_vesolid(const double tt,    /* parameter to vary time integration from
+                                  explicit (tt = 1) to implicit (tt = 0) */
+                            const double dt,    /* current time step size */
                             const int ielem,    /* current element number */
                             const int ip,       /* current integration point */
                             const int ip_total) /* total gauss integration points */
@@ -10017,7 +10017,7 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
   double h3;          /* Volume element (scale factors). */
   double dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
 
-  double det_J;           /* determinant of element Jacobian */
+  double det_J; /* determinant of element Jacobian */
 
   double d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
 
@@ -10050,9 +10050,9 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
   double s_dot[DIM][DIM]; /* stress tensor from last time step */
   double grad_s[DIM][DIM][DIM];
   double d_grad_s_dmesh[DIM][DIM][DIM][DIM]
-                    [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
+                       [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
 
-  double TT[DIM][DIM]; /* Mesh stress tensor... */
+  double TT[DIM][DIM];                    /* Mesh stress tensor... */
   double dTT_dx[DIM][DIM][DIM][MDE];      /* Sensitivity of stress tensor...
                           to nodal displacements */
   double dTT_dp[DIM][DIM][MDE];           /* Sensitivity of stress tensor...
@@ -10113,7 +10113,6 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
   advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
   diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
   source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-/*fprintf(stderr,"multiply %g %g %g %g\n",mass_etm,advection_etm,diffusion_etm,source_etm);*/
   /*
    * Get the deformation gradients and tensors if needed
    */
@@ -10186,7 +10185,8 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
   (void)stress_eqn_pointer(R_s);
 
   /* Begin loop over modes */
-  if(vn->modes != 1) GOMA_EH(GOMA_ERROR,"VE solid only set up for 1 mode at present!\n");
+  if (vn->modes != 1)
+    GOMA_EH(GOMA_ERROR, "VE solid only set up for 1 mode at present!\n");
   for (mode = 0; mode < vn->modes; mode++) {
 
     load_modal_pointers(mode, tt, dt, s, s_dot, grad_s, d_grad_s_dmesh);
@@ -10203,7 +10203,6 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
       }
     }
 
-
     /*
      * Stress tensor...(Note "anti-BSL" sign convention on deviatoric stress)
      */
@@ -10211,7 +10210,7 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
     /* get time constant */
     if (elc->solid_retard_model == CONSTANT) {
       lambda = elc->solid_retardation;
-    } 
+    }
 
     /*
      * Residuals_________________________________________________________________
@@ -10244,7 +10243,8 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
 
               advection = 0.;
               if (advection_on && DOUBLE_NONZERO(lambda)) {
-                advection = (v_dot_del_s[a][b] - x_dot_del_s[a][b]) * wt_func * lambda * advection_etm;
+                advection =
+                    (v_dot_del_s[a][b] - x_dot_del_s[a][b]) * wt_func * lambda * advection_etm;
               }
 
               diffusion = 0.;
@@ -10345,7 +10345,7 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
                       for (q = 0; q < WIM; q++) {
                         advection += d_vconv->C[q][w][j] * grad_s[q][a][b];
                       }
-                    advection *= wt_func * lambda * advection_etm;
+                      advection *= wt_func * lambda * advection_etm;
                     }
 
                     diffusion = 0.;
@@ -10419,7 +10419,7 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
                 for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                   phi_j = bf[var]->phi[j];
 
-                  mass = 0.;    
+                  mass = 0.;
 
                   advection = 0.;
 
@@ -10534,7 +10534,6 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
                 }
               }
 
-
               /*
                * J_S_d
                */
@@ -10568,8 +10567,8 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
                     diffusion = 0.;
                     if (diffusion_on) {
                       diffusion = -TT[a][b] * wt_func * diffusion_etm;
-                      diffusion *= wt * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);  
-                      diffusion += -dTT_dx[a][b][p][j] * wt_func * d_area * diffusion_etm; 
+                      diffusion *= wt * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
+                      diffusion += -dTT_dx[a][b][p][j] * wt_func * d_area * diffusion_etm;
                     }
 
                     source = 0.;
@@ -10578,7 +10577,8 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
                       source *= wt * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
                     }
 
-                    lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += (mass + advection + diffusion + source);
+                    lec->J[LEC_J_INDEX(peqn, pvar, i, j)] +=
+                        (mass + advection + diffusion + source);
                   }
                 }
               }
@@ -10605,7 +10605,7 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
                       advection += (vconv[r] - x_dot[r]) * bf[var]->grad_phi[j][r];
                     }
                     advection *= d_area * wt_func * lambda * advection_etm;
-                      }
+                  }
 
                   diffusion = 0.;
 
@@ -10614,8 +10614,7 @@ int assemble_stress_vesolid(const double tt,       /* parameter to vary time int
                     source = phi_j * d_area * wt_func * source_etm;
                   }
 
-                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] +=
-                          mass + advection + diffusion + source;
+                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + advection + diffusion + source;
                 }
               }
             }

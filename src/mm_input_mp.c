@@ -995,7 +995,6 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
   ECHO(es, echo_file);
 
-
   /* Bending stiffness of structural shells */
   model_read = look_for_mat_prop(
       imp, "Shell bending stiffness", &(elc_glob[mn]->bend_stiffness_model),

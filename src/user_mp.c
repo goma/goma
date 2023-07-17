@@ -1135,8 +1135,7 @@ int usr_momentum_source(dbl *param) /* ptr to user-defined parameter list       
 
 int usr_lame_mu(struct Elastic_Constitutive *ep,
                 dbl *param, /* ptr to user-defined parameter list        */
-                const int len_pars)
-{
+                const int len_pars) {
   int a, b;
   int w;
 
@@ -1152,7 +1151,7 @@ int usr_lame_mu(struct Elastic_Constitutive *ep,
 
   /**********************************************************/
 
-  /* Comment out our remove this line if using this routine 
+  /* Comment out or remove this line if using this routine
 
   GOMA_EH(GOMA_ERROR, "No user_lame_mu model implemented.");*/
 
@@ -1456,74 +1455,70 @@ int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
     GOMA_EH(-1, "not enough user parameters for usr_expansion");
 
   /* sigmoidal function between 2 linear functions  */
-  dfdT = param[0] + param[1] * T + (param[2] - param[0] + T * (param[3] - param[1])) /
-                        (1. + exp(-param[4] * (T - param[5])));
+  dfdT = param[0] + param[1] * T +
+         (param[2] - param[0] + T * (param[3] - param[1])) / (1. + exp(-param[4] * (T - param[5])));
   double delta_T = T - Tref, dTp5 = T - param[5], dTrefp5 = Tref - param[5];
-  if(DOUBLE_ZERO(param[3]-param[1])) {    /* analytical - no linear terms  */
+  if (DOUBLE_ZERO(param[3] - param[1])) { /* analytical - no linear terms  */
     f = param[2] * delta_T + 0.5 * param[1] * (SQUARE(T) - SQUARE(delta_T)) +
-      (param[2] - param[0]) / param[4] *
-          (log(1. + exp(-param[4] * dTp5)) - log(1. + exp(-param[4] * dTrefp5)));
-  /* integrate in segments  */
-  } else if (T < param[5] && Tref < param[5]) {   
+        (param[2] - param[0]) / param[4] *
+            (log(1. + exp(-param[4] * dTp5)) - log(1. + exp(-param[4] * dTrefp5)));
+    /* integrate in segments  */
+  } else if (T < param[5] && Tref < param[5]) {
     f = param[0] * delta_T + 0.5 * param[1] * (SQUARE(T) - SQUARE(Tref));
-  } else if (T > param[5] && Tref > param[5]) {   
+  } else if (T > param[5] && Tref > param[5]) {
     f = param[2] * delta_T + 0.5 * param[3] * (SQUARE(T) - SQUARE(Tref));
   } else if (T < param[5] && Tref > param[5]) {
     f = param[0] * dTp5 + 0.5 * param[1] * (SQUARE(T) - SQUARE(param[5])) -
-        (param[2] * dTrefp5 +
-         0.5 * param[3] * (SQUARE(Tref) - SQUARE(param[5])));
+        (param[2] * dTrefp5 + 0.5 * param[3] * (SQUARE(Tref) - SQUARE(param[5])));
   } else if (T > param[5] && Tref < param[5]) {
     f = param[2] * dTp5 + 0.5 * param[3] * (SQUARE(T) - SQUARE(param[5])) -
-        (param[0] * dTrefp5 +
-         0.5 * param[1] * (SQUARE(Tref) - SQUARE(param[5])));
+        (param[0] * dTrefp5 + 0.5 * param[1] * (SQUARE(Tref) - SQUARE(param[5])));
   }
 
-              /**********************************************************/
+  /**********************************************************/
 
-              /*******Add property function and sensitivities here*******/
-              /* Example:
-               *
-               * if (mp->porosity < param[1])
-               *    {
-               *      f = param[0] * pow((1. - mp->porosity)/(1. - param[1]), param[2]);
-               *    }
-               *  else
-               *    {
-               *      f = param[0];
-               *    }
-               *
-               * Add sensitivities here.
-               *
-               *  if (mp->porosity < param[1])
-               *    {
-               *      elc->d_lame_lambda[POROSITY] = - param[2] * param[0] *
-               *	pow((1. - mp->porosity), param[2] - 1)/
-               *	pow((1. - param[1]), param[2]);
-               *    }
-               *  else
-               *    {
-               *      elc->d_lame_lambda[POROSITY] = 0;
-               *    }
-               */
+  /*******Add property function and sensitivities here*******/
+  /* Example:
+   *
+   * if (mp->porosity < param[1])
+   *    {
+   *      f = param[0] * pow((1. - mp->porosity)/(1. - param[1]), param[2]);
+   *    }
+   *  else
+   *    {
+   *      f = param[0];
+   *    }
+   *
+   * Add sensitivities here.
+   *
+   *  if (mp->porosity < param[1])
+   *    {
+   *      elc->d_lame_lambda[POROSITY] = - param[2] * param[0] *
+   *	pow((1. - mp->porosity), param[2] - 1)/
+   *	pow((1. - param[1]), param[2]);
+   *    }
+   *  else
+   *    {
+   *      elc->d_lame_lambda[POROSITY] = 0;
+   *    }
+   */
 
-/*fprintf(stderr,"usr %g %g %g\n",T,f,dfdT);
-fprintf(stderr,"usr_pars %g %g %g\n",param[0],param[1],param[2]);  */
-              /****************Don't touch these lines***********************/
-  *thermexp = f;                           /*Do not touch */
-  d_thermexp_dx[TEMPERATURE] = dfdT;                   /*Do not touch */
-                                                       /*Do not touch */
-  for (b = 0; b < DIM; b++)                            /*Do not touch */
-  {                                                    /*Do not touch */
-    d_thermexp_dx[VELOCITY1 + b] = dfdV[b];            /*Do not touch */
-    }                                                  /*Do not touch */
-    for (b = 0; b < DIM; b++)                          /*Do not touch */
-    {                                                  /*Do not touch */
-      d_thermexp_dx[MESH_DISPLACEMENT1 + b] = dfdX[b]; /*Do not touch */
-    }                                                  /*Do not touch */
-    for (w = 0; w < MAX_CONC; w++)                     /*Do not touch */
-    {                                                  /*Do not touch */
-      d_thermexp_dx[MAX_VARIABLE_TYPES + w] = dfdC[w]; /*Do not touch */
-    }                                                  /*Do not touch */
+  /****************Don't touch these lines***********************/
+  *thermexp = f;                                     /*Do not touch */
+  d_thermexp_dx[TEMPERATURE] = dfdT;                 /*Do not touch */
+                                                     /*Do not touch */
+  for (b = 0; b < DIM; b++)                          /*Do not touch */
+  {                                                  /*Do not touch */
+    d_thermexp_dx[VELOCITY1 + b] = dfdV[b];          /*Do not touch */
+  }                                                  /*Do not touch */
+  for (b = 0; b < DIM; b++)                          /*Do not touch */
+  {                                                  /*Do not touch */
+    d_thermexp_dx[MESH_DISPLACEMENT1 + b] = dfdX[b]; /*Do not touch */
+  }                                                  /*Do not touch */
+  for (w = 0; w < MAX_CONC; w++)                     /*Do not touch */
+  {                                                  /*Do not touch */
+    d_thermexp_dx[MAX_VARIABLE_TYPES + w] = dfdC[w]; /*Do not touch */
+  }                                                  /*Do not touch */
 
   return (0);
 } /* End of usr_expansion */

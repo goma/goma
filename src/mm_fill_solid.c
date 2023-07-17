@@ -3297,7 +3297,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 
             if (elc->thermal_expansion_model == CONSTANT) {
               for (j = 0; j < dofs; j++) {
-                dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j] * delta(p, q);
+                dTT_dT[p][q][j] -=
+                    (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j] * delta(p, q);
                 dTT_dT[p][q][j] -=
                     (2. * elc->d_lame_mu[TEMPERATURE] + 3. * elc->d_lame_lambda[TEMPERATURE]) *
                     thermexp * bf[v]->phi[j] * delta(p, q);
@@ -3306,23 +3307,21 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                        elc->thermal_expansion_model == USER ||
                        elc->thermal_expansion_model == IDEAL_GAS) {
               for (j = 0; j < dofs; j++) {
-                dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) * d_thermexp_dx[v] *
-                                   bf[v]->phi[j] * delta(p, q);
                 dTT_dT[p][q][j] -=
-                    (2. * elc->d_lame_mu[v] + 3. * elc->d_lame_lambda[v]) *
-                    thermexp * bf[v]->phi[j] * delta(p, q);
+                    (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j] * delta(p, q);
+                dTT_dT[p][q][j] -= (2. * elc->d_lame_mu[v] + 3. * elc->d_lame_lambda[v]) *
+                                   thermexp * bf[v]->phi[j] * delta(p, q);
               }
             } else if (elc->thermal_expansion_model == ORTHOTROPIC) {
               for (j = 0; j < dofs; j++) {
-                dTT_dT[p][q][j] -=
-                    (2. * mu + 3. * lambda) *
-                    (d_thermexp_dx[v] * (delta(p, q) - orient[p] * orient[q]) +
-                     d_ortho_thermexp_dx[v] * orient[p] * orient[q]) * bf[v]->phi[j];
-                dTT_dT[p][q][j] -=
-                    (2. * elc->d_lame_mu[v] + 3. * elc->d_lame_lambda[v]) *
-                    (thermexp * (delta(p, q) - orient[p] * orient[q]) +
-                     ortho_thermexp * orient[p] * orient[q]) *
-                    bf[v]->phi[j];
+                dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) *
+                                   (d_thermexp_dx[v] * (delta(p, q) - orient[p] * orient[q]) +
+                                    d_ortho_thermexp_dx[v] * orient[p] * orient[q]) *
+                                   bf[v]->phi[j];
+                dTT_dT[p][q][j] -= (2. * elc->d_lame_mu[v] + 3. * elc->d_lame_lambda[v]) *
+                                   (thermexp * (delta(p, q) - orient[p] * orient[q]) +
+                                    ortho_thermexp * orient[p] * orient[q]) *
+                                   bf[v]->phi[j];
               }
             }
           }
@@ -4990,7 +4989,8 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   }
 
   /*If needed, hit lame_mu with temperature shift */
-  if (elc_ptr->lameTempShiftModel == CONSTANT && elc_ptr->lame_mu_model != USER && elc_ptr->lame_mu_model != TABLE) {
+  if (elc_ptr->lameTempShiftModel == CONSTANT && elc_ptr->lame_mu_model != USER &&
+      elc_ptr->lame_mu_model != TABLE) {
     *mu *= elc_ptr->lame_TempShift;
     elc_ptr->lame_mu *= elc_ptr->lame_TempShift;
     elc_ptr->d_lame_mu[TEMPERATURE] = 0.;
@@ -5123,7 +5123,6 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   double Tref = elc_ptr->solid_reference_temp, tmp;
   double exp_arg = 0., exp_therm = 1., d_arg_dT = 0.;
   if (elc_ptr->thermal_expansion_model == CONSTANT) {
-/*    *thermexp = elc_ptr->thermal_expansion;  */
     exp_arg = elc_ptr->thermal_expansion * (fv->T - Tref);
     d_arg_dT = elc_ptr->thermal_expansion;
 
@@ -5137,15 +5136,16 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
     d_arg_dT =
         (elc_ptr->u_thermal_expansion[0] +
          tmp * (elc_ptr->u_thermal_expansion[1] +
-             tmp * (elc_ptr->u_thermal_expansion[2] + tmp * elc_ptr->u_thermal_expansion[3])));
+                tmp * (elc_ptr->u_thermal_expansion[2] + tmp * elc_ptr->u_thermal_expansion[3])));
 
   } else if (elc_ptr->thermal_expansion_model == SHRINKAGE) {
     exp_arg = elc_ptr->u_thermal_expansion[0] * (fv->T - Tref);
     d_arg_dT = elc_ptr->u_thermal_expansion[0];
 
   } else if (elc_ptr->thermal_expansion_model == IDEAL_GAS) {
-    exp_arg = log((elc_ptr->u_thermal_expansion[0] + fv->T)/(elc_ptr->u_thermal_expansion[0] + Tref));
-    d_arg_dT = 1./(elc_ptr->u_thermal_expansion[0] + fv->T);
+    exp_arg =
+        log((elc_ptr->u_thermal_expansion[0] + fv->T) / (elc_ptr->u_thermal_expansion[0] + Tref));
+    d_arg_dT = 1. / (elc_ptr->u_thermal_expansion[0] + fv->T);
 
   } else if (elc_ptr->thermal_expansion_model == USER) {
     if (pd->MeshMotion == TOTAL_ALE)
@@ -5164,8 +5164,8 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
     err = usr_expansion(&elc_ptr->u_thermal_expansion[6], &ortho_exp_arg, d_ortho_thermexp_dx,
                         elc_ptr->len_u_thermal_expansion, elc_ptr->solid_reference_temp);
     exp_therm = exp(ortho_exp_arg);
-    if( exp_arg > 0.1) {
-      *ortho_thermexp = exp_therm -1.;
+    if (exp_arg > 0.1) {
+      *ortho_thermexp = exp_therm - 1.;
     } else {
       *ortho_thermexp =
           ortho_exp_arg *
@@ -5173,8 +5173,8 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
     }
     d_ortho_thermexp_dx[TEMPERATURE] *= exp_therm;
   } else if (elc_ptr->thermal_expansion_model == TABLE) {
-/*  Currently the table would have to be for the exponential
-    argument, i.e. integral(alpha_V*dT) from Tref to T  */
+    /*  Currently the table would have to be for the exponential
+        argument, i.e. integral(alpha_V*dT) from Tref to T  */
     struct Data_Table *table_local;
     table_local = MP_Tables[elc_ptr->thermal_expansion_tableid];
     apply_table_mp(&elc_ptr->thermal_expansion, table_local);
@@ -5189,14 +5189,12 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   }
   /*  Form exponential part -- i.e., dln(V) = alpha*dT  */
   exp_therm = exp(exp_arg);
-  if( exp_arg > 0.1) {
-    *thermexp = exp_therm -1.;
+  if (exp_arg > 0.1) {
+    *thermexp = exp_therm - 1.;
   } else {
-    *thermexp = exp_arg*(1.+exp_arg*(0.5+exp_arg*(1./6.+exp_arg/24.)));
+    *thermexp = exp_arg * (1. + exp_arg * (0.5 + exp_arg * (1. / 6. + exp_arg / 24.)));
   }
   d_thermexp_dx[TEMPERATURE] = d_arg_dT * exp_therm;
-/*fprintf(stderr,"ortho %g %g %g\n",*thermexp, d_thermexp_dx[TEMPERATURE], fv->T); 
-fprintf(stderr,"user %g %g %g\n",exp_arg, d_arg_dT, exp_therm-1.); */
 
   /*  species expansion	*/
   if (pd->e[pg->imtrx][R_MASS] &&

@@ -1718,16 +1718,16 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
        * And its derivatives at the old time, time.
        */
 
-      if( !nonconv_roll) {
+      if (!nonconv_roll) {
         predict_solution(numProcUnknowns, delta_t, delta_t_old, delta_t_older, theta, x, x_old,
-                       x_older, x_oldest, xdot, xdot_old, xdot_older);
+                         x_older, x_oldest, xdot, xdot_old, xdot_older);
 
         if (tran->solid_inertia) {
           predict_solution_newmark(num_total_nodes, delta_t, x, x_old, xdot, xdot_old);
           exchange_dof(cx[0], dpi, tran->xdbl_dot, 0);
         }
       } else {
-        DPRINTF(stderr,"skipping predict_solution %d %d %g %d\n",n, nt, time1, nonconv_roll);
+        DPRINTF(stderr, "skipping predict_solution %d %d %g %d\n", n, nt, time1, nonconv_roll);
       }
 
 #ifdef LASER_RAYTRACE
@@ -1895,13 +1895,14 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       /* For transient, reset the Newton damping factors after a
        *   successful time step
        */
-      if (nt > 0 && converged) { 
+      if (nt > 0 && converged) {
         damp_factor2 = -1.;
         damp_factor1 = 1.0;
         no_relax_retry = 0;
       }
 #endif
-      if (converged) nonconv_roll = 0;
+      if (converged)
+        nonconv_roll = 0;
 
       /*
        * HKM -> I do not know if these operations are needed. I added
@@ -1913,7 +1914,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       exchange_dof(cx[0], dpi, xdot, 0);
 
       if (!converged && (inewton < Max_Newton_Steps)) {
-fprintf(stderr,"copying x_save %d %d %g %d\n", n, nt, time1, nonconv_roll,converged,inewton);
+        fprintf(stderr, "copying x_save %d %d %g %d\n", n, nt, time1, nonconv_roll, converged,
+                inewton);
         dcopy1(numProcUnknowns, x_save, x);
         dcopy1(numProcUnknowns, xdot_save, xdot);
       }
@@ -2423,7 +2425,7 @@ fprintf(stderr,"copying x_save %d %d %g %d\n", n, nt, time1, nonconv_roll,conver
 
       else /* not converged or unsuccessful time step */
       {
-DPRINTF(stderr,"relax %d %d %d\n",relax_bit,nonconv_roll,no_relax_retry);
+        DPRINTF(stderr, "relax %d %d %d\n", relax_bit, nonconv_roll, no_relax_retry);
         if (relax_bit && (nonconv_roll < no_relax_retry)) {
           /*success_dt = TRUE;  */
 #ifdef RESET_TRANSIENT_RELAXATION_PLEASE

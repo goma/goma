@@ -253,13 +253,12 @@ int assemble_mesh(double time,
   source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
   do_vesolid = (cr->MeshMotion == LAGRANGIAN || cr->MeshMotion == DYNAMIC_LAGRANGIAN) &&
-               pd->e[pg->imtrx][eqn] && cr->MeshFluxModel == ZENER_SLS &&
-               pd->gv[POLYMER_STRESS11];
-               /*
-                * Material property constants, etc. Any variations for this
-                * Gauss point were evaluated in mm_fill.
-                */
-               rho = density(d_rho, time);
+               pd->e[pg->imtrx][eqn] && cr->MeshFluxModel == ZENER_SLS && pd->gv[POLYMER_STRESS11];
+  /*
+   * Material property constants, etc. Any variations for this
+   * Gauss point were evaluated in mm_fill.
+   */
+  rho = density(d_rho, time);
   mu = elc->lame_mu;
   lambda = elc->lame_lambda;
 
@@ -311,13 +310,14 @@ int assemble_mesh(double time,
   err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc, dTT_dp_liq, dTT_dp_gas, dTT_dporosity,
                            dTT_dsink_mass, dTT_dT, dTT_dmax_strain, dTT_dcur_strain, mu, lambda, dt,
                            ielem, ip, ip_total);
-  if(do_vesolid) {
+  if (do_vesolid) {
     int mode;
     memset(TT, 0, sizeof(double) * DIM * DIM);
-    if(vn->modes != 1) GOMA_EH(GOMA_ERROR,"VE solid only set up for 1 mode at present!\n");
+    if (vn->modes != 1)
+      GOMA_EH(GOMA_ERROR, "VE solid only set up for 1 mode at present!\n");
     /*load_modal_pointers(mode, tt, dt, s, s_dot, grad_s, d_grad_s_dmesh);*/
 
-    GOMA_WH(GOMA_ERROR,"do_vesolid on.  Resetting TT, dTT_dx!\n");
+    GOMA_WH(GOMA_ERROR, "do_vesolid on.  Resetting TT, dTT_dx!\n");
     for (a = 0; a < VIM; a++) {
       for (b = 0; b < VIM; b++) {
         for (mode = 0; mode < vn->modes; mode++) {
@@ -413,7 +413,6 @@ int assemble_mesh(double time,
       eqn = R_MESH1 + a;
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
-
 
       for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
         phi_i = bfm->phi[i];
