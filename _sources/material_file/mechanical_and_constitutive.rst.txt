@@ -59,6 +59,7 @@ momentum conservation equations.
    mechanical_and_constitutive/ptt_xi_parameter
    mechanical_and_constitutive/ptt_epsilon_parameter
    mechanical_and_constitutive/surface_tension
+   mechanical_and_constitutive/sa_weight_function
    mechanical_and_constitutive/second_level_set_conductivity
    mechanical_and_constitutive/second_level_set_density
    mechanical_and_constitutive/second_level_set_heat_capacity

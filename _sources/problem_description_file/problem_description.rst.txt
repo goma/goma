@@ -29,6 +29,7 @@ However, some combinations or specifications do not make much sense, e.g., a cyl
    problem_description/momentum
    problem_description/pmomentum
    problem_description/stress
+   problem_description/eddy_visc
    problem_description/species_bulk
    problem_description/mesh
    problem_description/mom_solid
