@@ -215,11 +215,11 @@ void compute_a_dot_b(dbl b[DIM][DIM],
                      dbl d_a_dot_b_db[DIM][DIM][DIM][DIM],
                      dbl d_a_dot_b_dG[DIM][DIM][DIM][DIM]);
 EXTERN int assemble_stress_vesolid /* mm_fill_stress.c                          */
-    (const double,                  /* tt - parm to vary time integration from
-                            * explicit (tt = 1) to implicit (tt = 0)    */
-     const double,                  /* dt - current time step size               */
+    (const double,                 /* tt - parm to vary time integration from
+                                    * explicit (tt = 1) to implicit (tt = 0)    */
+     const double,                 /* dt - current time step size               */
      const int,
      const int,
-     const int);      
+     const int);
 
 #endif /* GOMA_MM_FILL_STRESS_H */

@@ -184,9 +184,8 @@ extern int lub_viscosity_integrate(const double strs,
                                    double *pre_P,
                                    double *mu_star);
 
-extern double lub_viscos_fcn(const struct Generalized_Newtonian *gn,
-                             const double gammadot,
-                             double *visd);
+extern double
+lub_viscos_fcn(const struct Generalized_Newtonian *gn, const double gammadot, double *visd);
 
 extern double lub2D_crsrate(const struct Generalized_Newtonian *gn_local,
                             const double rate,
