@@ -1779,7 +1779,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
         if (!nonconv_roll) {
           predict_solution(nAC, delta_t, delta_t_old, delta_t_older, theta, x_AC, x_AC_old,
-                         x_AC_older, x_AC_oldest, x_AC_dot, x_AC_dot_old, x_AC_dot_older);
+                           x_AC_older, x_AC_oldest, x_AC_dot, x_AC_dot_old, x_AC_dot_older);
         }
 
         for (iAC = 0; iAC < nAC; iAC++) {
@@ -1919,7 +1919,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         DPRINTF(stderr, "copying x_save %g %d %d\n", time1, nonconv_roll, inewton);
         dcopy1(numProcUnknowns, x_save, x);
         dcopy1(numProcUnknowns, xdot_save, xdot);
-      } else if (!converged ) {
+      } else if (!converged) {
         dcopy1(numProcUnknowns, x_save, x);
         dcopy1(numProcUnknowns, xdot_save, xdot);
       }
