@@ -1777,8 +1777,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
       if (nAC > 0) {
 
-        predict_solution(nAC, delta_t, delta_t_old, delta_t_older, theta, x_AC, x_AC_old,
+        if (!nonconv_roll) {
+          predict_solution(nAC, delta_t, delta_t_old, delta_t_older, theta, x_AC, x_AC_old,
                          x_AC_older, x_AC_oldest, x_AC_dot, x_AC_dot_old, x_AC_dot_older);
+        }
 
         for (iAC = 0; iAC < nAC; iAC++) {
           update_parameterAC(iAC, x, xdot, x_AC, cx[0], exo, dpi);
@@ -1913,8 +1915,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       exchange_dof(cx[0], dpi, x, 0);
       exchange_dof(cx[0], dpi, xdot, 0);
 
-      if (!converged && (inewton < Max_Newton_Steps)) {
+      if (relax_bit && !converged && (inewton < Max_Newton_Steps)) {
         DPRINTF(stderr, "copying x_save %g %d %d\n", time1, nonconv_roll, inewton);
+        dcopy1(numProcUnknowns, x_save, x);
+        dcopy1(numProcUnknowns, xdot_save, xdot);
+      } else if (!converged ) {
         dcopy1(numProcUnknowns, x_save, x);
         dcopy1(numProcUnknowns, xdot_save, xdot);
       }
@@ -2424,7 +2429,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
       else /* not converged or unsuccessful time step */
       {
-        DPRINTF(stderr, "relax %d %d %d\n", relax_bit, nonconv_roll, no_relax_retry);
         if (relax_bit && (nonconv_roll < no_relax_retry)) {
           /*success_dt = TRUE;  */
 #ifdef RESET_TRANSIENT_RELAXATION_PLEASE
