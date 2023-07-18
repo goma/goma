@@ -107,7 +107,6 @@
  *       local accumulators in "lec".
  *
  */
-
 int assemble_mesh(double time,
                   double tt,
                   double dt,

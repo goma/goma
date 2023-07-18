@@ -7757,6 +7757,9 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
     MeshMotion = DYNAMIC_LAGRANGIAN;
   } else if (!strcmp(tscs, "TOTAL_ALE")) {
     MeshMotion = TOTAL_ALE;
+  } else if (!strcmp(tscs, "ELLIPTIC")) {
+    MeshMotion = ELLIPTIC;
+    GOMA_WH(GOMA_ERROR, "Warning still testing elliptic mesh motion");
   } else {
     fprintf(stderr, "%s: unrecognized mesh motion type: %s\n", yo, tscs);
     exit(-1);

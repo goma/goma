@@ -466,6 +466,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define INCOMP_PSTRESS  7
 #define HOOKEAN_PSTRAIN 8
 #define HOOKEAN_PSTRESS 9
+#define ELLIPTIC        10
 
 /* Viscoplastic consitutive equation params */
 #define EVP_HYPER 10

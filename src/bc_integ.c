@@ -21,7 +21,6 @@
 
 /* Standard include files */
 
-#include "load_field_variables.h"
 #include <complex.h>
 #undef I
 #include <math.h>
@@ -40,6 +39,7 @@
 #include "el_geom.h"
 #include "exo_struct.h"
 #include "gds/gds_vector.h"
+#include "load_field_variables.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
@@ -47,6 +47,7 @@
 #include "mm_elem_block_structs.h"
 #include "mm_em_bc.h"
 #include "mm_fill_aux.h"
+#include "mm_fill_elliptic_mesh.h"
 #include "mm_fill_em.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_jac.h"
@@ -508,6 +509,11 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
         }
         //        }
         break;
+
+        case ELLIPTIC_XI_REGULARIZATION_BC:
+        case ELLIPTIC_ETA_REGULARIZATION_BC:
+          assemble_essential_elliptic_mesh(func, d_func, bc->BC_Name, bc->BC_Data_Float[0]);
+          break;
 
         case VELO_NORMAL_LUB_BC:
         case LUB_KINEMATIC_BC:
@@ -2050,7 +2056,9 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                     if (bc->BC_Name == KINEMATIC_PETROV_BC ||
                         bc->BC_Name == VELO_NORMAL_LS_PETROV_BC ||
                         bc->BC_Name == SHELL_LUB_WALL_BC ||
-                        bc->BC_Name == KIN_DISPLACEMENT_PETROV_BC) {
+                        bc->BC_Name == KIN_DISPLACEMENT_PETROV_BC ||
+                        bc->BC_Name == ELLIPTIC_ETA_REGULARIZATION_BC ||
+                        bc->BC_Name == ELLIPTIC_XI_REGULARIZATION_BC) {
                       if (pd->Num_Dim != 2) {
                         GOMA_EH(
                             GOMA_ERROR,

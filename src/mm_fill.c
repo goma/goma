@@ -50,6 +50,7 @@
 #include "mm_fill.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_common.h"
+#include "mm_fill_elliptic_mesh.h"
 #include "mm_fill_em.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
@@ -1563,7 +1564,17 @@ Revised:         Summer 1998, SY Tam (UNM)
 #endif
     }
 
-    if (pde[R_MESH1] && !pde[R_SHELL_CURVATURE] && !pde[R_SHELL_TENSION]) {
+    if (pde[R_MESH1] && cr->MeshFluxModel == ELLIPTIC) {
+      err = assemble_elliptic_mesh();
+      GOMA_EH(err, "assemble_elliptic_mesh");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_elliptic_mesh");
+      if (err)
+        return -1;
+#endif
+      if (neg_elem_volume)
+        return -1;
+    } else if (pde[R_MESH1] && !pde[R_SHELL_CURVATURE] && !pde[R_SHELL_TENSION]) {
       err = assemble_mesh(time_value, theta, delta_t, ielem, ip, ip_total);
       GOMA_EH(err, "assemble_mesh");
 #ifdef CHECK_FINITE

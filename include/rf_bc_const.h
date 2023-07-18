@@ -984,6 +984,12 @@
 #define T_CONTACT_RESIS_2_BC         47000026
 
 /*
+ELLIPTIC MESH
+*/
+#define ELLIPTIC_XI_REGULARIZATION_BC      77000001
+#define ELLIPTIC_ETA_REGULARIZATION_BC     77000002
+
+/*
  * HKM Chemkin boundary conditions along surfaces
  *       -> Not sure if bit masks are used so will keep with the 47 theme!
  *             The "10" digit will represent equation unknowns

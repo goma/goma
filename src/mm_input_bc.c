@@ -340,6 +340,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
 
     case LS_SOLID_FLUID_BC:
       overlap_bc = TRUE;
+      /* fall through */
     case PSPG_BC:
     case KIN_ELECTRODEPOSITION_BC:   /*  RSL 5/27/02  */
     case VNORM_ELECTRODEPOSITION_BC: /*  RSL 5/30/02  */
@@ -417,6 +418,8 @@ void rd_bc_specs(FILE *ifp, char *input) {
       /*	case TSHRSIDE_BC:   ..dal   */
     case CURRENT_BC:
     case CURRENT_SIC_BC:
+    case ELLIPTIC_XI_REGULARIZATION_BC:
+    case ELLIPTIC_ETA_REGULARIZATION_BC:
     case KINEMATIC_BC:
     case LUB_KINEMATIC_BC:
     case KIN_LEAK_HEAT_BC:
