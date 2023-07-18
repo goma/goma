@@ -1914,8 +1914,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       exchange_dof(cx[0], dpi, xdot, 0);
 
       if (!converged && (inewton < Max_Newton_Steps)) {
-        fprintf(stderr, "copying x_save %d %d %g %d\n", n, nt, time1, nonconv_roll, converged,
-                inewton);
+        DPRINTF(stderr, "copying x_save %g %d %d\n", time1, nonconv_roll, inewton);
         dcopy1(numProcUnknowns, x_save, x);
         dcopy1(numProcUnknowns, xdot_save, xdot);
       }

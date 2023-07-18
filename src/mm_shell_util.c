@@ -3491,7 +3491,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 {
   int i, j, k, jk, w;
   dbl q[DIM], ev[DIM], pgrad, pg_cmp[DIM], dev_dpg[DIM][DIM];
-  double DQ_DP[DIM][DIM], DQ_DEP[DIM][DIM], DQ_DH[DIM];
+  double DQ_DP[DIM][DIM], DQ_DH[DIM];
   dbl v_avg[DIM];
   dbl H;
   dbl veloL[DIM], veloU[DIM];
@@ -3977,8 +3977,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dev_dpg[0][2] = dev_dpg[2][0] = -ev[0] * ev[2];
     dev_dpg[1][2] = dev_dpg[2][1] = -ev[1] * ev[2];
 
+    tau_w = 0.5 * H * pgrad;
     if (!movingwall) {
-      tau_w = 0.5 * H * pgrad;
       /*  First non-Newtonian models with analytical viscosity integration */
       if (gn->ConstitutiveEquation == POWER_LAW) {
         double nexp = gn->nexp;
@@ -6808,12 +6808,8 @@ int lub2D_flow2D(struct Generalized_Newtonian *gn_loc,
 
   /*  Jacobian elements  */
   if (dqfl_dp != NULL) {
-    double termv0, termv1;
-    double dq_dgamma[DIM][DIM], dq_gradp[DIM], dq_dp[DIM][DIM], dgamma_gradp[DIM];
+    double dq_dgamma[DIM][DIM], dq_gradp[DIM], dgamma_gradp[DIM];
     double rate0dh, rate1dh;
-
-    termv0 = vis0 + SQUARE(rate0) * dvis0;
-    termv1 = vis1 + SQUARE(rate1) * dvis1;
 
     /*        compute derivatives wrt rate0,rate1
               - removing termvx from both numerator and denominator  */
