@@ -920,7 +920,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
       if (BC_Types[ibc].BC_Name == QRAD_BC) {
         if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[4]) != 1) {
           BC_Types[ibc].BC_Data_Float[4] = 0.;
-        } else 
+        } else
           SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_Data_Float[4]);
         BC_Types[ibc].max_DFlt = 5;
       }
