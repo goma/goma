@@ -82,19 +82,6 @@ int assemble_elliptic_mesh(void) {
   // J[1][0] = dx/deta
   // J[0][1] = dy/dxi
   // J[1][1] = dy/deta
-  dbl grad_local[DIM][DIM];
-  dbl d_grad_local_dmesh[DIM][DIM][DIM][MDE];
-  for (int i = 0; i < dim; i++) {
-    for (int j = 0; j < dim; j++) {
-      grad_local[i][j] = bf[eqn]->B[j][i];
-
-      for (int b = 0; b < dim; b++) {
-        for (int m = 0; m < ei[pg->imtrx]->dof[R_MESH1 + b]; m++) {
-          d_grad_local_dmesh[i][j][b][m] = bf[eqn]->dB[j][i][b][m];
-        }
-      }
-    }
-  }
 
   dbl S[DIM] = {0};
   dbl d_S_dmesh[DIM][DIM][MDE] = {{{0}}};
@@ -151,7 +138,7 @@ int assemble_elliptic_mesh(void) {
            * use pseudo cartesian arbitrary mesh motion
            */
           for (int p = 0; p < dim; p++) {
-            diffusion += (S[a] + eps_s) * bf[eqn]->d_phi[i][p] * (grad_local[a][p]);
+            diffusion += (S[a] + eps_s) * bf[eqn]->d_phi[i][p] * bf[eqn]->B[p][a];
           }
           diffusion *= bf[eqn]->detJ * wt;
 
@@ -213,10 +200,10 @@ int assemble_elliptic_mesh(void) {
 
                 for (int p = 0; p < dim; p++) {
                   diff_a +=
-                      (d_S_dmesh[a][b][j]) * (bf[eqn]->d_phi[i][p] * grad_local[a][p]) +
-                      (S[a] + eps_s) * ((bf[eqn]->d_d_phi_dmesh[i][p][b][j] * grad_local[a][p]) +
-                                        (bf[eqn]->d_phi[i][p] * d_grad_local_dmesh[a][p][b][j]));
-                  diff_b += (S[a] + eps_s) * (bf[eqn]->d_phi[i][p] * grad_local[a][p]);
+                      (d_S_dmesh[a][b][j]) * (bf[eqn]->d_phi[i][p] * bf[eqn]->B[p][a]) +
+                      (S[a] + eps_s) * ((bf[eqn]->d_d_phi_dmesh[i][p][b][j] * bf[eqn]->B[p][a]) +
+                                        (bf[eqn]->d_phi[i][p] * bf[eqn]->dB[p][a][b][j]));
+                  diff_b += (S[a] + eps_s) * (bf[eqn]->d_phi[i][p] * bf[eqn]->B[p][a]);
                 }
 
                 diff_a *= bf[eqn]->detJ * wt;
