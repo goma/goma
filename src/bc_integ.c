@@ -1440,12 +1440,12 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
         case QRAD_BC:
           qrad_surf(func, d_func, BC_Types[bc_input_id].BC_Data_Float[0],
                     BC_Types[bc_input_id].BC_Data_Float[1], BC_Types[bc_input_id].BC_Data_Float[2],
-                    BC_Types[bc_input_id].BC_Data_Float[3]);
+                    BC_Types[bc_input_id].BC_Data_Float[3], BC_Types[bc_input_id].BC_Data_Float[4]);
           break;
 
         case QCONV_BC:
           qrad_surf(func, d_func, BC_Types[bc_input_id].BC_Data_Float[0],
-                    BC_Types[bc_input_id].BC_Data_Float[1], 0., 0.);
+                    BC_Types[bc_input_id].BC_Data_Float[1], 0., 0., 0.);
           break;
 
         case QRAD_REPULSE_ROLL_BC:

@@ -915,9 +915,16 @@ void rd_bc_specs(FILE *ifp, char *input) {
         sr = sprintf(err_msg, "%s: Expected 4 flts for %s.", yo, BC_Types[ibc].desc->name1);
         GOMA_EH(GOMA_ERROR, err_msg);
       }
-
       BC_Types[ibc].max_DFlt = 4;
       SPF_DBL_VEC(endofstring(echo_string), 4, BC_Types[ibc].BC_Data_Float);
+      if (BC_Types[ibc].BC_Name == QRAD_BC) {
+        if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[4]) != 1) {
+          BC_Types[ibc].BC_Data_Float[4] = 0.;
+        } else 
+          SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_Data_Float[4]);
+        BC_Types[ibc].max_DFlt = 5;
+      }
+
       break;
       /*
        * Fall through for all cases which require four floating point

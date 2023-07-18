@@ -854,7 +854,8 @@ EXTERN void qrad_surf /* mm_fill_terms.c                           */
      double,  /* heat_tran_coeff - (cgs units)             */
      double,  /* T_c - bath temperature (Kelvin)	     */
      double,  /* emissivity                                */
-     double); /* Boltzmann's constant                      */
+     double,  /* Boltzmann's constant                      */
+     double); /* Kelvin-to-Celsius Conversion              */
 
 EXTERN void qrad_surf_repulse /* mm_ns_bc.c                           */
     (double[DIM],             /* func                                      */

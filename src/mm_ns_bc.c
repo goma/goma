@@ -15199,7 +15199,8 @@ void qrad_surf(double func[DIM],
                double heat_tran_coeff, /* Heat transfer coefficient (cgs units)   */
                double T_c,             /* bath temperature (Kelvin)	             */
                double epsilon,         /* emissivity                              */
-               double sigma)           /* Boltzmann's constant                    */
+               double sigma,           /* Boltzmann's constant                    */
+               double T_offset)        /* Placeholder for Kelvin-to-Celsius Conversion*/
 
 /******************************************************************************
  *
@@ -15215,7 +15216,6 @@ void qrad_surf(double func[DIM],
   int j_id;
   int var;
   double phi_j;
-  double T_offset = 273.15; /*  Kelvin-to-Celsius Conversion */
 
   /***************************** EXECUTION BEGINS *******************************/
 
