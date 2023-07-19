@@ -147,7 +147,7 @@ int assemble_elliptic_mesh(void) {
 
         dbl source = 0.;
         if (source_on) {
-          source = -sc[a] * T[a] * bf[eqn]->phi[i] * wt;
+          source = -sc[a] * T[a] * bf[eqn]->dphidxi[i][a] * wt;
           /* Source term only applies in Lagrangian mesh motion */
 
           source *= source_etm;
@@ -216,7 +216,7 @@ int assemble_elliptic_mesh(void) {
               dbl source = 0.;
 
               if (source_on) {
-                source = -sc[a] * d_T_dmesh[a][b][j] * bf[eqn]->phi[i] * wt;
+                source = -sc[a] * d_T_dmesh[a][b][j] * bf[eqn]->dphidxi[i][a] * wt;
                 source *= source_etm;
               }
 
@@ -259,21 +259,23 @@ void assemble_essential_elliptic_mesh(dbl func[DIM],
   }
   switch (bc_name) {
   case ELLIPTIC_XI_REGULARIZATION_BC: {
-    func[0] = -M * fxi * T[0];
+    func[0] = -M * fxi * T[0] / fv->sdet;
 
     for (int b = 0; b < pd->Num_Dim; b++) {
       int var = MESH_DISPLACEMENT1 + b;
       for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        d_func[0][var][j] = -M * fxi * d_T_dmesh[0][b][j];
+        d_func[0][var][j] = -M * fxi * d_T_dmesh[0][b][j] / fv->sdet +
+                            M * fxi * T[0] * fv->dsurfdet_dx[b][j] / (fv->sdet * fv->sdet);
       }
     }
   } break;
   case ELLIPTIC_ETA_REGULARIZATION_BC: {
-    func[0] = -M * geta * T[1];
+    func[0] = -M * geta * T[1] / fv->sdet;
     for (int b = 0; b < pd->Num_Dim; b++) {
       int var = MESH_DISPLACEMENT1 + b;
       for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        d_func[0][var][j] = -M * geta * d_T_dmesh[1][b][j];
+        d_func[0][var][j] = -M * geta * d_T_dmesh[1][b][j] / fv->sdet +
+                            M * fxi * T[1] * fv->dsurfdet_dx[b][j] / (fv->sdet * fv->sdet);
       }
     }
   } break;

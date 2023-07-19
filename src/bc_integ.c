@@ -2056,9 +2056,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                     if (bc->BC_Name == KINEMATIC_PETROV_BC ||
                         bc->BC_Name == VELO_NORMAL_LS_PETROV_BC ||
                         bc->BC_Name == SHELL_LUB_WALL_BC ||
-                        bc->BC_Name == KIN_DISPLACEMENT_PETROV_BC ||
-                        bc->BC_Name == ELLIPTIC_ETA_REGULARIZATION_BC ||
-                        bc->BC_Name == ELLIPTIC_XI_REGULARIZATION_BC) {
+                        bc->BC_Name == KIN_DISPLACEMENT_PETROV_BC) {
                       if (pd->Num_Dim != 2) {
                         GOMA_EH(
                             GOMA_ERROR,
@@ -2068,10 +2066,16 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                       i_basis = 1 - id_side % 2;
                       phi_i = bf[eqn]->dphidxi[ldof_eqn][i_basis];
                       weight *= phi_i;
+                    } else if (bc->BC_Name == ELLIPTIC_XI_REGULARIZATION_BC ||
+                               bc->BC_Name == ELLIPTIC_ETA_REGULARIZATION_BC) {
+                      i_basis = bc->BC_Name - ELLIPTIC_XI_REGULARIZATION_BC;
+                      phi_i = bf[eqn]->dphidxi[ldof_eqn][i_basis];
+                      weight *= phi_i;
                     } else {
                       phi_i = bf[eqn]->phi[ldof_eqn];
                       weight *= phi_i;
                     }
+
                   }
                   /*
                    *  Handle the case of CROSS_PHASE boundary conditions in the
