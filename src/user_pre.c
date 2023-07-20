@@ -153,11 +153,8 @@ double user_mat_init(const int var,
     value = fmin(T_amb - (T_amb - T_init) * (sum + sum1), T_init);
     value = fmax(value, T_amb);
   } else if (var >= MESH_DISPLACEMENT1 && var <= MESH_DISPLACEMENT3) {
-    double xpt0[DIM], alpha;
+    double alpha;
     int dir;
-    for (dir = 0; dir < DIM; dir++) {
-      xpt0[dir] = p[dir];
-    }
     alpha = p[DIM + 1];
     dir = var - MESH_DISPLACEMENT1;
     if (dir == 0) {
