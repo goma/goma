@@ -6810,6 +6810,7 @@ int lub2D_flow2D(struct Generalized_Newtonian *gn_loc,
   if (dqfl_dp != NULL) {
     double dq_dgamma[DIM][DIM], dq_gradp[DIM], dgamma_gradp[DIM];
     double rate0dh, rate1dh;
+    memset(dq_dgamma, 0.0, sizeof(double) * DIM * DIM);
 
     /*        compute derivatives wrt rate0,rate1
               - removing termvx from both numerator and denominator  */
