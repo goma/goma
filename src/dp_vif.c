@@ -2389,6 +2389,9 @@ void noahs_ark(void) {
     ddd_add_member(n, &elc_glob[i]->solid_dil_viscosity, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->solid_dil_viscosity_model, 1, MPI_INT);
     ddd_add_member(n, &elc_glob[i]->len_u_solid_dil_viscosity, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->solid_retardation, 1, MPI_DOUBLE);
+    ddd_add_member(n, &elc_glob[i]->solid_retard_model, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->len_u_solid_retardation, 1, MPI_INT);
 
     ddd_add_member(n, &elc_glob[i]->bend_stiffness, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->bend_stiffness_model, 1, MPI_INT);
@@ -2453,6 +2456,9 @@ void noahs_ark(void) {
     ddd_add_member(n, &elc_rs_glob[i]->solid_dil_viscosity, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_rs_glob[i]->solid_dil_viscosity_model, 1, MPI_INT);
     ddd_add_member(n, &elc_rs_glob[i]->len_u_solid_dil_viscosity, 1, MPI_INT);
+    ddd_add_member(n, &elc_rs_glob[i]->solid_retardation, 1, MPI_DOUBLE);
+    ddd_add_member(n, &elc_rs_glob[i]->solid_retard_model, 1, MPI_INT);
+    ddd_add_member(n, &elc_rs_glob[i]->len_u_solid_retardation, 1, MPI_INT);
 
     ddd_add_member(n, &elc_rs_glob[i]->poisson, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_rs_glob[i]->Strss_fr_sol_vol_frac, 1, MPI_DOUBLE);
@@ -2600,7 +2606,6 @@ void noahs_ark(void) {
   ddd_add_member(n, &EXTERNAL_POST, 1, MPI_INT);
   ddd_add_member(n, &SURFACE_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &SHELL_NORMALS, 1, MPI_INT);
-  ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
   ddd_add_member(n, &LAMB_VECTOR, 1, MPI_INT);
   ddd_add_member(n, &Q_FCN, 1, MPI_INT);
   ddd_add_member(n, &POYNTING_VECTORS, 1, MPI_INT);
@@ -2613,13 +2618,13 @@ void noahs_ark(void) {
   ddd_add_member(n, &EM_CONTOURS, 1, MPI_INT);
   ddd_add_member(n, &TOTAL_EM_CONTOURS, 1, MPI_INT);
   ddd_add_member(n, &SCATTERED_EM_CONTOURS, 1, MPI_INT);
-  ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
   ddd_add_member(n, &PSPG_PP, 1, MPI_INT);
   ddd_add_member(n, &ORIENTATION_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &FIRST_STRAINRATE_INVAR, 1, MPI_INT);
   ddd_add_member(n, &SEC_STRAINRATE_INVAR, 1, MPI_INT);
   ddd_add_member(n, &THIRD_STRAINRATE_INVAR, 1, MPI_INT);
   ddd_add_member(n, &WALL_DISTANCE, 1, MPI_INT);
+  ddd_add_member(n, &USER_POST, 1, MPI_INT);
   if (len_u_post_proc > 0) {
     ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);
   }
@@ -3114,6 +3119,8 @@ void ark_landing(void) {
 
     dalloc(e->len_u_solid_dil_viscosity, e->u_solid_dil_viscosity);
 
+    dalloc(e->len_u_solid_retardation, e->u_solid_retardation);
+
     e = elc_rs_glob[i];
 
     dalloc(e->len_u_mu, e->u_mu);
@@ -3129,6 +3136,8 @@ void ark_landing(void) {
     dalloc(e->len_u_solid_viscosity, e->u_solid_viscosity);
 
     dalloc(e->len_u_solid_dil_viscosity, e->u_solid_dil_viscosity);
+
+    dalloc(e->len_u_solid_retardation, e->u_solid_retardation);
 
     dalloc(evpl_glob[i]->len_u_plastic_mu, evpl_glob[i]->u_plastic_mu);
 
@@ -3420,6 +3429,8 @@ void noahs_dove(void) {
 
     crdv(e->len_u_solid_dil_viscosity, e->u_solid_dil_viscosity);
 
+    crdv(e->len_u_solid_retardation, e->u_solid_retardation);
+
     e = elc_rs_glob[i];
 
     crdv(e->len_u_mu, e->u_mu);
@@ -3435,6 +3446,8 @@ void noahs_dove(void) {
     crdv(e->len_u_solid_viscosity, e->u_solid_viscosity);
 
     crdv(e->len_u_solid_dil_viscosity, e->u_solid_dil_viscosity);
+
+    crdv(e->len_u_solid_retardation, e->u_solid_retardation);
 
     crdv(evpl_glob[i]->len_u_plastic_mu, evpl_glob[i]->u_plastic_mu);
 

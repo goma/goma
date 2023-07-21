@@ -1447,7 +1447,15 @@ Revised:         Summer 1998, SY Tam (UNM)
      */
     do_LSA_mods(LSA_VOLUME);
 
-    if (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) {
+    if (vn->evssModel == EVSS_G && cr->MeshFluxModel == ZENER_SLS) {
+      err = assemble_stress_vesolid(theta, delta_t, ielem, ip, ip_total);
+      GOMA_EH(err, "assemble_stress_vesolid");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_stress_vesolid");
+      if (err)
+        return -1;
+#endif
+    } else if (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) {
       err = assemble_stress_fortin(theta, delta_t, &pg_data);
       err = segregate_stress_update(x_update);
       GOMA_EH(err, "assemble_stress_fortin");

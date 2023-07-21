@@ -1718,12 +1718,16 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
        * And its derivatives at the old time, time.
        */
 
-      predict_solution(numProcUnknowns, delta_t, delta_t_old, delta_t_older, theta, x, x_old,
-                       x_older, x_oldest, xdot, xdot_old, xdot_older);
+      if (!nonconv_roll) {
+        predict_solution(numProcUnknowns, delta_t, delta_t_old, delta_t_older, theta, x, x_old,
+                         x_older, x_oldest, xdot, xdot_old, xdot_older);
 
-      if (tran->solid_inertia) {
-        predict_solution_newmark(num_total_nodes, delta_t, x, x_old, xdot, xdot_old);
-        exchange_dof(cx[0], dpi, tran->xdbl_dot, 0);
+        if (tran->solid_inertia) {
+          predict_solution_newmark(num_total_nodes, delta_t, x, x_old, xdot, xdot_old);
+          exchange_dof(cx[0], dpi, tran->xdbl_dot, 0);
+        }
+      } else {
+        DPRINTF(stderr, "skipping predict_solution %d %d %g %d\n", n, nt, time1, nonconv_roll);
       }
 
 #ifdef LASER_RAYTRACE
@@ -1773,8 +1777,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
       if (nAC > 0) {
 
-        predict_solution(nAC, delta_t, delta_t_old, delta_t_older, theta, x_AC, x_AC_old,
-                         x_AC_older, x_AC_oldest, x_AC_dot, x_AC_dot_old, x_AC_dot_older);
+        if (!nonconv_roll) {
+          predict_solution(nAC, delta_t, delta_t_old, delta_t_older, theta, x_AC, x_AC_old,
+                           x_AC_older, x_AC_oldest, x_AC_dot, x_AC_dot_old, x_AC_dot_older);
+        }
 
         for (iAC = 0; iAC < nAC; iAC++) {
           update_parameterAC(iAC, x, xdot, x_AC, cx[0], exo, dpi);
@@ -1815,17 +1821,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       if (nAC > 0)
         dcopy1(nAC, x_AC, x_AC_pred);
 
-#ifdef RESET_TRANSIENT_RELAXATION_PLEASE
-      /* Set TRUE to disable relaxation on timesteps after the first*/
-      /* For transient, reset the Newton damping factors after a
-       *   successful time step
-       */
-      if (nt > 0 && converged) {
-        damp_factor2 = -1.;
-        damp_factor1 = 1.0;
-        nonconv_roll = 0;
-      }
-#endif
 #ifdef GOMA_ENABLE_OMEGA_H
       if ((tran->ale_adapt || (ls != NULL && ls->adapt)) && tran->theta != 0) {
         GOMA_EH(GOMA_ERROR, "Error theta time step parameter = %g only 0.0 supported", tran->theta);
@@ -1897,6 +1892,19 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       inewton = err;
       evpl_glob[0]->update_flag = 0;   /*See get_evp_stress_tensor for description */
       af->Sat_hyst_reevaluate = FALSE; /*See load_saturation for description*/
+#ifdef RESET_TRANSIENT_RELAXATION_PLEASE
+      /* Set TRUE to disable relaxation on timesteps after the first*/
+      /* For transient, reset the Newton damping factors after a
+       *   successful time step
+       */
+      if (nt > 0 && converged) {
+        damp_factor2 = -1.;
+        damp_factor1 = 1.0;
+        no_relax_retry = 0;
+      }
+#endif
+      if (converged)
+        nonconv_roll = 0;
 
       /*
        * HKM -> I do not know if these operations are needed. I added
@@ -1908,8 +1916,14 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       exchange_dof(cx[0], dpi, xdot, 0);
 
       if (!converged) {
-        dcopy1(numProcUnknowns, x_save, x);
-        dcopy1(numProcUnknowns, xdot_save, xdot);
+        if (inewton < Max_Newton_Steps) {
+          DPRINTF(stderr, "copying x_save %g %d %d\n", time1, nonconv_roll, inewton);
+          dcopy1(numProcUnknowns, x_save, x);
+          dcopy1(numProcUnknowns, xdot_save, xdot);
+        } else if (!relax_bit) {
+          dcopy1(numProcUnknowns, x_save, x);
+          dcopy1(numProcUnknowns, xdot_save, xdot);
+        }
       }
 
       if (converged)
@@ -2442,7 +2456,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               damp_factor1 *= 0.5;
               DPRINTF(stdout, "  damping factor %g  \n", damp_factor1);
             }
-          } else if (!converged) {
+          } else if (!converged && (inewton == Max_Newton_Steps)) {
             DPRINTF(stdout,
                     "\nHmm... could not converge on this step\nLet's try some more iterations %d\n",
                     no_relax_retry - nonconv_roll);

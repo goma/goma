@@ -43,6 +43,8 @@
 #include "mm_fill_aux.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
 #include "mm_fill_stabilization.h"
 #include "mm_fill_terms.h"
 #include "mm_fill_util.h"
@@ -9947,6 +9949,680 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
       }
     } /* End Assemble Jacobian */
   }   /* End loop over modes */
+
+  return (status);
+}
+/* assemble_stress_vesolid -- assemble terms (Residual &| Jacobian) for solid stress eqns
+ *
+ * in:
+ * 	ei -- pointer to Element Indeces	structure
+ *	pd -- pointer to Problem Description	structure
+ *	af -- pointer to Action Flag		structure
+ *	bf -- pointer to Basis Function		structure
+ *	fv -- pointer to Field Variable		structure
+ *	cr -- pointer to Constitutive Relation	structure
+ *	md -- pointer to Mesh Derivative	structure
+ *	me -- pointer to Material Entity	structure
+ * 	ija -- vector of pointers into the a matrix
+ * 	a  -- global Jacobian matrix
+ * 	R  -- global residual vector
+ *
+ * out:
+ *	a   -- gets loaded up with proper contribution
+ *	lec -- gets loaded up with local contributions to resid, Jacobian
+ * 	r  -- residual RHS vector
+ *
+ * Created:	Wed Dec  8 14:03:06 MST 1993 pasacki@sandia.gov
+ *
+ * Revised:	Sun Feb 27 06:53:12 MST 1994 pasacki@sandia.gov
+ *
+ *
+ * Note: currently we do a "double load" into the addresses in the global
+ *       "a" matrix and resid vector held in "esp", as well as into the
+ *       local accumulators in "lec".
+ *
+ */
+
+int assemble_stress_vesolid(const double tt,    /* parameter to vary time integration from
+                                  explicit (tt = 1) to implicit (tt = 0) */
+                            const double dt,    /* current time step size */
+                            const int ielem,    /* current element number */
+                            const int ip,       /* current integration point */
+                            const int ip_total) /* total gauss integration points */
+{
+  int dim, p, q, r, a, b, w = -1;
+
+  int mode; /*counter for viscoelastic modes */
+  int transient_run = pd->TimeIntegration != STEADY;
+  int mass_on;
+  int advection_on = 0;
+  int source_on = 0;
+  int diffusion_on = 0;
+
+  int err, eqn, var;
+  int peqn, pvar;
+
+  int i, j, status, imtrx;
+
+  double mass_etm, advection_etm, diffusion_etm, source_etm;
+
+  double vconv[MAX_PDIM];     /*Calculated convection velocity */
+  double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
+  CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
+  CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
+  double v_dot_del_s[DIM][DIM];
+  double x_dot_del_s[DIM][DIM];
+
+  double x_dot[DIM];  /* current position field derivative wrt time. */
+  double h3;          /* Volume element (scale factors). */
+  double dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
+
+  double det_J; /* determinant of element Jacobian */
+
+  double d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
+
+  double mass; /* For terms and their derivatives */
+  double advection;
+  double diffusion;
+  double source;
+  double d_area;
+
+  /*
+   * Petrov-Galerkin weighting functions for i-th and ab-th stress residuals
+   * and some of their derivatives...
+   */
+
+  dbl wt_func;
+
+  /*
+   * Interpolation functions for variables and some of their derivatives.
+   */
+
+  dbl phi_j;
+  dbl wt;
+
+  /* Variables for stress */
+
+  int R_s[MAX_MODES][DIM][DIM];
+  int v_s[MAX_MODES][DIM][DIM];
+
+  double s[DIM][DIM];     /* stress tensor */
+  double s_dot[DIM][DIM]; /* stress tensor from last time step */
+  double grad_s[DIM][DIM][DIM];
+  double d_grad_s_dmesh[DIM][DIM][DIM][DIM]
+                       [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
+
+  double TT[DIM][DIM];                    /* Mesh stress tensor... */
+  double dTT_dx[DIM][DIM][DIM][MDE];      /* Sensitivity of stress tensor...
+                          to nodal displacements */
+  double dTT_dp[DIM][DIM][MDE];           /* Sensitivity of stress tensor...
+                                  to nodal pressure*/
+  double dTT_dc[DIM][DIM][MAX_CONC][MDE]; /* Sensitivity of stress tensor...
+                          to nodal concentration */
+  double dTT_dp_liq[DIM][DIM][MDE];       /* Sensitivity of stress tensor...
+                                           to nodal porous liquid pressure*/
+  double dTT_dp_gas[DIM][DIM][MDE];       /* Sensitivity of stress tensor...
+                                           to nodal porous gas pressure*/
+  double dTT_dporosity[DIM][DIM][MDE];    /* Sensitivity of stress tensor...
+                                        to nodal porosity*/
+  double dTT_dsink_mass[DIM][DIM][MDE];   /* Sensitivity of stress tensor...
+                                          to nodal sink_mass*/
+  double dTT_dT[DIM][DIM][MDE];           /* Sensitivity of stress tensor...
+                                      to temperature*/
+  double dTT_dmax_strain[DIM][DIM][MDE];  /* Sensitivity of stress tensor...
+                             to max_strain*/
+  double dTT_dcur_strain[DIM][DIM][MDE];  /* Sensitivity of stress tensor...
+                             to cur_strain*/
+  double lame_mu = elc->lame_mu;
+  double lame_lambda = elc->lame_lambda;
+
+  /* constitutive equation parameters */
+  double lambda = 0; /* polymer relaxation constant */
+
+  status = 0;
+
+  eqn = R_STRESS11;
+
+  /*
+   * Bail out fast if there's nothing to do...
+   */
+
+  if (!pd->e[pg->imtrx][eqn]) {
+    return (status);
+  }
+
+  /*
+   * Unpack variables from structures for local convenience...
+   */
+
+  dim = pd->Num_Dim;
+  wt = fv->wt;
+  if (pd->e[pg->imtrx][R_MESH1]) {
+    det_J = bf[R_MESH1]->detJ;
+  } else {
+    det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
+  }
+  h3 = fv->h3; /* Differential volume element (scales). */
+  d_area = det_J * wt * h3;
+  mass_on = pd->e[pg->imtrx][eqn] & T_MASS;
+  advection_on = pd->e[pg->imtrx][eqn] & T_ADVECTION;
+  diffusion_on = pd->e[pg->imtrx][eqn] & T_DIFFUSION;
+  source_on = pd->e[pg->imtrx][eqn] & T_SOURCE;
+
+  mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+  advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+  diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+  source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+  /*
+   * Get the deformation gradients and tensors if needed
+   */
+  err = belly_flop(lame_mu);
+  GOMA_EH(err, "error in belly flop");
+  if (err == 2)
+    return (err);
+
+  /*
+   * Field variables...
+   */
+  /* Calculate inertia of mesh if required. PRS side note: no sensitivity
+   * with respect to porous media variables here for single compont pore liquids.
+   * eventually there may be sensitivity for diffusion in gas phase to p_gas */
+  if (cr->MeshMotion == LAGRANGIAN || cr->MeshMotion == DYNAMIC_LAGRANGIAN) {
+    err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
+  } else /* No inertia in an Arbitrary Mesh */
+  {
+    memset(vconv, 0, sizeof(double) * MAX_PDIM);
+    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+      if (pd->v[imtrx][MESH_DISPLACEMENT1])
+        memset(d_vconv->X, 0, DIM * DIM * MDE * sizeof(dbl));
+
+      if (pd->v[imtrx][VELOCITY1] || pd->v[imtrx][POR_LIQ_PRES])
+        memset(d_vconv->v, 0, DIM * DIM * MDE * sizeof(dbl));
+
+      if (pd->v[imtrx][MASS_FRACTION] || pd->v[imtrx][POR_LIQ_PRES])
+        memset(d_vconv->C, 0, DIM * MAX_CONC * MDE * sizeof(dbl));
+
+      if (pd->v[pg->imtrx][TEMPERATURE])
+        memset(d_vconv->T, 0, DIM * MDE * sizeof(dbl));
+    }
+  }
+
+  for (a = 0; a < WIM; a++) {
+    /* note, these are zero for steady calculations */
+    x_dot[a] = 0.0;
+    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+      if (transient_run && pd->v[imtrx][MESH_DISPLACEMENT1 + a]) {
+        x_dot[a] = fv_dot->x[a];
+      }
+    }
+  }
+
+  /*
+   * Total mesh stress tensor...
+   */
+  /* initialize some arrays */
+  memset(TT, 0, sizeof(double) * DIM * DIM);
+  if (af->Assemble_Jacobian) {
+    memset(dTT_dx, 0, sizeof(double) * DIM * DIM * DIM * MDE);
+    memset(dTT_dp, 0, sizeof(double) * DIM * DIM * MDE);
+    memset(dTT_dc, 0, sizeof(double) * DIM * DIM * MAX_CONC * MDE);
+    memset(dTT_dp_liq, 0, sizeof(double) * DIM * DIM * MDE);
+    memset(dTT_dp_gas, 0, sizeof(double) * DIM * DIM * MDE);
+    memset(dTT_dporosity, 0, sizeof(double) * DIM * DIM * MDE);
+    memset(dTT_dsink_mass, 0, sizeof(double) * DIM * DIM * MDE);
+    memset(dTT_dT, 0, sizeof(double) * DIM * DIM * MDE);
+    memset(dTT_dmax_strain, 0, sizeof(double) * DIM * DIM * MDE);
+    memset(dTT_dcur_strain, 0, sizeof(double) * DIM * DIM * MDE);
+  }
+
+  err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc, dTT_dp_liq, dTT_dp_gas, dTT_dporosity,
+                           dTT_dsink_mass, dTT_dT, dTT_dmax_strain, dTT_dcur_strain, lame_mu,
+                           lame_lambda, dt, ielem, ip, ip_total);
+
+  /* get tensor dot products for future use */
+
+  (void)stress_eqn_pointer(v_s);
+  (void)stress_eqn_pointer(R_s);
+
+  /* Begin loop over modes */
+  if (vn->modes != 1)
+    GOMA_EH(GOMA_ERROR, "VE solid only set up for 1 mode at present!\n");
+  for (mode = 0; mode < vn->modes; mode++) {
+
+    load_modal_pointers(mode, tt, dt, s, s_dot, grad_s, d_grad_s_dmesh);
+
+    /* precalculate advective terms of form (v dot del tensor)*/
+    memset(v_dot_del_s, 0, sizeof(double) * DIM * DIM);
+    memset(x_dot_del_s, 0, sizeof(double) * DIM * DIM);
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+        for (q = 0; q < WIM; q++) {
+          v_dot_del_s[a][b] += vconv[q] * grad_s[q][a][b];
+          x_dot_del_s[a][b] += x_dot[q] * grad_s[q][a][b];
+        }
+      }
+    }
+
+    /*
+     * Stress tensor...(Note "anti-BSL" sign convention on deviatoric stress)
+     */
+
+    /* get time constant */
+    if (elc->solid_retard_model == CONSTANT) {
+      lambda = elc->solid_retardation;
+    }
+
+    /*
+     * Residuals_________________________________________________________________
+     */
+
+    if (af->Assemble_Residual) {
+      /*
+       * Assemble each component "ab" of the polymer stress equation...
+       */
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+
+          if (a <= b) /* since the stress tensor is symmetric, only assemble the upper half */
+          {
+            eqn = R_s[mode][a][b];
+            peqn = upd->ep[pg->imtrx][eqn];
+
+            /*
+             * In the element, there will be contributions to this many equations
+             * based on the number of degrees of freedom...
+             */
+
+            for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+              wt_func = bf[eqn]->phi[i];
+
+              mass = 0.;
+              if (transient_run && mass_on) {
+                mass = s_dot[a][b] * wt_func * lambda * mass_etm;
+              }
+
+              advection = 0.;
+              if (advection_on && DOUBLE_NONZERO(lambda)) {
+                advection =
+                    (v_dot_del_s[a][b] - x_dot_del_s[a][b]) * wt_func * lambda * advection_etm;
+              }
+
+              diffusion = 0.;
+              if (diffusion_on) {
+                /* add SU term in here when appropriate */
+                diffusion = -TT[a][b] * wt_func * diffusion_etm;
+              }
+
+              /*
+               * Source term...
+               */
+
+              source = 0.;
+              if (source_on) {
+                source = s[a][b] * wt_func * source_etm;
+              }
+
+              /*
+               * Add contributions to this residual (globally into Resid, and
+               * locally into an accumulator)
+               */
+
+              lec->R[LEC_R_INDEX(peqn, i)] += (mass + advection + diffusion + source) * d_area;
+            }
+          }
+        }
+      }
+    }
+
+    /*
+     * Jacobian terms...
+     */
+
+    if (af->Assemble_Jacobian) {
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          if (a <= b) /* since the stress tensor is symmetric, only assemble the upper half */
+          {
+
+            eqn = R_s[mode][a][b];
+            peqn = upd->ep[pg->imtrx][eqn];
+
+            for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+              wt_func = bf[eqn]->phi[i];
+
+              /*
+               * Set up some preliminaries that are needed for the (a,i)
+               * equation for bunches of (b,j) column variables...
+               */
+
+              /*
+               * J_S_T
+               */
+
+              var = TEMPERATURE;
+              if (pd->v[pg->imtrx][var]) {
+                pvar = upd->vp[pg->imtrx][var];
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  mass = 0.;
+
+                  advection = 0.;
+                  if (advection_on && DOUBLE_NONZERO(lambda)) {
+                    for (q = 0; q < WIM; q++) {
+                      advection += d_vconv->T[q][j] * grad_s[q][a][b];
+                    }
+                    advection *= wt_func * lambda * advection_etm;
+                  }
+
+                  diffusion = 0.;
+                  if (diffusion_on) {
+                    diffusion = -dTT_dT[a][b][j] * wt_func * diffusion_etm;
+                  }
+
+                  source = 0.;
+
+                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += (advection + diffusion) * d_area;
+                }
+              }
+
+              /*
+               * J_S_c
+               */
+              var = MASS_FRACTION;
+              if (pd->v[pg->imtrx][var]) {
+                pvar = MAX_PROB_VAR + w;
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  for (w = 0; w < pd->Num_Species_Eqn; w++) {
+
+                    mass = 0.;
+
+                    advection = 0.;
+                    if (advection_on && DOUBLE_NONZERO(lambda)) {
+                      for (q = 0; q < WIM; q++) {
+                        advection += d_vconv->C[q][w][j] * grad_s[q][a][b];
+                      }
+                      advection *= wt_func * lambda * advection_etm;
+                    }
+
+                    diffusion = 0.;
+                    if (diffusion_on) {
+                      diffusion = -dTT_dc[a][b][w][j] * wt_func * diffusion_etm;
+                    }
+
+                    source = 0.;
+
+                    lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += (advection + diffusion) * d_area;
+                  }
+                }
+              }
+
+              /*
+               * J_S_P
+               */
+              var = PRESSURE;
+              if (pd->v[pg->imtrx][var]) {
+                pvar = upd->vp[pg->imtrx][var];
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  mass = 0.;
+
+                  advection = 0.;
+
+                  diffusion = 0.;
+                  if (diffusion_on) {
+                    diffusion = -dTT_dp[a][b][j] * wt_func * diffusion_etm;
+                  }
+
+                  source = 0.;
+
+                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion * d_area;
+                }
+              }
+
+              /*
+               * J_S_p_liq
+               */
+              var = POR_LIQ_PRES;
+              if (pd->v[pg->imtrx][var] &&
+                  (cr->MeshMotion == LAGRANGIAN || cr->MeshMotion == DYNAMIC_LAGRANGIAN)) {
+                pvar = upd->vp[pg->imtrx][var];
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  mass = 0.;
+
+                  advection = 0.;
+
+                  diffusion = 0.;
+                  if (diffusion_on) {
+                    diffusion = -dTT_dp_liq[a][b][j] * wt_func * diffusion_etm;
+                  }
+
+                  source = 0.;
+
+                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion * d_area;
+                }
+              }
+
+              /*
+               * J_S_p_gas
+               */
+              var = POR_GAS_PRES;
+              if (pd->v[pg->imtrx][var] &&
+                  (cr->MeshMotion == LAGRANGIAN || cr->MeshMotion == DYNAMIC_LAGRANGIAN)) {
+                pvar = upd->vp[pg->imtrx][var];
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  mass = 0.;
+
+                  advection = 0.;
+
+                  diffusion = 0.;
+                  if (diffusion_on) {
+                    diffusion = -dTT_dp_gas[a][b][j] * wt_func * diffusion_etm;
+                  }
+
+                  source = 0.;
+
+                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion * d_area;
+                }
+              }
+
+              /*
+               * J_S_porosity
+               */
+              var = POR_POROSITY;
+              if (pd->v[pg->imtrx][var] &&
+                  (cr->MeshMotion == LAGRANGIAN || cr->MeshMotion == DYNAMIC_LAGRANGIAN)) {
+                pvar = upd->vp[pg->imtrx][var];
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  mass = 0.;
+
+                  advection = 0.;
+
+                  diffusion = 0.;
+                  if (diffusion_on) {
+                    diffusion = -dTT_dporosity[a][b][j] * wt_func * diffusion_etm;
+                  }
+
+                  source = 0.;
+
+                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion * d_area;
+                }
+              }
+
+              /*
+               * J_S_sink_mass
+               */
+              var = POR_SINK_MASS;
+              if (pd->v[pg->imtrx][var] &&
+                  (cr->MeshMotion == LAGRANGIAN || cr->MeshMotion == DYNAMIC_LAGRANGIAN)) {
+                pvar = upd->vp[pg->imtrx][var];
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  mass = 0.;
+
+                  advection = 0.;
+
+                  diffusion = 0.;
+                  if (diffusion_on) {
+                    diffusion = -dTT_dsink_mass[a][b][j] * wt_func * diffusion_etm;
+                  }
+
+                  source = 0.;
+
+                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion * d_area;
+                }
+              }
+
+              /*
+               * J_S_max_strain
+               */
+              var = MAX_STRAIN;
+              if (pd->v[pg->imtrx][var] &&
+                  (cr->MeshMotion == LAGRANGIAN || cr->MeshMotion == DYNAMIC_LAGRANGIAN)) {
+                pvar = upd->vp[pg->imtrx][var];
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  mass = 0.;
+
+                  advection = 0.;
+
+                  diffusion = 0.;
+                  if (diffusion_on) {
+                    diffusion = -dTT_dmax_strain[a][b][j] * wt_func * diffusion_etm;
+                  }
+
+                  source = 0.;
+
+                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion * d_area;
+                }
+              }
+
+              /*
+               * J_S_cur_strain
+               */
+              var = CUR_STRAIN;
+              if (pd->v[pg->imtrx][var] &&
+                  (cr->MeshMotion == LAGRANGIAN || cr->MeshMotion == DYNAMIC_LAGRANGIAN)) {
+                pvar = upd->vp[pg->imtrx][var];
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  mass = 0.;
+
+                  advection = 0.;
+
+                  diffusion = 0.;
+                  if (diffusion_on) {
+                    diffusion = -dTT_dcur_strain[a][b][j] * wt_func * diffusion_etm;
+                  }
+
+                  source = 0.;
+
+                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion * d_area;
+                }
+              }
+
+              /*
+               * J_S_d
+               */
+              for (p = 0; p < dim; p++) {
+                var = MESH_DISPLACEMENT1 + p;
+                if (pd->v[pg->imtrx][var]) {
+                  pvar = upd->vp[pg->imtrx][var];
+                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                    phi_j = bf[var]->phi[j];
+                    d_det_J_dmesh_pj = bf[var]->d_det_J_dm[p][j];
+                    dh3dmesh_pj = fv->dh3dq[p] * bf[var]->phi[j];
+
+                    mass = 0.;
+                    if (transient_run && mass_on) {
+                      mass = s_dot[a][b] * wt_func * lambda * mass_etm;
+                      mass *= wt * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
+                    }
+
+                    advection = 0.;
+                    if (advection_on && DOUBLE_NONZERO(lambda)) {
+                      for (q = 0; q < WIM; q++) {
+                        advection += d_vconv->X[q][p][j] * grad_s[q][a][b];
+                        advection += (vconv[q] - x_dot[q]) * d_grad_s_dmesh[q][a][b][p][j];
+                      }
+                      advection *= wt_func * d_area * advection_etm;
+                      advection += (v_dot_del_s[a][b] - x_dot_del_s[a][b]) * wt_func * lambda *
+                                   advection_etm * wt *
+                                   (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
+                    }
+
+                    diffusion = 0.;
+                    if (diffusion_on) {
+                      diffusion = -TT[a][b] * wt_func * diffusion_etm;
+                      diffusion *= wt * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
+                      diffusion += -dTT_dx[a][b][p][j] * wt_func * d_area * diffusion_etm;
+                    }
+
+                    source = 0.;
+                    if (source_on) {
+                      source = s[a][b] * wt_func * source_etm;
+                      source *= wt * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
+                    }
+
+                    lec->J[LEC_J_INDEX(peqn, pvar, i, j)] +=
+                        (mass + advection + diffusion + source);
+                  }
+                }
+              }
+
+              /*
+               * J_S_S
+               */
+              var = v_s[mode][a][b];
+
+              if (pd->v[pg->imtrx][var]) {
+                pvar = upd->vp[pg->imtrx][var];
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  mass = 0.;
+                  if (transient_run && mass_on) {
+                    mass = (1. + 2. * tt) * phi_j / dt;
+                    mass *= d_area * wt_func * lambda * mass_etm;
+                  }
+
+                  advection = 0.;
+                  if (advection_on && DOUBLE_NONZERO(lambda)) {
+                    for (r = 0; r < WIM; r++) {
+                      advection += (vconv[r] - x_dot[r]) * bf[var]->grad_phi[j][r];
+                    }
+                    advection *= d_area * wt_func * lambda * advection_etm;
+                  }
+
+                  diffusion = 0.;
+
+                  source = 0.;
+                  if (source_on) {
+                    source = phi_j * d_area * wt_func * source_etm;
+                  }
+
+                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + advection + diffusion + source;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
   return (status);
 }

@@ -209,6 +209,7 @@ int assemble_mesh(double time,
   int advection_on = 0;
   int source_on = 0;
   int diffusion_on = 0;
+  int do_vesolid = FALSE;
 
   dbl mass_etm, advection_etm, diffusion_etm, source_etm;
 
@@ -235,13 +236,24 @@ int assemble_mesh(double time,
    *      is equal to the problem dimension, but ielem_dim is one less than the
    *      problem dimension.
    */
-  if (!pd->e[pg->imtrx][eqn] || (ei[pg->imtrx]->ielem_dim < pd->Num_Dim)) {
+  if (!pd->e[pg->imtrx][eqn] || (ei[pg->imtrx]->ielem_dim < dim)) {
     return (status);
   }
 
   det_J = bf[eqn]->detJ;
   d_area = det_J * wt * h3;
+  mass_on = pd->e[pg->imtrx][eqn] & T_MASS;
+  advection_on = pd->e[pg->imtrx][eqn] & T_ADVECTION;
+  diffusion_on = pd->e[pg->imtrx][eqn] & T_DIFFUSION;
+  source_on = pd->e[pg->imtrx][eqn] & T_SOURCE;
 
+  mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+  advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+  diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+  source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+  do_vesolid = (cr->MeshMotion == LAGRANGIAN || cr->MeshMotion == DYNAMIC_LAGRANGIAN) &&
+               pd->e[pg->imtrx][eqn] && cr->MeshFluxModel == ZENER_SLS && pd->gv[POLYMER_STRESS11];
   /*
    * Material property constants, etc. Any variations for this
    * Gauss point were evaluated in mm_fill.
@@ -295,10 +307,37 @@ int assemble_mesh(double time,
     memset(dTT_dmax_strain, 0, sizeof(double) * DIM * DIM * MDE);
     memset(dTT_dcur_strain, 0, sizeof(double) * DIM * DIM * MDE);
   }
-
   err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc, dTT_dp_liq, dTT_dp_gas, dTT_dporosity,
                            dTT_dsink_mass, dTT_dT, dTT_dmax_strain, dTT_dcur_strain, mu, lambda, dt,
                            ielem, ip, ip_total);
+  if (do_vesolid) {
+    int mode;
+    memset(TT, 0, sizeof(double) * DIM * DIM);
+    if (vn->modes != 1)
+      GOMA_EH(GOMA_ERROR, "VE solid only set up for 1 mode at present!\n");
+    /*load_modal_pointers(mode, tt, dt, s, s_dot, grad_s, d_grad_s_dmesh);*/
+
+    GOMA_WH(GOMA_ERROR, "do_vesolid on.  Resetting TT, dTT_dx!\n");
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+        for (mode = 0; mode < vn->modes; mode++) {
+          TT[a][b] += fv->S[mode][a][b];
+        }
+      }
+    }
+    if (af->Assemble_Jacobian) {
+      memset(dTT_dx, 0, sizeof(double) * DIM * DIM * DIM * MDE);
+      memset(dTT_dp, 0, sizeof(double) * DIM * DIM * MDE);
+      memset(dTT_dc, 0, sizeof(double) * DIM * DIM * MAX_CONC * MDE);
+      memset(dTT_dp_liq, 0, sizeof(double) * DIM * DIM * MDE);
+      memset(dTT_dp_gas, 0, sizeof(double) * DIM * DIM * MDE);
+      memset(dTT_dporosity, 0, sizeof(double) * DIM * DIM * MDE);
+      memset(dTT_dsink_mass, 0, sizeof(double) * DIM * DIM * MDE);
+      memset(dTT_dT, 0, sizeof(double) * DIM * DIM * MDE);
+      memset(dTT_dmax_strain, 0, sizeof(double) * DIM * DIM * MDE);
+      memset(dTT_dcur_strain, 0, sizeof(double) * DIM * DIM * MDE);
+    }
+  }
 
   /* Calculate inertia of mesh if required. PRS side note: no sensitivity
    * with respect to porous media variables here for single compont pore liquids.
@@ -361,16 +400,6 @@ int assemble_mesh(double time,
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      mass_on = pd->e[pg->imtrx][eqn] & T_MASS;
-      advection_on = pd->e[pg->imtrx][eqn] & T_ADVECTION;
-      diffusion_on = pd->e[pg->imtrx][eqn] & T_DIFFUSION;
-      source_on = pd->e[pg->imtrx][eqn] & T_SOURCE;
-
-      mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
-      advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-      diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
-      source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-
       for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
         phi_i = bfm->phi[i];
 
@@ -378,7 +407,7 @@ int assemble_mesh(double time,
 
         mass = 0.;
         if (transient_run && pd_glob[ei[pg->imtrx]->mn]->MeshMotion == DYNAMIC_LAGRANGIAN) {
-          if (pd->e[pg->imtrx][eqn] & T_MASS) {
+          if (mass_on) {
             mass = -x_dbl_dot[a];
             mass *= phi_i * rho * d_area;
             mass *= mass_etm;
@@ -450,16 +479,6 @@ int assemble_mesh(double time,
       eqn = R_MESH1 + a;
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
-
-      mass_on = pd->e[pg->imtrx][eqn] & T_MASS;
-      advection_on = pd->e[pg->imtrx][eqn] & T_ADVECTION;
-      diffusion_on = pd->e[pg->imtrx][eqn] & T_DIFFUSION;
-      source_on = pd->e[pg->imtrx][eqn] & T_SOURCE;
-
-      mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
-      advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-      diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
-      source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
       for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
         phi_i = bfm->phi[i];
@@ -969,6 +988,33 @@ int assemble_mesh(double time,
               diffusion *= diffusion_etm;
 
               lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
+            }
+          }
+        }
+
+        /*
+         * J_S_S
+         */
+        if (do_vesolid) {
+          int mode;
+          int v_s[MAX_MODES][DIM][DIM];
+          (void)stress_eqn_pointer(v_s);
+          for (mode = 0; mode < vn->modes; mode++) {
+            for (b = 0; b < VIM; b++) {
+              for (w = 0; w < VIM; w++) {
+                var = v_s[mode][b][w];
+
+                if (pd->v[pg->imtrx][var]) {
+                  pvar = upd->vp[pg->imtrx][var];
+                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                    phi_j = bf[var]->phi[j];
+                    diffusion = grad_phi_i_e_a[w][b] * phi_j;
+                    diffusion *= -d_area * diffusion_etm;
+
+                    lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
+                  }
+                }
+              }
             }
           }
         }
