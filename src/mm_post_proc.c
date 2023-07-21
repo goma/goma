@@ -1793,8 +1793,7 @@ static int calc_standard_fields(double **post_proc_vect,
       if (fv->x0[2] <= radius) {
         dir = 0;
       } else {
-        double tmp;
-        tmp = modf((fv->x0[2] - radius) / (2 * radius - overlap), &sign);
+        modf((fv->x0[2] - radius) / (2 * radius - overlap), &sign);
         sign += 1.;
         dir = (int)sign % 2;
       }

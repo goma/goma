@@ -327,20 +327,6 @@ int assemble_mesh(double time,
     }
     if (af->Assemble_Jacobian) {
       memset(dTT_dx, 0, sizeof(double) * DIM * DIM * DIM * MDE);
-      for (a = 0; a < VIM; a++) {
-        for (b = 0; b < VIM; b++) {
-          for (mode = 0; mode < vn->modes; mode++) {
-            for (p = 0; p < dim; p++) {
-              var = MESH_DISPLACEMENT1 + p;
-              if (pd->v[pg->imtrx][var]) {
-                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-                  dTT_dx[a][b][p][j] += fv->grad_S[mode][p][a][b] * bf[var]->phi[j];
-                }
-              }
-            }
-          }
-        }
-      }
       memset(dTT_dp, 0, sizeof(double) * DIM * DIM * MDE);
       memset(dTT_dc, 0, sizeof(double) * DIM * DIM * MAX_CONC * MDE);
       memset(dTT_dp_liq, 0, sizeof(double) * DIM * DIM * MDE);
