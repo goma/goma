@@ -78,7 +78,7 @@ void amesos_solve(char *choice,
 #endif
   /* Define internal variables */
   static std::string Pkg_Name;
-  static Epetra_CrsMatrix *A[MAX_NUM_MATRICES];
+  static Epetra_CrsMatrix *A[MAX_NUM_MATRICES]{nullptr};
   static Epetra_LinearProblem Problem[MAX_NUM_MATRICES];
   static Amesos_BaseSolver *A_Base[MAX_NUM_MATRICES] = {nullptr};
   Amesos A_Factory;
@@ -86,6 +86,8 @@ void amesos_solve(char *choice,
   /* Convert to Epetra format */
   if (ams->RowMatrix == 0) {
     if (!ams->solveSetup) {
+      if (A[imtrx] != nullptr)
+        delete A[imtrx];
       A[imtrx] = (Epetra_CrsMatrix *)construct_Epetra_CrsMatrix(ams);
     }
     GomaMsr2EpetraCsr(ams, A[imtrx], !ams->solveSetup);
@@ -141,6 +143,8 @@ void amesos_solve(char *choice,
     }
 
     /* Create Amesos base package */
+    if (A_Base[imtrx] != nullptr)
+      delete A_Base[imtrx];
 
     A_Base[imtrx] = A_Factory.Create(Pkg_Name.c_str(), Problem[imtrx]);
     if (A_Base[imtrx] == 0) {
