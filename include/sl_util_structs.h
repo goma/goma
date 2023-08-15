@@ -122,6 +122,8 @@ struct GomaLinearSolverData {
   int Number_Jac_Dump;
 #endif
 
+  int solveSetup;
+
   C_Epetra_RowMatrix_t *RowMatrix; /* This is a Epetra_RowMatrix object */
   int *GlobalIDs;                  /* Pointer to global ids of DOFs (only available with epetra) */
 

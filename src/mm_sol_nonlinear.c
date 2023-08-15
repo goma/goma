@@ -1374,16 +1374,12 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
     case AMESOS:
 
-      if (strcmp(Matrix_Format, "msr") == 0) {
-        amesos_solve_msr(Amesos_Package, ams, delta_x, resid_vector, 1, pg->imtrx);
-      } else if (strcmp(Matrix_Format, "epetra") == 0) {
-        amesos_solve_epetra(Amesos_Package, ams, delta_x, resid_vector, pg->imtrx);
-      } else {
-        GOMA_EH(
-            GOMA_ERROR,
-            " Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos "
-            "solver suite\n");
+      if ((strcmp(Matrix_Format, "msr") != 0) && (strcmp(Matrix_Format, "epetra") != 0)) {
+        GOMA_EH(GOMA_ERROR,
+                " Sorry, only MSR and Epetra matrix formats are currently supported with "
+                "the Amesos solver suite\n");
       }
+      amesos_solve(Amesos_Package, ams, delta_x, resid_vector, 1, pg->imtrx);
       strcpy(stringer, " 1 ");
       break;
 
@@ -1518,15 +1514,12 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           break;
 
         case AMESOS:
-          if (strcmp(Matrix_Format, "msr") == 0) {
-            amesos_solve_msr(Amesos_Package, ams, &wAC[iAC][0], &bAC[iAC][0], 0, pg->imtrx);
-          } else if (strcmp(Matrix_Format, "epetra") == 0) {
-            amesos_solve_epetra(Amesos_Package, ams, &wAC[iAC][0], &bAC[iAC][0], pg->imtrx);
-          } else {
+          if ((strcmp(Matrix_Format, "msr") != 0) && (strcmp(Matrix_Format, "epetra") != 0)) {
             GOMA_EH(GOMA_ERROR,
-                    " Sorry, only MSR and Epetra matrix formats are currently supported with the "
-                    "Amesos solver suite\n");
+                    " Sorry, only MSR and Epetra matrix formats are currently supported with "
+                    "the Amesos solver suite\n");
           }
+          amesos_solve(Amesos_Package, ams, &wAC[iAC][0], &bAC[iAC][0], 0, pg->imtrx);
           strcpy(stringer_AC, " 1 ");
           break;
 
@@ -3348,17 +3341,12 @@ static int soln_sens(double lambda,  /*  parameter */
     break;
 
   case AMESOS:
-    if (strcmp(Matrix_Format, "msr") == 0) {
-      amesos_solve_msr(Amesos_Package, ams, x_sens, resid_vector_sens, 0, pg->imtrx);
-    } else if (strcmp(Matrix_Format, "epetra") == 0) {
-      amesos_solve_epetra(Amesos_Package, ams, x_sens, resid_vector_sens, pg->imtrx);
-    } else {
-      GOMA_EH(GOMA_ERROR,
-              " Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos "
-              "solver suite\n");
+    if ((strcmp(Matrix_Format, "msr") != 0) && (strcmp(Matrix_Format, "epetra") != 0)) {
+      GOMA_EH(GOMA_ERROR, " Sorry, only MSR and Epetra matrix formats are currently supported with "
+                          "the Amesos solver suite\n");
     }
+    amesos_solve(Amesos_Package, ams, x_sens, resid_vector_sens, 0, pg->imtrx);
     strcpy(stringer, " 1 ");
-    break;
     break;
 
   case AZTEC:

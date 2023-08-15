@@ -1823,6 +1823,9 @@ static void init_Elastic_Constitutive(struct Elastic_Constitutive *e) {
   e->thermal_expansion = (double)0;
   e->thermal_expansion_model = 0;
   e->len_u_thermal_expansion = 0;
+  e->len_u_solid_viscosity = 0;
+  e->len_u_solid_dil_viscosity = 0;
+  e->len_u_solid_retardation = 0;
   e->u_thermal_expansion = NULL;
   e->solid_reference_temp = (double)0;
   e->solid_reference_temp_model = 0;
