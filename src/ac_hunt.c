@@ -347,7 +347,7 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
   asdv(&scale, numProcUnknowns);
 
   for (i = 0; i < NUM_ALSS; i++) {
-    ams[i] = (struct GomaLinearSolverData *)array_alloc(1, 1, sizeof(struct GomaLinearSolverData));
+    ams[i] = alloc_struct_1(struct GomaLinearSolverData, 1);
   }
 
 #ifdef MPI
