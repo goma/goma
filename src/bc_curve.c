@@ -25,6 +25,7 @@
 
 #include "ac_stability.h"
 #include "ac_stability_util.h"
+#include "bc/rotate_coordinates.h"
 #include "bc_colloc.h"
 #include "bc_curve.h"
 #include "dpi.h"
@@ -492,6 +493,10 @@ int apply_integrated_curve_bc(
                 ieqn = upd->ep[pg->imtrx][eqn];
                 if (eqn == R_MASS)
                   ieqn = MAX_PROB_VAR + BC_Types[bc_input_id].species_eq;
+                if (goma_automatic_rotations.automatic_rotations &&
+                    (BC_Types[bc_input_id].desc->rotate != NO_ROT)) {
+                  ieqn = equation_index_auto_rotate(NULL, I, eqn, p, ldof_eqn, NULL);
+                }
                 lec->R[LEC_R_INDEX(ieqn, ldof_eqn)] += weight * fv->edge_det * func[p];
 
                 /*
@@ -1020,6 +1025,10 @@ int apply_point_colloc_edge_bc(
               ieqn = upd->ep[pg->imtrx][eqn];
               if (eqn == R_MASS)
                 ieqn = MAX_PROB_VAR + BC_Types[bc_input_id].species_eq;
+              if (goma_automatic_rotations.automatic_rotations &&
+                  (BC_Types[bc_input_id].desc->rotate != NO_ROT)) {
+                ieqn = equation_index_auto_rotate(NULL, I, eqn, p, ldof_eqn, NULL);
+              }
               lec->R[LEC_R_INDEX(ieqn, ldof_eqn)] += BIG_PENALTY * func[p];
 
               /*

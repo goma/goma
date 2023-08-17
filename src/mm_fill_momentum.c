@@ -2831,7 +2831,18 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
      * algorithm in areas of high shear and stress.
      */
 
-    mu_num = numerical_viscosity(s, gamma_cont, d_mun_dS, d_mun_dG);
+    mu_num = 1;
+    if (DOUBLE_NONZERO(vn->eps)) {
+      for (int mode = 0; mode < vn->modes; mode++) {
+        for (a = 0; a < VIM; a++) {
+          for (b = 0; b < VIM; b++) {
+            s[a][b] += fv->S[mode][a][b];
+          }
+        }
+      }
+
+      mu_num = numerical_viscosity(s, gamma_cont, d_mun_dS, d_mun_dG);
+    }
 
     mu_over_mu_num = mus;
     mu = mu_num * mus;

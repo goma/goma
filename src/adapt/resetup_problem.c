@@ -196,6 +196,7 @@ int resetup_matrix(struct GomaLinearSolverData **ams, Exo_DB *exo, Dpi *dpi) {
       EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
     }
     pg->imtrx = 0;
+    ams[pg->imtrx]->solveSetup = 0;
   } else {
     GOMA_EH(-1, "Unsupported matrix storage format use epetra");
   }

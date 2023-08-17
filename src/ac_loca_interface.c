@@ -440,7 +440,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
 
   /* Allocate Aztec system structure(s) */
   for (i = 0; i < NUM_ALSS; i++) {
-    ams[i] = (struct GomaLinearSolverData *)array_alloc(1, 1, sizeof(struct GomaLinearSolverData));
+    ams[i] = alloc_struct_1(struct GomaLinearSolverData, 1);
   }
 
   /* Set Aztec proc_config array (for many different cases) */
@@ -1603,14 +1603,11 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
 
   case AMESOS:
 
-    if (strcmp(Matrix_Format, "msr") == 0) {
-      amesos_solve_msr(Amesos_Package, ams, x, xr, 1, pg->imtrx);
-    } else if (strcmp(Matrix_Format, "epetra") == 0) {
-      amesos_solve_epetra(Amesos_Package, ams, x, xr, pg->imtrx);
-    } else {
+    if ((strcmp(Matrix_Format, "msr") != 0) && (strcmp(Matrix_Format, "epetra") != 0)) {
       GOMA_EH(GOMA_ERROR, " Sorry, only MSR and Epetra matrix formats are currently supported with "
                           "the Amesos solver suite\n");
     }
+    amesos_solve(Amesos_Package, ams, x, xr, 1, pg->imtrx);
     strcpy(stringer, " 1 ");
     break;
 
@@ -2341,11 +2338,11 @@ void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double to
     strcpy(stringer, " 1 ");
     break;
   case AMESOS:
-    if (strcmp(Matrix_Format, "msr") == 0) {
-      amesos_solve_msr(Amesos_Package, ams, y, x, 1, pg->imtrx);
-    } else {
-      GOMA_EH(GOMA_ERROR, " Sorry, only MSR  matrix format supported for loca eigenvalue");
+    if ((strcmp(Matrix_Format, "msr") != 0) && (strcmp(Matrix_Format, "epetra") != 0)) {
+      GOMA_EH(GOMA_ERROR, " Sorry, only MSR and Epetra matrix formats are currently supported with "
+                          "the Amesos solver suite\n");
     }
+    amesos_solve(Amesos_Package, ams, y, x, 1, pg->imtrx);
     first_linear_solver_call = FALSE;
     strcpy(stringer, " 1 ");
     break;
