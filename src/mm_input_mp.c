@@ -2779,48 +2779,50 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           ve_glob[mn][mm]->time_const_st->lambdainf = modal_data[mm];
         }
       } break;
+      default:
+        break;
+      }
 
-        // Time Constant Time Constant
-        switch (ve_glob[mn][0]->time_const_st->ConstitutiveEquation) {
-        case CARREAU: {
-          strcpy(search_string, "Polymer Carreau Time Constant");
-          model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
-                                           modal_data, model_name, es);
-          if (model_read < 1) {
-            if (model_read == -1)
-              GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
-          }
-          if (matl_model != CONSTANT) {
-            GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
-          }
-          for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
-            ve_glob[mn][mm]->time_const_st->carreau_lambda = modal_data[mm];
-          }
-        } break;
-        default:
-          break;
+      // Time Constant Time Constant
+      switch (ve_glob[mn][0]->time_const_st->ConstitutiveEquation) {
+      case CARREAU: {
+        strcpy(search_string, "Polymer Carreau Time Constant");
+        model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                         modal_data, model_name, es);
+        if (model_read < 1) {
+          if (model_read == -1)
+            GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
         }
+        if (matl_model != CONSTANT) {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+        }
+        for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+          ve_glob[mn][mm]->time_const_st->carreau_lambda = modal_data[mm];
+        }
+      } break;
+      default:
+        break;
+      }
 
-        // Time Constant Aexp
-        switch (ve_glob[mn][0]->time_const_st->ConstitutiveEquation) {
-        case CARREAU: {
-          strcpy(search_string, "Polymer Time Constant Aexp");
-          model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
-                                           modal_data, model_name, es);
-          if (model_read < 1) {
-            if (model_read == -1)
-              GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
-          }
-          if (matl_model != CONSTANT) {
-            GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
-          }
-          for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
-            ve_glob[mn][mm]->time_const_st->aexp = modal_data[mm];
-          }
-        } break;
-        default:
-          break;
+      // Time Constant Aexp
+      switch (ve_glob[mn][0]->time_const_st->ConstitutiveEquation) {
+      case CARREAU: {
+        strcpy(search_string, "Polymer Time Constant Aexp");
+        model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                         modal_data, model_name, es);
+        if (model_read < 1) {
+          if (model_read == -1)
+            GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
         }
+        if (matl_model != CONSTANT) {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+        }
+        for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+          ve_glob[mn][mm]->time_const_st->aexp = modal_data[mm];
+        }
+      } break;
+      default:
+        break;
       }
     }
 
