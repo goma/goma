@@ -2460,105 +2460,197 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     modal_data = (dbl *)array_alloc(1, vn_glob[mn]->modes, sizeof(dbl));
 
-    model_read =
-        look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+    model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                     modal_data, model_name, es);
     if (model_read < 1) {
       if (model_read == -1)
-        SPF(err_msg, "%s card is missing.", search_string);
-      if (model_read == -2)
-        SPF(err_msg, "Only CONSTANT, POWER LAW and HERSCHEL_BULKLEY %s mode model supported.",
-            search_string);
-      fprintf(stderr, "%s\n", err_msg);
-      exit(-1);
+        GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+      if (model_read == -2) {
+        if (strcmp(model_name, "POWER_LAW") == 0) {
+          matl_model = POWER_LAW;
+        } else if (strcmp(model_name, "HERSCHEL_BULKLEY") == 0) {
+          matl_model = HERSCHEL_BULKLEY;
+        } else if (strcmp(model_name, "CARREAU") == 0) {
+          matl_model = CARREAU;
+        } else {
+          GOMA_EH(GOMA_ERROR,
+                  "Only CONSTANT, POWER LAW, CARREAU and HERSCHEL_BULKLEY %s mode model supported.",
+                  search_string);
+        }
+      }
     }
 
-    // in case of non-constant polymer viscosity, parse polymer viscosity parameters
-    // For now, these all assume a single node
-    const bool mupIsConstant = matl_model == CONSTANT;
-
-    int nExpModel = CONSTANT;
-    int aExpModel = CONSTANT;
-    int fExpModel = CONSTANT;
-    int mu0Model = CONSTANT;
-    int muInfModel = CONSTANT;
-    int lamModel = CONSTANT;
-    int tauyModel = CONSTANT;
-    dbl nExpVal = 0;
-    dbl aExpVal = 0;
-    dbl fExpVal = 0;
-    dbl mu0Val = 0;
-    dbl muInfVal = 0;
-    dbl lamVal = 0;
-    dbl tauyVal = 0;
-
-    if (!mupIsConstant) {
-      model_read = look_for_mat_prop(imp, "Polymer Low Rate Viscosity", &(mu0Model), &(mu0Val),
-                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
-      printf("Polymer Low Rate Viscosity model %s\n", model_name);
-      printf("Polymer Low Rate Viscosity value %E\n", mu0Val);
-      ECHO(es, echo_file);
-
-      model_read = look_for_mat_prop(imp, "Polymer Power Law Exponent", &(nExpModel), &(nExpVal),
-                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
-      printf("Polymer Power Law Exponent model %s\n", model_name);
-      printf("Polymer Power Law Exponent value %E\n", nExpVal);
-      ECHO(es, echo_file);
-
-      model_read = look_for_mat_prop(imp, "Polymer High Rate Viscosity", &(muInfModel), &(muInfVal),
-                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
-      printf("Polymer High Rate Viscosity model %s\n", model_name);
-      printf("Polymer High Rate Viscosity value %E\n", muInfVal);
-      ECHO(es, echo_file);
-
-      model_read = look_for_mat_prop(imp, "Polymer Viscosity Time Constant", &(lamModel), &(lamVal),
-                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
-      printf("Polymer Viscosity Time Constant model %s\n", model_name);
-      printf("Polymer Viscosity Time Constant value %E\n", lamVal);
-      ECHO(es, echo_file);
-
-      model_read = look_for_mat_prop(imp, "Polymer Aexp", &(aExpModel), &(aExpVal), NO_USER, NULL,
-                                     model_name, SCALAR_INPUT, &NO_SPECIES, es);
-      printf("Polymer Aexp model %s\n", model_name);
-      printf("Polymer Aexp value %E\n", aExpVal);
-      ECHO(es, echo_file);
-
-      model_read = look_for_mat_prop(imp, "Polymer Yield Stress", &(tauyModel), &(tauyVal), NO_USER,
-                                     NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
-      printf("Polymer Yield Stress model %s\n", model_name);
-      printf("Polymer Yield Stress value %E\n", tauyVal);
-      ECHO(es, echo_file);
-
-      model_read =
-          look_for_mat_prop(imp, "Polymer Viscosity Yield Exponent", &(fExpModel), &(fExpVal),
-                            NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
-      printf("Polymer Viscosity Yield Exponent model %s\n", model_name);
-      printf("Polymer Viscosity Yield Exponent value %E\n", fExpVal);
-      ECHO(es, echo_file);
+    if (vn_glob[mn]->ConstitutiveEquation == WHITE_METZNER && matl_model == CONSTANT) {
+      GOMA_WH(GOMA_ERROR, "White-Metzner model expects non-constant polymer viscosity.");
     }
-
     ECHO(es, echo_file);
 
     for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+      // initialize defaults
+      ve_glob[mn][mm]->gn->muinf = 0.;
+      ve_glob[mn][mm]->gn->muinfModel = CONSTANT;
+      ve_glob[mn][mm]->gn->lam = 0.;
+      ve_glob[mn][mm]->gn->lamModel = CONSTANT;
+      ve_glob[mn][mm]->gn->aexp = 0.;
+      ve_glob[mn][mm]->gn->aexpModel = CONSTANT;
+      ve_glob[mn][mm]->gn->nexp = 0.;
+      ve_glob[mn][mm]->gn->nexpModel = CONSTANT;
+      ve_glob[mn][mm]->gn->tau_y = 0.;
+      ve_glob[mn][mm]->gn->tau_yModel = CONSTANT;
+      ve_glob[mn][mm]->gn->fexp = 0.;
+      ve_glob[mn][mm]->gn->fexpModel = CONSTANT;
+
       ve_glob[mn][mm]->gn->ConstitutiveEquation = matl_model;
-      ve_glob[mn][mm]->gn->mu0 = (mupIsConstant ? modal_data[mm] : mu0Val);
-      ve_glob[mn][mm]->gn->muinf = muInfVal;
-      ve_glob[mn][mm]->gn->muinfModel = muInfModel;
-      ve_glob[mn][mm]->gn->lam = lamVal;
-      ve_glob[mn][mm]->gn->lamModel = lamModel;
-      ve_glob[mn][mm]->gn->aexp = aExpVal;
-      ve_glob[mn][mm]->gn->aexpModel = aExpModel;
-      ve_glob[mn][mm]->gn->nexp = nExpVal;
-      ve_glob[mn][mm]->gn->nexpModel = nExpModel;
-      ve_glob[mn][mm]->gn->tau_yModel = tauyModel;
-      ve_glob[mn][mm]->gn->tau_y = tauyVal;
-      ve_glob[mn][mm]->gn->fexpModel = fExpModel;
-      ve_glob[mn][mm]->gn->fexp = fExpVal;
+    }
+
+    // in case of non-constant polymer viscosity, parse polymer viscosity parameters
+    if (matl_model == CONSTANT) {
+      for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+        ve_glob[mn][mm]->gn->mu0 = modal_data[mm];
+      }
+    } else {
+      // look for material properties for non-constant polymer viscosity
+
+      // Low Rate Viscosity
+      switch (ve_glob[mn][0]->gn->ConstitutiveEquation) {
+      case POWER_LAW:
+      case CARREAU:
+      case HERSCHEL_BULKLEY: {
+        strcpy(search_string, "Polymer Low Rate Viscosity");
+        model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                         modal_data, model_name, es);
+        if (model_read < 1) {
+          if (model_read == -1)
+            GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+        }
+        if (matl_model != CONSTANT) {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+        }
+        for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+          ve_glob[mn][mm]->gn->mu0 = modal_data[mm];
+        }
+        ECHO(es, echo_file);
+      } break;
+      default:
+        break;
+      }
+
+      // Power Law Exponent
+      switch (ve_glob[mn][0]->gn->ConstitutiveEquation) {
+      case POWER_LAW:
+      case CARREAU:
+      case HERSCHEL_BULKLEY: {
+        strcpy(search_string, "Polymer Power Law Exponent");
+        model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                         modal_data, model_name, es);
+        if (model_read < 1) {
+          if (model_read == -1)
+            GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+        }
+        if (matl_model != CONSTANT) {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+        }
+        for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+          ve_glob[mn][mm]->gn->nexp = modal_data[mm];
+        }
+        ECHO(es, echo_file);
+      } break;
+      default:
+        break;
+      }
+
+      // High Rate Viscosity
+      switch (ve_glob[mn][0]->gn->ConstitutiveEquation) {
+      case CARREAU: {
+        strcpy(search_string, "Polymer High Rate Viscosity");
+        model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                         modal_data, model_name, es);
+        if (model_read < 1) {
+          if (model_read == -1)
+            GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+        }
+        if (matl_model != CONSTANT) {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+        }
+        for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+          ve_glob[mn][mm]->gn->muinf = modal_data[mm];
+        }
+        ECHO(es, echo_file);
+      } break;
+      default:
+        break;
+      }
+
+      // Viscosity Time Constant
+      switch (ve_glob[mn][0]->gn->ConstitutiveEquation) {
+      case CARREAU: {
+        strcpy(search_string, "Polymer Viscosity Time Constant");
+        model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                         modal_data, model_name, es);
+        if (model_read < 1) {
+          if (model_read == -1)
+            GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+        }
+        if (matl_model != CONSTANT) {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+        }
+        for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+          ve_glob[mn][mm]->gn->lam = modal_data[mm];
+        }
+        ECHO(es, echo_file);
+      } break;
+      default:
+        break;
+      }
+
+      // Viscosity Aexp
+      switch (ve_glob[mn][0]->gn->ConstitutiveEquation) {
+      case CARREAU: {
+        strcpy(search_string, "Polymer Viscosity Aexp");
+        model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                         modal_data, model_name, es);
+        if (model_read < 1) {
+          if (model_read == -1)
+            GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+        }
+        if (matl_model != CONSTANT) {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+        }
+        for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+          ve_glob[mn][mm]->gn->aexp = modal_data[mm];
+        }
+        ECHO(es, echo_file);
+      } break;
+      default:
+        break;
+      }
+
+      // Polymer Yield Stress
+      switch (ve_glob[mn][0]->gn->ConstitutiveEquation) {
+      case HERSCHEL_BULKLEY: {
+        strcpy(search_string, "Polymer Yield Stress");
+        model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                         modal_data, model_name, es);
+        if (model_read < 1) {
+          if (model_read == -1)
+            GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+        }
+        if (matl_model != CONSTANT) {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+        }
+        for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+          ve_glob[mn][mm]->gn->tau_y = modal_data[mm];
+        }
+      } break;
+      default:
+        break;
+      }
     }
 
     strcpy(search_string, "Positive Level Set Polymer Viscosity");
 
-    model_read =
-        look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+    model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                     modal_data, model_name, es);
 
     if (model_read == 1) {
 
@@ -2582,28 +2674,160 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     strcpy(search_string, "Polymer Time Constant");
 
-    model_read =
-        look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+    model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                     modal_data, model_name, es);
     if (model_read < 1) {
       if (model_read == -1)
-        SPF(err_msg, "%s card is missing.", search_string);
-      if (model_read == -2)
-        SPF(err_msg, "Only CONSTANT %s mode model supported.", search_string);
-      fprintf(stderr, "%s\n", err_msg);
-      exit(-1);
+        GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+      if (model_read == -2) {
+        if (strcmp(model_name, "POWER_LAW") == 0) {
+          matl_model = POWER_LAW;
+        } else if (strcmp(model_name, "CARREAU") == 0) {
+          matl_model = CARREAU;
+        } else {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT, POWER LAW and CARREAU %s mode model supported.",
+                  search_string);
+        }
+      }
     }
 
+    if (vn_glob[mn]->ConstitutiveEquation == WHITE_METZNER && matl_model == CONSTANT) {
+      GOMA_WH(GOMA_ERROR, "White-Metzner model expects non-constant polymer time constant.");
+    }
     ECHO(es, echo_file);
 
     for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
-      ve_glob[mn][mm]->time_const = modal_data[mm];
-      ve_glob[mn][mm]->time_constModel = matl_model;
+      // initialize defaults
+      ve_glob[mn][mm]->time_const_st->lambdainf = 0.;
+      ve_glob[mn][mm]->time_const_st->lambdainfModel = CONSTANT;
+      ve_glob[mn][mm]->time_const_st->carreau_lambda = 0.;
+      ve_glob[mn][mm]->time_const_st->carreau_lambdaModel = CONSTANT;
+      ve_glob[mn][mm]->time_const_st->aexp = 0.;
+      ve_glob[mn][mm]->time_const_st->aexpModel = CONSTANT;
+      ve_glob[mn][mm]->time_const_st->nexp = 0.;
+      ve_glob[mn][mm]->time_const_st->nexpModel = CONSTANT;
+      ve_glob[mn][mm]->time_const_st->lambda0Model = matl_model;
+      ve_glob[mn][mm]->time_const_st->ConstitutiveEquation = matl_model;
+    }
+
+    // in case of non-constant polymer viscosity, parse polymer time constant parameters
+    if (matl_model == CONSTANT) {
+      for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+        ve_glob[mn][mm]->time_const_st->lambda0 = modal_data[mm];
+      }
+    } else {
+      // look for material properties for non-constant polymer viscosity
+
+      // Low Rate Time Constant
+      switch (ve_glob[mn][0]->time_const_st->ConstitutiveEquation) {
+      case POWER_LAW:
+      case CARREAU: {
+        strcpy(search_string, "Polymer Low Rate Time Constant");
+        model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                         modal_data, model_name, es);
+        if (model_read < 1) {
+          if (model_read == -1)
+            GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+        }
+        if (matl_model != CONSTANT) {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+        }
+        for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+          ve_glob[mn][mm]->time_const_st->lambda0 = modal_data[mm];
+        }
+      } break;
+      default:
+        break;
+      }
+
+      // Power Law Exponent
+      switch (ve_glob[mn][0]->time_const_st->ConstitutiveEquation) {
+      case POWER_LAW:
+      case CARREAU: {
+        strcpy(search_string, "Polymer Time Constant Power Law Exponent");
+        model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                         modal_data, model_name, es);
+        if (model_read < 1) {
+          if (model_read == -1)
+            GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+        }
+        if (matl_model != CONSTANT) {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+        }
+        for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+          ve_glob[mn][mm]->time_const_st->nexp = modal_data[mm];
+        }
+      } break;
+      default:
+        break;
+      }
+
+      // High Rate Viscosity
+      switch (ve_glob[mn][0]->time_const_st->ConstitutiveEquation) {
+      case CARREAU: {
+        strcpy(search_string, "Polymer High Rate Time Constant");
+        model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                         modal_data, model_name, es);
+        if (model_read < 1) {
+          if (model_read == -1)
+            GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+        }
+        if (matl_model != CONSTANT) {
+          GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+        }
+        for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+          ve_glob[mn][mm]->time_const_st->lambdainf = modal_data[mm];
+        }
+      } break;
+
+        // Time Constant Time Constant
+        switch (ve_glob[mn][0]->time_const_st->ConstitutiveEquation) {
+        case CARREAU: {
+          strcpy(search_string, "Polymer Carreau Time Constant");
+          model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                           modal_data, model_name, es);
+          if (model_read < 1) {
+            if (model_read == -1)
+              GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+          }
+          if (matl_model != CONSTANT) {
+            GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+          }
+          for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+            ve_glob[mn][mm]->time_const_st->carreau_lambda = modal_data[mm];
+          }
+        } break;
+        default:
+          break;
+        }
+
+        // Time Constant Aexp
+        switch (ve_glob[mn][0]->time_const_st->ConstitutiveEquation) {
+        case CARREAU: {
+          strcpy(search_string, "Polymer Time Constant Aexp");
+          model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                           modal_data, model_name, es);
+          if (model_read < 1) {
+            if (model_read == -1)
+              GOMA_EH(GOMA_ERROR, "%s card is missing.", search_string);
+          }
+          if (matl_model != CONSTANT) {
+            GOMA_EH(GOMA_ERROR, "Only CONSTANT %s mode model supported.", search_string);
+          }
+          for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+            ve_glob[mn][mm]->time_const_st->aexp = modal_data[mm];
+          }
+        } break;
+        default:
+          break;
+        }
+      }
     }
 
     strcpy(search_string, "Positive Level Set Polymer Time Constant");
 
-    model_read =
-        look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+    model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                     modal_data, model_name, es);
 
     if (model_read == 1) {
 
@@ -2612,13 +2836,14 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                             "Set Tracking.\n");
 
       for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
-        ve_glob[mn][mm]->pos_ls.time_const = modal_data[mm];
-        if (ve_glob[mn][mm]->time_constModel != CONSTANT) {
+        ve_glob[mn][mm]->time_const_st->pos_ls_lambda = modal_data[mm];
+        if (ve_glob[mn][mm]->time_const_st->lambda0Model != CONSTANT) {
           fprintf(stderr, "%s\n",
                   "Only CONSTANT Polymer Time Constant model supported for viscoelastic level set");
           exit(-1);
         }
-        ve_glob[mn][mm]->time_constModel = VE_LEVEL_SET;
+        ve_glob[mn][mm]->time_const_st->lambda0Model = VE_LEVEL_SET;
+        ve_glob[mn][mm]->time_const_st->ConstitutiveEquation = VE_LEVEL_SET;
       }
 
       ECHO(es, echo_file);
@@ -2631,8 +2856,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     if (vn_glob[mn]->ConstitutiveEquation == MODIFIED_JEFFREYS) {
       strcpy(search_string, "Jeffreys Viscosity");
 
-      model_read =
-          look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+      model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                       modal_data, model_name, es);
 
       if (model_read < 1) {
         if (model_read == -1)
@@ -2656,7 +2881,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       strcpy(search_string, "Mobility Parameter");
 
       model_read = look_for_modal_prop(imp, "Mobility Parameter", vn_glob[mn]->modes, &matl_model,
-                                       modal_data, es);
+                                       modal_data, model_name, es);
 
       if (model_read < 1) {
         if (model_read == -1)
@@ -2676,15 +2901,14 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       strcpy(search_string, "Positive Level Set Mobility Parameter");
 
-      model_read =
-          look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+      model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                       modal_data, model_name, es);
 
       if (model_read == 1) {
 
         if (ls == NULL)
-          GOMA_EH(
-              GOMA_ERROR,
-              "Positive Level Set Mobility Parameter requires activation of Level Set Tracking.\n");
+          GOMA_EH(GOMA_ERROR, "Positive Level Set Mobility Parameter requires activation of "
+                              "Level Set Tracking.\n");
 
         for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
           ve_glob[mn][mm]->pos_ls.alpha = modal_data[mm];
@@ -2710,7 +2934,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       strcpy(search_string, "Extensibility Parameter");
 
       model_read = look_for_modal_prop(imp, "Extensibility Parameter", vn_glob[mn]->modes,
-                                       &matl_model, modal_data, es);
+                                       &matl_model, modal_data, model_name, es);
 
       if (model_read < 1) {
         if (model_read == -1)
@@ -2801,8 +3025,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT) {
       strcpy(search_string, "PTT Xi parameter");
 
-      model_read =
-          look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+      model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                       modal_data, model_name, es);
 
       if (model_read < 1) {
         if (model_read == -1)
@@ -2822,8 +3046,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       strcpy(search_string, "Positive Level Set PTT Xi parameter");
 
-      model_read =
-          look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+      model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                       modal_data, model_name, es);
 
       if (model_read == 1) {
 
@@ -2846,8 +3070,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       strcpy(search_string, "PTT Epsilon parameter");
 
-      model_read =
-          look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+      model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                       modal_data, model_name, es);
 
       if (model_read < 1) {
         if (model_read == -1)
@@ -2867,8 +3091,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       strcpy(search_string, "Positive Level Set PTT Epsilon parameter");
 
-      model_read =
-          look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+      model_read = look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model,
+                                       modal_data, model_name, es);
 
       if (model_read == 1) {
 
@@ -2906,7 +3130,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       strcpy(search_string, "Stretch Time Constant");
 
       model_read = look_for_modal_prop(imp, "Stretch Time Constant", vn_glob[mn]->modes,
-                                       &matl_model, modal_data, es);
+                                       &matl_model, modal_data, model_name, es);
 
       if (model_read < 1) {
         if (model_read == -1)
@@ -2926,7 +3150,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       strcpy(search_string, "CCR Coefficient");
 
       model_read = look_for_modal_prop(imp, "CCR Coefficient", vn_glob[mn]->modes, &matl_model,
-                                       modal_data, es);
+                                       modal_data, model_name, es);
 
       if (model_read < 1) {
         if (model_read == -1)
@@ -2947,7 +3171,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       strcpy(search_string, "Polymer Exponent");
 
       model_read = look_for_modal_prop(imp, "Polymer Exponent", vn_glob[mn]->modes, &matl_model,
-                                       modal_data, es);
+                                       modal_data, model_name, es);
 
       if (model_read < 1) {
         if (model_read == -1)
@@ -2968,7 +3192,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (vn_glob[mn]->ConstitutiveEquation == ROLIE_POLY_FE) {
         strcpy(search_string, "Maximum Stretch Ratio");
         model_read = look_for_modal_prop(imp, "Maximum Stretch Ratio", vn_glob[mn]->modes,
-                                         &matl_model, modal_data, es);
+                                         &matl_model, modal_data, model_name, es);
 
         if (model_read < 1) {
           if (model_read == -1)
@@ -10699,9 +10923,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         model_read = 1;
         mat_ptr->ehl_normal_method = NCM_PRIMITIVE_XY;
 
-      }
-
-      else {
+      } else {
         // default is normal of roller
         mat_ptr->ehl_normal_method = NCM_PRIMITIVE_S_ROLLER;
         SPF(es, "%s = %s", search_string, "SIK_S_ROLLER");

@@ -372,6 +372,7 @@ int ve_alloc(void) {
   for (mn = 0; mn < MAX_NUMBER_MATLS; mn++) {
     for (mode = 0; mode < MAX_MODES; mode++) {
       ve_glob[mn][mode]->gn = alloc_struct_1(GEN_NEWT_STRUCT, 1);
+      ve_glob[mn][mode]->time_const_st = alloc_struct_1(POLYMER_TIME_CONST_STRUCT, 1);
       init_Generalized_Newtonian(ve_glob[mn][mode]->gn);
     }
   }
@@ -1701,8 +1702,7 @@ static void init_Viscoelastic_Nonmodal(struct Viscoelastic_Nonmodal *v) {
 
 static void init_Viscoelastic_Constitutive(struct Viscoelastic_Constitutive *v) {
   v->gn = NULL;
-  v->time_const = (double)0;
-  v->time_constModel = 0;
+  v->time_const_st = NULL;
   v->alpha = (double)0;
   v->alphaModel = 0;
   v->xi = (double)0;
@@ -1712,7 +1712,6 @@ static void init_Viscoelastic_Constitutive(struct Viscoelastic_Constitutive *v) 
   v->pos_ls.alpha = 0.0;
   v->pos_ls.eps = 0.0;
   v->pos_ls.xi = 0.0;
-  v->pos_ls.time_const = 0.0;
   return;
 }
 

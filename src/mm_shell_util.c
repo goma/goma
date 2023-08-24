@@ -3930,7 +3930,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     /* Set some coefficients */
     dbl k_turb = 12., d_k_turb_dmu = 0., d_k_turb_dH = 0.;
-    dbl vsqr, q_mag = 0., v_mag, tau_w, vis_w, pre_delP = 0., vpre_delP;
+    dbl vsqr, q_mag = 0., v_mag, tau_w, vis_w = 0., pre_delP = 0., vpre_delP;
     dbl dq_gradp = 1., dv_gradp;
     dbl dq_dH = 0., dv_dH;
     dbl dqmag_dF[MDE], factor, ratio, q_mag2;

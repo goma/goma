@@ -1,7 +1,3 @@
-#include "load_field_variables.h"
-#include "mm_fill_energy.h"
-#include "mm_fill_ls_capillary_bcs.h"
-#include "mm_fill_terms.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +16,7 @@
 #include "el_elm_info.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "load_field_variables.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
@@ -27,8 +24,10 @@
 #include "mm_eh.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_common.h"
+#include "mm_fill_energy.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_ls_capillary_bcs.h"
 #include "mm_fill_population.h"
 #include "mm_fill_ptrs.h"
 #include "mm_fill_rs.h"
@@ -37,6 +36,7 @@
 #include "mm_fill_species.h"
 #include "mm_fill_stabilization.h"
 #include "mm_fill_stress.h"
+#include "mm_fill_terms.h"
 #include "mm_fill_util.h"
 #include "mm_flux.h"
 #include "mm_mp.h"
@@ -49,6 +49,7 @@
 #include "mm_species.h"
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
+#include "polymer_time_const.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
@@ -2306,15 +2307,8 @@ void ve_polymer_stress(double gamma[DIM][DIM],
     dbl eig_values[DIM];
 
     for (int mode = 0; mode < vn->modes; mode++) {
-      VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
-      VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-      dbl mup = viscosity(ve[mode]->gn, gamma, d_mup);
-      dbl lambda = 0.0;
-      if (ve[mode]->time_constModel == CONSTANT) {
-        lambda = ve[mode]->time_const;
-      } else {
-        GOMA_EH(GOMA_ERROR, "Unknown polymer time constant model");
-      }
+      dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
+      dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
       if (vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
 #ifdef ANALEIG_PLEASE
         analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1, d_exp_s_ds[mode]);
@@ -2341,7 +2335,7 @@ void ve_polymer_stress(double gamma[DIM][DIM],
     for (int mode = 0; mode < vn->modes; mode++) {
       /* get polymer viscosity */
       dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
-      dbl lambda = ve[mode]->time_const;
+      dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
 
       dbl bdotb[DIM][DIM];
       dbl b[DIM][DIM];
@@ -2390,15 +2384,8 @@ void ve_polymer_stress(double gamma[DIM][DIM],
       default:
         break;
       }
-      VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
-      VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-      dbl mup = viscosity(ve[mode]->gn, gamma, d_mup);
-      dbl lambda = 0.0;
-      if (ve[mode]->time_constModel == CONSTANT) {
-        lambda = ve[mode]->time_const;
-      } else {
-        GOMA_EH(GOMA_ERROR, "Unknown polymer time constant model");
-      }
+      dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
+      dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
       for (int i = 0; i < VIM; i++) {
         for (int j = 0; j < VIM; j++) {
           stress[i][j] += mup * k / lambda * (fv->S[mode][i][j] - (double)delta(i, j));
@@ -2429,13 +2416,10 @@ void ve_polymer_stress(double gamma[DIM][DIM],
       for (int mode = 0; mode < vn->modes; mode++) {
         VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
         VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+        POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+        POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
         dbl mup = viscosity(ve[mode]->gn, gamma, d_mup);
-        dbl lambda = 0.0;
-        if (ve[mode]->time_constModel == CONSTANT) {
-          lambda = ve[mode]->time_const;
-        } else {
-          GOMA_EH(GOMA_ERROR, "Unknown polymer time constant model");
-        }
+        dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
         compute_d_exp_s_ds(fv->S[mode], exp_s, d_exp_s_ds);
 
         for (int p = 0; p < VIM; p++) {
@@ -2453,6 +2437,18 @@ void ve_polymer_stress(double gamma[DIM][DIM],
                     d_stress->S[p][q][mode][b][c][j] = 0;
                   }
                 }
+              }
+            }
+          }
+        }
+
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            for (int b = 0; b < WIM; b++) {
+              int var = VELOCITY1 + b;
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                d_stress->v[p][q][b][j] += d_mup->v[b][j] / lambda * exp_s[p][q] -
+                                           mup * d_lam->v[b][j] / (lambda * lambda) * exp_s[p][q];
               }
             }
           }
@@ -2478,9 +2474,13 @@ void ve_polymer_stress(double gamma[DIM][DIM],
 
     } break;
     case SQRT_CONF: {
+      VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
+      VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+      POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+      POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
       for (int mode = 0; mode < vn->modes; mode++) {
-        dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
-        dbl lambda = ve[mode]->time_const;
+        dbl mup = viscosity(ve[mode]->gn, gamma, d_mup);
+        dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
 
         dbl b[DIM][DIM];
         for (int ii = 0; ii < VIM; ii++) {
@@ -2491,6 +2491,9 @@ void ve_polymer_stress(double gamma[DIM][DIM],
             }
           }
         }
+        dbl bdotb[DIM][DIM];
+        tensor_dot(b, b, bdotb, VIM);
+
         for (int p = 0; p < VIM; p++) {
           for (int q = 0; q < VIM; q++) {
             for (int r = 0; r < VIM; r++) {
@@ -2516,6 +2519,19 @@ void ve_polymer_stress(double gamma[DIM][DIM],
                 for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                   d_stress->S[p][q][mode][r][c][j] = conf[p][q] * bf[var]->phi[j];
                 }
+              }
+            }
+          }
+        }
+
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            for (int b = 0; b < WIM; b++) {
+              int var = VELOCITY1 + b;
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                d_stress->v[p][q][b][j] +=
+                    -(d_mup->v[b][j] / lambda) * (delta(p, q) - bdotb[p][q]) +
+                    (d_lam->v[b][j] * mup / (lambda * lambda)) * (delta(p, q) - bdotb[p][q]);
               }
             }
           }
@@ -2571,13 +2587,10 @@ void ve_polymer_stress(double gamma[DIM][DIM],
         }
         VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
         VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+        POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+        POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
         dbl mup = viscosity(ve[mode]->gn, gamma, d_mup);
-        dbl lambda = 0.0;
-        if (ve[mode]->time_constModel == CONSTANT) {
-          lambda = ve[mode]->time_const;
-        } else {
-          GOMA_EH(GOMA_ERROR, "Unknown polymer time constant model");
-        }
+        dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
         for (int a = 0; a < VIM; a++) {
           for (int b = 0; b < VIM; b++) {
             for (int p = 0; p < VIM; p++) {
@@ -2588,6 +2601,19 @@ void ve_polymer_stress(double gamma[DIM][DIM],
                       mup * k / lambda * delta(a, p) * delta(b, q) * bf[var]->phi[j] +
                       (mup * d_k[p][q] / lambda) * bf[var]->phi[j] * (fv->S[mode][a][b]);
                 }
+              }
+            }
+          }
+        }
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            for (int b = 0; b < WIM; b++) {
+              int var = VELOCITY1 + b;
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                d_stress->v[p][q][b][j] +=
+                    -(d_mup->v[b][j] * k / lambda) * (delta(p, q) - fv->S[mode][p][q]) +
+                    (d_lam->v[b][j] * k * mup / (lambda * lambda)) *
+                        (delta(p, q) - fv->S[mode][p][q]);
               }
             }
           }
