@@ -2684,8 +2684,9 @@ int rd_vectors_from_exoII(double u[],
        * Allocate memory for external field variable arrays
        */
       efv->ext_fld_ndl_val[variable_no] = alloc_dbl_1(exo->num_nodes, 0.0);
-      printf("rd_vectors_from_exoII: Allocated field %d for %s at %p\n", variable_no,
-             efv->name[variable_no], (void *)efv->ext_fld_ndl_val[variable_no]);
+      if (Debug_Flag)
+        printf("rd_vectors_from_exoII: Allocated field %d for %s at %p\n", variable_no,
+               efv->name[variable_no], (void *)efv->ext_fld_ndl_val[variable_no]);
       vdex = -1;
 #ifdef REACTION_PRODUCT_EFV
       if (TimeIntegration != STEADY) {
