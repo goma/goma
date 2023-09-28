@@ -2113,9 +2113,9 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                 /*
                  * For strong conditions weight the function by BIG_PENALTY
                  */
-                if (bc_desc->method == STRONG_INT_SURF) {
-                  weight *= BIG_PENALTY;
-                }
+                // if (bc_desc->method == STRONG_INT_SURF) {
+                //   weight *= BIG_PENALTY;
+                // }
                 /*
                  *   Add in the multiplicative constant for corresponding to
                  *   all boundary conditions, except for certain special

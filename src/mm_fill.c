@@ -3153,6 +3153,9 @@ Revised:         Summer 1998, SY Tam (UNM)
         if (bct == CONTACT_SURF)
           call_contact = 1;
       }
+      if (call_int || call_col) {
+        err = zero_strong_resid_side(lec, elem_side_bc);
+      }
       /*
        * Major change here 6/10/98 to accomodate frontal solver.  Here the
        * FLUID_SOLID/SOLID_FLUID BCs actually use local element contribution
@@ -4637,6 +4640,9 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
           call_col = 1;
         if (bct == CONTACT_SURF)
           call_contact = 1;
+      }
+      if (call_int || call_col) {
+        err = zero_strong_resid_side(lec, elem_side_bc);
       }
       if (call_col) {
         err = apply_point_colloc_bc(resid_vector, delta_t, theta, ielem, ip_total, ielem_type,
