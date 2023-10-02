@@ -439,6 +439,7 @@ gmax_double
  */
 
 void row_sum_scaling_scale(struct GomaLinearSolverData *ams, double b[], double scale[]) {
+  return;
   if (strcmp(Matrix_Format, "msr") == 0) {
     row_sum_scale_MSR(ams->npu, ams->val, ams->bindx, b, scale);
   } else if (strcmp(Matrix_Format, "vbr") == 0) {

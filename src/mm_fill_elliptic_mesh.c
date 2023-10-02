@@ -121,7 +121,8 @@ int assemble_elliptic_mesh(void) {
     /*
      * Assemble each component "a" of the momentum equation...
      */
-    for (int a = 0; a < dim; a++) {
+    for (int aa = 0; aa < dim; aa++) {
+      int a = (aa+1) % dim;
       int eqn = R_MESH1 + a;
       int peqn = upd->ep[pg->imtrx][eqn];
 
@@ -169,7 +170,8 @@ int assemble_elliptic_mesh(void) {
    */
 
   if (af->Assemble_Jacobian) {
-    for (int a = 0; a < dim; a++) {
+    for (int aa = 0; aa < dim; aa++) {
+      int a = (aa+1) % dim;
       int eqn = R_MESH1 + a;
       int peqn = upd->ep[pg->imtrx][eqn];
 
@@ -188,7 +190,8 @@ int assemble_elliptic_mesh(void) {
         /*
          * J_d_d
          */
-        for (int b = 0; b < dim; b++) {
+        for (int bb = 0; bb < dim; bb++) {
+          int b =  (bb+1) % dim;
           int var = MESH_DISPLACEMENT1 + b;
           if (pd->v[pg->imtrx][var]) {
             int pvar = upd->vp[pg->imtrx][var];
