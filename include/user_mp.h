@@ -56,7 +56,8 @@ EXTERN int usr_surface_tension(dbl *); /* param - ptr to user-defined parm list 
 EXTERN int usr_momentum_source(dbl *); /* param - ptr to user-defined parm list     */
 
 EXTERN int usr_lame_mu(struct Elastic_Constitutive *,
-                       dbl *); /* param - ptr to user-defined parm list     */
+                       dbl *, /* param - ptr to user-defined parm list     */
+                       const int);
 
 EXTERN int usr_lame_lambda(struct Elastic_Constitutive *,
                            dbl *); /* param - ptr to user-defined parm list     */
@@ -64,7 +65,8 @@ EXTERN int usr_lame_lambda(struct Elastic_Constitutive *,
 EXTERN int usr_expansion(dbl *, /* param - ptr to user-defined parm list     */
                          double *,
                          double[MAX_VARIABLE_TYPES + MAX_CONC],
-                         const int);
+                         const int,
+                         const double);
 
 EXTERN int usr_diffusivity(int,    /* species_no - of diffusivity etc. needed   */
                            dbl *); /* param - ptr to user-defined parm list     */

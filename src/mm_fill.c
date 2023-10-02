@@ -1448,7 +1448,15 @@ Revised:         Summer 1998, SY Tam (UNM)
      */
     do_LSA_mods(LSA_VOLUME);
 
-    if (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) {
+    if (vn->evssModel == EVSS_G && cr->MeshFluxModel == ZENER_SLS) {
+      err = assemble_stress_vesolid(theta, delta_t, ielem, ip, ip_total);
+      GOMA_EH(err, "assemble_stress_vesolid");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_stress_vesolid");
+      if (err)
+        return -1;
+#endif
+    } else if (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) {
       err = assemble_stress_fortin(theta, delta_t, &pg_data);
       err = segregate_stress_update(x_update);
       GOMA_EH(err, "assemble_stress_fortin");
@@ -3156,6 +3164,9 @@ Revised:         Summer 1998, SY Tam (UNM)
         if (bct == CONTACT_SURF)
           call_contact = 1;
       }
+      if (call_int || call_col) {
+        err = zero_strong_resid_side(lec, elem_side_bc);
+      }
       /*
        * Major change here 6/10/98 to accomodate frontal solver.  Here the
        * FLUID_SOLID/SOLID_FLUID BCs actually use local element contribution
@@ -4640,6 +4651,9 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
           call_col = 1;
         if (bct == CONTACT_SURF)
           call_contact = 1;
+      }
+      if (call_int || call_col) {
+        err = zero_strong_resid_side(lec, elem_side_bc);
       }
       if (call_col) {
         err = apply_point_colloc_bc(resid_vector, delta_t, theta, ielem, ip_total, ielem_type,

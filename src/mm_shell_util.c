@@ -3491,6 +3491,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 {
   int i, j, k, jk, w;
   dbl q[DIM], ev[DIM], pgrad, pg_cmp[DIM], dev_dpg[DIM][DIM];
+  double DQ_DP[DIM][DIM], DQ_DH[DIM];
   dbl v_avg[DIM];
   dbl H;
   dbl veloL[DIM], veloU[DIM];
@@ -3933,6 +3934,16 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dbl dq_gradp = 1., dv_gradp;
     dbl dq_dH = 0., dv_dH;
     dbl dqmag_dF[MDE], factor, ratio, q_mag2;
+    double DQ_DP1[DIM][DIM], DQ_DF[DIM][MDE];
+    double D_Q_DF[DIM][MDE], D_V_DF[DIM][MDE];
+    int nonmoving_model =
+        (gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
+         gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF);
+    int movwall_model =
+        (gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
+         gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF ||
+         gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == HERSCHEL_BULKLEY);
+    int movingwall = FALSE;
 
     /* Calculate flow rate and velocity */
     memset(ev, 0.0, sizeof(double) * DIM);
@@ -3950,6 +3961,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       vsqr += SQUARE(veloL[i]);
       vsqr += SQUARE(veloU[i]);
     }
+    movingwall = DOUBLE_NONZERO(vsqr);
     pgrad = sqrt(pgrad);
     if (DOUBLE_NONZERO(pgrad)) {
       for (i = 0; i < dim; i++) {
@@ -3966,102 +3978,171 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dev_dpg[1][2] = dev_dpg[2][1] = -ev[1] * ev[2];
 
     tau_w = 0.5 * H * pgrad;
-    if (gn->ConstitutiveEquation == POWER_LAW) {
-      double nexp = gn->nexp;
-      k_turb = 4. * (2. + 1. / nexp);
-      if (DOUBLE_NONZERO(pgrad)) {
-        q_mag = -2. * SQUARE(H) / k_turb * pow(tau_w / mu, 1. / nexp);
-        pre_delP = -CUBE(H) / (k_turb * mu) * pow(tau_w / mu, 1. / nexp - 1.);
-        dq_gradp = pre_delP / nexp;
-        dq_dH = (2. + 1. / nexp) / H * q_mag;
-        srate = pow(fabs(tau_w) / mu, 1. / nexp);
-        vis_w = tau_w / srate;
-      } else {
-        q_mag = dq_dH = 0.;
+    if (!movingwall) {
+      /*  First non-Newtonian models with analytical viscosity integration */
+      if (gn->ConstitutiveEquation == POWER_LAW) {
+        double nexp = gn->nexp;
+        k_turb = 4. * (2. + 1. / nexp);
+        if (DOUBLE_NONZERO(pgrad)) {
+          q_mag = -2. * SQUARE(H) / k_turb * pow(tau_w / mu, 1. / nexp);
+          pre_delP = -CUBE(H) / (k_turb * mu) * pow(tau_w / mu, 1. / nexp - 1.);
+          dq_gradp = pre_delP / nexp;
+          dq_dH = (2. + 1. / nexp) / H * q_mag;
+          srate = pow(fabs(tau_w) / mu, 1. / nexp);
+          vis_w = tau_w / srate;
+        } else {
+          q_mag = dq_dH = 0.;
+          dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
+          srate = 0.;
+          vis_w = mu;
+        }
+      } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
+        double nexp = gn->nexp, yield = gn->tau_y, eps_rate = 0.000001;
+        if (tau_w - yield > 0.) {
+          double f, f_c, f_term, f_termd;
+          f = yield / tau_w;
+          f_c = 1. - f;
+          f_term = 1. - SQUARE(f) - SQUARE(f_c) / (2. * nexp + 1.) - 2. * f * f_c / (2. + nexp);
+          f_termd = SQUARE(f) + f * f_c / (2 * nexp + 1.) + f * (1. - 2 * f) / (2 + nexp);
+          srate = pow((tau_w - yield) / mu, 1. / nexp);
+          vis_w = tau_w / srate;
+          q_mag = -0.25 * SQUARE(H) * srate * f_term;
+          pre_delP = 0.5 * H * q_mag / tau_w;
+          dq_gradp = -0.125 * CUBE(H) * f_term / (nexp * f_c * vis_w);
+          dq_gradp += -0.25 * CUBE(H) * f_termd / vis_w;
+          dq_dH = (2 + 1. / nexp / f_c) * q_mag / H - 0.5 * H * srate * f_termd;
+        } else {
+          srate = 0.;
+          vis_w = yield / eps_rate;
+          q_mag = 0.;
+          pre_delP = 0.;
+          dq_gradp = -0.25 * CUBE(H) / vis_w * SQUARE(nexp + 1.) / nexp / (nexp + 2.);
+          dq_dH = 0.;
+        }
+        /*  Next  non-Newtonian models with numerical viscosity integration */
+      } else if (nonmoving_model) {
+        if (isnan(tau_w))
+          GOMA_WH(GOMA_ERROR, "Trouble, tau_w is nan...\n");
+        err =
+            lub_viscosity_integrate(tau_w, H, &q_mag, &dq_gradp, &dq_dH, &srate, &pre_delP, &vis_w);
+        if (isnan(srate))
+          DPRINTF(stderr, "lub_srate isnan %g %g %g %g\n", tau_w, q_mag, srate, vis_w);
+        if (err < 0) {
+          GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
+        }
+      } else { /*  Newtonian type models - nonmoving wall part  */
+        k_turb = 12.;
         dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
-        srate = 0.;
+        q_mag = pre_delP * pgrad;
+        dq_dH = -3. * SQUARE(H) / (k_turb * mu) * pgrad;
+        dq_dH += q_mag * (-d_k_turb_dH / k_turb);
+        srate = fabs(tau_w / mu);
         vis_w = mu;
+        for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
+          dqmag_dF[j] += q_mag * (-d_k_turb_dmu * dmu_df[j] / k_turb - dmu_df[j] / mu);
+        }
       }
-    } else if (gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
-               gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF) {
-      if (isnan(tau_w))
-        GOMA_WH(GOMA_ERROR, "Trouble, tau_w is nan...\n");
-      err = lub_viscosity_integrate(tau_w, H, &q_mag, &dq_gradp, &dq_dH, &srate, &pre_delP, &vis_w);
-      if (isnan(srate))
-        fprintf(stderr, "lub_srate isnan %g %g %g %g\n", tau_w, q_mag, srate, vis_w);
-      if (err < 0) {
-        GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
-      }
-
-    } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
-      double nexp = gn->nexp, yield = gn->tau_y, eps_rate = 0.000001;
-      if (tau_w - yield > 0.) {
-        double f, f_c, f_term, f_termd;
-        f = yield / tau_w;
-        f_c = 1. - f;
-        f_term = 1. - SQUARE(f) - SQUARE(f_c) / (2. * nexp + 1.) - 2. * f * f_c / (2. + nexp);
-        f_termd = SQUARE(f) + f * f_c / (2 * nexp + 1.) + f * (1. - 2 * f) / (2 + nexp);
-        srate = pow((tau_w - yield) / mu, 1. / nexp);
-        vis_w = tau_w / srate;
-        q_mag = -0.25 * SQUARE(H) * srate * f_term;
-        pre_delP = 0.5 * H * q_mag / tau_w;
-        dq_gradp = -0.125 * CUBE(H) * f_term / (nexp * f_c * vis_w);
-        dq_gradp += -0.25 * CUBE(H) * f_termd / vis_w;
-        dq_dH = (2 + 1. / nexp / f_c) * q_mag / H - 0.5 * H * srate * f_termd;
-      } else {
-        srate = 0.;
-        vis_w = yield / eps_rate;
-        q_mag = 0.;
-        pre_delP = 0.;
-        dq_gradp = -0.25 * CUBE(H) / vis_w * SQUARE(nexp + 1.) / nexp / (nexp + 2.);
-        dq_dH = 0.;
-      }
-    } else { /*  Newtonian type models */
-      k_turb = 12.;
-      dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
-      q_mag = pre_delP * pgrad;
-      dq_dH = -3. * SQUARE(H) / (k_turb * mu) * pgrad;
-      srate = fabs(tau_w / mu);
-      vis_w = mu;
-      for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
-        dqmag_dF[j] += q_mag * (-d_k_turb_dmu * dmu_df[j] / k_turb - dmu_df[j] / mu);
-      }
-    } /*  End of Viscosity Models **/
-
-    /* modulate q if level-set interface present */
-    if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
-      ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-      q_mag2 = q_mag * ratio;
-      q_mag =
-          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-      factor *= (1. - ratio);
-      factor += ratio;
-      dq_gradp *= factor;
-      dq_dH *= factor;
-      pre_delP *= factor;
-      vis_w /= factor;
-    }
-
-    v_mag = q_mag / H;
-    dv_gradp = dq_gradp / H;
-    dv_dH = dq_dH / H - q_mag / SQUARE(H);
-    vpre_delP = pre_delP / H;
-
-    memset(q, 0.0, sizeof(double) * DIM);
-    for (i = 0; i < dim; i++) {
-      q[i] += q_mag * ev[i];
-    }
-    if (DOUBLE_NONZERO(vsqr) &&
-        (gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
-         gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF ||
-         gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == HERSCHEL_BULKLEY)) {
-      GOMA_EH(GOMA_ERROR, "Shear-thining moving wall model not finished yet.\n");
-    } else {
+      memset(q, 0.0, sizeof(double) * DIM);
       for (i = 0; i < dim; i++) {
-        q[i] += 0.5 * H * (veloL[i] + veloU[i]);
+        q[i] += q_mag * ev[i];
       }
-    }
+      /* modulate q (stationary wall part) if level-set interface present */
+      if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
+        ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
+        q_mag2 = q_mag * ratio;
+        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                     (double)mp->mp2nd->viscositymask[0],
+                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+        factor *= (1. - ratio);
+        factor += ratio;
+        dq_gradp *= factor;
+        dq_dH *= factor;
+        pre_delP *= factor;
+        vis_w /= factor;
+      }
+      v_mag = q_mag / H;
+      dv_gradp = dq_gradp / H;
+      dv_dH = dq_dH / H - q_mag / SQUARE(H);
+      vpre_delP = pre_delP / H;
+      /* Convert to more general nomenclature  */
+      for (i = 0; i < dim; i++) {
+        for (j = 0; j < dim; j++) {
+          DQ_DP1[i][j] = dq_gradp * ev[i] * ev[j];
+          DQ_DP[i][j] = DQ_DP1[i][j] + pre_delP * dev_dpg[i][j];
+        }
+        DQ_DH[i] = dq_dH * ev[i];
+        DQ_DH[i] += 0.5 * (veloL[i] + veloU[i]);
+      }
+      for (i = 0; i < dim; i++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
+          DQ_DF[i][j] += dqmag_dF[j] * ev[i];
+          D_Q_DF[i][j] += dq_gradp * D_GRAV_DF[i][j];
+          if (pd->v[pg->imtrx][VAR]) {
+            D_Q_DF[i][j] += dq_gradp * D_GRADH_DF[i][j] * CURV * mp->surface_tension;
+            D_Q_DF[i][j] += dq_gradp * GRADH[i] * D_CURV_DF[j] * mp->surface_tension;
+          }
+        }
+      }
+      /* moving wall parts  */
+    } else {
+      if (movwall_model) { /*  non-Newtonian models with a moving wall */
+        double wstrs, relax = 0.5;
+        int guess = 0;
+        err = lub2D_flow2D(gn, pg_cmp, ev, dev_dpg, q, DQ_DP, DQ_DP1, DQ_DH, H, &srate, veloL,
+                           veloU, guess, &wstrs, relax);
+        if (isnan(srate))
+          DPRINTF(stderr, "lub_srate isnan %g %g %g %g\n", wstrs, q[0], q[1], srate);
+        if (err < 0) {
+          GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
+        }
+      } else { /*  moving wall part of Newtonian type models */
+        k_turb = 12.;
+        dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
+        q_mag = pre_delP * pgrad;
+        dq_dH = -3. * SQUARE(H) / (k_turb * mu) * pgrad;
+        srate = fabs(tau_w / mu);
+        vis_w = mu;
+        for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
+          dqmag_dF[j] += q_mag * (-d_k_turb_dmu * dmu_df[j] / k_turb - dmu_df[j] / mu);
+        }
+        memset(q, 0.0, sizeof(double) * DIM);
+        for (i = 0; i < dim; i++) {
+          q[i] += q_mag * ev[i];
+          q[i] += 0.5 * H * (veloL[i] + veloU[i]);
+        }
+        /* Convert to more general nomenclature  */
+        for (i = 0; i < dim; i++) {
+          for (j = 0; j < dim; j++) {
+            DQ_DP1[i][j] = dq_gradp * ev[i] * ev[j];
+            DQ_DP[i][j] = DQ_DP1[i][j] + pre_delP * dev_dpg[i][j];
+          }
+          DQ_DH[i] = dq_dH * ev[i];
+          DQ_DH[i] += 0.5 * (veloL[i] + veloU[i]);
+        }
+      } /*  End of Viscosity Models **/
+
+      /* modulate q (moving wall part) if level-set interface present */
+      if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
+        ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
+        q_mag2 = q_mag * ratio;
+        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                     (double)mp->mp2nd->viscositymask[0],
+                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+        factor *= (1. - ratio);
+        factor += ratio;
+        dq_gradp *= factor;
+        dq_dH *= factor;
+        pre_delP *= factor;
+        vis_w /= factor;
+      }
+
+      v_mag = q_mag / H;
+      dv_gradp = dq_gradp / H;
+      dv_dH = dq_dH / H - q_mag / SQUARE(H);
+      vpre_delP = pre_delP / H;
+      /** Will need conversion to general here too  */
+    } /* End of moving wall part  */
+
     memset(v_avg, 0.0, sizeof(double) * DIM);
     for (i = 0; i < dim; i++) {
       v_avg[i] += q[i] / H;
@@ -4070,15 +4151,24 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     /* Sensitivity w.r.t. height */
     dbl D_Q_DH[DIM] = {0.0};
     dbl D_V_DH[DIM] = {0.0};
-    for (i = 0; i < dim; i++) {
-      D_Q_DH[i] += dq_dH * ev[i];
-      D_Q_DH[i] += q_mag * (-d_k_turb_dH / k_turb) * ev[i];
-      if (gn->ConstitutiveEquation == NEWTONIAN || 1)
-        D_Q_DH[i] += 0.5 * (veloL[i] + veloU[i]);
-    }
-    for (i = 0; i < dim; i++) {
-      D_V_DH[i] += dv_dH * ev[i];
-      D_V_DH[i] += v_mag * (-d_k_turb_dH / k_turb) * ev[i];
+    if (movingwall && movwall_model) {
+      for (i = 0; i < dim; i++) {
+        D_Q_DH[i] += DQ_DH[i];
+      }
+      for (i = 0; i < dim; i++) {
+        D_V_DH[i] += DQ_DH[i] / H - q[i] / SQUARE(H);
+      }
+    } else {
+      for (i = 0; i < dim; i++) {
+        D_Q_DH[i] += dq_dH * ev[i];
+        D_Q_DH[i] += q_mag * (-d_k_turb_dH / k_turb) * ev[i];
+        if (gn->ConstitutiveEquation == NEWTONIAN || 1)
+          D_Q_DH[i] += 0.5 * (veloL[i] + veloU[i]);
+      }
+      for (i = 0; i < dim; i++) {
+        D_V_DH[i] += dv_dH * ev[i];
+        D_V_DH[i] += v_mag * (-d_k_turb_dH / k_turb) * ev[i];
+      }
     }
 
     /* Sensitivity w.r.t. pressure */
@@ -4092,31 +4182,47 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     memset(D_Q_DGRADP, 0.0, sizeof(double) * DIM * DIM * MDE);
     memset(D_V_DGRADP, 0.0, sizeof(double) * DIM * DIM * MDE);
 
-    for (i = 0; i < dim; i++) {
-      for (j = 0; j < ei[pg->imtrx]->dof[EQN]; j++) {
-        D_Q_DP1[i][j] += dq_gradp * D_GRADP_DP[i][j];
-        D_Q_DP2[i][j] += D_Q_DH[i] * D_H_DP[j];
+    if (movingwall && movwall_model) {
+      for (i = 0; i < dim; i++) {
+        for (j = 0; j < dim; j++) {
+          for (k = 0; k < ei[pg->imtrx]->dof[EQN]; k++) {
+            D_Q_DP1[i][k] += DQ_DP1[i][j] * D_GRADP_DP[j][k];
+            D_Q_DGRADP[i][j][k] += DQ_DP[i][j] * D_GRADP_DP[j][k];
+          }
+          D_Q_DP2[i][j] += D_Q_DH[i] * D_H_DP[j];
+        }
       }
-    }
-    for (i = 0; i < dim; i++) {
-      for (j = 0; j < ei[pg->imtrx]->dof[EQN]; j++) {
-        D_V_DP1[i][j] += dv_gradp * D_GRADP_DP[i][j];
-        D_V_DP2[i][j] += D_V_DH[i] * D_H_DP[j];
+      for (i = 0; i < dim; i++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[EQN]; j++) {
+          D_V_DP1[i][j] = D_Q_DP1[i][j] / H;
+          D_V_DP2[i][j] = (D_Q_DH[i] - q[i] / H) / H * D_H_DP[j];
+        }
+        for (j = 0; j < dim; j++) {
+          for (k = 0; k < ei[pg->imtrx]->dof[EQN]; k++) {
+            D_V_DGRADP[i][j][k] = D_Q_DGRADP[i][j][k] / H;
+          }
+        }
       }
-    }
-    for (i = 0; i < dim; i++) {
-      for (j = 0; j < dim; j++) {
-        for (k = 0; k < ei[pg->imtrx]->dof[EQN]; k++) {
-          D_Q_DGRADP[i][j][k] +=
-              (dq_gradp * ev[i] * ev[j] + pre_delP * dev_dpg[i][j]) * D_GRADP_DP[j][k];
-          D_V_DGRADP[i][j][k] +=
-              (dv_gradp * ev[i] * ev[j] + vpre_delP * dev_dpg[i][j]) * D_GRADP_DP[j][k];
+    } else {
+      for (i = 0; i < dim; i++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[EQN]; j++) {
+          D_V_DP1[i][j] += dv_gradp * D_GRADP_DP[i][j];
+          D_V_DP2[i][j] += D_V_DH[i] * D_H_DP[j];
+        }
+      }
+      for (i = 0; i < dim; i++) {
+        for (j = 0; j < dim; j++) {
+          for (k = 0; k < ei[pg->imtrx]->dof[EQN]; k++) {
+            D_Q_DGRADP[i][j][k] +=
+                (dq_gradp * ev[i] * ev[j] + pre_delP * dev_dpg[i][j]) * D_GRADP_DP[j][k];
+            D_V_DGRADP[i][j][k] +=
+                (dv_gradp * ev[i] * ev[j] + vpre_delP * dev_dpg[i][j]) * D_GRADP_DP[j][k];
+          }
         }
       }
     }
 
     /* Sensitivity w.r.t. level set */
-    dbl D_Q_DF[DIM][MDE], D_V_DF[DIM][MDE];
     memset(D_Q_DF, 0.0, sizeof(double) * DIM * MDE);
     memset(D_V_DF, 0.0, sizeof(double) * DIM * MDE);
     for (i = 0; i < dim; i++) {
@@ -6011,8 +6117,6 @@ int lub_viscosity_integrate(const double strs,
     }
   }
   muinf = at * gn->muinf;
-  mu0 *= at;
-  lam = at * gn->lam;
   F = at * gn->fexp;
 
   /**  Take care of de-generate case first **/
@@ -6302,3 +6406,837 @@ int lub_viscosity_integrate(const double strs,
   return (ierr);
 
 } /* End of lub_viscosity_integrate */
+/**************************
+     Lub viscosity function - hopefully faster than viscosity
+ **************************/
+double
+lub_viscos_fcn(const struct Generalized_Newtonian *gn_local, const double gammadot, double *visd) {
+  double visw = 0., temp, at = 1.;
+  double nexp = gn_local->nexp, lam = gn_local->lam, aexp = gn_local->aexp, muinf = gn_local->muinf;
+  double yield = gn_local->tau_y, F = gn_local->fexp, mu0 = gn_local->mu0,
+         P_eps = gn_local->epsilon;
+  double tp1 = 0., xfact = 0., tmp = 0., tp2 = 0., P_sig = 0., tpe = 0., tpe_d = 0.;
+
+  if (pd->gv[SHELL_TEMPERATURE]) {
+    temp = fv->sh_t;
+  } else {
+    temp = upd->Process_Temperature;
+  }
+
+  if (DOUBLE_NONZERO(temp) && DOUBLE_NONZERO(mp->reference[TEMPERATURE])) {
+    if (gn_local->ConstitutiveEquation == BINGHAM) {
+      at = exp(gn_local->atexp * (1. / temp - 1. / mp->reference[TEMPERATURE]));
+    } else if (gn_local->ConstitutiveEquation == CARREAU_WLF ||
+               gn_local->ConstitutiveEquation == BINGHAM_WLF) {
+      at = exp(gn_local->atexp * (mp->reference[TEMPERATURE] - temp) /
+               (gn_local->wlfc2 + temp - mp->reference[TEMPERATURE]));
+    }
+  }
+  muinf = at * gn_local->muinf;
+  mu0 *= at;
+  lam = at * gn_local->lam;
+  F = at * gn_local->fexp;
+
+  switch (gn_local->ConstitutiveEquation) {
+  case POWER_LAW:
+    visw = mu0 * pow(gammadot, 1. / nexp);
+    *visd = visw / (nexp * SQUARE(gammadot));
+    /*if(*visd != NULL)  *visd = visw / (nexp * SQUARE(gammadot));*/
+    break;
+  case CARREAU:
+  case CARREAU_WLF:
+    tp1 = lam * gammadot;
+    xfact = 1. + pow(tp1, aexp);
+    tmp = pow(xfact, (1. - nexp) / aexp);
+    visw = muinf + (mu0 - muinf) / tmp;
+    *visd = (mu0 - muinf) * (nexp - 1.) * pow(tp1, aexp) / (tmp * xfact);
+    break;
+  case BINGHAM:
+  case BINGHAM_WLF:
+    tp1 = lam * gammadot;
+    xfact = 1. + pow(tp1, aexp);
+    tmp = pow(xfact, (1. - nexp) / aexp);
+    tp2 = F * gammadot;
+    P_sig = pow(1. + tp2, P_eps);
+    tpe = (1. - exp(-tp2)) / gammadot * P_sig;
+    visw = muinf + (mu0 - muinf + yield * tpe) / tmp;
+    if (1) {
+      *visd = (mu0 - muinf + yield * tpe) * (nexp - 1.) * pow(tp1, aexp) / (tmp * xfact);
+      *visd += yield * tpe_d / tmp;
+    }
+    break;
+  default:
+    GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
+  }
+  return (visw);
+}
+/**************************
+     flow subroutine - for knife gaps including web velocity
+ **************************/
+int lub2D_flow2D(struct Generalized_Newtonian *gn_loc,
+                 const double gradp[DIM],
+                 const double ev[DIM],
+                 const double dev_dpg[DIM][DIM],
+                 double qfl[DIM],
+                 double dqfl_dp[DIM][DIM],
+                 double dqfl_dp1[DIM][DIM],
+                 double dqfl_dh[DIM],
+                 const double h,
+                 double *wrate,
+                 const double veloL[DIM],
+                 const double veloU[DIM],
+                 int iguess,
+                 double *wstrs,
+                 double relax_rate) {
+
+  double pgrad, visw, vis0, vis1, str_scale, pg_inv;
+  double shr, dvis0, dvis1, dvis0dK, dvis1dK;
+  double eps, res, TOL_CEIL = 1.e-6, res_tol, soln_tol;
+  int i, j, iter, ITERMAX = 50, ierr, ICNTMAX = 50;
+  double xint1, xint2, xint1dK, xint2dK, xint3;
+  double r[3], xj[3][3], u[3];
+  int colinear = 0;
+  struct Generalized_Newtonian *dum_ptr, *gn_tmp;
+  double epsxint = 0.001, epsvisc = 1.e-6;
+  static double rate0, rate1, Kconst;
+  double fside, fv[DIM], evelo;
+  double rate00, rate10, Kconst0, rate0d, rate1d, Kconstd, step, th, th1;
+  int icnt, ifail, iconv, ifin, sz;
+  double xjnum[3][3], xjs[3][3];
+  double rate0f, rate1f, shear, res0, resid, relax;
+  double shear0, shear1, wrate1;
+  double term1, term2, term3, term4;
+  double dfv_dpg[DIM][DIM], dqfl_depg[DIM][DIM];
+
+  res_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][0]);
+  soln_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][2]);
+
+  /*        check if the flow is only drag flow  */
+
+  shr = 0.;
+  pgrad = 0.;
+  for (i = 0; i < DIM; i++) {
+    shr += SQUARE(veloU[i] - veloL[i]);
+    pgrad += SQUARE(gradp[i]);
+  }
+  shr = sqrt(shr) / h;
+  pgrad = sqrt(pgrad);
+  str_scale = pgrad * h;
+  visw = lub_viscos_fcn(gn_loc, shr, NULL);
+  vis0 = lub_viscos_fcn(gn_loc, fabs(rate0), NULL);
+  vis1 = lub_viscos_fcn(gn_loc, fabs(rate1), NULL);
+
+  if (fabs(vis1 - vis0) / visw < res_tol) {
+    double dqdp;
+    dqdp = -CUBE(h) / (12. * visw);
+    for (i = 0; i < DIM; i++) {
+      qfl[i] = 0.5 * h * (veloU[i] + veloL[i]) + dqdp * gradp[i];
+    }
+    *wrate = MAX(rate1, rate0);
+    *wstrs = visw * (*wrate);
+    return (1);
+  }
+
+  fv[0] = -ev[1];
+  fv[1] = ev[0];
+  fv[2] = -ev[2];
+  dfv_dpg[0][0] = -dev_dpg[1][0];
+  dfv_dpg[0][1] = -dev_dpg[1][1];
+  dfv_dpg[0][2] = -dev_dpg[1][2];
+  dfv_dpg[1][0] = dev_dpg[0][0];
+  dfv_dpg[1][1] = dev_dpg[0][1];
+  dfv_dpg[1][2] = dev_dpg[0][2];
+  dfv_dpg[2][0] = -dev_dpg[2][0];
+  dfv_dpg[2][1] = -dev_dpg[2][1];
+  dfv_dpg[2][2] = -dev_dpg[2][2];
+  fside = 0.;
+  for (i = 0; i < DIM; i++) {
+    fside += fv[i] * (veloU[i] - veloL[i]);
+  }
+  Kconst = visw / h * fside;
+
+  /*        Check for colinearity  */
+  colinear = fabs(fside) <= res_tol;
+
+  sz = sizeof(struct Generalized_Newtonian *);
+  gn_tmp = (struct Generalized_Newtonian *)array_alloc(1, 1, sz);
+  if (gn_tmp == NULL) {
+    GOMA_EH(GOMA_ERROR, "Problem getting memory for Generalized_Newtonian material");
+  }
+  memset(gn_tmp, 0, sz);
+
+  dum_ptr = gn_loc;
+  gn_tmp = gn_loc;
+  gn_loc = dum_ptr;
+
+  /*   solve for the shear rate at the top and bottom surface
+           and crosswise shear stress value  */
+
+  /*        initial guesses based solutions for Newtonian liquids  */
+
+  evelo = 0.;
+  for (i = 0; i < DIM; i++) {
+    evelo += ev[i] * (veloU[i] - veloL[i]);
+  }
+  rate00 = evelo / h - h * pgrad / (2. * visw);
+  rate10 = evelo / h + h * pgrad / (2. * visw);
+  Kconst0 = Kconst;
+  if (iguess) {
+    rate0 = rate00;
+    rate1 = rate10;
+    Kconst = Kconst0;
+  }
+  rate0d = rate0 - rate00;
+  rate1d = rate1 - rate10;
+  Kconstd = Kconst - Kconst0;
+  /********************************************
+         perform continuation from newtonian to viscosity parameters
+   ********************************************/
+  iconv = 1;
+  step = 1.0;
+  ifail = 0;
+  th = 0.;
+  ifin = 0;
+  th1 = 1.;
+  for (icnt = 0; icnt < ICNTMAX; icnt++) {
+    double deter, detinv;
+    if (th + step >= th1) {
+      step = th1 - th;
+      ifin = 1;
+    }
+    th += step;
+    gn_tmp->nexp = 1.0 + th * (gn_loc->nexp - 1.0);
+    gn_tmp->aexp = 2.0 + th * (gn_loc->aexp - 2.0);
+    gn_tmp->tau_y = th * gn_loc->tau_y;
+    gn_tmp->atexp = th * gn_loc->atexp;
+    rate0 = rate00 + step * rate0d;
+    rate1 = rate10 + step * rate1d;
+    Kconst = Kconst0 + step * Kconstd;
+    for (iter = 0; iter < ITERMAX; iter++) {
+      if (colinear) {
+        Kconst = 0.;
+        vis0 = lub_viscos_fcn(gn_tmp, fabs(rate0), &dvis0);
+        dvis0dK = 0.;
+        vis1 = lub_viscos_fcn(gn_tmp, fabs(rate1), &dvis1);
+        dvis1dK = 0.;
+      } else {
+        rate0f = lub2D_crsrate(gn_tmp, rate0, Kconst, epsvisc);
+        shear = sqrt(SQUARE(rate0) + SQUARE(rate0f));
+        vis0 = lub_viscos_fcn(gn_tmp, shear, &dvis0);
+        dvis0dK = Kconst * vis0 * dvis0 / (CUBE(vis0) + SQUARE(Kconst) * dvis0);
+        rate1f = lub2D_crsrate(gn_tmp, rate1, Kconst, epsvisc);
+        shear = sqrt(SQUARE(rate1) + SQUARE(rate1f));
+        vis1 = lub_viscos_fcn(gn_tmp, shear, &dvis1);
+        dvis1dK = Kconst * vis1 * dvis1 / (CUBE(vis1) + SQUARE(Kconst) * dvis1);
+      }
+
+      /*       evaluate first viscosity integral  */
+
+      ierr = lub2D_viscint_2D(gn_tmp, rate0, rate1, Kconst, &xint1, &xint2, &xint1dK, &xint2dK,
+                              epsxint);
+      if (!ierr)
+        GOMA_EH(GOMA_ERROR, "2D viscosity integral failed.");
+
+      /*        evaluate residuals, jacobian entries  */
+
+      r[0] = h * pgrad - vis1 * rate1 + vis0 * rate0;
+      r[1] = pgrad * (ev[0] * (veloU[0] - veloL[0]) + ev[1] * (veloU[1] - veloL[1])) -
+             (vis1 * SQUARE(rate1) - vis0 * SQUARE(rate0) - xint1);
+      r[2] = 0.;
+
+      /*      jacobian entries   */
+
+      if (Include_Visc_Sens || iter > ((int)(0.5 / relax_rate))) {
+        xj[0][0] = vis0 + SQUARE(rate0) * dvis0;
+        xj[0][1] = -vis1 - SQUARE(rate1) * dvis1;
+        xj[1][0] = rate0 * (vis0 + SQUARE(rate0) * dvis0);
+        xj[1][1] = -rate1 * (vis1 + SQUARE(rate1) * dvis1);
+        xj[0][2] = rate0 * dvis0dK - rate1 * dvis1dK;
+        xj[1][2] = SQUARE(rate0) * dvis0dK - SQUARE(rate1) * dvis1dK + xint1dK;
+      } else {
+        xj[0][0] = vis0;
+        xj[0][1] = -vis1;
+        xj[1][0] = vis0 * rate0;
+        xj[1][1] = -vis1 * rate1;
+        xj[0][2] = 0.;
+        xj[1][2] = 0.;
+      }
+      if (!colinear) {
+        if (Include_Visc_Sens || iter > ((int)(0.5 / relax_rate))) {
+          xj[2][0] = Kconst * (1. + SQUARE(rate0) * dvis0 / vis0);
+          xj[2][1] = -Kconst * (1. + SQUARE(rate1) * dvis1 / vis1);
+        } else {
+          xj[2][0] = Kconst;
+          xj[2][1] = -Kconst;
+        }
+        xj[2][2] = -(rate1 * (1. + log(vis1)) - rate0 * (1. + log(vis0)) - xint2) -
+                   Kconst * (rate1 / vis1 * dvis1dK - rate0 / vis0 * dvis0dK - xint2dK);
+        r[2] = pgrad * (fv[0] * (veloU[0] - veloL[0]) + fv[1] * (veloU[1] - veloL[1])) -
+               Kconst * (rate1 * (1. + log(vis1)) - rate0 * (1. + log(vis0)) - xint2);
+      } else {
+        xj[2][2] = 0.;
+      }
+
+      /*       Check numerical Jacobian  */
+
+      if (0) {
+        int i1, j1;
+        ierr = lub2D_numjac(h, pgrad, rate0, rate1, Kconst, epsxint, ev, fv, veloU, veloL, gn_tmp,
+                            xjnum);
+        for (i1 = 0; i1 < 3; i1++) {
+          for (j1 = 0; j1 < 3; j1++) {
+            xjs[i1][j1] = xj[i1][j1];
+            xj[i1][j1] = xjnum[i1][j1];
+          }
+        }
+      }
+
+      /*        solve 3x3 linear system  */
+
+      if (colinear) {
+        deter = xj[0][0] * xj[1][1] - xj[1][0] * xj[0][1];
+        detinv = 1. / deter;
+        u[0] = detinv * (-r[0] * xj[1][1] + r[1] * xj[0][1]);
+        u[1] = detinv * (r[0] * xj[1][0] - r[1] * xj[0][0]);
+        u[2] = 0.;
+      } else {
+        deter = xj[0][0] * (xj[1][1] * xj[2][2] - xj[2][1] * xj[1][2]) -
+                xj[1][0] * (xj[0][1] * xj[2][2] - xj[2][1] * xj[0][2]) +
+                xj[2][0] * (xj[1][2] * xj[0][1] - xj[1][1] * xj[0][2]);
+        detinv = 1. / deter;
+        u[0] = detinv * ((-r[0]) * (xj[2][2] * xj[1][1] - xj[2][1] * xj[1][2]) +
+                         (-r[1]) * (xj[2][1] * xj[0][2] - xj[2][2] * xj[0][1]) +
+                         (-r[2]) * (xj[1][2] * xj[0][1] - xj[1][1] * xj[0][2]));
+        u[1] = detinv * (-r[0] * (xj[2][0] * xj[1][2] - xj[2][2] * xj[1][0]) -
+                         r[1] * (xj[2][2] * xj[0][0] - xj[2][0] * xj[0][2]) -
+                         r[2] * (xj[1][0] * xj[0][2] - xj[1][2] * xj[0][0]));
+        u[2] = detinv * (-r[0] * (xj[2][1] * xj[1][0] - xj[2][0] * xj[1][1]) -
+                         r[1] * (xj[2][0] * xj[0][1] - xj[2][1] * xj[0][0]) -
+                         r[2] * (xj[1][1] * xj[0][0] - xj[1][0] * xj[0][1]));
+      }
+      res = SQUARE(u[0]) + SQUARE(u[1]);
+      resid = sqrt(SQUARE(r[0]) + SQUARE(r[1]) + SQUARE(r[2]));
+      res0 = SQUARE(rate0) + SQUARE(rate1);
+      eps = sqrt(res / (1. + res0)) + fabs(u[2] / str_scale);
+      relax = MIN(1., (double)(iter)*relax_rate);
+      rate0 += relax * u[0];
+      rate1 += relax * u[1];
+      Kconst += relax * u[2];
+      if (iter >= ITERMAX / 4 && icnt >= 3) {
+        DPRINTF(stderr, "flow2 icnt %d %d %g %g %g\n", icnt, iter, eps, resid, relax);
+        if (!colinear) {
+          if (0) {
+            int i1, j1;
+            for (i1 = 0; i1 < 3; i1++) {
+              for (j1 = 0; j1 < 3; j1++) {
+                DPRINTF(stderr, "numjac %d %d %g %g %g\n", i1, j1, xjs[i1][j1], xjnum[i1][j1],
+                        (xjs[i1][j1] - xjnum[i1][j1]) / xjnum[i1][j1]);
+              }
+            }
+          }
+        }
+      }
+      if (eps <= soln_tol && resid < res_tol) {
+        iconv = 1;
+        break;
+      }
+      if (res > 1.0E+20) {
+        iconv = 0;
+        break;
+      }
+    }
+    if (eps > soln_tol || resid > res_tol)
+      iconv = 0;
+
+    /*     if not converged : cut step, go back  */
+
+    if (!iconv) {
+      ifin = 0;
+      th -= step;
+      step *= 0.1;
+      ifail += 1;
+      if (ifail >= 6) {
+        GOMA_EH(GOMA_ERROR, "flow2D has 6 consecutive failures");
+      }
+      break;
+    } else {
+      ifail = 0;
+      if (DOUBLE_NONZERO(step)) {
+        rate0d = (rate0 - rate00) / step;
+        rate1d = (rate1 - rate10) / step;
+        Kconstd = (Kconst - Kconst0) / step;
+      } else {
+        rate0d = 0.;
+        rate1d = 0.;
+        Kconstd = 0.;
+      }
+      rate00 = rate0;
+      rate10 = rate1;
+      Kconst0 = Kconst;
+      if (iter < ITERMAX / 4)
+        step *= 1.8;
+      if (iter >= ITERMAX / 2)
+        step *= 0.5;
+    }
+    if (ifin)
+      break;
+  }
+  DPRINTF(stderr, "flow2 continuation loop failed %g pct\n", 100 * th);
+
+  /*    solve for flowrate, knowing both wall shear rates and
+             the value of the crosswise shear stress  */
+
+  xint3 = lub2D_flowint_2D(gn_loc, rate0, rate1, Kconst, epsxint);
+
+  pg_inv = 1. / pgrad;
+  term1 = veloU[0] * vis1 * rate1 - veloL[0] * vis0 * rate0;
+  term2 = SQUARE(vis1) * CUBE(rate1) - SQUARE(vis0) * CUBE(rate0) - xint3;
+  term3 = Kconst * (vis1 * SQUARE(rate1) - vis0 * SQUARE(rate0) - xint1);
+  term4 = veloU[1] * vis1 * rate1 - veloL[1] * vis0 * rate0;
+  qfl[0] = term1 * pg_inv - SQUARE(pg_inv) * (0.5 * ev[0] * term2 + fv[0] * term3);
+  qfl[1] = term4 * pg_inv - SQUARE(pg_inv) * (0.5 * ev[1] * term2 + fv[1] * term3);
+
+  /*        calculate maximum wall shear rate   */
+
+  shear0 = lub2D_crsrate(gn_loc, rate0, Kconst, epsvisc);
+  shear1 = lub2D_crsrate(gn_loc, rate1, Kconst, epsvisc);
+  *wrate = sqrt(SQUARE(shear0) + SQUARE(rate0));
+  wrate1 = sqrt(SQUARE(shear1) + SQUARE(rate1));
+  *wrate = MAX(wrate1, *wrate);
+  *wstrs = MAX(wrate1 * vis1, (*wrate) * vis0);
+  iguess = 0;
+
+  /*  Jacobian elements  */
+  if (dqfl_dp != NULL) {
+    double dq_dgamma[DIM][DIM], dq_gradp[DIM], dgamma_gradp[DIM];
+    double rate0dh, rate1dh;
+    memset(dq_dgamma, 0.0, sizeof(double) * DIM * DIM);
+
+    /*        compute derivatives wrt rate0,rate1
+              - removing termvx from both numerator and denominator  */
+
+    for (i = 0; i < DIM; i++) {
+      dq_dgamma[i][0] = -veloL[i] * pg_inv +
+                        (ev[i] * vis0 * SQUARE(rate0) + fv[i] * Kconst * rate0) * SQUARE(pg_inv);
+      dq_dgamma[i][1] = veloU[i] * pg_inv -
+                        (ev[i] * vis1 * SQUARE(rate1) + fv[i] * Kconst * rate1) * SQUARE(pg_inv);
+      /*         derivatives wrt pgrad  */
+      dq_gradp[i] = -term1 * SQUARE(pg_inv) + (ev[i] * term2 + 2. * fv[i] * term3) * CUBE(pg_inv);
+      /*        derivatives wrt px,py through ex,ey,fx,fy   */
+      for (j = 0; j < DIM; j++) {
+        dqfl_depg[i][j] = -(0.5 * dev_dpg[i][j] * term2 + dfv_dpg[i][j] * term3) * CUBE(pg_inv);
+      }
+    }
+
+    /*        derivatives of rates wrt pgrad   */
+
+    dgamma_gradp[0] = (evelo - h * rate1) / (rate1 - rate0);
+    dgamma_gradp[1] = (evelo - h * rate0) / (rate1 - rate0);
+    dgamma_gradp[2] = 0.;
+
+    for (i = 0; i < DIM; i++) {
+      for (j = 0; j < DIM; j++) {
+        dqfl_dp1[i][j] = (dq_dgamma[i][j] * dgamma_gradp[j] + dq_gradp[i]) * ev[j];
+        dqfl_dp[i][j] = dqfl_dp1[i][j] + dqfl_depg[i][j];
+      }
+    }
+    /*   qxpx = (qxd0*pd0 + qxd1*pd1 + qxdp)*ex + qxdpx
+       qxpy = (qxd0*pd0 + qxd1*pd1 + qxdp)*ey + qxdpy
+       qypx = (qyd0*pd0 + qyd1*pd1 + qydp)*ex + qydpx
+       qypy = (qyd0*pd0 + qyd1*pd1 + qydp)*ey + qydpy  */
+    iguess = 0;
+    rate1dh = pgrad * rate0 / (rate1 - rate0);
+    rate0dh = pgrad * rate1 / (rate1 - rate0);
+    dqfl_dh[0] = ev[0] * (dq_dgamma[0][0] * rate0dh + dq_dgamma[0][1] * rate1dh);
+    dqfl_dh[1] = ev[1] * (dq_dgamma[1][0] * rate0dh + dq_dgamma[1][0] * rate1dh);
+    dqfl_dh[2] = 0.;
+  }
+
+  return (1);
+}
+/*************************************
+         iteration routine for finding cross shear rate
+ ************************************/
+double lub2D_crsrate(const struct Generalized_Newtonian *gn_local,
+                     const double rate,
+                     const double strs,
+                     const double tolerance) {
+  double shr, shrw, vis_w = 1., visd = 0.;
+  double eps, res, xj, delta;
+  int iter, ITERMAX = 50;
+
+  /** First iterate to find shearrate that corresponds to stress */
+  shr = strs / gn_local->mu0;
+  for (iter = 0; iter < ITERMAX; iter++) {
+    shrw = sqrt(SQUARE(rate) + SQUARE(shr));
+    vis_w = lub_viscos_fcn(gn_local, shrw, &visd);
+
+    res = strs - vis_w * shr;
+    xj = -vis_w - SQUARE(shr) * visd;
+    if ((1. + visd / vis_w) < 0.01) {
+      GOMA_WH(GOMA_ERROR, "Trouble... Viscosity function nearly singular!");
+    }
+    delta = -res / xj;
+    if (iter < ITERMAX / 4) {
+      shr += delta;
+    } else if (iter < ITERMAX / 2) {
+      shr += 0.2 * delta;
+    } else if (iter < 3 * ITERMAX / 4) {
+      shr += 0.5 * delta;
+    } else {
+      shr += delta;
+    }
+    eps = fabs(delta) / (1. + fabs(shr));
+    if (fabs(res) < tolerance && eps < tolerance) {
+      break;
+    }
+  }
+  if (eps > tolerance) {
+    GOMA_EH(GOMA_ERROR, "2D Cross-rate iteration not converged!");
+  }
+  return (shr);
+}
+/***************************
+     flow2D numerical jacobian for 3x3
+ ****************************/
+int lub2D_numjac(const double h,
+                 const double pgrad,
+                 const double rate0,
+                 const double rate1,
+                 const double Kconst,
+                 const double epstol,
+                 const double ev[DIM],
+                 const double fv[DIM],
+                 const double veloU[DIM],
+                 const double veloL[DIM],
+                 struct Generalized_Newtonian *gn_loc,
+                 double xj[3][3]) {
+  double u[3], u0[3], r_plus[3], r_neg[3], denom;
+  double STEP = 0.000001;
+  int j, i, ierr;
+  double xint1, xint2;
+  double rate0f, shear, vis0, rate1f, vis1, dvis0, dvis1;
+
+  u0[0] = u[0] = rate0;
+  u0[1] = u[1] = rate1;
+  u0[2] = u[2] = Kconst;
+
+  for (j = 0; j < 3; j++) {
+    if (DOUBLE_NONZERO(u0[j])) {
+      u[j] = u0[j] * (1. + STEP);
+    } else {
+      u[j] = u0[j] + STEP;
+    }
+
+    rate0f = lub2D_crsrate(gn_loc, u[0], u[2], epstol);
+    shear = sqrt(SQUARE(u[0]) + SQUARE(rate0f));
+    vis0 = lub_viscos_fcn(gn_loc, shear, &dvis0);
+    rate1f = lub2D_crsrate(gn_loc, u[1], u[2], epstol);
+    shear = sqrt(SQUARE(u[1]) + SQUARE(rate1f));
+    vis1 = lub_viscos_fcn(gn_loc, shear, &dvis1);
+
+    ierr = lub2D_viscint_2D(gn_loc, u[0], u[1], u[2], &xint1, &xint2, NULL, NULL, epstol);
+    if (!ierr)
+      GOMA_EH(GOMA_ERROR, "2D viscosity integral failed.");
+    r_plus[0] = h * pgrad - vis1 * u[1] + vis0 * u[0];
+    r_plus[1] = pgrad * (ev[0] * (veloU[0] - veloL[0]) + ev[1] * (veloU[1] - veloL[1])) -
+                (vis1 * SQUARE(u[1]) - vis0 * SQUARE(u[0]) - xint1);
+    r_plus[2] = pgrad * (fv[0] * (veloU[0] - veloL[0]) + fv[1] * (veloU[1] - veloL[1])) -
+                u[2] * (u[1] * (1. + log(vis1)) - u[0] * (1. + log(vis0)) - xint2);
+
+    if (DOUBLE_NONZERO(u0[j])) {
+      u[j] = u0[j] * (1. - STEP);
+    } else {
+      u[j] = u0[j] - STEP;
+    }
+
+    rate0f = lub2D_crsrate(gn_loc, u[0], u[2], epstol);
+    shear = sqrt(SQUARE(u[0]) + SQUARE(rate0f));
+    vis0 = lub_viscos_fcn(gn_loc, shear, &dvis0);
+    rate1f = lub2D_crsrate(gn_loc, u[1], u[2], epstol);
+    shear = sqrt(SQUARE(u[1]) + SQUARE(rate1f));
+    vis1 = lub_viscos_fcn(gn_loc, shear, &dvis1);
+    ierr = lub2D_viscint_2D(gn_loc, u[0], u[1], u[2], &xint1, &xint2, NULL, NULL, epstol);
+    if (!ierr)
+      GOMA_EH(GOMA_ERROR, "2D viscosity integral failed.");
+    r_neg[0] = h * pgrad - vis1 * u[1] + vis0 * u[0];
+    r_neg[1] = pgrad * (ev[0] * (veloU[0] - veloL[0]) + ev[1] * (veloU[1] - veloL[1])) -
+               (vis1 * SQUARE(u[1]) - vis0 * SQUARE(u[0]) - xint1);
+    r_neg[2] = pgrad * (fv[0] * (veloU[0] - veloL[0]) + fv[1] * (veloU[1] - veloL[1])) -
+               u[2] * (u[1] * (1. + log(vis1)) - u[0] * (1. + log(vis0)) - xint2);
+
+    if (DOUBLE_NONZERO(u0[j])) {
+      denom = 2. * u0[j] * STEP;
+    } else {
+      denom = 2. * STEP;
+    }
+    for (i = 0; i < 3; i++) {
+      xj[i][j] = (r_plus[i] - r_neg[i]) / denom;
+    }
+    u[j] = u0[j];
+  }
+  return (1);
+}
+/**************************
+    flow2D viscosity integrals
+***************************/
+int lub2D_viscint_2D(const struct Generalized_Newtonian *gn_loc,
+                     const double rate0,
+                     const double rate1,
+                     const double Kconst,
+                     double *xint1,
+                     double *xint2,
+                     double *xint1dK,
+                     double *xint2dK,
+                     const double tolerance) {
+  double shr;
+  double eps, res, res0;
+  int jdi, JDIPOWER_MAX = 16, l;
+  double drate, xintold, x0, idiv, jdiv, delx, cee;
+
+  /*       evaluate first viscosity integral  */
+
+  if (rate0 * rate1 >= 0.) {
+    double rate, shear, dvisdK, vis, dvis;
+
+    /*       rates of the same sign - do as one integral */
+
+    drate = rate1 - rate0;
+    xintold = 0.;
+    for (jdi = 0; jdi < JDIPOWER_MAX; jdi++) {
+      jdiv = pow(2., jdi);
+      delx = 1. / jdiv;
+      x0 = 0.0;
+      *xint1 = *xint1dK = 0.;
+      for (idiv = 0; idiv < jdiv; idiv++) {
+        for (l = 0; l < mp->LubInt_NGP; l++) {
+          cee = x0 + mp->Lub_gpts[l] * delx;
+          rate = drate * cee + rate0;
+          shear = lub2D_crsrate(gn_loc, rate, Kconst, tolerance);
+          shr = sqrt(SQUARE(rate) + SQUARE(shear));
+          vis = lub_viscos_fcn(gn_loc, shr, &dvis);
+          *xint1 += vis * rate * drate * delx * mp->Lub_wts[l];
+          dvisdK = Kconst * vis * dvis / (CUBE(vis) + SQUARE(Kconst) * dvis);
+          *xint1dK += dvisdK * rate * drate * delx * mp->Lub_wts[l];
+        }
+        x0 += delx;
+      }
+      res = fabs(*xint1 - xintold);
+      res0 = fabs(*xint1);
+      eps = res / (1. + res0);
+      if (eps < tolerance)
+        break;
+      xintold = *xint1;
+    }
+    if (eps > tolerance) {
+      GOMA_EH(GOMA_ERROR, "xint1 same sign integration diverged!");
+    }
+  } else {
+    double ratea, rateb, sheara, shearb, dvisdKa, dvisdKb;
+    double visa, dvisa, visb, dvisb;
+
+    /*       rates of opposite sign - do as two integrals  */
+
+    xintold = 0.;
+    for (jdi = 0; jdi < JDIPOWER_MAX; jdi++) {
+      jdiv = pow(2., jdi);
+      delx = 1. / jdiv;
+      x0 = 0.;
+      *xint1 = *xint1dK = 0.;
+      for (idiv = 0; idiv < jdiv; idiv++) {
+        for (l = 0; l < mp->LubInt_NGP; l++) {
+          cee = x0 + mp->Lub_gpts[l] * delx;
+          ratea = cee * rate1;
+          sheara = lub2D_crsrate(gn_loc, ratea, Kconst, tolerance);
+          shr = sqrt(SQUARE(ratea) + SQUARE(sheara));
+          visa = lub_viscos_fcn(gn_loc, shr, &dvisa);
+          rateb = cee * rate0;
+          shearb = lub2D_crsrate(gn_loc, rateb, Kconst, tolerance);
+          shr = sqrt(SQUARE(rateb) + SQUARE(shearb));
+          visb = lub_viscos_fcn(gn_loc, shr, &dvisb);
+          *xint1 += (visa * ratea * rate1 - visb * rateb * rate0) * delx * mp->Lub_wts[l];
+          dvisdKa = Kconst * visa * dvisa / (CUBE(visa) + SQUARE(Kconst) * dvisa);
+          dvisdKb = Kconst * visb * dvisb / (CUBE(visb) + SQUARE(Kconst) * dvisb);
+          *xint1dK += (dvisdKa * ratea * rate1 - dvisdKb * rateb * rate0) * delx * mp->Lub_wts[l];
+        }
+        x0 += delx;
+      }
+      res = fabs(*xint1 - xintold);
+      res0 = fabs(*xint1);
+      eps = res / (1. + res0);
+      if (eps < tolerance)
+        break;
+      xintold = *xint1;
+    }
+    if (eps > tolerance)
+      GOMA_EH(GOMA_ERROR, "xint1 opposite sign integration diverged");
+  }
+
+  /*       evaluate second viscosity integrals  */
+
+  if (rate0 * rate1 >= 0.) {
+    double rate, shear, dvisdK, vis, dvis;
+
+    /*       rates of the same sign - do as one integral */
+
+    drate = rate1 - rate0;
+    xintold = 0.;
+    for (jdi = 0; jdi < JDIPOWER_MAX; jdi++) {
+      jdiv = pow(2., jdi);
+      delx = 1. / jdiv;
+      x0 = 0.;
+      *xint2 = *xint2dK = 0.;
+      for (idiv = 0; idiv < jdiv; idiv++) {
+        for (l = 0; l < mp->LubInt_NGP; l++) {
+          cee = x0 + mp->Lub_gpts[l] * delx;
+          rate = drate * cee + rate0;
+          shear = lub2D_crsrate(gn_loc, rate, Kconst, tolerance);
+          shr = sqrt(SQUARE(rate) + SQUARE(shear));
+          vis = lub_viscos_fcn(gn_loc, shr, &dvis);
+          *xint2 += log(vis) * drate * delx * mp->Lub_wts[l];
+          dvisdK = Kconst * vis * dvis / (CUBE(vis) + SQUARE(Kconst) * dvis);
+          *xint2dK += dvisdK / vis * drate * delx * mp->Lub_wts[l];
+        }
+        x0 += delx;
+      }
+      res = fabs(*xint2 - xintold);
+      res0 = fabs(*xint2);
+      eps = res / (1. + res0);
+      if (eps < tolerance)
+        break;
+      xintold = *xint2;
+    }
+    if (eps > tolerance)
+      GOMA_EH(GOMA_ERROR, "xint2 same sign integration diverged");
+  } else {
+    double ratea, rateb, sheara, shearb, dvisdKa, dvisdKb;
+    double visa, dvisa, visb, dvisb;
+
+    /*       rates of opposite sign - do as two integrals */
+
+    xintold = 0.;
+    for (jdi = 0; jdi < JDIPOWER_MAX; jdi++) {
+      jdiv = pow(2., jdi);
+      delx = 1. / jdiv;
+      x0 = 0.0;
+      *xint2 = *xint2dK = 0.;
+      for (idiv = 0; idiv < jdiv; idiv++) {
+        for (l = 0; l < mp->LubInt_NGP; l++) {
+          cee = x0 + mp->Lub_gpts[l] * delx;
+          ratea = cee * rate1;
+          sheara = lub2D_crsrate(gn_loc, ratea, Kconst, tolerance);
+          shr = sqrt(SQUARE(ratea) + SQUARE(sheara));
+          visa = lub_viscos_fcn(gn_loc, shr, &dvisa);
+          rateb = cee * rate0;
+          shearb = lub2D_crsrate(gn_loc, rateb, Kconst, tolerance);
+          shr = sqrt(SQUARE(rateb) + SQUARE(shearb));
+          visb = lub_viscos_fcn(gn_loc, shr, &dvisb);
+          *xint2 += (log(visa) * rate1 - log(visb) * rate0) * delx * mp->Lub_wts[l];
+          dvisdKa = Kconst * visa * dvisa / (CUBE(visa) + SQUARE(Kconst) * dvisa);
+          dvisdKb = Kconst * visb * dvisb / (CUBE(visb) + SQUARE(Kconst) * dvisb);
+          *xint2dK += (dvisdKa / visa * rate1 - dvisdKb / visb * rate0) * delx * mp->Lub_wts[l];
+        }
+        x0 += delx;
+      }
+      res = fabs(*xint2 - xintold);
+      res0 = fabs(*xint2);
+      eps = res / (1. + res0);
+      if (eps < tolerance)
+        break;
+      xintold = *xint2;
+    }
+    if (eps > tolerance)
+      GOMA_EH(GOMA_ERROR, "xint2 opposite sign integration diverged");
+  }
+  return (1);
+}
+/***************************
+     flow2D flow integral
+****************************/
+double lub2D_flowint_2D(const struct Generalized_Newtonian *gn_loc,
+                        const double rate0,
+                        const double rate1,
+                        const double Kconst,
+                        const double tolerance) {
+  double drate, xintold, xint3, x0, delx, cee, res, res0;
+  int l, jdi, jdiv, idiv, JDIPOWER_MAX = 16;
+
+  /*       solve for flowrate, knowing both wall shear rates and
+          the value of the crosswise shear stress   */
+
+  if (rate0 * rate1 >= 0.) {
+    double rate, shear, shr, vis;
+
+    /*       rates of the same sign - do as one integral  */
+
+    drate = rate1 - rate0;
+    xintold = 0.;
+    for (jdi = 0; jdi < JDIPOWER_MAX; jdi++) {
+      jdiv = pow(2, jdi);
+      delx = 1. / ((double)jdiv);
+      xint3 = 0.;
+      x0 = 0.;
+      for (idiv = 0; idiv < jdiv; idiv++) {
+        for (l = 0; l < mp->LubInt_NGP; l++) {
+          cee = x0 + mp->Lub_gpts[l] * delx;
+          rate = drate * cee + rate0;
+
+          /*       determine cross rate which corresponds to this shearx  */
+
+          shear = lub2D_crsrate(gn_loc, rate, Kconst, tolerance);
+          shr = sqrt(SQUARE(rate) + SQUARE(shear));
+          vis = lub_viscos_fcn(gn_loc, shr, NULL);
+          xint3 += SQUARE(vis * rate) * drate * delx * mp->Lub_wts[l];
+        }
+      }
+      res = fabs(xint3 - xintold);
+      res0 = fabs(xint3);
+      eps = res / (1. + res0);
+      if (eps < tolerance)
+        break;
+      xintold = xint3;
+    }
+    if (eps > tolerance)
+      GOMA_EH(GOMA_ERROR, "xint3 same sign integration diverged");
+  } else {
+    double ratea, rateb, sheara, shearb, shr, visa, visb;
+
+    /*       rates of opposite sign - do as two integrals  */
+
+    xintold = 0.;
+    for (jdi = 0; jdi < JDIPOWER_MAX; jdi++) {
+      jdiv = pow(2, jdi);
+      delx = 1. / ((double)jdiv);
+      xint3 = 0.;
+      x0 = 0.;
+      for (idiv = 0; idiv < jdiv; idiv++) {
+        for (l = 0; l < mp->LubInt_NGP; l++) {
+          cee = x0 + mp->Lub_gpts[l] * delx;
+          ratea = cee * rate1;
+          rateb = cee * rate0;
+
+          /*       determine cross rate which corresponds to this shearx  */
+
+          sheara = lub2D_crsrate(gn_loc, ratea, Kconst, tolerance);
+          shearb = lub2D_crsrate(gn_loc, rateb, Kconst, tolerance);
+          shr = sqrt(SQUARE(ratea) + SQUARE(sheara));
+          visa = lub_viscos_fcn(gn_loc, shr, NULL);
+          shr = sqrt(SQUARE(rateb) + SQUARE(shearb));
+          visb = lub_viscos_fcn(gn_loc, shr, NULL);
+          xint3 +=
+              (SQUARE(visa * ratea) * rate1 - SQUARE(visb * rateb) * rate0) * delx * mp->Lub_wts[l];
+        }
+      }
+      res = fabs(xint3 - xintold);
+      res0 = fabs(xint3);
+      eps = res / (1. + res0);
+      if (eps < tolerance)
+        break;
+      xintold = xint3;
+    }
+    if (eps > tolerance)
+      GOMA_EH(GOMA_ERROR, "xint3 opposite sign integration diverged");
+  }
+  return (xint3);
+}
+/*===========================================================================*/

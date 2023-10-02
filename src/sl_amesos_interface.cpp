@@ -21,6 +21,7 @@
 #include "Epetra_DataAccess.h"
 #include "Epetra_RowMatrix.h"
 #include "az_aztec.h"
+#include "rf_fem_const.h"
 #ifndef GOMA_SL_AMESOS_INTERFACE_CC
 #define GOMA_SL_AMESOS_INTERFACE_CC
 #endif
@@ -61,14 +62,13 @@
 #include "Trilinos_Util.h"
 #include "sl_util_structs.h"
 
-static void GomaMsr2EpetraCsr(struct GomaLinearSolverData *, Epetra_CrsMatrix *);
-
-void amesos_solve_msr(char *choice,
-                      struct GomaLinearSolverData *ams,
-                      double *x_,
-                      double *b_,
-                      int NewMatrix,
-                      int imtrx) {
+static void GomaMsr2EpetraCsr(struct GomaLinearSolverData *ams, Epetra_CrsMatrix *A, int newmatrix);
+void amesos_solve(char *choice,
+                  struct GomaLinearSolverData *ams,
+                  double *x_,
+                  double *b_,
+                  int NewMatrix,
+                  int imtrx) {
 
   /* Initialize MPI communications */
 #ifdef EPETRA_MPI
@@ -76,32 +76,25 @@ void amesos_solve_msr(char *choice,
 #else
   Epetra_SerialComm comm;
 #endif
-  static int prev_matrix = 0;
-
   /* Define internal variables */
-  static int FirstRun = 1;
   static std::string Pkg_Name;
-  static Epetra_CrsMatrix *A;
-  Epetra_LinearProblem Problem;
-  static Amesos_BaseSolver *A_Base;
-  static Amesos A_Factory;
-
-  if (prev_matrix != imtrx) {
-    if (!FirstRun) {
-      delete A;
-    }
-    FirstRun = 1;
-    prev_matrix = imtrx;
-  }
+  static Epetra_CrsMatrix *A[MAX_NUM_MATRICES]{nullptr};
+  static Epetra_LinearProblem Problem[MAX_NUM_MATRICES];
+  static Amesos_BaseSolver *A_Base[MAX_NUM_MATRICES] = {nullptr};
+  Amesos A_Factory;
 
   /* Convert to Epetra format */
-  if (NewMatrix) {
-    if (!FirstRun)
-      delete A;
-    A = (Epetra_CrsMatrix *)construct_Epetra_CrsMatrix(ams);
-    GomaMsr2EpetraCsr(ams, A);
+  if (ams->RowMatrix == 0) {
+    if (!ams->solveSetup) {
+      if (A[imtrx] != nullptr)
+        delete A[imtrx];
+      A[imtrx] = (Epetra_CrsMatrix *)construct_Epetra_CrsMatrix(ams);
+    }
+    GomaMsr2EpetraCsr(ams, A[imtrx], !ams->solveSetup);
+  } else {
+    A[imtrx] = dynamic_cast<Epetra_CrsMatrix *>(ams->RowMatrix);
   }
-  const Epetra_Map &map = (*A).RowMatrixRowMap();
+  const Epetra_Map &map = A[imtrx]->RowMatrixRowMap();
   Epetra_Vector x(Copy, map, x_);
   Epetra_Vector b(Copy, map, b_);
 
@@ -112,7 +105,12 @@ void amesos_solve_msr(char *choice,
   exit(0);
 #endif
   /* Choose correct solver */
-  if (FirstRun) {
+  /* Assemble linear problem */
+  Problem[imtrx].SetOperator(A[imtrx]);
+  Problem[imtrx].SetLHS(&x);
+  Problem[imtrx].SetRHS(&b);
+  Problem[imtrx].CheckInput();
+  if (!ams->solveSetup) {
     std::string Pkg_Choice = choice;
     if (Pkg_Choice == "KLU")
       Pkg_Name = "Amesos_Klu";
@@ -143,28 +141,26 @@ void amesos_solve_msr(char *choice,
       std::cerr << "Error: Unsupported Amesos solver package" << std::endl;
       exit(-1);
     }
-  }
 
-  /* Assemble linear problem */
-  Problem.SetOperator(A);
-  Problem.SetLHS(&x);
-  Problem.SetRHS(&b);
-  Problem.CheckInput();
+    /* Create Amesos base package */
+    if (A_Base[imtrx] != nullptr)
+      delete A_Base[imtrx];
 
-  /* Create Amesos base package */
-
-  A_Base = A_Factory.Create(Pkg_Name.c_str(), Problem);
-  if (A_Base == 0) {
-    std::cout << "Error in amesos_solve_msr" << std::endl;
-    std::cout << "It is likely that the solver package: " << Pkg_Name
-              << " has not been linked into the amesos library " << std::endl;
-    exit(-1);
+    A_Base[imtrx] = A_Factory.Create(Pkg_Name.c_str(), Problem[imtrx]);
+    if (A_Base[imtrx] == 0) {
+      std::cout << "Error in amesos_solve_msr" << std::endl;
+      std::cout << "It is likely that the solver package: " << Pkg_Name
+                << " has not been linked into the amesos library " << std::endl;
+      exit(-1);
+    }
   }
 
   /* Solve problem */
-  A_Base->SymbolicFactorization();
-  A_Base->NumericFactorization();
-  A_Base->Solve();
+  if (!ams->solveSetup) {
+    A_Base[imtrx]->SymbolicFactorization();
+  }
+  A_Base[imtrx]->NumericFactorization();
+  A_Base[imtrx]->Solve();
 
   /* Convert solution vector */
   int NumMyRows = map.NumMyElements();
@@ -173,117 +169,10 @@ void amesos_solve_msr(char *choice,
   }
 
   /* Cleanup problem */
-  FirstRun = 0;
-  delete A_Base;
+  ams->solveSetup = 1;
 }
 
-/**
- * Solve linear system using amesos using epetra  (C interface)
- * A x = b
- * @param choice Amesos solver choice
- * @param ams ams containing Row Matrix for A
- * @param x_ array of values for solution to be put in (containing initial guess)
- * @param resid_vector array representing residual vector (b)
- * @return 0 on success
- */
-int amesos_solve_epetra(
-    char *choice, struct GomaLinearSolverData *ams, double *x_, double *resid_vector, int imtrx) {
-
-  /* Initialize MPI communications */
-#ifdef EPETRA_MPI
-  Epetra_MpiComm comm(MPI_COMM_WORLD);
-#else
-  Epetra_SerialComm comm;
-#endif
-  static int prev_matrix = 0;
-  Epetra_RowMatrix *A = ams->RowMatrix;
-  static Epetra_LinearProblem Problem;
-  static Amesos_BaseSolver *Solver;
-  static Amesos A_Factory;
-  std::string Pkg_Name;
-  static bool firstSolve = true;
-
-  if (prev_matrix != imtrx) {
-    if (!firstSolve) {
-      delete Solver;
-    }
-    firstSolve = true;
-  }
-
-  const Epetra_Map &map = (*A).RowMatrixRowMap();
-
-  Epetra_Vector x(Copy, map, x_);
-  Epetra_Vector b(Copy, map, resid_vector);
-
-  std::string Pkg_Choice = choice;
-
-  if (Pkg_Choice == "KLU")
-    Pkg_Name = "Amesos_Klu";
-#ifdef HAVE_AMESOS_UMFPACK
-  else if (Pkg_Choice == "UMF")
-    Pkg_Name = "Amesos_Umfpack";
-#endif
-  else if (Pkg_Choice == "LAPACK")
-    Pkg_Name = "Amesos_Lapack";
-#if defined(HAVE_AMESOS_SUPERLUDIST)
-  else if (Pkg_Choice == "SUPERLU")
-    Pkg_Name = "Amesos_Superludist";
-  else if (Pkg_Choice == "SUPERLU_PARALLEL")
-    Pkg_Name = "Amesos_Superludist";
-#elif defined(HAVE_AMESOS_SUPERLU)
-  else if (Pkg_Choice == "SUPERLU")
-    Pkg_Name = "Amesos_Superlu";
-#endif
-#ifdef HAVE_AMESOS_SCALAPACK
-  else if (Pkg_Choice == "SCALAPACK")
-    Pkg_Name = "Amesos_Scalapack";
-#endif
-#ifdef HAVE_AMESOS_MUMPS
-  else if (Pkg_Choice == "MUMPS")
-    Pkg_Name = "Amesos_Mumps";
-#endif
-  else {
-    std::cerr << "Error: Unsupported Amesos solver package" << std::endl;
-    exit(-1);
-  }
-
-  /* Assemble linear problem */
-  Problem.SetOperator(A);
-  Problem.SetLHS(&x);
-  Problem.SetRHS(&b);
-
-  AMESOS_CHK_ERR(Problem.CheckInput())
-
-  /* Create Amesos base package */
-  if (firstSolve) {
-
-    Solver = A_Factory.Create(Pkg_Name.c_str(), Problem);
-    if (Solver == 0) {
-      std::cout << "Error in amesos_solve_epetra" << std::endl;
-      std::cout << "It is likely that the solver package: " << Pkg_Name
-                << " has not been linked into the amesos library " << std::endl;
-      exit(-1);
-    }
-
-    /* Solve problem */
-    Solver->SymbolicFactorization();
-  }
-  Solver->NumericFactorization();
-  Solver->Solve();
-
-  /* Convert solution vector */
-  int NumMyRows = map.NumMyElements();
-  for (int i = 0; i < NumMyRows; i++) {
-    x_[i] = x[i];
-  }
-
-  /* Success! */
-  //  firstSolve = false;
-  delete Solver;
-  return 0;
-}
-
-static void GomaMsr2EpetraCsr(struct GomaLinearSolverData *ams, Epetra_CrsMatrix *A)
+static void GomaMsr2EpetraCsr(struct GomaLinearSolverData *ams, Epetra_CrsMatrix *A, int newmatrix)
 
 {
 #ifdef EPETRA_MPI
@@ -291,8 +180,6 @@ static void GomaMsr2EpetraCsr(struct GomaLinearSolverData *ams, Epetra_CrsMatrix
 #else
   Epetra_SerialComm comm;
 #endif
-
-  static int newmatrix = 1;
 
   int *bindx = ams->bindx;
   double *val = ams->val;

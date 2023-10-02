@@ -713,6 +713,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ElasticConstitutiveEquation = KELVIN_VOIGT;
   } else if (!strcmp(model_name, "ELLIPTIC")) {
     ElasticConstitutiveEquation = ELLIPTIC;
+  } else if (!strcmp(model_name, "ZENER_SLS")) {
+    ElasticConstitutiveEquation = ZENER_SLS;
   } else /* default to nonlinear */
   {
     ElasticConstitutiveEquation = NONLINEAR;
@@ -982,6 +984,19 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
   ECHO(es, echo_file);
 
+  model_read = look_for_mat_prop(
+      imp, "Solid Retardation Time", &(elc_glob[mn]->solid_retard_model),
+      &(elc_glob[mn]->solid_retardation), &(elc_glob[mn]->u_solid_retardation),
+      &(elc_glob[mn]->len_u_solid_retardation), model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
+  if (model_read == -1) {
+    elc_glob[mn]->solid_retard_model = CONSTANT;
+    elc_glob[mn]->solid_retardation = 0.0;
+
+    SPF(es, "\t(%s = CONSTANT %.4g)", "Solid Retardation Time", 0.0);
+  }
+  ECHO(es, echo_file);
+
   /* Bending stiffness of structural shells */
   model_read = look_for_mat_prop(
       imp, "Shell bending stiffness", &(elc_glob[mn]->bend_stiffness_model),
@@ -1151,6 +1166,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         GOMA_EH(GOMA_ERROR, err_msg);
       }
       elc_glob[mn]->len_u_thermal_expansion = num_const;
+      SPF_DBL_VEC(endofstring(es), num_const, elc_glob[mn]->u_thermal_expansion);
     } else if (!strcmp(model_name, "IDEAL_GAS")) {
       elc_glob[mn]->thermal_expansion_model = IDEAL_GAS;
       num_const = read_constants(imp, &(elc_glob[mn]->u_thermal_expansion), NO_SPECIES);
@@ -1160,6 +1176,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         GOMA_EH(GOMA_ERROR, err_msg);
       }
       elc_glob[mn]->len_u_thermal_expansion = num_const;
+      SPF_DBL_VEC(endofstring(es), num_const, elc_glob[mn]->u_thermal_expansion);
     } else if (!strcmp(model_name, "THERMAL")) {
       elc_glob[mn]->thermal_expansion_model = THERMAL_HEAT;
       num_const = read_constants(imp, &(elc_glob[mn]->u_thermal_expansion), NO_SPECIES);
@@ -1185,9 +1202,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     else {
       elc_glob[mn]->thermal_expansion_model = CONSTANT;
       elc_glob[mn]->thermal_expansion = 0.0;
+      SPF(es, "\t(%s = CONSTANT %.4g)", "Solid Thermal Expansion", 0.0);
     }
-
-    SPF(es, "\t(%s = CONSTANT %.4g)", "Solid Thermal Expansion", 0.0);
   }
 
   ECHO(es, echo_file);
@@ -1307,6 +1323,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ElasticConstitutiveEquation = INCOMP_3D;
     } else if (!strcmp(model_name, "KELVIN_VOIGT")) {
       ElasticConstitutiveEquation = KELVIN_VOIGT;
+    } else if (!strcmp(model_name, "ZENER_SLS")) {
+      ElasticConstitutiveEquation = ZENER_SLS;
     } else if (!strcmp(model_name, "EVP_HYPER")) {
       ElasticConstitutiveEquation = EVP_HYPER;
       GOMA_EH(GOMA_ERROR, "Pseudo-solid constitutive equationis elasto-viscoplastic. Hmm. Won't "

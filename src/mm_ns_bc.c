@@ -15199,7 +15199,8 @@ void qrad_surf(double func[DIM],
                double heat_tran_coeff, /* Heat transfer coefficient (cgs units)   */
                double T_c,             /* bath temperature (Kelvin)	             */
                double epsilon,         /* emissivity                              */
-               double sigma)           /* Boltzmann's constant                    */
+               double sigma,           /* Boltzmann's constant                    */
+               double T_offset)        /* Placeholder for Kelvin-to-Celsius Conversion*/
 
 /******************************************************************************
  *
@@ -15229,13 +15230,14 @@ void qrad_surf(double func[DIM],
     for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
       phi_j = bf[var]->phi[j_id];
       d_func[0][var][j_id] -= heat_tran_coeff * phi_j;
-      d_func[0][var][j_id] -= 4. * epsilon * sigma * pow(fv->T, 3.0) * phi_j;
+      d_func[0][var][j_id] -= 4. * epsilon * sigma * pow(fv->T + T_offset, 3.0) * phi_j;
     }
   }
 
   /* Calculate the residual contribution					     */
 
-  *func += heat_tran_coeff * (T_c - fv->T) + epsilon * sigma * (pow(T_c, 4.0) - pow(fv->T, 4.0));
+  *func += heat_tran_coeff * (T_c - fv->T) +
+           epsilon * sigma * (pow(T_c + T_offset, 4.0) - pow(fv->T + T_offset, 4.0));
 
   return;
 } /* END of routine qrad_surf                                                */

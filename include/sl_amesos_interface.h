@@ -29,7 +29,7 @@
 
 /* Use this version when Amesos is linked in through Trilinos */
 #ifdef TRILINOS
-EXTERN void amesos_solve_msr(char *, struct GomaLinearSolverData *, double *, double *, int, int);
+EXTERN void amesos_solve(char *, struct GomaLinearSolverData *, double *, double *, int, int);
 EXTERN int amesos_solve_epetra(
     char *choice, struct GomaLinearSolverData *ams, double *x_, double *resid_vector, int imtrx);
 

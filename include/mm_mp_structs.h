@@ -1286,6 +1286,10 @@ struct Elastic_Constitutive {
   int solid_dil_viscosity_model;
   int len_u_solid_dil_viscosity;
   dbl *u_solid_dil_viscosity;
+  dbl solid_retardation; /*  viscoelastic solid retardation time   */
+  int solid_retard_model;
+  int len_u_solid_retardation;
+  dbl *u_solid_retardation;
 };
 
 typedef struct Elastic_Constitutive ELASTIC_CONST_STRUCT;

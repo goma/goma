@@ -1134,8 +1134,8 @@ int usr_momentum_source(dbl *param) /* ptr to user-defined parameter list       
  */
 
 int usr_lame_mu(struct Elastic_Constitutive *ep,
-                dbl *param) /* ptr to user-defined parameter list        */
-{
+                dbl *param, /* ptr to user-defined parameter list        */
+                const int len_pars) {
   int a, b;
   int w;
 
@@ -1151,9 +1151,9 @@ int usr_lame_mu(struct Elastic_Constitutive *ep,
 
   /**********************************************************/
 
-  /* Comment out our remove this line if using this routine */
+  /* Comment out or remove this line if using this routine
 
-  GOMA_EH(GOMA_ERROR, "No user_lame_mu model implemented.");
+  GOMA_EH(GOMA_ERROR, "No user_lame_mu model implemented.");*/
 
   /**********************************************************/
 
@@ -1231,6 +1231,14 @@ int usr_lame_mu(struct Elastic_Constitutive *ep,
   //     dfdT = 0.;
   // }
 
+  if (len_pars < 3)
+    GOMA_EH(-1, "not enough user parameters for usr_lame_mu");
+  double G0 = param[0], aT;
+  double B1 = param[1], Tref = param[2];
+
+  aT = 1. / (1. + exp(B1 * (T - Tref)));
+  f = G0 * aT;
+  dfdT = -G0 * SQUARE(aT) * B1 * exp(B1 * (T - Tref));
   /****************Don't touch these lines***********************/
   for (a = 0; a < DIM; a++) {
     ep->lame_mu = f;                                   /*Do not touch */
@@ -1393,14 +1401,15 @@ int usr_lame_lambda(struct Elastic_Constitutive *ep,
 int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
                   double *thermexp,
                   double d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC],
-                  const int len_pars) {
+                  const int len_pars,
+                  const double Tref) {
   int a, b;
   int w;
 
-  dbl f, dfdT;        /* momentum sources and its derivative wrt temperature*/
-  dbl dfdV[DIM];      /* momentum source derivative wrt velocity*/
-  dbl dfdC[MAX_CONC]; /* momentum source derivative wrt concentration*/
-  dbl dfdX[DIM];      /* momentum source derivative wrt displacement*/
+  dbl f, dfdT;        /* sources and its derivative wrt temperature*/
+  dbl dfdV[DIM];      /* source derivative wrt velocity*/
+  dbl dfdC[MAX_CONC]; /* source derivative wrt concentration*/
+  dbl dfdX[DIM];      /* source derivative wrt displacement*/
 
   int i;
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
@@ -1437,19 +1446,33 @@ int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
 
   /* f = param[0] * sin(param[1] * tran->time_value);  */
   /* Double exponential thermal expansion model        */
+  /* For thermal expansion, we supply the expeonential argument.
+     i.e., alpha_V = 1/V * (del_V/del_T), so ln V = integral(alpha_T*dT)
+     or V = V_0 * exp[ integral(alpha_T*dT)] or delta_V/V_0 = exp[integral(alpha_T*dT)]
+     input parameters supply alpha_T(T).    */
 
-  if (len_pars < 8)
+  if (len_pars < 6)
     GOMA_EH(-1, "not enough user parameters for usr_expansion");
 
-  f = param[0] * exp(param[1] * (T - param[2]));
-  f += param[3] * exp(param[4] * (T - param[5]));
-  f *= param[6];
-  if (f > param[7]) {
-    f = param[7];
-  } else {
-    dfdT = param[0] * param[1] * exp(param[1] * (T - param[2]));
-    dfdT += param[3] * param[4] * exp(param[4] * (T - param[5]));
-    dfdT *= param[6];
+  /* sigmoidal function between 2 linear functions  */
+  dfdT = param[0] + param[1] * T +
+         (param[2] - param[0] + T * (param[3] - param[1])) / (1. + exp(-param[4] * (T - param[5])));
+  double delta_T = T - Tref, dTp5 = T - param[5], dTrefp5 = Tref - param[5];
+  if (DOUBLE_ZERO(param[3] - param[1])) { /* analytical - no linear terms  */
+    f = param[2] * delta_T + 0.5 * param[1] * (SQUARE(T) - SQUARE(delta_T)) +
+        (param[2] - param[0]) / param[4] *
+            (log(1. + exp(-param[4] * dTp5)) - log(1. + exp(-param[4] * dTrefp5)));
+    /* integrate in segments  */
+  } else if (T < param[5] && Tref < param[5]) {
+    f = param[0] * delta_T + 0.5 * param[1] * (SQUARE(T) - SQUARE(Tref));
+  } else if (T > param[5] && Tref > param[5]) {
+    f = param[2] * delta_T + 0.5 * param[3] * (SQUARE(T) - SQUARE(Tref));
+  } else if (T < param[5] && Tref > param[5]) {
+    f = param[0] * dTp5 + 0.5 * param[1] * (SQUARE(T) - SQUARE(param[5])) -
+        (param[2] * dTrefp5 + 0.5 * param[3] * (SQUARE(Tref) - SQUARE(param[5])));
+  } else if (T > param[5] && Tref < param[5]) {
+    f = param[2] * dTp5 + 0.5 * param[3] * (SQUARE(T) - SQUARE(param[5])) -
+        (param[0] * dTrefp5 + 0.5 * param[1] * (SQUARE(Tref) - SQUARE(param[5])));
   }
 
   /**********************************************************/
@@ -1481,23 +1504,21 @@ int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
    */
 
   /****************Don't touch these lines***********************/
-  for (a = 0; a < DIM; a++) {
-    *thermexp = f;                                     /*Do not touch */
-    d_thermexp_dx[TEMPERATURE] = dfdT;                 /*Do not touch */
-                                                       /*Do not touch */
-    for (b = 0; b < DIM; b++)                          /*Do not touch */
-    {                                                  /*Do not touch */
-      d_thermexp_dx[VELOCITY1 + b] = dfdV[b];          /*Do not touch */
-    }                                                  /*Do not touch */
-    for (b = 0; b < DIM; b++)                          /*Do not touch */
-    {                                                  /*Do not touch */
-      d_thermexp_dx[MESH_DISPLACEMENT1 + a] = dfdX[b]; /*Do not touch */
-    }                                                  /*Do not touch */
-    for (w = 0; w < MAX_CONC; w++)                     /*Do not touch */
-    {                                                  /*Do not touch */
-      d_thermexp_dx[MAX_VARIABLE_TYPES + w] = dfdC[w]; /*Do not touch */
-    }                                                  /*Do not touch */
-  }                                                    /*Do not touch */
+  *thermexp = f;                                     /*Do not touch */
+  d_thermexp_dx[TEMPERATURE] = dfdT;                 /*Do not touch */
+                                                     /*Do not touch */
+  for (b = 0; b < DIM; b++)                          /*Do not touch */
+  {                                                  /*Do not touch */
+    d_thermexp_dx[VELOCITY1 + b] = dfdV[b];          /*Do not touch */
+  }                                                  /*Do not touch */
+  for (b = 0; b < DIM; b++)                          /*Do not touch */
+  {                                                  /*Do not touch */
+    d_thermexp_dx[MESH_DISPLACEMENT1 + b] = dfdX[b]; /*Do not touch */
+  }                                                  /*Do not touch */
+  for (w = 0; w < MAX_CONC; w++)                     /*Do not touch */
+  {                                                  /*Do not touch */
+    d_thermexp_dx[MAX_VARIABLE_TYPES + w] = dfdC[w]; /*Do not touch */
+  }                                                  /*Do not touch */
 
   return (0);
 } /* End of usr_expansion */
@@ -1748,17 +1769,14 @@ int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list       
   for (i = 0; i < pd->Num_Species_Eqn; i++)
     C[i] = fv->c[i]; /*Do not touch */
 
-  if (len_pars < 4)
+  if (len_pars < 3)
     GOMA_EH(-1, "not enough user parameters for usr_solid_viscosity");
   double visc0 = param[0], aT;
-  double C1 = param[1], C2 = param[2], Tref = param[3];
+  double B1 = param[1], Tref = param[2];
 
-  if (T <= Tref - C2)
-    GOMA_WH(-1, "Trouble WLF denominator is zero!\n");
-
-  aT = visc0 * exp(-C1 * (T - Tref) / (C2 + T - Tref));
+  aT = 1. / (1. + exp(B1 * (T - Tref)));
   f = visc0 * aT;
-  dfdT = visc0 * aT * (-C1 * C2 / SQUARE(C2 + T - Tref));
+  dfdT = -visc0 * SQUARE(aT) * B1 * exp(B1 * (T - Tref));
 
   /**********************************************************/
   f = 1.;
@@ -1855,20 +1873,14 @@ int usr_solid_dil_viscosity(dbl *param, /* ptr to user-defined parameter list   
   for (i = 0; i < pd->Num_Species_Eqn; i++)
     C[i] = fv->c[i]; /*Do not touch */
 
-  if (len_pars < 4)
+  if (len_pars < 3)
     GOMA_EH(-1, "not enough user parameters for usr_solid_dil_viscosity");
   double visc0 = param[0], aT;
-  double C1 = param[1], C2 = param[2], Tref = param[3];
+  double B1 = param[1], Tref = param[2];
 
-  if (T <= Tref - C2)
-    GOMA_WH(-1, "Trouble WLF denominator is zero!\n");
-
-  aT = visc0 * exp(-C1 * (T - Tref) / (C2 + T - Tref));
+  aT = 1. / (1. + exp(B1 * (T - Tref)));
   f = visc0 * aT;
-  dfdT = visc0 * aT * (-C1 * C2 / SQUARE(C2 + T - Tref));
-
-  /**********************************************************/
-  f = 1.;
+  dfdT = -visc0 * SQUARE(aT) * B1 * exp(B1 * (T - Tref));
 
   /****************Don't touch these lines***********************/
   for (a = 0; a < DIM; a++) {

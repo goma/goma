@@ -1769,8 +1769,11 @@ static int calc_standard_fields(double **post_proc_vect,
     /* parameters are sent through USER_POST input line for 3D printing orientation ...  */
     if (pd->e[pg->imtrx][R_ENERGY] && USER_POST != -1 && len_u_post_proc > 2) {
       double q_mag = 0., sign = 0.;
-      double radius = u_post_proc[1]; // overlap = u_post_proc[2];
-      int dir = 0;
+      double radius = u_post_proc[1], overlap = u_post_proc[2];
+      int dir = 0, alternate_off;
+      /*      int dir = 0, alternate_off = 0; */
+      alternate_off = (int)u_post_proc[0];
+      /*alternate_off = 0; radius = 0.79375; overlap = 0.1;*/
       if (cr->HeatFluxModel == CR_HF_FOURIER_0) {
         if (mp->ConductivityModel == USER) {
           err = usr_thermal_conductivity(mp->u_thermal_conductivity, time);
@@ -1784,14 +1787,21 @@ static int calc_standard_fields(double **post_proc_vect,
           qc[a] = 0.;
         }
       }
+      if (DOUBLE_ZERO(q_mag)) {
+        q_mag = 1.;
+      }
       if (fv->x0[2] <= radius) {
         dir = 0;
       } else {
-        // double tmp = modf((fv->x0[2] - radius) / (2 * radius - overlap), &sign);
+        modf((fv->x0[2] - radius) / (2 * radius - overlap), &sign);
         sign += 1.;
         dir = (int)sign % 2;
       }
-      sign = 2 * (double)dir - 1.;
+      if (alternate_off) {
+        sign = -1.;
+      } else {
+        sign = 2 * (double)dir - 1.;
+      }
       for (a = 0; a < dim; a++) {
         local_post[ORIENTATION_VECTORS + a] = sign * qc[a] / sqrt(q_mag);
         local_lumped[ORIENTATION_VECTORS + a] = 1.;
@@ -3042,26 +3052,36 @@ static int calc_standard_fields(double **post_proc_vect,
     /* Define parameters */
     double mu;
     double lambda;
-    double thermexp = 0;
+    double thermexp = 0, ortho_thermexp = 0;
     double speciesexp[MAX_CONC];
     double viscos = 0, dil_viscos = 0;
     double d_mu_dx[DIM][MDE];
     double d_lambda_dx[DIM][MDE];
     double d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
+    double d_ortho_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
     double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
     double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
     double d_dilviscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
+
+    memset(d_mu_dx, 0, sizeof(double) * DIM * MDE);
+    memset(d_lambda_dx, 0, sizeof(double) * DIM * MDE);
+    memset(d_thermexp_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
+    memset(d_ortho_thermexp_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
+    memset(d_speciesexp_dx, 0, sizeof(double) * MAX_CONC * (MAX_VARIABLE_TYPES + MAX_CONC));
+    memset(d_viscos_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
+    memset(d_dilviscos_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
+    memset(speciesexp, 0, sizeof(double) * MAX_CONC);
 
     /* Calculate modulus */
 
     if (pd->MeshMotion == TOTAL_ALE) {
       load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
                               d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
-                              d_dilviscos_dx);
+                              d_dilviscos_dx, &ortho_thermexp, d_ortho_thermexp_dx);
     } else {
       load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
                               d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
-                              d_dilviscos_dx);
+                              d_dilviscos_dx, &ortho_thermexp, d_ortho_thermexp_dx);
     }
 
     /* Post velocities */
@@ -3075,25 +3095,35 @@ static int calc_standard_fields(double **post_proc_vect,
     /* Define parameters */
     double mu;
     double lambda;
-    double thermexp = 0;
+    double thermexp = 0, ortho_thermexp = 0;
     double speciesexp[MAX_CONC];
     double viscos = 0, dil_viscos = 0;
     double d_mu_dx[DIM][MDE];
     double d_lambda_dx[DIM][MDE];
     double d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
+    double d_ortho_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
     double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
     double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
     double d_dilviscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
+
+    memset(d_mu_dx, 0, sizeof(double) * DIM * MDE);
+    memset(d_lambda_dx, 0, sizeof(double) * DIM * MDE);
+    memset(d_thermexp_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
+    memset(d_ortho_thermexp_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
+    memset(d_speciesexp_dx, 0, sizeof(double) * MAX_CONC * (MAX_VARIABLE_TYPES + MAX_CONC));
+    memset(d_viscos_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
+    memset(d_dilviscos_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
+    memset(speciesexp, 0, sizeof(double) * MAX_CONC);
 
     /* Calculate modulus */
     if (pd->MeshMotion == TOTAL_ALE) {
       load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
                               d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
-                              d_dilviscos_dx);
+                              d_dilviscos_dx, &ortho_thermexp, d_ortho_thermexp_dx);
     } else {
       load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
                               d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
-                              d_dilviscos_dx);
+                              d_dilviscos_dx, &ortho_thermexp, d_ortho_thermexp_dx);
     }
 
     /* Post velocities */
@@ -7783,9 +7813,11 @@ void rd_post_process_specs(FILE *ifp, char *input) {
         for (i = 0; i < len_u_post_proc; i++) {
           u_post_proc[i] = atof(arguments[i]);
         }
+        SPF_DBL_VEC(endofstring(echo_string), len_u_post_proc, u_post_proc);
       } else {
         u_post_proc = dummy;
       }
+      ECHO(echo_string, echo_file);
     }
   }
 
