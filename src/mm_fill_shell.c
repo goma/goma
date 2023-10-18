@@ -6448,7 +6448,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
   dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_dtime_dmesh[DIM][MDE];
   dbl dH_dtime_drealsolid[DIM][MDE];
   dbl dH_dtime_dnormal[DIM][MDE];
-  dbl dH_U_dp, dH_U_ddh;
+  dbl dH_U_dp, dH_U_ddh, dH_dF[MDE];
   dbl veloU[DIM], veloL[DIM];
   dbl diffusion, source;
 
@@ -6509,7 +6509,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
   /* Lubrication height from model */
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
   dH_dtime = dH_U_dtime - dH_L_dtime;
   /*
   if (pd->v[pg->imtrx][SHELL_DELTAH] &&
@@ -7135,7 +7135,7 @@ int assemble_shell_energy(double time,            /* present time value */
   dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
   dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_dmesh[DIM][MDE], dH_dtime_dmesh[DIM][MDE];
   dbl dH_drealsolid[DIM][MDE], dH_dtime_drealsolid[DIM][MDE];
-  dbl dH_U_dp, dH_U_ddh;
+  dbl dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   dbl q_tot = 0.;
   dbl dqdh[DIM];
@@ -7269,7 +7269,7 @@ int assemble_shell_energy(double time,            /* present time value */
 
   /* Lubrication height from model */
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
 
   /* Deform lubrication height for FSI interaction */
   switch (mp->FSIModel) {
@@ -8180,7 +8180,7 @@ int assemble_shell_species(double time,            /* present time value */
   dbl H; /* Shell heights */
   dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
   dbl dH_U_dX[DIM], dH_L_dX[DIM];
-  dbl dH_U_dp, dH_U_ddh;
+  dbl dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   dbl grad_c[MAX_CONC][DIM] = {{0.0}}; /* Shell concentration gradient. */
 
@@ -8244,7 +8244,7 @@ int assemble_shell_species(double time,            /* present time value */
 
   /* Lubrication height from model */
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
 
   /* Concentration gradient */
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
@@ -8544,7 +8544,7 @@ int assemble_film(double time,    /* present time value */
 
   dbl P, H, C, H_dot;
   dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
-  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
   dbl dH_dot_dmesh[DIM][MDE], dH_dot_drealsolid[DIM][MDE], dH_dot_dnormal[DIM][MDE];
   dbl sigma;
   dbl EvapRate, dEvapRate_dC, dEvapRate_dH;
@@ -8618,7 +8618,7 @@ int assemble_film(double time,    /* present time value */
 
   /* Get lower height from height function model */
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
 
   /* Get the net film thickness */
   H = fv->sh_fh - H_L;
@@ -10239,7 +10239,7 @@ int assemble_film_particles(double time,            /* present time value */
   dbl wt;
 
   dbl H = 0, C, C_dot;
-  dbl H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_dp, dH_U_ddh;
+  dbl H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_dp, dH_U_ddh, dH_dF[MDE];
   dbl dH_U_dX[DIM], dH_L_dX[DIM];
   dbl q_old[DIM], q[DIM], v[DIM];
   dbl dq_dp1[DIM][MDE], dq_dp2[DIM][MDE], dq_dh1[DIM][MDE], dq_dh2[DIM][MDE], dq_dc[DIM][MDE];
@@ -10316,7 +10316,7 @@ int assemble_film_particles(double time,            /* present time value */
   } else if (pd->v[pg->imtrx][LUBP]) {
     EQN = R_LUBP;
     H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                              &dH_U_ddh, time, dt);
+                              &dH_U_ddh, dH_dF, time, dt);
   } else {
     GOMA_EH(GOMA_ERROR, "In assemble_film_particles: Can't find an appropriate lubrication height");
   }
@@ -10997,10 +10997,10 @@ void dPdz_calc(dbl tt,
     nbar = fv->sh_sat_gasn;
 
   /* Lubrication height from model */
-  dbl Hlub, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_dp, dH_U_ddh;
+  dbl Hlub, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_dp, dH_U_ddh, dH_dF[MDE];
   dbl dH_U_dX[DIM], dH_L_dX[DIM];
   Hlub = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                               &dH_U_ddh, 0.0, 0.0);
+                               &dH_U_ddh, dH_dF, 0.0, 0.0);
 
   /* Level set curvature */
   int b;
@@ -14431,7 +14431,7 @@ int assemble_lubrication_power_law(double time,    /* present time value */
   dbl wt;
 
   dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_dtime, dH_U_ddh;
-  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp;
+  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_dF[MDE];
   dbl shear_top, shear_bot, cross_shear, gradP_mag;
   dbl *grad_P, *grad_II_P;
   grad_P = (double *)malloc(DIM * sizeof(double));
@@ -14511,7 +14511,7 @@ int assemble_lubrication_power_law(double time,    /* present time value */
    */
 
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
   dH_dtime = dH_U_dtime - dH_L_dtime;
 
   mu0 = gn->mu0;
@@ -16426,13 +16426,13 @@ int assemble_shell_mesh(double time,    /* Time */
   K2 = fv->sh_K2;
 
   double h = 0, H_U, dH_U_dtime, H_L, dH_L_dtime;
-  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   if (pd->e[pg->imtrx][R_TFMP_MASS]) {
     /* Use the height_function_model */
 
     h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                              &dH_U_ddh, time, delta_t);
+                              &dH_U_ddh, dH_dF, time, delta_t);
 
     // Setup Height function model and sensitivities to mesh motion, and normal
     switch (mp->FSIModel) {

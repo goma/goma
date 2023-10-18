@@ -873,10 +873,10 @@ void load_gap_model(GAP_STRUCT *gap) {
   /* Use the height_function_model */
   // double h, H_U, dH_U_dtime, H_L, dH_L_dtime;
   double H_U, dH_U_dtime, H_L, dH_L_dtime;
-  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   gap->h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                                 &dH_U_ddh, gap->time, gap->delta_t);
+                                 &dH_U_ddh, dH_dF, gap->time, gap->delta_t);
 
   if (fpclassify(gap->h) != fp_type && gap->h != 0.0) {
     GOMA_EH(GOMA_ERROR,

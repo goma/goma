@@ -1324,8 +1324,12 @@ int assemble_fill(double tt,
 
           case FILL_WEIGHT_G: /* Plain ol' Galerkin */
             for (a = 0; a < dim; a++) {
-              advection += LubAux->dv_avg_dp1[a][j] * grad_II_F[a] * wfcn * grad_II_phi_j[a];
-              advection += LubAux->dv_avg_dp2[a][j] * grad_II_F[a] * wfcn * phi_j;
+              advection +=
+                  phi_i * LubAux->dv_avg_dp2[a][j] * grad_II_F[a] * wfcn * grad_II_phi_j[a];
+              for (b = 0; b < dim; b++) {
+                advection +=
+                    phi_i * LubAux->dv_dgradp[a][b][j] * grad_II_F[a] * wfcn * grad_II_phi_j[b];
+              }
             }
 
             break;
@@ -3929,7 +3933,7 @@ int curvature_momentum_source(double f[DIM],
 
 int assemble_phase_function(double time_value, double tt, double dt, double xi[DIM], Exo_DB *exo) {
   int i, j;
-  int a, b, p;
+  int a, b, p, q;
   int eqn, var, peqn, pvar, ledof;
   int dim;
   int status = -1;
@@ -4398,8 +4402,11 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
 
               case FILL_WEIGHT_G:
                 for (p = 0; p < dim; p++) {
-                  advection += LubAux->dv_avg_dp1[p][j] * grad_II_pf[p] * wfcn * grad_II_phi_j[p];
                   advection += LubAux->dv_avg_dp2[p][j] * grad_II_pf[p] * wfcn * phi_j;
+                  for (q = 0; q < dim; q++) {
+                    advection += phi_i * LubAux->dv_dgradp[p][q][j] * grad_II_pf[p] * wfcn *
+                                 grad_II_phi_j[q];
+                  }
                 }
 
                 break;
