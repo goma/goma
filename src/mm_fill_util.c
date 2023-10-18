@@ -384,9 +384,17 @@ int beer_belly(void) {
     dim = ei[pg->imtrx]->ielem_dim;
     MapBf->detJ = MapBf->J[0][0] * MapBf->J[1][1] - MapBf->J[0][1] * MapBf->J[1][0];
 
+//                        y_eta
+// .  xi_x
     MapBf->B[0][0] = MapBf->J[1][1] / MapBf->detJ;
+    //                  y_xi
+    // eta_x
     MapBf->B[0][1] = -MapBf->J[0][1] / MapBf->detJ;
+    //               x_eta
+    // xi_y
     MapBf->B[1][0] = -MapBf->J[1][0] / MapBf->detJ;
+    //              x_xi
+    // eta_y
     MapBf->B[1][1] = MapBf->J[0][0] / MapBf->detJ;
 
     /*
