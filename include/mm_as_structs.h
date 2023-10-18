@@ -1777,7 +1777,8 @@ struct Field_Variables {
   dbl grad_sh_sat_2[DIM];  /* Gradient of porous shell saturation layer 2 */
   dbl grad_sh_sat_3[DIM];  /* Gradient of porous shell saturation layer 3 */
 
-  dbl grad_eddy_nu[DIM]; /* Gradient of Eddy viscosity */
+  dbl grad_eddy_nu[DIM];       /* Gradient of Eddy viscosity */
+  dbl grad_wall_distance[DIM]; /* Distance to nearest wall */
 
   /*
    * Grads of vectors...

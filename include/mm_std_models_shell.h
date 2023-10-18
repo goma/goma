@@ -33,7 +33,7 @@
 #endif
 
 EXTERN double height_function_model /* mm_std_models_shell.c                */
-    (dbl *, dbl *, dbl *, dbl *, dbl[DIM], dbl[DIM], dbl *, dbl *, dbl, dbl);
+    (dbl *, dbl *, dbl *, dbl *, dbl[DIM], dbl[DIM], dbl *, dbl *, dbl[MDE], dbl, dbl);
 
 EXTERN double velocity_function_model /* mm_std_models_shell.c                */
     (dbl[DIM], dbl[DIM], dbl, dbl);

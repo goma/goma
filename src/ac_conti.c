@@ -678,7 +678,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
   good_mesh = element_quality(exo, x, ams[0]->proc_config);
 
   if (Output_Variable_Stats) {
-    err = variable_stats(x, path1);
+    err = variable_stats(x, path1, Output_Variable_Regression);
     GOMA_EH(err, "Problem with variable_stats!");
     if (ProcID == 0)
       fflush(stdout);
@@ -1102,7 +1102,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
       }
     }
     if (Output_Variable_Stats) {
-      err = variable_stats(x, path1);
+      err = variable_stats(x, path1, Output_Variable_Regression);
       GOMA_EH(err, "Problem with variable_stats!");
       if (ProcID == 0)
         fflush(stdout);
