@@ -5517,9 +5517,9 @@ goma_error zero_strong_resid_side(struct Local_Element_Contributions *lec,
             index_eq =
                 bc_eqn_index(id, I, bc_input_id, ei[pg->imtrx]->mn, p, &eqn, &matID_apply, &vd);
           }
-          int ieqn = upd->ep[pg->imtrx][eqn];
           int ldof_eqn;
           if (index_eq >= 0) {
+            int ieqn = upd->ep[pg->imtrx][eqn];
             /*
              * Obtain the first local variable degree of freedom
              * at the current node, whether or not it actually an

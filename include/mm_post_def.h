@@ -677,6 +677,7 @@ extern int SARAMITO_YIELD;
 extern int STRESS_NORM;
 extern int SPECIES_SOURCES; /* Species sources */
 extern int VISCOUS_STRESS;  /* Viscous stress */
+extern int PP_VELOCITY_GRADIENTS;
 extern int VISCOUS_STRESS_NORM;
 extern int VISCOUS_VON_MISES_STRESS;
 extern int EM_CONTOURS;

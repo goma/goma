@@ -2613,6 +2613,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &SPECIES_SOURCES, 1, MPI_INT);
   ddd_add_member(n, &VISCOUS_STRESS, 1, MPI_INT);
+  ddd_add_member(n, &PP_VELOCITY_GRADIENTS, 1, MPI_INT);
   ddd_add_member(n, &VISCOUS_STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &VISCOUS_VON_MISES_STRESS, 1, MPI_INT);
   ddd_add_member(n, &EM_CONTOURS, 1, MPI_INT);
