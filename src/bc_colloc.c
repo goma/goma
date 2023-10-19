@@ -124,7 +124,7 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
   double d_kfunc[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE];
   double time_intermediate = time_value - theta * delta_t;
   /* time at which bc's are evaluated */
-  const double penalty = 1.0;//BIG_PENALTY;
+  const double penalty = 1.0; // BIG_PENALTY;
   VARIABLE_DESCRIPTION_STRUCT *vd;
   int doFullJac = 0;
   double nwall[3];

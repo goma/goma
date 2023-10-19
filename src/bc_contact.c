@@ -633,7 +633,7 @@ int apply_contact_bc(double x[],              /* Solution vector for the current
               /*
                * For strong conditions weight the function by BIG_PENALTY
                */
-              
+
               // if (BC_Types[bc_input_id].desc->method == STRONG_INT_SURF) {
               //   weight *= BIG_PENALTY;
               // }

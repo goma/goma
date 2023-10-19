@@ -220,5 +220,6 @@ void vector_shape_function(Dpi *dpi,
                            double *phi_e,
                            double *dphidxi_e);
 
-goma_error zero_strong_resid_side(struct Local_Element_Contributions *lec, struct elem_side_bc_struct *elem_side_bc);
+goma_error zero_strong_resid_side(struct Local_Element_Contributions *lec,
+                                  struct elem_side_bc_struct *elem_side_bc);
 #endif /* GOMA_MM_FILL_UTIL_H */

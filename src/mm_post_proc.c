@@ -664,7 +664,8 @@ static int calc_standard_fields(double **post_proc_vect,
 
   dim = pd_glob[0]->Num_Dim;
 
-  if (pd->v[pg->imtrx][R_MESH1] && ei[pg->imtrx]->ielem_dim >= dim && !(cr->MeshFluxModel == ELLIPTIC)) {
+  if (pd->v[pg->imtrx][R_MESH1] && ei[pg->imtrx]->ielem_dim >= dim &&
+      !(cr->MeshFluxModel == ELLIPTIC)) {
     err = belly_flop(elc->lame_mu);
     GOMA_EH(err, "error in belly flop");
     if (err == 2)
@@ -2526,8 +2527,8 @@ static int calc_standard_fields(double **post_proc_vect,
       }
     }
     if (Num_Dim == 2 && VIM == 3) {
-        local_post[VISCOUS_STRESS + 4] = mu * gamma[2][2];
-        local_lumped[VISCOUS_STRESS + 4] = 1.;
+      local_post[VISCOUS_STRESS + 4] = mu * gamma[2][2];
+      local_lumped[VISCOUS_STRESS + 4] = 1.;
     }
   }
 
@@ -2539,8 +2540,8 @@ static int calc_standard_fields(double **post_proc_vect,
       }
     }
     if (Num_Dim == 2 && VIM == 3) {
-        local_post[PP_VELOCITY_GRADIENTS + 4] = fv->grad_v[2][2];
-        local_lumped[PP_VELOCITY_GRADIENTS + 4] = 1.;
+      local_post[PP_VELOCITY_GRADIENTS + 4] = fv->grad_v[2][2];
+      local_lumped[PP_VELOCITY_GRADIENTS + 4] = 1.;
     }
   }
 
@@ -10765,7 +10766,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
       index++;
       index_post++;
 
-      if (VIM==3) {
+      if (VIM == 3) {
         set_nv_tkud(rd, index, 0, 0, -2, "VS33", "[1]", "Viscous stress zz", FALSE);
         index++;
         index_post++;
@@ -10832,7 +10833,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
       set_nv_tkud(rd, index, 0, 0, -2, "GRADV22", "[1]", "Velocity gradient yy", FALSE);
       index++;
       index_post++;
-      if (VIM==3) {
+      if (VIM == 3) {
         set_nv_tkud(rd, index, 0, 0, -2, "GRADV33", "[1]", "Velocity gradient zz", FALSE);
         index++;
         index_post++;

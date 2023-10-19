@@ -225,12 +225,13 @@ int assemble_elliptic_mesh(void) {
 
                 switch (a) {
                 case 0:
-                  diff_a += (S[a] + eps_s) *
-                            (bf[eqn]->dphidxi[i][0] * (2.0 * bf[eqn]->dJ[1][0][b][j] * dx_deta +
-                                                       2.0 * bf[eqn]->dJ[1][1][b][j] * dy_deta) -
-                             bf[eqn]->dphidxi[i][1] *
-                                 (bf[eqn]->dJ[0][0][b][j] * dx_deta + dx_dxi * bf[eqn]->dJ[1][0][b][j] +
-                                  bf[eqn]->dJ[0][1][b][j] * dy_deta + dy_dxi * bf[eqn]->dJ[1][1][b][j]));
+                  diff_a +=
+                      (S[a] + eps_s) *
+                      (bf[eqn]->dphidxi[i][0] * (2.0 * bf[eqn]->dJ[1][0][b][j] * dx_deta +
+                                                 2.0 * bf[eqn]->dJ[1][1][b][j] * dy_deta) -
+                       bf[eqn]->dphidxi[i][1] *
+                           (bf[eqn]->dJ[0][0][b][j] * dx_deta + dx_dxi * bf[eqn]->dJ[1][0][b][j] +
+                            bf[eqn]->dJ[0][1][b][j] * dy_deta + dy_dxi * bf[eqn]->dJ[1][1][b][j]));
 
                   diff_a += (d_S_dmesh[a][b][j]) *
                             (bf[eqn]->dphidxi[i][0] * (dx_deta * dx_deta + dy_deta * dy_deta) -
@@ -241,13 +242,14 @@ int assemble_elliptic_mesh(void) {
                              bf[eqn]->dphidxi[i][1] * (dx_dxi * dx_deta + dy_dxi * dy_deta));
                   break;
                 case 1:
-                  diff_a += (S[a] + eps_s) *
-                            (bf[eqn]->dphidxi[i][1] *
-                                 (2.0 * bf[eqn]->dJ[0][0][b][j] * dx_dxi + 2.0 * bf[eqn]->dJ[0][1][b][j] * dy_dxi) -
-                             bf[eqn]->dphidxi[i][0] *
-                                 (bf[eqn]->dJ[0][0][b][j] * dx_deta + dx_dxi * bf[eqn]->dJ[1][0][b][j] +
-                                  bf[eqn]->dJ[0][1][b][j] * dy_deta + dy_dxi * bf[eqn]->dJ[1][1][b][j]));
-                  
+                  diff_a +=
+                      (S[a] + eps_s) *
+                      (bf[eqn]->dphidxi[i][1] * (2.0 * bf[eqn]->dJ[0][0][b][j] * dx_dxi +
+                                                 2.0 * bf[eqn]->dJ[0][1][b][j] * dy_dxi) -
+                       bf[eqn]->dphidxi[i][0] *
+                           (bf[eqn]->dJ[0][0][b][j] * dx_deta + dx_dxi * bf[eqn]->dJ[1][0][b][j] +
+                            bf[eqn]->dJ[0][1][b][j] * dy_deta + dy_dxi * bf[eqn]->dJ[1][1][b][j]));
+
                   diff_a += (d_S_dmesh[a][b][j]) *
                             (bf[eqn]->dphidxi[i][1] * (dx_dxi * dx_dxi + dy_dxi * dy_dxi) -
                              bf[eqn]->dphidxi[i][0] * (dx_dxi * dx_deta + dy_dxi * dy_deta));
@@ -258,8 +260,9 @@ int assemble_elliptic_mesh(void) {
                 }
                 diff_a *= (1.0 / absJT) * wt;
                 diff_b *= -(JT / (absJT * absJT * absJT)) *
-                          (-1.0 * (bf[eqn]->dJ[1][0][b][j] * dy_dxi + dx_deta * bf[eqn]->dJ[0][1][b][j] -
-                                   bf[eqn]->dJ[1][1][b][j] * dx_dxi - dy_deta * bf[eqn]->dJ[0][0][b][j])) *
+                          (-1.0 *
+                           (bf[eqn]->dJ[1][0][b][j] * dy_dxi + dx_deta * bf[eqn]->dJ[0][1][b][j] -
+                            bf[eqn]->dJ[1][1][b][j] * dx_dxi - dy_deta * bf[eqn]->dJ[0][0][b][j])) *
                           wt;
 
                 diffusion = diff_a + diff_b;
