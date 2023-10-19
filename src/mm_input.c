@@ -5809,6 +5809,40 @@ void rd_solver_specs(FILE *ifp, char *input) {
     upd->Total_Num_Matrices = 1;
   }
 
+  iread = look_for_optional(ifp, "Strong Boundary Condition Replace Equation", input, '=');
+  upd->strong_bc_replace = FALSE;
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (!strcasecmp(input, "no") || !strcasecmp(input, "false")) {
+      upd->strong_bc_replace = FALSE;
+      ECHO("Strong Boundary Condition Replace Equation = no", echo_file);
+    } else if (!strcasecmp(input, "yes") || !strcasecmp(input, "true")) {
+      upd->strong_bc_replace = TRUE;
+      ECHO("Strong Boundary Condition Replace Equation = yes", echo_file);
+    } else {
+      GOMA_EH(GOMA_ERROR, "Bad specification for Strong Boundary Condition Replace Equation");
+    }
+  }
+
+  iread = look_for_optional(ifp, "Strong Boundary Condition Penalty", input, '=');
+  if (iread == 1) {
+    upd->strong_penalty = read_dbl(ifp, "Strong Boundary Condition Penalty");
+    if (upd->strong_penalty <= 0) {
+      GOMA_EH(GOMA_ERROR, "Strong Boundary Condition Penalty should be greater than 0, got %g",
+              upd->strong_penalty);
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "Strong Boundary Condition Penalty",
+             upd->strong_penalty);
+    ECHO(echo_string, echo_file);
+  } else {
+    if (upd->strong_bc_replace) {
+      upd->strong_penalty = 1.0;
+    } else {
+      upd->strong_penalty = BIG_PENALTY;
+    }
+  }
+
   iread = look_for_optional(ifp, "Segregated Solve", input, '=');
   upd->SegregatedSolve = FALSE;
   if (iread == 1) {

@@ -904,6 +904,8 @@ struct Uniform_Problem_Description {
   void *petsc_post_proc_data;
   int devss_traceless_gradient;
   turbulent_information *turbulent_info;
+  int strong_bc_replace;
+  dbl strong_penalty;
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/

@@ -145,6 +145,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
   VARIABLE_DESCRIPTION_STRUCT *vd;
   double surface_centroid[DIM];
   int interface_id = -1;
+  const double penalty = upd->strong_penalty;
 
   tran->time_value = time_intermediate;
 
@@ -2127,9 +2128,9 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                 /*
                  * For strong conditions weight the function by BIG_PENALTY
                  */
-                // if (bc_desc->method == STRONG_INT_SURF) {
-                //   weight *= BIG_PENALTY;
-                // }
+                if (bc_desc->method == STRONG_INT_SURF) {
+                  weight *= penalty;
+                }
                 /*
                  *   Add in the multiplicative constant for corresponding to
                  *   all boundary conditions, except for certain special
@@ -2346,7 +2347,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                    * For strong conditions weight the function by BIG_PENALTY
                    */
                   if (bc_desc->method == STRONG_INT_SURF) {
-                    weight *= BIG_PENALTY;
+                    weight *= penalty;
                   }
 
                   /*
@@ -2783,7 +2784,7 @@ int apply_nedelec_bc(double x[],            /* Solution vector for the current p
            * For strong conditions weight the function by BIG_PENALTY
            */
           if (bc_desc->method == STRONG_INT_NEDELEC) {
-            weight *= BIG_PENALTY;
+            weight *= upd->strong_penalty;
           }
           ieqn = upd->ep[pg->imtrx][eqn];
 

@@ -5486,7 +5486,8 @@ goma_error zero_strong_resid_side(struct Local_Element_Contributions *lec,
       n_modes = 1;
     }
 
-    if (!((bc_desc->method == STRONG_INT_SURF) || (bc_desc->method == COLLOCATE_SURF))) {
+    if (!((bc_desc->method == STRONG_INT_SURF) || (bc_desc->method == COLLOCATE_SURF) ||
+          (bc_desc->method == STRONG_INT_NEDELEC))) {
       continue;
     }
 
