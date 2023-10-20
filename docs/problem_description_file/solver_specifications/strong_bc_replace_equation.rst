@@ -4,7 +4,7 @@ Strong Boundary Condition Replace Equation
 
 ::
 
-Strong Boundary Condition Replace Equation = {yes | no}
+    Strong Boundary Condition Replace Equation = {yes | no}
 
 -----------------------
 Description / Usage
