@@ -4652,7 +4652,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
         if (bct == CONTACT_SURF)
           call_contact = 1;
       }
-      if (call_int || call_col) {
+      if (upd->strong_bc_replace && (call_int || call_col)) {
         err = zero_strong_resid_side(lec, elem_side_bc);
       }
       if (call_col) {
