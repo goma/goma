@@ -711,6 +711,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ElasticConstitutiveEquation = INCOMP_3D;
   } else if (!strcmp(model_name, "KELVIN_VOIGT")) {
     ElasticConstitutiveEquation = KELVIN_VOIGT;
+  } else if (!strcmp(model_name, "ELLIPTIC")) {
+    ElasticConstitutiveEquation = ELLIPTIC;
   } else if (!strcmp(model_name, "ZENER_SLS")) {
     ElasticConstitutiveEquation = ZENER_SLS;
   } else /* default to nonlinear */

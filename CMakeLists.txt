@@ -457,6 +457,7 @@ set(GOMA_INCLUDES
     include/mm_fill_aux.h
     include/mm_fill_common.h
     include/mm_fill_continuity.h
+    include/mm_fill_elliptic_mesh.h
     include/mm_fill_em.h
     include/mm_fill_energy.h
     include/mm_fill_fill.h
@@ -610,6 +611,7 @@ set(GOMA_SOURCES
     src/mm_fill.c
     src/mm_fill_common.c
     src/mm_fill_continuity.c
+    src/mm_fill_elliptic_mesh.c
     src/mm_fill_em.c
     src/mm_fill_energy.c
     src/mm_fill_fill.c

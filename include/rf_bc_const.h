@@ -806,6 +806,8 @@
 #define SM_PLANE_BC                961200000 /* Solid Model PLANE BC */
 #define MESH_CONSTRAINT_BC         961300000
 #define KINEMATIC_BC               962000000
+#define KINEMATIC_XI_BC            962000001
+#define KINEMATIC_ETA_BC           962000002
 #define LUB_KINEMATIC_BC           962050000
 #define KIN_LEAK_BC                962100000
 #define KIN_ELECTRODEPOSITION_BC   962200000 /* RSL 5/24/02 */
@@ -982,6 +984,12 @@
 #define HEAT_OF_RXN_BC               47000024
 #define T_CONTACT_RESIS_BC           47000025
 #define T_CONTACT_RESIS_2_BC         47000026
+
+/*
+ELLIPTIC MESH
+*/
+#define ELLIPTIC_XI_REGULARIZATION_BC  77000001
+#define ELLIPTIC_ETA_REGULARIZATION_BC 77000002
 
 /*
  * HKM Chemkin boundary conditions along surfaces

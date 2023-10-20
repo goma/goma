@@ -324,6 +324,7 @@ int SARAMITO_YIELD = -1;
 int STRESS_NORM = -1;
 int SPECIES_SOURCES = -1; /* continuous species sources*/
 int VISCOUS_STRESS = -1;
+int PP_VELOCITY_GRADIENTS = -1;
 int VISCOUS_STRESS_NORM = -1;
 int VISCOUS_VON_MISES_STRESS = -1;
 int EM_CONTOURS = -1;
@@ -663,7 +664,8 @@ static int calc_standard_fields(double **post_proc_vect,
 
   dim = pd_glob[0]->Num_Dim;
 
-  if (pd->v[pg->imtrx][R_MESH1] && ei[pg->imtrx]->ielem_dim >= dim) {
+  if (pd->v[pg->imtrx][R_MESH1] && ei[pg->imtrx]->ielem_dim >= dim &&
+      !(cr->MeshFluxModel == ELLIPTIC)) {
     err = belly_flop(elc->lame_mu);
     GOMA_EH(err, "error in belly flop");
     if (err == 2)
@@ -2520,9 +2522,26 @@ static int calc_standard_fields(double **post_proc_vect,
     // printf("%lf", mu);
     for (a = 0; a < VIM; a++) {
       for (b = 0; b < VIM; b++) {
-        local_post[VISCOUS_STRESS + a * VIM + b] = mu * gamma[a][b];
-        local_lumped[VISCOUS_STRESS + a * VIM + b] = 1.;
+        local_post[VISCOUS_STRESS + a * Num_Dim + b] = mu * gamma[a][b];
+        local_lumped[VISCOUS_STRESS + a * Num_Dim + b] = 1.;
       }
+    }
+    if (Num_Dim == 2 && VIM == 3) {
+      local_post[VISCOUS_STRESS + 4] = mu * gamma[2][2];
+      local_lumped[VISCOUS_STRESS + 4] = 1.;
+    }
+  }
+
+  if (PP_VELOCITY_GRADIENTS != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    for (a = 0; a < Num_Dim; a++) {
+      for (b = 0; b < Num_Dim; b++) {
+        local_post[PP_VELOCITY_GRADIENTS + a * Num_Dim + b] = fv->grad_v[a][b];
+        local_lumped[PP_VELOCITY_GRADIENTS + a * Num_Dim + b] = 1.;
+      }
+    }
+    if (Num_Dim == 2 && VIM == 3) {
+      local_post[PP_VELOCITY_GRADIENTS + 4] = fv->grad_v[2][2];
+      local_lumped[PP_VELOCITY_GRADIENTS + 4] = 1.;
     }
   }
 
@@ -7784,6 +7803,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "VE Stress Norm", &STRESS_NORM);
   iread = look_for_post_proc(ifp, "Species Sources", &SPECIES_SOURCES);
   iread = look_for_post_proc(ifp, "Viscous Stress", &VISCOUS_STRESS);
+  iread = look_for_post_proc(ifp, "Velocity Gradients", &PP_VELOCITY_GRADIENTS);
   iread = look_for_post_proc(ifp, "Viscous Stress Norm", &VISCOUS_STRESS_NORM);
   iread = look_for_post_proc(ifp, "Viscous Von Mises Stress", &VISCOUS_VON_MISES_STRESS);
   iread = look_for_post_proc(ifp, "Orientation Vectors", &ORIENTATION_VECTORS);
@@ -10745,6 +10765,79 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
       set_nv_tkud(rd, index, 0, 0, -2, "VS22", "[1]", "Viscous stress yy", FALSE);
       index++;
       index_post++;
+
+      if (VIM == 3) {
+        set_nv_tkud(rd, index, 0, 0, -2, "VS33", "[1]", "Viscous stress zz", FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  }
+
+  if (PP_VELOCITY_GRADIENTS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+    if (Num_Dim > 2) {
+      PP_VELOCITY_GRADIENTS = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV11", "[1]", "Velocity gradient xx", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV12", "[1]", "Velocity gradient xy", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV13", "[1]", "Velocity gradient xz", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV21", "[1]", "Velocity gradient yx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV22", "[1]", "Velocity gradient yy", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV23", "[1]", "Velocity gradient yz", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV31", "[1]", "Velocity gradient zx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV32", "[1]", "Velocity gradient zy", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV33", "[1]", "Velocity gradient zz", FALSE);
+      index++;
+      index_post++;
+
+    } else {
+      PP_VELOCITY_GRADIENTS = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV11", "[1]", "Velocity gradient xx", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV12", "[1]", "Velocity gradient xy", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV21", "[1]", "Velocity gradient yx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV22", "[1]", "Velocity gradient yy", FALSE);
+      index++;
+      index_post++;
+      if (VIM == 3) {
+        set_nv_tkud(rd, index, 0, 0, -2, "GRADV33", "[1]", "Velocity gradient zz", FALSE);
+        index++;
+        index_post++;
+      }
     }
   }
 
