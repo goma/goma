@@ -322,6 +322,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../hunting.html">Hunting Specifications</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../augmenting_conditions.html">Augmenting Conditions Specifications</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../solver_specifications.html">Solver Specifications</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../solver_specifications/strong_bc_replace_equation.html">Strong Boundary Condition Replace Equation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solver_specifications/strong_bc_penalty.html">Strong Boundary Condition Penalty</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../solver_specifications/total_number_of_matrices.html">Total Number of Matrices</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../solver_specifications/solution_algorithm.html">Solution Algorithm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../solver_specifications/matrix_storage_format.html">Matrix Storage Format</a></li>
@@ -2487,13 +2489,153 @@ or set equal to 1.0 in the absence of <em>KIN_CHEM</em>.</p>
 <p>No References.</p>
 </section>
 </section>
+<section id="kinematic-xi">
+<h2>KINEMATIC_XI<a class="headerlink" href="#kinematic-xi" title="Permalink to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_XI</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">integer</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="id78">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id78" title="Permalink to this heading">#</a></h3>
+<p><strong>(SIC/MESH1)</strong></p>
+<p>This boundary condition card is used as a distinguishing condition on the mesh motion
+equations (viz. <em>mesh1, mesh2</em>, and <em>mesh3</em> under the <em>EQ</em> card). It enforces the boundary
+of the mesh defined by the side set to conform to a transient or steady material surface,
+with an optional, pre-specified mass loss/gain rate.</p>
+<p>This is applied on the MESH1 component and is not rotated.</p>
+<p>Definitions of the input parameters are as follows:</p>
+<table class="table">
+<tbody>
+<tr class="row-odd"><td><p>KINEMATIC_XI</p></td>
+<td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
+</tr>
+<tr class="row-even"><td><p>SS</p></td>
+<td><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong> denotes
+side set in the EXODUS II database.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;bc_id&gt;</p></td>
+<td><p>The boundary flag identifier, an integer associated with
+&lt;bc_type&gt; that identifies the boundary location (side set in
+EXODUS II) in the problem domain.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float1&gt;</p></td>
+<td><p>Mass-loss (positive) or mass-gain (negative) velocity at the
+free boundary.</p></td>
+</tr>
+<tr class="row-odd"><td><p>[integer]</p></td>
+<td><p>Optional integer value indicating the element block id from
+which to apply the boundary condition.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id79">
+<h3><strong>Examples</strong><a class="headerlink" href="#id79" title="Permalink to this heading">#</a></h3>
+<p>The following sample card</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_XI</span> <span class="n">SS</span> <span class="mi">7</span> <span class="mf">0.0</span>
+</pre></div>
+</div>
+<p>leads to the application of the kinematic boundary condition to the MESH1
+component of the mesh equation on the boundary defined by side set 7.</p>
+</section>
+<section id="id80">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id80" title="Permalink to this heading">#</a></h3>
+<p>The functional form of the kinematic boundary condition is:</p>
+<div class="math notranslate nohighlight">
+\[\underline{n} \cdot \left( \underline{v} - \underline{v}_s \right) = \dot{m}\]</div>
+<p>Here <span class="math notranslate nohighlight">\(\underline{n}\)</span> is the unit normal vector to the free surface, <span class="math notranslate nohighlight">\(\underline{v}\)</span> is the velocity of the fluid, <span class="math notranslate nohighlight">\(\underline{v}_s\)</span> is
+the velocity of the surface (or mesh), and <span class="math notranslate nohighlight">\(\dot{m}\)</span> is the mass loss/gain rate. In two
+dimensions this equation is applied to the normal component of the vector mesh
+position equation, and hence is considered as a distinguishing condition on the location
+of the mesh relative to the fluid domain.</p>
+</section>
+<section id="id81">
+<h3><strong>FAQs</strong><a class="headerlink" href="#id81" title="Permalink to this heading">#</a></h3>
+<p>See the FAQ pertaining to “Continuation Strategies for Free Surface Flows” on the
+<em>DISTNG</em> boundary condition card.</p>
+</section>
+<section id="id82">
+<h3><strong>References</strong><a class="headerlink" href="#id82" title="Permalink to this heading">#</a></h3>
+<p>GT-001.4: GOMA and SEAMS tutorial for new users, February 18, 2002, P. R. Schunk
+and D. A. Labreche</p>
+</section>
+</section>
+<section id="kinematic-eta">
+<h2>KINEMATIC_ETA<a class="headerlink" href="#kinematic-eta" title="Permalink to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_ETA</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">integer</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="id83">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id83" title="Permalink to this heading">#</a></h3>
+<p><strong>(SIC/MESH2)</strong></p>
+<p>This boundary condition card is used as a distinguishing condition on the mesh motion
+equations (viz. <em>mesh1, mesh2</em>, and <em>mesh3</em> under the <em>EQ</em> card). It enforces the boundary
+of the mesh defined by the side set to conform to a transient or steady material surface,
+with an optional, pre-specified mass loss/gain rate.</p>
+<p>This is applied on the MESH2 component and is not rotated.</p>
+<p>Definitions of the input parameters are as follows:</p>
+<table class="table">
+<tbody>
+<tr class="row-odd"><td><p>KINEMATIC_ETA</p></td>
+<td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
+</tr>
+<tr class="row-even"><td><p>SS</p></td>
+<td><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong> denotes
+side set in the EXODUS II database.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;bc_id&gt;</p></td>
+<td><p>The boundary flag identifier, an integer associated with
+&lt;bc_type&gt; that identifies the boundary location (side set in
+EXODUS II) in the problem domain.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float1&gt;</p></td>
+<td><p>Mass-loss (positive) or mass-gain (negative) velocity at the
+free boundary.</p></td>
+</tr>
+<tr class="row-odd"><td><p>[integer]</p></td>
+<td><p>Optional integer value indicating the element block id from
+which to apply the boundary condition.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id84">
+<h3><strong>Examples</strong><a class="headerlink" href="#id84" title="Permalink to this heading">#</a></h3>
+<p>The following sample card</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_ETA</span> <span class="n">SS</span> <span class="mi">7</span> <span class="mf">0.0</span>
+</pre></div>
+</div>
+<p>leads to the application of the kinematic boundary condition to the MESH1
+component of the mesh equation on the boundary defined by side set 7.</p>
+</section>
+<section id="id85">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id85" title="Permalink to this heading">#</a></h3>
+<p>The functional form of the kinematic boundary condition is:</p>
+<div class="math notranslate nohighlight">
+\[\underline{n} \cdot \left( \underline{v} - \underline{v}_s \right) = \dot{m}\]</div>
+<p>Here <span class="math notranslate nohighlight">\(\underline{n}\)</span> is the unit normal vector to the free surface, <span class="math notranslate nohighlight">\(\underline{v}\)</span> is the velocity of the fluid, <span class="math notranslate nohighlight">\(\underline{v}_s\)</span> is
+the velocity of the surface (or mesh), and <span class="math notranslate nohighlight">\(\dot{m}\)</span> is the mass loss/gain rate. In two
+dimensions this equation is applied to the normal component of the vector mesh
+position equation, and hence is considered as a distinguishing condition on the location
+of the mesh relative to the fluid domain.</p>
+</section>
+<section id="id86">
+<h3><strong>FAQs</strong><a class="headerlink" href="#id86" title="Permalink to this heading">#</a></h3>
+<p>See the FAQ pertaining to “Continuation Strategies for Free Surface Flows” on the
+<em>DISTNG</em> boundary condition card.</p>
+</section>
+<section id="id87">
+<h3><strong>References</strong><a class="headerlink" href="#id87" title="Permalink to this heading">#</a></h3>
+<p>GT-001.4: GOMA and SEAMS tutorial for new users, February 18, 2002, P. R. Schunk
+and D. A. Labreche</p>
+</section>
+</section>
 <section id="force">
 <h2><strong>FORCE</strong><a class="headerlink" href="#force" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id78">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id78" title="Permalink to this heading">#</a></h3>
+<section id="id88">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id88" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MESH)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) on a Lagrangian
 mesh region. The force per unit area is applied uniformly over the boundary delineated
@@ -2525,8 +2667,8 @@ EXODUS II) in the problem domain.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id79">
-<h3><strong>Examples</strong><a class="headerlink" href="#id79" title="Permalink to this heading">#</a></h3>
+<section id="id89">
+<h3><strong>Examples</strong><a class="headerlink" href="#id89" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.</span> <span class="mf">1.0</span> <span class="mf">1.0</span>
 </pre></div>
@@ -2534,8 +2676,8 @@ EXODUS II) in the problem domain.</p></td>
 <p>This card results in a vector traction defined by <strong>EQUATION</strong> being
 applied to the side set boundary delineated by the number 10.</p>
 </section>
-<section id="id80">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id80" title="Permalink to this heading">#</a></h3>
+<section id="id90">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id90" title="Permalink to this heading">#</a></h3>
 <p><strong>Important note</strong>: this boundary condition can only be applied to <em>LAGRANGIAN,
 DYNAMIC_LAGRANGIAN</em> or <em>ARBITRARY</em> mesh motion types (cf. <em>Mesh Motion</em> card).
 For real-solid mesh motion types, refer to <em>FORCE_RS</em>. Furthermore, it is rare and
@@ -2544,13 +2686,13 @@ An example application of this boundary condition card is to address the need to
 some load pressure to a solid Lagrangian region, like a rubber roller, so as to squeeze
 and drive flow in a liquid region.</p>
 </section>
-<section id="id81">
-<h3><strong>FAQs</strong><a class="headerlink" href="#id81" title="Permalink to this heading">#</a></h3>
+<section id="id91">
+<h3><strong>FAQs</strong><a class="headerlink" href="#id91" title="Permalink to this heading">#</a></h3>
 <p>On internal two-sided side sets, this boundary condition results in double the force in
 the same direction.</p>
 </section>
-<section id="id82">
-<h3><strong>References</strong><a class="headerlink" href="#id82" title="Permalink to this heading">#</a></h3>
+<section id="id92">
+<h3><strong>References</strong><a class="headerlink" href="#id92" title="Permalink to this heading">#</a></h3>
 <p>A MEMS Ejector for Printing Applications, A. Gooray, G. Roller, P. Galambos, K.
 Zavadil, R. Givler, F. Peter and J. Crowley, Proceedings of the Society of Imaging
 Science &amp; Technology, Ft. Lauderdale FL, September 2001.</p>
@@ -2561,8 +2703,8 @@ Science &amp; Technology, Ft. Lauderdale FL, September 2001.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">NORM_FORCE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id83">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id83" title="Permalink to this heading">#</a></h3>
+<section id="id93">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id93" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MESH)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) on a Lagrangian
 mesh region. The force per unit area is applied uniformly over the boundary delineated
@@ -2598,8 +2740,8 @@ force/area (in 3-D).</p></td>
 <p>This card actually applies a traction that is then naturally integrated over the entire
 side set of elements. Hence, the units on the floating point input must be force/area.</p>
 </section>
-<section id="id84">
-<h3><strong>Examples</strong><a class="headerlink" href="#id84" title="Permalink to this heading">#</a></h3>
+<section id="id94">
+<h3><strong>Examples</strong><a class="headerlink" href="#id94" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">NORM_FORCE</span> <span class="n">SS</span> <span class="mi">10</span>   <span class="mf">0.</span>   <span class="mf">1.0</span>   <span class="mf">1.0</span>
 </pre></div>
@@ -2611,8 +2753,8 @@ side sets which include both sides of the interface, this condition will result 
 a zero traction, i.e., internal surface side sets must be attached to one element block
 only to get a net effect.</p>
 </section>
-<section id="id85">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id85" title="Permalink to this heading">#</a></h3>
+<section id="id95">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id95" title="Permalink to this heading">#</a></h3>
 <p><strong>Important note</strong>: this boundary condition can only be applied to <em>LAGRANGIAN,
 DYNAMIC_LAGRANGIAN</em> or <em>ARBITRARY</em> mesh motion types (cf. <em>Mesh Motion</em> card).
 For real-solid mesh motion types, refer to <em>NORM_FORCE_RS</em>. Furthermore, it is rare
@@ -2630,8 +2772,8 @@ counterparts.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">REP_FORCE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id86">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id86" title="Permalink to this heading">#</a></h3>
+<section id="id96">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id96" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MESH)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) that varies as the
 inverse of the fourth power of the distance from a planar surface to a Lagrangian or
@@ -2675,8 +2817,8 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 <p>Refer to the Technical Discussion for an explanation of the various coefficients.</p>
 </section>
-<section id="id87">
-<h3><strong>Examples</strong><a class="headerlink" href="#id87" title="Permalink to this heading">#</a></h3>
+<section id="id97">
+<h3><strong>Examples</strong><a class="headerlink" href="#id97" title="Permalink to this heading">#</a></h3>
 <p>The following sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE_REP</span> <span class="n">SS</span>   <span class="mi">10</span>  <span class="mf">1.e+03</span><span class="o">.</span>   <span class="mf">1.0</span>   <span class="mf">0.0</span> <span class="mf">0.0</span>   <span class="o">-</span><span class="mf">3.0</span>
 </pre></div>
@@ -2686,8 +2828,8 @@ surface
 side set 10 and the distance h is measured from side set 10 to the plane defined by
 1.0x – 3. = 0.</p>
 </section>
-<section id="id88">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id88" title="Permalink to this heading">#</a></h3>
+<section id="id98">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id98" title="Permalink to this heading">#</a></h3>
 <p>The <em>REP_FORCE</em> boundary condition produces a vector traction in the normal
 direction to a surface side set, defined by:</p>
 <div class="math notranslate nohighlight">
@@ -2709,8 +2851,8 @@ uniformly on a surface that is large enough such that this surface never penetra
 predefined planar boundary. Hence, this condition can be use to impose an
 impenetrable contact condition.</p>
 </section>
-<section id="id89">
-<h3><strong>FAQs</strong><a class="headerlink" href="#id89" title="Permalink to this heading">#</a></h3>
+<section id="id99">
+<h3><strong>FAQs</strong><a class="headerlink" href="#id99" title="Permalink to this heading">#</a></h3>
 <p>On internal two-sided side sets, this boundary condition results in double the force in
 the same direction.</p>
 </section>
@@ -2720,8 +2862,8 @@ the same direction.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE_USER</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">...&lt;</span><span class="n">floatn</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id90">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id90" title="Permalink to this heading">#</a></h3>
+<section id="id100">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id100" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MESH)</strong></p>
 <p>This boundary condition card applies a user-defined force per unit area (traction) on a
 Lagrangian or dynamic Lagrangian (see <em>Mesh Motion</em> card) mesh region. The
@@ -2752,8 +2894,8 @@ through the p[]array in force_user_surf.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id91">
-<h3><strong>Examples</strong><a class="headerlink" href="#id91" title="Permalink to this heading">#</a></h3>
+<section id="id101">
+<h3><strong>Examples</strong><a class="headerlink" href="#id101" title="Permalink to this heading">#</a></h3>
 <p>The input card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE_USER</span> <span class="n">SS</span> <span class="mi">3</span>   <span class="p">{</span><span class="n">delta_t</span><span class="p">}</span> <span class="mf">0.</span>   <span class="mf">1000.0</span> <span class="mf">0.</span>
 </pre></div>
@@ -2780,21 +2922,21 @@ through the p[]array in force_user_surf.</p></td>
 <p>applies a time-dependent force ramped from zero to 1000.0 in the +y direction over the
 time period {<em>delta_t</em>}.</p>
 </section>
-<section id="id92">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id92" title="Permalink to this heading">#</a></h3>
+<section id="id102">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id102" title="Permalink to this heading">#</a></h3>
 <p>Used commonly to apply a force per unit area to an external surface of a solid region
 (<em>LAGRANGIAN</em> type, cf. <em>FORCE_USER_RS</em>), that is nonconstant, viz. time varying or
 spatially varying. The <em>FORCE</em> and <em>NORM_FORCE</em> boundary conditions can be used
 for constant forces. This condition is applied as a weak integrated condition in <em>Goma</em>,
 and hence will be additive with others of its kind.</p>
 </section>
-<section id="id93">
-<h3><strong>FAQs</strong><a class="headerlink" href="#id93" title="Permalink to this heading">#</a></h3>
+<section id="id103">
+<h3><strong>FAQs</strong><a class="headerlink" href="#id103" title="Permalink to this heading">#</a></h3>
 <p>On internal two-sided side sets, this boundary condition results in double the force in
 the same direction.</p>
 </section>
-<section id="id94">
-<h3><strong>References</strong><a class="headerlink" href="#id94" title="Permalink to this heading">#</a></h3>
+<section id="id104">
+<h3><strong>References</strong><a class="headerlink" href="#id104" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -2803,8 +2945,8 @@ the same direction.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id95">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id95" title="Permalink to this heading">#</a></h3>
+<section id="id105">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id105" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ROTATED MESH)</strong></p>
 <p>This boundary condition card applies a specified contact-angle on the mesh at a single
 node nodeset. It is used exclusively in two dimensional computations. Its primary
@@ -2849,8 +2991,8 @@ normals, viz. non-planar solid walls).</p></td>
 </tbody>
 </table>
 </section>
-<section id="id96">
-<h3><strong>Examples</strong><a class="headerlink" href="#id96" title="Permalink to this heading">#</a></h3>
+<section id="id106">
+<h3><strong>Examples</strong><a class="headerlink" href="#id106" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA</span> <span class="n">NS</span> <span class="mi">100</span> <span class="mf">1.4</span> <span class="mf">0.</span> <span class="mf">1.</span> <span class="mf">0.</span>
 </pre></div>
@@ -2859,8 +3001,8 @@ normals, viz. non-planar solid walls).</p></td>
 the 100 nodeset and the vector (0,1,0). Normally, this latter vector is the normal to the
 solid surface in contact with the free surface at this point.</p>
 </section>
-<section id="id97">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id97" title="Permalink to this heading">#</a></h3>
+<section id="id107">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id107" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>The constraint that is imposed at the nodeset node is:</p>
 <div class="math notranslate nohighlight">
@@ -2909,8 +3051,8 @@ angle. Recall that the angle is specified in radians on this card.</p></li>
 <a class="reference internal image-reference" href="../../_images/055_goma_physics.png"><img alt="../../_images/055_goma_physics.png" src="../../_images/055_goma_physics.png" style="width: 90%;" /></a>
 </figure>
 </section>
-<section id="id98">
-<h3><strong>References</strong><a class="headerlink" href="#id98" title="Permalink to this heading">#</a></h3>
+<section id="id108">
+<h3><strong>References</strong><a class="headerlink" href="#id108" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -2919,8 +3061,8 @@ angle. Recall that the angle is specified in radians on this card.</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_OR_FIX</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id99">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id99" title="Permalink to this heading">#</a></h3>
+<section id="id109">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id109" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ROTATED MESH)</strong></p>
 <p>This boundary condition card allows the application of Gibb’s inequality condition in
 conjuction with a contact angle. This allows for a point to be specified at which a
@@ -2982,15 +3124,15 @@ EXODUS II) in the problem domain.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id100">
-<h3><strong>Examples</strong><a class="headerlink" href="#id100" title="Permalink to this heading">#</a></h3>
+<section id="id110">
+<h3><strong>Examples</strong><a class="headerlink" href="#id110" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_OR_FIX</span> <span class="n">NS</span> <span class="mi">100</span> <span class="mf">1.3</span> <span class="mf">0.</span> <span class="mf">1.</span> <span class="mf">0.</span> <span class="o">-</span><span class="mf">0.5</span> <span class="mf">1.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
-<section id="id101">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id101" title="Permalink to this heading">#</a></h3>
+<section id="id111">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id111" title="Permalink to this heading">#</a></h3>
 <p>The Gibb’s inequality condition is illustrated in the accompanying figure. The fixed
 point is indicated by the plane, x = x<sub>0</sub>. Initially, the contact line is far from this point as
 the condition at the contact line fixes the contact angle to the value θ<sub>dcl</sub>. However,
@@ -3001,11 +3143,11 @@ other part of the Gibb’s inequality is illustrated (above) by the last sketch.
 virture of the overall fluid mechanics, the contact angle withdraws until it is larger than
 θ<sub>dcl</sub>. When this happens the contact line is no longer affixed at x = x<sub>0</sub> and is allowed to
 move freely. Once again the contact angle condition is enforced.</p>
-<figure class="align-center" id="id150">
+<figure class="align-center" id="id170">
 <a class="reference internal image-reference" href="../../_images/056_goma_physics.png"><img alt="../../_images/056_goma_physics.png" src="../../_images/056_goma_physics.png" style="width: 90%;" /></a>
 <figcaption>
 <p><span class="caption-text">Contact angles and Gibb’s inequality condition in Goma, for the
-special case when the meniscus is moving along a surface of constant x.</span><a class="headerlink" href="#id150" title="Permalink to this image">#</a></p>
+special case when the meniscus is moving along a surface of constant x.</span><a class="headerlink" href="#id170" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <p>Also, please see the important note under the BC = CA card regarding the convention
@@ -3023,8 +3165,8 @@ to pin the contact line there and allow it to take on any macroscale contact ang
 a certain range. The line can release again if the meniscus pulls the contact line
 sufficiently to overcome specified bounds.</p>
 </section>
-<section id="id102">
-<h3><strong>References</strong><a class="headerlink" href="#id102" title="Permalink to this heading">#</a></h3>
+<section id="id112">
+<h3><strong>References</strong><a class="headerlink" href="#id112" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -3033,8 +3175,8 @@ sufficiently to overcome specified bounds.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id103">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id103" title="Permalink to this heading">#</a></h3>
+<section id="id113">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id113" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC-EDGE/ROTATED MESH)</strong></p>
 <p>This boundary condition card specifies a constant contact angle on the edge defined by
 the intersection of the primary and secondary side sets. This card is used most often to
@@ -3091,8 +3233,8 @@ should lie in the range 0 ≤ angle ≤ 180.</p></td>
 every node that lies on the edge (subject to overriding <em>ROT</em> cards or Dirichlet
 conditions).</p>
 </section>
-<section id="id104">
-<h3><strong>Examples</strong><a class="headerlink" href="#id104" title="Permalink to this heading">#</a></h3>
+<section id="id114">
+<h3><strong>Examples</strong><a class="headerlink" href="#id114" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE</span> <span class="n">SS</span> <span class="mi">40</span> <span class="mi">50</span> <span class="mf">33.0</span> <span class="mf">0.</span> <span class="mf">1.</span> <span class="mf">0.</span>
 </pre></div>
@@ -3101,8 +3243,8 @@ conditions).</p>
 side set 40 and the vector (0,1,0) at all points on the edge defined by the intersection of
 side set 40 and side set 50.</p>
 </section>
-<section id="id105">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id105" title="Permalink to this heading">#</a></h3>
+<section id="id115">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id115" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>Although this constraint deals with vector quantities, it is a scalar constraint. The
 actual requirement that is imposed is:</p>
@@ -3131,8 +3273,8 @@ not planar.</p></li>
 CA_EDGE_CURVE_INT, VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 </ul>
 </section>
-<section id="id106">
-<h3><strong>References</strong><a class="headerlink" href="#id106" title="Permalink to this heading">#</a></h3>
+<section id="id116">
+<h3><strong>References</strong><a class="headerlink" href="#id116" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -3141,8 +3283,8 @@ CA_EDGE_CURVE_INT, VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_INT</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id107">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id107" title="Permalink to this heading">#</a></h3>
+<section id="id117">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id117" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC-EDGE/ROTATED MESH)</strong></p>
 <p>This boundary condition card specifies a constant contact angle on the edge defined by
 the intersection of the primary and secondary side sets. It is identical in format and
@@ -3191,8 +3333,8 @@ should lie in the range 0 ≤ angle ≤ 180.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id108">
-<h3><strong>Examples</strong><a class="headerlink" href="#id108" title="Permalink to this heading">#</a></h3>
+<section id="id118">
+<h3><strong>Examples</strong><a class="headerlink" href="#id118" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_INT</span> <span class="n">SS</span> <span class="mi">40</span> <span class="mi">50</span> <span class="mf">33.0</span> <span class="mf">0.</span> <span class="mf">1.</span> <span class="mf">0.</span>
 </pre></div>
@@ -3201,8 +3343,8 @@ should lie in the range 0 ≤ angle ≤ 180.</p></td>
 side set 40 and the vector (0,1,0) at all points on the edge defined by the intersection of
 side set 40 and side set 50.</p>
 </section>
-<section id="id109">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id109" title="Permalink to this heading">#</a></h3>
+<section id="id119">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id119" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>As noted above, this boundary condition is identical in function to the <em>CA_EDGE</em>
 condition. It differs only in the manner of its application. Whereas, the former was
@@ -3229,8 +3371,8 @@ slope of the edge curve.</p>
 CA_EDGE_CURVE_INT, VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 </ul>
 </section>
-<section id="id110">
-<h3><strong>References</strong><a class="headerlink" href="#id110" title="Permalink to this heading">#</a></h3>
+<section id="id120">
+<h3><strong>References</strong><a class="headerlink" href="#id120" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -3239,8 +3381,8 @@ CA_EDGE_CURVE_INT, VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_OR_FIX</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">type_string</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">float_list</span><span class="p">}</span>
 </pre></div>
 </div>
-<section id="id111">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id111" title="Permalink to this heading">#</a></h3>
+<section id="id121">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id121" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ROTATED MESH)</strong></p>
 <p>In analogy to the two-dimensional condition, <em>CA_OR_FIX</em>, boundary condition, this
 boundary condition imposes a contact angle on an edge feature in a three-dimensional
@@ -3350,8 +3492,8 @@ imposing the appropriate contact angle.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id112">
-<h3><strong>Examples</strong><a class="headerlink" href="#id112" title="Permalink to this heading">#</a></h3>
+<section id="id122">
+<h3><strong>Examples</strong><a class="headerlink" href="#id122" title="Permalink to this heading">#</a></h3>
 <p>An example making use of the <strong>CIRCLE</strong> feature curve option is as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_OR_FIX</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mi">20</span> <span class="n">CIRCLE</span> <span class="mf">1.3</span>   <span class="mf">0.</span> <span class="o">-</span><span class="mf">1.</span> <span class="mf">0.</span>   <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>   <span class="mf">1.0</span>
 </pre></div>
@@ -3362,8 +3504,8 @@ circle of radius 1.0 centered at (0.0, 0.0, 0.0). The original location for the 
 must be completely inside of the feature circle. Note also that the circle center should
 lie in the substrate plane.</p>
 </section>
-<section id="id113">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id113" title="Permalink to this heading">#</a></h3>
+<section id="id123">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id123" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>See the Technical Discussion under the boundary condition <em>CA_OR_FIX</em> for a
 detailed discussion of the nature of the Gibb’s criterion as it applies to contact
@@ -3386,8 +3528,8 @@ once the contact angle it makes with the cylinder top exceeds the mobile contact
 angle by a small amount.</p></li>
 </ul>
 </section>
-<section id="id114">
-<h3><strong>References</strong><a class="headerlink" href="#id114" title="Permalink to this heading">#</a></h3>
+<section id="id124">
+<h3><strong>References</strong><a class="headerlink" href="#id124" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -3396,8 +3538,8 @@ angle by a small amount.</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_CURVE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id115">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id115" title="Permalink to this heading">#</a></h3>
+<section id="id125">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id125" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC-EDGE/ROTATED MESH)</strong></p>
 <p>This boundary condition allows the user to specify a constant contact angle along an
 edge in three-dimensions. It is similar in function to the <em>CA_EDGE</em> boundary condition
@@ -3438,8 +3580,8 @@ the range 0 ≤ angle ≤ 180.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id116">
-<h3><strong>Examples</strong><a class="headerlink" href="#id116" title="Permalink to this heading">#</a></h3>
+<section id="id126">
+<h3><strong>Examples</strong><a class="headerlink" href="#id126" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_CURVE</span> <span class="n">SS</span> <span class="mi">40</span> <span class="mi">50</span> <span class="mf">135.0</span>
 </pre></div>
@@ -3449,8 +3591,8 @@ surface on side set 40 and the outward-pointing normal to side set 50 at all poi
 the edge defined by side set 40 and 50. There is no restriction on whether side set 50’s
 normal vectors must be constant.</p>
 </section>
-<section id="id117">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id117" title="Permalink to this heading">#</a></h3>
+<section id="id127">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id127" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>Although this boundary condition deals with vector quantities it is a scalar
 constraint. The actual requirement that is imposed is:</p>
@@ -3477,8 +3619,8 @@ enforced point collocated condition.</p></li>
 CA_EDGE_CURVE_INT, VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 </ul>
 </section>
-<section id="id118">
-<h3><strong>References</strong><a class="headerlink" href="#id118" title="Permalink to this heading">#</a></h3>
+<section id="id128">
+<h3><strong>References</strong><a class="headerlink" href="#id128" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -3487,8 +3629,8 @@ CA_EDGE_CURVE_INT, VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_CURVE_INT</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id119">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id119" title="Permalink to this heading">#</a></h3>
+<section id="id129">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id129" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition allows the user to specify a constant contact angle along an
 edge in three-dimensions. It is identical in function to <em>CA_EDGE_CURVE</em> boundary
@@ -3527,8 +3669,8 @@ lie in the range 0 ≤ angle ≤ 180.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id120">
-<h3><strong>Examples</strong><a class="headerlink" href="#id120" title="Permalink to this heading">#</a></h3>
+<section id="id130">
+<h3><strong>Examples</strong><a class="headerlink" href="#id130" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_CURVE_INT</span> <span class="n">SS</span> <span class="mi">40</span> <span class="mi">50</span> <span class="mf">135.0</span>
 </pre></div>
@@ -3538,8 +3680,8 @@ surface on side set 40 and the outward-pointing normal to side set 50 at all poi
 the edge defined by side set 40 and 50. The is no restriction on whether side set 50’s
 normal vectors must be constant.</p>
 </section>
-<section id="id121">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id121" title="Permalink to this heading">#</a></h3>
+<section id="id131">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id131" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>Although this boundary condition deals with vector quantities it is a scalar
 constraint. As noted above the form of the constraint is identical to that in the
@@ -3569,8 +3711,8 @@ integrated constraint.</p></li>
 VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 </ul>
 </section>
-<section id="id122">
-<h3><strong>References</strong><a class="headerlink" href="#id122" title="Permalink to this heading">#</a></h3>
+<section id="id132">
+<h3><strong>References</strong><a class="headerlink" href="#id132" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -3579,8 +3721,8 @@ VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VAR_</span> <span class="n">CA_EDGE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id123">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id123" title="Permalink to this heading">#</a></h3>
+<section id="id133">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id133" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC-EDGE/ROTATED MESH)</strong></p>
 <p>This card is used to set a variable contact angle on a dynamic three-dimensional contact
 line. A local contact angle is determined based upon the local rate of advance/recession
@@ -3639,8 +3781,8 @@ Discussion.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id124">
-<h3><strong>Examples</strong><a class="headerlink" href="#id124" title="Permalink to this heading">#</a></h3>
+<section id="id134">
+<h3><strong>Examples</strong><a class="headerlink" href="#id134" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VAR_CA_EDGE</span> <span class="n">SS</span> <span class="mi">60</span> <span class="mi">20</span>   <span class="mf">135.</span> <span class="mf">0.02</span>   <span class="mf">0.</span> <span class="o">-</span><span class="mf">1.</span> <span class="mf">0.</span>
 </pre></div>
@@ -3649,8 +3791,8 @@ Discussion.</p></td>
 20. The static contact angle is 135 degrees and the slope parameter is 0.02. The solid
 substrate is moving at the fixed velocity (0, -1., 0.).</p>
 </section>
-<section id="id125">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id125" title="Permalink to this heading">#</a></h3>
+<section id="id135">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id135" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>A contact line that moves relative to its underlying solid substrate is referred to as
 a dynamic contact line. For a dynamic contact line associated with threedimensional
@@ -3731,8 +3873,8 @@ on the edge is:</p></li>
 <div><p>where φ<sub>i</sub> is the shape function associated with node <em>i</em>.</p>
 </div></blockquote>
 </section>
-<section id="id126">
-<h3><strong>References</strong><a class="headerlink" href="#id126" title="Permalink to this heading">#</a></h3>
+<section id="id136">
+<h3><strong>References</strong><a class="headerlink" href="#id136" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -3741,8 +3883,8 @@ on the edge is:</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VAR_CA_USER</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id127">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id127" title="Permalink to this heading">#</a></h3>
+<section id="id137">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id137" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC-EDGE/ROTATED MESH)</strong></p>
 <p>This card is used to set a variable contact angle on a dynamic three-dimensional contact
 line. It is identical in function to the <em>VAR_CA_USER</em> except that it allows the user to
@@ -3788,8 +3930,8 @@ user-supplied function for use with the user model.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id128">
-<h3><strong>Examples</strong><a class="headerlink" href="#id128" title="Permalink to this heading">#</a></h3>
+<section id="id138">
+<h3><strong>Examples</strong><a class="headerlink" href="#id138" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VAR_CA_USER</span> <span class="n">SS</span> <span class="mi">60</span> <span class="mi">20</span>   <span class="o">-</span><span class="mf">1.</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">1.e-3</span> <span class="mf">135.0</span>
 </pre></div>
@@ -3799,8 +3941,8 @@ user-supplied function for use with the user model.</p></td>
 function is passed the constants 1.e-3 and 135.0 in variable locations p[0] and p[1],
 respectively.</p>
 </section>
-<section id="id129">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id129" title="Permalink to this heading">#</a></h3>
+<section id="id139">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id139" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p><em>VAR_CA_USER</em> function is identical to <em>VAR_CA_EDGE</em>. It is applied to threedimensional
 dynamic contact lines in order to set a variable contact angle. The user
@@ -3829,8 +3971,8 @@ described in <em>VAR_CA_EDGE</em>.</p></li>
 </pre></div>
 </div>
 </section>
-<section id="id130">
-<h3><strong>References</strong><a class="headerlink" href="#id130" title="Permalink to this heading">#</a></h3>
+<section id="id140">
+<h3><strong>References</strong><a class="headerlink" href="#id140" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -3839,8 +3981,8 @@ described in <em>VAR_CA_EDGE</em>.</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FRICTION</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">integer1</span><span class="p">]</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id131">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id131" title="Permalink to this heading">#</a></h3>
+<section id="id141">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id141" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MESH)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) on a Lagrangian
 mesh region. The force per unit area is applied according to Coulomb’s friction law
@@ -3873,15 +4015,15 @@ this condition will be applied.</p></td>
 <p>This card actually applies a traction that is then naturally integrated over the entire side
 set of elements.</p>
 </section>
-<section id="id132">
-<h3><strong>Examples</strong><a class="headerlink" href="#id132" title="Permalink to this heading">#</a></h3>
+<section id="id142">
+<h3><strong>Examples</strong><a class="headerlink" href="#id142" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FRICTION</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.1</span> <span class="mi">2</span>
 </pre></div>
 </div>
 </section>
-<section id="id133">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id133" title="Permalink to this heading">#</a></h3>
+<section id="id143">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id143" title="Permalink to this heading">#</a></h3>
 <p><strong>Important note</strong>: this boundary condition can only be applied to <em>LAGRANGIAN,
 DYNAMIC_LAGRANGIAN</em> or <em>ARBITRARY</em> mesh motion types (cf. <em>Mesh Motion</em> card).
 For real-solid mesh motion types, refer to <em>FRICTION_RS</em>.</p>
@@ -3898,8 +4040,8 @@ that the direction of the frictional force is determined by the velocity directi
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SOLID_FLUID</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="p">[</span><span class="nb">float</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="id134">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id134" title="Permalink to this heading">#</a></h3>
+<section id="id144">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id144" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/VECTOR REALSOLID)</strong></p>
 <p>The <em>SOLID_FLUID</em> condition performs the exact same task as the <em>FLUID_SOLID</em>
 condition. The usage and example are also the same, so consult the discussion on that
@@ -3939,16 +4081,16 @@ contribution of stress, is optional. The default is 1.0.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id135">
-<h3><strong>Examples</strong><a class="headerlink" href="#id135" title="Permalink to this heading">#</a></h3>
+<section id="id145">
+<h3><strong>Examples</strong><a class="headerlink" href="#id145" title="Permalink to this heading">#</a></h3>
 <p>See <em>FLUID_SOLID</em> description.</p>
 </section>
-<section id="id136">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id136" title="Permalink to this heading">#</a></h3>
+<section id="id146">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id146" title="Permalink to this heading">#</a></h3>
 <p>See <em>FLUID_SOLID</em> description.</p>
 </section>
-<section id="id137">
-<h3><strong>References</strong><a class="headerlink" href="#id137" title="Permalink to this heading">#</a></h3>
+<section id="id147">
+<h3><strong>References</strong><a class="headerlink" href="#id147" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -3957,22 +4099,22 @@ contribution of stress, is optional. The default is 1.0.</p></td>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">PENETRATION</span>
 </pre></div>
 </div>
-<section id="id138">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id138" title="Permalink to this heading">#</a></h3>
+<section id="id148">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id148" title="Permalink to this heading">#</a></h3>
 <p><strong>()</strong></p>
 <p>No longer supported/used in <em>Goma</em>. See <em>DARCY_CONTINUOUS</em> boundary condition
 card.</p>
 </section>
-<section id="id139">
-<h3><strong>Examples</strong><a class="headerlink" href="#id139" title="Permalink to this heading">#</a></h3>
+<section id="id149">
+<h3><strong>Examples</strong><a class="headerlink" href="#id149" title="Permalink to this heading">#</a></h3>
 <p>No Example.</p>
 </section>
-<section id="id140">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id140" title="Permalink to this heading">#</a></h3>
+<section id="id150">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id150" title="Permalink to this heading">#</a></h3>
 <p>No Discussion.</p>
 </section>
-<section id="id141">
-<h3><strong>References</strong><a class="headerlink" href="#id141" title="Permalink to this heading">#</a></h3>
+<section id="id151">
+<h3><strong>References</strong><a class="headerlink" href="#id151" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -3981,24 +4123,24 @@ card.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_KIN</span>
 </pre></div>
 </div>
-<section id="id142">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id142" title="Permalink to this heading">#</a></h3>
+<section id="id152">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id152" title="Permalink to this heading">#</a></h3>
 <p><strong>()</strong></p>
 <p>This boundary condition card was used as a distinguishing condition for the Darcy-
 Flow in porous medium, in an arbitrary frame of reference.</p>
 <p>This boundary condition was disabled in November of 2001 due to the new formulation
 in <em>Goma</em> for poroelasticity; this boundary condition was poorly formulated.</p>
 </section>
-<section id="id143">
-<h3><strong>Examples</strong><a class="headerlink" href="#id143" title="Permalink to this heading">#</a></h3>
+<section id="id153">
+<h3><strong>Examples</strong><a class="headerlink" href="#id153" title="Permalink to this heading">#</a></h3>
 <p>No Example.</p>
 </section>
-<section id="id144">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id144" title="Permalink to this heading">#</a></h3>
+<section id="id154">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id154" title="Permalink to this heading">#</a></h3>
 <p>No Discussion.</p>
 </section>
-<section id="id145">
-<h3><strong>References</strong><a class="headerlink" href="#id145" title="Permalink to this heading">#</a></h3>
+<section id="id155">
+<h3><strong>References</strong><a class="headerlink" href="#id155" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -4007,8 +4149,8 @@ in <em>Goma</em> for poroelasticity; this boundary condition was poorly formulat
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SDC_KIN_SF</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">char_string</span><span class="p">}</span>
 </pre></div>
 </div>
-<section id="id146">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id146" title="Permalink to this heading">#</a></h3>
+<section id="id156">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id156" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition represents the specification of the normal component of the
 mesh velocity. This is a DVI_MULTI_PHASE_SINGLE boundary condition that has an
@@ -4067,8 +4209,8 @@ implemented, so <strong>SDC_SURFRXN</strong> currently does nothing.</p>
 </tbody>
 </table>
 </section>
-<section id="id147">
-<h3><strong>Examples</strong><a class="headerlink" href="#id147" title="Permalink to this heading">#</a></h3>
+<section id="id157">
+<h3><strong>Examples</strong><a class="headerlink" href="#id157" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SDC_KIN_SF</span> <span class="n">SS</span> <span class="mi">1</span>   <span class="mi">0</span> <span class="n">VL_EQUIL_PSEUDORXN</span>
 </pre></div>
@@ -4078,8 +4220,8 @@ normal component of the velocity on side set 1 on the element block 0 side of th
 interface. The source term to be used in the above equation will be taken from multiple
 previously specified multiple VL_EQUIL_PSEUDORXN cards.</p>
 </section>
-<section id="id148">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id148" title="Permalink to this heading">#</a></h3>
+<section id="id158">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id158" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>This boundary condition is exactly the same as SDC_STEFANFLOW, except for the
 fact that it is applied on the normal component of the mesh velocity instead of the
@@ -4097,11 +4239,97 @@ boundary for a variable that is continuous across the interface. The user is ref
 to Moffat (2001) for detailed presentation on discontinuous variables.</p></li>
 </ul>
 </section>
-<section id="id149">
-<h3><strong>References</strong><a class="headerlink" href="#id149" title="Permalink to this heading">#</a></h3>
+<section id="id159">
+<h3><strong>References</strong><a class="headerlink" href="#id159" title="Permalink to this heading">#</a></h3>
 <p>GTM-015.1: Implementation Plan for Upgrading Boundary Conditions at
 Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
 <hr class="docutils" />
+</section>
+</section>
+<section id="elliptic-xi-regularization">
+<h2>ELLIPTIC_XI_REGULARIZATION<a class="headerlink" href="#elliptic-xi-regularization" title="Permalink to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">ELLIPTIC_XI_REGULARIZATION</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<section id="id160">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id160" title="Permalink to this heading">#</a></h3>
+<p><strong>(WIC/MESH1)</strong></p>
+<p>This Boundary condition applies a regularization term on the boundary for spacing in the <span class="math notranslate nohighlight">\(\xi\)</span> direction</p>
+<dl class="simple">
+<dt>ELLIPTIC_XI_REGULARIZATION</dt><dd><p>Name of the boundary condition (&lt;bc_name&gt;).</p>
+</dd>
+<dt>SS</dt><dd><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong> denotes
+side set in the EXODUS II database.</p>
+</dd>
+<dt>&lt;bc_id&gt;</dt><dd><p>The boundary flag identifier, an integer associated with
+&lt;bc_type&gt; that identifies the boundary location (side set in
+EXODUS II) in the problem domain.</p>
+</dd>
+<dt>&lt;float1&gt;</dt><dd><p>Penalty on the regularization term (float).</p>
+</dd>
+</dl>
+</section>
+<section id="id161">
+<h3><strong>Examples</strong><a class="headerlink" href="#id161" title="Permalink to this heading">#</a></h3>
+<p>The following sample card</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">ELLIPTIC_XI_REGULARIZATION</span> <span class="n">SS</span> <span class="mi">7</span> <span class="mf">100.0</span>
+</pre></div>
+</div>
+</section>
+<section id="id162">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id162" title="Permalink to this heading">#</a></h3>
+<div class="math notranslate nohighlight">
+\[\mathbf{n} \cdot \nabla \xi = -M * log(x_\xi^2 + y_\xi^2)\]</div>
+<p>Here <span class="math notranslate nohighlight">\(M\)</span> is the penalty from the input card.</p>
+</section>
+<section id="id163">
+<h3><strong>FAQs</strong><a class="headerlink" href="#id163" title="Permalink to this heading">#</a></h3>
+</section>
+<section id="id164">
+<h3><strong>References</strong><a class="headerlink" href="#id164" title="Permalink to this heading">#</a></h3>
+</section>
+</section>
+<section id="elliptic-eta-regularization">
+<h2>ELLIPTIC_ETA_REGULARIZATION<a class="headerlink" href="#elliptic-eta-regularization" title="Permalink to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">ELLIPTIC_ETA_REGULARIZATION</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<section id="id165">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id165" title="Permalink to this heading">#</a></h3>
+<p><strong>(WIC/MESH2)</strong></p>
+<p>This Boundary condition applies a regularization term on the boundary for spacing in the <span class="math notranslate nohighlight">\(\eta\)</span> direction</p>
+<dl class="simple">
+<dt>ELLIPTIC_ETA_REGULARIZATION</dt><dd><p>Name of the boundary condition (&lt;bc_name&gt;).</p>
+</dd>
+<dt>SS</dt><dd><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong> denotes
+side set in the EXODUS II database.</p>
+</dd>
+<dt>&lt;bc_id&gt;</dt><dd><p>The boundary flag identifier, an integer associated with
+&lt;bc_type&gt; that identifies the boundary location (side set in
+EXODUS II) in the problem domain.</p>
+</dd>
+<dt>&lt;float1&gt;</dt><dd><p>Penalty on the regularization term (float).</p>
+</dd>
+</dl>
+</section>
+<section id="id166">
+<h3><strong>Examples</strong><a class="headerlink" href="#id166" title="Permalink to this heading">#</a></h3>
+<p>The following sample card</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">ELLIPTIC_ETA_REGULARIZATION</span> <span class="n">SS</span> <span class="mi">7</span> <span class="mf">100.0</span>
+</pre></div>
+</div>
+</section>
+<section id="id167">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id167" title="Permalink to this heading">#</a></h3>
+<div class="math notranslate nohighlight">
+\[\mathbf{n} \cdot \nabla \eta = -M * log(x_\eta^2 + y_\eta^2)\]</div>
+<p>Here <span class="math notranslate nohighlight">\(M\)</span> is the penalty from the input card.</p>
+</section>
+<section id="id168">
+<h3><strong>FAQs</strong><a class="headerlink" href="#id168" title="Permalink to this heading">#</a></h3>
+</section>
+<section id="id169">
+<h3><strong>References</strong><a class="headerlink" href="#id169" title="Permalink to this heading">#</a></h3>
 </section>
 </section>
 </section>
@@ -4917,10 +5145,8 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#force">
-   <strong>
-    FORCE
-   </strong>
+  <a class="reference internal nav-link" href="#kinematic-xi">
+   KINEMATIC_XI
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
@@ -4961,10 +5187,8 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#norm-force">
-   <strong>
-    NORM_FORCE
-   </strong>
+  <a class="reference internal nav-link" href="#kinematic-eta">
+   KINEMATIC_ETA
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
@@ -4988,6 +5212,94 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
      </strong>
     </a>
    </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id86">
+     <strong>
+      FAQs
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id87">
+     <strong>
+      References
+     </strong>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#force">
+   <strong>
+    FORCE
+   </strong>
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id88">
+     <strong>
+      Description / Usage
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id89">
+     <strong>
+      Examples
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id90">
+     <strong>
+      Technical Discussion
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id91">
+     <strong>
+      FAQs
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id92">
+     <strong>
+      References
+     </strong>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#norm-force">
+   <strong>
+    NORM_FORCE
+   </strong>
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id93">
+     <strong>
+      Description / Usage
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id94">
+     <strong>
+      Examples
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id95">
+     <strong>
+      Technical Discussion
+     </strong>
+    </a>
+   </li>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -4998,28 +5310,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id86">
+    <a class="reference internal nav-link" href="#id96">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id87">
+    <a class="reference internal nav-link" href="#id97">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id88">
+    <a class="reference internal nav-link" href="#id98">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id89">
+    <a class="reference internal nav-link" href="#id99">
      <strong>
       FAQs
      </strong>
@@ -5035,35 +5347,35 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id90">
+    <a class="reference internal nav-link" href="#id100">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id91">
+    <a class="reference internal nav-link" href="#id101">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id92">
+    <a class="reference internal nav-link" href="#id102">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id93">
+    <a class="reference internal nav-link" href="#id103">
      <strong>
       FAQs
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id94">
+    <a class="reference internal nav-link" href="#id104">
      <strong>
       References
      </strong>
@@ -5079,28 +5391,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id95">
+    <a class="reference internal nav-link" href="#id105">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id96">
+    <a class="reference internal nav-link" href="#id106">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id97">
+    <a class="reference internal nav-link" href="#id107">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id98">
+    <a class="reference internal nav-link" href="#id108">
      <strong>
       References
      </strong>
@@ -5116,21 +5428,21 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id99">
+    <a class="reference internal nav-link" href="#id109">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id100">
+    <a class="reference internal nav-link" href="#id110">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id101">
+    <a class="reference internal nav-link" href="#id111">
      <strong>
       Technical Discussion
      </strong>
@@ -5144,7 +5456,7 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id102">
+    <a class="reference internal nav-link" href="#id112">
      <strong>
       References
      </strong>
@@ -5160,28 +5472,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id103">
+    <a class="reference internal nav-link" href="#id113">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id104">
+    <a class="reference internal nav-link" href="#id114">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id105">
+    <a class="reference internal nav-link" href="#id115">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id106">
+    <a class="reference internal nav-link" href="#id116">
      <strong>
       References
      </strong>
@@ -5197,28 +5509,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id107">
+    <a class="reference internal nav-link" href="#id117">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id108">
+    <a class="reference internal nav-link" href="#id118">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id109">
+    <a class="reference internal nav-link" href="#id119">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id110">
+    <a class="reference internal nav-link" href="#id120">
      <strong>
       References
      </strong>
@@ -5234,28 +5546,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id111">
+    <a class="reference internal nav-link" href="#id121">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id112">
+    <a class="reference internal nav-link" href="#id122">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id113">
+    <a class="reference internal nav-link" href="#id123">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id114">
+    <a class="reference internal nav-link" href="#id124">
      <strong>
       References
      </strong>
@@ -5271,28 +5583,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id115">
+    <a class="reference internal nav-link" href="#id125">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id116">
+    <a class="reference internal nav-link" href="#id126">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id117">
+    <a class="reference internal nav-link" href="#id127">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id118">
+    <a class="reference internal nav-link" href="#id128">
      <strong>
       References
      </strong>
@@ -5308,28 +5620,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id119">
+    <a class="reference internal nav-link" href="#id129">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id120">
+    <a class="reference internal nav-link" href="#id130">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id121">
+    <a class="reference internal nav-link" href="#id131">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id122">
+    <a class="reference internal nav-link" href="#id132">
      <strong>
       References
      </strong>
@@ -5345,28 +5657,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id123">
+    <a class="reference internal nav-link" href="#id133">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id124">
+    <a class="reference internal nav-link" href="#id134">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id125">
+    <a class="reference internal nav-link" href="#id135">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id126">
+    <a class="reference internal nav-link" href="#id136">
      <strong>
       References
      </strong>
@@ -5382,28 +5694,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id127">
+    <a class="reference internal nav-link" href="#id137">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id128">
+    <a class="reference internal nav-link" href="#id138">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id129">
+    <a class="reference internal nav-link" href="#id139">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id130">
+    <a class="reference internal nav-link" href="#id140">
      <strong>
       References
      </strong>
@@ -5419,21 +5731,21 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id131">
+    <a class="reference internal nav-link" href="#id141">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id132">
+    <a class="reference internal nav-link" href="#id142">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id133">
+    <a class="reference internal nav-link" href="#id143">
      <strong>
       Technical Discussion
      </strong>
@@ -5449,28 +5761,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id134">
+    <a class="reference internal nav-link" href="#id144">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id135">
+    <a class="reference internal nav-link" href="#id145">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id136">
+    <a class="reference internal nav-link" href="#id146">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id137">
+    <a class="reference internal nav-link" href="#id147">
      <strong>
       References
      </strong>
@@ -5486,28 +5798,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id138">
+    <a class="reference internal nav-link" href="#id148">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id139">
+    <a class="reference internal nav-link" href="#id149">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id140">
+    <a class="reference internal nav-link" href="#id150">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id141">
+    <a class="reference internal nav-link" href="#id151">
      <strong>
       References
      </strong>
@@ -5523,28 +5835,28 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id142">
+    <a class="reference internal nav-link" href="#id152">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id143">
+    <a class="reference internal nav-link" href="#id153">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id144">
+    <a class="reference internal nav-link" href="#id154">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id145">
+    <a class="reference internal nav-link" href="#id155">
      <strong>
       References
      </strong>
@@ -5560,28 +5872,112 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id146">
+    <a class="reference internal nav-link" href="#id156">
      <strong>
       Description / Usage
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id147">
+    <a class="reference internal nav-link" href="#id157">
      <strong>
       Examples
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id148">
+    <a class="reference internal nav-link" href="#id158">
      <strong>
       Technical Discussion
      </strong>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id149">
+    <a class="reference internal nav-link" href="#id159">
+     <strong>
+      References
+     </strong>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#elliptic-xi-regularization">
+   ELLIPTIC_XI_REGULARIZATION
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id160">
+     <strong>
+      Description / Usage
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id161">
+     <strong>
+      Examples
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id162">
+     <strong>
+      Technical Discussion
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id163">
+     <strong>
+      FAQs
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id164">
+     <strong>
+      References
+     </strong>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#elliptic-eta-regularization">
+   ELLIPTIC_ETA_REGULARIZATION
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id165">
+     <strong>
+      Description / Usage
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id166">
+     <strong>
+      Examples
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id167">
+     <strong>
+      Technical Discussion
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id168">
+     <strong>
+      FAQs
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id169">
      <strong>
       References
      </strong>

@@ -16,6 +16,8 @@ report by Schunk, et al. (2002) for an overview and further usage tips.
 .. toctree::
    :maxdepth: 1
 
+   solver_specifications/strong_bc_replace_equation
+   solver_specifications/strong_bc_penalty
    solver_specifications/total_number_of_matrices
    solver_specifications/solution_algorithm
    solver_specifications/matrix_storage_format

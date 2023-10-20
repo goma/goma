@@ -322,6 +322,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../../problem_description_file/hunting.html">Hunting Specifications</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../problem_description_file/augmenting_conditions.html">Augmenting Conditions Specifications</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../problem_description_file/solver_specifications.html">Solver Specifications</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../problem_description_file/solver_specifications/strong_bc_replace_equation.html">Strong Boundary Condition Replace Equation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../problem_description_file/solver_specifications/strong_bc_penalty.html">Strong Boundary Condition Penalty</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../problem_description_file/solver_specifications/total_number_of_matrices.html">Total Number of Matrices</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../problem_description_file/solver_specifications/solution_algorithm.html">Solution Algorithm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../problem_description_file/solver_specifications/matrix_storage_format.html">Matrix Storage Format</a></li>
@@ -806,6 +808,7 @@ small, thus simplifying the analysis of strain and stress.</p></li>
 <li><p><strong>NONLINEAR</strong> - a nonlinear neo-Hookean elastic model for which the deformations can
 be large without loss of frame invariance. This is the recommended model (and all
 materials currently default to NONLINEAR if the mesh is arbitrary).</p></li>
+<li><p><strong>ELLIPTIC</strong> - elliptic mesh generation equations</p></li>
 </ul>
 </div></blockquote>
 <p>For a LAGRANGIAN, DYNAMIC_LAGRANGIAN, or TOTAL_ALE <em>Mesh Motion</em>, {model_name} can be
