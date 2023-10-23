@@ -153,7 +153,7 @@ double user_mat_init(const int var,
     value = fmin(T_amb - (T_amb - T_init) * (sum + sum1), T_init);
     value = fmax(value, T_amb);
   } else if (var >= MESH_DISPLACEMENT1 && var <= MESH_DISPLACEMENT3) {
-    value = init_value + p[0]*xpt[0] + p[1]*xpt[1] + p[2]*xpt[2];
+    value = init_value + p[0] * xpt[0] + p[1] * xpt[1] + p[2] * xpt[2];
 
   } else {
     GOMA_EH(GOMA_ERROR, "Not a supported usermat initialization condition ");
