@@ -1009,6 +1009,8 @@ void noahs_ark(void) {
   ddd_add_member(n, &upd->PSPG_advection_correction, 1, MPI_INT);
   ddd_add_member(n, &upd->petsc_solve_post_proc, 1, MPI_INT);
   ddd_add_member(n, &upd->devss_traceless_gradient, 1, MPI_INT);
+  ddd_add_member(n, &upd->strong_bc_replace, 1, MPI_INT);
+  ddd_add_member(n, &upd->strong_penalty, 1, MPI_DOUBLE);
 
   ddd_add_member(n, pg->time_step_control_disabled, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, pg->matrix_subcycle_count, MAX_NUM_MATRICES, MPI_INT);
@@ -2614,6 +2616,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &SPECIES_SOURCES, 1, MPI_INT);
   ddd_add_member(n, &VISCOUS_STRESS, 1, MPI_INT);
+  ddd_add_member(n, &PP_VELOCITY_GRADIENTS, 1, MPI_INT);
   ddd_add_member(n, &VISCOUS_STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &VISCOUS_VON_MISES_STRESS, 1, MPI_INT);
   ddd_add_member(n, &EM_CONTOURS, 1, MPI_INT);

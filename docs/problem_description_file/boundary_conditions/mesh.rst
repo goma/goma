@@ -52,6 +52,10 @@ also available.
 
 .. include:: /problem_description_file/boundary_conditions/mesh/kin_chem.rst
 
+.. include:: /problem_description_file/boundary_conditions/mesh/kinematic_xi.rst
+
+.. include:: /problem_description_file/boundary_conditions/mesh/kinematic_eta.rst
+
 .. include:: /problem_description_file/boundary_conditions/mesh/force.rst
 
 .. include:: /problem_description_file/boundary_conditions/mesh/norm_force.rst
@@ -87,4 +91,8 @@ also available.
 .. include:: /problem_description_file/boundary_conditions/mesh/porous_kin.rst
 
 .. include:: /problem_description_file/boundary_conditions/mesh/sdc_kin_sf.rst
+
+.. include:: /problem_description_file/boundary_conditions/mesh/elliptic_xi_regularization.rst
+
+.. include:: /problem_description_file/boundary_conditions/mesh/elliptic_eta_regularization.rst
 
