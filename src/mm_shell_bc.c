@@ -171,10 +171,10 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         Inn(grad_phi_j, grad_II_phi_j);
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
-          d_func[0][var][j] += LubAux->dq_dp2[ii][j] * phi_j * bound_normal[ii];
+          d_func[0][var][j] += LubAux->dq_dp2[ii] * phi_j * bound_normal[ii];
           for (jj = 0; jj < pd->Num_Dim; jj++) {
             d_func[0][var][j] +=
-                LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
+                LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * bound_normal[ii];
           }
         }
       }
@@ -312,9 +312,9 @@ void shell_n_dot_flow_wall(double func[DIM],
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           d_func[0][var][j] +=
-              wall_factor * LubAux->dq_dp2[ii][j] * phi_j * bdy_tangent[ii] / fv->sdet;
+              wall_factor * LubAux->dq_dp2[ii] * phi_j * bdy_tangent[ii] / fv->sdet;
           for (jj = 0; jj < pd->Num_Dim; jj++) {
-            d_func[0][var][j] += wall_factor * LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] *
+            d_func[0][var][j] += wall_factor * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] *
                                  bdy_tangent[ii] / fv->sdet;
           }
         }
@@ -814,7 +814,7 @@ void shell_n_dot_flow_bc_film(double func[DIM],
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           for (jj = 0; jj < pd->Num_Dim; jj++) {
             d_func[0][var][j] +=
-                LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
+                LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * bound_normal[ii];
           }
         }
       }
