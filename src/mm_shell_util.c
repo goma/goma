@@ -5005,8 +5005,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
         ShellBF(SHELL_FILMH, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
                 n_dof[MESH_DISPLACEMENT1], dof_map);
-      //  D_V_DP[i] += dv_gradp * grad_II_phi_j[i];  Shouldn't be here!
-        D_V_DP[i] += dv_gradp;                    // Shouldn't be here!
+        //  D_V_DP[i] += dv_gradp * grad_II_phi_j[i];  Shouldn't be here!
+        D_V_DP[i] += dv_gradp; // Shouldn't be here!
       }
     }
 
