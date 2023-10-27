@@ -10556,11 +10556,11 @@ int assemble_film_particles(double time,            /* present time value */
                   q[ii] * grad_II_C[ii] * dv_dp2[ii] * phi_j * grad_II_phi_i[ii] * 0.5 * dt;
               for (jj = 0; jj < VIM; jj++) {
                 advection +=
-                  1.5 * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * wt_func +
-                  LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * v[ii] * grad_II_phi_i[ii] *
-                      0.5 * dt +
-                  q[ii] * grad_II_C[ii] * LubAux->dv_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_phi_i[ii] *
-                      0.5 * dt;
+                    1.5 * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * wt_func +
+                    LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * v[ii] *
+                        grad_II_phi_i[ii] * 0.5 * dt +
+                    q[ii] * grad_II_C[ii] * LubAux->dv_dgradp[ii][jj] * grad_II_phi_j[jj] *
+                        grad_II_phi_i[ii] * 0.5 * dt;
               }
             }
 
@@ -10620,11 +10620,12 @@ int assemble_film_particles(double time,            /* present time value */
 
             for (ii = 0; ii < VIM; ii++) {
               for (jj = 0; jj < VIM; jj++) {
-              advection += 1.5 * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * wt_func +
-                           LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * v[ii] *
-                               grad_II_phi_i[ii] * 0.5 * dt +
-                           q[ii] * grad_II_C[ii] * LubAux->dv_dgradp[ii][jj] * grad_II_phi_j[jj] *
-                               grad_II_phi_i[ii] * 0.5 * dt;
+                advection +=
+                    1.5 * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * wt_func +
+                    LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * v[ii] *
+                        grad_II_phi_i[ii] * 0.5 * dt +
+                    q[ii] * grad_II_C[ii] * LubAux->dv_dgradp[ii][jj] * grad_II_phi_j[jj] *
+                        grad_II_phi_i[ii] * 0.5 * dt;
               }
             }
 

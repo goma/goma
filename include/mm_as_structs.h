@@ -3195,8 +3195,8 @@ struct Lubrication_Auxiliaries {
   double dq_dh[DIM][MDE];              /* Flow rate sensitivities w.r.t. height */
   double dq_dh1[DIM][MDE];             /* Flow rate sensitivities w.r.t. height */
   double dq_dh2[DIM][MDE];             /* Flow rate sensitivities w.r.t. height */
-  double dq_dp[DIM];              /* Flow rate sensitivities w.r.t. lubrication pressure */
-  double dq_dp2[DIM];             /* Flow rate sensitivities w.r.t. lubrication pressure */
+  double dq_dp[DIM];                   /* Flow rate sensitivities w.r.t. lubrication pressure */
+  double dq_dp2[DIM];                  /* Flow rate sensitivities w.r.t. lubrication pressure */
   double dq_df[DIM][MDE];              /* Flow rate sensitivities w.r.t. level set */
   double dq_dk[DIM][MDE];              /* Flow rate sensitivities w.r.t. curvature */
   double dq_dx[DIM][DIM][MDE];         /* Flow rate sensitivities w.r.t. mesh deformation */
@@ -3213,13 +3213,13 @@ struct Lubrication_Auxiliaries {
                                           shear rate */
   double dq_dcross_shear[DIM][MDE];    /* Flow rate sensitivities w.r.t. cross
                                           stream shear stress */
-  double dq_dgradp[DIM][DIM];     /* Flow rate sensitivities w.r.t. pressure gradient */
+  double dq_dgradp[DIM][DIM];          /* Flow rate sensitivities w.r.t. pressure gradient */
 
-  double dv_avg_dh[DIM][MDE];  /* Average velocity sensitivities w.r.t. height */
-  double dv_avg_dh1[DIM][MDE]; /* Average velocity sensitivities w.r.t. height */
-  double dv_avg_dh2[DIM][MDE]; /* Average velocity sensitivities w.r.t. height */
-  double dv_avg_dp2[DIM]; /* Average velocity sensitivities w.r.t.
-                                  lubrication pressure */
+  double dv_avg_dh[DIM][MDE];           /* Average velocity sensitivities w.r.t. height */
+  double dv_avg_dh1[DIM][MDE];          /* Average velocity sensitivities w.r.t. height */
+  double dv_avg_dh2[DIM][MDE];          /* Average velocity sensitivities w.r.t. height */
+  double dv_avg_dp2[DIM];               /* Average velocity sensitivities w.r.t.
+                                                lubrication pressure */
   double dv_avg_dnormal[DIM][DIM][MDE]; /* Average velocity sensitivities w.r.t. mesh deformation */
   double dv_avg_df[DIM][MDE];           /* Average velocity sensitivities w.r.t. level set */
   double dv_avg_dk[DIM][MDE];           /* Average veloctiy sensitivities w.r.t. curvature */
@@ -3239,11 +3239,11 @@ struct Lubrication_Auxiliaries {
                                            bottom wall shear rate */
   double dv_avg_dcross_shear[DIM][MDE]; /* Average velocity sensitivities w.r.t.
                                            cross stream shear stress */
-  double dv_dgradp[DIM][DIM]; /* Average velocity sensitivities w.r.t. pressure gradient */
-  double dH_dmesh[DIM][MDE];       /* lubrication gap sensitivities w.r.t. mesh */
-  double dH_drealsolid[DIM][MDE];  /* lubrication gap sensitivities w.r.t. real
-                                      solid */
-  double dH_dP[MDE];               /* lubrication gap sensitivities w.r.t. pressure */
+  double dv_dgradp[DIM][DIM];     /* Average velocity sensitivities w.r.t. pressure gradient */
+  double dH_dmesh[DIM][MDE];      /* lubrication gap sensitivities w.r.t. mesh */
+  double dH_drealsolid[DIM][MDE]; /* lubrication gap sensitivities w.r.t. real
+                                     solid */
+  double dH_dP[MDE];              /* lubrication gap sensitivities w.r.t. pressure */
 };
 
 typedef struct Lubrication_Auxiliaries LUBRICATION_AUXILIARIES_STRUCT;

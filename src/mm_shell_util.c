@@ -3735,7 +3735,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     }
 
     /* Calculate pressure sensitivity */
-    /*  del_II_phi_j is added in mm_fill_shell.c, so don't really need this 
+    /*  del_II_phi_j is added in mm_fill_shell.c, so don't really need this
     for (i = 0; i < dim; i++) {
       for (j = 0; j < ei[pg->imtrx]->dof[EQN]; j++) {
         D_GRADP_DP[i][j] = 1.0;
@@ -4048,23 +4048,23 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       if (pd->v[pg->imtrx][VAR]) {
         if (mp->mp2nd->ViscosityModel == RATIO) {
           ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-        /*} else if (mp->mp2nd->ViscosityModel == CONSTANT) {
-          ratio = vis_w / mp->mp2nd->viscosity;
-        } else {
-          ratio = 0.;
-          GOMA_WH(GOMA_ERROR, " LS field with no mp2nd Viscosity Model... ");
-        }*/
-        q_mag2 = q_mag * ratio;
-        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-        factor *= (1. - ratio);
-        factor += ratio;
-        dq_gradp *= factor;
-        dq_dH *= factor;
-        pre_delP *= factor;
-        vis_w /= factor;
-        srate *= factor;
+          /*} else if (mp->mp2nd->ViscosityModel == CONSTANT) {
+            ratio = vis_w / mp->mp2nd->viscosity;
+          } else {
+            ratio = 0.;
+            GOMA_WH(GOMA_ERROR, " LS field with no mp2nd Viscosity Model... ");
+          }*/
+          q_mag2 = q_mag * ratio;
+          q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                       (double)mp->mp2nd->viscositymask[0],
+                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+          factor *= (1. - ratio);
+          factor += ratio;
+          dq_gradp *= factor;
+          dq_dH *= factor;
+          pre_delP *= factor;
+          vis_w /= factor;
+          srate *= factor;
         }
       }
       memset(q, 0.0, sizeof(double) * DIM);
@@ -4112,8 +4112,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       if (movwall_model) { /*  non-Newtonian models with a moving wall */
         double wstrs, relax = 0.5;
         int guess = 0;
-        err = lub2D_flow2D(gn, pg_cmp, ev, dev_dpg, q, DQ_DP, DQ_DH, H, &srate, veloL,
-                           veloU, guess, &wstrs, relax);
+        err = lub2D_flow2D(gn, pg_cmp, ev, dev_dpg, q, DQ_DP, DQ_DH, H, &srate, veloL, veloU, guess,
+                           &wstrs, relax);
         if (isnan(srate))
           DPRINTF(stderr, "lub_srate isnan %g %g %g %g\n", wstrs, q[0], q[1], srate);
         if (err < 0) {
@@ -4154,23 +4154,23 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       if (pd->v[pg->imtrx][VAR]) {
         if (mp->mp2nd->ViscosityModel == RATIO) {
           ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-        /*} else if (mp->mp2nd->ViscosityModel == CONSTANT) {
-          ratio = vis_w / mp->mp2nd->viscosity;
-        } else {
-          ratio = 1.;
-          GOMA_WH(GOMA_ERROR, " LS field with no mp2nd Viscosity Model... ");
-        }*/
-        q_mag2 = q_mag * ratio;
-        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-        factor *= (1. - ratio);
-        factor += ratio;
-        dq_gradp *= factor;
-        dq_dH *= factor;
-        pre_delP *= factor;
-        vis_w /= factor;
-        srate *= factor;
+          /*} else if (mp->mp2nd->ViscosityModel == CONSTANT) {
+            ratio = vis_w / mp->mp2nd->viscosity;
+          } else {
+            ratio = 1.;
+            GOMA_WH(GOMA_ERROR, " LS field with no mp2nd Viscosity Model... ");
+          }*/
+          q_mag2 = q_mag * ratio;
+          q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                       (double)mp->mp2nd->viscositymask[0],
+                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+          factor *= (1. - ratio);
+          factor += ratio;
+          dq_gradp *= factor;
+          dq_dH *= factor;
+          pre_delP *= factor;
+          vis_w /= factor;
+          srate *= factor;
         }
         for (i = 0; i < dim; i++) {
           for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
@@ -4756,7 +4756,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     for (i = 0; i < dim; i++) {
       pg_cmp[i] = GRADP[i] - GRAV[i] - GRAD_DISJ_PRESS[i];
-/*fprintf(stderr,"filmp %d %g %g %g\n",i,GRADP[i], GRAV[i], GRAD_DISJ_PRESS[i]); */
+      /*fprintf(stderr,"filmp %d %g %g %g\n",i,GRADP[i], GRAV[i], GRAD_DISJ_PRESS[i]); */
     }
     pgrad = 0.;
     vsqr = 0.;
@@ -4848,22 +4848,22 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     if (pd->v[pg->imtrx][VAR]) {
       if (mp->mp2nd->ViscosityModel == RATIO) {
         ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-      /*} else if (mp->mp2nd->ViscosityModel == CONSTANT) {
-        ratio = vis_w / mp->mp2nd->viscosity;
-      } else {
-        ratio = 1.;
-        GOMA_WH(GOMA_ERROR, " LS field with no mp2nd Viscosity Model... ");
-      } */
-      q_mag2 = q_mag * ratio;
-      q_mag =
-          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-      factor *= (1. - ratio);
-      factor += ratio;
-      dq_gradp *= factor;
-      dq_dH *= factor;
-      pre_delP *= factor;
-      vis_w /= factor;
+        /*} else if (mp->mp2nd->ViscosityModel == CONSTANT) {
+          ratio = vis_w / mp->mp2nd->viscosity;
+        } else {
+          ratio = 1.;
+          GOMA_WH(GOMA_ERROR, " LS field with no mp2nd Viscosity Model... ");
+        } */
+        q_mag2 = q_mag * ratio;
+        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                     (double)mp->mp2nd->viscositymask[0],
+                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+        factor *= (1. - ratio);
+        factor += ratio;
+        dq_gradp *= factor;
+        dq_dH *= factor;
+        pre_delP *= factor;
+        vis_w /= factor;
       }
     }
     dq_gradpt = dq_gradp - beta_slip * SQUARE(H);
@@ -4934,10 +4934,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     }
     for (i = 0; i < dim; i++) {
       for (j = 0; j < dim; j++) {
-        D_Q_DGRADP[i][j] +=
-              dq_gradpt * ev[i] * ev[j] + pre_delP * dev_dpg[i][j];
-        D_V_DGRADP[i][j] +=
-              dv_gradp * ev[i] * ev[j] + vpre_delP * dev_dpg[i][j];
+        D_Q_DGRADP[i][j] += dq_gradpt * ev[i] * ev[j] + pre_delP * dev_dpg[i][j];
+        D_V_DGRADP[i][j] += dv_gradp * ev[i] * ev[j] + vpre_delP * dev_dpg[i][j];
       }
     }
 
@@ -5007,8 +5005,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
         ShellBF(SHELL_FILMH, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
                 n_dof[MESH_DISPLACEMENT1], dof_map);
-        D_V_DP[i] += dv_gradp * grad_II_phi_j[i];  // Shouldn't be here!
-        D_V_DP[i] += dv_gradp;  // Shouldn't be here!
+      //  D_V_DP[i] += dv_gradp * grad_II_phi_j[i];  Shouldn't be here!
+        D_V_DP[i] += dv_gradp;                    // Shouldn't be here!
       }
     }
 
@@ -5068,7 +5066,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
       LubAux->dq_dp2[i] = D_Q_DP[i];
       LubAux->dv_avg_dp2[i] = D_V_DP[i];
-     
+
       for (j = 0; j < dim; j++) {
         LubAux->dq_dgradp[i][j] = D_Q_DGRADP[i][j];
         LubAux->dv_dgradp[i][j] = D_V_DGRADP[i][j];
@@ -5089,7 +5087,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       }
     }
     LubAux->gradP_mag = sqrt(LubAux->gradP_mag);
-/*fprintf(stderr,"filmp %g %g %g %g\n",H,q[0],q[1],LubAux->gradP_mag); */
+    /*fprintf(stderr,"filmp %g %g %g %g\n",H,q[0],q[1],LubAux->gradP_mag); */
 
     // Cleanup
     fv->wt = wt_old;
@@ -5345,18 +5343,18 @@ void calculate_lub_q_v_old(
       if (pd->v[pg->imtrx][VAR]) {
         if (mp->mp2nd->ViscosityModel == RATIO) {
           ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-        /*} else if (mp->mp2nd->ViscosityModel == CONSTANT) {
-          ratio = vis_w / mp->mp2nd->viscosity;
-        } else {
-          ratio = 1.;
-          GOMA_WH(GOMA_ERROR, " LS field with no mp2nd Viscosity Model... ");
-        }*/
-        q_mag2 = q_mag * ratio;
-        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-        factor *= (1. - ratio);
-        factor += ratio;
+          /*} else if (mp->mp2nd->ViscosityModel == CONSTANT) {
+            ratio = vis_w / mp->mp2nd->viscosity;
+          } else {
+            ratio = 1.;
+            GOMA_WH(GOMA_ERROR, " LS field with no mp2nd Viscosity Model... ");
+          }*/
+          q_mag2 = q_mag * ratio;
+          q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                       (double)mp->mp2nd->viscositymask[0],
+                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+          factor *= (1. - ratio);
+          factor += ratio;
         }
       }
 
@@ -5386,21 +5384,21 @@ void calculate_lub_q_v_old(
       if (pd->v[pg->imtrx][VAR]) {
         if (mp->mp2nd->ViscosityModel == RATIO) {
           ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-        /*} else if (mp->mp2nd->ViscosityModel == CONSTANT) {
-          ratio = vis_w / mp->mp2nd->viscosity;
-        } else {
+          /*} else if (mp->mp2nd->ViscosityModel == CONSTANT) {
+            ratio = vis_w / mp->mp2nd->viscosity;
+          } else {
+            ratio = 1.;
+            GOMA_WH(GOMA_ERROR, " LS field with no mp2nd Viscosity Model... ");
+          }*/
           ratio = 1.;
           GOMA_WH(GOMA_ERROR, " LS field with no mp2nd Viscosity Model... ");
-        }*/
-        ratio = 1.;
-        GOMA_WH(GOMA_ERROR, " LS field with no mp2nd Viscosity Model... ");
-        q_mag2 = q_mag * ratio;
-        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-        v_mag = q_mag / H_old;
-        factor *= (1. - ratio);
-        factor += ratio;
+          q_mag2 = q_mag * ratio;
+          q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                       (double)mp->mp2nd->viscositymask[0],
+                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+          v_mag = q_mag / H_old;
+          factor *= (1. - ratio);
+          factor += ratio;
         }
       }
       memset(q_old, 0.0, sizeof(double) * DIM);
