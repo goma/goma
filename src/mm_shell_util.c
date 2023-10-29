@@ -3500,7 +3500,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
   DENSITY_DEPENDENCE_STRUCT d_rho_struct;
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
-  int VAR, VAR2;
+  int VAR;
   int err;
 
   /* Problem dimensions */
@@ -3784,8 +3784,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     /* Define variables */
     dbl CURV = 0.0;
     dbl D_CURV_DH = 0.0;
-    dbl D_CURV_DK[MDE], D_CURV_DF[MDE], D_CURV_DX[DIM][MDE], D_CURV_DNORMAL[DIM][MDE];
-    memset(D_CURV_DK, 0.0, sizeof(double) * MDE);
+    dbl D_CURV_DF[MDE], D_CURV_DX[DIM][MDE], D_CURV_DNORMAL[DIM][MDE];
     memset(D_CURV_DF, 0.0, sizeof(double) * MDE);
     memset(D_CURV_DX, 0.0, sizeof(double) * DIM * MDE);
     memset(D_CURV_DNORMAL, 0.0, sizeof(double) * DIM * MDE);
@@ -3818,28 +3817,30 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     if (pd->v[pg->imtrx][VAR])
       D_CURV_DH = -(cos(M_PIE - dcaU - atan(slopeU)) + cos(M_PIE - dcaL - atan(-slopeL))) / (H * H);
 
-    /* Sensitivity to curvature */
+    /* Sensitivity to curvature
     if (pd->e[pg->imtrx][SHELL_LUB_CURV]) {
       for (i = 0; i < ei[pg->imtrx]->dof[SHELL_LUB_CURV]; i++) {
         D_CURV_DK[i] = 1.0;
       }
     }
-
-    /* Sensitivity to curvature 2 */
+*/
+    /* Sensitivity to curvature 2
     if (pd->e[pg->imtrx][SHELL_LUB_CURV_2]) {
       for (i = 0; i < ei[pg->imtrx]->dof[SHELL_LUB_CURV_2]; i++) {
         D_CURV_DK[i] = 1.0;
       }
     }
-
+*/
     /* Sensitivity to level set F */
-    if (pd->e[pg->imtrx][VAR]) {
+    if (pd->v[pg->imtrx][VAR]) {
+      load_lsi(ls->Length_Scale);
+      load_lsi_derivs();
       for (i = 0; i < ei[pg->imtrx]->dof[VAR]; i++) {
         for (j = 0; j < DIM; j++) {
           D_CURV_DF[i] += sin(dcaU + atan(slopeU)) / (H * (1 + slopeU * slopeU)) * dH_U_dX[j] *
-                          *lsi->d_normal_dF[j];
+                          lsi->d_normal_dF[j][i];
           D_CURV_DF[i] += sin(dcaL + atan(slopeL)) / (H * (1 + slopeL * slopeL)) * dH_L_dX[j] *
-                          *lsi->d_normal_dF[j];
+                          lsi->d_normal_dF[j][i];
         }
       }
     }
@@ -4237,22 +4238,13 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     }
 
     /* Sensitivity w.r.t. curvature */
-    dbl D_Q_DK[DIM][MDE], D_V_DK[DIM][MDE];
-    memset(D_Q_DK, 0.0, sizeof(double) * DIM * MDE);
-    memset(D_V_DK, 0.0, sizeof(double) * DIM * MDE);
+    dbl D_Q_DK[DIM], D_V_DK[DIM];
+    memset(D_Q_DK, 0.0, sizeof(double) * DIM);
+    memset(D_V_DK, 0.0, sizeof(double) * DIM);
 
-    VAR2 = SHELL_LUB_CURV;
-    if (EQN == R_LUBP_2)
-      VAR2 = SHELL_LUB_CURV_2;
     for (i = 0; i < dim; i++) {
-      for (j = 0; j < ei[pg->imtrx]->dof[VAR2]; j++) {
-        D_Q_DK[i][j] += pre_delP * GRADH[i] * D_CURV_DK[j] * mp->surface_tension;
-      }
-    }
-    for (i = 0; i < dim; i++) {
-      for (j = 0; j < ei[pg->imtrx]->dof[VAR2]; j++) {
-        D_V_DK[i][j] += vpre_delP * GRADH[i] * D_CURV_DK[j] * mp->surface_tension;
-      }
+      D_Q_DK[i] += pre_delP * GRADH[i] * mp->surface_tension;
+      D_V_DK[i] += vpre_delP * GRADH[i] * mp->surface_tension;
     }
 
     /* Sensitivity w.r.t. mesh and/or real-solid */
@@ -4428,9 +4420,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     memset(LubAux->dq_dx, 0.0, sizeof(double) * DIM * DIM * MDE);
     memset(LubAux->dq_dnormal, 0.0, sizeof(double) * DIM * DIM * MDE);
-    VAR2 = SHELL_LUB_CURV;
-    if (EQN == R_LUBP_2)
-      VAR2 = SHELL_LUB_CURV_2;
 
     LubAux->H = H;
     LubAux->gradP_mag = 0;
@@ -4450,10 +4439,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         LubAux->dq_df[i][j] = D_Q_DF[i][j];
         LubAux->dv_avg_df[i][j] = D_V_DF[i][j];
       }
-      for (j = 0; j < ei[pg->imtrx]->dof[VAR2]; j++) {
-        LubAux->dq_dk[i][j] = D_Q_DK[i][j];
-        LubAux->dv_avg_dk[i][j] = D_V_DK[i][j];
-      }
+      LubAux->dq_dk[i] = D_Q_DK[i];
+      LubAux->dv_avg_dk[i] = D_V_DK[i];
       for (j = 0; j < ei[pg->imtrx]->dof[SHELL_DELTAH]; j++) {
         LubAux->dq_ddh[i][j] = D_Q_DdH[i][j];
         LubAux->dv_avg_ddh[i][j] = D_V_DdH[i][j];

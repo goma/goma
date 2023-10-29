@@ -3198,7 +3198,7 @@ struct Lubrication_Auxiliaries {
   double dq_dp[DIM];                   /* Flow rate sensitivities w.r.t. lubrication pressure */
   double dq_dp2[DIM];                  /* Flow rate sensitivities w.r.t. lubrication pressure */
   double dq_df[DIM][MDE];              /* Flow rate sensitivities w.r.t. level set */
-  double dq_dk[DIM][MDE];              /* Flow rate sensitivities w.r.t. curvature */
+  double dq_dk[DIM];                   /* Flow rate sensitivities w.r.t. curvature */
   double dq_dx[DIM][DIM][MDE];         /* Flow rate sensitivities w.r.t. mesh deformation */
   double dq_dnormal[DIM][DIM][MDE];    /* Flow rate sensitivities w.r.t. shell normal */
   double dq_drs[DIM][DIM][MDE];        /* Flow rate sensitivities w.r.t. real solid
@@ -3222,7 +3222,7 @@ struct Lubrication_Auxiliaries {
                                                 lubrication pressure */
   double dv_avg_dnormal[DIM][DIM][MDE]; /* Average velocity sensitivities w.r.t. mesh deformation */
   double dv_avg_df[DIM][MDE];           /* Average velocity sensitivities w.r.t. level set */
-  double dv_avg_dk[DIM][MDE];           /* Average veloctiy sensitivities w.r.t. curvature */
+  double dv_avg_dk[DIM];                /* Average veloctiy sensitivities w.r.t. curvature */
   double dv_avg_dx[DIM][DIM][MDE];      /* Average velocity sensitivities w.r.t. mesh
                                            deformation */
   double dv_avg_drs[DIM][DIM][MDE];     /* Average velocity sensitivities w.r.t.

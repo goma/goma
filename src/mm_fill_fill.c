@@ -1365,17 +1365,16 @@ int assemble_fill(double tt,
           case FILL_WEIGHT_TG: /* Taylor-Galerkin */
             for (a = 0; a < dim; a++) {
 
-              advection += 0.5 * LubAux->dv_avg_dk[a][j] * grad_II_F[a] * phi_i * phi_j;
-              advection += 0.5 * LubAux->dv_avg_dk[a][j] * grad_II_phi_i[a] * phi_j * v_dot_DF * dt;
-              advection +=
-                  0.5 * LubAux->dv_avg_dk[a][j] * grad_II_F[a] * phi_j * v_dot_Dphi[i] * dt;
+              advection += 0.5 * LubAux->dv_avg_dk[a] * grad_II_F[a] * phi_i * phi_j;
+              advection += 0.5 * LubAux->dv_avg_dk[a] * grad_II_phi_i[a] * phi_j * v_dot_DF * dt;
+              advection += 0.5 * LubAux->dv_avg_dk[a] * grad_II_F[a] * phi_j * v_dot_Dphi[i] * dt;
             }
 
             break;
 
           case FILL_WEIGHT_G: /* Plain ol' Galerkin */
             for (a = 0; a < dim; a++)
-              advection += LubAux->dv_avg_dk[a][j] * grad_II_F[a] * phi_i * phi_j;
+              advection += LubAux->dv_avg_dk[a] * grad_II_F[a] * phi_i * phi_j;
 
             break;
           }
@@ -4442,18 +4441,18 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
 
               case FILL_WEIGHT_TG:
                 for (p = 0; p < dim; p++) {
-                  advection += 0.5 * LubAux->dv_avg_dk[p][j] * grad_II_pf[p] * phi_i * phi_j;
-                  advection += 0.5 * LubAux->dv_avg_dk[p][j] * grad_II_phi_i[p] * phi_j *
+                  advection += 0.5 * LubAux->dv_avg_dk[p] * grad_II_pf[p] * phi_i * phi_j;
+                  advection += 0.5 * LubAux->dv_avg_dk[p] * grad_II_phi_i[p] * phi_j *
                                v_dot_grad_pf * dt * 0.5;
-                  advection += 0.5 * LubAux->dv_avg_dk[p][j] * grad_II_pf[p] * phi_j *
-                               v_dot_Dphi[i] * dt * 0.5;
+                  advection +=
+                      0.5 * LubAux->dv_avg_dk[p] * grad_II_pf[p] * phi_j * v_dot_Dphi[i] * dt * 0.5;
                 }
 
                 break;
 
               case FILL_WEIGHT_G:
                 for (p = 0; p < dim; p++)
-                  advection += LubAux->dv_avg_dk[p][j] * grad_II_pf[p] * phi_i * phi_j;
+                  advection += LubAux->dv_avg_dk[p] * grad_II_pf[p] * phi_i * phi_j;
 
                 break;
               }

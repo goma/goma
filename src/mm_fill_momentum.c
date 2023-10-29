@@ -1707,7 +1707,7 @@ int assemble_momentum(dbl time,       /* current time */
 
                 porous = 0.;
                 if (porous_brinkman_on) {
-                  porous -= LubAux->dv_avg_dk[a][j] * phi_j;
+                  porous -= LubAux->dv_avg_dk[a] * phi_j;
                   porous *= phi_i * fv->sdet * wt * h3;
                   porous *= porous_brinkman_etm;
                 }

@@ -6772,7 +6772,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           diffusion = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (b = 0; b < dim; b++) {
-              diffusion += LubAux->dq_dk[b][j] * grad_II_phi_i[b] * phi_j;
+              diffusion += LubAux->dq_dk[b] * grad_II_phi_i[b] * phi_j;
             }
           }
           diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
@@ -6799,7 +6799,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           diffusion = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (b = 0; b < dim; b++) {
-              diffusion += LubAux->dq_dk[b][j] * grad_II_phi_i[b] * phi_j;
+              diffusion += LubAux->dq_dk[b] * grad_II_phi_i[b] * phi_j;
             }
           }
           diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
