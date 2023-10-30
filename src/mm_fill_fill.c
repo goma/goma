@@ -1325,10 +1325,9 @@ int assemble_fill(double tt,
 
           case FILL_WEIGHT_G: /* Plain ol' Galerkin */
             for (a = 0; a < dim; a++) {
-              advection += phi_i * LubAux->dv_avg_dp2[a] * grad_II_F[a] * wfcn * grad_II_phi_j[a];
+              advection += LubAux->dv_avg_dp2[a] * grad_II_F[a] * wfcn * grad_II_phi_j[a];
               for (b = 0; b < dim; b++) {
-                advection +=
-                    phi_i * LubAux->dv_dgradp[a][b] * grad_II_F[a] * wfcn * grad_II_phi_j[b];
+                advection += LubAux->dv_dgradp[a][b] * grad_II_F[a] * wfcn * grad_II_phi_j[b];
               }
             }
 
