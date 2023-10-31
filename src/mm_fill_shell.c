@@ -7010,7 +7010,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           diffusion = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (p = 0; p < dim; p++) {
-              diffusion += det_J * LubAux->dq_ddh[p][j] * phi_j * grad_II_phi_i[p];
+              diffusion += det_J * LubAux->dq_ddh[p] * phi_j * grad_II_phi_i[p];
             }
           }
           diffusion *= wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
@@ -8529,7 +8529,7 @@ int assemble_film(double time,    /* present time value */
 {
   int eqn;
   int var, peqn, pvar, dim, p, b;
-  int i = -1, ii, jj;
+  int i = -1, ii;
   int j, jk, k, status;
   int *n_dof = NULL;
   int dof_map[MDE];
@@ -9023,10 +9023,7 @@ int assemble_film(double time,    /* present time value */
           diffusion = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (ii = 0; ii < dim; ii++) {
-              diffusion -= LubAux->dq_dp2[ii] * phi_j * grad_II_phi_i[ii];
-              for (jj = 0; jj < dim; jj++) {
-                diffusion -= LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_phi_i[ii];
-              }
+              diffusion += -LubAux->dq_dp[ii][j] * grad_II_phi_i[ii];
             }
 
             diffusion *= det_J * wt;
@@ -9080,7 +9077,7 @@ int assemble_film(double time,    /* present time value */
               //	                  diffusion += - LubAux->dq_dh1[ii][j] * grad_II_phi_j[ii] *
               // grad_II_phi_i[ii]; 	                  diffusion += - LubAux->dq_dh2[ii][j] *
               // phi_j * grad_II_phi_i[ii];
-              diffusion += -LubAux->dq_dh[ii][j] * phi_j * grad_II_phi_i[ii];
+              diffusion += -LubAux->dq_dh[ii][j] * grad_II_phi_i[ii];
             }
 
             diffusion *= det_J * wt;
@@ -10243,8 +10240,8 @@ int assemble_film_particles(double time,            /* present time value */
   dbl H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_dp, dH_U_ddh, dH_dF[MDE];
   dbl dH_U_dX[DIM], dH_L_dX[DIM];
   dbl q_old[DIM], q[DIM], v[DIM];
-  dbl dq_dp2[DIM], dq_dh1[DIM][MDE], dq_dh2[DIM][MDE], dq_dc[DIM][MDE];
-  dbl dv_dp2[DIM], dv_dh1[DIM][MDE], dv_dh2[DIM][MDE], dv_dc[DIM][MDE];
+  dbl dq_dh1[DIM][MDE], dq_dh2[DIM][MDE], dq_dc[DIM][MDE];
+  dbl dv_dh1[DIM][MDE], dv_dh2[DIM][MDE], dv_dc[DIM][MDE];
   dbl mu, dmu_dc;
   dbl EvapRate, dEvapRate_dC, dEvapRate_dH;
   dbl diff_coeff, ddiff_dmu, ddiff_dc;
@@ -10372,8 +10369,6 @@ int assemble_film_particles(double time,            /* present time value */
     q[p] = LubAux->q[p];
     v[p] = LubAux->v_avg[p];
     q_old[p] = LubAux_old->q[p];
-    dq_dp2[p] = LubAux->dq_dp2[p];
-    dv_dp2[p] = LubAux->dv_avg_dp2[p];
     for (j = 0; j < ei[pg->imtrx]->dof[SHELL_PARTC]; j++) {
       dq_dh1[p][j] = LubAux->dq_dh1[p][j];
       dq_dh2[p][j] = LubAux->dq_dh2[p][j];
@@ -10550,10 +10545,12 @@ int assemble_film_particles(double time,            /* present time value */
           if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
 
             for (ii = 0; ii < VIM; ii++) {
-              advection +=
-                  1.5 * dq_dp2[ii] * phi_j * grad_II_C[ii] * wt_func +
-                  dq_dp2[ii] * phi_j * grad_II_C[ii] * v[ii] * grad_II_phi_i[ii] * 0.5 * dt +
-                  q[ii] * grad_II_C[ii] * dv_dp2[ii] * phi_j * grad_II_phi_i[ii] * 0.5 * dt;
+              advection += 1.5 * LubAux->dq_dp2[ii] * phi_j * grad_II_C[ii] * wt_func +
+                           LubAux->dq_dp2[ii] * phi_j * grad_II_C[ii] * v[ii] * grad_II_phi_i[ii] *
+                               0.5 * dt +
+                           0.5 * dt +
+                           q[ii] * grad_II_C[ii] * LubAux->dv_avg_dp2[ii] * phi_j *
+                               grad_II_phi_i[ii] * 0.5 * dt;
               for (jj = 0; jj < VIM; jj++) {
                 advection +=
                     1.5 * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * wt_func +

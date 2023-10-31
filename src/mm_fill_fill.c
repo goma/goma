@@ -1403,7 +1403,7 @@ int assemble_fill(double tt,
           mass = 0.0;
           advection = 0.0;
           for (a = 0; a < dim; a++)
-            advection += LubAux->dv_avg_ddh[a][j] * grad_F[a] * phi_i * phi_j;
+            advection += LubAux->dv_avg_ddh[a] * grad_F[a] * phi_i * phi_j;
 
           mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
           advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];

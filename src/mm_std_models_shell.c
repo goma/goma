@@ -809,9 +809,6 @@ double velocity_function_model(double veloU[DIM],
      * in any situation.  If you need dH_U_dX on a curved surface
      * we really need to think about what dH_U_dX really means. --SAR */
 
-    /* H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-     * &dH_U_ddh, time, delta_t); */
-
     height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
                           &dH_U_ddh, dH_dF, time, delta_t);
     thetax = atan(dH_U_dX[1]);

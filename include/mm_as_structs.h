@@ -3195,7 +3195,7 @@ struct Lubrication_Auxiliaries {
   double dq_dh[DIM][MDE];              /* Flow rate sensitivities w.r.t. height */
   double dq_dh1[DIM][MDE];             /* Flow rate sensitivities w.r.t. height */
   double dq_dh2[DIM][MDE];             /* Flow rate sensitivities w.r.t. height */
-  double dq_dp[DIM];                   /* Flow rate sensitivities w.r.t. lubrication pressure */
+  double dq_dp[DIM][MDE];              /* Flow rate sensitivities w.r.t. lubrication pressure */
   double dq_dp2[DIM];                  /* Flow rate sensitivities w.r.t. lubrication pressure */
   double dq_df[DIM][MDE];              /* Flow rate sensitivities w.r.t. level set */
   double dq_dk[DIM];                   /* Flow rate sensitivities w.r.t. curvature */
@@ -3203,7 +3203,7 @@ struct Lubrication_Auxiliaries {
   double dq_dnormal[DIM][DIM][MDE];    /* Flow rate sensitivities w.r.t. shell normal */
   double dq_drs[DIM][DIM][MDE];        /* Flow rate sensitivities w.r.t. real solid
                                           deformation */
-  double dq_ddh[DIM][MDE];             /* Flow rate sensitivities w.r.t. heat transport */
+  double dq_ddh[DIM];                  /* Flow rate sensitivities w.r.t. heat transport */
   double dq_dc[DIM][MDE];              /* Flow rate sensitivities w.r.t. particles volume
                                           fraction */
   double dq_dconc[DIM][MAX_CONC][MDE]; /* Flow rate sensitivities w.r.t. species concentration */
@@ -3227,8 +3227,8 @@ struct Lubrication_Auxiliaries {
                                            deformation */
   double dv_avg_drs[DIM][DIM][MDE];     /* Average velocity sensitivities w.r.t.
                                            real solid deformation*/
-  double dv_avg_ddh[DIM][MDE];          /* Average velocity sensitivities w.r.t. heat
-                                           transport */
+  double dv_avg_ddh[DIM];               /* Average velocity sensitivities w.r.t. heat
+                                                transport */
   double dv_avg_dc[DIM][MDE];           /* Average velocity sensitivities w.r.t. particles
                                            volume fraction */
   double dv_avg_dconc[DIM][MAX_CONC]
