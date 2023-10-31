@@ -10102,7 +10102,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
 
   if (WALL_DISTANCE != -1 &&
       (Num_Var_In_Type[pg->imtrx][VELOCITY1] || Num_Var_In_Type[pg->imtrx][R_LUBP])) {
-    set_nv_tkud(rd, index, 0, 0, -2, "WALL_DIST", "[1]", "Wall distance", FALSE);
+    set_nv_tkud(rd, index, 0, 0, -2, "WALL_DISTANCE", "[1]", "Wall distance", FALSE);
     index++;
     if (WALL_DISTANCE == 2) {
       Export_XP_ID[index_post_export] = index_post;
