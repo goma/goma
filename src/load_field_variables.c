@@ -3712,8 +3712,8 @@ int load_fv_grads(void)
       dofs = ei[pg->imtrx]->dof_ext[w];
       if (efv->i[w] != I_TABLE) {
         if (strcmp(efv->name[w], "F1") == 0 && !pd->gv[PHASE1]) {
-          
-             /* load up the gradient of the the phase function variables
+
+          /* load up the gradient of the the phase function variables
            * Currently, this is the only field whose gradient is computed when
            * is applied as externally
            */
