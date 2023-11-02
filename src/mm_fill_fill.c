@@ -1306,18 +1306,13 @@ int assemble_fill(double tt,
 
           case FILL_WEIGHT_TG: /* Taylor-Galerkin */
             for (a = 0; a < dim; a++) {
-              advection += 0.5 * LubAux->dv_avg_dp2[a] * grad_II_F[a] * phi_i * phi_j;
-              advection += 0.5 * LubAux->dv_avg_dp2[a] * grad_II_phi_i[a] * phi_j * v_dot_DF * dt;
-              advection += 0.5 * LubAux->dv_avg_dp2[a] * grad_II_F[a] * phi_j * v_dot_Dphi[i] * dt;
+              advection +=
+                  0.5 * LubAux->dv_avg_dp2[a] * phi_j *
+                  (grad_II_F[a] * (phi_i + v_dot_Dphi[i] * dt) + grad_II_phi_i[a] * v_dot_DF * dt);
               for (b = 0; b < dim; b++) {
-                advection +=
-                    0.5 * LubAux->dv_dgradp[a][b] * grad_II_F[a] * phi_i * grad_II_phi_j[b];
-
-                advection += 0.5 * LubAux->dv_dgradp[a][b] * grad_II_phi_i[a] * grad_II_phi_j[b] *
-                             v_dot_DF * dt;
-
-                advection += 0.5 * LubAux->dv_dgradp[a][b] * grad_II_F[a] * grad_II_phi_j[b] *
-                             v_dot_Dphi[i] * dt;
+                advection += 0.5 * LubAux->dv_dgradp[a][b] * grad_II_phi_j[b] *
+                             (grad_II_F[a] * (phi_i + v_dot_Dphi[i] * dt) +
+                              grad_II_phi_i[a] * v_dot_DF * dt);
               }
             }
 
@@ -1364,9 +1359,9 @@ int assemble_fill(double tt,
           case FILL_WEIGHT_TG: /* Taylor-Galerkin */
             for (a = 0; a < dim; a++) {
 
-              advection += 0.5 * LubAux->dv_avg_dk[a] * grad_II_F[a] * phi_i * phi_j;
-              advection += 0.5 * LubAux->dv_avg_dk[a] * grad_II_phi_i[a] * phi_j * v_dot_DF * dt;
-              advection += 0.5 * LubAux->dv_avg_dk[a] * grad_II_F[a] * phi_j * v_dot_Dphi[i] * dt;
+              advection +=
+                  0.5 * LubAux->dv_avg_dk[a] * phi_j *
+                  (grad_II_F[a] * (phi_i + v_dot_Dphi[i] * dt) + grad_II_phi_i[a] * v_dot_DF * dt);
             }
 
             break;
@@ -4404,8 +4399,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
                 for (p = 0; p < dim; p++) {
                   advection += LubAux->dv_avg_dp2[p] * grad_II_pf[p] * wfcn * phi_j;
                   for (q = 0; q < dim; q++) {
-                    advection +=
-                        phi_i * LubAux->dv_dgradp[p][q] * grad_II_pf[p] * wfcn * grad_II_phi_j[q];
+                    advection += LubAux->dv_dgradp[p][q] * grad_II_pf[p] * wfcn * grad_II_phi_j[q];
                   }
                 }
 

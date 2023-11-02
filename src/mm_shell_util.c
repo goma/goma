@@ -3809,6 +3809,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           D_CURV_DF[i] += sin(dcaL + atan(slopeL)) / (H * (1 + slopeL * slopeL)) * dH_L_dX[j] *
                           lsi->d_normal_dF[j][i];
         }
+        D_CURV_DF[i] += D_CURV_DH * dH_dF[i];
       }
     }
 
