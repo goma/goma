@@ -715,10 +715,10 @@ void fvelo_normal_lub_bc(double func[DIM],
         ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
                 n_dof[MESH_DISPLACEMENT1], dof_map);
         for (p = 0; p < pd->Num_Dim; p++) {
-          d_func[0][var][j] += LubAux->dq_dp2[p][j] * phi_j * grad_II_phi_j[p] * bound_normal[p];
+          d_func[0][var][j] += LubAux->dq_dp2[p] * phi_j * grad_II_phi_j[p] * bound_normal[p];
           for (q = 0; q < pd->Num_Dim; q++) {
             d_func[0][var][j] +=
-                LubAux->dq_dgradp[p][q][j] * grad_II_phi_j[q] * grad_II_phi_j[p] * bound_normal[p];
+                LubAux->dq_dgradp[p][q] * grad_II_phi_j[q] * grad_II_phi_j[p] * bound_normal[p];
           }
         }
       }
@@ -733,10 +733,10 @@ void fvelo_normal_lub_bc(double func[DIM],
         ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
                 n_dof[MESH_DISPLACEMENT1], dof_map);
         for (p = 0; p < pd->Num_Dim; p++) {
-          d_func[0][var][j] += LubAux->dq_dp2[p][j] * phi_j * grad_II_phi_j[p] * bound_normal[p];
+          d_func[0][var][j] += LubAux->dq_dp2[p] * phi_j * grad_II_phi_j[p] * bound_normal[p];
           for (q = 0; q < pd->Num_Dim; q++) {
             d_func[0][var][j] +=
-                LubAux->dq_dgradp[p][q][j] * grad_II_phi_j[q] * grad_II_phi_j[p] * bound_normal[p];
+                LubAux->dq_dgradp[p][q] * grad_II_phi_j[q] * grad_II_phi_j[p] * bound_normal[p];
           }
         }
       }

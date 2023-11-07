@@ -70,6 +70,7 @@
 #define ACOUSTIC_INTENSITY       351
 #define LS_DCA                   361
 #define SHELL_VOLUME_FLUX        30
+#define SHELL_FORCE_NORMAL       3131
 #define FORCE_X_POS              371
 #define FORCE_Y_POS              372
 #define FORCE_Z_POS              373
@@ -146,7 +147,7 @@ typedef struct Post_Processing_Flux_Names FLUX_NAME_STRUCT;
 extern FLUX_NAME_STRUCT pp_flux_names[];
 extern int Num_Flux_Names;
 
-struct Post_Processing_Flux_Names pp_flux_names[50] = {
+struct Post_Processing_Flux_Names pp_flux_names[51] = {
     {"FORCE_NORMAL", FORCE_NORMAL},
     {"FORCE_TANGENT1", FORCE_TANGENT1},
     {"FORCE_TANGENT2", FORCE_TANGENT2},
@@ -155,6 +156,7 @@ struct Post_Processing_Flux_Names pp_flux_names[50] = {
     {"FORCE_Z", FORCE_Z},
     {"VOLUME_FLUX", VOLUME_FLUX},
     {"SHELL_VOLUME_FLUX", SHELL_VOLUME_FLUX},
+    {"SHELL_FORCE_NORMAL", SHELL_FORCE_NORMAL},
     {"SPECIES_FLUX", SPECIES_FLUX},
     {"HEAT_FLUX", HEAT_FLUX},
     {"TORQUE", TORQUE},

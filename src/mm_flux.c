@@ -244,6 +244,9 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
   double global_flux = 0.0;      /* flux sum over all procs */
   double global_flux_conv = 0.0; /* convective flux sum over all procs */
   double global_area = 0.0;      /* area sum over all procs */
+  double global_Torque[DIM] = {0, 0, 0}, proc_Torque[DIM] = {0, 0, 0},
+         delta_Torque[DIM] = {0, 0, 0};
+  double Torque0[DIM] = {0, 0, 0};
 #endif
 
   double xi[DIM]; /* Local element coordinates of Gauss point. */
@@ -1289,29 +1292,52 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                     "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
               if (pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == CYLINDRICAL) {
-                for (a = 0; a < WIM; a++) {
-                  for (b = 0; b < WIM; b++) {
-                    /*
-                     *  note that for CYLINDRICAL and SWIRLING coordinate systems
-                     * the h3 factor has been incorporated already into sdet
-                     * the moment arm is incorporated into sideset.
-                     */
+                if (cr->MeshMotion == ARBITRARY) {
+                  for (a = 0; a < WIM; a++) {
+                    for (b = 0; b < WIM; b++) {
+                      /*
+                       *  note that for CYLINDRICAL and SWIRLING coordinate systems
+                       * the h3 factor has been incorporated already into sdet
+                       * the moment arm is incorporated into sideset.
+                       */
 
-                    local_q += (fv->x[1] * e_theta[a] * (vs[a][b] + ves[a][b]) * fv->snormal[b]);
+                      local_q += fv->x[1] * e_theta[a] * (vs[a][b] + ves[a][b]) * fv->snormal[b];
+                      local_qconv += fv->x[1] * e_theta[a] *
+                                     (-rho * (fv->v[a] - x_dot[a]) * fv->v[b] * fv->snormal[b]);
+                    }
+                  }
+                } else {
+                  for (a = 0; a < WIM; a++) {
+                    for (b = 0; b < WIM; b++) {
+                      local_q += fv->x[1] * e_theta[a] * TT[a][b] * fv->snormal[b];
+                    }
                   }
                 }
                 local_flux += weight * det * local_q;
+                local_flux_conv += weight * det * local_qconv;
               } else if (pd->CoordinateSystem == CARTESIAN) {
                 if (WIM == 2) {
                   fv->x[2] = 0.0;
                   fv->snormal[2] = 0.0;
                 }
-                for (a = 0; a < DIM; a++) {
-                  Tract[a] = 0.0;
-                  for (b = 0; b < DIM; b++) {
-                    Tract[a] += (vs[a][b] + ves[a][b]) * fv->snormal[b];
+                if (cr->MeshMotion == ARBITRARY) {
+                  for (a = 0; a < DIM; a++) {
+                    Tract[a] = 0.0;
+                    for (b = 0; b < DIM; b++) {
+                      Tract[a] += (vs[a][b] + ves[a][b]) * fv->snormal[b];
+                    }
+                  }
+                } else {
+                  for (a = 0; a < DIM; a++) {
+                    Tract[a] = 0.0;
+                    for (b = 0; b < DIM; b++) {
+                      Tract[a] += TT[a][b] * fv->snormal[b];
+                    }
                   }
                 }
+                /* Small quibble here, correctly done the cross product would be
+                     local_Torque[a] += permute(a, b, c) * fv->x[b] * Tract[c];
+                     Fortuitously, the code below gives the same answer */
                 for (a = 0; a < DIM; a++) {
                   for (b = 0; b < DIM; b++) {
                     for (c = 0; c < DIM; c++) {
@@ -1420,6 +1446,30 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                 }
                 local_flux += weight * det * local_q;
               }
+              break;
+
+            case SHELL_FORCE_NORMAL:
+              /* First save local normal to edge because lubrication_shell_init changes it */
+              for (a = 0; a < VIM; a++)
+                base_normal[a] = fv->snormal[a];
+
+              n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+              lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+              /* Calculate the flow rate and its sensitivties */
+
+              calculate_lub_q_v(R_LUBP, time_value, 0, xi, exo);
+
+              for (a = 0; a < WIM; a++) {
+                for (b = 0; b < WIM; b++) {
+                  local_q += fv->lubp;
+
+                  local_qconv += (-rho * base_normal[a] * (LubAux->q[a] - x_dot[a]) * LubAux->q[b] *
+                                  base_normal[b]);
+                }
+              }
+              local_flux += weight * det * local_q;
+              local_flux_conv += weight * det * local_qconv;
               break;
 
             case FORCE_X:
@@ -2043,23 +2093,37 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
             delta_flux = local_flux - local_flux0;
             delta_flux_conv = local_flux_conv - local_flux_conv0;
             delta_area = local_area - local_area0;
-
+            for (a = 0; a < DIM; a++) {
+              delta_Torque[a] = Torque[a] - Torque0[a];
+            }
             if (Num_Proc > 1 && dpi->elem_owner[elem_list[i]] == ProcID) {
               proc_flux += delta_flux;
               proc_flux_conv += delta_flux_conv;
               proc_area += delta_area;
+              for (a = 0; a < DIM; a++) {
+                proc_Torque[a] += delta_Torque[a];
+              }
             }
 
             local_flux0 = local_flux;
             local_flux_conv0 = local_flux_conv;
             local_area0 = local_area;
+            for (a = 0; a < DIM; a++) {
+              Torque0[a] = Torque[a];
+            }
 #endif
 
             if (profile_flag && print_flag && (quantity != LS_DCA || (ierr && ip == 0))) {
               FILE *jfp;
               if ((jfp = fopen(filenm, "a")) != NULL) {
-                fprintf(jfp, " %g  %g  %g  %g  %g", fv->x[0], fv->x[1], fv->x[2], local_q,
-                        local_qconv);
+                if (quantity == TORQUE &&
+                    (pd->CoordinateSystem != SWIRLING && pd->CoordinateSystem != CYLINDRICAL)) {
+                  fprintf(jfp, " %g  %g  %g  %g  %g %g", fv->x[0], fv->x[1], fv->x[2],
+                          local_Torque[0], local_Torque[1], local_Torque[2]);
+                } else {
+                  fprintf(jfp, " %g  %g  %g  %g  %g", fv->x[0], fv->x[1], fv->x[2], local_q,
+                          local_qconv);
+                }
                 if (profile_flag & 1)
                   fprintf(jfp, " %g  %g ", gamma_dot, mu);
                 if (profile_flag & 4)
@@ -3859,16 +3923,25 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
               delta_flux = local_flux - local_flux0;
               delta_flux_conv = local_flux_conv - local_flux_conv0;
               delta_area = local_area - local_area0;
+              for (a = 0; a < DIM; a++) {
+                delta_Torque[a] = Torque[a] - Torque0[a];
+              }
 
               if (Num_Proc > 1 && dpi->elem_owner[elem_list[i]] == ProcID) {
                 proc_flux += delta_flux;
                 proc_flux_conv += delta_flux_conv;
                 proc_area += delta_area;
+                for (a = 0; a < DIM; a++) {
+                  proc_Torque[a] += delta_Torque[a];
+                }
               }
 
               local_flux0 = local_flux;
               local_flux_conv0 = local_flux_conv;
               local_area0 = local_area;
+              for (a = 0; a < DIM; a++) {
+                Torque0[a] = Torque[a];
+              }
 #endif
               if (profile_flag && print_flag && (quantity != LS_DCA || (ierr && ip == 0))) {
                 FILE *jfp;
@@ -3970,9 +4043,13 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
     MPI_Allreduce(&proc_flux_conv, &global_flux_conv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     MPI_Allreduce(&proc_area, &global_area, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(proc_Torque, global_Torque, DIM, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     local_flux = global_flux;
     local_flux_conv = global_flux_conv;
     local_area = global_area;
+    for (a = 0; a < DIM; a++) {
+      Torque[a] = global_Torque[a];
+    }
   }
 #endif
 
@@ -3983,20 +4060,19 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
     if ((jfp = fopen(filenm, "a")) != NULL) {
       if (quantity == TORQUE) {
         if (pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == CYLINDRICAL) {
-          fprintf(jfp, " torque= %e   \n", local_flux);
-        } else /* CARTESIAN */
-        {
-          fprintf(jfp, " torque= %e %e %e \n", Torque[0], Torque[1], Torque[2]);
+          fprintf(jfp, " torque= %g   \n", local_flux);
+        } else { /* CARTESIAN */
+          fprintf(jfp, " torque= %g %g %g area= %g\n", Torque[0], Torque[1], Torque[2], local_area);
         }
         fprintf(jfp, "\n");
         fflush(jfp);
       } else {
-        fprintf(jfp, " flux=  %e %e  area= %e  ", local_flux, local_flux_conv, local_area);
+        fprintf(jfp, " flux=  %g %g  area= %g  ", local_flux, local_flux_conv, local_area);
         if (quantity == REPULSIVE_FORCE) {
           for (b = 0; b < DIM; b++) {
             Torque[b] /= local_flux;
           }
-          fprintf(jfp, " centers=  %e %e %e  ", Torque[0], Torque[1], Torque[2]);
+          fprintf(jfp, " centers=  %g %g %g  ", Torque[0], Torque[1], Torque[2]);
         }
         fprintf(jfp, "\n\n");
         fflush(jfp);
@@ -4515,9 +4591,9 @@ int compute_volume_integrand(const int quantity,
   case I_SHELL_VOLUME: {
 
     dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime;
-    dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+    dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
     H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                              &dH_U_ddh, time, delta_t);
+                              &dH_U_ddh, dH_dF, time, delta_t);
 
     *sum += H * weight * det;
 
@@ -5123,10 +5199,10 @@ int compute_volume_integrand(const int quantity,
   case I_NEG_FILL: {
     double alpha, height = 1.0;
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
-    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
     if (pd->e[pg->imtrx][R_LUBP])
       height = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX,
-                                     &dH_U_dp, &dH_U_ddh, time, delta_t);
+                                     &dH_U_dp, &dH_U_ddh, dH_dF, time, delta_t);
     if (adapt_int_flag) {
       double dwt_dF = 0;
       *sum += height * weight * det;
@@ -5394,9 +5470,9 @@ int compute_volume_integrand(const int quantity,
     if (pd->e[pg->imtrx][R_TFMP_MASS]) {
       dbl saturation, height;
       double H_U, dH_U_dtime, H_L, dH_L_dtime;
-      double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+      double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
       height = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX,
-                                     &dH_U_dp, &dH_U_ddh, time, delta_t);
+                                     &dH_U_dp, &dH_U_ddh, dH_dF, time, delta_t);
       saturation = fv->tfmp_sat;
       *sum += weight * det * saturation * height;
     }

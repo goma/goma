@@ -9237,7 +9237,44 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                      pd_glob[mn]->MaterialName, "Upper Height Function", "EXTERNAL_FIELD");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
+    } else if (model_read == -1 && !strcmp(model_name, "WALL_DISTANCE")) {
+      if (fscanf(imp, "%s", input) != 1) {
+        GOMA_EH(GOMA_ERROR,
+                "Expecting trailing keyword for Upper height function WALL_DISTANCE model.\n");
+      }
+      model_read = 1;
+
+      ii = 0;
+      for (j = 0; j < efv->Num_external_field; j++) {
+        if (strcmp(efv->name[j], input) == 0) {
+          ii = 1;
+          if (mat_ptr->heightU_ext_field_index == -1)
+            mat_ptr->heightU_ext_field_index = j;
+        }
+      }
+      if (ii == 0) {
+        if (upd->turbulent_info->use_internal_wall_distance) {
+          GOMA_WH(GOMA_ERROR, "No WALL_DISTANCE external field - using turbulent field.");
+          mat_ptr->HeightUFunctionModel = WALL_DISTURB;
+        } else {
+          GOMA_EH(GOMA_ERROR, "Must activate external fields to use this Upper height function "
+                              "model.  Field name needed for the WALL_DISTANCE");
+        }
+      } else {
+        mat_ptr->HeightUFunctionModel = WALL_DISTMOD;
+      }
+      /* pick up parameters for wall function */
+      num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
+
+      mat_ptr->len_u_heightU_function_constants = num_const;
+      if (num_const < 3) {
+        sr = sprintf(err_msg, "Matl %s expected at least 3 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Upper Height Function", "WALL_DISTANCE");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
     }
+
     /*
      *  TABLE model added to upper height function constant to apply height function model
      *  as computed from videos of experiments of drop merger.

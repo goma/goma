@@ -1601,7 +1601,7 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[THIRD_STRAINRATE_INVAR] = 1.;
   }
 
-  if (WALL_DISTANCE != -1 && pd->e[pg->imtrx][VELOCITY1]) {
+  if (WALL_DISTANCE != -1 && (pd->e[pg->imtrx][VELOCITY1] || pd->e[pg->imtrx][R_LUBP])) {
     local_post[WALL_DISTANCE] = fv->wall_distance;
     local_lumped[WALL_DISTANCE] = 1.;
   }
@@ -2201,9 +2201,9 @@ static int calc_standard_fields(double **post_proc_vect,
     double S = fv->tfmp_sat;
     /* Use the height_function_model */
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
-    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
     double h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX,
-                                     &dH_U_dp, &dH_U_ddh, time, delta_t);
+                                     &dH_U_dp, &dH_U_ddh, dH_dF, time, delta_t);
 
     double dh_dtime = dH_U_dtime - dH_L_dtime;
     double gradII_h[DIM];
@@ -2293,9 +2293,9 @@ static int calc_standard_fields(double **post_proc_vect,
     double S = fv->tfmp_sat;
     /* Use the height_function_model */
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
-    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
     double h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX,
-                                     &dH_U_dp, &dH_U_ddh, time, delta_t);
+                                     &dH_U_dp, &dH_U_ddh, dH_dF, time, delta_t);
 
     double dh_dtime = dH_U_dtime - dH_L_dtime;
     double gradII_h[DIM];
@@ -2825,7 +2825,7 @@ static int calc_standard_fields(double **post_proc_vect,
   if (LUB_HEIGHT != -1 && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP] ||
                            pd->e[pg->imtrx][R_TFMP_MASS] || pd->e[pg->imtrx][R_TFMP_BOUND])) {
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
-    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
     /* Setup lubrication */
     int *n_dof = NULL;
@@ -2835,8 +2835,9 @@ static int calc_standard_fields(double **post_proc_vect,
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
     if (pd->e[pg->imtrx][R_LUBP]) {
-      local_post[LUB_HEIGHT] = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX,
-                                                     dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
+      local_post[LUB_HEIGHT] =
+          height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
+                                &dH_U_ddh, dH_dF, time, delta_t);
     } else if (pd->e[pg->imtrx][R_SHELL_FILMP]) {
       local_post[LUB_HEIGHT] = fv->sh_fh;
     } else if (pd->e[pg->imtrx][R_TFMP_MASS] || pd->e[pg->imtrx][R_TFMP_BOUND]) {
@@ -2906,7 +2907,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (LUB_HEIGHT_2 != -1 && (pd->e[pg->imtrx][R_LUBP_2])) {
     double H_U_2, dH_U_2_dtime, H_L_2, dH_L_2_dtime;
-    double dH_U_2_dX[DIM], dH_L_2_dX[DIM], dH_U_2_dp, dH_U_2_ddh;
+    double dH_U_2_dX[DIM], dH_L_2_dX[DIM], dH_U_2_dp, dH_U_2_ddh, dH_2_dF[MDE];
 
     /* Setup lubrication */
     int *n_dof = NULL;
@@ -2918,7 +2919,7 @@ static int calc_standard_fields(double **post_proc_vect,
     if (pd->e[pg->imtrx][R_LUBP_2]) {
       local_post[LUB_HEIGHT_2] =
           height_function_model(&H_U_2, &dH_U_2_dtime, &H_L_2, &dH_L_2_dtime, dH_U_2_dX, dH_L_2_dX,
-                                &dH_U_2_dp, &dH_U_2_ddh, time, delta_t);
+                                &dH_U_2_dp, &dH_U_2_ddh, dH_2_dF, time, delta_t);
     } else if (pd->e[pg->imtrx][R_SHELL_FILMP]) {
       local_post[LUB_HEIGHT] = 0.;
     }
@@ -10099,7 +10100,8 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     index_post++;
   }
 
-  if (WALL_DISTANCE != -1 && Num_Var_In_Type[pg->imtrx][VELOCITY1]) {
+  if (WALL_DISTANCE != -1 &&
+      (Num_Var_In_Type[pg->imtrx][VELOCITY1] || Num_Var_In_Type[pg->imtrx][R_LUBP])) {
     set_nv_tkud(rd, index, 0, 0, -2, "WALL_DISTANCE", "[1]", "Wall distance", FALSE);
     index++;
     if (WALL_DISTANCE == 2) {

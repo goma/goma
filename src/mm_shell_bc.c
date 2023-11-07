@@ -171,10 +171,9 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         Inn(grad_phi_j, grad_II_phi_j);
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
-          d_func[0][var][j] += LubAux->dq_dp2[ii][j] * phi_j * bound_normal[ii];
+          d_func[0][var][j] += LubAux->dq_dp2[ii] * phi_j * bound_normal[ii];
           for (jj = 0; jj < pd->Num_Dim; jj++) {
-            d_func[0][var][j] +=
-                LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
+            d_func[0][var][j] += LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * bound_normal[ii];
           }
         }
       }
@@ -227,10 +226,11 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 /*****************************************************************************/
 void shell_n_dot_flow_wall(double func[DIM],
                            double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                           const double pwr_index, /* power-law for gap dependence */
-                           const double time,      /* current time */
-                           const double dt,        /* current time step size */
-                           double xi[DIM],         /* Local stu coordinates */
+                           const double pwr_index,    /* power-law for gap dependence */
+                           const double fudge_factor, /* self-explanatory */
+                           const double time,         /* current time */
+                           const double dt,           /* current time step size */
+                           double xi[DIM],            /* Local stu coordinates */
                            const Exo_DB *exo)
 
 /***********************************************************************
@@ -278,7 +278,13 @@ void shell_n_dot_flow_wall(double func[DIM],
     }
   }
   /* Wall factor for power-law liquids, i.e., (Qtube/2R)/(Qslot/W) */
-  wall_factor = M_PIE * (2. + 1. / pwr_index) / (3. + 1. / pwr_index) / pow(2., 2. + 1 / pwr_index);
+  wall_factor =
+      -M_PIE * (2. + 1. / pwr_index) / (3. + 1. / pwr_index) / pow(2., 2. + 1 / pwr_index);
+  if (ls != NULL || pfd != NULL) {
+    wall_factor *= (1. - lsi->H) * fudge_factor;
+  } else {
+    wall_factor *= fudge_factor;
+  }
   /*
    * Prepare geometry
    */
@@ -305,9 +311,9 @@ void shell_n_dot_flow_wall(double func[DIM],
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           d_func[0][var][j] +=
-              wall_factor * LubAux->dq_dp2[ii][j] * phi_j * bdy_tangent[ii] / fv->sdet;
+              wall_factor * LubAux->dq_dp2[ii] * phi_j * bdy_tangent[ii] / fv->sdet;
           for (jj = 0; jj < pd->Num_Dim; jj++) {
-            d_func[0][var][j] += wall_factor * LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] *
+            d_func[0][var][j] += wall_factor * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] *
                                  bdy_tangent[ii] / fv->sdet;
           }
         }
@@ -347,6 +353,17 @@ void shell_n_dot_flow_wall(double func[DIM],
         }
       }
     }
+    /* Calculate F sensitivity */
+    var = FILL;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        for (ii = 0; ii < pd->Num_Dim; ii++) {
+          d_func[0][var][j] +=
+              -lsi->d_H_dF[j] * wall_factor * LubAux->q[ii] * bdy_tangent[ii] / fv->sdet;
+        }
+      }
+    }
+
   } /* end of if Assemble_Jacobian */
 
   /* Calculate the residual contribution        */
@@ -426,9 +443,9 @@ void lub_static_pressure(double func[DIM],
 
   /* Extract wall heights */
   dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime;
-  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
 
   /***** DEFORM HEIGHT AND CALCULATE SENSITIVITIES *****/
 
@@ -795,8 +812,7 @@ void shell_n_dot_flow_bc_film(double func[DIM],
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           for (jj = 0; jj < pd->Num_Dim; jj++) {
-            d_func[0][var][j] +=
-                LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
+            d_func[0][var][j] += LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * bound_normal[ii];
           }
         }
       }
@@ -2014,10 +2030,10 @@ void shell_tfmp_avg_plate_velo_liq(double func[DIM],
   S = fv->tfmp_sat;
   /* Use the height_function_model */
   double H_U, dH_U_dtime, H_L, dH_L_dtime;
-  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, delta_t);
+                            &dH_U_ddh, dH_dF, time, delta_t);
 
   double dh_dmesh[DIM][MDE];
   double dh_dnormal[DIM][MDE];
@@ -2487,12 +2503,12 @@ void shell_lubrication_outflow(double func[DIM],
   lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
   /* Use the height_function_model */
   double H_U, dH_U_dtime, H_L, dH_L_dtime;
-  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   double h;
 
   h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, delta_t);
+                            &dH_U_ddh, dH_dF, time, delta_t);
 
   double dh_dmesh[DIM][MDE];
   double dh_dnormal[DIM][MDE];
@@ -2704,10 +2720,10 @@ void shell_tfmp_avg_plate_velo_gas(double func[DIM],
   S = fv->tfmp_sat;
   /* Use the height_function_model */
   double H_U, dH_U_dtime, H_L, dH_L_dtime;
-  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, delta_t);
+                            &dH_U_ddh, dH_dF, time, delta_t);
 
   double dh_dmesh[DIM][MDE];
   double dh_dnormal[DIM][MDE];

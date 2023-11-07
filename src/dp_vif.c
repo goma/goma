@@ -712,6 +712,7 @@ void noahs_ark(void) {
   ddd_add_member(n, Epsilon, MAX_NUM_MATRICES * 3, MPI_DOUBLE);
   ddd_add_member(n, &Solver_Output_Format, 1, MPI_INT);
   ddd_add_member(n, &Output_Variable_Stats, 1, MPI_INT);
+  ddd_add_member(n, &Output_Variable_Regression, 1, MPI_INT);
 
   /*
    * Eigensolver inputs.

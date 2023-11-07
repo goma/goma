@@ -474,6 +474,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case FRICTION_RS_BC:
     case SHEAR_TO_SHELL_BC:
     case GRAD_LUB_PRESS_BC:
+    case SHELL_LUB_WALL_BC:
     case LUB_STATIC_BC:
     case SHELL_GRAD_FP_BC:
     case SHELL_GRAD_FH_BC:
@@ -497,11 +498,21 @@ void rd_bc_specs(FILE *ifp, char *input) {
         BC_Types[ibc].BC_Data_Float[2] = 1.;
         if (fscanf(ifp, "%lf %lf", &BC_Types[ibc].BC_Data_Float[1],
                    &BC_Types[ibc].BC_Data_Float[2]) != 2) {
+          sr = sprintf(err_msg, "%s: Expected 2 flts for %s.", yo, BC_Types[ibc].desc->name1);
         }
         BC_Types[ibc].max_DFlt = 3;
         SPF(endofstring(echo_string), " %.4g %.4g", BC_Types[ibc].BC_Data_Float[1],
             BC_Types[ibc].BC_Data_Float[2]);
       }
+      if (BC_Types[ibc].BC_Name == SHELL_LUB_WALL_BC) {
+        BC_Types[ibc].BC_Data_Float[1] = 1.;
+        if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[1]) != 1) {
+          sr = sprintf(err_msg, "%s: Expected 1 flt for %s.", yo, BC_Types[ibc].desc->name1);
+        }
+        BC_Types[ibc].max_DFlt = 2;
+        SPF(endofstring(echo_string), " %.4g ", BC_Types[ibc].BC_Data_Float[1]);
+      }
+
       if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1) {
         BC_Types[ibc].BC_Data_Int[0] = -1;
         /* The default for this int now becomes an added sign needed to resolve unhandled issues

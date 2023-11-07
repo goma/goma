@@ -78,6 +78,7 @@ double height_function_model(double *H_U,
                              double dH_L_dX[DIM],
                              double *dH_U_dp,
                              double *dH_U_ddh,
+                             double dH_dF[MDE],
                              double time,    /* present time value           */
                              double delta_t) /* present time step             */
 
@@ -96,34 +97,40 @@ double height_function_model(double *H_U,
   double H_dot, H_init, H_delta, H_low, x_0, Length, r;
   double R, origin[3], dir_angle[3], t, axis_pt[3], dist, cos_denom;
 
-  dH_L_dX[0] = 0.0;
-  dH_L_dX[1] = 0.0;
-  dH_L_dX[2] = 0.0;
+  // Initialize gradients, etc. so only need to add nonzero values
+  dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
+  dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.0;
+  *dH_U_dtime = 0.0;
+  *dH_U_dp = 0.0;
+  *dH_U_ddh = 0.0;
+  *dH_L_dtime = 0.0;
 
   if (pd->TimeIntegration == STEADY)
     time = 0.;
 
   if (mp->HeightUFunctionModel == CONSTANT) {
     *H_U = mp->heightU;
-    *dH_U_dtime = 0.0;
-    *dH_U_dp = 0.0;
-    *dH_U_ddh = 0.0;
-    dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
   }
 
-  else if (mp->HeightUFunctionModel == CONSTANT_SPEED) {
+  else if (mp->HeightUFunctionModel == CONSTANT_SPEED || mp->HeightUFunctionModel == WALL_DISTMOD ||
+           mp->HeightUFunctionModel == WALL_DISTURB) {
     H_dot = mp->u_heightU_function_constants[0];
     H_init = mp->u_heightU_function_constants[1];
     *H_U = H_dot * time + H_init;
 
     /* add on external field height if there is one. The scale factor will be the third user const*/
-    if (mp->heightU_ext_field_index >= 0)
+    // It seems we should dispense with this option and just use the EXTERNAL_FIELD one...
+    if (mp->heightU_ext_field_index >= 0 && mp->HeightUFunctionModel != WALL_DISTMOD &&
+        mp->HeightUFunctionModel != WALL_DISTURB) {
       *H_U += mp->u_heightU_function_constants[2] * fv->external_field[mp->heightU_ext_field_index];
-
+      dH_U_dX[0] =
+          mp->u_heightU_function_constants[2] * fv->grad_ext_field[mp->heightU_ext_field_index][0];
+      dH_U_dX[1] =
+          mp->u_heightU_function_constants[2] * fv->grad_ext_field[mp->heightU_ext_field_index][1];
+      dH_U_dX[2] =
+          mp->u_heightU_function_constants[2] * fv->grad_ext_field[mp->heightU_ext_field_index][2];
+    }
     *dH_U_dtime = H_dot;
-    dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.;
-    *dH_U_dp = 0.;
-    *dH_U_ddh = 0.0;
   }
 
   else if (mp->HeightUFunctionModel == EXTERNAL_FIELD) {
@@ -133,11 +140,14 @@ double height_function_model(double *H_U,
     *H_U = H_dot * time + H_init;
 
     *H_U += mp->u_heightU_function_constants[2] * fv->external_field[mp->heightU_ext_field_index];
+    dH_U_dX[0] =
+        mp->u_heightU_function_constants[2] * fv->grad_ext_field[mp->heightU_ext_field_index][0];
+    dH_U_dX[1] =
+        mp->u_heightU_function_constants[2] * fv->grad_ext_field[mp->heightU_ext_field_index][1];
+    dH_U_dX[2] =
+        mp->u_heightU_function_constants[2] * fv->grad_ext_field[mp->heightU_ext_field_index][2];
 
     *dH_U_dtime = H_dot;
-    dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.;
-    *dH_U_dp = 0.;
-    *dH_U_ddh = 0.0;
   }
 
   else if (mp->HeightUFunctionModel == CONSTANT_SPEED_DEFORM) {
@@ -153,9 +163,9 @@ double height_function_model(double *H_U,
     // to give us a fv_dot->lubp kicker.
     *dH_U_dtime = H_dot + fv_dot->lubp / (E_mod / L_0);
     *dH_U_dp = 1. / (E_mod / L_0);
-    *dH_U_ddh = 0.0;
-    dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.;
-  } else if (mp->HeightUFunctionModel == CONSTANT_SPEED_MELT) {
+  }
+
+  else if (mp->HeightUFunctionModel == CONSTANT_SPEED_MELT) {
     H_dot = mp->u_heightU_function_constants[0];
     H_init = mp->u_heightU_function_constants[1];
 
@@ -167,15 +177,14 @@ double height_function_model(double *H_U,
     // otherwise it is 0.*fv_dot->sh_dh
 
     *dH_U_dtime = H_dot - 0. * fv_dot->sh_dh;
-    *dH_U_dp = 0.;
     *dH_U_ddh = 1.0;
-    dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.;
-
     if (*H_U <= 0.00001 * H_init) {
       *H_U = 0.00001 * H_init;
     }
 
-  } else if (mp->HeightUFunctionModel == ROLL_ON) {
+  }
+
+  else if (mp->HeightUFunctionModel == ROLL_ON) {
     Length = mp->u_heightU_function_constants[4];
     H_dot = mp->u_heightU_function_constants[3];
     H_delta = mp->u_heightU_function_constants[2];
@@ -190,12 +199,9 @@ double height_function_model(double *H_U,
 
     *dH_U_dtime = H_dot * (fv->x[0] - x_0) / Length;
     dH_U_dX[0] = (H_dot * time + H_delta) / Length;
-    dH_U_dX[1] = 0.;
-    dH_U_dX[2] = 0.;
-    *dH_U_dp = 0.;
-    *dH_U_ddh = 0.0;
+  }
 
-  } else if (mp->HeightUFunctionModel == ROLL_ON_MELT) {
+  else if (mp->HeightUFunctionModel == ROLL_ON_MELT) {
     Length = mp->u_heightU_function_constants[4];
     H_dot = mp->u_heightU_function_constants[3];
     H_delta = mp->u_heightU_function_constants[2];
@@ -205,12 +211,10 @@ double height_function_model(double *H_U,
     *H_U = (H_dot * time + H_delta) * ((fv->x[0] - x_0) / Length) + H_low + fv->sh_dh;
     *dH_U_dtime = H_dot * (fv->x[0] - x_0) / Length;
     dH_U_dX[0] = (H_dot * time + H_delta) / Length;
-    dH_U_dX[1] = 0.;
-    dH_U_dX[2] = 0.;
-    *dH_U_dp = 0.;
     *dH_U_ddh = 1.0;
+  }
 
-  } else if (mp->HeightUFunctionModel == ROLL) {
+  else if (mp->HeightUFunctionModel == ROLL) {
     R = mp->u_heightU_function_constants[0];
     /*  origin and direction of rotation axis	*/
     origin[0] = mp->u_heightU_function_constants[1];
@@ -221,8 +225,6 @@ double height_function_model(double *H_U,
     dir_angle[2] = mp->u_heightU_function_constants[6];
     H_dot = mp->u_heightU_function_constants[7];
     origin[2] += H_dot * time;
-    *dH_U_dp = 0.;
-    *dH_U_ddh = 0.0;
 
     /*  find intersection of axis with normal plane - i.e., locate point on
             axis that intersects plane normal to axis that contains local point. */
@@ -240,7 +242,6 @@ double height_function_model(double *H_U,
     dist = sqrt(SQUARE(fv->x[0] - axis_pt[0]) + SQUARE(fv->x[1] - axis_pt[1]));
     if (dist > fabs(R)) {
       *H_U = fabs(R);
-      dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
     } else {
       *H_U = SGN(R) * (axis_pt[2] - fv->x[2] - sqrt(SQUARE(R) - SQUARE(dist)));
       *dH_U_dtime = 0.; /* finish later  */
@@ -272,11 +273,8 @@ double height_function_model(double *H_U,
     *dH_U_dtime = H_dot;
     dH_U_dX[0] = (fv->x[0] - x_0) / sqrt(R * R - (fv->x[0] - x_0) * (fv->x[0] - x_0) -
                                          (fv->x[2] - z_0) * (fv->x[2] - z_0));
-    dH_U_dX[1] = 0.;
-
     dH_U_dX[2] = (fv->x[2] - z_0) / sqrt(R * R - (fv->x[0] - x_0) * (fv->x[0] - x_0) -
                                          (fv->x[2] - z_0) * (fv->x[2] - z_0));
-    *dH_U_ddh = 0.0;
   }
 
   else if ((mp->HeightUFunctionModel == FLAT_GRAD_FLAT) ||
@@ -307,11 +305,6 @@ double height_function_model(double *H_U,
     // Assemble
     *H_U = (1 - z1) * h1 + z1 * (1 - z2) * f + z2 * h2;
     dH_U_dX[0] = -h1 * z1_x + z1_x * (1 - z2) * f - z1 * z2_x * f + z1 * (1 - z2) * n + z2_x * h2;
-    dH_U_dX[1] = 0.0;
-    dH_U_dX[2] = 0.0;
-    *dH_U_dtime = 0.0;
-    *dH_U_dp = 0.0;
-    *dH_U_ddh = 0.0;
 
     // Add in any melting
     if (mp->HeightUFunctionModel == FLAT_GRAD_FLAT_MELT) {
@@ -325,8 +318,6 @@ double height_function_model(double *H_U,
     // Define variables and initialize
     int i;
     dbl np;
-    *H_U = *dH_U_dtime = *dH_U_dp = *dH_U_ddh = 0.0;
-    dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
 
     // Read in parameters
     np = mp->len_u_heightU_function_constants;
@@ -337,7 +328,6 @@ double height_function_model(double *H_U,
       *H_U += mp->u_heightU_function_constants[i] * pow(time, i);
       *dH_U_dtime += mp->u_heightU_function_constants[i] * pow(time, i - 1) * i;
     }
-
   }
 
   else if (mp->HeightUFunctionModel == JOURNAL) {
@@ -346,8 +336,6 @@ double height_function_model(double *H_U,
     dbl C, ecc;
     dbl x, y;
     dbl Ri, theta;
-    *H_U = *dH_U_dtime = *dH_U_dp = *dH_U_ddh = 0.0;
-    dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
 
     // Read in parameters
     C = mp->u_heightU_function_constants[0];
@@ -371,12 +359,12 @@ double height_function_model(double *H_U,
     *H_U = C * (1 + ecc * y / Ri);
     dH_U_dX[0] = -C * ecc / Ri * sin(theta) * cos(theta);
     dH_U_dX[1] = +C * ecc / Ri * sin(theta) * sin(theta);
+  }
 
-  } else if (mp->HeightUFunctionModel == CIRCLE_MELT) {
+  else if (mp->HeightUFunctionModel == CIRCLE_MELT) {
     x_0 = mp->u_heightU_function_constants[0];
     r = mp->u_heightU_function_constants[1];
     H_low = mp->u_heightU_function_constants[2];
-
     Length = fv->x[0] - x_0;
     if (Length > 0.95 * r)
       GOMA_EH(GOMA_ERROR, "Problem in calculating height function model CIRCLE_MELT");
@@ -384,11 +372,10 @@ double height_function_model(double *H_U,
     *H_U = H_low + r - sqrt(r * r - Length * Length) + fv->sh_dh;
     *dH_U_dtime = Length / sqrt(r * r - Length * Length);
     *dH_U_dtime = 0.0;
-    dH_U_dX[1] = 0.;
-    dH_U_dX[2] = 0.;
-    *dH_U_dp = 0.;
     *dH_U_ddh = 1.0;
-  } else if (mp->HeightUFunctionModel == TABLE) {
+  }
+
+  else if (mp->HeightUFunctionModel == TABLE) {
     struct Data_Table *table_local;
     table_local = MP_Tables[mp->heightU_function_constants_tableid];
 
@@ -397,9 +384,10 @@ double height_function_model(double *H_U,
       time_local[0] = time;
 
       *H_U = interpolate_table(table_local, time_local, dH_U_dtime, NULL);
-      dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
     }
-  } else if (mp->HeightUFunctionModel == ROLLER) {
+  }
+
+  else if (mp->HeightUFunctionModel == ROLLER) {
     // implement for bar elements in 2d space for now
     double hmin = mp->u_heightU_function_constants[0];
     double r = mp->u_heightU_function_constants[1];
@@ -409,9 +397,7 @@ double height_function_model(double *H_U,
 
     // we're all efv Sherman! It's likely that gap thickness
     // should be defined radially for this problem
-    if (external_field_multiplier == 1.0) {
-      *H_U = 0.0;
-    } else {
+    if (external_field_multiplier != 1.0) {
       *H_U = hmin + r - sqrt(SQUARE(r) - SQUARE(x - xc));
     }
 
@@ -423,9 +409,7 @@ double height_function_model(double *H_U,
         GOMA_WH(GOMA_ERROR, "read in a negative external field in height_function_model()");
       }
     }
-    if (external_field_multiplier == 1.0) {
-      dH_U_dX[0] = 0.0;
-    } else {
+    if (external_field_multiplier != 1.0) {
       dH_U_dX[0] = (x - xc) / sqrt(SQUARE(r) - SQUARE(x - xc));
     }
     // dH_U_DX[0] = dH_ds for my_normal == primitive_s
@@ -453,8 +437,6 @@ double height_function_model(double *H_U,
       dHext_ds = dHext_dcsi / det_J;
       dH_U_dX[0] += dHext_ds;
     } // end handling of the external field gradients
-    dH_U_dX[1] = 0.0;
-    dH_U_dX[2] = 0.0;
 
   } else {
     GOMA_EH(GOMA_ERROR, "Not a supported height-function model");
@@ -462,34 +444,46 @@ double height_function_model(double *H_U,
 
   if (mp->HeightLFunctionModel == CONSTANT) {
     *H_L = mp->heightL;
-    *dH_L_dtime = 0.0;
-    dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.0;
   }
 
-  else if (mp->HeightLFunctionModel == CONSTANT_SPEED) {
+  else if (mp->HeightLFunctionModel == CONSTANT_SPEED || mp->HeightLFunctionModel == WALL_DISTMOD ||
+           mp->HeightLFunctionModel == WALL_DISTURB) {
     H_dot = mp->u_heightL_function_constants[0];
     H_init = mp->u_heightL_function_constants[1];
-
     *H_L = H_dot * time + H_init;
 
     /* add on external field height if there is one. The scale factor will be the third user const*/
-    if (mp->heightL_ext_field_index >= 0) {
+    if (mp->heightL_ext_field_index >= 0 && mp->HeightUFunctionModel != WALL_DISTMOD &&
+        mp->HeightUFunctionModel != WALL_DISTURB) {
       *H_L += mp->u_heightL_function_constants[2] * fv->external_field[mp->heightL_ext_field_index];
+      dH_L_dX[0] =
+          mp->u_heightL_function_constants[2] * fv->grad_ext_field[mp->heightL_ext_field_index][0];
+      dH_L_dX[1] =
+          mp->u_heightL_function_constants[2] * fv->grad_ext_field[mp->heightL_ext_field_index][1];
+      dH_L_dX[2] =
+          mp->u_heightL_function_constants[2] * fv->grad_ext_field[mp->heightL_ext_field_index][2];
     }
 
     *dH_L_dtime = H_dot;
-    dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.;
-  } else if (mp->HeightLFunctionModel == EXTERNAL_FIELD) {
+  }
+
+  else if (mp->HeightLFunctionModel == EXTERNAL_FIELD) {
     H_dot = mp->u_heightL_function_constants[0];
     H_init = mp->u_heightL_function_constants[1];
-
     *H_L = H_dot * time + H_init;
 
     /* add on external field height if there is one. The scale factor will be the third user const*/
     *H_L += mp->u_heightL_function_constants[2] * fv->external_field[mp->heightL_ext_field_index];
+    dH_L_dX[0] =
+        mp->u_heightL_function_constants[2] * fv->grad_ext_field[mp->heightL_ext_field_index][0];
+    dH_L_dX[1] =
+        mp->u_heightL_function_constants[2] * fv->grad_ext_field[mp->heightL_ext_field_index][1];
+    dH_L_dX[2] =
+        mp->u_heightL_function_constants[2] * fv->grad_ext_field[mp->heightL_ext_field_index][2];
     *dH_L_dtime = H_dot;
-    dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.;
-  } else if (mp->HeightLFunctionModel == ROLL_ON) {
+  }
+
+  else if (mp->HeightLFunctionModel == ROLL_ON) {
     Length = mp->u_heightL_function_constants[4];
     H_dot = mp->u_heightL_function_constants[3];
     H_delta = mp->u_heightL_function_constants[2];
@@ -499,9 +493,9 @@ double height_function_model(double *H_U,
     *H_L = (H_dot * time + H_delta) * ((fv->x[0] - x_0) / Length) + H_low;
     *dH_L_dtime = H_dot * (fv->x[0] - x_0) / Length;
     dH_L_dX[0] = (H_dot * time + H_delta) / Length;
-    dH_L_dX[1] = 0.;
-    dH_U_dX[2] = 0.;
-  } else if (mp->HeightLFunctionModel == ROLL) {
+  }
+
+  else if (mp->HeightLFunctionModel == ROLL) {
     R = mp->u_heightL_function_constants[0];
     /*  origin and direction of rotation axis	*/
     origin[0] = mp->u_heightL_function_constants[1];
@@ -529,7 +523,6 @@ double height_function_model(double *H_U,
     dist = sqrt(SQUARE(fv->x[0] - axis_pt[0]) + SQUARE(fv->x[1] - axis_pt[1]));
     if (dist > fabs(R)) {
       *H_L = -fabs(R);
-      dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.0;
     } else {
       *H_L = SGN(R) * (axis_pt[2] - fv->x[2] - sqrt(SQUARE(R) - SQUARE(dist)));
       *dH_L_dtime = 0.; /* finish later  */
@@ -546,7 +539,9 @@ double height_function_model(double *H_U,
                           (fv->x[2] - axis_pt[2]) * (-SQUARE(dir_angle[2]) / cos_denom)) /
                              sqrt(SQUARE(R) - SQUARE(dist));
     }
-  } else if (mp->HeightLFunctionModel == TABLE) {
+  }
+
+  else if (mp->HeightLFunctionModel == TABLE) {
     struct Data_Table *table_local;
     table_local = MP_Tables[mp->heightL_function_constants_tableid];
     if (!strcmp(table_local->t_name[0], "LOWER_DISTANCE")) {
@@ -585,8 +580,6 @@ double height_function_model(double *H_U,
 
       // Calculate spatial derivatives
       dH_L_dX[0] = -slope;
-      dH_L_dX[1] = 0.0;
-      dH_L_dX[2] = 0.0;
 
       // Calculate time derivative
       double H2;
@@ -606,6 +599,94 @@ double height_function_model(double *H_U,
   }
 
   H = MAX(*H_U - *H_L, DBL_SEMI_SMALL); /* Negative H would be seem to be a bad thing...*/
+
+  // Now would be a good time to implement sidewall effects
+
+  if (mp->HeightUFunctionModel == WALL_DISTMOD || mp->HeightUFunctionModel == WALL_DISTURB ||
+      mp->HeightLFunctionModel == WALL_DISTMOD || mp->HeightLFunctionModel == WALL_DISTURB) {
+    double wall_d, alpha = 0., powerlaw = 1., H_orig = H;
+    bool Fwall_model = false;
+
+    if (mp->HeightUFunctionModel == WALL_DISTMOD) {
+      wall_d = fv->external_field[mp->heightU_ext_field_index];
+      if (mp->len_u_heightU_function_constants > 2)
+        alpha = mp->u_heightU_function_constants[2];
+    } else if (mp->HeightLFunctionModel == WALL_DISTMOD) {
+      wall_d = fv->external_field[mp->heightL_ext_field_index];
+      if (mp->len_u_heightL_function_constants > 2)
+        alpha = mp->u_heightL_function_constants[2];
+    } else {
+      wall_d = fv->wall_distance;
+      if (mp->len_u_heightU_function_constants > 2)
+        alpha = mp->u_heightU_function_constants[2];
+      if (mp->len_u_heightL_function_constants > 2)
+        alpha = mp->u_heightL_function_constants[2];
+    }
+
+    if (mp->len_u_heightU_function_constants > 3) {
+      Fwall_model = (bool)mp->u_heightU_function_constants[3];
+    } else if (mp->len_u_heightL_function_constants > 3) {
+      Fwall_model = (bool)mp->u_heightL_function_constants[3];
+    }
+
+    if (mp->len_u_heightU_function_constants > 4) {
+      powerlaw = mp->u_heightU_function_constants[4];
+    } else if (mp->len_u_heightL_function_constants > 4) {
+      powerlaw = mp->u_heightL_function_constants[4];
+    } else {
+      powerlaw = gn->nexp;
+    }
+    // Keep wall distance positive
+    double rel_dist = MAX(wall_d, 0.) / H_orig;
+    // 3 decimal point accuracy on end of boundary layer
+    if (rel_dist <= 3. / alpha * log(10.)) {
+      double dh_grad = 0., exp_term, exp_term2, tmp = alpha * rel_dist;
+      int j;
+      if (tmp < 0.1) {
+        exp_term = tmp * (1. - 0.5 * tmp * (1. - tmp / 3. * (1. - 0.25 * tmp)));
+      } else {
+        exp_term = 1. - exp(-alpha * rel_dist);
+      }
+      exp_term2 = pow(MAX(exp_term, DBL_SEMI_SMALL), 1. / (2. * powerlaw + 1.));
+      if ((ls != NULL || pfd != NULL) && Fwall_model) {
+        H *= (1. - lsi->H) * exp_term2 + lsi->H;
+        dh_grad = (1. - lsi->H) * alpha / (2. * powerlaw + 1.) * pow(exp_term2, -2. * powerlaw);
+        for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
+          dH_dF[j] = H_orig * lsi->d_H_dF[j] * (1. - exp_term2);
+        }
+      } else {
+        H *= exp_term2;
+        dh_grad = alpha / (2. * powerlaw + 1.) * pow(exp_term2, -2. * powerlaw);
+        if (0 && H < DBL_SEMI_SMALL) {
+          H = DBL_SEMI_SMALL;
+          dh_grad = 0.0;
+        }
+      }
+      if (mp->HeightUFunctionModel == WALL_DISTMOD) {
+        dH_U_dX[0] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][0];
+        dH_U_dX[1] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][1];
+        dH_U_dX[2] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][2];
+      } else if (mp->HeightLFunctionModel == WALL_DISTMOD) {
+        dH_L_dX[0] = -dh_grad * fv->grad_ext_field[mp->heightL_ext_field_index][0];
+        dH_L_dX[1] = -dh_grad * fv->grad_ext_field[mp->heightL_ext_field_index][1];
+        dH_L_dX[2] = -dh_grad * fv->grad_ext_field[mp->heightL_ext_field_index][2];
+      } else if (mp->HeightUFunctionModel == WALL_DISTURB) {
+        dH_U_dX[0] = dh_grad * fv->grad_wall_distance[0];
+        dH_U_dX[1] = dh_grad * fv->grad_wall_distance[1];
+        dH_U_dX[2] = dh_grad * fv->grad_wall_distance[2];
+      } else if (mp->HeightLFunctionModel == WALL_DISTURB) {
+        dH_L_dX[0] = -dh_grad * fv->grad_wall_distance[0];
+        dH_L_dX[1] = -dh_grad * fv->grad_wall_distance[1];
+        dH_L_dX[2] = -dh_grad * fv->grad_wall_distance[2];
+      }
+    }
+    if (H < DBL_SEMI_SMALL) {
+      H = DBL_SEMI_SMALL;
+      dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.;
+      dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.;
+    }
+  }
+
   return (H);
 }
 
@@ -706,7 +787,7 @@ double velocity_function_model(double veloU[DIM],
     int i, j;
     /* dbl H; */
     dbl H_U, H_L, dH_U_dtime, dH_L_dtime, dH_U_dp, dH_U_ddh;
-    dbl dH_U_dX[DIM], dH_L_dX[DIM];
+    dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_dF[MDE];
     dbl thetax, thetay;
     dbl n2[DIM] = {0.0};
     dbl R[DIM][DIM];
@@ -728,11 +809,8 @@ double velocity_function_model(double veloU[DIM],
      * in any situation.  If you need dH_U_dX on a curved surface
      * we really need to think about what dH_U_dX really means. --SAR */
 
-    /* H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-     * &dH_U_ddh, time, delta_t); */
-
     height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                          &dH_U_ddh, time, delta_t);
+                          &dH_U_ddh, dH_dF, time, delta_t);
     thetax = atan(dH_U_dX[1]);
     thetay = -atan(dH_U_dX[0]);
     R[0][0] = cos(thetay);
@@ -871,7 +949,7 @@ double velocity_function_model(double veloU[DIM],
     int i, j;
     /* dbl H; */
     dbl H_U, H_L, dH_U_dtime, dH_L_dtime, dH_U_dp, dH_U_ddh;
-    dbl dH_U_dX[DIM], dH_L_dX[DIM];
+    dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_dF[MDE];
     dbl thetax, thetay;
     dbl n2[DIM] = {0.0};
     dbl R[DIM][DIM];
@@ -897,7 +975,7 @@ double velocity_function_model(double veloU[DIM],
      * &dH_U_ddh, time, delta_t); */
 
     height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                          &dH_U_ddh, time, delta_t);
+                          &dH_U_ddh, dH_dF, time, delta_t);
     thetax = atan(dH_L_dX[1]);
     thetay = -atan(dH_L_dX[0]);
     R[0][0] = cos(thetay);

@@ -7784,10 +7784,10 @@ struct Equation_Names Var_Name[] = {
     {"USTAR", "USX", USTAR},
     {"VSTAR", "USY", VSTAR},
     {"WSTAR", "USZ", WSTAR},
-    {"EDDY_NU", "EDDY_NU", EDDY_NU},
+    {"EDDY_NU", "EDDY_NU", EDDY_NU}, // 214
 
     {"MESH_POSITION1", "X", MESH_POSITION1},
-    {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 206 */
+    {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 216 */
     {"MESH_POSITION3", "Z", MESH_POSITION3},
 
     {"VEL_NORM", "VN", VEL_NORM},
@@ -7801,14 +7801,14 @@ struct Equation_Names Var_Name[] = {
 
     {"D_X1_DT", "XDOT", D_X1_DT},
     {"D_X2_DT", "YDOT", D_X2_DT},
-    {"D_X3_DT", "ZDOT", D_X3_DT}, /* 212 */
+    {"D_X3_DT", "ZDOT", D_X3_DT}, /* 227 */
     {"D_S_DT", "SDOT", D_S_DT},
 
     {"D_P_DT", "PDOT", D_P_DT},
 
     {"SOLID_POSITION1", "X_RS", SOLID_POSITION1},
     {"SOLID_POSITION2", "Y_RS", SOLID_POSITION2},
-    {"SOLID_POSITION3", "Z_RS", SOLID_POSITION3} /* 217 */
+    {"SOLID_POSITION3", "Z_RS", SOLID_POSITION3} /* 232 */
 };
 
 int Num_Var_Names = sizeof(Var_Name) / sizeof(struct Equation_Names);
@@ -8114,6 +8114,7 @@ struct Equation_Names Post_Var_Name[] = {
     {"FIRST_STRAINRATE_INVAR", "FIRST_STRAINRATE_INVAR", -1},
     {"SEC_STRAINRATE_INVAR", "SEC_STRAINRATE_INVAR", -1},
     {"THIRD_STRAINRATE_INVAR", "THIRD_STRAINRATE_INVAR", -1},
+    {"WALL_DISTANCE", "WALL_DISTANCE", -1},
 };
 
 int Num_Post_Var_Names = sizeof(Post_Var_Name) / sizeof(struct Equation_Names);

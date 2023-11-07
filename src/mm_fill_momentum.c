@@ -1629,8 +1629,10 @@ int assemble_momentum(dbl time,       /* current time */
                           n_dof[MESH_DISPLACEMENT1], dof_map);
 
                   /* Assemble */
-                  porous -= LubAux->dv_avg_dp1[a][j] * grad_II_phi_j[a];
-                  porous -= LubAux->dv_avg_dp2[a][j] * phi_j;
+                  for (b = 0; b < DIM; b++) {
+                    porous -= LubAux->dv_dgradp[a][b] * grad_II_phi_j[b];
+                  }
+                  porous -= LubAux->dv_avg_dp2[a] * phi_j;
                   porous *= phi_i * fv->sdet * wt * h3;
                   // porous *= phi_i * wt * h3;
                   porous *= porous_brinkman_etm;
@@ -1655,7 +1657,7 @@ int assemble_momentum(dbl time,       /* current time */
 
                 porous = 0.;
                 if (porous_brinkman_on) {
-                  porous -= LubAux->dv_avg_ddh[a][j] * phi_j;
+                  porous -= LubAux->dv_avg_ddh[a] * phi_j;
                   porous *= phi_i * fv->sdet * wt * h3;
                   porous *= porous_brinkman_etm;
                 }
@@ -1705,7 +1707,7 @@ int assemble_momentum(dbl time,       /* current time */
 
                 porous = 0.;
                 if (porous_brinkman_on) {
-                  porous -= LubAux->dv_avg_dk[a][j] * phi_j;
+                  porous -= LubAux->dv_avg_dk[a] * phi_j;
                   porous *= phi_i * fv->sdet * wt * h3;
                   porous *= porous_brinkman_etm;
                 }
@@ -1735,7 +1737,9 @@ int assemble_momentum(dbl time,       /* current time */
                           n_dof[MESH_DISPLACEMENT1], dof_map);
 
                   /* Assemble */
-                  porous -= LubAux->dv_avg_dp1[a][j] * grad_II_phi_j[a];
+                  for (b = 0; b < DIM; b++) {
+                    porous -= LubAux->dv_dgradp[a][b] * grad_II_phi_j[b];
+                  }
                   porous *= phi_i * fv->sdet * wt * h3;
                   porous *= porous_brinkman_etm;
                 }

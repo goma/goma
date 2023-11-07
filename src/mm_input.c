@@ -6575,6 +6575,21 @@ void rd_solver_specs(FILE *ifp, char *input) {
     SPF(echo_string, "%s = %d", "Output Variable Statistics", Output_Variable_Stats);
   }
 
+  Output_Variable_Regression = 0;
+  iread = look_for_optional(ifp, "Output Variable Regression", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0) {
+      Output_Variable_Regression = FALSE;
+    } else if (strcmp(input, "yes") == 0) {
+      Output_Variable_Regression = TRUE;
+    } else {
+      GOMA_EH(GOMA_ERROR, "error reading Variable Regression");
+    }
+    SPF(echo_string, "%s = %d", "Output Variable Regression", Output_Variable_Regression);
+  }
+
   iread = look_for_optional(ifp, "Residual Ratio Tolerance", input, '=');
   if (iread == 1) {
     read_string(ifp, input, '\n');
