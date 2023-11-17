@@ -541,6 +541,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define ENTHALPY     4
 #define THERMAL_HEAT 45
 #define FOAM_PBE     46
+#define CONSTANT_DV  50
 
 /*Electrode-kinetics Species Source model: KSC 10/13/98 */
 #define ELECTRODE_KINETICS 904

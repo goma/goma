@@ -3179,7 +3179,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 
     /*  add thermo-elasticity  */
     if (pd->e[pg->imtrx][R_ENERGY]) {
-      if (elc->thermal_expansion_model == CONSTANT ||
+      if (elc->thermal_expansion_model == CONSTANT || elc->thermal_expansion_model == CONSTANT_DV ||
           elc->thermal_expansion_model == THERMAL_HEAT || elc->thermal_expansion_model == USER ||
           elc->thermal_expansion_model == IDEAL_GAS) {
         for (p = 0; p < VIM; p++) {
@@ -3240,6 +3240,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                 }
                 if (pd->e[pg->imtrx][R_ENERGY]) {
                   if (elc->thermal_expansion_model == CONSTANT ||
+                      elc->thermal_expansion_model == CONSTANT_DV ||
                       elc->thermal_expansion_model == THERMAL_HEAT ||
                       elc->thermal_expansion_model == IDEAL_GAS) {
                     dTT_dx[p][q][b][j] -=
@@ -3295,7 +3296,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
               }
             }
 
-            if (elc->thermal_expansion_model == CONSTANT) {
+            if (elc->thermal_expansion_model == CONSTANT ||
+                elc->thermal_expansion_model == CONSTANT_DV) {
               for (j = 0; j < dofs; j++) {
                 dTT_dT[p][q][j] -=
                     (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j] * delta(p, q);
@@ -5121,80 +5123,85 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
 
   /*  thermal expansion	*/
   double Tref = elc_ptr->solid_reference_temp, tmp;
-  double exp_arg = 0., exp_therm = 1., d_arg_dT = 0.;
   if (elc_ptr->thermal_expansion_model == CONSTANT) {
-    exp_arg = elc_ptr->thermal_expansion * (fv->T - Tref);
-    d_arg_dT = elc_ptr->thermal_expansion;
+    *thermexp = elc_ptr->thermal_expansion * (fv->T - Tref);
+    d_thermexp_dx[TEMPERATURE] = elc_ptr->thermal_expansion;
+  } else {
+    double exp_arg = 0., exp_therm = 1., d_arg_dT = 0.;
+    if (elc_ptr->thermal_expansion_model == CONSTANT_DV) {
+      exp_arg = elc_ptr->thermal_expansion * (fv->T - Tref);
+      d_arg_dT = elc_ptr->thermal_expansion;
 
-  } else if (elc_ptr->thermal_expansion_model == THERMAL_HEAT) {
-    Tref = elc_ptr->u_thermal_expansion[4];
-    tmp = fv->T - Tref;
-    exp_arg = tmp * (elc_ptr->u_thermal_expansion[0] +
-                     tmp * (0.5 * elc_ptr->u_thermal_expansion[1] +
-                            tmp * (elc_ptr->u_thermal_expansion[2] / 3. +
-                                   tmp * 0.25 * elc_ptr->u_thermal_expansion[3])));
-    d_arg_dT =
-        (elc_ptr->u_thermal_expansion[0] +
-         tmp * (elc_ptr->u_thermal_expansion[1] +
-                tmp * (elc_ptr->u_thermal_expansion[2] + tmp * elc_ptr->u_thermal_expansion[3])));
+    } else if (elc_ptr->thermal_expansion_model == THERMAL_HEAT) {
+      Tref = elc_ptr->u_thermal_expansion[4];
+      tmp = fv->T - Tref;
+      exp_arg = tmp * (elc_ptr->u_thermal_expansion[0] +
+                       tmp * (0.5 * elc_ptr->u_thermal_expansion[1] +
+                              tmp * (elc_ptr->u_thermal_expansion[2] / 3. +
+                                     tmp * 0.25 * elc_ptr->u_thermal_expansion[3])));
+      d_arg_dT =
+          (elc_ptr->u_thermal_expansion[0] +
+           tmp * (elc_ptr->u_thermal_expansion[1] +
+                  tmp * (elc_ptr->u_thermal_expansion[2] + tmp * elc_ptr->u_thermal_expansion[3])));
 
-  } else if (elc_ptr->thermal_expansion_model == SHRINKAGE) {
-    exp_arg = elc_ptr->u_thermal_expansion[0] * (fv->T - Tref);
-    d_arg_dT = elc_ptr->u_thermal_expansion[0];
+    } else if (elc_ptr->thermal_expansion_model == SHRINKAGE) {
+      exp_arg = elc_ptr->u_thermal_expansion[0] * (fv->T - Tref);
+      d_arg_dT = elc_ptr->u_thermal_expansion[0];
 
-  } else if (elc_ptr->thermal_expansion_model == IDEAL_GAS) {
-    exp_arg =
-        log((elc_ptr->u_thermal_expansion[0] + fv->T) / (elc_ptr->u_thermal_expansion[0] + Tref));
-    d_arg_dT = 1. / (elc_ptr->u_thermal_expansion[0] + fv->T);
+    } else if (elc_ptr->thermal_expansion_model == IDEAL_GAS) {
+      exp_arg =
+          log((elc_ptr->u_thermal_expansion[0] + fv->T) / (elc_ptr->u_thermal_expansion[0] + Tref));
+      d_arg_dT = 1. / (elc_ptr->u_thermal_expansion[0] + fv->T);
 
-  } else if (elc_ptr->thermal_expansion_model == USER) {
-    if (pd->MeshMotion == TOTAL_ALE)
-      GOMA_EH(GOMA_ERROR, "No TALE Real-solid jacobian entries for USER");
-    err = usr_expansion(elc_ptr->u_thermal_expansion, &exp_arg, d_thermexp_dx,
-                        elc_ptr->len_u_thermal_expansion, elc_ptr->solid_reference_temp);
-    d_arg_dT = d_thermexp_dx[TEMPERATURE];
+    } else if (elc_ptr->thermal_expansion_model == USER) {
+      if (pd->MeshMotion == TOTAL_ALE)
+        GOMA_EH(GOMA_ERROR, "No TALE Real-solid jacobian entries for USER");
+      err = usr_expansion(elc_ptr->u_thermal_expansion, &exp_arg, d_thermexp_dx,
+                          elc_ptr->len_u_thermal_expansion, elc_ptr->solid_reference_temp);
+      d_arg_dT = d_thermexp_dx[TEMPERATURE];
 
-  } else if (elc_ptr->thermal_expansion_model == ORTHOTROPIC) {
-    double ortho_exp_arg;
-    if (pd->MeshMotion == TOTAL_ALE)
-      GOMA_EH(GOMA_ERROR, "No TALE Real-solid jacobian entries for USER");
-    err = usr_expansion(elc_ptr->u_thermal_expansion, &exp_arg, d_thermexp_dx,
-                        elc_ptr->len_u_thermal_expansion, elc_ptr->solid_reference_temp);
-    d_arg_dT = d_thermexp_dx[TEMPERATURE];
-    err = usr_expansion(&elc_ptr->u_thermal_expansion[6], &ortho_exp_arg, d_ortho_thermexp_dx,
-                        elc_ptr->len_u_thermal_expansion, elc_ptr->solid_reference_temp);
-    exp_therm = exp(ortho_exp_arg);
-    if (exp_arg > 0.1) {
-      *ortho_thermexp = exp_therm - 1.;
+    } else if (elc_ptr->thermal_expansion_model == ORTHOTROPIC) {
+      double ortho_exp_arg;
+      if (pd->MeshMotion == TOTAL_ALE)
+        GOMA_EH(GOMA_ERROR, "No TALE Real-solid jacobian entries for USER");
+      err = usr_expansion(elc_ptr->u_thermal_expansion, &exp_arg, d_thermexp_dx,
+                          elc_ptr->len_u_thermal_expansion, elc_ptr->solid_reference_temp);
+      d_arg_dT = d_thermexp_dx[TEMPERATURE];
+      err = usr_expansion(&elc_ptr->u_thermal_expansion[6], &ortho_exp_arg, d_ortho_thermexp_dx,
+                          elc_ptr->len_u_thermal_expansion, elc_ptr->solid_reference_temp);
+      exp_therm = exp(ortho_exp_arg);
+      if (exp_arg > 0.1) {
+        *ortho_thermexp = exp_therm - 1.;
+      } else {
+        *ortho_thermexp =
+            ortho_exp_arg *
+            (1. + ortho_exp_arg * (0.5 + ortho_exp_arg * (1. / 6. + ortho_exp_arg / 24.)));
+      }
+      d_ortho_thermexp_dx[TEMPERATURE] *= exp_therm;
+    } else if (elc_ptr->thermal_expansion_model == TABLE) {
+      /*  Currently the table would have to be for the exponential
+          argument, i.e. integral(alpha_V*dT) from Tref to T  */
+      struct Data_Table *table_local;
+      table_local = MP_Tables[elc_ptr->thermal_expansion_tableid];
+      apply_table_mp(&elc_ptr->thermal_expansion, table_local);
+      exp_arg = elc_ptr->thermal_expansion * table_local->yscale;
+      for (i = 0; i < table_local->columns - 1; i++) {
+        var = table_local->t_index[i];
+        d_thermexp_dx[var] = table_local->slope[i] * table_local->yscale;
+      }
+      d_arg_dT = d_thermexp_dx[TEMPERATURE];
     } else {
-      *ortho_thermexp =
-          ortho_exp_arg *
-          (1. + ortho_exp_arg * (0.5 + ortho_exp_arg * (1. / 6. + ortho_exp_arg / 24.)));
+      GOMA_EH(GOMA_ERROR, "Unrecognized thermal expansion model");
     }
-    d_ortho_thermexp_dx[TEMPERATURE] *= exp_therm;
-  } else if (elc_ptr->thermal_expansion_model == TABLE) {
-    /*  Currently the table would have to be for the exponential
-        argument, i.e. integral(alpha_V*dT) from Tref to T  */
-    struct Data_Table *table_local;
-    table_local = MP_Tables[elc_ptr->thermal_expansion_tableid];
-    apply_table_mp(&elc_ptr->thermal_expansion, table_local);
-    exp_arg = elc_ptr->thermal_expansion * table_local->yscale;
-    for (i = 0; i < table_local->columns - 1; i++) {
-      var = table_local->t_index[i];
-      d_thermexp_dx[var] = table_local->slope[i] * table_local->yscale;
+    /*  Form exponential part -- i.e., dln(V) = alpha*dT  */
+    exp_therm = exp(exp_arg);
+    if (exp_arg > 0.1) {
+      *thermexp = exp_therm - 1.;
+    } else {
+      *thermexp = exp_arg * (1. + exp_arg * (0.5 + exp_arg * (1. / 6. + exp_arg / 24.)));
     }
-    d_arg_dT = d_thermexp_dx[TEMPERATURE];
-  } else {
-    GOMA_EH(GOMA_ERROR, "Unrecognized thermal expansion model");
+    d_thermexp_dx[TEMPERATURE] = d_arg_dT * exp_therm;
   }
-  /*  Form exponential part -- i.e., dln(V) = alpha*dT  */
-  exp_therm = exp(exp_arg);
-  if (exp_arg > 0.1) {
-    *thermexp = exp_therm - 1.;
-  } else {
-    *thermexp = exp_arg * (1. + exp_arg * (0.5 + exp_arg * (1. / 6. + exp_arg / 24.)));
-  }
-  d_thermexp_dx[TEMPERATURE] = d_arg_dT * exp_therm;
 
   /*  species expansion	*/
   if (pd->e[pg->imtrx][R_MASS] &&

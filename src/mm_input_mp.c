@@ -1157,7 +1157,17 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   if (model_read == -1) {
 
-    if (!strcmp(model_name, "SHRINKAGE")) {
+    if (!strcmp(model_name, "CONSTANT_DV")) {
+      elc_glob[mn]->thermal_expansion_model = CONSTANT_DV;
+      num_const = read_constants(imp, &(elc_glob[mn]->u_thermal_expansion), NO_SPECIES);
+      elc_glob[mn]->thermal_expansion = elc_glob[mn]->u_thermal_expansion[0];
+      if (num_const < 1) {
+        GOMA_EH(GOMA_ERROR, "Matl %s expected at least 1 constants for %s %s model.\n",
+                pd_glob[mn]->MaterialName, "Thermal Expansion", "CONSTANT_DV");
+      }
+      elc_glob[mn]->len_u_thermal_expansion = num_const;
+      SPF_DBL_VEC(endofstring(es), 1, &elc_glob[mn]->thermal_expansion);
+    } else if (!strcmp(model_name, "SHRINKAGE")) {
       elc_glob[mn]->thermal_expansion_model = SHRINKAGE;
       num_const = read_constants(imp, &(elc_glob[mn]->u_thermal_expansion), NO_SPECIES);
       if (num_const < 2) {
