@@ -3263,7 +3263,6 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                 if (pd->e[pg->imtrx][R_MASS]) {
                   for (w = 0; w < pd->Num_Species_Eqn; w++) {
                     if (mp->SpecVolExpModel[w] == CONSTANT ||
-                        elc->thermal_expansion_model == CONSTANT_DV ||
                         mp->SpecVolExpModel[w] == PHOTO_CURING) {
                       dTT_dx[p][q][b][j] -= (2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) *
                                             speciesexp[w] * (fv->c[w] - mp->reference_concn[w]) *
