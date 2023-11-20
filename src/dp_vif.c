@@ -1547,6 +1547,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->moment_nucleation_kernel_model, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->moment_nucleation_kernel_rate_coeff, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_nucleation_min_conc, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->moment_nucleation_kernel_nucelli_volume, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_fragment_model, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->moment_breakage_kernel_model, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->moment_breakage_kernel_rate_coeff, 1, MPI_INT);
@@ -1554,6 +1555,8 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->moment_coalescence_model, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->moment_coalescence_scale, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_growth_model, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->moment_growth_Tramp, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->moment_growth_Toff, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_growth_scale, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_growth_reference_pressure, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_growth_max_frac, 1, MPI_DOUBLE);

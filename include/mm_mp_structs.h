@@ -661,6 +661,8 @@ struct Material_Properties {
   dbl moment_growth_molar_mass;  // molar mass of y0 (source species)
   dbl moment_growth_solute_density; // density of y0 (source species)
   dbl moment_growth_E_over_R; //
+  dbl moment_growth_Toff; // growth turns off at this T
+  dbl moment_growth_Tramp; // growth starts ramping down at this T
 
   int moment_coalescence_model;
   dbl moment_coalescence_scale;
@@ -675,7 +677,7 @@ struct Material_Properties {
   int moment_nucleation_kernel_model;
   dbl moment_nucleation_kernel_rate_coeff;
   dbl moment_nucleation_min_conc;
-
+  dbl moment_nucleation_kernel_nucelli_volume;
 
   /*
    * Source terms...

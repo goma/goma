@@ -78,7 +78,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 
 // nucleation
 #define TIME_CONTROLLED_NUCLEATION  7
-#define CONCENTRATION_DEPENDENT     8
+#define CONCENTRATION_DEPENDENT_PMDI     8
 #define SUSPENSION_NUCLEATION       9
 
 
@@ -348,7 +348,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define FOAM_PMDI_10_CO2_LIQ 44
 #define FOAM_PMDI_10_CO2_GAS 45
 
-#define MOMENT_RHEOMETER 49
+#define GILLETTE_RHEOMETER 49
 #define MOMENT_CONSTANT_GROWTH            50
 #define MOMENT_SIZE_DEPENDENT_COALESCENCE 51
 

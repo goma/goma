@@ -61,6 +61,8 @@ struct moment_kernel_struct {
 };
 
 
+extern int get_moment_kernel_struct(struct moment_kernel_struct *MKS);
+
 extern void wheeler_algorithm(int N, double *moments, double *weights, double *nodes);
 
 extern int get_foam_pbe_indices(int *index_W,
@@ -96,7 +98,6 @@ extern double PBEVolumeSource(double time,
                               double dFVS_dC[MAX_CONC][MDE],
                               double dFVS_dMOM[MAX_MOMENTS][MDE]);
 
-extern int get_moment_kernel_struct(struct moment_kernel_struct *MKS);
 
 extern void
 foam_pbe_conversion_water(struct Species_Conservation_Terms *st, double time, double tt, double dt);

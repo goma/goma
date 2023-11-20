@@ -10159,21 +10159,20 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
 
         st->MassSource[w] = mp->species_source[w];
         } 
-        else if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS) {
+               else if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_CO2_GAS) {
+        err = foam_pmdi10_co2_gas_species_source(w, st, mp->u_species_source[w], time, tt, dt);
+
+        st->MassSource[w] = mp->species_source[w];
+      } else if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS) {
         err = suspension_liquid_species_source_arrhenius_plus_moments(w, st, mp->u_species_source[w], time, tt, dt);
 
         st->MassSource[w] = mp->species_source[w];
 
-      } else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS) {
+      } else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS){
         err = suspension_solid_species_source_arrhenius_plus_moments(w, st, mp->u_species_source[w], time, tt, dt);
 
         st->MassSource[w] = mp->species_source[w];
 
-      } 
-       else if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_CO2_GAS) {
-        err = foam_pmdi10_co2_gas_species_source(w, st, mp->u_species_source[w], time, tt, dt);
-
-        st->MassSource[w] = mp->species_source[w];
       } else if (mp->SpeciesSourceModel[w] == GILLETTE_FOAMY_LIQUID) {
         err = gillette_foamy_liquid_species_source(w, st, mp->u_species_source[w], time, tt, dt);
 
@@ -10205,12 +10204,6 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
           }
 
-         // var = TEMPERATURE;
-         // if (pd->v[pg->imtrx][var]) {
-         //   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-         //     st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
-         //   }
-         // }
         }
       }  else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_CONSTANT) {
         for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
@@ -10233,12 +10226,6 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
           }
 
-        //  var = TEMPERATURE;
-        //  if (pd->v[pg->imtrx][var]) {
-        //    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        //      st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
-        //    }
-        //  }
         }
        } else if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_ARRHENIUS) {
           for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {

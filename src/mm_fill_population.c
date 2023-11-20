@@ -38,8 +38,11 @@ extern FSUB_TYPE dsyev_(char *JOBZ,
 
 extern int get_moment_kernel_struct(struct moment_kernel_struct *MKS);
 
-static void moments_set_lognormal(
-    int mom_index_1, int mom_index_2, int n_moments, double *moments, double *log_norm_moments);
+static void moments_set_lognormal(int mom_index_1, 
+                                  int mom_index_2, 
+                                  int n_moments, 
+                                  double *moments, 
+                                  double *log_norm_moments);
 
 static void moment_correction_wright(double *moments, int n_moments, double *moments_corrected);
 
@@ -295,8 +298,6 @@ void adaptive_wheeler(
   }
 
   if (bmin < 0) {
-    //fprintf(stderr, "Moments %.30e %.30e %.30e %.30e are not realizable\n", moments[0], moments[1],
-    //        moments[2], moments[3]);
     double moments_tmp[2 * N];
     moment_correction_wright(moments, 2 * N, moments_tmp);
     for (int k = 0; k < (2 * N); k++) {
@@ -386,10 +387,101 @@ void adaptive_wheeler(
     }
 
     if (((minweight / maxweight) > rmin[n1 - 1]) && ((mindab / maxmab) > eabs)) {
-      //printf("%lf vs %lf", minweight/maxweight, rmin);
       return;
     }
   }
+}
+
+int get_gillette_species_indices(int *index_liquid,
+                     int *index_gas)
+{
+      int w;
+      int species_liquid = -1;
+      int species_gas    = -1;
+
+      /* the below for loop figures out which source model goes with which species*/
+      for (w = 0; w < pd->Num_Species; w++){
+        switch (mp->SpeciesSourceModel[w]){
+          case GILLETTE_FOAMY_LIQUID:
+            species_liquid = w;
+            break;
+          case GILLETTE_FOAMY_GASEOUS:
+            species_gas = w;
+            break;
+          default:
+          break;
+        }
+      }
+      
+      if (species_liquid == -1){
+        GOMA_EH(GOMA_ERROR, "Expected a Species Source of GILLETTE_FOAMY_LIQUID");
+        return -1;
+      }
+      else if (species_gas == -1){
+        GOMA_EH(GOMA_ERROR, "Expected a Species Source of GILLETTE_FOAMY_GASEOUS");
+        return -1;
+      }
+
+      if (index_liquid != NULL) {
+        *index_liquid = species_liquid;
+      }
+
+      if (index_gas != NULL) {
+        *index_gas = species_gas;
+      }
+  return 0;
+}
+
+
+int get_pmdi_species_indices(int *index_H2O,
+                     int *index_CO2_l,
+                     int *index_CO2_g)
+{
+      int w;
+      int species_H2O   = -1;
+      int species_CO2_l = -1;
+      int species_CO2_g = -1;
+
+      /* the below for loop figures out which source model goes with which species*/
+      for (w = 0; w < pd->Num_Species; w++){
+        switch (mp->SpeciesSourceModel[w]){
+          case FOAM_PMDI_10_H2O:
+            species_H2O = w;
+            break;
+          case FOAM_PMDI_10_CO2_LIQ:
+            species_CO2_l = w;
+            break;
+          case FOAM_PMDI_10_CO2_GAS:
+            species_CO2_g = w;
+            break;
+          default:
+          break;
+        }
+      }
+      /* the below for loop figures out which source model goes with which species*/
+      if (species_H2O == -1){
+        GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
+        return -1;
+      }
+      else if (species_CO2_l == -1){
+        GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+        return -1;
+      }
+      else if (species_CO2_g == -1){
+        GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+        return -1;
+      }
+
+      if (index_H2O != NULL) {
+        *index_H2O = species_H2O;
+      }
+      if (index_CO2_l != NULL) {
+        *index_CO2_l = species_CO2_l;
+      }
+      if (index_CO2_g != NULL) {
+        *index_CO2_g = species_CO2_g;
+      }
+  return 0;
 }
 
 int get_foam_pbe_indices(int *index_W,
@@ -662,43 +754,15 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
   int wCO2Liq;
   int wCO2Gas;
   int wH2O;
-  int w;
 
-  wCO2Liq = -1;
-  wCO2Gas = -1;
-  wH2O = -1;
-  for (w = 0; w < pd->Num_Species; w++) {
-    switch (mp->SpeciesSourceModel[w]) {
-    case FOAM_PMDI_10_CO2_LIQ:
-      wCO2Liq = w;
-      break;
-    case FOAM_PMDI_10_CO2_GAS:
-      wCO2Gas = w;
-      break;
-    case FOAM_PMDI_10_H2O:
-      wH2O = w;
-      break;
-    default:
-      break;
-    }
+  int err = get_pmdi_species_indices(&wH2O, &wCO2Liq, &wCO2Gas);
+  if (err)
+  {
+    return 0;
   }
-
-  if (wCO2Liq == -1) {
-    GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
-    return -1;
-  } else if (wH2O == -1) {
-    GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
-    return -1;
-  } else if (wCO2Gas == -1) {
-    GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
-    return -1;
-  }
-
-  double G0;
-
-  G0 = mp->u_moment_source[0];
 
   int j;
+  int w;
 
   for (w = 0; w < MAX_CONC; w++) {
     growth_rate[w] = 0;
@@ -712,35 +776,35 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
     int var, j;
     int w;
 
-    double M_CO2 = mp->u_density[0];
+    double M_CO2   = mp->u_density[0];
     double rho_liq = mp->u_density[1];
+
 
     var = MASS_FRACTION;
 
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       if (w == wCO2Liq) {
-        double CO2_max = mp->u_density[4];;
-
-        //printf("co2max %e\n", CO2_max);
+        double CO2_max = mp->u_density[4];
         double mf = fv_old->c[wCO2Liq] * M_CO2 / rho_liq;
-        // double dmfdC = M_CO2 / rho_liq;
-        //printf("co2liq %e\n", fv_old->c[wCO2Liq]);
+          if (mf > CO2_max) {
+            growth_rate[wCO2Liq] = (mf - CO2_max) / CO2_max;
+            }
+          else {
+            growth_rate[wCO2Liq] = 0;
+           }
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              d_growth_rate_dc[wCO2Liq][j] =  0;//G0 * dmfdC * bf[var]->phi[j] / CO2_max;
+            }
 
-        if (mf > CO2_max) {
-          growth_rate[wCO2Liq] = G0 * (mf - CO2_max) / CO2_max;
-          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            d_growth_rate_dc[wCO2Liq][j] =  0;//G0 * dmfdC * bf[var]->phi[j] / CO2_max;
-          }
-
-          for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
-            d_growth_rate_dT[wCO2Liq][j] = 0;
-          }
-        }
+            for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+              d_growth_rate_dT[wCO2Liq][j] = 0;
+            }
+         }
       }
-    }
-  } else {
-    GOMA_EH(GOMA_ERROR, "Expected DENSITY_FOAM_PMDI_10 for growth rate");
-    return -1;
+   } 
+   else {
+      GOMA_EH(GOMA_ERROR, "Expected DENSITY_FOAM_PMDI_10 for growth rate");
+      return -1;
   }
 
   return 0;
@@ -787,30 +851,28 @@ int suspension_growth_rate_plus_moments(double growth_rate[MAX_CONC],
   }
 
 
-  if (mp->moment_growth_model = ARRHENIUS_GROWTH_RATE) {
-    double T        = fv->T;
-    double Aexp     = mp->moment_growth_scale;
-    double norm_E   = mp->moment_growth_E_over_R;
+  if (mp->moment_growth_model == ARRHENIUS_GROWTH_RATE) {
+    double T        = fv->T; // current temperature
+    double Aexp     = mp->moment_growth_scale; // pre exponential for arrhenius eqn
+    double norm_E   = mp->moment_growth_E_over_R; // E/R arrhenius eqn
     double G0       = Aexp * exp(norm_E/T);
-    double M_liq    = mp->u_species_source[wLiquid][0];
-    double max_frac = mp->u_species_source[wLiquid][1];
-    double rho_liq  = mp->u_density[1];;
+    double MM_liq    = mp->u_species_source[wLiquid][0]; // molar mass of liquid species
+    double max_frac = mp->u_species_source[wLiquid][1]; // max mass frac after which rxn 
+    double rho_liq  = mp->u_density[1]; // density of liquid species/solute
 
     var = MASS_FRACTION;
 
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       if (w == wLiquid) {
-        
-        double mf = fv_old->c[wLiquid] * M_liq / rho_liq;
-
+        double mf = fv_old->c[wLiquid] * MM_liq / rho_liq;
         if (mf > max_frac) {
           growth_rate[wLiquid] =  G0 * (mf - max_frac) / max_frac;
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            d_growth_rate_dc[wLiquid][j] =  G0 *(M_liq/rho_liq) * bf[var]->phi[j] / max_frac; // dG/dCliq
+            d_growth_rate_dc[wLiquid][j] =  0; // only if implicit: G0 *(MM_liq/rho_liq) / max_frac; // dG/dCliq
           }
 
           for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
-            d_growth_rate_dT[wLiquid][j] = (-norm_E/(T*T)) * G0 * (mf - max_frac) / max_frac* bf[TEMPERATURE]->phi[j]; //dG/dT
+            d_growth_rate_dT[wLiquid][j] = 0; //(-norm_E/(T*T)) * G0 * (mf - max_frac) / max_frac; //dG/dT
           }
         }
       }
@@ -865,7 +927,7 @@ int suspension_growth_rate(double growth_rate[MAX_CONC],
 
   double G0       = mp->u_moment_source[0];
   double max_frac = mp->moment_growth_max_frac;
-  double M_liq    = mp->moment_growth_molar_mass;
+  double MM_liq    = mp->moment_growth_molar_mass;
   double rho_liq  = mp->moment_growth_solute_density;
 
   var = MASS_FRACTION;
@@ -873,12 +935,12 @@ int suspension_growth_rate(double growth_rate[MAX_CONC],
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
     if (w == wLiquid) {
       
-      double mf = fv_old->c[wLiquid] * M_liq / rho_liq;
+      double mf = fv_old->c[wLiquid] * MM_liq / rho_liq;
 
       if (mf > max_frac) {
         growth_rate[wLiquid] = G0 * (mf - max_frac) / max_frac;
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          d_growth_rate_dc[wLiquid][j] =  G0 *(M_liq/rho_liq) * bf[var]->phi[j] / max_frac;
+          d_growth_rate_dc[wLiquid][j] =  G0 *(MM_liq/rho_liq) * bf[var]->phi[j] / max_frac;
         }
 
         for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
@@ -894,34 +956,25 @@ int suspension_growth_rate(double growth_rate[MAX_CONC],
 int gillette_foamy_growth_rate(double growth_rate[MAX_CONC],
                           double d_growth_rate_dc[MAX_CONC][MDE],
                           double d_growth_rate_dT[MAX_CONC][MDE]) {
-  int wLiq;
+
+  int wLiq = -1;
+  int wGas = -1;
   int w;
 
-  wLiq = -1;
-  for (w = 0; w < pd->Num_Species; w++) {
-    switch (mp->SpeciesSourceModel[w]) {
-    case GILLETTE_FOAMY_LIQUID:
-      wLiq = w;
-      break;
-    default:
-      break;
-    }
+  int err =  get_gillette_species_indices(&wLiq, &wGas);
+  if (err)
+  {
+    return 0;
   }
-
-  if (wLiq == -1) {
-    GOMA_EH(GOMA_ERROR, "Expected a Species Source of Gillette Foamy");
-    return -1;
-  }
-
+  
   double G0;
 
-  G0 = mp->u_moment_source[0];
+  G0 = mp->u_moment_source[0]; //growth rate constant
 
-  int j;
 
   for (w = 0; w < MAX_CONC; w++) {
     growth_rate[w] = 0;
-    for (j = 0; j < MDE; j++) {
+    for (int j = 0; j < MDE; j++) {
       d_growth_rate_dc[w][j] = 0.0;
       d_growth_rate_dT[w][j] = 0.0;
     }
@@ -929,18 +982,16 @@ int gillette_foamy_growth_rate(double growth_rate[MAX_CONC],
 
   if (mp->DensityModel == DENSITY_MOMENT_BASED) {
     int var, j;
-    int w;
 
-    double M_liq = mp->u_density[2];
+    double MM_liq  = mp->u_density[2];
     double rho_liq = mp->u_density[1];
 
     var = MASS_FRACTION;
 
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       if (w == wLiq) {
-        double max_frac = mp->u_density[3];
-        
-        double mf = fv_old->c[wLiq] * M_liq / rho_liq;
+        double max_frac = mp->u_density[3]; 
+        double mf       = fv_old->c[wLiq] * MM_liq / rho_liq;
 
         if (mf > max_frac) {
           growth_rate[wLiq] = G0 * (mf - max_frac) / max_frac;
@@ -1369,6 +1420,13 @@ extern int growth_rate_model_pmdi10(int species_index,
   } else {
     muL = mu0 * exp(-norm_E / T) * pow(ratio, -B);
   }
+  
+  double C0 = 1;
+  double Toff =  mp->moment_growth_Toff;
+
+  if (T>= mp->moment_growth_Tramp){
+   C0 = fmax(0, (Toff-T)/Toff); 
+  }
 
   dbl volF = (fv_old->moment[1] / (1 + fv_old->moment[1]));
 
@@ -1379,27 +1437,34 @@ extern int growth_rate_model_pmdi10(int species_index,
   dbl mu = muL * exp(volF / (1 - volF));
   double eta0 = muL;
 
-  double scale = 0;
+  double scale; 
+  int wH2O    = -1;
+  int wCO2Liq = -1;
+  int wCO2Gas = -1;
+
+  int err = get_pmdi_species_indices(&wH2O, &wCO2Liq, &wCO2Gas);
+  if (err)
+  {
+    return 0;
+  }
 
   for (int k = 0; k < n_moments; k++) {
     MKS->G[species_index][k] = 0;
     for (int alpha = 0; alpha < n_nodes; alpha++) {
       switch (mp->moment_growth_model) {
       case CONSTANT:
-        scale = mp->moment_growth_scale;
+        scale = C0*mp->moment_growth_scale;
         break;
       case VISCOSITY_SCALED_GROWTH_RATE:
-        scale = mp->moment_growth_scale * (eta0 / mu);
+        scale = C0*mp->moment_growth_scale * (eta0 / mu);
         break;
       case VISCOSITY_PRESSURE_GROWTH_RATE: {
         double ref_p = fv_old->P - mp->moment_growth_reference_pressure;
         if (ref_p > 1) {
           double inv_pressure = 1.0 / (fv_old->P - mp->moment_growth_reference_pressure);
-          scale = mp->moment_growth_scale * (eta0 / mu) * inv_pressure * inv_pressure;
-          //printf("opt1 pressure %e\n", fv_old->P);
+          scale = C0*mp->moment_growth_scale * (eta0 / mu) * inv_pressure * inv_pressure;
         } else {
-          scale = mp->moment_growth_scale * (eta0 / mu);
-          //printf("opt2 pressure %e\n", fv_old->P);
+          scale = C0*mp->moment_growth_scale * (eta0 / mu);
         }
       } break;
       default:
@@ -1408,14 +1473,6 @@ extern int growth_rate_model_pmdi10(int species_index,
       }
       double coeff = k * weights[alpha] * pow(fmax(nodes[alpha], PBE_FP_SMALL), k - 1);
       MKS->G[species_index][k] += scale * coeff * growth_rate[species_index];
-      //if (k==1){
-      //  if (coeff>1){
-      //    printf("rate coeff %e sumcoeff %e gr  %e\n", scale, coeff, growth_rate[species_index]);
-      //  }
-      //}
-      //if (k==1 && growth_rate[species_index]>1){
-      //   printf("grwoth %e \n",  growth_rate[species_index]);
-      //}
     }
   }
   return 0;
@@ -1446,24 +1503,26 @@ extern int growth_rate_model(int species_index,
         scale = mp->moment_growth_scale;
         break;
       case ARRHENIUS_GROWTH_RATE:
-         scale = mp->u_moment_source[0];
+         scale = 1;  // can add later of one wants additional control
         break;
        default:
         GOMA_EH(GOMA_ERROR, "Unknown growth kernel");
         return -1;
       }
       double coeff = k * weights[alpha] * pow(fmax(nodes[alpha], PBE_FP_SMALL), k - 1);
+
       MKS->G[species_index][k] += scale * coeff * growth_rate[species_index];
+
       if (af->Assemble_Jacobian) {
            if (pd->v[pg->imtrx][MASS_FRACTION]) {
              for (int j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-               MKS->d_G_dC[species_index][k][j] = scale * coeff * d_growth_rate_dc[species_index][j];
+               MKS->d_G_dC[species_index][k][j] += scale * coeff * d_growth_rate_dc[species_index][j];
              }
            }
  
            if (pd->v[pg->imtrx][TEMPERATURE]) {
              for (int j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
-               MKS->d_G_dT[species_index][k][j] = scale * coeff * d_growth_rate_dT[species_index][j];
+               MKS->d_G_dT[species_index][k][j] += scale * coeff * d_growth_rate_dT[species_index][j];
              }
            }
          }
@@ -1546,8 +1605,6 @@ extern int coalescence_kernel_model_pmdi10(double *nodes, double *weights, int n
         double na = nodes[alpha];
         double nb = nodes[beta];
         MKS->S[k] += wa * wb * (pow(na + nb, k) - pow(na, k) - pow(nb, k)) * coalescence_kernel;
-      //printf(" coalescene kernel %lf wa %lf * frag_dist %lf na %lf\n",  breakage_kernel, wa, fragment_dist, na);
-      //printf(" coalescene %.10e\n", MKS->S[k]);
       }
       MKS->S[k] *= 0.5;
     }
@@ -1580,8 +1637,6 @@ extern int coalescence_kernel_model(double *nodes, double *weights, int n_nodes,
         double na = nodes[alpha];
         double nb = nodes[beta];
         MKS->S[k] += wa * wb * (pow(na + nb, k) - pow(na, k) - pow(nb, k)) * coalescence_kernel;
-      //printf(" coalescene kernel %lf wa %lf * frag_dist %lf na %lf\n",  breakage_kernel, wa, fragment_dist, na);
-     // printf(" coalescene %.10e\n", MKS->S[k]);
       }
       MKS->S[k] *= 0.5;
     }
@@ -1615,8 +1670,6 @@ extern int breakage_kernel_model(double *nodes, double *weights, int n_nodes,
         case POWERLAW_BREAKAGE:
           pwr_alf         = mp->moment_breakage_kernel_exp;
           breakage_kernel = mp->moment_breakage_kernel_rate_coeff * (pow(na, pwr_alf));
-          //printf("rate coeff %lf, na  %lf, alf %lf\n", mp->moment_breakage_kernel_rate_coeff, na, pwr_alf); 
-          //printf("pow %9f,na %9f, break kernel %9f\n",pwr_alf,na, mp->moment_breakage_kernel_rate_coeff);
           break;
         case EXPONENTIAL_BREAKAGE:
           pwr_alf         = mp->moment_breakage_kernel_exp;
@@ -1645,95 +1698,87 @@ extern int breakage_kernel_model(double *nodes, double *weights, int n_nodes,
       return -1;
       }
       MKS->BA[k] += breakage_kernel * wa * ((fragment_dist - pow(na, k)));
-      //if (na>0){ 
-      //printf(" breakage kernel %lf wa %lf * frag_dist %lf na %lf\n",  breakage_kernel, wa, fragment_dist, na);
-      //printf(" breakages %.10e\n", MKS->BA[k]);
-       //}
       }
     }
 
   return 0;
 }
 // ---------------------------------------- //
-// -------- nucleation_kernel_model ------- //
+// ----- nucleation_kernel_model_pmdi ----- //
 // ---------------------------------------- //
 extern int nucleation_kernel_model(int n_moments, struct moment_kernel_struct *MKS) {
 
-  double nucleation_kernel;
-  int wCO2Liq;
-  int wCO2Gas;
-  int wH2O;
-  int w;
-  int wLiquid;
-  int wSolid;
-
+  // init moment kernal sources to zero
   for (int k = 0; k < n_moments; k++){
     MKS->NUC[k] = 0;
   }
 
+  double nucleation_kernel; // nucleation rate constant
+  double critnuc; // critical nucleus size
+  
+
+
   switch (mp->moment_nucleation_kernel_model){
     case CONSTANT:
+    {
       nucleation_kernel = mp->moment_nucleation_kernel_rate_coeff;
-      MKS->NUC[0] += nucleation_kernel;
+      critnuc           = mp->moment_nucleation_kernel_nucelli_volume;
+      for (int k = 0; k<n_moments; k++) 
+      {
+        MKS->NUC[k] += nucleation_kernel*pow(critnuc,k);
+      }
       break;
-    case CONCENTRATION_DEPENDENT:
-      wCO2Liq = -1;
-      wCO2Gas = -1;
-      wH2O    = -1;
+    }
+    case CONCENTRATION_DEPENDENT_PMDI:{
+      int wH2O    = -1;
+      int wCO2Liq = -1;
+      int wCO2Gas = -1;
 
-      /* the below for loop figures out which source model goes with which species*/
-      for (w = 0; w < pd->Num_Species; w++){
-        switch (mp->SpeciesSourceModel[w]){
-          case FOAM_PMDI_10_CO2_LIQ:
-            wCO2Liq = w;
-            break;
-          case FOAM_PMDI_10_CO2_GAS:
-            wCO2Gas = w;
-            break;
-          case FOAM_PMDI_10_H2O:
-            wH2O = w;
-            break;
-          default:
-          break;
-        }
+      int err = get_pmdi_species_indices(&wH2O, &wCO2Liq, &wCO2Gas);
+      if (err)
+      {
+        return 0;
       }
-      /* the below for loop figures out which source model goes with which species*/
-      if (wCO2Liq == -1){
-        GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
-        return -1;
+
+      dbl T = upd->Process_Temperature;
+      if (pd->gv[TEMPERATURE]) {
+        T = fv->T;
       }
-      else if (wH2O == -1){
-        GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
-        return -1;
+
+      double C0 = 1;
+      double Toff =  mp->moment_growth_Toff;
+
+      if (T>= mp->moment_growth_Tramp){
+       C0 = fmax(0, (Toff-T)/Toff); 
       }
-      else if (wCO2Gas == -1){
-        GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
-        return -1;
-       }
 
       double M_CO2       = mp->u_density[0];
       double rho_liq     = mp->u_density[1];
       double mf          = fv_old->c[wCO2Liq] * M_CO2 / rho_liq; /*equiv w_{CO2} in eqn (14)*/
-      nucleation_kernel  = mp->moment_nucleation_kernel_rate_coeff;
-      double CO2_max_nuc = mp->moment_nucleation_min_conc;
+      double CO2_min_nuc = mp->moment_nucleation_min_conc;
 
-      if ( mf>CO2_max_nuc ){
-        //printf("min %lf, curr %lf, nuc: %f12 \n",CO2_max_nuc, mf, nucleation_kernel*(((mf/CO2_max_nuc)-1)));
-        MKS->NUC[0] += nucleation_kernel*(((mf/CO2_max_nuc)-1));
-      }
-      //printf("nuc %lf\n",MKS->NUC[0]);
+      // Here, Helen
+        double maxterm     = fmax((mf/CO2_min_nuc)-1,0);
+        nucleation_kernel  = maxterm * mp->moment_nucleation_kernel_rate_coeff;
+        double critnuc     = mp->moment_nucleation_kernel_nucelli_volume;
+        for (int k = 0; k<n_moments; k++) 
+        {
+          MKS->NUC[k] += C0*nucleation_kernel*pow(critnuc,k);
+        }
       break;
-  case SUSPENSION_NUCLEATION:
-       wLiquid = -1;
-       wSolid = -1;
+  }
+  case SUSPENSION_NUCLEATION:{
+       int wLiquid = -1;
+       int wSolid = -1;
+       int w;
 
       /* the below for loop figures out which source model goes with which species*/
       for (w = 0; w < pd->Num_Species; w++){
         switch (mp->SpeciesSourceModel[w]){
-          case CONSTANT:
+          case SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS:
             wLiquid = w;
             break;
-          case SUSPENSION_SOLID_SOURCE_CONSTANT:
+          case SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS:
             wSolid = w;
             break;
           default:
@@ -1742,26 +1787,30 @@ extern int nucleation_kernel_model(int n_moments, struct moment_kernel_struct *M
       }
       /* the below for loop figures out which source model goes with which species*/
       if (wLiquid == -1){
-        GOMA_EH(GOMA_ERROR, "Expected a Species Source of suspension liquid");
+        GOMA_EH(GOMA_ERROR, "Expected a Species Source of SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS");
         return -1;
       }
       else if (wSolid == -1){
-        GOMA_EH(GOMA_ERROR, "Expected a Species Source of SUSPENSION_SOLID_SOURCE");
+        GOMA_EH(GOMA_ERROR, "Expected a Species Source of SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS");
         return -1;
        }
 
-      double M_liq        = 342.3; // g/mol
-      rho_liq      = mp->u_density[1];
-      mf           = fv_old->c[wLiquid] * M_liq / rho_liq;
-      nucleation_kernel   = mp->moment_nucleation_kernel_rate_coeff;
-      double conc_max_nuc = mp->moment_nucleation_min_conc;
+      double MM_liq      = mp->u_species_source[wLiquid][0];
+      double rho_liq    = mp->u_density[1];
+      double mf         = fv_old->c[wLiquid] * MM_liq / rho_liq;
+      double Y1         = fv_old->c[wSolid];
+      nucleation_kernel = mp->moment_nucleation_kernel_rate_coeff;
+      double max_frac   = mp->moment_nucleation_min_conc;
+      double nuc_volume = mp->moment_nucleation_kernel_nucelli_volume;
+      double Bs         = nucleation_kernel*Y1*((mf-max_frac)/max_frac);
 
-      if ( mf>conc_max_nuc ){
-        //printf("min %lf, curr %lf, nuc: %f12 \n",CO2_max_nuc, mf, nucleation_kernel*(((mf/CO2_max_nuc)-1)));
-        MKS->NUC[0] += nucleation_kernel*(((mf/conc_max_nuc)-1));
+      if ( mf > max_frac ){
+        for (int k = 0; k<n_moments; k++) {
+          MKS->NUC[k] += Bs*pow(nuc_volume,k);
+        }
       }
-      //printf("nuc %lf\n",MKS->NUC[0]);
       break;
+      }
       default:
       GOMA_EH(GOMA_ERROR, "Unknown nucleation kernel model");
       return -1;
@@ -1848,37 +1897,12 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
     int wCO2Liq;
     int wCO2Gas;
     int wH2O;
-    int w;
 
-    wCO2Liq = -1;
-    wCO2Gas = -1;
-    wH2O = -1;
-    for (w = 0; w < pd->Num_Species; w++) {
-      switch (mp->SpeciesSourceModel[w]) {
-      case FOAM_PMDI_10_CO2_LIQ:
-        wCO2Liq = w;
-        break;
-      case FOAM_PMDI_10_CO2_GAS:
-        wCO2Gas = w;
-        break;
-      case FOAM_PMDI_10_H2O:
-        wH2O = w;
-        break;
-      default:
-        break;
+      int err = get_pmdi_species_indices(&wH2O, &wCO2Liq, &wCO2Gas);
+      if (err)
+      {
+        return 0;
       }
-    }
-
-    if (wCO2Liq == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
-      return -1;
-    } else if (wH2O == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
-      return -1;
-    } else if (wCO2Gas == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
-      return -1;
-    }
 
    // evaluate growth kernel
     foam_pmdi_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
@@ -1893,38 +1917,20 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
 
    // evaluate coalescence kernel (only make sense when nndoes>1 b/c 2nd order process)
     if (nnodes_out > 1) {
-      //printf("here!!\n");
       coalescence_kernel_model_pmdi10(nodes, weights, nnodes_out, 2 * nnodes, MKS);
     }
     return 0;
-  } case MOMENT_RHEOMETER: {
-   //printf("nnodes out %d", nnodes_out);
-    int wLiq;
-    int wGas;
-    int w;
+  } case GILLETTE_RHEOMETER: {
 
-    wLiq = -1;
-    wGas = -1;
-    for (w = 0; w < pd->Num_Species; w++) {
-      switch (mp->SpeciesSourceModel[w]) {
-      case GILLETTE_FOAMY_LIQUID:
-        wLiq = w;
-        break;
-      case GILLETTE_FOAMY_GASEOUS:
-        wGas = w;
-        break;
-      default:
-        break;
-      }
+    int wLiq = -1;
+    int wGas = -1;
+
+    int err =  get_gillette_species_indices(&wLiq, &wGas);
+    if (err)
+    {
+      return 0;
     }
 
-    if (wLiq == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of GILLETTE_FOAMY_LIQUID");
-      return -1;
-    } else if (wGas == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of GILLETTE_FOAMY_GASEOUS");
-      return -1;
-    }
 
    // evaluate growth kernel
     gillette_foamy_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
@@ -1939,7 +1945,6 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
 
    // evaluate coalescence kernel (only make sense when nndoes>1 b/c 2nd order process)
     if (nnodes_out > 1) {
-      //printf("did we make it?");
       coalescence_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MKS);
     }
     return 0;
@@ -1965,10 +1970,10 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
     }
 
     if (wLiquid == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source for liquid suspension plus moments");
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source:liquid suspension plus moments");
       return -1;
     } else if (wSolid == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of solid suspension  plus moments");
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source: solid suspension  plus moments");
       return -1;
     }
 
@@ -1981,7 +1986,7 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
    // breakage_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MKS);
     
    // evaluate nucleation kernel
-   // nucleation_kernel_model(2 * nnodes, MKS);
+    nucleation_kernel_model(2 * nnodes, MKS);
 
    // evaluate coalescence kernel (only make sense when nndoes>1 b/c 2nd order process)
     //if (nnodes_out > 1) {
@@ -2098,47 +2103,26 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
 
   case FOAM_PMDI_10: {
 
-    double growth_kernel_scale      = mp->u_moment_source[0];
-    double coalescence_kernel_scale = mp->u_moment_source[1];
-    double breakage_kernel_scale    = mp->u_moment_source[2];
-    double nucleation_kernel_scale  = mp->u_moment_source[3];
+    double growth_kernel_scale;
+    double coalescence_kernel_scale;
+    double breakage_kernel_scale;
+    double nucleation_kernel_scale;
 
     int wCO2Liq;
     int wCO2Gas;
     int wH2O;
-    int w;
     int j;
 
-    wCO2Liq = -1;
-    wCO2Gas = -1;
-    wH2O = -1;
-    for (w = 0; w < pd->Num_Species; w++) {
-      switch (mp->SpeciesSourceModel[w]) {
-      case FOAM_PMDI_10_CO2_LIQ:
-        wCO2Liq = w;
-        break;
-      case FOAM_PMDI_10_CO2_GAS:
-        wCO2Gas = w;
-        break;
-      case FOAM_PMDI_10_H2O:
-        wH2O = w;
-        break;
-      default:
-        break;
-      }
+    int err1 = get_pmdi_species_indices(&wH2O, &wCO2Liq, &wCO2Gas);
+    if (err1)
+    {
+      return 0;
     }
 
-    if (wCO2Liq == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
-      return -1;
-    } else if (wH2O == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
-      return -1;
-    } else if (wCO2Gas == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
-      return -1;
-    }
-
+    growth_kernel_scale      = mp->u_moment_source[0];
+    nucleation_kernel_scale  = mp->u_moment_source[3];
+    coalescence_kernel_scale = mp->u_moment_source[1];
+    breakage_kernel_scale    = mp->u_moment_source[2];
     double H = 1;
 
     if (ls != NULL) {
@@ -2177,39 +2161,21 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
     free(MKS);
   } break;
 
-  case MOMENT_RHEOMETER: {
+  case GILLETTE_RHEOMETER: {
 
     double growth_kernel_scale      = mp->u_moment_source[0];
     double coalescence_kernel_scale = mp->u_moment_source[1];
     double breakage_kernel_scale    = mp->u_moment_source[2];
     double nucleation_kernel_scale  = mp->u_moment_source[3];
 
-    int wLiq;
-    int wGas;
-    int w;
     int j;
+    int wLiq = -1;
+    int wGas = -1;
 
-    wLiq = -1;
-    wGas = -1;
-    for (w = 0; w < pd->Num_Species; w++) {
-      switch (mp->SpeciesSourceModel[w]) {
-      case GILLETTE_FOAMY_LIQUID:
-        wLiq = w;
-        break;
-      case GILLETTE_FOAMY_GASEOUS:
-        wGas = w;
-        break;
-      default:
-        break;
-      }
-    }
-
-    if (wLiq == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of GILLETTE_FOAMY_LIQUID");
-      return -1;
-    } else if (wGas == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of GILLETTE_FOAMY_GASEOUS");
-      return -1;
+    int err1 =  get_gillette_species_indices(&wLiq, &wGas);
+    if (err1)
+    {
+      return 0;
     }
 
     double H = 1;
@@ -2298,13 +2264,8 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
     }
 
     for (int mom = 0; mom < MAX_MOMENTS; mom++) {
-      msource[mom] = H * (growth_kernel_scale*MKS->G[wLiquid][mom]);
-                          //+ nucleation_kernel_scale * MKS->NUC[mom]);
-     // if (mom ==1){
-      //  if (MKS->NUC[mom]>0){
-      //    printf("mom %d nucleation %lf\n", mom, nucleation_kernel_scale*MKS->NUC[mom]);
-      //  }
-      //}
+      msource[mom] = H * (growth_kernel_scale*MKS->G[wLiquid][mom]
+                          + nucleation_kernel_scale * MKS->NUC[mom]);
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
           d_msource->C[mom][wLiquid][j] = H * MKS->d_G_dC[wLiquid][mom][j];
