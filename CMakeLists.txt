@@ -946,15 +946,23 @@ if(ENABLE_PETSC AND PETSC_FOUND)
                             ${PETSC_STATIC_LIBRARY_DIRS})
 endif()
 
+if ($Trilinos_VERSION VERSION_LESS 14.0.0)
+  set(GOMA_TRILINOS_LIBRARIES
+      ${Trilinos_LIBRARIES}
+      ${Trilinos_TPL_LIBRARIES}
+      ${Trilinos_EXTRA_LD_FLAGS})
+else()
+  set(GOMA_TRILINOS_LIBRARIES
+  Trilinos::all_libs)
+endif()
+
 set(GOMA_TPL_LIBRARIES
     ${SEACASExodus_LIBRARIES}
     ${SEACASExodus_TPL_LIBRARIES}
     ${SEACASAprepro_lib_LIBRARIES}
     ${SEACASAprepro_lib_TPL_LIBRARIES}
     ${GOMA_TPL_LIBRARIES}
-    ${Trilinos_LIBRARIES}
-    ${Trilinos_TPL_LIBRARIES}
-    ${Trilinos_EXTRA_LD_FLAGS}
+    ${GOMA_TRILINOS_LIBRARIES}
     ${MPI_C_LIBRARIES}
     ${MPI_Fortran_LIBRARIES})
 if(ENABLE_PETSC AND PETSC_FOUND)
@@ -971,6 +979,7 @@ add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
 target_include_directories(goma_user SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_compile_definitions(goma_user PUBLIC ${GOMA_COMPILE_DEFINITIONS})
+target_link_libraries(goma_user PUBLIC ${GOMA_TPL_LIBRARIES})
 if(ENABLE_WARNINGS)
   target_compile_options(
     goma_user
