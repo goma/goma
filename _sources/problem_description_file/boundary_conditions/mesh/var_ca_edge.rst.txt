@@ -10,6 +10,11 @@
 **Description / Usage**
 -----------------------
 
+.. warning::
+
+  The angle in this BC is specified in degrees, not radians. This is 
+  different than the 2D equivalent.
+
 **(SIC-EDGE/ROTATED MESH)**
 
 This card is used to set a variable contact angle on a dynamic three-dimensional contact
