@@ -10,6 +10,11 @@
 **Description / Usage**
 -----------------------
 
+.. warning::
+
+  The angle in this BC is specified in degrees, not radians. This is 
+  different than the 2D equivalent.
+
 **(PCC-EDGE/ROTATED MESH)**
 
 This boundary condition card specifies a constant contact angle on the edge defined by
