@@ -1761,6 +1761,7 @@ extern int nucleation_kernel_model(int n_moments, struct moment_kernel_struct *M
         double maxterm     = fmax((mf/CO2_min_nuc)-1,0);
         nucleation_kernel  = maxterm * mp->moment_nucleation_kernel_rate_coeff;
         double critnuc     = mp->moment_nucleation_kernel_nucelli_volume;
+        //printf("C0=%lf maxterm= %lf nuc_rate = %lf \n", C0, (mf/CO2_min_nuc)-1, mp->moment_nucleation_kernel_rate_coeff);
         for (int k = 0; k<n_moments; k++) 
         {
           MKS->NUC[k] += C0*nucleation_kernel*pow(critnuc,k);
