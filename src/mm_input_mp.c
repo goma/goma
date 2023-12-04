@@ -7639,39 +7639,36 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         GOMA_EH(GOMA_ERROR, err_msg);
       }
       printf("%lf %lf %lf", a0, a2, a3);
-      mat_ptr->moment_growth_scale              = a0;
+      mat_ptr->moment_growth_scale = a0;
       mat_ptr->moment_growth_reference_pressure = a1;
-      mat_ptr->moment_growth_Toff               = a2;
-      mat_ptr->moment_growth_Tramp              = a3;
+      mat_ptr->moment_growth_Toff = a2;
+      mat_ptr->moment_growth_Tramp = a3;
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_growth_scale));
-    }  else if (!strcmp(model_name, "MASS_FRACTION_SCALED")) {
+    } else if (!strcmp(model_name, "MASS_FRACTION_SCALED")) {
       model_read = 1;
       mat_ptr->moment_growth_model = MASS_FRACTION_SCALED_GROWTH_RATE;
       if (fscanf(imp, "%lf %lf %lf %lf", &a0, &a1, &a2, &a3) != 4) {
-        sr =
-            sprintf(err_msg, "Matl %s needs 4 constants for %s %s model.\n",
-                    pd_glob[mn]->MaterialName, "Moment Growth Kernel", "MASS_FRACTION_SCALED");
+        sr = sprintf(err_msg, "Matl %s needs 4 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Moment Growth Kernel", "MASS_FRACTION_SCALED");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
-      mat_ptr->moment_growth_scale          = a0; // scaler on growth term
-      mat_ptr->moment_growth_max_frac       = a1; // mass fraction past which growth starts from y0 to y1
-      mat_ptr->moment_growth_molar_mass     = a2; // molar mass of y0 (source species)
+      mat_ptr->moment_growth_scale = a0;    // scaler on growth term
+      mat_ptr->moment_growth_max_frac = a1; // mass fraction past which growth starts from y0 to y1
+      mat_ptr->moment_growth_molar_mass = a2;     // molar mass of y0 (source species)
       mat_ptr->moment_growth_solute_density = a3; // density of y0 (source species)
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_growth_scale));
     } else if (!strcmp(model_name, "ARRHENIUS")) {
       model_read = 1;
       mat_ptr->moment_growth_model = ARRHENIUS_GROWTH_RATE;
       if (fscanf(imp, "%lf %lf", &a0, &a1) != 2) {
-        sr =
-            sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
-                    pd_glob[mn]->MaterialName, "Moment Growth Kernel", "ARRHENIUS");
+        sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Moment Growth Kernel", "ARRHENIUS");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
-      mat_ptr->moment_growth_scale          = a0; // A
-      mat_ptr->moment_growth_E_over_R       = a1; // E/R
+      mat_ptr->moment_growth_scale = a0;    // A
+      mat_ptr->moment_growth_E_over_R = a1; // E/R
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_growth_scale));
-    }
-      else {
+    } else {
       if (model_read == -1) {
         GOMA_EH(model_read, "Moment Growth Kernel invalid");
       }
@@ -7726,131 +7723,108 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     ECHO(es, echo_file);
 
-model_read = look_for_mat_prop(imp, "Moment Breakage Kernel", 
-                          &(mat_ptr->moment_coalescence_model),
-                          &(mat_ptr->moment_coalescence_scale), 
-                          NULL, 
-                          NULL, 
-                          model_name,SCALAR_INPUT, &NO_SPECIES, es);
+    model_read =
+        look_for_mat_prop(imp, "Moment Breakage Kernel", &(mat_ptr->moment_coalescence_model),
+                          &(mat_ptr->moment_coalescence_scale), NULL, NULL, model_name,
+                          SCALAR_INPUT, &NO_SPECIES, es);
     if (!strcmp(model_name, "POWERLAW_BREAKAGE")) {
       model_read = 1;
       mat_ptr->moment_breakage_kernel_model = POWERLAW_BREAKAGE;
       if (fscanf(imp, "%lf %lf", &a0, &a1) != 2) {
         sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
-             pd_glob[mn]->MaterialName, "Moment Breakage Kernel", "POWERLAW BREAKAGE");
+                     pd_glob[mn]->MaterialName, "Moment Breakage Kernel", "POWERLAW BREAKAGE");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->moment_breakage_kernel_rate_coeff = a0;
-      mat_ptr->moment_breakage_kernel_exp        = a1;
+      mat_ptr->moment_breakage_kernel_exp = a1;
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_breakage_kernel_rate_coeff));
-    }
-    else if ( !strcmp(model_name, "EXPONENTIAL_BREAKAGE") ){
+    } else if (!strcmp(model_name, "EXPONENTIAL_BREAKAGE")) {
       model_read = 1;
       mat_ptr->moment_breakage_kernel_model = EXPONENTIAL_BREAKAGE;
-      if ( fscanf(imp, "%lf %lf",&a0, &a1)!= 2){     
-         sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
-              pd_glob[mn]->MaterialName,"Moment Breakage Kernel", "EXPONENTIAL_BREAKAGE" );
+      if (fscanf(imp, "%lf %lf", &a0, &a1) != 2) {
+        sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Moment Breakage Kernel", "EXPONENTIAL_BREAKAGE");
         GOMA_EH(GOMA_ERROR, err_msg);
-      }     
-      mat_ptr->moment_breakage_kernel_rate_coeff = a0; 
-      mat_ptr->moment_breakage_kernel_exp = a1; 
+      }
+      mat_ptr->moment_breakage_kernel_rate_coeff = a0;
+      mat_ptr->moment_breakage_kernel_exp = a1;
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_breakage_kernel_rate_coeff));
-    }
-    else {
-    if(model_read == -1){
-    GOMA_EH(model_read, "Moment Breakage Kernel invalid");
-    }
-    GOMA_EH(model_read, "Moment Breakage Kernel");
+    } else {
+      if (model_read == -1) {
+        GOMA_EH(model_read, "Moment Breakage Kernel invalid");
+      }
+      GOMA_EH(model_read, "Moment Breakage Kernel");
     }
 
     ECHO(es, echo_file);
 
-model_read =
-  look_for_mat_prop(imp, "Moment Fragment Distribution",
-    &(mat_ptr->moment_fragment_model),
-    &(mat_ptr->moment_fragment),
-    NULL, 
-    NULL, 
-    model_name, SCALAR_INPUT, &NO_SPECIES,es);
+    model_read = look_for_mat_prop(imp, "Moment Fragment Distribution",
+                                   &(mat_ptr->moment_fragment_model), &(mat_ptr->moment_fragment),
+                                   NULL, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
 
-    if ( !strcmp(model_name, "SYMMETRIC_FRAGMENT") ){
+    if (!strcmp(model_name, "SYMMETRIC_FRAGMENT")) {
       model_read = 1;
       mat_ptr->moment_fragment_model = SYMMETRIC_FRAGMENT;
-    }
-    else if ( !strcmp(model_name, "EROSION_FRAGMENT") )
-    {
+    } else if (!strcmp(model_name, "EROSION_FRAGMENT")) {
       model_read = 1;
       mat_ptr->moment_fragment_model = EROSION_FRAGMENT;
-    }
-    else if ( !strcmp(model_name, "ONEFOUR_FRAGMENT") )
-    {
+    } else if (!strcmp(model_name, "ONEFOUR_FRAGMENT")) {
       model_read = 1;
       mat_ptr->moment_fragment_model = ONEFOUR_FRAGMENT;
-    }
-    else if ( !strcmp(model_name, "PARABOLIC_FRAGMENT") )
-    {
+    } else if (!strcmp(model_name, "PARABOLIC_FRAGMENT")) {
       model_read = 1;
       mat_ptr->moment_fragment_model = PARABOLIC_FRAGMENT;
     }
 
-    else
-    {
-      if(model_read == -1)
-      {
+    else {
+      if (model_read == -1) {
         GOMA_EH(model_read, "Moment Fragment Distribution invalid");
       }
-       GOMA_EH(model_read, "Moment Fragment Distribution");
-     }
+      GOMA_EH(model_read, "Moment Fragment Distribution");
+    }
 
     ECHO(es, echo_file);
 
-  model_read =look_for_mat_prop(imp, "Moment Nucleation Kernel",
-                   &(mat_ptr->moment_nucleation_kernel_model),
-                   &(mat_ptr->moment_nucleation_kernel_rate_coeff),
-                   NULL,
-                   NULL,
-                   model_name, SCALAR_INPUT, &NO_SPECIES,es);
+    model_read = look_for_mat_prop(imp, "Moment Nucleation Kernel",
+                                   &(mat_ptr->moment_nucleation_kernel_model),
+                                   &(mat_ptr->moment_nucleation_kernel_rate_coeff), NULL, NULL,
+                                   model_name, SCALAR_INPUT, &NO_SPECIES, es);
 
-        if ( !strcmp(model_name, "CONCENTRATION_DEPENDENT_PMDI") ){
-                   model_read = 1;
-                   mat_ptr->moment_nucleation_kernel_model = CONCENTRATION_DEPENDENT_PMDI;
-                   if ( fscanf(imp, "%lf %lf %lf", &a0, &a1, &a2)!= 3 )
-                   {
-                   sr = sprintf(err_msg, "Matl %s needs 3 constants for %s %s model.\n",
-                   pd_glob[mn]->MaterialName,"Moment Nucleation Kernel", "CONCENTRATION_DEPENDENT_PMDI" );
-                   GOMA_EH(GOMA_ERROR, err_msg);
-                   }
-                   mat_ptr->moment_nucleation_kernel_rate_coeff = a0; // rate coeff
-                   mat_ptr->moment_nucleation_min_conc = a1; // min conc at which nuc happens
-                   mat_ptr->moment_nucleation_kernel_nucelli_volume = a2; // nucelli volume
-                   SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_nucleation_kernel_rate_coeff));
-                   }
-        if ( !strcmp(model_name, "SUSPENSION_NUCLEATION") ){
-                   model_read = 1;
-                   mat_ptr->moment_nucleation_kernel_model = SUSPENSION_NUCLEATION;
-                   if ( fscanf(imp, "%lf %lf %lf",
-                   &a0, &a1, &a2)
-                   != 3 )
-                   {
-                   sr = sprintf(err_msg,
-                   "Matl %s needs 3 constants for %s %s model.\n",
-                   pd_glob[mn]->MaterialName,
-                   "Moment Nucleation Kernel", "SUSPENSION_NUCLEATION" );
-                   GOMA_EH(GOMA_ERROR, err_msg);
-                   }
-                   mat_ptr->moment_nucleation_kernel_rate_coeff = a0;  // pre expoential factor
-                   mat_ptr->moment_nucleation_min_conc = a1;  // min conc required before nucleation
-                   mat_ptr->moment_nucleation_kernel_nucelli_volume = a2; // nucelli volume
-                   SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_nucleation_kernel_rate_coeff));
-                   }
-          else{if(model_read == -1)
-                {
-                  GOMA_EH(model_read, "Moment Nucleation Kernel invalid");
-                 }
-                 GOMA_EH(model_read, "Moment Nucleation Kernel");
-                }
-    ECHO(es,echo_file);
-}
+    if (!strcmp(model_name, "CONCENTRATION_DEPENDENT_PMDI")) {
+      model_read = 1;
+      mat_ptr->moment_nucleation_kernel_model = CONCENTRATION_DEPENDENT_PMDI;
+      if (fscanf(imp, "%lf %lf %lf", &a0, &a1, &a2) != 3) {
+        sr = sprintf(err_msg, "Matl %s needs 3 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Moment Nucleation Kernel",
+                     "CONCENTRATION_DEPENDENT_PMDI");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      mat_ptr->moment_nucleation_kernel_rate_coeff = a0;     // rate coeff
+      mat_ptr->moment_nucleation_min_conc = a1;              // min conc at which nuc happens
+      mat_ptr->moment_nucleation_kernel_nucelli_volume = a2; // nucelli volume
+      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_nucleation_kernel_rate_coeff));
+    }
+    if (!strcmp(model_name, "SUSPENSION_NUCLEATION")) {
+      model_read = 1;
+      mat_ptr->moment_nucleation_kernel_model = SUSPENSION_NUCLEATION;
+      if (fscanf(imp, "%lf %lf %lf", &a0, &a1, &a2) != 3) {
+        sr =
+            sprintf(err_msg, "Matl %s needs 3 constants for %s %s model.\n",
+                    pd_glob[mn]->MaterialName, "Moment Nucleation Kernel", "SUSPENSION_NUCLEATION");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      mat_ptr->moment_nucleation_kernel_rate_coeff = a0;     // pre expoential factor
+      mat_ptr->moment_nucleation_min_conc = a1;              // min conc required before nucleation
+      mat_ptr->moment_nucleation_kernel_nucelli_volume = a2; // nucelli volume
+      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_nucleation_kernel_rate_coeff));
+    } else {
+      if (model_read == -1) {
+        GOMA_EH(model_read, "Moment Nucleation Kernel invalid");
+      }
+      GOMA_EH(model_read, "Moment Nucleation Kernel");
+    }
+    ECHO(es, echo_file);
+  }
   /*
    * Source Terms
    */
@@ -8589,15 +8563,15 @@ model_read =
       mat_ptr->u_species_source[species_no][0] = a0; /* universal gas constant */
       mat_ptr->u_species_source[species_no][1] = a1; /* reference pressure */
       mat_ptr->u_species_source[species_no][2] = a2; /* lower concentration limit */
-      mat_ptr->u_species_source[species_no][3] = a3; /* conversion from units moments eqns to species eqns */
+      mat_ptr->u_species_source[species_no][3] =
+          a3; /* conversion from units moments eqns to species eqns */
       SPF_DBL_VEC(endofstring(es), 4, mat_ptr->u_species_source[species_no]);
     } else if (!strcmp(model_name, "GILLETTE_FOAMY_GASEOUS")) {
       SpeciesSourceModel = GILLETTE_FOAMY_GASEOUS;
       model_read = 1;
       mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
       mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
-    }
-      else if (!strcmp(model_name, "FOAM_PMDI_10_H2O_DIVV")) {
+    } else if (!strcmp(model_name, "FOAM_PMDI_10_H2O_DIVV")) {
       SpeciesSourceModel = FOAM_PMDI_10_H2O;
       model_read = 1;
       mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
@@ -8639,7 +8613,8 @@ model_read =
       mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
       if (fscanf(imp, "%lf %lf", &a0, &a1) != 2) {
         sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
-                     pd_glob[mn]->MaterialName, "Species Source", "SUSPENSION_LIQUID_SOURCE_CONSTANT");
+                     pd_glob[mn]->MaterialName, "Species Source",
+                     "SUSPENSION_LIQUID_SOURCE_CONSTANT");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
 
@@ -8649,7 +8624,9 @@ model_read =
       mat_ptr->u_species_source[species_no][1] = a1; /* mass fraction liquid source*/
       SPF_DBL_VEC(endofstring(es), 1, mat_ptr->u_species_source[species_no]);
 
-    } else if (!strcmp(model_name, "SUSPENSION_SOLID_SOURCE_CONSTANT")) { /*all relevant parameters come in with liquid source*/
+    } else if (!strcmp(model_name,
+                       "SUSPENSION_SOLID_SOURCE_CONSTANT")) { /*all relevant parameters come in with
+                                                                 liquid source*/
       SpeciesSourceModel = SUSPENSION_SOLID_SOURCE_CONSTANT;
       model_read = 1;
       mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
@@ -8661,14 +8638,15 @@ model_read =
       mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
       if (fscanf(imp, "%lf %lf %lf %lf %lf ", &a0, &a1, &a2, &a3, &a4) != 5) {
         sr = sprintf(err_msg, "Matl %s needs 5 constants for %s %s model.\n",
-                     pd_glob[mn]->MaterialName, "Species Source", "SUSPENSION_LIQUID_SOURCE_ARRHENIUS");
+                     pd_glob[mn]->MaterialName, "Species Source",
+                     "SUSPENSION_LIQUID_SOURCE_ARRHENIUS");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
 
       mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 5, sizeof(dbl));
       mat_ptr->len_u_species_source[species_no] = 5;
-      mat_ptr->u_species_source[species_no][0] = a0;/* molar mass */
-      mat_ptr->u_species_source[species_no][1] = a1;/* n */
+      mat_ptr->u_species_source[species_no][0] = a0; /* molar mass */
+      mat_ptr->u_species_source[species_no][1] = a1; /* n */
       mat_ptr->u_species_source[species_no][2] = a2; /* A */
       mat_ptr->u_species_source[species_no][3] = a3; /* En/R */
       mat_ptr->u_species_source[species_no][4] = a4; /* concentration cuttoff */
@@ -8687,14 +8665,15 @@ model_read =
       mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
       if (fscanf(imp, "%lf %lf ", &a0, &a1) != 2) {
         sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
-                     pd_glob[mn]->MaterialName, "Species Source", "SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS");
+                     pd_glob[mn]->MaterialName, "Species Source",
+                     "SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
 
       mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 2, sizeof(dbl));
       mat_ptr->len_u_species_source[species_no] = 2;
-      mat_ptr->u_species_source[species_no][0] = a0;/* molar mass */
-      mat_ptr->u_species_source[species_no][1] = a1;/* mass frac after which rxn starts */
+      mat_ptr->u_species_source[species_no][0] = a0; /* molar mass */
+      mat_ptr->u_species_source[species_no][1] = a1; /* mass frac after which rxn starts */
       SPF_DBL_VEC(endofstring(es), 1, mat_ptr->u_species_source[species_no]);
 
     } else if (!strcmp(model_name, "SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS")) {
@@ -9062,88 +9041,92 @@ model_read =
 
   ECHO(es, echo_file);
 
-  model_read = look_for_mat_prop(imp, "Moment Source", &(mat_ptr->MomentSourceModel),
+  model_read =
+      look_for_mat_prop(imp, "Moment Source", &(mat_ptr->MomentSourceModel),
                         &(mat_ptr->moment_source), &(mat_ptr->u_moment_source),
                         &(mat_ptr->len_u_moment_source), model_name, SCALAR_INPUT, &NO_SPECIES, es);
-    
-    if (!strcmp(model_name, "FOAM_PMDI_10")) {
-      mat_ptr->MomentSourceModel = FOAM_PMDI_10;
-      model_read = 1;
-      num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
 
-      /* Requires growth rate and coalescence rate constants */
-      if (num_const < 2) {
-        sr = sprintf(err_msg, "Matl %s needs at least 2 constants for %s %s model (growth and coalescence (breakage, nucleation).\n",
-                     pd_glob[mn]->MaterialName, "Moment Source", "FOAM_PMDI_10");
-        GOMA_EH(GOMA_ERROR, err_msg);
-      }
-      mat_ptr->len_u_moment_source = num_const;
-      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
+  if (!strcmp(model_name, "FOAM_PMDI_10")) {
+    mat_ptr->MomentSourceModel = FOAM_PMDI_10;
+    model_read = 1;
+    num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
+
+    /* Requires growth rate and coalescence rate constants */
+    if (num_const < 2) {
+      sr = sprintf(err_msg,
+                   "Matl %s needs at least 2 constants for %s %s model (growth and coalescence "
+                   "(breakage, nucleation).\n",
+                   pd_glob[mn]->MaterialName, "Moment Source", "FOAM_PMDI_10");
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
+    mat_ptr->len_u_moment_source = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
+  }
 
-    else if (!strcmp(model_name, "GILLETTE_RHEOMETER")) {
-      mat_ptr->MomentSourceModel = GILLETTE_RHEOMETER;
-      model_read = 1;
-      num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
+  else if (!strcmp(model_name, "GILLETTE_RHEOMETER")) {
+    mat_ptr->MomentSourceModel = GILLETTE_RHEOMETER;
+    model_read = 1;
+    num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
 
-      if (num_const < 5) {
-        sr = sprintf(err_msg, "Matl %s needs at least 5 constants for %s %s model (growth and coalescence (breakage, nucleation).\n",
-                     pd_glob[mn]->MaterialName, "Moment Source", "GILLETTE_RHEOMETER");
-        GOMA_EH(GOMA_ERROR, err_msg);
-      }
-      mat_ptr->len_u_moment_source = num_const;
-      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
+    if (num_const < 5) {
+      sr = sprintf(err_msg,
+                   "Matl %s needs at least 5 constants for %s %s model (growth and coalescence "
+                   "(breakage, nucleation).\n",
+                   pd_glob[mn]->MaterialName, "Moment Source", "GILLETTE_RHEOMETER");
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
-    else if (!strcmp(model_name, "MOMENT_SUSPENSION")) {
-      mat_ptr->MomentSourceModel = MOMENT_SUSPENSION;
-      model_read = 1;
-      num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
+    mat_ptr->len_u_moment_source = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
+  } else if (!strcmp(model_name, "MOMENT_SUSPENSION")) {
+    mat_ptr->MomentSourceModel = MOMENT_SUSPENSION;
+    model_read = 1;
+    num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
 
-      if (num_const < 2) {
-        sr = sprintf(err_msg, "Matl %s needs at least 2 constants for %s %s model (growth and nucleation).\n",
-                     pd_glob[mn]->MaterialName, "Moment Source", "MOMENT SUSPENSION");
-        GOMA_EH(GOMA_ERROR, err_msg);
-      }
-      mat_ptr->len_u_moment_source = num_const;
-      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
-    } 
-    else if (!strcmp(model_name, "MOMENT_SUSPENSION_PLUS_MOMENTS")) {
-      mat_ptr->MomentSourceModel = MOMENT_SUSPENSION_PLUS_MOMENTS;
-      model_read = 1;
-      num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
-
-      if (num_const < 2) {
-        sr = sprintf(err_msg, "Matl %s needs at least 2 constants for %s %s model (growth and nucleation).\n",
-                     pd_glob[mn]->MaterialName, "Moment Source", "MOMENT_SUSPENSION_PLUS_MOMENTS");
-        GOMA_EH(GOMA_ERROR, err_msg);
-      }
-      mat_ptr->len_u_moment_source = num_const;
-      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
+    if (num_const < 2) {
+      sr = sprintf(err_msg,
+                   "Matl %s needs at least 2 constants for %s %s model (growth and nucleation).\n",
+                   pd_glob[mn]->MaterialName, "Moment Source", "MOMENT SUSPENSION");
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
-    else if (!strcmp(model_name, "CONSTANT_GROWTH")) {
-      mat_ptr->MomentSourceModel = MOMENT_CONSTANT_GROWTH;
-      model_read = 1;
-      num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
+    mat_ptr->len_u_moment_source = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
+  } else if (!strcmp(model_name, "MOMENT_SUSPENSION_PLUS_MOMENTS")) {
+    mat_ptr->MomentSourceModel = MOMENT_SUSPENSION_PLUS_MOMENTS;
+    model_read = 1;
+    num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
 
-      /* Requires growth rate and coalescence rate constants */
-      if (num_const < 3) {
-        sr = sprintf(err_msg, "Matl %s needs 3 constants for %s %s model.\n",
-                     pd_glob[mn]->MaterialName, "Moment Source", "CONSTANT_GROWTH");
-        GOMA_EH(GOMA_ERROR, err_msg);
-      }
-      mat_ptr->len_u_moment_source = num_const;
-      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
-    } else if (!strcmp(model_name, "FOAM_PBE")) {
-      mat_ptr->MomentSourceModel = FOAM_PBE;
-      model_read = 1;
-      num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
-      mat_ptr->len_u_moment_source = num_const;
-      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
-    } 
-   //else if (model_read == -1) {
-   // GOMA_EH(model_read, "Moment Source model invalid");
-   // }
-    ECHO(es, echo_file);
+    if (num_const < 2) {
+      sr = sprintf(err_msg,
+                   "Matl %s needs at least 2 constants for %s %s model (growth and nucleation).\n",
+                   pd_glob[mn]->MaterialName, "Moment Source", "MOMENT_SUSPENSION_PLUS_MOMENTS");
+      GOMA_EH(GOMA_ERROR, err_msg);
+    }
+    mat_ptr->len_u_moment_source = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
+  } else if (!strcmp(model_name, "CONSTANT_GROWTH")) {
+    mat_ptr->MomentSourceModel = MOMENT_CONSTANT_GROWTH;
+    model_read = 1;
+    num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
+
+    /* Requires growth rate and coalescence rate constants */
+    if (num_const < 3) {
+      sr = sprintf(err_msg, "Matl %s needs 3 constants for %s %s model.\n",
+                   pd_glob[mn]->MaterialName, "Moment Source", "CONSTANT_GROWTH");
+      GOMA_EH(GOMA_ERROR, err_msg);
+    }
+    mat_ptr->len_u_moment_source = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
+  } else if (!strcmp(model_name, "FOAM_PBE")) {
+    mat_ptr->MomentSourceModel = FOAM_PBE;
+    model_read = 1;
+    num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
+    mat_ptr->len_u_moment_source = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
+  }
+  // else if (model_read == -1) {
+  //  GOMA_EH(model_read, "Moment Source model invalid");
+  //  }
+  ECHO(es, echo_file);
 
   /*
    * Before we go on let's check to see if a Source term needed extra material Properties

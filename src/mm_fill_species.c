@@ -10158,18 +10158,19 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         err = foam_pmdi10_co2_liq_species_source(w, st, mp->u_species_source[w], time, tt, dt);
 
         st->MassSource[w] = mp->species_source[w];
-        } 
-               else if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_CO2_GAS) {
+      } else if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_CO2_GAS) {
         err = foam_pmdi10_co2_gas_species_source(w, st, mp->u_species_source[w], time, tt, dt);
 
         st->MassSource[w] = mp->species_source[w];
       } else if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS) {
-        err = suspension_liquid_species_source_arrhenius_plus_moments(w, st, mp->u_species_source[w], time, tt, dt);
+        err = suspension_liquid_species_source_arrhenius_plus_moments(
+            w, st, mp->u_species_source[w], time, tt, dt);
 
         st->MassSource[w] = mp->species_source[w];
 
-      } else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS){
-        err = suspension_solid_species_source_arrhenius_plus_moments(w, st, mp->u_species_source[w], time, tt, dt);
+      } else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS) {
+        err = suspension_solid_species_source_arrhenius_plus_moments(w, st, mp->u_species_source[w],
+                                                                     time, tt, dt);
 
         st->MassSource[w] = mp->species_source[w];
 
@@ -10182,8 +10183,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         err = gillette_foamy_gaseous_species_source(w, st, mp->u_species_source[w], time, tt, dt);
 
         st->MassSource[w] = mp->species_source[w];
-      }
-       else if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_CONSTANT) {
+      } else if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_CONSTANT) {
         for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
           var_offset = MAX_VARIABLE_TYPES + w1;
           mp->d_species_source[var_offset] = 0.0;
@@ -10203,9 +10203,8 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
               }
             }
           }
-
         }
-      }  else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_CONSTANT) {
+      } else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_CONSTANT) {
         for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
           var_offset = MAX_VARIABLE_TYPES + w1;
           mp->d_species_source[var_offset] = 0.0;
@@ -10225,10 +10224,9 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
               }
             }
           }
-
         }
-       } else if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_ARRHENIUS) {
-          for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+      } else if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_ARRHENIUS) {
+        for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
           var_offset = MAX_VARIABLE_TYPES + w1;
           mp->d_species_source[var_offset] = 0.0;
         }
@@ -10255,7 +10253,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
           }
         }
-      }  else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_ARRHENIUS) {
+      } else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_ARRHENIUS) {
         for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
           var_offset = MAX_VARIABLE_TYPES + w1;
           mp->d_species_source[var_offset] = 0.0;

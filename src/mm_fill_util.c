@@ -1746,8 +1746,8 @@ int load_bf_grad(void)
         case 1:
           for (i = 0; i < dofs; i++) {
             bfv->d_phi[i][0] =
-      //          (bfv->B[0][0] * bfv->dphidxi[i][0] + bfv->B[0][1] * bfv->dphidxi[i][1]);
-            bfv->d_phi[i][1] = 0.0;
+                //          (bfv->B[0][0] * bfv->dphidxi[i][0] + bfv->B[0][1] * bfv->dphidxi[i][1]);
+                bfv->d_phi[i][1] = 0.0;
             bfv->d_phi[i][2] = 0.0;
           }
           break;
@@ -1755,7 +1755,9 @@ int load_bf_grad(void)
           for (i = 0; i < dofs; i++) {
             bfv->d_phi[i][0] =
                 (bfv->B[0][0] * bfv->dphidxi[i][0] + bfv->B[0][1] * bfv->dphidxi[i][1]);
-                //printf("bfv->B[0][0] = %10f,  bfv->dphidxi[i][0] =%10f, bfv->B[0][1] = %10f, bfv->dphidxi[i][1]=%10f\n",bfv->B[0][0], bfv->dphidxi[i][0], bfv->B[0][1],  bfv->dphidxi[i][1]);
+            // printf("bfv->B[0][0] = %10f,  bfv->dphidxi[i][0] =%10f, bfv->B[0][1] = %10f,
+            // bfv->dphidxi[i][1]=%10f\n",bfv->B[0][0], bfv->dphidxi[i][0], bfv->B[0][1],
+            // bfv->dphidxi[i][1]);
             bfv->d_phi[i][1] =
                 (bfv->B[1][0] * bfv->dphidxi[i][0] + bfv->B[1][1] * bfv->dphidxi[i][1]);
             bfv->d_phi[i][2] = 0.0;
@@ -1794,8 +1796,8 @@ int load_bf_grad(void)
 #else
           bfv->grad_phi[i][0] = (bfv->d_phi[i][0]) / (fv->h[0]);
           bfv->grad_phi[i][1] = (bfv->d_phi[i][1]) / (fv->h[1]);
-          //printf("bfv->d_phi[i][0] = %10f,  fv->h[0] = %10f\n", bfv->d_phi[i][0], fv->h[0]);
-          //printf("bfv->d_phi[i][1] = %10f,  fv->h[1] = %10f\n", bfv->d_phi[i][1], fv->h[1]);
+          // printf("bfv->d_phi[i][0] = %10f,  fv->h[0] = %10f\n", bfv->d_phi[i][0], fv->h[0]);
+          // printf("bfv->d_phi[i][1] = %10f,  fv->h[1] = %10f\n", bfv->d_phi[i][1], fv->h[1]);
           if (VIM == 3)
             bfv->grad_phi[i][2] = (bfv->d_phi[i][2]) / (fv->h[2]);
 #endif
@@ -1838,7 +1840,8 @@ int load_bf_grad(void)
 #else
 
           bfv->grad_phi_e[i][0][0][0] = bfv->grad_phi[i][0];
-          //printf("bfv->grad_phi[i][0] = %10f, bfv->grad_phi[i][1] = %10f\n", bfv->grad_phi[i][0], bfv->grad_phi[i][1]);
+          // printf("bfv->grad_phi[i][0] = %10f, bfv->grad_phi[i][1] = %10f\n", bfv->grad_phi[i][0],
+          // bfv->grad_phi[i][1]);
           bfv->grad_phi_e[i][0][0][1] = 0.0;
           bfv->grad_phi_e[i][1][1][0] = 0.0;
           bfv->grad_phi_e[i][1][1][1] = bfv->grad_phi[i][1];

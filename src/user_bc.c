@@ -77,9 +77,9 @@ dbl velo_vary_fnc(const int velo_condition,
       }  */
   double thetadot = p[0]; // rate of change of theta wrt to time
   if (velo_condition == UVARY_BC) {
-      f = -thetadot*x2;
+    f = -thetadot * x2;
   } else if (velo_condition == VVARY_BC) {
-      f = thetadot*x1;
+    f = thetadot * x1;
   } else if (velo_condition == WVARY_BC) {
     f = 0;
   }
