@@ -2563,9 +2563,7 @@ void fvelo_tangential_solid_bc(double func[],
   if (Current_EB_ptr->Elem_Blk_Id == eb_mat_fluid) {
     if (type == VELO_TANGENT_SOLID_BC) {
       for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
-        {
-          *func += fv->v[kdir] * fv->stangent[0][kdir] * betainv;
-        }
+        { *func += fv->v[kdir] * fv->stangent[0][kdir] * betainv; }
       }
     } else {
       for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
