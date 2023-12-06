@@ -999,6 +999,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         case AC_VOLUME:
         case AC_LS_VEL:
         case AC_POSITION:
+        case AC_POSITION_MT:
         case AC_ANGLE:
           std_aug_cond(iAC, nAC, x_AC, bAC, cAC, dAC, gAC, numProcUnknowns, cx, &mf_args);
           break;
@@ -2138,7 +2139,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                     augc[iAC].lm_elem, augc[iAC].lm_side, Var_Name[augc[iAC].VAR].name1, x_AC[iAC],
                     damp_factor * yAC[iAC]);
           } else if (augc[iAC].Type == AC_POSITION) {
-            DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+            DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%13.9e\n", augc[iAC].MTID,
                     augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
           } else if (augc[iAC].Type == AC_ANGLE) {
             DPRINTF(stdout, "\tMT[%4d] ANG[%4d]=%10.6e Param=%10.6e\n", augc[iAC].VOLID,
