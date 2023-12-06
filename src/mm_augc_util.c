@@ -1962,7 +1962,7 @@ int std_aug_cond(int iAC,
     // Formulate and store the residual for the augmented condition
     gAC[iAC] = (inventory - augc[iAC].CONSTV);
 
-  } else if (augc[iAC].Type == AC_POSITION ||  augc[iAC].Type == AC_POSITION_MT) {
+  } else if (augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_POSITION_MT) {
     inventory = getPositionAC(augc + iAC, cAC[iAC], mf_args->x, mf_args->exo);
 #ifdef PARALLEL
     if (Num_Proc > 1) {
