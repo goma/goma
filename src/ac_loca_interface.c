@@ -1375,7 +1375,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
 #endif
           DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                   augc[iAC].VOLID, evol_local, passdown.x_AC[iAC]);
-        } else if (augc[iAC].Type == AC_POSITION) {
+        } else if (augc[iAC].Type == AC_POSITION ||  augc[iAC].Type == AC_POSITION_MT) {
           evol_local = augc[iAC].evol;
 #ifdef PARALLEL
           if (Num_Proc > 1) {
@@ -1383,7 +1383,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
           }
           evol_local = evol_global;
 #endif
-          DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+          DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%13.9e\n", augc[iAC].MTID,
                   augc[iAC].VOLID, evol_local, passdown.x_AC[iAC]);
         } else if (augc[iAC].Type == AC_FLUX) {
           DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
