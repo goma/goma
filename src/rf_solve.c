@@ -2132,8 +2132,9 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             for (iAC = 0; iAC < nAC; iAC++) {
               evol_local = augc[iAC].evol;
 #ifdef PARALLEL
-              if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
-                                   augc[iAC].Type == AC_ANGLE || augc[iAC].Type == AC_POSITION_MT)) {
+              if (Num_Proc > 1 &&
+                  (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
+                   augc[iAC].Type == AC_ANGLE || augc[iAC].Type == AC_POSITION_MT)) {
                 MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 evol_local = evol_global;
               }

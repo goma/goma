@@ -128,7 +128,8 @@ void load_extra_unknownsAC(int iAC,     /* ID NUMBER OF AC'S */
   }
 
   if (augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_FLUX ||
-      augc[iAC].Type == AC_LS_VEL || augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_ANGLE || augc[iAC].Type == AC_POSITION_MT) {
+      augc[iAC].Type == AC_LS_VEL || augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_ANGLE ||
+      augc[iAC].Type == AC_POSITION_MT) {
 
     ibc = augc[iAC].BCID;
     idf = augc[iAC].DFID;
@@ -2573,8 +2574,8 @@ static int estimate_dAC_ALC(
 
     case AC_POSITION:
       // here you are supposed to calculate the residual at the + perturbation
-      // I believe this can be done for the position type ac by copying the structure above (line 1992)
-      // this should calculate the residual at the updated x
+      // I believe this can be done for the position type ac by copying the structure above (line
+      // 1992) this should calculate the residual at the updated x
 
       inventory = getPositionAC(augc + jAC, dAC[jAC], mf_args->x, mf_args->exo);
 #ifdef PARALLEL

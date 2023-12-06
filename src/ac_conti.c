@@ -870,7 +870,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
             evol_local = augc[iAC].evol;
 #ifdef PARALLEL
             if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
-                                 augc[iAC].Type == AC_ANGLE || augc[iAC].Type == AC_POSITION_MT )) {
+                                 augc[iAC].Type == AC_ANGLE || augc[iAC].Type == AC_POSITION_MT)) {
               MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
               evol_local = evol_global;
             }

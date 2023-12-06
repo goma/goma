@@ -5150,10 +5150,10 @@ void rd_ac_specs(FILE *ifp, char *input) {
        *  5th    int - Form of the 1D position parameterization (0)
        *  6th   flt  - Value of the coordinate position
        */
-      //read_line(ifp, input, FALSE);
+      // read_line(ifp, input, FALSE);
       augc[iAC].LewisNum = 0.0;
-      if (fscanf(ifp, "%d %d %d %d %d %lf", &augc[iAC].MTID, &augc[iAC].VOLID,
-                 &augc[iAC].BCID, &augc[iAC].DFID, &augc[iAC].COMPID, &augc[iAC].CONSTV) < 6) {
+      if (fscanf(ifp, "%d %d %d %d %d %lf", &augc[iAC].MTID, &augc[iAC].VOLID, &augc[iAC].BCID,
+                 &augc[iAC].DFID, &augc[iAC].COMPID, &augc[iAC].CONSTV) < 6) {
         fprintf(stderr, "%s:\tError reading NSID, CoordID, BCID, DFID, FORMID, CONSTV\n", yo);
         fprintf(stderr, "%s:\tRecall Format:AC=NSID CoordID BCID DFID FORMID CONSTV\n", yo);
         exit(-1);
@@ -5685,16 +5685,16 @@ void rd_ac_specs(FILE *ifp, char *input) {
           augc[iAC].Type == AC_FLUX_MAT || augc[iAC].Type == AC_POSITION) &&
          augc[iAC].BCID == APREPRO_AC_BCID)) {
 
-        if (fscanf(ifp, "%s", string) != 1) {
-          GOMA_EH(GOMA_ERROR, "error reading Parameter File name");
-        }
-        strcpy(augc[iAC].Params_File, string);
-        if (fscanf(ifp, "%s", string) != 1) {
-          GOMA_EH(GOMA_ERROR, "error reading Parameter name");
-        }
-        strcpy(augc[iAC].AP_param, string);
+      if (fscanf(ifp, "%s", string) != 1) {
+        GOMA_EH(GOMA_ERROR, "error reading Parameter File name");
+      }
+      strcpy(augc[iAC].Params_File, string);
+      if (fscanf(ifp, "%s", string) != 1) {
+        GOMA_EH(GOMA_ERROR, "error reading Parameter name");
+      }
+      strcpy(augc[iAC].AP_param, string);
 
-        SPF(endofstring(echo_string), " %s %s", augc[iAC].Params_File, augc[iAC].AP_param);
+      SPF(endofstring(echo_string), " %s %s", augc[iAC].Params_File, augc[iAC].AP_param);
 
       // read in the file
       if (augc[iAC].BCID == APREPRO_LIB_AC_BCID) {
