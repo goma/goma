@@ -1564,16 +1564,19 @@ int gillette_foamy_liquid_species_source(int species_no, /* Current species numb
     return -1;
   }
 
-  double Rgas_const = param[0];
-  double ref_press = param[1];
-  double conc_lim = param[2];
+  double Rgas_const   = param[0];
+  double ref_press    = param[1];
+  double conc_lim     = param[2];
   double myconversion = param[3];
 
   double conc = fv->c[species_no];
 
   double source;
-  double growth_term_conv =
-      MKS->G[species_no][1] * myconversion; // MKS->G[species_no][1] convert to correct units
+  double M_iso = mp->u_density[1];
+  double rho_liq = mp->u_density[2];
+
+
+  double growth_term_conv = MKS->G[species_no][1]  * myconversion; // MKS->G[species_no][1] convert to correct units
 
   if (T <= 0) {
     source = 0;
@@ -1587,7 +1590,7 @@ int gillette_foamy_liquid_species_source(int species_no, /* Current species numb
     source = 0;
     mp->species_source[species_no] = 0;
   } else {
-    source = -growth_term_conv * ref_press / (Rgas_const * T);
+    source = -growth_term_conv * ref_press / (Rgas_const * T) - ((MKS->NUC[1]) * rho_liq / M_iso);
   }
 
   /**********************************************************/
@@ -1664,6 +1667,8 @@ int gillette_foamy_gaseous_species_source(int species_no, /* Current species num
       mp->u_species_source[wLiq][3]; // imporant if species and moments not same units
   double conc = fv->c[wLiq];
 
+  double M_iso   = mp->u_density[1];
+  double rho_liq = mp->u_density[2];
   double source;
   double growth_term_conv =
       MKS->G[wLiq][1] * myconversion; // MKS->G[species_no][1] convert to correct units
@@ -1682,7 +1687,7 @@ int gillette_foamy_gaseous_species_source(int species_no, /* Current species num
     mp->species_source[species_no] = 0;
     myoff = 0; // turns off partials if source is 0
   } else {
-    source = growth_term_conv * ref_press / (Rgas_const * T);
+    source = growth_term_conv * ref_press / (Rgas_const * T)+((MKS->NUC[1]) * rho_liq / M_iso);
   }
 
   /**********************************************************/

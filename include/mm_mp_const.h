@@ -80,6 +80,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define TIME_CONTROLLED_NUCLEATION  7
 #define CONCENTRATION_DEPENDENT_PMDI     8
 #define SUSPENSION_NUCLEATION       9
+#define CONSTANT_NUC               10
 
 
 

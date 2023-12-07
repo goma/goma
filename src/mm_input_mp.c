@@ -7790,6 +7790,19 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                    &(mat_ptr->moment_nucleation_kernel_rate_coeff), NULL, NULL,
                                    model_name, SCALAR_INPUT, &NO_SPECIES, es);
 
+    if (!strcmp(model_name, "CONSTANT_NUC")) {
+      model_read = 1;
+      mat_ptr->moment_nucleation_kernel_model = CONSTANT_NUC;
+      if (fscanf(imp, "%lf %lf", &a0, &a1) != 2) {
+        sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Moment Nucleation Kernel",
+                     "CONSTANT_NUC");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      mat_ptr->moment_nucleation_kernel_rate_coeff = a0;     // rate coeff
+      mat_ptr->moment_nucleation_kernel_nucelli_volume = a1; // nucelli volume
+      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_nucleation_kernel_rate_coeff));
+    }
     if (!strcmp(model_name, "CONCENTRATION_DEPENDENT_PMDI")) {
       model_read = 1;
       mat_ptr->moment_nucleation_kernel_model = CONCENTRATION_DEPENDENT_PMDI;
