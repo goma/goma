@@ -1648,7 +1648,7 @@ extern int breakage_kernel_model(
       case POWERLAW_BREAKAGE:
         pwr_alf = mp->moment_breakage_kernel_exp;
         breakage_kernel = mp->moment_breakage_kernel_rate_coeff * (pow(na, pwr_alf));
-        //printf("%lf %lf \n",mp->moment_breakage_kernel_rate_coeff, pow(na,pwr_alf));
+        // printf("%lf %lf \n",mp->moment_breakage_kernel_rate_coeff, pow(na,pwr_alf));
         break;
       case EXPONENTIAL_BREAKAGE:
         pwr_alf = mp->moment_breakage_kernel_exp;
@@ -1676,8 +1676,8 @@ extern int breakage_kernel_model(
         return -1;
       }
       MKS->BA[k] += breakage_kernel * wa * ((fragment_dist - pow(na, k)));
-      //printf("%d %lf %lf \n", k, breakage_kernel, pow(na,k));
-      //printf("%d %lf\n", k, MKS->BA[k]);
+      // printf("%d %lf %lf \n", k, breakage_kernel, pow(na,k));
+      // printf("%d %lf\n", k, MKS->BA[k]);
     }
   }
 

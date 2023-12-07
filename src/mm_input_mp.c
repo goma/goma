@@ -7795,8 +7795,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->moment_nucleation_kernel_model = CONSTANT_NUC;
       if (fscanf(imp, "%lf %lf", &a0, &a1) != 2) {
         sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
-                     pd_glob[mn]->MaterialName, "Moment Nucleation Kernel",
-                     "CONSTANT_NUC");
+                     pd_glob[mn]->MaterialName, "Moment Nucleation Kernel", "CONSTANT_NUC");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->moment_nucleation_kernel_rate_coeff = a0;     // rate coeff
