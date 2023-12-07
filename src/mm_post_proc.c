@@ -5295,7 +5295,11 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
     post_process_average(x, x_old, xdot, xdot_old, resid_vector, exo, dpi, post_proc_vect,
                          *time_ptr);
     for (int ii = 0; ii < nn_average; ii++) {
-      exchange_node(cx[0], dpi, post_proc_vect[pp_average[ii]->index_post]);
+      if ((pp_average[ii]->non_variable_type && pg->imtrx == 0) ||
+          (!pp_average[ii]->non_variable_type &&
+           Num_Var_In_Type[pg->imtrx][pp_average[ii]->type])) {
+        exchange_node(cx[0], dpi, post_proc_vect[pp_average[ii]->index_post]);
+      }
     }
   }
 
