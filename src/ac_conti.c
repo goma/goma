@@ -870,7 +870,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
             evol_local = augc[iAC].evol;
 #ifdef PARALLEL
             if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
-                                 augc[iAC].Type == AC_ANGLE)) {
+                                 augc[iAC].Type == AC_ANGLE || augc[iAC].Type == AC_POSITION_MT)) {
               MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
               evol_local = evol_global;
             }
@@ -884,7 +884,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
             } else if (augc[iAC].Type == AC_VOLUME) {
               DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                       augc[iAC].VOLID, evol_local, x_AC[iAC]);
-            } else if (augc[iAC].Type == AC_POSITION) {
+            } else if (augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_POSITION_MT) {
               DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                       augc[iAC].VOLID, evol_local, x_AC[iAC]);
             } else if (augc[iAC].Type == AC_ANGLE) {

@@ -60,7 +60,6 @@ struct moment_kernel_struct {
   double NUC[MAX_MOMENTS]; // nucleation
 };
 
-
 extern int get_moment_kernel_struct(struct moment_kernel_struct *MKS);
 
 extern void wheeler_algorithm(int N, double *moments, double *weights, double *nodes);
@@ -79,8 +78,6 @@ EXTERN double foam_pbe_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
 extern double foam_pbe_conductivity(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time);
 
-
-
 extern int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource);
 
 extern int assemble_moments(
@@ -97,7 +94,6 @@ extern double PBEVolumeSource(double time,
                               double dFVS_dx[DIM][MDE],
                               double dFVS_dC[MAX_CONC][MDE],
                               double dFVS_dMOM[MAX_MOMENTS][MDE]);
-
 
 extern void
 foam_pbe_conversion_water(struct Species_Conservation_Terms *st, double time, double tt, double dt);
@@ -124,14 +120,14 @@ extern int assemble_density(void);
 extern double PBEVolumeSource_rhoeqn(double time, double dt, double tt, double dFVS_drho[MDE]);
 
 extern int growth_rate_model(int species_index,
-                      double *nodes,
-                      double *weights,
-                      int n_nodes,
-                      int n_moments,
-                      double growth_rate[MAX_CONC],
-                      double d_growth_rate_dc[MAX_CONC][MDE],
-                      double d_growth_rate_dT[MAX_CONC][MDE],
-                      struct moment_kernel_struct *MKS);
+                             double *nodes,
+                             double *weights,
+                             int n_nodes,
+                             int n_moments,
+                             double growth_rate[MAX_CONC],
+                             double d_growth_rate_dc[MAX_CONC][MDE],
+                             double d_growth_rate_dT[MAX_CONC][MDE],
+                             struct moment_kernel_struct *MKS);
 
 extern int coalescence_kernel_model(
     double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS);

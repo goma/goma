@@ -990,6 +990,7 @@
 #define AC_POSITION      11 // Positional constraint
 #define AC_FLUX_MAT      12
 #define AC_ANGLE         13 // Angle constraint - 2D onl
+#define AC_POSITION_MT   14 // Positional constraint met using material prop.
 
 /* Post Processing Volumetric Integration types - AMC Originally Aug 2013 */
 
