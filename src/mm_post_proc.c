@@ -442,6 +442,8 @@ static int look_for_post_proc /* mm_post_proc.c                            */
 static int midsid(double[],  /* stream_fcn_vect */
                   Exo_DB *); /* exo */
 
+static bool post_process_variable_is_active(pp_Average *pp_average, int matrix_index);
+
 void sum_average_nodal(double **avg_count, double **avg_sum, int global_node, double time);
 
 void post_process_average(double x[],            /* Solution vector for the current processor */
@@ -3847,8 +3849,7 @@ void post_process_average(double x[],            /* Solution vector for the curr
   for (int i = 0; i < nn_average; i++) {
     int node;
     for (node = 0; node < dpi->num_universe_nodes; node++) {
-      if ((pp_average[i]->non_variable_type && pg->imtrx == 0) ||
-          (!pp_average[i]->non_variable_type && Num_Var_In_Type[pg->imtrx][pp_average[i]->type])) {
+      if (post_process_variable_is_active(pp_average[i], pg->imtrx)) {
         post_proc_vect[pp_average[i]->index_post][node] = avg_sum[i][node] / avg_count[i][node];
       }
     }
@@ -5295,9 +5296,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
     post_process_average(x, x_old, xdot, xdot_old, resid_vector, exo, dpi, post_proc_vect,
                          *time_ptr);
     for (int ii = 0; ii < nn_average; ii++) {
-      if ((pp_average[ii]->non_variable_type && pg->imtrx == 0) ||
-          (!pp_average[ii]->non_variable_type &&
-           Num_Var_In_Type[pg->imtrx][pp_average[ii]->type])) {
+      if (post_process_variable_is_active(pp_average[ii], pg->imtrx)) {
         exchange_node(cx[0], dpi, post_proc_vect[pp_average[ii]->index_post]);
       }
     }
@@ -11944,8 +11943,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
 
   if (nn_average > 0) {
     for (i = 0; i < nn_average; i++) {
-      if ((pp_average[i]->non_variable_type && pg->imtrx == 0) ||
-          (!pp_average[i]->non_variable_type && Num_Var_In_Type[pg->imtrx][pp_average[i]->type])) {
+      if (post_process_variable_is_active(pp_average[i], pg->imtrx)) {
         pp_average[i]->index = index;
         pp_average[i]->index_post = index_post;
 
@@ -12778,6 +12776,14 @@ int check_elem_order(const int *listel, const Exo_DB *exo)
   safer_free((void **)&used_elem);
   safer_free((void **)&used_node);
   return nbreaks;
+}
+
+static bool post_process_variable_is_active(pp_Average *pp_average, int matrix_index) {
+  if ((pp_average->non_variable_type && matrix_index == 0) ||
+      (!pp_average->non_variable_type && Num_Var_In_Type[matrix_index][pp_average->type])) {
+    return true;
+  }
+  return false;
 }
 /************************************************************************************/
 /************************************************************************************/
