@@ -100,8 +100,8 @@
  * Global variables defined in this file.
  */
 
-struct elem_side_bc_struct ***First_Elem_Side_BC_Array;
-struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
+extern struct elem_side_bc_struct ***First_Elem_Side_BC_Array;
+extern struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
 
 #define ROUND_TO_ONE 0.9999999
 
@@ -1005,7 +1005,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         evol_local = augc[iAC].evol;
 #ifdef PARALLEL
         if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
-                             augc[iAC].Type == AC_ANGLE)) {
+                             augc[iAC].Type == AC_ANGLE || augc[iAC].Type == AC_POSITION_MT)) {
           MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
           evol_local = evol_global;
         }
@@ -1017,7 +1017,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         } else if (augc[iAC].Type == AC_VOLUME) {
           DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                   augc[iAC].VOLID, evol_local, x_AC[iAC]);
-        } else if (augc[iAC].Type == AC_POSITION) {
+        } else if (augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_POSITION_MT) {
           DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e MT[%4d] Param=%10.6e\n",
                   augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_ANGLE) {
@@ -2132,8 +2132,9 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             for (iAC = 0; iAC < nAC; iAC++) {
               evol_local = augc[iAC].evol;
 #ifdef PARALLEL
-              if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
-                                   augc[iAC].Type == AC_ANGLE)) {
+              if (Num_Proc > 1 &&
+                  (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
+                   augc[iAC].Type == AC_ANGLE || augc[iAC].Type == AC_POSITION_MT)) {
                 MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 evol_local = evol_global;
               }
@@ -2150,7 +2151,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               } else if (augc[iAC].Type == AC_FLUX) {
                 DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                         x_AC[iAC]);
-              } else if (augc[iAC].Type == AC_POSITION) {
+              } else if (augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_POSITION_MT) {
                 DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e MT[%4d] Param=%10.6e\n",
                         augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
               } else if (augc[iAC].Type == AC_ANGLE) {

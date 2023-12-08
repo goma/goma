@@ -76,7 +76,6 @@
 #include "stdbool.h"
 #include "user_mp.h"
 #include "user_mp_gen.h"
-
 /*  _______________________________________________________________________  */
 
 /* assemble_mesh -- assemble terms (Residual &| Jacobian) for mesh stress eqns

@@ -294,7 +294,7 @@ goma_corner_coordinate_system(goma_normal **normals, int n_normals, goma_normal 
 
   return GOMA_ERROR;
 
-corner_coord_critical_found : {
+corner_coord_critical_found: {
   // find closest to x for first
   int first_crit = -1;
   double max_dot = 0;

@@ -5075,6 +5075,8 @@ void rd_ac_specs(FILE *ifp, char *input) {
       augc[iAC].Type = AC_VOLUME;
     } else if (!strcmp(input, "XY") || !strcmp(input, "POSITION")) {
       augc[iAC].Type = AC_POSITION;
+    } else if (!strcmp(input, "XY") || !strcmp(input, "POSITION_MT")) {
+      augc[iAC].Type = AC_POSITION_MT;
     } else if (!strcmp(input, "XY") || !strcmp(input, "ANGLE")) {
       augc[iAC].Type = AC_ANGLE;
     } else if (!strcmp(input, "LSV") || !strcmp(input, "LS_VELOCITY")) {
@@ -5148,11 +5150,10 @@ void rd_ac_specs(FILE *ifp, char *input) {
        *  5th    int - Form of the 1D position parameterization (0)
        *  6th   flt  - Value of the coordinate position
        */
-      read_line(ifp, input, FALSE);
+      // read_line(ifp, input, FALSE);
       augc[iAC].LewisNum = 0.0;
-      if (sscanf(input, "%d %d %d %d %d %lf %lf", &augc[iAC].MTID, &augc[iAC].VOLID,
-                 &augc[iAC].BCID, &augc[iAC].DFID, &augc[iAC].COMPID, &augc[iAC].CONSTV,
-                 &augc[iAC].LewisNum) < 6) {
+      if (fscanf(ifp, "%d %d %d %d %d %lf", &augc[iAC].MTID, &augc[iAC].VOLID, &augc[iAC].BCID,
+                 &augc[iAC].DFID, &augc[iAC].COMPID, &augc[iAC].CONSTV) < 6) {
         fprintf(stderr, "%s:\tError reading NSID, CoordID, BCID, DFID, FORMID, CONSTV\n", yo);
         fprintf(stderr, "%s:\tRecall Format:AC=NSID CoordID BCID DFID FORMID CONSTV\n", yo);
         exit(-1);
@@ -5163,6 +5164,34 @@ void rd_ac_specs(FILE *ifp, char *input) {
 
       break;
 
+    case AC_POSITION_MT:
+      /*
+       *  first  int - NSID Node set ID to be used
+       *  second int - CoordID direction to be used
+       *  third  int - MTID index to use for variable
+       *  4th    int - MPID index to use for variable
+       *  5th    int - Form of the 1D position parameterization (0)
+       *  6th   flt  - Value of the coordinate position
+       *
+       * I GUESS WE'RE GOING TO HAVE TO MESS THINGS UP
+       */
+      read_line(ifp, input, FALSE);
+      augc[iAC].LewisNum = 0.0;
+      if (sscanf(input, "%d %d %d %d %d %lf %lf", &augc[iAC].DHID, &augc[iAC].VOLID,
+                 &augc[iAC].MTID, &augc[iAC].MPID, &augc[iAC].COMPID, &augc[iAC].CONSTV,
+                 &augc[iAC].LewisNum) < 6) {
+        fprintf(stderr, "%s:\tError reading NSID, CoordID, BCID, DFID, FORMID, CONSTV\n", yo);
+        fprintf(stderr, "%s:\tRecall Format:AC=NSID CoordID BCID DFID FORMID CONSTV\n", yo);
+        exit(-1);
+        DPRINTF(stdout, "NSID %i, CoordID%i, MTID%i, MPID%i, form%i, Value%f", augc[iAC].DHID,
+                augc[iAC].VOLID, augc[iAC].MTID, augc[iAC].MPID, augc[iAC].COMPID,
+                augc[iAC].CONSTV);
+      }
+
+      SPF(endofstring(echo_string), " %d %d %d %d %d %.4g", augc[iAC].MTID, augc[iAC].VOLID,
+          augc[iAC].BCID, augc[iAC].DFID, augc[iAC].COMPID, augc[iAC].CONSTV);
+
+      break;
     case AC_LS_VEL: /* LSV */
       if (fscanf(ifp, "%d %d %d %d %s", &augc[iAC].MTID, &augc[iAC].BCID, &augc[iAC].DFID,
                  &augc[iAC].LSPHASE, input) != 5) {
@@ -5653,8 +5682,9 @@ void rd_ac_specs(FILE *ifp, char *input) {
 
     if (augc[iAC].BCID == APREPRO_LIB_AC_BCID ||
         ((augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_FLUX ||
-          augc[iAC].Type == AC_FLUX_MAT) &&
+          augc[iAC].Type == AC_FLUX_MAT || augc[iAC].Type == AC_POSITION) &&
          augc[iAC].BCID == APREPRO_AC_BCID)) {
+
       if (fscanf(ifp, "%s", string) != 1) {
         GOMA_EH(GOMA_ERROR, "error reading Parameter File name");
       }
@@ -12429,7 +12459,7 @@ int count_datalines(FILE *ifp, char *input, const char *endlist) {
 #ifndef tflop
   fgetpos(ifp, &file_position); /* OK everybody, remember where we parked */
 #else
-  file_position = ftell(ifp);          /* OK everybody, remember where we parked */
+  file_position = ftell(ifp); /* OK everybody, remember where we parked */
 #endif
 
   if (endlist != NULL) /* Table data is in input deck */

@@ -110,6 +110,9 @@
 
 #define GOMA_MM_FILL_C
 
+extern struct elem_side_bc_struct ***First_Elem_Side_BC_Array;
+extern struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
+
 /*
  * Global variables defined here. Declared frequently via rf_bc.h
  */
@@ -5453,7 +5456,7 @@ int checkfinite(const char *file, const int line, const char *message) {
     peqn = upd->ep[pg->imtrx][eqn];
     if (peqn != -1) {
       for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-        j = finite(lec->R[LEC_R_INDEX(peqn, i)]);
+        j = isfinite(lec->R[LEC_R_INDEX(peqn, i)]);
         if (!j) {
           fprintf(stderr, "lec->R[%s][edof=%d] = %g\n", EQ_Name[eqn].name1, i,
                   lec->R[LEC_R_INDEX(peqn, i)]);
