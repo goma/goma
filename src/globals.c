@@ -13,11 +13,11 @@
 \************************************************************************/
 /* File containing the many of Goma's global variables, moved for -fno-common */
 
+#include "ac_particles.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "rf_node_const.h"
 #include "rf_solver.h"
-#include "ac_particles.h"
 
 int CoordinateSystem; /* Indicates type of coordinate system (see fem_const.h)*/
 

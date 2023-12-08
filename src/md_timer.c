@@ -68,8 +68,8 @@
 #endif
 
 #ifdef __MACH__
-#include <time.h>
 #include <sys/times.h>
+#include <time.h>
 #endif
 
 #define GOMA_MD_TIMER_C

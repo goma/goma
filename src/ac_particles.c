@@ -60,7 +60,6 @@
 /* GOMA include files */
 #define GOMA_AC_PARTICLES_C
 
-
 /* Global variables that reside entirely within this file. */
 static particle_t *particles_to_do, *particles_to_send;
 static particle_t **element_particle_list_head;
@@ -90,7 +89,6 @@ static dbl *static_x_old;
 static dbl *static_xdot;
 static dbl *static_xdot_old;
 static dbl *static_resid_vector;
-
 
 static dbl my_volume;
 static dbl *el_volume;

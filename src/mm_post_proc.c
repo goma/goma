@@ -927,7 +927,9 @@ static int calc_standard_fields(double **post_proc_vect,
   if (DIV_VELOCITY != -1 && pd->e[pg->imtrx][PRESSURE]) {
     Dnn = 0.;
     for (a = 0; a < dim; a++) {
-      { Dnn += fv->grad_v[a][a]; }
+      {
+        Dnn += fv->grad_v[a][a];
+      }
     }
     /* If you want everything positive, uncomment this next line */
     /* Dnn = fabs(Dnn);  */
