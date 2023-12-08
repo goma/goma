@@ -35,6 +35,8 @@
 #include "rf_fem_const.h"
 #include "std.h"
 
+extern int Particle_Show_Debug_Info;
+
 #define SLEN   256
 #define SLEN_2 512
 

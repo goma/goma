@@ -16,7 +16,6 @@
 #include <cstdio>
 #include <cstring>
 #include <exodusII.h>
-#include <ext/alloc_traits.h>
 #include <iterator>
 #include <memory>
 #include <mpi.h>
