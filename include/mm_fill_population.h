@@ -19,16 +19,16 @@
 #ifndef MM_FILL_POPULATION_H
 #define MM_FILL_POPULATION_H
 
-#ifdef extern
-#undef extern
+#ifdef EXTERN
+#undef EXTERN
 #endif
 
 #ifdef GOMA_MM_FILL_POPULATION_C
-#define extern /* do nothing */
+#define EXTERN /* do nothing */
 #endif
 
 #ifndef GOMA_MM_FILL_POPULATION_C
-#define extern extern
+#define EXTERN EXTERN
 #endif
 
 #define PBE_FP_SMALL 1e-15
@@ -60,11 +60,11 @@ struct moment_kernel_struct {
   double NUC[MAX_MOMENTS]; // nucleation
 };
 
-extern int get_moment_kernel_struct(struct moment_kernel_struct *MKS);
+EXTERN int get_moment_kernel_struct(struct moment_kernel_struct *MKS);
 
-extern void wheeler_algorithm(int N, double *moments, double *weights, double *nodes);
+EXTERN void wheeler_algorithm(int N, double *moments, double *weights, double *nodes);
 
-extern int get_foam_pbe_indices(int *index_W,
+EXTERN int get_foam_pbe_indices(int *index_W,
                                 int *index_OH,
                                 int *index_BA_l,
                                 int *index_BA_g,
@@ -76,17 +76,17 @@ EXTERN double foam_pbe_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                                                 * explicit (tt = 1) to implicit (tt = 0) */
                                    double dt); /* current time step size */
 
-extern double foam_pbe_conductivity(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time);
+EXTERN double foam_pbe_conductivity(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time);
 
-extern int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource);
+EXTERN int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource);
 
-extern int assemble_moments(
+EXTERN int assemble_moments(
     double time, /* present time value */
     double tt, /* parameter to vary time integration from explicit (tt = 1) to implicit (tt = 0) */
     double dt, /* current time step size */
     const PG_DATA *pg_data);
 
-extern double PBEVolumeSource(double time,
+EXTERN double PBEVolumeSource(double time,
                               double dt,
                               double tt,
                               double dFVS_dv[DIM][MDE],
@@ -95,31 +95,31 @@ extern double PBEVolumeSource(double time,
                               double dFVS_dC[MAX_CONC][MDE],
                               double dFVS_dMOM[MAX_MOMENTS][MDE]);
 
-extern void
+EXTERN void
 foam_pbe_conversion_water(struct Species_Conservation_Terms *st, double time, double tt, double dt);
 
-extern void
+EXTERN void
 foam_pbe_conversion_OH(struct Species_Conservation_Terms *st, double time, double tt, double dt);
 
-extern void
+EXTERN void
 foam_pbe_ba_gas_source(struct Species_Conservation_Terms *st, double time, double tt, double dt);
 
-extern void
+EXTERN void
 foam_pbe_ba_liquid_source(struct Species_Conservation_Terms *st, double time, double tt, double dt);
 
-extern void
+EXTERN void
 foam_pbe_co2_gas_source(struct Species_Conservation_Terms *st, double time, double tt, double dt);
 
-extern void foam_pbe_co2_liquid_source(struct Species_Conservation_Terms *st,
+EXTERN void foam_pbe_co2_liquid_source(struct Species_Conservation_Terms *st,
                                        double time,
                                        double tt,
                                        double dt);
 
-extern int assemble_density(void);
+EXTERN int assemble_density(void);
 
-extern double PBEVolumeSource_rhoeqn(double time, double dt, double tt, double dFVS_drho[MDE]);
+EXTERN double PBEVolumeSource_rhoeqn(double time, double dt, double tt, double dFVS_drho[MDE]);
 
-extern int growth_rate_model(int species_index,
+EXTERN int growth_rate_model(int species_index,
                              double *nodes,
                              double *weights,
                              int n_nodes,
@@ -129,15 +129,15 @@ extern int growth_rate_model(int species_index,
                              double d_growth_rate_dT[MAX_CONC][MDE],
                              struct moment_kernel_struct *MKS);
 
-extern int coalescence_kernel_model(
+EXTERN int coalescence_kernel_model(
     double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS);
 
-extern int moment_breakage_kernel_model(
+EXTERN int moment_breakage_kernel_model(
     double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS);
 
-extern int moment_nucleation_kernel_model(
+EXTERN int moment_nucleation_kernel_model(
     double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS);
 
-extern int get_moment_kernel_struct(struct moment_kernel_struct *MKS);
+EXTERN int get_moment_kernel_struct(struct moment_kernel_struct *MKS);
 
 #endif /* MM_FILL_POPULATION_H */

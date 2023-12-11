@@ -1194,13 +1194,21 @@ int foam_pmdi10_h2o_species_source(
   double CH2O = fv->c[species_no];
   double T = fv->T;
   double n = param[0];
+  double t_nuc = param[1];
   double A = param[2];
   double norm_E = param[3];
   double src_min = param[4];
   double conc_min = param[5];
-  double N = 1; /* left over from when there was t_nuc*/
   double source = 0;
+  double N; // nucleation delay term when relevant
 
+  if (t_nuc<0){ // HLC version with nuc so no delay
+    N = 1;
+  }
+  else { //Weston's orignal version, without nuc
+    N = 0.5 * (1 + tanh((time - t_nuc) / t_nuc));
+  }
+  
   if (T <= 0) {
     source = 0;
     mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
@@ -1267,12 +1275,11 @@ int foam_pmdi10_co2_species_source(int species_no, /* Current species number */
   }
   double CH2O = fv->c[wH2O];
   double n = mp->u_species_source[wH2O][0];
-  // double t_nuc = mp->u_species_source[wH2O][1];
+  double t_nuc = mp->u_species_source[wH2O][1];
   double A = mp->u_species_source[wH2O][2];
   double norm_E = mp->u_species_source[wH2O][3];
 
-  // double N = 0.5 * (1 + tanh((time - t_nuc) / t_nuc));
-  double N = 1;
+  double N = 0.5 * (1 + tanh((time - t_nuc) / t_nuc));
 
   double source;
 
@@ -1364,16 +1371,23 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
 
   double CH2O = fv->c[wH2O];
   double n = mp->u_species_source[wH2O][0];
+  double t_nuc = mp->u_species_source[wH2O][1];
   double A = mp->u_species_source[wH2O][2];
   double norm_E = mp->u_species_source[wH2O][3];
   double src_min = mp->u_species_source[wH2O][4];
   double conc_min = mp->u_species_source[wH2O][5];
-  double N = 1;
+  double N; // nucleation delay term when relevant
 
-  double M_CO2 = mp->u_density[0];
-  double rho_liq = mp->u_density[1];
-
-  double source;
+  if (t_nuc<0){ // HLC version with nuc so no delay
+     N = 1;
+  }
+  else { //Weston's orignal version, without nuc
+    N = 0.5 * (1 + tanh((time - t_nuc) / t_nuc));
+  }
+  
+ double M_CO2 = mp->u_density[0];
+ double rho_liq = mp->u_density[1];
+ double source;
 
   if (T <= 0) {
     source = 0;

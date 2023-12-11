@@ -77,10 +77,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define PARABOLIC_FRAGMENT 9
 
 // nucleation
-#define TIME_CONTROLLED_NUCLEATION  7
-#define CONCENTRATION_DEPENDENT_PMDI     8
-#define SUSPENSION_NUCLEATION       9
-#define CONSTANT_NUC               10
+#define TIME_CONTROLLED_NUCLEATION   7
+#define CONCENTRATION_DEPENDENT_PMDI 8
+#define SUSPENSION_NUCLEATION        9
+#define CONSTANT_NUC                 10
 
 /* Source term models */
 #define BOUSS                                      \
@@ -363,8 +363,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define GILLETTE_FOAMY_LIQUID  61
 #define GILLETTE_FOAMY_GASEOUS 62
 
-#define TURBULENT_SA         52 /* Spallart Allmaras */
-#define TURBULENT_SA_DYNAMIC 53 /* Spallart Allmaras */
+#define TURBULENT_SA         63 /* Spallart Allmaras */
+#define TURBULENT_SA_DYNAMIC 64 /* Spallart Allmaras */
 
 /*
  *  Heat source modeling

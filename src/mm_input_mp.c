@@ -7632,17 +7632,23 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     } else if (!strcmp(model_name, "VISCOSITY_PRESSURE_SCALED")) {
       model_read = 1;
       mat_ptr->moment_growth_model = VISCOSITY_PRESSURE_GROWTH_RATE;
-      if (fscanf(imp, "%lf %lf %lf %lf ", &a0, &a1, &a2, &a3) != 4) {
+      int const_read = 0;
+      mat_ptr->moment_growth_Toff = 1e308;
+      mat_ptr->moment_growth_Tramp = 0;
+      if ((const_read = fscanf(imp, "%lf %lf %lf %lf ", &a0, &a1, &a2, &a3)) < 2) {
         sr =
-            sprintf(err_msg, "Matl %s needs 4 constants for %s %s model.\n",
+            sprintf(err_msg, "Matl %s needs at least 2 constants for %s %s model.\n",
                     pd_glob[mn]->MaterialName, "Moment Growth Kernel", "VISCOSITY_PRESSURE_SCALED");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
-      printf("%lf %lf %lf", a0, a2, a3);
       mat_ptr->moment_growth_scale = a0;
       mat_ptr->moment_growth_reference_pressure = a1;
-      mat_ptr->moment_growth_Toff = a2;
-      mat_ptr->moment_growth_Tramp = a3;
+      if (const_read > 2) {
+        mat_ptr->moment_growth_Toff = a2;
+      }
+      if (const_read > 3) {
+        mat_ptr->moment_growth_Tramp = a3;
+      }
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_growth_scale));
     } else if (!strcmp(model_name, "MASS_FRACTION_SCALED")) {
       model_read = 1;
@@ -8524,9 +8530,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       SpeciesSourceModel = FOAM_PMDI_10_H2O;
       model_read = 1;
       mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      int const_read = 0;
       mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
-      if (fscanf(imp, "%lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5) != 6) {
-        sr = sprintf(err_msg, "Matl %s needs 6 constants for %s %s model.\n",
+      if ((const_read = fscanf(imp, "%lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5)) < 4) {
+        sr = sprintf(err_msg, "Matl %s needs at least 4 constants for %s %s model.\n",
                      pd_glob[mn]->MaterialName, "Species Source", "FOAM_PMDI_10_H2O");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
@@ -8539,8 +8546,12 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->u_species_source[species_no][1] = a1; /* t_nuc */
       mat_ptr->u_species_source[species_no][2] = a2; /* A */
       mat_ptr->u_species_source[species_no][3] = a3; /* En/R */
-      mat_ptr->u_species_source[species_no][4] = a4; /* source minimum cut off*/
-      mat_ptr->u_species_source[species_no][5] = a5; /* concentration minium cut off*/
+      if (const_read > 4) {
+        mat_ptr->u_species_source[species_no][4] = a4; /* source minimum cut off*/
+      }
+      if (const_read > 5) {
+        mat_ptr->u_species_source[species_no][5] = a5; /* concentration minium cut off*/
+      }
       SPF_DBL_VEC(endofstring(es), 6, mat_ptr->u_species_source[species_no]);
     } else if (!strcmp(model_name, "FOAM_PMDI_10_CO2")) {
       SpeciesSourceModel = FOAM_PMDI_10_CO2;

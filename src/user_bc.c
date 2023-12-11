@@ -77,6 +77,47 @@ dbl velo_vary_fnc(const int velo_condition,
       }  */
   double thetadot = p[0]; // rate of change of theta wrt to time
   if (velo_condition == UVARY_BC) {
+    ///* if(time<900.)
+    //   {
+    //     a1 = 0.002;
+    //   }
+    // else if(time>=900.&&time<1800.)
+    //   {
+    //     a1 = 0.02;
+    //   }
+    // else if(time>=1800.&&time<2700.)
+    //   {
+    //     a1 = 0.2;
+    //   }
+    // else if(time>=2700.&&time<3600.)
+    //   {
+    //     a1 = 0.02;
+    //   }
+    // else if(time>=3600.&&time<4500.)
+    //   {
+    //     a1 = 0.002;
+    //   }
+    // else if(time>=4500.)
+    //   {
+    //     a1 = 0.;
+    //   }
+    // */
+    // double y = x2, z = x3;
+
+    // // origin of circle
+    // double z0 = 0.0; //(2.162810-1.21031)*0.5 + 1.21031;
+    // double y0 = 0.0;
+
+    // double R = 0.1; // 0.254*0.25;//0.1; // Radius of tube
+
+    // double v_max = 5 * tanh(time);
+
+    // double coeff = v_max * (1 / (R * R));
+
+    // double r = sqrt((y - y0) * (y - y0) + (z - z0) * (z - z0));
+
+    // f = coeff * (R * R - r * r);
+    // /*  f = -a2*x2/radius; */
     f = -thetadot * x2;
   } else if (velo_condition == VVARY_BC) {
     f = thetadot * x1;

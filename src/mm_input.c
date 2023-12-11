@@ -5644,7 +5644,6 @@ void rd_ac_specs(FILE *ifp, char *input) {
         /* loop through equation names and compare to input */
         stringup(input);
         for (var = 0; var < MAX_VARIABLE_TYPES && !var_found; var++) {
-          // printf("%s vs %s vs %s\n",input, Var_Name[var].name1, Var_Name[var].name2);
           if (!strcmp(input, Var_Name[var].name1) || !strcmp(input, Var_Name[var].name2))
             var_found = TRUE;
         }

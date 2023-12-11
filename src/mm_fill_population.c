@@ -290,6 +290,10 @@ void adaptive_wheeler(
   double bmin = 1e128;
   for (int i = 0; i < (*n_out + 1); i++) {
     if (b[i] < bmin) {
+      if (bmin < 0) {
+        fprintf(stderr, "Moments %.30e %.30e %.30e %.30e are not realizable\n", moments[0],
+                moments[1], moments[2], moments[3]);
+      }
       bmin = b[i];
     }
   }
