@@ -3801,7 +3801,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         slopeL += dHc_L_dX[i] * lsi->normal[i];
       }
       /*  Positive sign for convex meniscus, negative for concave meniscus,
-            this sign convention is opposite of generally accepted one for curvature 
+            this sign convention is opposite of generally accepted one for curvature
           i.e., 2H = grad-dot-normal_vector vs. 2H = -grad-dot-normal_vector       */
       CURV = -(cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / H_cap;
 
@@ -3821,8 +3821,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         for (j = 0; j < DIM; j++) {
           D_CURV_DF[i] += sin(dcaU + atan(slopeU)) / (H_cap * (1 + slopeU * slopeU)) * dHc_U_dX[j] *
                           lsi->d_normal_dF[j][i];
-          D_CURV_DF[i] += sin(dcaL + atan(-slopeL)) / (H_cap * (1 + slopeL * slopeL)) * dHc_L_dX[j] *
-                          lsi->d_normal_dF[j][i];
+          D_CURV_DF[i] += sin(dcaL + atan(-slopeL)) / (H_cap * (1 + slopeL * slopeL)) *
+                          dHc_L_dX[j] * lsi->d_normal_dF[j][i];
         }
         D_CURV_DF[i] += D_CURV_DH * dH_dF[i];
       }
