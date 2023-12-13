@@ -1568,6 +1568,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->FSIModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->TurbulentLubricationModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->LubIntegrationModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->Lub_Curv_DiffModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedPorosityModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedRadiusModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedHeightModel, 1, MPI_INT);
@@ -1845,6 +1846,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->cap_pres_tableid, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->LubInt_NGP, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->LubInt_PL, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->Lub_Curv_Diff, 1, MPI_DOUBLE);
 
     /*
      * Material property constants that are vectors over the concentration

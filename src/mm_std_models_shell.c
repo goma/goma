@@ -657,10 +657,6 @@ double height_function_model(double *H_U,
       } else {
         H *= exp_term2;
         dh_grad = alpha / (2. * powerlaw + 1.) * pow(exp_term2, -2. * powerlaw);
-        if (0 && H < DBL_SEMI_SMALL) {
-          H = DBL_SEMI_SMALL;
-          dh_grad = 0.0;
-        }
       }
       if (mp->HeightUFunctionModel == WALL_DISTMOD) {
         dH_U_dX[0] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][0];

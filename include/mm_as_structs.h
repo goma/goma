@@ -3192,28 +3192,29 @@ struct Lubrication_Auxiliaries {
   double dgradP_normal_dP[DIM];  /* Pressure gradient normal sensitivities w.r.t.
                                     pressure */
 
-  double dq_dh[DIM][MDE];              /* Flow rate sensitivities w.r.t. height */
-  double dq_dh1[DIM][MDE];             /* Flow rate sensitivities w.r.t. height */
-  double dq_dh2[DIM][MDE];             /* Flow rate sensitivities w.r.t. height */
-  double dq_dp[DIM][MDE];              /* Flow rate sensitivities w.r.t. lubrication pressure */
-  double dq_dp2[DIM];                  /* Flow rate sensitivities w.r.t. lubrication pressure */
-  double dq_df[DIM][MDE];              /* Flow rate sensitivities w.r.t. level set */
-  double dq_dk[DIM];                   /* Flow rate sensitivities w.r.t. curvature */
-  double dq_dx[DIM][DIM][MDE];         /* Flow rate sensitivities w.r.t. mesh deformation */
-  double dq_dnormal[DIM][DIM][MDE];    /* Flow rate sensitivities w.r.t. shell normal */
-  double dq_drs[DIM][DIM][MDE];        /* Flow rate sensitivities w.r.t. real solid
-                                          deformation */
-  double dq_ddh[DIM];                  /* Flow rate sensitivities w.r.t. heat transport */
-  double dq_dc[DIM][MDE];              /* Flow rate sensitivities w.r.t. particles volume
-                                          fraction */
-  double dq_dconc[DIM][MAX_CONC][MDE]; /* Flow rate sensitivities w.r.t. species concentration */
-  double dq_dshear_top[DIM][MDE];      /* Flow rate sensitivities w.r.t. top wall
-                                          shear rate */
-  double dq_dshear_bot[DIM][MDE];      /* Flow rate sensitivities w.r.t. bottom wall
-                                          shear rate */
-  double dq_dcross_shear[DIM][MDE];    /* Flow rate sensitivities w.r.t. cross
-                                          stream shear stress */
-  double dq_dgradp[DIM][DIM];          /* Flow rate sensitivities w.r.t. pressure gradient */
+  double dq_dh[DIM][MDE];           /* Flow rate sensitivities w.r.t. height */
+  double dq_dh1[DIM][MDE];          /* Flow rate sensitivities w.r.t. height */
+  double dq_dh2[DIM][MDE];          /* Flow rate sensitivities w.r.t. height */
+  double dq_dp[DIM][MDE];           /* Flow rate sensitivities w.r.t. lubrication pressure */
+  double dq_dp2[DIM];               /* Flow rate sensitivities w.r.t. lubrication pressure */
+  double dq_df[DIM][MDE];           /* Flow rate sensitivities w.r.t. level set */
+  double dq_dk[DIM];                /* Flow rate sensitivities w.r.t. curvature */
+  double dq_dx[DIM][DIM][MDE];      /* Flow rate sensitivities w.r.t. mesh deformation */
+  double dq_dnormal[DIM][DIM][MDE]; /* Flow rate sensitivities w.r.t. shell normal */
+  double dq_drs[DIM][DIM][MDE];     /* Flow rate sensitivities w.r.t. real solid
+                                       deformation */
+  double dq_ddh[DIM];               /* Flow rate sensitivities w.r.t. heat transport */
+  double dq_dc[DIM][MDE];           /* Flow rate sensitivities w.r.t. particles volume
+                                       fraction */
+  double dq_dconc[DIM][DIM][MAX_CONC]
+                 [MDE];             /* Flow rate sensitivities w.r.t. species concentration */
+  double dq_dshear_top[DIM][MDE];   /* Flow rate sensitivities w.r.t. top wall
+                                       shear rate */
+  double dq_dshear_bot[DIM][MDE];   /* Flow rate sensitivities w.r.t. bottom wall
+                                       shear rate */
+  double dq_dcross_shear[DIM][MDE]; /* Flow rate sensitivities w.r.t. cross
+                                       stream shear stress */
+  double dq_dgradp[DIM][DIM];       /* Flow rate sensitivities w.r.t. pressure gradient */
 
   double dv_avg_dh[DIM][MDE];           /* Average velocity sensitivities w.r.t. height */
   double dv_avg_dh1[DIM][MDE];          /* Average velocity sensitivities w.r.t. height */
@@ -3231,7 +3232,7 @@ struct Lubrication_Auxiliaries {
                                                 transport */
   double dv_avg_dc[DIM][MDE];           /* Average velocity sensitivities w.r.t. particles
                                            volume fraction */
-  double dv_avg_dconc[DIM][MAX_CONC]
+  double dv_avg_dconc[DIM][DIM][MAX_CONC]
                      [MDE]; /* Average velocity sensitivities w.r.t. species concentration */
   double dv_avg_dshear_top[DIM][MDE];   /* Average velocity sensitivities w.r.t.
                                            top wall shear rate */
