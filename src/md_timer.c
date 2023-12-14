@@ -67,6 +67,11 @@
 #include <sys/types.h>
 #endif
 
+#ifdef __MACH__
+#include <sys/times.h>
+#include <time.h>
+#endif
+
 #define GOMA_MD_TIMER_C
 #include "md_timer.h"
 #include "std.h"
