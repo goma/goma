@@ -69,6 +69,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 // breakage
 #define POWERLAW_BREAKAGE    4
 #define EXPONENTIAL_BREAKAGE 5
+#define VISCOSITY_AND_SHEAR_DEPENDENT_BREAKAGE 11
 
 // fragment
 #define SYMMETRIC_FRAGMENT 6

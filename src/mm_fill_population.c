@@ -291,8 +291,7 @@ void adaptive_wheeler(
   for (int i = 0; i < (*n_out + 1); i++) {
     if (b[i] < bmin) {
       if (bmin < 0) {
-        fprintf(stderr, "Moments %.30e %.30e %.30e %.30e are not realizable\n", moments[0],
-                moments[1], moments[2], moments[3]);
+        fprintf(stderr, "Moments %.30e %.30e %.30e %.30e are not realizable\n", moments[0], moments[1], moments[2], moments[3]);
       }
       bmin = b[i];
     }
@@ -1638,6 +1637,15 @@ extern int breakage_kernel_model(
   double pwr_alf;
   double fragment_dist = -1;
   double breakage_kernel;
+  double C1;     
+  double C2;     
+  double C3;     
+  double eps;    
+  double surf_T; 
+  double visc_d; 
+  double part1;  
+  double part2;  
+  double part3;  
 
   for (int k = 0; k < n_moments; k++) {
     MKS->BA[k] = 0;
@@ -1658,6 +1666,18 @@ extern int breakage_kernel_model(
         pwr_alf = mp->moment_breakage_kernel_exp;
         breakage_kernel = mp->moment_breakage_kernel_rate_coeff * (exp(na * pwr_alf));
         break;
+      case VISCOSITY_AND_SHEAR_DEPENDENT_BREAKAGE:
+       C1     = mp->u_moment_breakage[0];  
+       C2     = mp->u_moment_breakage[1];  
+       C3     = mp->u_moment_breakage[2];  
+       eps    = mp->u_moment_breakage[3];  
+       surf_T = mp->u_moment_breakage[4];  
+       visc_d = mp->u_moment_breakage[5];  
+       part1  = C1*pow(eps, 1/3);
+       part2  = C2*surf_T/(mp->u_density[1] * pow(eps, 2/3) * pow(na, 5/9));
+       part3  = C3*visc_d/(pow(mp->u_density[1]*mp->u_density[0],0.5)*pow(eps, 1/3)*pow(na, 4/9));
+       breakage_kernel = part1*erfc(pow(part2 + part3, 0.5));
+       break;
       default:
         GOMA_EH(GOMA_ERROR, "Unknown breakage kernel model");
         return -1;
@@ -1665,6 +1685,7 @@ extern int breakage_kernel_model(
       switch (mp->moment_fragment_model) {
       case SYMMETRIC_FRAGMENT:
         fragment_dist = pow(2, 1 - k) * pow(na, k);
+        MKS->BA[k] += breakage_kernel * wa * ((fragment_dist - pow(na, k)));
         break;
       case EROSION_FRAGMENT:
         fragment_dist = 1 + pow((na - 1), k);
@@ -1679,7 +1700,6 @@ extern int breakage_kernel_model(
         GOMA_EH(GOMA_ERROR, "Unknown fragment distribution");
         return -1;
       }
-      MKS->BA[k] += breakage_kernel * wa * ((fragment_dist - pow(na, k)));
       // printf("%d %lf %lf \n", k, breakage_kernel, pow(na,k));
       // printf("%d %lf\n", k, MKS->BA[k]);
     }

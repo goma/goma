@@ -7730,8 +7730,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
 
     model_read =
-        look_for_mat_prop(imp, "Moment Breakage Kernel", &(mat_ptr->moment_coalescence_model),
-                          &(mat_ptr->moment_coalescence_scale), NULL, NULL, model_name,
+        look_for_mat_prop(imp, "Moment Breakage Kernel", &(mat_ptr->moment_breakage_kernel_model),
+                          &(mat_ptr->moment_breakage_kernel_rate_coeff), NULL, NULL, model_name,
                           SCALAR_INPUT, &NO_SPECIES, es);
     if (!strcmp(model_name, "POWERLAW_BREAKAGE")) {
       model_read = 1;
@@ -7755,7 +7755,19 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->moment_breakage_kernel_rate_coeff = a0;
       mat_ptr->moment_breakage_kernel_exp = a1;
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_breakage_kernel_rate_coeff));
-    } else {
+    } else if (!strcmp(model_name, "VISCOSITY_AND_SHEAR_DEPENDENT_BREAKAGE")) {
+       mat_ptr->moment_breakage_kernel_model = VISCOSITY_AND_SHEAR_DEPENDENT_BREAKAGE;
+       num_const = read_constants(imp, &(mat_ptr->u_moment_breakage), 0);
+          if (num_const < 6) {
+            sprintf(err_msg, "Material %s - expected at least 6 constants for %s %s model.\n",
+                    pd_ptr->MaterialName, "Moment Breakage Kernel", "VISCOSITY_AND_SHEAR_DEPENDENT_BREAKAGE");
+            GOMA_EH(GOMA_ERROR, err_msg);
+          }
+          mat_ptr->len_u_moment_breakage = num_const;
+      
+          SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_breakage);
+
+     } else {
       if (model_read == -1) {
         GOMA_EH(model_read, "Moment Breakage Kernel invalid");
       }

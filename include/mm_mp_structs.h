@@ -670,6 +670,8 @@ struct Material_Properties {
   int moment_breakage_kernel_model;
   dbl moment_breakage_kernel_rate_coeff;
   dbl moment_breakage_kernel_exp;
+  int len_u_moment_breakage;
+  dbl *u_moment_breakage;
 
   int moment_fragment_model;
   dbl moment_fragment;
