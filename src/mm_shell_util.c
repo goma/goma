@@ -4699,7 +4699,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dbl q_mag = 0., pre_delP = 0., dq_gradp = 1., vpre_delP = 1.;
     dbl k_turb = 3., tau_w, vis_w, dq_gradpt, dv_gradp;
     dbl vsqr, dq_dH = 0., dv_dH = 0.;
-    dbl dqmag_dF[MDE], factor, ratio, q_mag2;
     double DGRADP_DX[DIM][DIM][MDE];
 
     for (i = 0; i < dim; i++) {
@@ -4792,24 +4791,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       dq_dH = (-3. * SQUARE(H) / (k_turb * mu) - 2. * H * beta_slip) * pgrad;
       srate = fabs(tau_w / mu);
       vis_w = mu;
-      for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
-        dqmag_dF[j] += q_mag * (-dmu_df[j] / mu);
-      }
     } /*  End of Viscosity Models **/
 
-    if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
-      ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-      q_mag2 = q_mag * ratio;
-      q_mag =
-          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-      factor *= (1. - ratio);
-      factor += ratio;
-      dq_gradp *= factor;
-      dq_dH *= factor;
-      pre_delP *= factor;
-      vis_w /= factor;
-    }
     dq_gradpt = dq_gradp - beta_slip * SQUARE(H);
     dv_gradp = dq_gradp / H - beta_slip * H;
     dv_dH = dq_dH / H - q_mag / SQUARE(H);
@@ -5303,6 +5286,8 @@ void calculate_lub_q_v_old(
   else if (pd->e[pg->imtrx][R_SHELL_FILMP]) {
 
     /******* PRECALCULATE ALL NECESSARY COMPONENTS ***********/
+    /* Problem dimensions */
+    int dim = pd->Num_Dim;
 
     /* Setup lubrication shell constructs */
     dbl wt_old = fv->wt;
@@ -5313,6 +5298,10 @@ void calculate_lub_q_v_old(
     /* Load viscosity */
     viscosity(gn, NULL, d_mu);
     mu_old = mp_old->viscosity;
+
+    /* Get slip coefficient */
+    double beta_slip;
+    beta_slip = mp->SlipCoeff;
 
     /* Extract bottom wall velocity */
     velocity_function_model(veloU_old, veloL_old, time_old, dt_old);
@@ -5366,22 +5355,92 @@ void calculate_lub_q_v_old(
 
     /******* CALCULATE FLOW RATE AND AVERAGE VELOCITY ***********/
 
+    double q_old[DIM], v_avg_old[DIM], pg_cmp[DIM], pgrad, ev[DIM];
     memset(q_old, 0.0, sizeof(double) * DIM);
     memset(v_avg_old, 0.0, sizeof(double) * DIM);
+    dbl q_mag = 0., k_turb = 3., tau_w, vis_w, srate, vsqr;
 
+    for (i = 0; i < dim; i++) {
+      pg_cmp[i] = GRADP[i] - GRAV[i] - GRAD_DISJ_PRESS[i];
+    }
+    pgrad = 0.;
+    vsqr = 0.;
+    for (i = 0; i < dim; i++) {
+      pgrad += SQUARE(pg_cmp[i]);
+      vsqr += SQUARE(veloL_old[i]);
+    }
+    pgrad = sqrt(pgrad);
+    if (DOUBLE_NONZERO(pgrad)) {
+      for (i = 0; i < dim; i++) {
+        ev[i] = pg_cmp[i] / pgrad;
+      }
+    } else {
+      ev[0] = 1.;
+    }
     /* Evaluate flow rate and average velocity */
-    for (i = 0; i < DIM; i++) {
-      q_old[i] += -pow(H_old, 3) / (3. * mu_old) * GRADP[i];
-      q_old[i] += pow(H_old, 3) / (3. * mu_old) * GRAD_DISJ_PRESS[i];
-      q_old[i] += pow(H_old, 3) / (3. * mu_old) * GRAV[i];
-      q_old[i] += H_old * veloL_old[i];
+    tau_w = H_old * pgrad;
+    if (gn->ConstitutiveEquation == POWER_LAW) {
+      double nexp = gn->nexp;
+      k_turb = 2. + 1. / nexp;
+      if (DOUBLE_NONZERO(pgrad)) {
+        q_mag = -SQUARE(H_old) / k_turb * pow(tau_w / mu_old, 1. / nexp);
+        srate = pow(fabs(tau_w) / mu_old, 1. / nexp);
+        vis_w = tau_w / srate;
+      } else {
+        q_mag = 0.;
+        srate = 0.;
+        vis_w = mu_old;
+      }
+    } else if (gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
+               gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF) {
+      int err;
+      if (isnan(tau_w))
+        GOMA_WH(GOMA_ERROR, "Trouble, tau_w is nan...\n");
+      err = lub_viscosity_integrate(tau_w, H_old, &q_mag, NULL, NULL, &srate, NULL, &vis_w);
+      if (isnan(srate))
+        fprintf(stderr, "srate isnan %g %g %g %g\n", tau_w, q_mag, srate, vis_w);
+      if (err < 0) {
+        GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
+      }
+
+      /** Make corrections for film flow from confined calculations **/
+      q_mag *= 2.;
+      q_mag -= beta_slip * SQUARE(H_old) * pgrad;
+    } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
+      double nexp = gn->nexp, yield = gn->tau_y;
+      k_turb = (2 * nexp + 1.);
+      if (tau_w > yield) {
+        q_mag = -pgrad * CUBE(H_old) / k_turb * pow((tau_w - yield) / mu_old, 1. / nexp) *
+                (nexp / tau_w -
+                 nexp / (1. + nexp) * yield / SQUARE(tau_w) * (1. + nexp * yield / SQUARE(tau_w)));
+        srate = pow((fabs(tau_w) - yield) / mu_old, 1. / nexp);
+      } else {
+        q_mag = 0.;
+      }
+    } else { /*  Newtonian type models */
+      k_turb = 3.;
+      q_mag = -pgrad * (CUBE(H_old) / (k_turb * mu_old) + beta_slip * SQUARE(H_old));
+      srate = fabs(tau_w / mu_old);
+      vis_w = mu_old;
+    } /*  End of Viscosity Models **/
+
+    for (i = 0; i < dim; i++) {
+      q_old[i] += q_mag * ev[i];
+    }
+    if (DOUBLE_NONZERO(vsqr) &&
+        (gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
+         gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF ||
+         gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == HERSCHEL_BULKLEY)) {
+      GOMA_EH(GOMA_ERROR, "Shear-thining moving wall model not finished yet.\n");
+    } else {
+      for (i = 0; i < dim; i++) {
+        q_old[i] += H_old * veloL_old[i];
+      }
     }
 
-    for (i = 0; i < DIM; i++) {
-      v_avg_old[i] += -pow(H_old, 2) / (3. * mu_old) * GRADP[i];
-      v_avg_old[i] += pow(H_old, 2) / (3. * mu_old) * GRAD_DISJ_PRESS[i];
-      v_avg_old[i] += pow(H_old, 2) / (3. * mu_old) * GRAV[i];
-      v_avg_old[i] += veloL_old[i];
+    memset(v_avg_old, 0.0, sizeof(double) * DIM);
+    for (i = 0; i < dim; i++) {
+      v_avg_old[i] += q_old[i] / H_old;
     }
 
     /******* STORE THE INFORMATION TO LUBRICATION AUXILIARIES STRUCTURE ***********/
