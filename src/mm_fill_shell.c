@@ -13815,7 +13815,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
   int eqn = R_SHELL_LUB_CURV;
   int peqn, var, pvar;
   int status = 0;
-  int masslump_bit = 1;
+  int masslump_bit = 0;
   int i, j, k, a, jj, b;
   dbl phi_i, grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
   dbl phi_j, grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
@@ -13952,10 +13952,10 @@ int assemble_lubrication_curvature(double time,            /* present time value
       diff = 0.0;
       if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
         for (a = 0; a < VIM; a++) {
-          diff += gradII_kappa[a] * grad_II_phi_i[a];
+          diff += hsquared[a] * gradII_kappa[a] * grad_II_phi_i[a];
         }
       }
-      diff *= K_diff * (*hsquared) * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+      diff *= K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
       /* Assemble divergence terms */
       div = 0.0;
@@ -14012,11 +14012,11 @@ int assemble_lubrication_curvature(double time,            /* present time value
           diff = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (a = 0; a < VIM; a++) {
-              diff += grad_II_phi_i[a] * grad_II_phi_j[a];
+              diff += hsquared[a] * grad_II_phi_i[a] * grad_II_phi_j[a];
             }
           }
           diff *=
-              K_diff * (*hsquared) * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+              K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
           /* Assemble jacobian */
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + diff;
@@ -14058,12 +14058,12 @@ int assemble_lubrication_curvature(double time,            /* present time value
             diff = 0.0;
             if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
               for (a = 0; a < VIM; a++) {
-                diff += d_gradII_kappa_dmesh[a][b][jj] * grad_II_phi_i[a] * det_J;
-                diff += gradII_kappa[a] * d_grad_II_phi_i_dmesh[a][b][jj] * det_J;
-                diff += gradII_kappa[a] * grad_II_phi_i[a] * fv->dsurfdet_dx[b][jj];
+                diff += hsquared[a] * d_gradII_kappa_dmesh[a][b][jj] * grad_II_phi_i[a] * det_J;
+                diff += hsquared[a] * gradII_kappa[a] * d_grad_II_phi_i_dmesh[a][b][jj] * det_J;
+                diff += hsquared[a] * gradII_kappa[a] * grad_II_phi_i[a] * fv->dsurfdet_dx[b][jj];
               }
             }
-            diff *= K_diff * (*hsquared) * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+            diff *= K_diff * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
             /* Assemble divergence terms */
             div = 0.0;
