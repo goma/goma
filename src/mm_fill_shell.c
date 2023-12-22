@@ -13815,7 +13815,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
   int eqn = R_SHELL_LUB_CURV;
   int peqn, var, pvar;
   int status = 0;
-  int masslump_bit = 0;
+  int masslump_bit = 1;
   int i, j, k, a, jj, b;
   dbl phi_i, grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
   dbl phi_j, grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
@@ -14015,8 +14015,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
               diff += hsquared[a] * grad_II_phi_i[a] * grad_II_phi_j[a];
             }
           }
-          diff *=
-              K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+          diff *= K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
           /* Assemble jacobian */
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + diff;

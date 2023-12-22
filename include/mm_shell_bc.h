@@ -55,13 +55,13 @@ EXTERN void shell_n_dot_flow_wall(double func[DIM],
 
 EXTERN void shell_n_dot_curv_bc(double func[DIM],
                                 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                                const double param1,  
-                                const int ibc_flag,     /* NOBC flag from bc input  */
-                                const int bc_id,        /* BC_Name */
-                                const double time,      /* current time */
-                                const double dt,        /* current time step size */
+                                const double param1,
+                                const int ibc_flag,         /* NOBC flag from bc input  */
+                                const int bc_id,            /* BC_Name */
+                                const double time,          /* current time */
+                                const double dt,            /* current time step size */
                                 const double hsquared[DIM], /* Element scales */
-                                double xi[DIM],         /* Local stu coordinates */
+                                double xi[DIM],             /* Local stu coordinates */
                                 const Exo_DB *exo);
 
 EXTERN void lub_static_pressure(double func[DIM],
