@@ -764,6 +764,9 @@ struct Material_Properties {
   dbl Lub_wts[MAX_LUB_NGP];
   dbl LubInt_PL;
 
+  int Lub_Curv_DiffModel;
+  double Lub_Curv_Diff;
+
   int TurbulentLubricationModel;
 
   dbl lubsource;

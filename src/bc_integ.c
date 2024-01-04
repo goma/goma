@@ -1042,6 +1042,14 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
               (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
           break;
 
+        case LUB_CURV_NOBC_BC:
+          shell_n_dot_curv_bc(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0],
+                              (int)bc->BC_Name, time_value, delta_t, pg_data->hsquared, xi, exo);
+          surface_determinant_and_normal(
+              ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
+              (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
+          break;
+
         case LUB_STATIC_BC:
           lub_static_pressure(func, d_func, bc->BC_Data_Float[0], time_value, delta_t, xi, exo);
           surface_determinant_and_normal(

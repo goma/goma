@@ -3516,8 +3516,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     mat_ptr->Energy_Div_Term = 0;
     SPF(es, "\t(%s = %s)", search_string, "off");
   }
-
   ECHO(es, echo_file);
+
   strcpy(search_string, "Residence Time Weight Function");
   model_read =
       look_for_mat_prop(imp, search_string, &(mat_ptr->Rst_funcModel), &(mat_ptr->Rst_func),
@@ -10097,6 +10097,20 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       }
       ECHO(es, echo_file);
     }
+  }
+
+  /*  Shell Lubrication Curvature Diffusion Term */
+  if (pd_glob[mn]->gv[R_SHELL_LUB_CURV] || pd_glob[mn]->gv[R_SHELL_LUB_CURV_2]) {
+    strcpy(search_string, "Lubrication Curvature Diffusion");
+    model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Curv_DiffModel),
+                                   &(mat_ptr->Lub_Curv_Diff), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+    if (model_read == -1) {
+      mat_ptr->Lub_Curv_DiffModel = CONSTANT;
+      mat_ptr->Lub_Curv_Diff = 1.0;
+      GOMA_WH(model_read, "Defaulting on Lubrication Curvature Diffusion");
+    }
+    ECHO(es, echo_file);
   }
 
   /*
