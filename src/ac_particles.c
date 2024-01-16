@@ -60,44 +60,6 @@
 /* GOMA include files */
 #define GOMA_AC_PARTICLES_C
 
-/* Global variables extern declared in ac_particles.h. */
-int Particle_Dynamics;                /* global toggle indicating particles are present. */
-enum Particle_Model_t Particle_Model; /* What flavor of particle<->continuum stuff... */
-dbl Particle_Model_Data[MAX_PARTICLE_MODEL_DATA_VALUES]; /* Real values for this model. */
-int Particle_Number;                                     /* number of discrete particles. */
-particle_filename_s Particle_Restart_Filename;           /* restart filename */
-int Particle_Output_Stride;    /* How often to output particle information. */
-dbl Particle_Output_Time_Step; /* Output every these units. */
-int Particle_Max_Time_Steps;   /* max number of particle time steps if steady solution. */
-enum Particle_Output_Format_t Particle_Output_Format; /* What kind of output file? */
-int Particle_Full_Output_Stride;                   /* > 0 => full output every that many steps. */
-particle_filename_s Particle_Full_Output_Filename; /* where to put them. */
-int Particle_Number_Sample_Types;                  /* How many datasets to output? */
-int *Particle_Number_Samples_Existing;             /* How many are tagged for each sample type?*/
-int *Particle_Number_Samples;          /* How many particles to output for dataset #n? */
-int *Particle_Number_Output_Variables; /* How many output vars for each sample. */
-particle_variable_s *
-    *Particle_Output_Variables; /* List of variable indices to output for dataset #n */
-particle_filename_s *Particle_Filename_Template; /* Template of where to put the data... */
-
-dbl Particle_Density;         /* Density of particle in problem units */
-dbl Particle_Radius;          /* Radius of particle in problem units. */
-dbl Particle_Ratio;           /* Real/computational particle ratio. */
-int Particle_Show_Debug_Info; /* Show particle debug info. */
-enum Particle_Domain_t Particle_Creation_Domain;
-enum Particle_Domain_t Particle_Move_Domain;
-particle_filename_s Particle_Creation_Domain_Filename;
-particle_s Particle_Creation_Domain_Name;
-particle_filename_s Particle_Move_Domain_Filename;
-particle_s Particle_Move_Domain_Name;
-dbl Particle_Creation_Domain_Reals[MAX_DOMAIN_REAL_VALUES];
-dbl Particle_Move_Domain_Reals[MAX_DOMAIN_REAL_VALUES];
-dbl xi_boundary_tolerances[3] = {XI_BOUNDARY_TOLERANCE0, XI_BOUNDARY_TOLERANCE1,
-                                 XI_BOUNDARY_TOLERANCE2};
-
-int Particle_Number_PBCs; /* Number of particle-related sideset BC's. */
-PBC_t *PBCs;              /* Particle boundary condition structures. */
-
 /* Global variables that reside entirely within this file. */
 static particle_t *particles_to_do, *particles_to_send;
 static particle_t **element_particle_list_head;
@@ -127,8 +89,6 @@ static dbl *static_x_old;
 static dbl *static_xdot;
 static dbl *static_xdot_old;
 static dbl *static_resid_vector;
-
-element_particle_info_t *element_particle_info;
 
 static dbl my_volume;
 static dbl *el_volume;

@@ -239,9 +239,9 @@ NETCDF_VERSION="c-4.9.0"
 NETCDF_VERSION_ONLY="4.9.0"
 NETCDF_MD5="26cfd1b2e32d511bd82477803976365d"
 
-TRILINOS_VERSION="13.4.0"
-TRILINOS_VERSION_DASH="13-4-0"
-TRILINOS_MD5="8f0c9ef997b7fa1eff0d2dd16fddb7ad"
+TRILINOS_VERSION="14.4.0"
+TRILINOS_VERSION_DASH="14-4-0"
+TRILINOS_MD5="334f9c3700c72f6ed5658eaa783ffccd"
 
 MUMPS_VERSION="5.5.1"
 MUMPS_URL="https://graal.ens-lyon.fr/MUMPS/MUMPS_$MUMPS_VERSION.tar.gz"
@@ -267,8 +267,8 @@ SCALAPACK_MD5="2397d36790d1445383bc3cdb1e18ca5f"
 LAPACK_VERSION="3.8.0"
 LAPACK_MD5="96591affdbf58c450d45c1daa540dbd2"
 
-PETSC_VERSION="3.18.0"
-PETSC_MD5="f7cf693ba8b1c04088deb65f9c5e8187"
+PETSC_VERSION="3.20.2"
+PETSC_MD5="1e170a5f096433ca21aa643c80c749eb"
 
 OMEGA_H_VERSION="9.34.13"
 OMEGA_H_MD5="b6eee23870bb21b58f9bbf0f640bf12a"
@@ -337,7 +337,7 @@ ARCHIVE_URLS=("$ARPACK_NG_URL" \
 "$MUMPS_URL" \
 "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/refs/tags/v$SUITESPARSE_VERSION.tar.gz" \
 "https://github.com/tbeu/matio/releases/download/v$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz" \
-"https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-$PETSC_VERSION.tar.gz" \
+"https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-$PETSC_VERSION.tar.gz" \
 "https://github.com/sandialabs/omega_h/archive/refs/tags/v$OMEGA_H_VERSION.tar.gz")
 
 # You can't call the ARPACK patch ARPACK or it will think it is already extracted

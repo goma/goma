@@ -2354,6 +2354,22 @@ struct BC_descriptions BC_Desc[] = {
      SINGLE_PHASE,
      DVI_SINGLE_PHASE_DB},
 
+    {"LUB_CURV_NOBC",
+     "LUB_CURV_NOBC_BC",
+     WEAK_INT_SURF,
+     LUB_CURV_NOBC_BC,
+     R_SHELL_LUB_CURV,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+
     {"SHELL_TEMP",
      "SHELL_TEMP_BC",
      DIRICHLET,
@@ -4055,6 +4071,26 @@ struct BC_descriptions BC_Desc[] = {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
      SINGLE_PHASE,
      DVI_SINGLE_PHASE_DB},
+    {"ELLIPTIC_XI_REGULARIZATION",
+     "ELLIPTIC_XI_REGULARIZATION_BC",
+     WEAK_INT_SURF,
+     ELLIPTIC_XI_REGULARIZATION_BC,
+     R_MESH1,
+     SCALAR,
+     NO_ROT,
+     {1, 1, 1, 0, 0, 1, 1, 1, 0, 0},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+    {"ELLIPTIC_ETA_REGULARIZATION",
+     "ELLIPTIC_ETA_REGULARIZATION_BC",
+     WEAK_INT_SURF,
+     ELLIPTIC_ETA_REGULARIZATION_BC,
+     R_MESH2,
+     SCALAR,
+     NO_ROT,
+     {1, 1, 1, 0, 0, 1, 1, 1, 0, 0},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
     {"KIN_LEAK",
      "KIN_LEAK_BC",
      STRONG_INT_SURF,
@@ -4102,6 +4138,26 @@ struct BC_descriptions BC_Desc[] = {
      R_MESH_NORMAL,
      SCALAR,
      R_MESH1,
+     {1, 1, 1, 0, 0, 1, 1, 1, 0, 0},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+    {"KINEMATIC_XI",
+     "KINEMATIC_XI_BC",
+     STRONG_INT_SURF,
+     KINEMATIC_XI_BC,
+     R_MESH1,
+     SCALAR,
+     NO_ROT,
+     {1, 1, 1, 0, 0, 1, 1, 1, 0, 0},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+    {"KINEMATIC_ETA",
+     "KINEMATIC_ETA_BC",
+     STRONG_INT_SURF,
+     KINEMATIC_ETA_BC,
+     R_MESH2,
+     SCALAR,
+     NO_ROT,
      {1, 1, 1, 0, 0, 1, 1, 1, 0, 0},
      SINGLE_PHASE,
      DVI_SINGLE_PHASE_DB},
@@ -7744,10 +7800,10 @@ struct Equation_Names Var_Name[] = {
     {"USTAR", "USX", USTAR},
     {"VSTAR", "USY", VSTAR},
     {"WSTAR", "USZ", WSTAR},
-    {"EDDY_NU", "EDDY_NU", EDDY_NU},
+    {"EDDY_NU", "EDDY_NU", EDDY_NU}, // 214
 
     {"MESH_POSITION1", "X", MESH_POSITION1},
-    {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 206 */
+    {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 216 */
     {"MESH_POSITION3", "Z", MESH_POSITION3},
 
     {"VEL_NORM", "VN", VEL_NORM},
@@ -7761,14 +7817,14 @@ struct Equation_Names Var_Name[] = {
 
     {"D_X1_DT", "XDOT", D_X1_DT},
     {"D_X2_DT", "YDOT", D_X2_DT},
-    {"D_X3_DT", "ZDOT", D_X3_DT}, /* 212 */
+    {"D_X3_DT", "ZDOT", D_X3_DT}, /* 227 */
     {"D_S_DT", "SDOT", D_S_DT},
 
     {"D_P_DT", "PDOT", D_P_DT},
 
     {"SOLID_POSITION1", "X_RS", SOLID_POSITION1},
     {"SOLID_POSITION2", "Y_RS", SOLID_POSITION2},
-    {"SOLID_POSITION3", "Z_RS", SOLID_POSITION3} /* 217 */
+    {"SOLID_POSITION3", "Z_RS", SOLID_POSITION3} /* 232 */
 };
 
 int Num_Var_Names = sizeof(Var_Name) / sizeof(struct Equation_Names);
@@ -8074,6 +8130,7 @@ struct Equation_Names Post_Var_Name[] = {
     {"FIRST_STRAINRATE_INVAR", "FIRST_STRAINRATE_INVAR", -1},
     {"SEC_STRAINRATE_INVAR", "SEC_STRAINRATE_INVAR", -1},
     {"THIRD_STRAINRATE_INVAR", "THIRD_STRAINRATE_INVAR", -1},
+    {"WALL_DISTANCE", "WALL_DISTANCE", -1},
 };
 
 int Num_Post_Var_Names = sizeof(Post_Var_Name) / sizeof(struct Equation_Names);

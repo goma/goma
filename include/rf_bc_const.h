@@ -806,6 +806,8 @@
 #define SM_PLANE_BC                961200000 /* Solid Model PLANE BC */
 #define MESH_CONSTRAINT_BC         961300000
 #define KINEMATIC_BC               962000000
+#define KINEMATIC_XI_BC            962000001
+#define KINEMATIC_ETA_BC           962000002
 #define LUB_KINEMATIC_BC           962050000
 #define KIN_LEAK_BC                962100000
 #define KIN_ELECTRODEPOSITION_BC   962200000 /* RSL 5/24/02 */
@@ -984,6 +986,12 @@
 #define T_CONTACT_RESIS_2_BC         47000026
 
 /*
+ELLIPTIC MESH
+*/
+#define ELLIPTIC_XI_REGULARIZATION_BC  77000001
+#define ELLIPTIC_ETA_REGULARIZATION_BC 77000002
+
+/*
  * HKM Chemkin boundary conditions along surfaces
  *       -> Not sure if bit masks are used so will keep with the 47 theme!
  *             The "10" digit will represent equation unknowns
@@ -1118,6 +1126,7 @@
 #define LUB_PRESS_HYDROSTATIC_BC 777000025
 #define GRAD_LUBP_NOBC_BC        777000026
 #define SHELL_LUB_WALL_BC        777000027
+#define LUB_CURV_NOBC_BC         777000028
 
 #define SHELL_TFMP_PRES_BC           777000030
 #define SHELL_TFMP_SAT_BC            777000031

@@ -27,6 +27,7 @@ single input parameter is defined as
 |            | * **NONLINEAR** - a nonlinear neo-Hookean elastic model for which the deformations can|
 |            |   be large without loss of frame invariance. This is the recommended model (and all   |
 |            |   materials currently default to NONLINEAR if the mesh is arbitrary).                 |
+|            | * **ELLIPTIC** - elliptic mesh generation equations                                   |
 |            |                                                                                       |
 |            |For a LAGRANGIAN, DYNAMIC_LAGRANGIAN, or TOTAL_ALE *Mesh Motion*, {model_name} can be  |
 |            |one of the following:                                                                  |

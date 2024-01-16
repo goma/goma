@@ -50,6 +50,7 @@
 #include "mm_fill.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_common.h"
+#include "mm_fill_elliptic_mesh.h"
 #include "mm_fill_em.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
@@ -108,6 +109,9 @@
 #include "wr_side_data.h"
 
 #define GOMA_MM_FILL_C
+
+extern struct elem_side_bc_struct ***First_Elem_Side_BC_Array;
+extern struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
 
 /*
  * Global variables defined here. Declared frequently via rf_bc.h
@@ -1571,7 +1575,17 @@ Revised:         Summer 1998, SY Tam (UNM)
 #endif
     }
 
-    if (pde[R_MESH1] && !pde[R_SHELL_CURVATURE] && !pde[R_SHELL_TENSION]) {
+    if (pde[R_MESH1] && cr->MeshFluxModel == ELLIPTIC) {
+      err = assemble_elliptic_mesh();
+      GOMA_EH(err, "assemble_elliptic_mesh");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_elliptic_mesh");
+      if (err)
+        return -1;
+#endif
+      if (neg_elem_volume)
+        return -1;
+    } else if (pde[R_MESH1] && !pde[R_SHELL_CURVATURE] && !pde[R_SHELL_TENSION]) {
       err = assemble_mesh(time_value, theta, delta_t, ielem, ip, ip_total);
       GOMA_EH(err, "assemble_mesh");
 #ifdef CHECK_FINITE
@@ -3153,6 +3167,9 @@ Revised:         Summer 1998, SY Tam (UNM)
         if (bct == CONTACT_SURF)
           call_contact = 1;
       }
+      if (upd->strong_bc_replace && (call_int || call_col || call_nedelec)) {
+        err = zero_strong_resid_side(lec, elem_side_bc);
+      }
       /*
        * Major change here 6/10/98 to accomodate frontal solver.  Here the
        * FLUID_SOLID/SOLID_FLUID BCs actually use local element contribution
@@ -4638,6 +4655,9 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
         if (bct == CONTACT_SURF)
           call_contact = 1;
       }
+      if (upd->strong_bc_replace && (call_int || call_col)) {
+        err = zero_strong_resid_side(lec, elem_side_bc);
+      }
       if (call_col) {
         err = apply_point_colloc_bc(resid_vector, delta_t, theta, ielem, ip_total, ielem_type,
                                     num_local_nodes, ielem_dim, iconnect_ptr, elem_side_bc,
@@ -5436,7 +5456,7 @@ int checkfinite(const char *file, const int line, const char *message) {
     peqn = upd->ep[pg->imtrx][eqn];
     if (peqn != -1) {
       for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-        j = finite(lec->R[LEC_R_INDEX(peqn, i)]);
+        j = isfinite(lec->R[LEC_R_INDEX(peqn, i)]);
         if (!j) {
           fprintf(stderr, "lec->R[%s][edof=%d] = %g\n", EQ_Name[eqn].name1, i,
                   lec->R[LEC_R_INDEX(peqn, i)]);

@@ -128,7 +128,8 @@ void load_extra_unknownsAC(int iAC,     /* ID NUMBER OF AC'S */
   }
 
   if (augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_FLUX ||
-      augc[iAC].Type == AC_LS_VEL || augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_ANGLE) {
+      augc[iAC].Type == AC_LS_VEL || augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_ANGLE ||
+      augc[iAC].Type == AC_POSITION_MT) {
 
     ibc = augc[iAC].BCID;
     idf = augc[iAC].DFID;
@@ -1962,7 +1963,7 @@ int std_aug_cond(int iAC,
     // Formulate and store the residual for the augmented condition
     gAC[iAC] = (inventory - augc[iAC].CONSTV);
 
-  } else if (augc[iAC].Type == AC_POSITION) {
+  } else if (augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_POSITION_MT) {
     inventory = getPositionAC(augc + iAC, cAC[iAC], mf_args->x, mf_args->exo);
 #ifdef PARALLEL
     if (Num_Proc > 1) {
@@ -2571,6 +2572,23 @@ static int estimate_dAC_ALC(
       }
       break;
 
+    case AC_POSITION:
+      // here you are supposed to calculate the residual at the + perturbation
+      // I believe this can be done for the position type ac by copying the structure above (line
+      // 1992) this should calculate the residual at the updated x
+
+      inventory = getPositionAC(augc + jAC, dAC[jAC], mf_args->x, mf_args->exo);
+#ifdef PARALLEL
+      if (Num_Proc > 1) {
+        MPI_Allreduce(&inventory, &global_inventory, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        inventory = global_inventory;
+      }
+#endif
+      // Formulate and store the perturbed residual for the augmented condition
+      // seems correct. -BW 04/18/2022 + WO 04/21/2023
+      res_p[jAC] = inventory - augc[jAC].CONSTV;
+      break;
+
     case AC_USERBC:
     case AC_USERMAT:
       load_extra_unknownsAC(jAC, x_AC, cx, mf_args->exo, mf_args->dpi);
@@ -2660,6 +2678,17 @@ static int estimate_dAC_ALC(
                                   *(mf_args->delta_t), *(mf_args->time), 0);
         res_m[jAC] = inventory - (-BC_Types[ibc].BC_Data_Float[idf]);
       }
+      break;
+    case AC_POSITION:
+      // just do it again
+      inventory = getPositionAC(augc + jAC, dAC[jAC], mf_args->x, mf_args->exo);
+#ifdef PARALLEL
+      if (Num_Proc > 1) {
+        MPI_Allreduce(&inventory, &global_inventory, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        inventory = global_inventory;
+      }
+#endif
+      res_m[jAC] = inventory - augc[jAC].CONSTV;
       break;
 
     case AC_USERBC:

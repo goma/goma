@@ -3681,6 +3681,28 @@ int load_fv_grads(void)
       }
     }
   }
+
+  /* grad(wall_distance)
+   *
+   */
+  if (upd->turbulent_info->use_internal_wall_distance) {
+    if (pd->gv[pd->ShapeVar]) {
+      dofs = ei[pg->imtrx]->dof[pd->ShapeVar];
+      for (p = 0; p < VIM; p++) {
+        fv->grad_wall_distance[p] = 0.0;
+        for (i = 0; i < dofs; i++) {
+          fv->grad_wall_distance[p] +=
+              upd->turbulent_info->wall_distances[ei[pg->imtrx]->gnn_list[pd->ShapeVar][i]] *
+              bf[pd->ShapeVar]->grad_phi[i][p];
+        }
+      }
+    }
+  } else if (zero_unused_grads && !upd->turbulent_info->use_internal_wall_distance) {
+    for (p = 0; p < VIM; p++) {
+      fv->grad_wall_distance[p] = 0.0;
+    }
+  }
+
   /*
    * External
    */
@@ -3690,6 +3712,7 @@ int load_fv_grads(void)
       dofs = ei[pg->imtrx]->dof_ext[w];
       if (efv->i[w] != I_TABLE) {
         if (strcmp(efv->name[w], "F1") == 0 && !pd->gv[PHASE1]) {
+
           /* load up the gradient of the the phase function variables
            * Currently, this is the only field whose gradient is computed when
            * is applied as externally

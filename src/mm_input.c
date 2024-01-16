@@ -5075,6 +5075,8 @@ void rd_ac_specs(FILE *ifp, char *input) {
       augc[iAC].Type = AC_VOLUME;
     } else if (!strcmp(input, "XY") || !strcmp(input, "POSITION")) {
       augc[iAC].Type = AC_POSITION;
+    } else if (!strcmp(input, "XY") || !strcmp(input, "POSITION_MT")) {
+      augc[iAC].Type = AC_POSITION_MT;
     } else if (!strcmp(input, "XY") || !strcmp(input, "ANGLE")) {
       augc[iAC].Type = AC_ANGLE;
     } else if (!strcmp(input, "LSV") || !strcmp(input, "LS_VELOCITY")) {
@@ -5148,11 +5150,10 @@ void rd_ac_specs(FILE *ifp, char *input) {
        *  5th    int - Form of the 1D position parameterization (0)
        *  6th   flt  - Value of the coordinate position
        */
-      read_line(ifp, input, FALSE);
+      // read_line(ifp, input, FALSE);
       augc[iAC].LewisNum = 0.0;
-      if (sscanf(input, "%d %d %d %d %d %lf %lf", &augc[iAC].MTID, &augc[iAC].VOLID,
-                 &augc[iAC].BCID, &augc[iAC].DFID, &augc[iAC].COMPID, &augc[iAC].CONSTV,
-                 &augc[iAC].LewisNum) < 6) {
+      if (fscanf(ifp, "%d %d %d %d %d %lf", &augc[iAC].MTID, &augc[iAC].VOLID, &augc[iAC].BCID,
+                 &augc[iAC].DFID, &augc[iAC].COMPID, &augc[iAC].CONSTV) < 6) {
         fprintf(stderr, "%s:\tError reading NSID, CoordID, BCID, DFID, FORMID, CONSTV\n", yo);
         fprintf(stderr, "%s:\tRecall Format:AC=NSID CoordID BCID DFID FORMID CONSTV\n", yo);
         exit(-1);
@@ -5163,6 +5164,34 @@ void rd_ac_specs(FILE *ifp, char *input) {
 
       break;
 
+    case AC_POSITION_MT:
+      /*
+       *  first  int - NSID Node set ID to be used
+       *  second int - CoordID direction to be used
+       *  third  int - MTID index to use for variable
+       *  4th    int - MPID index to use for variable
+       *  5th    int - Form of the 1D position parameterization (0)
+       *  6th   flt  - Value of the coordinate position
+       *
+       * I GUESS WE'RE GOING TO HAVE TO MESS THINGS UP
+       */
+      read_line(ifp, input, FALSE);
+      augc[iAC].LewisNum = 0.0;
+      if (sscanf(input, "%d %d %d %d %d %lf %lf", &augc[iAC].DHID, &augc[iAC].VOLID,
+                 &augc[iAC].MTID, &augc[iAC].MPID, &augc[iAC].COMPID, &augc[iAC].CONSTV,
+                 &augc[iAC].LewisNum) < 6) {
+        fprintf(stderr, "%s:\tError reading NSID, CoordID, BCID, DFID, FORMID, CONSTV\n", yo);
+        fprintf(stderr, "%s:\tRecall Format:AC=NSID CoordID BCID DFID FORMID CONSTV\n", yo);
+        exit(-1);
+        DPRINTF(stdout, "NSID %i, CoordID%i, MTID%i, MPID%i, form%i, Value%f", augc[iAC].DHID,
+                augc[iAC].VOLID, augc[iAC].MTID, augc[iAC].MPID, augc[iAC].COMPID,
+                augc[iAC].CONSTV);
+      }
+
+      SPF(endofstring(echo_string), " %d %d %d %d %d %.4g", augc[iAC].MTID, augc[iAC].VOLID,
+          augc[iAC].BCID, augc[iAC].DFID, augc[iAC].COMPID, augc[iAC].CONSTV);
+
+      break;
     case AC_LS_VEL: /* LSV */
       if (fscanf(ifp, "%d %d %d %d %s", &augc[iAC].MTID, &augc[iAC].BCID, &augc[iAC].DFID,
                  &augc[iAC].LSPHASE, input) != 5) {
@@ -5653,8 +5682,9 @@ void rd_ac_specs(FILE *ifp, char *input) {
 
     if (augc[iAC].BCID == APREPRO_LIB_AC_BCID ||
         ((augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_FLUX ||
-          augc[iAC].Type == AC_FLUX_MAT) &&
+          augc[iAC].Type == AC_FLUX_MAT || augc[iAC].Type == AC_POSITION) &&
          augc[iAC].BCID == APREPRO_AC_BCID)) {
+
       if (fscanf(ifp, "%s", string) != 1) {
         GOMA_EH(GOMA_ERROR, "error reading Parameter File name");
       }
@@ -5807,6 +5837,40 @@ void rd_solver_specs(FILE *ifp, char *input) {
     ECHO(echo_string, echo_file);
   } else {
     upd->Total_Num_Matrices = 1;
+  }
+
+  iread = look_for_optional(ifp, "Strong Boundary Condition Replace Equation", input, '=');
+  upd->strong_bc_replace = FALSE;
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (!strcasecmp(input, "no") || !strcasecmp(input, "false")) {
+      upd->strong_bc_replace = FALSE;
+      ECHO("Strong Boundary Condition Replace Equation = no", echo_file);
+    } else if (!strcasecmp(input, "yes") || !strcasecmp(input, "true")) {
+      upd->strong_bc_replace = TRUE;
+      ECHO("Strong Boundary Condition Replace Equation = yes", echo_file);
+    } else {
+      GOMA_EH(GOMA_ERROR, "Bad specification for Strong Boundary Condition Replace Equation");
+    }
+  }
+
+  iread = look_for_optional(ifp, "Strong Boundary Condition Penalty", input, '=');
+  if (iread == 1) {
+    upd->strong_penalty = read_dbl(ifp, "Strong Boundary Condition Penalty");
+    if (upd->strong_penalty <= 0) {
+      GOMA_EH(GOMA_ERROR, "Strong Boundary Condition Penalty should be greater than 0, got %g",
+              upd->strong_penalty);
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "Strong Boundary Condition Penalty",
+             upd->strong_penalty);
+    ECHO(echo_string, echo_file);
+  } else {
+    if (upd->strong_bc_replace) {
+      upd->strong_penalty = 1.0;
+    } else {
+      upd->strong_penalty = BIG_PENALTY;
+    }
   }
 
   iread = look_for_optional(ifp, "Segregated Solve", input, '=');
@@ -6539,6 +6603,21 @@ void rd_solver_specs(FILE *ifp, char *input) {
       GOMA_EH(GOMA_ERROR, "error reading Variable Stats");
     }
     SPF(echo_string, "%s = %d", "Output Variable Statistics", Output_Variable_Stats);
+  }
+
+  Output_Variable_Regression = 0;
+  iread = look_for_optional(ifp, "Output Variable Regression", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0) {
+      Output_Variable_Regression = FALSE;
+    } else if (strcmp(input, "yes") == 0) {
+      Output_Variable_Regression = TRUE;
+    } else {
+      GOMA_EH(GOMA_ERROR, "error reading Variable Regression");
+    }
+    SPF(echo_string, "%s = %d", "Output Variable Regression", Output_Variable_Regression);
   }
 
   iread = look_for_optional(ifp, "Residual Ratio Tolerance", input, '=');
@@ -7757,6 +7836,9 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
     MeshMotion = DYNAMIC_LAGRANGIAN;
   } else if (!strcmp(tscs, "TOTAL_ALE")) {
     MeshMotion = TOTAL_ALE;
+  } else if (!strcmp(tscs, "ELLIPTIC")) {
+    MeshMotion = ELLIPTIC;
+    GOMA_WH(GOMA_ERROR, "Warning still testing elliptic mesh motion");
   } else {
     fprintf(stderr, "%s: unrecognized mesh motion type: %s\n", yo, tscs);
     exit(-1);
@@ -12369,7 +12451,7 @@ int count_datalines(FILE *ifp, char *input, const char *endlist) {
 #ifndef tflop
   fgetpos(ifp, &file_position); /* OK everybody, remember where we parked */
 #else
-  file_position = ftell(ifp);          /* OK everybody, remember where we parked */
+  file_position = ftell(ifp); /* OK everybody, remember where we parked */
 #endif
 
   if (endlist != NULL) /* Table data is in input deck */

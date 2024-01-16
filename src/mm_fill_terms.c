@@ -76,7 +76,6 @@
 #include "stdbool.h"
 #include "user_mp.h"
 #include "user_mp_gen.h"
-
 /*  _______________________________________________________________________  */
 
 /* assemble_mesh -- assemble terms (Residual &| Jacobian) for mesh stress eqns
@@ -107,7 +106,6 @@
  *       local accumulators in "lec".
  *
  */
-
 int assemble_mesh(double time,
                   double tt,
                   double dt,

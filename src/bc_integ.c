@@ -21,7 +21,6 @@
 
 /* Standard include files */
 
-#include "load_field_variables.h"
 #include <complex.h>
 #undef I
 #include <math.h>
@@ -40,6 +39,7 @@
 #include "el_geom.h"
 #include "exo_struct.h"
 #include "gds/gds_vector.h"
+#include "load_field_variables.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
@@ -47,6 +47,7 @@
 #include "mm_elem_block_structs.h"
 #include "mm_em_bc.h"
 #include "mm_fill_aux.h"
+#include "mm_fill_elliptic_mesh.h"
 #include "mm_fill_em.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_jac.h"
@@ -144,6 +145,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
   VARIABLE_DESCRIPTION_STRUCT *vd;
   double surface_centroid[DIM];
   int interface_id = -1;
+  const double penalty = upd->strong_penalty;
 
   tran->time_value = time_intermediate;
 
@@ -484,6 +486,8 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
         switch (bc->BC_Name) {
         case KINEMATIC_PETROV_BC:
         case KINEMATIC_BC:
+        case KINEMATIC_XI_BC:
+        case KINEMATIC_ETA_BC:
         case VELO_NORMAL_BC:
         case VELO_NORMAL_LS_BC:
         case VELO_NORMAL_LS_PETROV_BC: {
@@ -508,6 +512,11 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
         }
         //        }
         break;
+
+        case ELLIPTIC_XI_REGULARIZATION_BC:
+        case ELLIPTIC_ETA_REGULARIZATION_BC:
+          assemble_essential_elliptic_mesh(func, d_func, bc->BC_Name, bc->BC_Data_Float[0]);
+          break;
 
         case VELO_NORMAL_LUB_BC:
         case LUB_KINEMATIC_BC:
@@ -1026,7 +1035,16 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           break;
 
         case SHELL_LUB_WALL_BC:
-          shell_n_dot_flow_wall(func, d_func, bc->BC_Data_Float[0], time_value, delta_t, xi, exo);
+          shell_n_dot_flow_wall(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Float[1],
+                                time_value, delta_t, xi, exo);
+          surface_determinant_and_normal(
+              ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
+              (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
+          break;
+
+        case LUB_CURV_NOBC_BC:
+          shell_n_dot_curv_bc(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0],
+                              (int)bc->BC_Name, time_value, delta_t, pg_data->hsquared, xi, exo);
           surface_determinant_and_normal(
               ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
               (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
@@ -2051,7 +2069,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                         bc->BC_Name == VELO_NORMAL_LS_PETROV_BC ||
                         bc->BC_Name == SHELL_LUB_WALL_BC ||
                         bc->BC_Name == KIN_DISPLACEMENT_PETROV_BC) {
-                      if (pd->Num_Dim != 2) {
+                      if (pd->Num_Dim != 2 && bc->BC_Name != SHELL_LUB_WALL_BC) {
                         GOMA_EH(
                             GOMA_ERROR,
                             "KINEMATIC_PETROV or KIN_DISPLACEMENT_PETROV not available in 3D yet");
@@ -2060,10 +2078,16 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                       i_basis = 1 - id_side % 2;
                       phi_i = bf[eqn]->dphidxi[ldof_eqn][i_basis];
                       weight *= phi_i;
+                    } else if (bc->BC_Name == ELLIPTIC_XI_REGULARIZATION_BC ||
+                               bc->BC_Name == ELLIPTIC_ETA_REGULARIZATION_BC) {
+                      i_basis = (bc->BC_Name - ELLIPTIC_XI_REGULARIZATION_BC);
+                      phi_i = bf[eqn]->dphidxi[ldof_eqn][i_basis];
+                      weight *= phi_i;
                     } else {
                       phi_i = bf[eqn]->phi[ldof_eqn];
                       weight *= phi_i;
                     }
+
                   }
                   /*
                    *  Handle the case of CROSS_PHASE boundary conditions in the
@@ -2114,7 +2138,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                  * For strong conditions weight the function by BIG_PENALTY
                  */
                 if (bc_desc->method == STRONG_INT_SURF) {
-                  weight *= BIG_PENALTY;
+                  weight *= penalty;
                 }
                 /*
                  *   Add in the multiplicative constant for corresponding to
@@ -2332,7 +2356,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                    * For strong conditions weight the function by BIG_PENALTY
                    */
                   if (bc_desc->method == STRONG_INT_SURF) {
-                    weight *= BIG_PENALTY;
+                    weight *= penalty;
                   }
 
                   /*
@@ -2769,7 +2793,7 @@ int apply_nedelec_bc(double x[],            /* Solution vector for the current p
            * For strong conditions weight the function by BIG_PENALTY
            */
           if (bc_desc->method == STRONG_INT_NEDELEC) {
-            weight *= BIG_PENALTY;
+            weight *= upd->strong_penalty;
           }
           ieqn = upd->ep[pg->imtrx][eqn];
 

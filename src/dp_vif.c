@@ -712,6 +712,7 @@ void noahs_ark(void) {
   ddd_add_member(n, Epsilon, MAX_NUM_MATRICES * 3, MPI_DOUBLE);
   ddd_add_member(n, &Solver_Output_Format, 1, MPI_INT);
   ddd_add_member(n, &Output_Variable_Stats, 1, MPI_INT);
+  ddd_add_member(n, &Output_Variable_Regression, 1, MPI_INT);
 
   /*
    * Eigensolver inputs.
@@ -1008,6 +1009,8 @@ void noahs_ark(void) {
   ddd_add_member(n, &upd->PSPG_advection_correction, 1, MPI_INT);
   ddd_add_member(n, &upd->petsc_solve_post_proc, 1, MPI_INT);
   ddd_add_member(n, &upd->devss_traceless_gradient, 1, MPI_INT);
+  ddd_add_member(n, &upd->strong_bc_replace, 1, MPI_INT);
+  ddd_add_member(n, &upd->strong_penalty, 1, MPI_DOUBLE);
 
   ddd_add_member(n, pg->time_step_control_disabled, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, pg->matrix_subcycle_count, MAX_NUM_MATRICES, MPI_INT);
@@ -1565,6 +1568,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->FSIModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->TurbulentLubricationModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->LubIntegrationModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->Lub_Curv_DiffModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedPorosityModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedRadiusModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedHeightModel, 1, MPI_INT);
@@ -1842,6 +1846,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->cap_pres_tableid, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->LubInt_NGP, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->LubInt_PL, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->Lub_Curv_Diff, 1, MPI_DOUBLE);
 
     /*
      * Material property constants that are vectors over the concentration
@@ -2625,6 +2630,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &SPECIES_SOURCES, 1, MPI_INT);
   ddd_add_member(n, &VISCOUS_STRESS, 1, MPI_INT);
+  ddd_add_member(n, &PP_VELOCITY_GRADIENTS, 1, MPI_INT);
   ddd_add_member(n, &VISCOUS_STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &VISCOUS_VON_MISES_STRESS, 1, MPI_INT);
   ddd_add_member(n, &EM_CONTOURS, 1, MPI_INT);

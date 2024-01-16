@@ -711,6 +711,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ElasticConstitutiveEquation = INCOMP_3D;
   } else if (!strcmp(model_name, "KELVIN_VOIGT")) {
     ElasticConstitutiveEquation = KELVIN_VOIGT;
+  } else if (!strcmp(model_name, "ELLIPTIC")) {
+    ElasticConstitutiveEquation = ELLIPTIC;
   } else if (!strcmp(model_name, "ZENER_SLS")) {
     ElasticConstitutiveEquation = ZENER_SLS;
   } else /* default to nonlinear */
@@ -1155,7 +1157,17 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   if (model_read == -1) {
 
-    if (!strcmp(model_name, "SHRINKAGE")) {
+    if (!strcmp(model_name, "CONSTANT_DV")) {
+      elc_glob[mn]->thermal_expansion_model = CONSTANT_DV;
+      num_const = read_constants(imp, &(elc_glob[mn]->u_thermal_expansion), NO_SPECIES);
+      elc_glob[mn]->thermal_expansion = elc_glob[mn]->u_thermal_expansion[0];
+      if (num_const < 1) {
+        GOMA_EH(GOMA_ERROR, "Matl %s expected at least 1 constants for %s %s model.\n",
+                pd_glob[mn]->MaterialName, "Thermal Expansion", "CONSTANT_DV");
+      }
+      elc_glob[mn]->len_u_thermal_expansion = num_const;
+      SPF_DBL_VEC(endofstring(es), 1, &elc_glob[mn]->thermal_expansion);
+    } else if (!strcmp(model_name, "SHRINKAGE")) {
       elc_glob[mn]->thermal_expansion_model = SHRINKAGE;
       num_const = read_constants(imp, &(elc_glob[mn]->u_thermal_expansion), NO_SPECIES);
       if (num_const < 2) {
@@ -3730,8 +3742,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     mat_ptr->Energy_Div_Term = 0;
     SPF(es, "\t(%s = %s)", search_string, "off");
   }
-
   ECHO(es, echo_file);
+
   strcpy(search_string, "Residence Time Weight Function");
   model_read =
       look_for_mat_prop(imp, search_string, &(mat_ptr->Rst_funcModel), &(mat_ptr->Rst_func),
@@ -9461,7 +9473,44 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                      pd_glob[mn]->MaterialName, "Upper Height Function", "EXTERNAL_FIELD");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
+    } else if (model_read == -1 && !strcmp(model_name, "WALL_DISTANCE")) {
+      if (fscanf(imp, "%s", input) != 1) {
+        GOMA_EH(GOMA_ERROR,
+                "Expecting trailing keyword for Upper height function WALL_DISTANCE model.\n");
+      }
+      model_read = 1;
+
+      ii = 0;
+      for (j = 0; j < efv->Num_external_field; j++) {
+        if (strcmp(efv->name[j], input) == 0) {
+          ii = 1;
+          if (mat_ptr->heightU_ext_field_index == -1)
+            mat_ptr->heightU_ext_field_index = j;
+        }
+      }
+      if (ii == 0) {
+        if (upd->turbulent_info->use_internal_wall_distance) {
+          GOMA_WH(GOMA_ERROR, "No WALL_DISTANCE external field - using turbulent field.");
+          mat_ptr->HeightUFunctionModel = WALL_DISTURB;
+        } else {
+          GOMA_EH(GOMA_ERROR, "Must activate external fields to use this Upper height function "
+                              "model.  Field name needed for the WALL_DISTANCE");
+        }
+      } else {
+        mat_ptr->HeightUFunctionModel = WALL_DISTMOD;
+      }
+      /* pick up parameters for wall function */
+      num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
+
+      mat_ptr->len_u_heightU_function_constants = num_const;
+      if (num_const < 3) {
+        sr = sprintf(err_msg, "Matl %s expected at least 3 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Upper Height Function", "WALL_DISTANCE");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
     }
+
     /*
      *  TABLE model added to upper height function constant to apply height function model
      *  as computed from videos of experiments of drop merger.
@@ -10274,6 +10323,20 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       }
       ECHO(es, echo_file);
     }
+  }
+
+  /*  Shell Lubrication Curvature Diffusion Term */
+  if (pd_glob[mn]->gv[R_SHELL_LUB_CURV] || pd_glob[mn]->gv[R_SHELL_LUB_CURV_2]) {
+    strcpy(search_string, "Lubrication Curvature Diffusion");
+    model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Curv_DiffModel),
+                                   &(mat_ptr->Lub_Curv_Diff), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+    if (model_read == -1) {
+      mat_ptr->Lub_Curv_DiffModel = CONSTANT;
+      mat_ptr->Lub_Curv_Diff = 1.0;
+      GOMA_WH(model_read, "Defaulting on Lubrication Curvature Diffusion");
+    }
+    ECHO(es, echo_file);
   }
 
   /*

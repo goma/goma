@@ -325,6 +325,7 @@ int SARAMITO_YIELD = -1;
 int STRESS_NORM = -1;
 int SPECIES_SOURCES = -1; /* continuous species sources*/
 int VISCOUS_STRESS = -1;
+int PP_VELOCITY_GRADIENTS = -1;
 int VISCOUS_STRESS_NORM = -1;
 int VISCOUS_VON_MISES_STRESS = -1;
 int EM_CONTOURS = -1;
@@ -441,6 +442,8 @@ static int look_for_post_proc /* mm_post_proc.c                            */
 
 static int midsid(double[],  /* stream_fcn_vect */
                   Exo_DB *); /* exo */
+
+static bool post_process_variable_is_active(pp_Average *pp_average, int matrix_index);
 
 void sum_average_nodal(double **avg_count, double **avg_sum, int global_node, double time);
 
@@ -664,7 +667,8 @@ static int calc_standard_fields(double **post_proc_vect,
 
   dim = pd_glob[0]->Num_Dim;
 
-  if (pd->v[pg->imtrx][R_MESH1] && ei[pg->imtrx]->ielem_dim >= dim) {
+  if (pd->v[pg->imtrx][R_MESH1] && ei[pg->imtrx]->ielem_dim >= dim &&
+      !(cr->MeshFluxModel == ELLIPTIC)) {
     err = belly_flop(elc->lame_mu);
     GOMA_EH(err, "error in belly flop");
     if (err == 2)
@@ -918,7 +922,7 @@ static int calc_standard_fields(double **post_proc_vect,
   if (DIV_VELOCITY != -1 && pd->e[pg->imtrx][PRESSURE]) {
     Dnn = 0.;
     for (a = 0; a < dim; a++) {
-      { Dnn += fv->grad_v[a][a]; }
+      Dnn += fv->grad_v[a][a];
     }
     /* If you want everything positive, uncomment this next line */
     /* Dnn = fabs(Dnn);  */
@@ -1582,7 +1586,7 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[THIRD_STRAINRATE_INVAR] = 1.;
   }
 
-  if (WALL_DISTANCE != -1 && pd->e[pg->imtrx][VELOCITY1]) {
+  if (WALL_DISTANCE != -1 && (pd->e[pg->imtrx][VELOCITY1] || pd->e[pg->imtrx][R_LUBP])) {
     local_post[WALL_DISTANCE] = fv->wall_distance;
     local_lumped[WALL_DISTANCE] = 1.;
   }
@@ -2182,9 +2186,9 @@ static int calc_standard_fields(double **post_proc_vect,
     double S = fv->tfmp_sat;
     /* Use the height_function_model */
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
-    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
     double h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX,
-                                     &dH_U_dp, &dH_U_ddh, time, delta_t);
+                                     &dH_U_dp, &dH_U_ddh, dH_dF, time, delta_t);
 
     double dh_dtime = dH_U_dtime - dH_L_dtime;
     double gradII_h[DIM];
@@ -2274,9 +2278,9 @@ static int calc_standard_fields(double **post_proc_vect,
     double S = fv->tfmp_sat;
     /* Use the height_function_model */
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
-    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
     double h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX,
-                                     &dH_U_dp, &dH_U_ddh, time, delta_t);
+                                     &dH_U_dp, &dH_U_ddh, dH_dF, time, delta_t);
 
     double dh_dtime = dH_U_dtime - dH_L_dtime;
     double gradII_h[DIM];
@@ -2503,9 +2507,26 @@ static int calc_standard_fields(double **post_proc_vect,
     // printf("%lf", mu);
     for (a = 0; a < VIM; a++) {
       for (b = 0; b < VIM; b++) {
-        local_post[VISCOUS_STRESS + a * VIM + b] = mu * gamma[a][b];
-        local_lumped[VISCOUS_STRESS + a * VIM + b] = 1.;
+        local_post[VISCOUS_STRESS + a * Num_Dim + b] = mu * gamma[a][b];
+        local_lumped[VISCOUS_STRESS + a * Num_Dim + b] = 1.;
       }
+    }
+    if (Num_Dim == 2 && VIM == 3) {
+      local_post[VISCOUS_STRESS + 4] = mu * gamma[2][2];
+      local_lumped[VISCOUS_STRESS + 4] = 1.;
+    }
+  }
+
+  if (PP_VELOCITY_GRADIENTS != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    for (a = 0; a < Num_Dim; a++) {
+      for (b = 0; b < Num_Dim; b++) {
+        local_post[PP_VELOCITY_GRADIENTS + a * Num_Dim + b] = fv->grad_v[a][b];
+        local_lumped[PP_VELOCITY_GRADIENTS + a * Num_Dim + b] = 1.;
+      }
+    }
+    if (Num_Dim == 2 && VIM == 3) {
+      local_post[PP_VELOCITY_GRADIENTS + 4] = fv->grad_v[2][2];
+      local_lumped[PP_VELOCITY_GRADIENTS + 4] = 1.;
     }
   }
 
@@ -2789,7 +2810,7 @@ static int calc_standard_fields(double **post_proc_vect,
   if (LUB_HEIGHT != -1 && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP] ||
                            pd->e[pg->imtrx][R_TFMP_MASS] || pd->e[pg->imtrx][R_TFMP_BOUND])) {
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
-    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+    double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
     /* Setup lubrication */
     int *n_dof = NULL;
@@ -2799,8 +2820,9 @@ static int calc_standard_fields(double **post_proc_vect,
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
     if (pd->e[pg->imtrx][R_LUBP]) {
-      local_post[LUB_HEIGHT] = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX,
-                                                     dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
+      local_post[LUB_HEIGHT] =
+          height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
+                                &dH_U_ddh, dH_dF, time, delta_t);
     } else if (pd->e[pg->imtrx][R_SHELL_FILMP]) {
       local_post[LUB_HEIGHT] = fv->sh_fh;
     } else if (pd->e[pg->imtrx][R_TFMP_MASS] || pd->e[pg->imtrx][R_TFMP_BOUND]) {
@@ -2870,7 +2892,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (LUB_HEIGHT_2 != -1 && (pd->e[pg->imtrx][R_LUBP_2])) {
     double H_U_2, dH_U_2_dtime, H_L_2, dH_L_2_dtime;
-    double dH_U_2_dX[DIM], dH_L_2_dX[DIM], dH_U_2_dp, dH_U_2_ddh;
+    double dH_U_2_dX[DIM], dH_L_2_dX[DIM], dH_U_2_dp, dH_U_2_ddh, dH_2_dF[MDE];
 
     /* Setup lubrication */
     int *n_dof = NULL;
@@ -2882,7 +2904,7 @@ static int calc_standard_fields(double **post_proc_vect,
     if (pd->e[pg->imtrx][R_LUBP_2]) {
       local_post[LUB_HEIGHT_2] =
           height_function_model(&H_U_2, &dH_U_2_dtime, &H_L_2, &dH_L_2_dtime, dH_U_2_dX, dH_L_2_dX,
-                                &dH_U_2_dp, &dH_U_2_ddh, time, delta_t);
+                                &dH_U_2_dp, &dH_U_2_ddh, dH_2_dF, time, delta_t);
     } else if (pd->e[pg->imtrx][R_SHELL_FILMP]) {
       local_post[LUB_HEIGHT] = 0.;
     }
@@ -3786,8 +3808,7 @@ void post_process_average(double x[],            /* Solution vector for the curr
   for (int i = 0; i < nn_average; i++) {
     int node;
     for (node = 0; node < dpi->num_universe_nodes; node++) {
-      if ((pp_average[i]->non_variable_type && pg->imtrx == 0) ||
-          (!pp_average[i]->non_variable_type && Num_Var_In_Type[pg->imtrx][pp_average[i]->type])) {
+      if (post_process_variable_is_active(pp_average[i], pg->imtrx)) {
         post_proc_vect[pp_average[i]->index_post][node] = avg_sum[i][node] / avg_count[i][node];
       }
     }
@@ -5234,7 +5255,9 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
     post_process_average(x, x_old, xdot, xdot_old, resid_vector, exo, dpi, post_proc_vect,
                          *time_ptr);
     for (int ii = 0; ii < nn_average; ii++) {
-      exchange_node(cx[0], dpi, post_proc_vect[pp_average[ii]->index_post]);
+      if (post_process_variable_is_active(pp_average[ii], pg->imtrx)) {
+        exchange_node(cx[0], dpi, post_proc_vect[pp_average[ii]->index_post]);
+      }
     }
   }
 
@@ -7743,6 +7766,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "VE Stress Norm", &STRESS_NORM);
   iread = look_for_post_proc(ifp, "Species Sources", &SPECIES_SOURCES);
   iread = look_for_post_proc(ifp, "Viscous Stress", &VISCOUS_STRESS);
+  iread = look_for_post_proc(ifp, "Velocity Gradients", &PP_VELOCITY_GRADIENTS);
   iread = look_for_post_proc(ifp, "Viscous Stress Norm", &VISCOUS_STRESS_NORM);
   iread = look_for_post_proc(ifp, "Viscous Von Mises Stress", &VISCOUS_VON_MISES_STRESS);
   iread = look_for_post_proc(ifp, "Orientation Vectors", &ORIENTATION_VECTORS);
@@ -10038,7 +10062,8 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     index_post++;
   }
 
-  if (WALL_DISTANCE != -1 && Num_Var_In_Type[pg->imtrx][VELOCITY1]) {
+  if (WALL_DISTANCE != -1 &&
+      (Num_Var_In_Type[pg->imtrx][VELOCITY1] || Num_Var_In_Type[pg->imtrx][R_LUBP])) {
     set_nv_tkud(rd, index, 0, 0, -2, "WALL_DISTANCE", "[1]", "Wall distance", FALSE);
     index++;
     if (WALL_DISTANCE == 2) {
@@ -10704,6 +10729,79 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
       set_nv_tkud(rd, index, 0, 0, -2, "VS22", "[1]", "Viscous stress yy", FALSE);
       index++;
       index_post++;
+
+      if (VIM == 3) {
+        set_nv_tkud(rd, index, 0, 0, -2, "VS33", "[1]", "Viscous stress zz", FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  }
+
+  if (PP_VELOCITY_GRADIENTS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+    if (Num_Dim > 2) {
+      PP_VELOCITY_GRADIENTS = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV11", "[1]", "Velocity gradient xx", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV12", "[1]", "Velocity gradient xy", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV13", "[1]", "Velocity gradient xz", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV21", "[1]", "Velocity gradient yx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV22", "[1]", "Velocity gradient yy", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV23", "[1]", "Velocity gradient yz", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV31", "[1]", "Velocity gradient zx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV32", "[1]", "Velocity gradient zy", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV33", "[1]", "Velocity gradient zz", FALSE);
+      index++;
+      index_post++;
+
+    } else {
+      PP_VELOCITY_GRADIENTS = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV11", "[1]", "Velocity gradient xx", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV12", "[1]", "Velocity gradient xy", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV21", "[1]", "Velocity gradient yx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRADV22", "[1]", "Velocity gradient yy", FALSE);
+      index++;
+      index_post++;
+      if (VIM == 3) {
+        set_nv_tkud(rd, index, 0, 0, -2, "GRADV33", "[1]", "Velocity gradient zz", FALSE);
+        index++;
+        index_post++;
+      }
     }
   }
 
@@ -11804,8 +11902,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
 
   if (nn_average > 0) {
     for (i = 0; i < nn_average; i++) {
-      if ((pp_average[i]->non_variable_type && pg->imtrx == 0) ||
-          (!pp_average[i]->non_variable_type && Num_Var_In_Type[pg->imtrx][pp_average[i]->type])) {
+      if (post_process_variable_is_active(pp_average[i], pg->imtrx)) {
         pp_average[i]->index = index;
         pp_average[i]->index_post = index_post;
 
@@ -12638,6 +12735,14 @@ int check_elem_order(const int *listel, const Exo_DB *exo)
   safer_free((void **)&used_elem);
   safer_free((void **)&used_node);
   return nbreaks;
+}
+
+static bool post_process_variable_is_active(pp_Average *pp_average, int matrix_index) {
+  if ((pp_average->non_variable_type && matrix_index == 0) ||
+      (!pp_average->non_variable_type && Num_Var_In_Type[matrix_index][pp_average->type])) {
+    return true;
+  }
+  return false;
 }
 /************************************************************************************/
 /************************************************************************************/

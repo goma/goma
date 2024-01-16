@@ -76,6 +76,8 @@
  *
  *  shell_n_dot_flow_wall                void
  *
+ *  shell_n_dot_curv_bc                  void
+ *
  *
  ******************************************************************************/
 
@@ -171,10 +173,9 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         Inn(grad_phi_j, grad_II_phi_j);
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
-          d_func[0][var][j] += LubAux->dq_dp2[ii][j] * phi_j * bound_normal[ii];
+          d_func[0][var][j] += LubAux->dq_dp2[ii] * phi_j * bound_normal[ii];
           for (jj = 0; jj < pd->Num_Dim; jj++) {
-            d_func[0][var][j] +=
-                LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
+            d_func[0][var][j] += LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * bound_normal[ii];
           }
         }
       }
@@ -224,13 +225,265 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 
 } /* END of routine shell_n_dot_flow_bc_confined  */
 /*****************************************************************************/
+void shell_n_dot_curv_bc(double func[DIM],
+                         double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                         const double theta_deg,
+                         const int ibc_flag,         /* NOBC flag from bc input  */
+                         const int bc_id,            /* BC_Name */
+                         const double time,          /* current time */
+                         const double dt,            /* current time step size */
+                         const double hsquared[DIM], /* Element scales */
+                         double xi[DIM],             /* Local stu coordinates */
+                         const Exo_DB *exo)
+
+/***********************************************************************
+ *
+ * shell_n_dot_curv_bc():
+ *
+ *  Function which evaluates the boundary terms for the shell Curvature eqn
+ *
+ *         func =   - n_bdy . nII_LS - epsilon * n_bdy * grad_II_CurvII
+ *
+ *  The boundary condition LUB_CURV_NOBC employs this function.
+ *  For full NOBC behavior ibc_flag != -1, otherwise if ibc_flag == -1,
+ *  then cos(DCA) is substituted into the first term.  Epsilon is the
+ *  Lub_Curv_Diff material property (ad-hoc curvature diffusion to aid smoothness)
+ *
+ * Input:
+ *
+ *  DCA - theta_deg      = specified on the bc card as the first float
+ *  ibc_flag             = toggles NOBC behavior of the condition
+ *
+ * Output:
+ *
+ *  func[0] = value of the function mentioned above
+ *  d_func[0][varType][lvardof] =
+ *              Derivate of func[0] wrt
+ *              the variable type, varType, and the local variable
+ *              degree of freedom, lvardof, corresponding to that
+ *              variable type.
+ *
+ *
+ *   Author: R. Secor    (12/15/2023)
+ *
+ ********************************************************************/
+{
+  int j, ii, jj, var, jk;
+  int *n_dof = NULL;
+  int dof_map[MDE];
+  double phi_j, phi_i;
+  double grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
+  double grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
+  double bound_normal[DIM], bound_dnormal_dx[DIM][DIM][MDE];
+
+  int eqn = R_SHELL_LUB_CURV;
+  if (ei[pg->imtrx]->ielem_dim == 3)
+    return;
+  /* Save the boundary normal vector */
+
+  for (ii = 0; ii < pd->Num_Dim; ii++) {
+    bound_normal[ii] = fv->snormal[ii];
+    for (jj = 0; jj < pd->Num_Dim; jj++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
+        bound_dnormal_dx[ii][jj][j] = fv->dsnormal_dx[ii][jj][j];
+      }
+    }
+  }
+
+  /*
+   * Prepare geometry
+   */
+  n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+  /* Calculate the flow rate and its sensitivties */
+
+  /* Load level set fields */
+  load_lsi(ls->Length_Scale);
+  load_lsi_derivs();
+
+  /* Rotate grad(F) and grad(kappa) to shell coordinates */
+  dbl gradII_F[DIM], gradII_kappa[DIM];
+  dbl d_grad_F_dmesh[DIM][DIM][MDE], d_gradII_F_dmesh[DIM][DIM][MDE];
+  dbl d_grad_kappa_dmesh[DIM][DIM][MDE], d_gradII_kappa_dmesh[DIM][DIM][MDE];
+  memset(d_grad_F_dmesh, 0.0, sizeof(double) * DIM * DIM * MDE);
+  memset(d_grad_kappa_dmesh, 0.0, sizeof(double) * DIM * DIM * MDE);
+  for (ii = 0; ii < DIM; ii++) {
+    for (jj = 0; jj < DIM; jj++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
+        jk = dof_map[j];
+        d_grad_F_dmesh[ii][jj][jk] = fv->d_grad_F_dmesh[ii][jj][j];
+        d_grad_kappa_dmesh[ii][jj][jk] = fv->d_grad_sh_l_curv_dmesh[ii][jj][j];
+      }
+    }
+  }
+  ShellRotate(fv->grad_F, d_grad_F_dmesh, gradII_F, d_gradII_F_dmesh, n_dof[MESH_DISPLACEMENT1]);
+  ShellRotate(fv->grad_sh_l_curv, d_grad_kappa_dmesh, gradII_kappa, d_gradII_kappa_dmesh,
+              n_dof[MESH_DISPLACEMENT1]);
+
+  /* Calculate rotated level set normal */
+  dbl LSnormal[DIM], LSnormal_mag = 0, LSnormal_maginv;
+  for (ii = 0; ii < DIM; ii++) {
+    LSnormal_mag += gradII_F[ii] * gradII_F[ii];
+  }
+  LSnormal_mag = sqrt(LSnormal_mag);
+  LSnormal_maginv = (LSnormal_mag == 0.0) ? 1.0 : 1.0 / LSnormal_mag;
+  for (ii = 0; ii < DIM; ii++) {
+    LSnormal[ii] = gradII_F[ii] * LSnormal_maginv;
+  }
+
+  /* Calculate sensitivity of level set normal to mesh */
+  dbl d_LSnormal_dmesh[DIM][DIM][MDE];
+  dbl d_LSnormal_mag_dmesh[DIM][MDE];
+  memset(d_LSnormal_dmesh, 0.0, sizeof(double) * DIM * DIM * MDE);
+  memset(d_LSnormal_mag_dmesh, 0.0, sizeof(double) * DIM * MDE);
+  for (ii = 0; ii < DIM; ii++) {
+    for (jj = 0; jj < DIM; jj++) {
+      for (jk = 0; jk < n_dof[MESH_DISPLACEMENT1]; jk++) {
+        d_LSnormal_mag_dmesh[jj][jk] +=
+            gradII_F[ii] * d_gradII_F_dmesh[ii][jj][jk] * LSnormal_maginv;
+      }
+    }
+  }
+  for (ii = 0; ii < DIM; ii++) {
+    for (jj = 0; jj < DIM; jj++) {
+      for (jk = 0; jk < n_dof[MESH_DISPLACEMENT1]; jk++) {
+        d_LSnormal_dmesh[ii][jj][jk] += d_gradII_F_dmesh[ii][jj][jk] * LSnormal_maginv;
+        d_LSnormal_dmesh[ii][jj][jk] -=
+            gradII_F[ii] * LSnormal_maginv * LSnormal_maginv * d_LSnormal_mag_dmesh[jj][jk];
+      }
+    }
+  }
+
+  /* Calculate sensitivity of level set normal to F */
+  dbl d_LSnormal_mag_dF[MDE];
+  dbl d_LSnormal_dF[DIM][MDE];
+  memset(d_LSnormal_mag_dF, 0.0, sizeof(double) * MDE);
+  memset(d_LSnormal_dF, 0.0, sizeof(double) * MDE * DIM);
+  var = FILL;
+  for (ii = 0; ii < ei[pg->imtrx]->dof[FILL]; ii++) {
+
+    /* Basis functions */
+    ShellBF(eqn, ii, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh,
+            n_dof[MESH_DISPLACEMENT1], dof_map);
+
+    /* Derivative of magnitude */
+    for (jj = 0; jj < DIM; jj++) {
+      d_LSnormal_mag_dF[ii] += gradII_F[jj] * grad_II_phi_i[jj] * LSnormal_maginv;
+    }
+
+    /* Derivative of normal vector */
+    for (jj = 0; jj < DIM; jj++) {
+      d_LSnormal_dF[ii][jj] = grad_II_phi_i[jj] * LSnormal_maginv;
+      d_LSnormal_dF[ii][jj] -= gradII_F[jj] * d_LSnormal_mag_dF[ii] * pow(LSnormal_maginv, 2);
+    }
+  }
+
+  /* Prepare weighting for artificial diffusion term */
+  const double K_diff = mp->Lub_Curv_Diff;
+
+  if (af->Assemble_LSA_Mass_Matrix) {
+    return;
+  }
+
+  if (af->Assemble_Jacobian) {
+    /*
+     * J_Curv_DMX
+     */
+    var = MESH_DISPLACEMENT1;
+    if (pd->v[pg->imtrx][var] &&
+        (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_MESH_UNDEF)) {
+
+      /*** Loop over dimensions of mesh displacement ***/
+      for (jj = 0; jj < pd->Num_Dim; jj++) {
+        var = MESH_DISPLACEMENT1 + jj;
+
+        /*** Loop over DOFs (j) ***/
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          jk = dof_map[j];
+
+          /* Load basis functions (j) */
+          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                  n_dof[MESH_DISPLACEMENT1], dof_map);
+
+          if (pd->e[pg->imtrx][var]) {
+            if (ibc_flag != -1) {
+              for (ii = 0; ii < pd->Num_Dim; ii++) {
+                d_func[0][var][j] -= d_LSnormal_dmesh[ii][jj][jk] * bound_normal[ii];
+                d_func[0][var][j] -= LSnormal[ii] * bound_dnormal_dx[ii][jj][jk];
+              }
+            }
+            for (ii = 0; ii < pd->Num_Dim; ii++) {
+              d_func[0][var][j] -= K_diff * hsquared[ii] *
+                                   (gradII_kappa[ii] * bound_dnormal_dx[ii][jj][jk] +
+                                    d_gradII_kappa_dmesh[ii][jj][j]);
+            }
+          }
+        }
+      }
+    }
+    /*
+     * J_Curv_DF
+     */
+    var = FILL;
+    if (pd->v[pg->imtrx][var]) {
+
+      /* Loop over DOFs (j) */
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+
+        if (pd->e[pg->imtrx][var] && (ibc_flag != -1)) {
+          for (ii = 0; ii < pd->Num_Dim; ii++) {
+            d_func[0][var][j] -= d_LSnormal_dF[ii][j] * bound_normal[ii];
+          }
+        }
+      } // End of loop over DOFs (j)
+    }   // End of FILL assembly
+    /*** SHELL_LUB_CURV ***/
+    var = SHELL_LUB_CURV;
+    if (pd->v[pg->imtrx][var]) {
+
+      /* Loop over DOFs (j) */
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        /* Prepare basis funcitons (j) */
+        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                n_dof[MESH_DISPLACEMENT1], dof_map);
+        Inn(grad_phi_j, grad_II_phi_j);
+        if (pd->e[pg->imtrx][var]) {
+          for (ii = 0; ii < pd->Num_Dim; ii++) {
+            d_func[0][var][j] -= K_diff * hsquared[ii] * bound_normal[ii] * grad_II_phi_j[ii];
+          }
+        }
+      }
+    }
+
+  } /* end of if Assemble_Jacobian */
+
+  /* Calculate the residual contribution        */
+  if (ibc_flag == -1) {
+    func[0] -= cos(M_PIE * theta_deg / 180.);
+  } else {
+    for (ii = 0; ii < pd->Num_Dim; ii++) {
+      func[0] -= LSnormal[ii] * bound_normal[ii];
+    }
+  }
+  /* Diffusion boundary term */
+  for (ii = 0; ii < pd->Num_Dim; ii++) {
+    func[0] -= K_diff * hsquared[ii] * gradII_kappa[ii] * bound_normal[ii];
+  }
+
+  /* clean-up */
+  safe_free((void *)n_dof);
+
+} /* END of routine shell_n_dot_flow_bc_confined  */
+/*****************************************************************************/
 /*****************************************************************************/
 void shell_n_dot_flow_wall(double func[DIM],
                            double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                           const double pwr_index, /* power-law for gap dependence */
-                           const double time,      /* current time */
-                           const double dt,        /* current time step size */
-                           double xi[DIM],         /* Local stu coordinates */
+                           const double pwr_index,    /* power-law for gap dependence */
+                           const double fudge_factor, /* self-explanatory */
+                           const double time,         /* current time */
+                           const double dt,           /* current time step size */
+                           double xi[DIM],            /* Local stu coordinates */
                            const Exo_DB *exo)
 
 /***********************************************************************
@@ -278,7 +531,13 @@ void shell_n_dot_flow_wall(double func[DIM],
     }
   }
   /* Wall factor for power-law liquids, i.e., (Qtube/2R)/(Qslot/W) */
-  wall_factor = M_PIE * (2. + 1. / pwr_index) / (3. + 1. / pwr_index) / pow(2., 2. + 1 / pwr_index);
+  wall_factor =
+      -M_PIE * (2. + 1. / pwr_index) / (3. + 1. / pwr_index) / pow(2., 2. + 1 / pwr_index);
+  if (ls != NULL || pfd != NULL) {
+    wall_factor *= (1. - lsi->H) * fudge_factor;
+  } else {
+    wall_factor *= fudge_factor;
+  }
   /*
    * Prepare geometry
    */
@@ -305,9 +564,9 @@ void shell_n_dot_flow_wall(double func[DIM],
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           d_func[0][var][j] +=
-              wall_factor * LubAux->dq_dp2[ii][j] * phi_j * bdy_tangent[ii] / fv->sdet;
+              wall_factor * LubAux->dq_dp2[ii] * phi_j * bdy_tangent[ii] / fv->sdet;
           for (jj = 0; jj < pd->Num_Dim; jj++) {
-            d_func[0][var][j] += wall_factor * LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] *
+            d_func[0][var][j] += wall_factor * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] *
                                  bdy_tangent[ii] / fv->sdet;
           }
         }
@@ -347,6 +606,17 @@ void shell_n_dot_flow_wall(double func[DIM],
         }
       }
     }
+    /* Calculate F sensitivity */
+    var = FILL;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        for (ii = 0; ii < pd->Num_Dim; ii++) {
+          d_func[0][var][j] +=
+              -lsi->d_H_dF[j] * wall_factor * LubAux->q[ii] * bdy_tangent[ii] / fv->sdet;
+        }
+      }
+    }
+
   } /* end of if Assemble_Jacobian */
 
   /* Calculate the residual contribution        */
@@ -426,9 +696,9 @@ void lub_static_pressure(double func[DIM],
 
   /* Extract wall heights */
   dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime;
-  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
 
   /***** DEFORM HEIGHT AND CALCULATE SENSITIVITIES *****/
 
@@ -795,8 +1065,7 @@ void shell_n_dot_flow_bc_film(double func[DIM],
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           for (jj = 0; jj < pd->Num_Dim; jj++) {
-            d_func[0][var][j] +=
-                LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
+            d_func[0][var][j] += LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * bound_normal[ii];
           }
         }
       }
@@ -2014,10 +2283,10 @@ void shell_tfmp_avg_plate_velo_liq(double func[DIM],
   S = fv->tfmp_sat;
   /* Use the height_function_model */
   double H_U, dH_U_dtime, H_L, dH_L_dtime;
-  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, delta_t);
+                            &dH_U_ddh, dH_dF, time, delta_t);
 
   double dh_dmesh[DIM][MDE];
   double dh_dnormal[DIM][MDE];
@@ -2487,12 +2756,12 @@ void shell_lubrication_outflow(double func[DIM],
   lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
   /* Use the height_function_model */
   double H_U, dH_U_dtime, H_L, dH_L_dtime;
-  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   double h;
 
   h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, delta_t);
+                            &dH_U_ddh, dH_dF, time, delta_t);
 
   double dh_dmesh[DIM][MDE];
   double dh_dnormal[DIM][MDE];
@@ -2704,10 +2973,10 @@ void shell_tfmp_avg_plate_velo_gas(double func[DIM],
   S = fv->tfmp_sat;
   /* Use the height_function_model */
   double H_U, dH_U_dtime, H_L, dH_L_dtime;
-  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, delta_t);
+                            &dH_U_ddh, dH_dF, time, delta_t);
 
   double dh_dmesh[DIM][MDE];
   double dh_dnormal[DIM][MDE];

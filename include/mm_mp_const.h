@@ -466,6 +466,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define INCOMP_PSTRESS  7
 #define HOOKEAN_PSTRAIN 8
 #define HOOKEAN_PSTRESS 9
+#define ELLIPTIC        10
 
 /* Viscoplastic consitutive equation params */
 #define EVP_HYPER 10
@@ -540,6 +541,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define ENTHALPY     4
 #define THERMAL_HEAT 45
 #define FOAM_PBE     46
+#define CONSTANT_DV  50
 
 /*Electrode-kinetics Species Source model: KSC 10/13/98 */
 #define ELECTRODE_KINETICS 904
@@ -597,6 +599,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define FLAT_GRAD_FLAT_MELT   10142
 #define CIRCLE_MELT           10143
 #define LOWER_DISTANCE        10144
+#define WALL_DISTMOD          10145
+#define WALL_DISTURB          10146
 
 /* Lubrication contact angle models */
 #define DYNAMIC_CA        10201

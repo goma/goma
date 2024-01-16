@@ -3478,7 +3478,7 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
     if (Dolphin[pg->imtrx][I][VELOCITY1] > 0) {
       for (a = 0; a < VIM; a++) {
         for (q = 0; q < VIM; q++) {
-          cfunc[ldof][a] -= sgn5 * (surf_shear_visc)*2.000 *
+          cfunc[ldof][a] -= sgn5 * (surf_shear_visc) * 2.000 *
                             (fv->surfCurvatureDyadic[a][q] - 2.00 * fv->curv * Is[a][q]) *
                             fv->grad_v_dot_n[q];
         }
@@ -3733,19 +3733,19 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
                 dotdotTmp +=
                     (fv->surfCurvatureDyadic[p][q] - 2 * fv->curv * Is[p][q]) * grad_s_v[q][p];
                 d_cfunc[ldof][a][var][j] +=
-                    sgn4 * (surf_shear_visc)*2.0 *
+                    sgn4 * (surf_shear_visc) * 2.0 *
                     (d_surfCurvatureDyadic_dn[p][q][b][j] * grad_s_v[q][p]) * fv->n[a];
                 d_cfunc[ldof][a][var][j] +=
-                    sgn4 * (surf_shear_visc)*2.0 *
+                    sgn4 * (surf_shear_visc) * 2.0 *
                     (-2 * fv->curv * (-fv->n[p] * phi_j * delta(q, b)) * grad_s_v[q][p]) * fv->n[a];
                 d_cfunc[ldof][a][var][j] +=
-                    sgn4 * (surf_shear_visc)*2.0 *
+                    sgn4 * (surf_shear_visc) * 2.0 *
                     (-2 * fv->curv * (-fv->n[q] * phi_j * delta(p, b)) * grad_s_v[q][p]) * fv->n[a];
               }
             }
 
             d_cfunc[ldof][a][var][j] +=
-                sgn4 * (surf_shear_visc)*2.0 * dotdotTmp * phi_j * delta(a, b);
+                sgn4 * (surf_shear_visc) * 2.0 * dotdotTmp * phi_j * delta(a, b);
           }
         }
       }
@@ -3757,7 +3757,7 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
           for (p = 0; p < VIM; p++) {
             for (q = 0; q < VIM; q++) {
               // curvature dependence to first term
-              d_cfunc[ldof][a][var][j] += sgn4 * (surf_shear_visc)*2.0 * fv->n[a] *
+              d_cfunc[ldof][a][var][j] += sgn4 * (surf_shear_visc) * 2.0 * fv->n[a] *
                                           (-2.0 * phi_j * Is[p][q] * grad_s_v[q][p]);
             }
           }
@@ -3802,7 +3802,7 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
               // cfunc[ldof][a] -= sgn5 * (surf_shear_visc) * 2.000 * (fv->surfCurvatureDyadic[a][q]
               // - 2.00 * fv->curv * Is[a][q]) * fv->grad_v_dot_n[q];
               d_cfunc[ldof][a][var][j] -=
-                  sgn5 * (surf_shear_visc)*2.000 *
+                  sgn5 * (surf_shear_visc) * 2.000 *
                   (fv->surfCurvatureDyadic[a][q] - 2.00 * fv->curv * Is[a][q]) * delta(q, b) *
                   phi_j;
             }
@@ -3817,7 +3817,7 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
           for (q = 0; q < VIM; q++) {
             // cfunc[ldof][a] -= sgn5 * (surf_shear_visc) * 2.000 * (fv->surfCurvatureDyadic[a][q]
             // - 2.00 * fv->curv * Is[a][q]) * fv->grad_v_dot_n[q];
-            d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc)*2.000 *
+            d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc) * 2.000 *
                                         (fv->surfCurvatureDyadic[a][q] - 2.00 * phi_j * Is[a][q]) *
                                         fv->grad_v_dot_n[q];
           }
@@ -3830,13 +3830,13 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
           phi_j = bf[var]->phi[j];
           for (a = 0; a < VIM; a++) {
             for (q = 0; q < VIM; q++) {
-              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc)*2.000 *
+              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc) * 2.000 *
                                           (d_surfCurvatureDyadic_dn[a][q][b][j]) *
                                           fv->grad_v_dot_n[q];
-              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc)*2.000 *
+              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc) * 2.000 *
                                           (-2 * fv->curv * (-fv->n[a] * phi_j * delta(q, b))) *
                                           fv->grad_v_dot_n[q];
-              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc)*2.000 *
+              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc) * 2.000 *
                                           (-2 * fv->curv * (-fv->n[q] * phi_j * delta(a, b))) *
                                           fv->grad_v_dot_n[q];
             }
@@ -3851,7 +3851,7 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
             phi_j = bf[var]->phi[j];
             for (a = 0; a < VIM; a++) {
               for (q = 0; q < VIM; q++) {
-                d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc)*2.000 *
+                d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc) * 2.000 *
                                             (d_surfCurvatureDyadic_dmesh[a][q][b][j]) *
                                             fv->grad_v_dot_n[q];
               }
@@ -6436,7 +6436,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
                          double dt,      /* current time step size */
                          double xi[DIM], /* Local stu coordinates */
                          const Exo_DB *exo) {
-  int eqn, var, peqn, pvar, p, a, b, k, jk, w;
+  int eqn, var, peqn, pvar, p, q, a, b, k, jk, w;
   int i = -1, j, status; //, err;
   int *n_dof = NULL;
   int dof_map[MDE];
@@ -6448,7 +6448,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
   dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_dtime_dmesh[DIM][MDE];
   dbl dH_dtime_drealsolid[DIM][MDE];
   dbl dH_dtime_dnormal[DIM][MDE];
-  dbl dH_U_dp, dH_U_ddh;
+  dbl dH_U_dp, dH_U_ddh, dH_dF[MDE];
   dbl veloU[DIM], veloL[DIM];
   dbl diffusion, source;
 
@@ -6509,7 +6509,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
   /* Lubrication height from model */
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
   dH_dtime = dH_U_dtime - dH_L_dtime;
   /*
   if (pd->v[pg->imtrx][SHELL_DELTAH] &&
@@ -6734,9 +6734,9 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           diffusion = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (a = 0; a < dim; a++) {
-              diffusion += LubAux->dq_dp2[a][j] * phi_j * grad_II_phi_i[a];
+              diffusion += LubAux->dq_dp2[a] * phi_j * grad_II_phi_i[a];
               for (b = 0; b < dim; b++) {
-                diffusion += LubAux->dq_dgradp[a][b][j] * grad_II_phi_j[b] * grad_II_phi_i[a];
+                diffusion += LubAux->dq_dgradp[a][b] * grad_II_phi_j[b] * grad_II_phi_i[a];
               }
             }
           }
@@ -6772,7 +6772,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           diffusion = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (b = 0; b < dim; b++) {
-              diffusion += LubAux->dq_dk[b][j] * grad_II_phi_i[b] * phi_j;
+              diffusion += LubAux->dq_dk[b] * grad_II_phi_i[b] * phi_j;
             }
           }
           diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
@@ -6799,7 +6799,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           diffusion = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (b = 0; b < dim; b++) {
-              diffusion += LubAux->dq_dk[b][j] * grad_II_phi_i[b] * phi_j;
+              diffusion += LubAux->dq_dk[b] * grad_II_phi_i[b] * phi_j;
             }
           }
           diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
@@ -7010,7 +7010,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           diffusion = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (p = 0; p < dim; p++) {
-              diffusion += det_J * LubAux->dq_ddh[p][j] * phi_j * grad_II_phi_i[p];
+              diffusion += det_J * LubAux->dq_ddh[p] * phi_j * grad_II_phi_i[p];
             }
           }
           diffusion *= wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
@@ -7069,7 +7069,9 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
             diffusion = 0.;
             if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
               for (p = 0; p < VIM; p++) {
-                diffusion += LubAux->dq_dconc[p][w][j] * grad_II_phi_i[p];
+                for (q = 0; q < VIM; q++) {
+                  diffusion += LubAux->dq_dconc[p][q][w][j] * grad_II_phi_i[q];
+                }
               }
 
               diffusion *= det_J * wt;
@@ -7135,7 +7137,7 @@ int assemble_shell_energy(double time,            /* present time value */
   dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
   dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_dmesh[DIM][MDE], dH_dtime_dmesh[DIM][MDE];
   dbl dH_drealsolid[DIM][MDE], dH_dtime_drealsolid[DIM][MDE];
-  dbl dH_U_dp, dH_U_ddh;
+  dbl dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   dbl q_tot = 0.;
   dbl dqdh[DIM];
@@ -7269,7 +7271,7 @@ int assemble_shell_energy(double time,            /* present time value */
 
   /* Lubrication height from model */
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
 
   /* Deform lubrication height for FSI interaction */
   switch (mp->FSIModel) {
@@ -8180,7 +8182,7 @@ int assemble_shell_species(double time,            /* present time value */
   dbl H; /* Shell heights */
   dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
   dbl dH_U_dX[DIM], dH_L_dX[DIM];
-  dbl dH_U_dp, dH_U_ddh;
+  dbl dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   dbl grad_c[MAX_CONC][DIM] = {{0.0}}; /* Shell concentration gradient. */
 
@@ -8244,7 +8246,7 @@ int assemble_shell_species(double time,            /* present time value */
 
   /* Lubrication height from model */
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
 
   /* Concentration gradient */
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
@@ -8544,7 +8546,7 @@ int assemble_film(double time,    /* present time value */
 
   dbl P, H, C, H_dot;
   dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
-  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
   dbl dH_dot_dmesh[DIM][MDE], dH_dot_drealsolid[DIM][MDE], dH_dot_dnormal[DIM][MDE];
   dbl sigma;
   dbl EvapRate, dEvapRate_dC, dEvapRate_dH;
@@ -8618,7 +8620,7 @@ int assemble_film(double time,    /* present time value */
 
   /* Get lower height from height function model */
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
 
   /* Get the net film thickness */
   H = fv->sh_fh - H_L;
@@ -9023,8 +9025,6 @@ int assemble_film(double time,    /* present time value */
           diffusion = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (ii = 0; ii < dim; ii++) {
-              //                          diffusion += - LubAux->dq_dp1[ii][j] * grad_II_phi_i[ii] *
-              //                          grad_II_phi_j[ii];
               diffusion += -LubAux->dq_dp[ii][j] * grad_II_phi_i[ii];
             }
 
@@ -9251,7 +9251,7 @@ int assemble_film(double time,    /* present time value */
 
     } // End of loop over i
 
-    /* ************* ASEMBLE JACOBIAN OF FILM THICKNESS ************ */
+    /* ************* ASSEMBLE JACOBIAN OF FILM THICKNESS ************ */
 
     eqn = R_SHELL_FILMH;
     peqn = upd->ep[pg->imtrx][eqn];
@@ -10229,7 +10229,7 @@ int assemble_film_particles(double time,            /* present time value */
 {
   int eqn;
   int var, peqn, pvar, dim, p;
-  int i = -1, ii;
+  int i = -1, ii, jj;
   int j, status;
   int *n_dof = NULL;
   int dof_map[MDE];
@@ -10239,11 +10239,11 @@ int assemble_film_particles(double time,            /* present time value */
   dbl wt;
 
   dbl H = 0, C, C_dot;
-  dbl H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_dp, dH_U_ddh;
+  dbl H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_dp, dH_U_ddh, dH_dF[MDE];
   dbl dH_U_dX[DIM], dH_L_dX[DIM];
   dbl q_old[DIM], q[DIM], v[DIM];
-  dbl dq_dp1[DIM][MDE], dq_dp2[DIM][MDE], dq_dh1[DIM][MDE], dq_dh2[DIM][MDE], dq_dc[DIM][MDE];
-  dbl dv_dp1[DIM][MDE], dv_dp2[DIM][MDE], dv_dh1[DIM][MDE], dv_dh2[DIM][MDE], dv_dc[DIM][MDE];
+  dbl dq_dh1[DIM][MDE], dq_dh2[DIM][MDE], dq_dc[DIM][MDE];
+  dbl dv_dh1[DIM][MDE], dv_dh2[DIM][MDE], dv_dc[DIM][MDE];
   dbl mu, dmu_dc;
   dbl EvapRate, dEvapRate_dC, dEvapRate_dH;
   dbl diff_coeff, ddiff_dmu, ddiff_dc;
@@ -10316,7 +10316,7 @@ int assemble_film_particles(double time,            /* present time value */
   } else if (pd->v[pg->imtrx][LUBP]) {
     EQN = R_LUBP;
     H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                              &dH_U_ddh, time, dt);
+                              &dH_U_ddh, dH_dF, time, dt);
   } else {
     GOMA_EH(GOMA_ERROR, "In assemble_film_particles: Can't find an appropriate lubrication height");
   }
@@ -10372,13 +10372,9 @@ int assemble_film_particles(double time,            /* present time value */
     v[p] = LubAux->v_avg[p];
     q_old[p] = LubAux_old->q[p];
     for (j = 0; j < ei[pg->imtrx]->dof[SHELL_PARTC]; j++) {
-      dq_dp1[p][j] = LubAux->dq_dp1[p][j];
-      dq_dp2[p][j] = LubAux->dq_dp2[p][j];
       dq_dh1[p][j] = LubAux->dq_dh1[p][j];
       dq_dh2[p][j] = LubAux->dq_dh2[p][j];
       dq_dc[p][j] = LubAux->dq_dc[p][j];
-      dv_dp1[p][j] = LubAux->dv_avg_dp1[p][j];
-      dv_dp2[p][j] = LubAux->dv_avg_dp2[p][j];
       dv_dh1[p][j] = LubAux->dv_avg_dh1[p][j];
       dv_dh2[p][j] = LubAux->dv_avg_dh2[p][j];
       dv_dc[p][j] = LubAux->dv_avg_dc[p][j];
@@ -10551,15 +10547,20 @@ int assemble_film_particles(double time,            /* present time value */
           if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
 
             for (ii = 0; ii < VIM; ii++) {
-              advection +=
-                  1.5 * dq_dp1[ii][j] * grad_II_phi_j[ii] * grad_II_C[ii] * wt_func +
-                  1.5 * dq_dp2[ii][j] * phi_j * grad_II_C[ii] * wt_func +
-                  dq_dp1[ii][j] * grad_II_phi_j[ii] * grad_II_C[ii] * v[ii] * grad_II_phi_i[ii] *
-                      0.5 * dt +
-                  dq_dp2[ii][j] * phi_j * grad_II_C[ii] * v[ii] * grad_II_phi_i[ii] * 0.5 * dt +
-                  q[ii] * grad_II_C[ii] * dv_dp1[ii][j] * grad_II_phi_j[ii] * grad_II_phi_i[ii] *
-                      0.5 * dt +
-                  q[ii] * grad_II_C[ii] * dv_dp2[ii][j] * phi_j * grad_II_phi_i[ii] * 0.5 * dt;
+              advection += 1.5 * LubAux->dq_dp2[ii] * phi_j * grad_II_C[ii] * wt_func +
+                           LubAux->dq_dp2[ii] * phi_j * grad_II_C[ii] * v[ii] * grad_II_phi_i[ii] *
+                               0.5 * dt +
+                           0.5 * dt +
+                           q[ii] * grad_II_C[ii] * LubAux->dv_avg_dp2[ii] * phi_j *
+                               grad_II_phi_i[ii] * 0.5 * dt;
+              for (jj = 0; jj < VIM; jj++) {
+                advection +=
+                    1.5 * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * wt_func +
+                    LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * v[ii] *
+                        grad_II_phi_i[ii] * 0.5 * dt +
+                    q[ii] * grad_II_C[ii] * LubAux->dv_dgradp[ii][jj] * grad_II_phi_j[jj] *
+                        grad_II_phi_i[ii] * 0.5 * dt;
+              }
             }
 
             advection *= det_J * wt;
@@ -10617,11 +10618,14 @@ int assemble_film_particles(double time,            /* present time value */
           if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
 
             for (ii = 0; ii < VIM; ii++) {
-              advection += 1.5 * dq_dp1[ii][j] * grad_II_phi_j[ii] * grad_II_C[ii] * wt_func +
-                           dq_dp1[ii][j] * grad_II_phi_j[ii] * grad_II_C[ii] * v[ii] *
-                               grad_II_phi_i[ii] * 0.5 * dt +
-                           q[ii] * grad_II_C[ii] * dv_dp1[ii][j] * grad_II_phi_j[ii] *
-                               grad_II_phi_i[ii] * 0.5 * dt;
+              for (jj = 0; jj < VIM; jj++) {
+                advection +=
+                    1.5 * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * wt_func +
+                    LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] * grad_II_C[ii] * v[ii] *
+                        grad_II_phi_i[ii] * 0.5 * dt +
+                    q[ii] * grad_II_C[ii] * LubAux->dv_dgradp[ii][jj] * grad_II_phi_j[jj] *
+                        grad_II_phi_i[ii] * 0.5 * dt;
+              }
             }
 
             advection *= det_J * wt;
@@ -10997,10 +11001,10 @@ void dPdz_calc(dbl tt,
     nbar = fv->sh_sat_gasn;
 
   /* Lubrication height from model */
-  dbl Hlub, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_dp, dH_U_ddh;
+  dbl Hlub, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_dp, dH_U_ddh, dH_dF[MDE];
   dbl dH_U_dX[DIM], dH_L_dX[DIM];
   Hlub = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                               &dH_U_ddh, 0.0, 0.0);
+                               &dH_U_ddh, dH_dF, 0.0, 0.0);
 
   /* Level set curvature */
   int b;
@@ -13811,6 +13815,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
   int eqn = R_SHELL_LUB_CURV;
   int peqn, var, pvar;
   int status = 0;
+  int masslump_bit = 1;
   int i, j, k, a, jj, b;
   dbl phi_i, grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
   dbl phi_j, grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
@@ -13918,6 +13923,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
 
   /* Prepare weighting for artificial diffusion term */
   const dbl *hsquared = pg_data->hsquared;
+  const double K_diff = mp->Lub_Curv_Diff;
 
   /* --- Residual assembly --------------------------------------------------*/
   if (af->Assemble_Residual) {
@@ -13934,7 +13940,11 @@ int assemble_lubrication_curvature(double time,            /* present time value
       /* Assemble mass term */
       mass = 0.0;
       if (pd->e[pg->imtrx][eqn] & T_MASS) {
-        mass += *esp->sh_l_curv[i] * phi_i;
+        if (masslump_bit) {
+          mass += *esp->sh_l_curv[i] * phi_i;
+        } else {
+          mass += fv->sh_l_curv * phi_i;
+        }
       }
       mass *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 
@@ -13942,10 +13952,10 @@ int assemble_lubrication_curvature(double time,            /* present time value
       diff = 0.0;
       if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
         for (a = 0; a < VIM; a++) {
-          diff += *hsquared * gradII_kappa[a] * grad_II_phi_i[a];
+          diff += hsquared[a] * gradII_kappa[a] * grad_II_phi_i[a];
         }
       }
-      diff *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+      diff *= K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
       /* Assemble divergence terms */
       div = 0.0;
@@ -13989,8 +13999,12 @@ int assemble_lubrication_curvature(double time,            /* present time value
           mass = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_MASS) {
             // mass += phi_i * phi_j;
-            if (i == j)
-              mass += phi_i;
+            if (masslump_bit) {
+              if (i == j)
+                mass += phi_i;
+            } else {
+              mass += phi_i * phi_j;
+            }
           }
           mass *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 
@@ -13998,10 +14012,10 @@ int assemble_lubrication_curvature(double time,            /* present time value
           diff = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (a = 0; a < VIM; a++) {
-              diff += *hsquared * grad_II_phi_i[a] * grad_II_phi_j[a];
+              diff += hsquared[a] * grad_II_phi_i[a] * grad_II_phi_j[a];
             }
           }
-          diff *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+          diff *= K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
           /* Assemble jacobian */
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + diff;
@@ -14031,7 +14045,11 @@ int assemble_lubrication_curvature(double time,            /* present time value
             /* Assemble mass term */
             mass = 0.0;
             if (pd->e[pg->imtrx][eqn] & T_MASS) {
-              mass += *esp->sh_l_curv[i] * phi_i;
+              if (masslump_bit) {
+                mass += *esp->sh_l_curv[i] * phi_i;
+              } else {
+                mass += fv->sh_l_curv * phi_i;
+              }
             }
             mass *= fv->dsurfdet_dx[b][jj] * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 
@@ -14039,12 +14057,12 @@ int assemble_lubrication_curvature(double time,            /* present time value
             diff = 0.0;
             if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
               for (a = 0; a < VIM; a++) {
-                diff += *hsquared * d_gradII_kappa_dmesh[a][b][jj] * grad_II_phi_i[a] * det_J;
-                diff += *hsquared * gradII_kappa[a] * d_grad_II_phi_i_dmesh[a][b][jj] * det_J;
-                diff += *hsquared * gradII_kappa[a] * grad_II_phi_i[a] * fv->dsurfdet_dx[b][jj];
+                diff += hsquared[a] * d_gradII_kappa_dmesh[a][b][jj] * grad_II_phi_i[a] * det_J;
+                diff += hsquared[a] * gradII_kappa[a] * d_grad_II_phi_i_dmesh[a][b][jj] * det_J;
+                diff += hsquared[a] * gradII_kappa[a] * grad_II_phi_i[a] * fv->dsurfdet_dx[b][jj];
               }
             }
-            diff *= wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+            diff *= K_diff * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
             /* Assemble divergence terms */
             div = 0.0;
@@ -14235,6 +14253,7 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
 
   /* Prepare weighting for artificial diffusion term */
   const dbl *hsquared = pg_data->hsquared;
+  const double K_diff = mp->Lub_Curv_Diff;
 
   /* --- Residual assembly --------------------------------------------------*/
   if (af->Assemble_Residual) {
@@ -14259,10 +14278,10 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
       diff = 0.0;
       if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
         for (a = 0; a < VIM; a++) {
-          diff += *hsquared * gradII_kappa[a] * grad_II_phi_i[a];
+          diff += gradII_kappa[a] * grad_II_phi_i[a];
         }
       }
-      diff *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+      diff *= K_diff * (*hsquared) * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
       /* Assemble divergence terms */
       div = 0.0;
@@ -14316,10 +14335,11 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
           diff = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (a = 0; a < VIM; a++) {
-              diff += *hsquared * grad_II_phi_i[a] * grad_II_phi_j[a];
+              diff += grad_II_phi_i[a] * grad_II_phi_j[a];
             }
           }
-          diff *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+          diff *=
+              K_diff * (*hsquared) * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
           /* Assemble jacobian */
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + diff;
@@ -14357,12 +14377,12 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
             diff = 0.0;
             if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
               for (a = 0; a < VIM; a++) {
-                diff += *hsquared * d_gradII_kappa_dmesh[a][b][jj] * grad_II_phi_i[a] * det_J;
-                diff += *hsquared * gradII_kappa[a] * d_grad_II_phi_i_dmesh[a][b][jj] * det_J;
-                diff += *hsquared * gradII_kappa[a] * grad_II_phi_i[a] * fv->dsurfdet_dx[b][jj];
+                diff += d_gradII_kappa_dmesh[a][b][jj] * grad_II_phi_i[a] * det_J;
+                diff += gradII_kappa[a] * d_grad_II_phi_i_dmesh[a][b][jj] * det_J;
+                diff += gradII_kappa[a] * grad_II_phi_i[a] * fv->dsurfdet_dx[b][jj];
               }
             }
-            diff *= wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+            diff *= K_diff * (*hsquared) * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
             /* Assemble divergence terms */
             div = 0.0;
@@ -14431,7 +14451,7 @@ int assemble_lubrication_power_law(double time,    /* present time value */
   dbl wt;
 
   dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_dtime, dH_U_ddh;
-  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp;
+  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_dF[MDE];
   dbl shear_top, shear_bot, cross_shear, gradP_mag;
   dbl *grad_P, *grad_II_P;
   grad_P = (double *)malloc(DIM * sizeof(double));
@@ -14511,7 +14531,7 @@ int assemble_lubrication_power_law(double time,    /* present time value */
    */
 
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, time, dt);
+                            &dH_U_ddh, dH_dF, time, dt);
   dH_dtime = dH_U_dtime - dH_L_dtime;
 
   mu0 = gn->mu0;
@@ -15688,7 +15708,9 @@ int assemble_lubrication_power_law(double time,    /* present time value */
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
 
             for (ii = 0; ii < dim; ii++) {
-              diffusion += -grad_II_phi_i[ii] * LubAux->dq_dp1[ii][j];
+              for (jj = 0; jj < dim; jj++) {
+                diffusion += -grad_II_phi_i[ii] * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj];
+              }
             }
 
             diffusion *= det_J * h3 * wt;
@@ -16426,13 +16448,13 @@ int assemble_shell_mesh(double time,    /* Time */
   K2 = fv->sh_K2;
 
   double h = 0, H_U, dH_U_dtime, H_L, dH_L_dtime;
-  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
 
   if (pd->e[pg->imtrx][R_TFMP_MASS]) {
     /* Use the height_function_model */
 
     h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                              &dH_U_ddh, time, delta_t);
+                              &dH_U_ddh, dH_dF, time, delta_t);
 
     // Setup Height function model and sensitivities to mesh motion, and normal
     switch (mp->FSIModel) {
