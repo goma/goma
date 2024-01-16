@@ -1575,6 +1575,16 @@ Revised:         Summer 1998, SY Tam (UNM)
 #endif
     }
 
+    if (pde[R_QTENSOR11]) {
+      err = assemble_qtensor_full_fill();
+      GOMA_EH(err, "assemble_qtensor_full_fill");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_gradient");
+      if (err)
+        return -1;
+#endif
+    }
+
     if (pde[R_MESH1] && cr->MeshFluxModel == ELLIPTIC) {
       err = assemble_elliptic_mesh();
       GOMA_EH(err, "assemble_elliptic_mesh");

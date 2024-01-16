@@ -4346,7 +4346,7 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
 
   for (a = 0; a < VIM; a++) {
     for (b = 0; b < VIM; b++) {
-      gamma_dot[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+      gamma_dot[a][b] = fv_old->grad_v[a][b] + fv_old->grad_v[b][a];
     }
   }
 
@@ -4395,7 +4395,14 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
   }
   memset(tau_p, 0, DIM * DIM * sizeof(dbl));
 
-  if (cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD) {
+  if (pd->gv[QTENSOR11]) {
+    for (int i = 0; i < VIM; i++) {
+      for (int j = 0; j < VIM; j++) {
+        qtensor[i][j] = fv->Q[i][j];
+      }
+    }
+  }
+  else if (cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD) {
     /* Get Q tensor */
     for (a = 0; a < VIM; a++) {
       vort_dir_local[a] = 0.0;
@@ -4429,7 +4436,7 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
     tau_p[a][a] +=
         cp * Y[w] * fv->P; /* suspension pressure adds an isotropic term on the diagonal */
     for (b = 0; b < VIM; b++) {
-      tau_p[a][b] += mu0 * pp * gammadot * qtensor[a][b];
+      tau_p[a][b] += mu0 * pp * fv->SH * qtensor[a][b];
     }
   }
 
@@ -4449,7 +4456,7 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
           for (b = 0; b < VIM; b++) {
             for (p = 0; p < VIM; p++) {
               for (j = 0; j < dofs; j++) {
-                d_tau_p_dv[a][b][p][j] = mu0 * pp * d_gd_dv[p][j] * qtensor[a][b];
+                d_tau_p_dv[a][b][p][j] = 0 * mu0 * pp * d_gd_dv[p][j] * qtensor[a][b];
               }
             }
           }
@@ -4465,7 +4472,7 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
           for (b = 0; b < VIM; b++) {
             for (p = 0; p < dim; p++) {
               for (j = 0; j < dofs; j++) {
-                d_tau_p_dmesh[a][b][p][j] = mu0 * pp * d_gd_dmesh[p][j] * qtensor[a][b];
+                d_tau_p_dmesh[a][b][p][j] = 0 * mu0 * pp * d_gd_dmesh[p][j] * qtensor[a][b];
               }
             }
           }
@@ -4610,8 +4617,17 @@ int divergence_particle_stress(
     grad_mu[a] += dmu_dY[w] * fv->grad_c[w][a];
   }
 
-  /* assume a diagonal Q tensor */
+  dbl div_qtensor[DIM] = {0.};
   memset(qtensor, 0, DIM * DIM * sizeof(dbl));
+  if (pd->gv[QTENSOR11]) {
+    for (int i = 0; i < VIM; i++) {
+      div_qtensor[i] = fv->div_Q[i];
+      for (int j = 0; j < VIM; j++) {
+        qtensor[i][j] = fv->Q[i][j];
+      }
+    }
+  } else {
+  /* assume a diagonal Q tensor */
   for (a = 0; a < DIM; a++) {
     qtensor[a][a] = mp->u_qdiffusivity[w][a];
   }
@@ -4656,6 +4672,7 @@ int divergence_particle_stress(
 
   memset(qtensor, 0, DIM * DIM * sizeof(dbl));
   rotate_tensor(Q_prime, qtensor, R, 0);
+  }
 
   if (gn->ConstitutiveEquation == SUSPENSION || gn->ConstitutiveEquation == CARREAU_SUSPENSION ||
       gn->ConstitutiveEquation == POWERLAW_SUSPENSION || gn->ConstitutiveEquation == FILLED_EPOXY) {
@@ -4705,7 +4722,8 @@ int divergence_particle_stress(
   for (a = 0; a < WIM; a++) {
     for (b = 0; b < WIM; b++) {
       div_tau_p[a] +=
-          mu0 * qtensor[a][b] * (pp * grad_gd[b] + (gammadot + gamma_nl) * d_pp_dy * grad_Y[w][b]);
+          mu0 * qtensor[a][b] * (pp * grad_gd[b] + (gammadot + gamma_nl) * d_pp_dy * grad_Y[w][b])
+          + mu0 * div_qtensor[b] * (gammadot + gamma_nl) * pp;
     }
   }
 
@@ -4726,7 +4744,8 @@ int divergence_particle_stress(
                 mu0 * qtensor[a][b] *
                 (d_pp_dy * bf[var]->phi[j] * grad_gd[b] +
                  (gammadot + gamma_nl) * d_pp2_dy2 * bf[var]->phi[j] * grad_Y[w][b] +
-                 (gammadot + gamma_nl) * d_pp_dy * bf[var]->grad_phi[j][b]);
+                 (gammadot + gamma_nl) * d_pp_dy * bf[var]->grad_phi[j][b])
+          + mu0 * fv->div_Q[b] * (gammadot + gamma_nl) * d_pp_dy * bf[var]->phi[j];
           }
         }
       }

@@ -8289,6 +8289,18 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         ce = set_eqn(R_GRADIENT32, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "gradient33")) {
         ce = set_eqn(R_GRADIENT33, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "QTENSOR11")) {
+        ce = set_eqn(R_QTENSOR11, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "QTENSOR12")) {
+        ce = set_eqn(R_QTENSOR12, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "QTENSOR13")) {
+        ce = set_eqn(R_QTENSOR13, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "QTENSOR22")) {
+        ce = set_eqn(R_QTENSOR22, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "QTENSOR23")) {
+        ce = set_eqn(R_QTENSOR23, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "QTENSOR33")) {
+        ce = set_eqn(R_QTENSOR33, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "bond")) {
         ce = set_eqn(R_BOND_EVOLUTION, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "species_bulk")) {
@@ -8847,6 +8859,18 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         cv = set_var(POLYMER_STRESS23, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "S33")) {
         cv = set_var(POLYMER_STRESS33, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "Q11")) {
+        cv = set_var(QTENSOR11, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "Q12")) {
+        cv = set_var(QTENSOR12, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "Q13")) {
+        cv = set_var(QTENSOR13, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "Q22")) {
+        cv = set_var(QTENSOR22, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "Q23")) {
+        cv = set_var(QTENSOR23, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "Q33")) {
+        cv = set_var(QTENSOR33, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "G11")) {
         cv = set_var(VELOCITY_GRADIENT11, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "G12")) {
@@ -9426,6 +9450,12 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       case R_GRADIENT31:
       case R_GRADIENT32:
       case R_GRADIENT33:
+      case QTENSOR11:
+      case QTENSOR12:
+      case QTENSOR13:
+      case QTENSOR22:
+      case QTENSOR23:
+      case QTENSOR33:
       case PSTAR:
       case R_EM_CONT_REAL:
       case R_EM_CONT_IMAG:

@@ -943,6 +943,11 @@ int assembly_alloc(Exo_DB *exo)
       (void)memset(esp->S[0][0][0], 0, MAX_MODES * VIM * VIM * MDE * sizeof(dbl *));
     }
 
+    if (Num_Var_In_Type[imtrx][QTENSOR11]) {
+      esp->Q = (dbl ****)array_alloc(3, VIM, VIM, MDE, sizeof(dbl *));
+      (void)memset(esp->Q[0][0], 0, VIM * VIM * MDE * sizeof(dbl *));
+    }
+
     /* VELOCITY_GRADIENT */
     if (Num_Var_In_Type[imtrx][VELOCITY_GRADIENT11]) {
       esp->G = (dbl ****)array_alloc(3, VIM, VIM, MDE, sizeof(dbl *));

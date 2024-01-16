@@ -1291,6 +1291,26 @@ static void set_interaction_masks(Exo_DB *exo)
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
 
+
+        v = QTENSOR11;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR12;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR13;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR22;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR23;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR33;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
         v = POLYMER_STRESS11;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
@@ -1748,6 +1768,41 @@ static void set_interaction_masks(Exo_DB *exo)
           eqn_var_mask[imtrx][e][v] = 1;
         break;
 
+
+      case QTENSOR11:
+      case QTENSOR12:
+      case QTENSOR13:
+      case QTENSOR22:
+      case QTENSOR23:
+      case QTENSOR33:
+        v = VELOCITY1;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = VELOCITY2;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = VELOCITY3;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR11;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR12;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR13;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR22;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR23;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR33;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        break;
       case R_MASS:
         v = VELOCITY1;
         if (Num_Var_In_Type[imtrx][v])
@@ -1786,6 +1841,25 @@ static void set_interaction_masks(Exo_DB *exo)
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = FILL;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
+        v = QTENSOR11;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR12;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR13;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR22;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR23;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = QTENSOR33;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
 

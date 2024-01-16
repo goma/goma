@@ -23,6 +23,7 @@
 #include "mm_mp.h"
 #include "mm_post_def.h"
 #include "rf_fem.h"
+#include "rf_fem_const.h"
 #include "std.h"
 
 /***************************************************************************/
@@ -1274,6 +1275,38 @@ int load_fv(void)
             }
           }
         }
+      }
+    }
+  }
+
+  int R_Q[DIM][DIM];
+  R_Q[0][0] = QTENSOR11;
+  R_Q[0][1] = QTENSOR12;
+  R_Q[0][2] = QTENSOR13;
+  R_Q[1][0] = QTENSOR12;
+  R_Q[1][1] = QTENSOR22;
+  R_Q[1][2] = QTENSOR23;
+  R_Q[2][0] = QTENSOR13;
+  R_Q[2][1] = QTENSOR23;
+  R_Q[2][2] = QTENSOR33;
+  for (p = 0; pdgv[QTENSOR11] && p < VIM; p++) {
+    for (q = p; q < VIM; q++) {
+      v = R_Q[p][q];
+      if (pdgv[v]) {
+        fv->Q[p][q] = fv_old->Q[p][q] = fv_dot->Q[p][q] = 0.0;
+        if (p != q)
+          fv->Q[q][p] = fv_old->Q[q][p] = fv_dot->Q[q][p] = 0.0;
+        dofs = ei[upd->matrix_index[v]]->dof[v];
+        for (i = 0; i < dofs; i++) {
+          fv->Q[p][q] += *esp->Q[p][q][i] * bf[v]->phi[i];
+          if (pd->TimeIntegration != STEADY) {
+            fv_old->Q[p][q] += *esp_old->Q[p][q][i] * bf[v]->phi[i];
+            fv_dot->Q[p][q] += *esp_dot->Q[p][q][i] * bf[v]->phi[i];
+          }
+        }
+        fv->Q[q][p] = fv->Q[p][q];
+        fv_old->Q[q][p] = fv_old->Q[p][q];
+        fv_dot->Q[q][p] = fv_dot->Q[p][q];
       }
     }
   }
@@ -2605,7 +2638,7 @@ int load_fv_grads(void)
   /*
    * curl(v)
    */
-  if (CURL_V != -1 && !InShellElementWithParentElementCoverage) {
+  if (pd->gv[QTENSOR11] || (CURL_V != -1 && !InShellElementWithParentElementCoverage)) {
     v = VELOCITY1;
     bfn = bf[v];
 
@@ -2988,6 +3021,60 @@ int load_fv_grads(void)
       for (q = 0; q < VIM; q++) {
         for (r = 0; r < VIM; r++) {
           fv->grad_G[r][p][q] = 0.;
+        }
+      }
+    }
+  }
+
+  if (pd->gv[QTENSOR11]) {
+    v = QTENSOR11;
+    dofs = ei[upd->matrix_index[v]]->dof[v];
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (r = 0; r < VIM; r++) {
+          fv->grad_Q[r][p][q] = 0.0;
+
+          for (i = 0; i < dofs; i++) {
+            fv->grad_Q[r][p][q] += *esp->Q[p][q][i] * bf[v]->grad_phi[i][r];
+          }
+        }
+      }
+    }
+
+    /*
+     * div(Q) - this is a vector!
+     */
+    for (r = 0; r < dim; r++) {
+      fv->div_Q[r] = 0.0;
+      for (q = 0; q < dim; q++) {
+        fv->div_Q[r] += fv->grad_Q[q][q][r];
+      }
+    }
+
+    if (pd->CoordinateSystem != CARTESIAN) {
+      for (s = 0; s < VIM; s++) {
+        for (r = 0; r < VIM; r++) {
+          for (p = 0; p < VIM; p++) {
+            fv->div_Q[s] += fv->Q[p][s] * fv->grad_e[p][r][s];
+          }
+        }
+      }
+
+      for (s = 0; s < VIM; s++) {
+        for (r = 0; r < VIM; r++) {
+          for (q = 0; q < VIM; q++) {
+            fv->div_Q[s] += fv->Q[r][q] * fv->grad_e[q][r][s];
+          }
+        }
+      }
+    }
+
+  } else if (zero_unused_grads && upd->vp[pg->imtrx][QTENSOR11] == -1) {
+    for (p = 0; p < VIM; p++) {
+      fv->div_Q[p] = 0.0;
+      for (q = 0; q < VIM; q++) {
+        for (r = 0; r < VIM; r++) {
+          fv->grad_Q[r][p][q] = 0.;
         }
       }
     }
@@ -6777,6 +6864,89 @@ int load_fv_mesh_derivs(int okToZero)
     siz = sizeof(double) * DIM * DIM * MDE;
     memset(fv->d_div_G_dmesh, 0, siz);
     memset(fv->d_div_Gt_dmesh, 0, siz);
+  }
+  /*
+   * d(grad(Q))/dmesh
+   */
+
+  if (pd->gv[QTENSOR11]) {
+    v = QTENSOR11;
+    bfv = bf[v];
+    vdofs = ei[upd->matrix_index[v]]->dof[v];
+
+    siz = sizeof(double) * DIM * DIM * DIM * DIM * MDE;
+    memset(fv->d_grad_Q_dmesh, 0, siz);
+    siz = sizeof(double) * DIM * DIM * MDE;
+    memset(fv->d_div_Q_dmesh, 0, siz);
+
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (r = 0; r < VIM; r++) {
+          for (b = 0; b < VIM; b++) {
+            for (j = 0; j < mdofs; j++) {
+              for (i = 0; i < vdofs; i++) {
+                fv->d_grad_Q_dmesh[r][p][q][b][j] +=
+                    *esp->Q[p][q][i] * bfv->d_grad_phi_dmesh[i][r][b][j];
+              }
+            }
+          }
+        }
+      }
+    }
+
+    for (r = 0; r < VIM; r++) {
+      for (q = 0; q < VIM; q++) {
+        for (b = 0; b < VIM; b++) {
+          for (j = 0; j < mdofs; j++) {
+            fv->d_div_Q_dmesh[r][b][j] += fv->d_grad_Q_dmesh[q][q][r][b][j];
+          }
+        }
+      }
+    }
+
+    if (pd->CoordinateSystem != CARTESIAN) {
+      for (s = 0; s < VIM; s++) {
+        for (r = 0; r < VIM; r++) {
+          for (p = 0; p < VIM; p++) {
+            for (q = 0; q < VIM; q++) {
+              for (b = 0; b < dim; b++) {
+                for (j = 0; j < mdofs; j++) {
+                  fv->d_div_Q_dmesh[s][b][j] +=
+                      fv->Q[p][q] *
+                      (fv->d_grad_e_dq[p][r][q][b] * bfm->phi[j] * (double)delta(s, q) +
+                       fv->d_grad_e_dq[q][p][s][b] * bfm->phi[j] * (double)delta(r, p));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (pd->CoordinateSystem != CARTESIAN) {
+      for (s = 0; s < VIM; s++) {
+        for (r = 0; r < VIM; r++) {
+          for (p = 0; p < VIM; p++) {
+            for (q = 0; q < VIM; q++) {
+              for (b = 0; b < VIM; b++) {
+                for (j = 0; j < mdofs; j++) {
+                  fv->d_div_Q_dmesh[s][b][j] +=
+                      fv->Q[q][p] *
+                      (fv->d_grad_e_dq[p][r][q][b] * bfm->phi[j] * (double)delta(s, q) +
+                       fv->d_grad_e_dq[q][p][s][b] * bfm->phi[j] * (double)delta(r, p));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+  } else if (upd->vp[pg->imtrx][QTENSOR11] != -1 && okToZero) {
+    siz = sizeof(double) * DIM * DIM * DIM * DIM * MDE;
+    memset(fv->d_grad_Q_dmesh, 0, siz);
+    siz = sizeof(double) * DIM * DIM * MDE;
+    memset(fv->d_div_Q_dmesh, 0, siz);
   }
 
   /*
