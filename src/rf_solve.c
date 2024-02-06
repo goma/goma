@@ -60,6 +60,7 @@
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
 #include "mpi.h"
+#include "polymer_time_const.h"
 #include "rd_exo.h"
 #include "rd_mesh.h"
 #include "rf_allo.h"
@@ -188,8 +189,6 @@ void initial_guess_stress_to_log_conf(double *x, int num_total_nodes) {
   double WORK[LWORK];
   double A[DIM * DIM];
   dbl gamma_dot[DIM][DIM];
-  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
-  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mu_struct;
 
   int mode, mn;
   double lambda = 0;
@@ -214,16 +213,8 @@ void initial_guess_stress_to_log_conf(double *x, int num_total_nodes) {
           }
         }
 
-        mup = viscosity(ve[mode]->gn, gamma_dot, d_mup);
-
-        if (ve[mode]->time_constModel == CONSTANT) {
-          lambda = ve[mode]->time_const;
-        } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-          lambda = mup / ve[mode]->time_const;
-        } else {
-          GOMA_EH(GOMA_ERROR,
-                  "Unknown model for Polymer Time Constant in initial guess log conf to stress");
-        }
+        mup = viscosity(ve[mode]->gn, gamma_dot, NULL);
+        lambda = polymer_time_const(ve[mode]->time_const_st, gamma_dot, NULL);
 
         // skip node if stress variables not found
         if (s_idx[0][0] == -1 || s_idx[0][1] == -1 || s_idx[1][1] == -1)

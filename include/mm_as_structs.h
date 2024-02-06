@@ -3079,6 +3079,13 @@ struct viscosity_dependence {
   double eddy_nu[MDE];            /* Turbulent viscosity */
 };
 typedef struct viscosity_dependence VISCOSITY_DEPENDENCE_STRUCT;
+typedef struct polymer_time_const_dependence {
+  double v[DIM][MDE]; /* velocity dependence. */
+  double X[DIM][MDE]; /* mesh dependence. */
+  double T[MDE];      /* temperature dependence. */
+  double F[MDE];      /* FILL dependence. */
+  double gd;          /* strain rate dependence */
+} POLYMER_TIME_CONST_DEPENDENCE_STRUCT;
 
 /* struct for d_saramito */
 struct saramito_coefficient_dependence {

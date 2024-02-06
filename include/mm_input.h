@@ -234,6 +234,7 @@ extern int look_for_modal_prop /* mm_input.c                                */
      const int,                /* modes - number of viscoelastic modes (in) */
      int *,                    /* MaterialModel - int material model  (out) */
      dbl *,                    /* modal_const - modal data            (out) */
+     char *,                   /*     model string char array              (out) */
      char *);                  /*      echo string char array              (out) */
 
 extern int read_constants_int /* mm_input.c                                */

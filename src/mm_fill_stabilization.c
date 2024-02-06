@@ -16,6 +16,7 @@
 #include "mm_mp_structs.h"
 #include "mm_qtensor_model.h"
 #include "mm_viscosity.h"
+#include "polymer_time_const.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "rf_solver.h"
@@ -976,11 +977,8 @@ int calc_pspg(dbl pspg[DIM],
     if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
         vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
       for (mode = 0; mode < vn->modes; mode++) {
-        dbl lambda = 0.0;
-        if (ve[mode]->time_constModel == CONSTANT) {
-          lambda = ve[mode]->time_const;
-        }
         dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
+        dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
         int dofs = ei[upd->matrix_index[v_s[mode][0][0]]]->dof[v_s[mode][0][0]];
         dbl grad_S[DIM][DIM][DIM] = {{{0.0}}};
         dbl s[MDE][DIM][DIM];

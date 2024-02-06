@@ -1858,7 +1858,7 @@ void f_vestress_parabola(const int var_flag,
 
   case GIESEKUS:
     alpha = ve_glob[mn][mode]->alpha;
-    lambda = ve_glob[mn][mode]->time_const;
+    lambda = ve_glob[mn][mode]->time_const_st->lambda0;
     Ws = at * lambda * fabs(srate);
     A_alpha = 8 * alpha * (1. - alpha);
     mup = viscosity(ve[mode]->gn, gamma, NULL);
@@ -1890,7 +1890,7 @@ void f_vestress_parabola(const int var_flag,
     }
     break;
   case OLDROYDB:
-    lambda = ve_glob[mn][mode]->time_const;
+    lambda = ve_glob[mn][mode]->time_const_st->lambda0;
     Ws = at * lambda * fabs(srate);
     mup = viscosity(ve[mode]->gn, gamma, NULL);
     switch (strs) {

@@ -61,6 +61,7 @@
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
 #include "mpi.h"
+#include "polymer_time_const.h"
 #include "rd_mesh.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
@@ -7073,6 +7074,9 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
   dbl d_mup_dv_pj;
 
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
+
   dbl saramitoCoeff = 1.;
   SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
   SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
@@ -7242,11 +7246,7 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
     alpha = ve[mode]->alpha;
 
     /* get time constant */
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    }
+    lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
 
     ucwt = 1.0 - ve[mode]->xi / 2.0;
     lcwt = ve[mode]->xi / 2.0;
@@ -7632,9 +7632,8 @@ void stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
   dbl advection_term1[DIM][DIM];
 
   /* polymer viscosity and derivatives */
-  dbl mup;
-  VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
-  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
 
   /*  shift function */
   dbl at = 0.0;
@@ -7740,19 +7739,11 @@ void stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
       }
     }
 
-    // Polymer viscosity
-    mup = viscosity(ve[mode]->gn, gamma, d_mup);
-
     // Giesekus mobility parameter
     alpha = ve[mode]->alpha;
 
     // Polymer time constant
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    }
-
+    lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
 #ifdef ANALEIG_PLEASE
     analytical_exp_s(s, exp_s, eig_values, R1, NULL);
 #else
@@ -7926,7 +7917,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   int err;
   dbl alpha = 0;  /* This is the Geisekus mobility parameter */
   dbl lambda = 0; /* polymer relaxation constant */
-  dbl d_lambda_dF[MDE];
   double xi;
   double d_xi_dF[MDE];
   dbl eps = 0; /* This is the PTT elongation parameter */
@@ -7982,6 +7972,8 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
 
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
   // todo: will want to parse necessary parameters... for now hard code
   const bool saramitoEnabled =
       (vn->ConstitutiveEquation == SARAMITO_OLDROYDB || vn->ConstitutiveEquation == SARAMITO_PTT ||
@@ -8172,17 +8164,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
     }
 
     /* get time constant */
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    } else if (ls != NULL && ve[mode]->time_constModel == VE_LEVEL_SET) {
-      double pos_lambda = ve[mode]->pos_ls.time_const;
-      double neg_lambda = ve[mode]->time_const;
-      double width = ls->Length_Scale;
-      err = level_set_property(neg_lambda, pos_lambda, width, &lambda, d_lambda_dF);
-      GOMA_EH(err, "level_set_property() failed for polymer time constant.");
-    }
+    lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
 
     xi = 0;
     if (ve[mode]->xiModel == CONSTANT) {
@@ -8382,16 +8364,18 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
 
                     if (pd->TimeIntegration != STEADY) {
                       if (pd->e[pg->imtrx][eqn] & T_MASS) {
-
-                        mass *=
-                            pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * at * lambda * det_J * wt * h3;
+                        mass = b_dot[ii][jj];
+                        mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * at * d_lam->v[p][j] * det_J *
+                                wt * h3;
                       }
                     }
 
                     advection = 0.;
                     if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
                       if (DOUBLE_NONZERO(lambda)) {
-                        advection *= at * lambda * det_J * wt * h3;
+                        advection -= b_dot_g[ii][jj];
+                        advection -= a_dot_b[ii][jj];
+                        advection *= at * d_lam->v[p][j] * det_J * wt * h3;
                         advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                       }
                     }
@@ -8667,7 +8651,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                     if (pd->e[pg->imtrx][eqn] & T_MASS) {
 
                       mass = b_dot[ii][jj];
-                      mass *= d_lambda_dF[j];
+                      mass *= d_lam->F[j];
                       mass *= at * det_J * wt;
                       mass *= h3;
                       mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
@@ -8677,14 +8661,10 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                   advection = 0.;
 
                   if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-                    if (d_lambda_dF[j] != 0.) {
-
-                      advection += v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
-
-                      advection *= d_lambda_dF[j];
-                      advection *= at * det_J * wt * h3;
-                      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-                    }
+                    advection += v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
+                    advection *= d_lam->F[j];
+                    advection *= at * det_J * wt * h3;
+                    advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                   }
 
                   diffusion = 0.;
@@ -8698,17 +8678,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                   source = 0.;
 
                   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-
-                    double invmup = 1 / mup;
-                    // PTT
-
-                    // Giesekus
-                    if (alpha != 0.) {
-                      source += s_dot_s[ii][jj] *
-                                (-alpha * lambda * d_mup->F[j] * invmup * invmup +
-                                 d_alpha_dF[j] * lambda * invmup + alpha * d_lambda_dF[j] * invmup);
-                    }
-
                     source *= det_J * h3 * wt;
 
                     source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
@@ -8841,7 +8810,8 @@ void stress_no_v_dot_gradS_logc_transient(
   dbl mup;
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
   /*  shift function */
   dbl at = 0.0;
   dbl wlf_denom;
@@ -8952,11 +8922,8 @@ void stress_no_v_dot_gradS_logc_transient(
     alpha = ve[mode]->alpha;
 
     // Polymer time constant
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    }
+    lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
+
     const bool saramitoEnabled =
         (vn->ConstitutiveEquation == SARAMITO_OLDROYDB ||
          vn->ConstitutiveEquation == SARAMITO_PTT || vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
