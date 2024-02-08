@@ -641,7 +641,7 @@ void update_MT_parameter(double lambda, /* Parameter value */
   case TAGC_TIME_CONST5:
   case TAGC_TIME_CONST6:
   case TAGC_TIME_CONST7:
-    ve_glob[mn][mpr - TAGC_TIME_CONST]->time_const = lambda;
+    ve_glob[mn][mpr - TAGC_TIME_CONST]->time_const_st->lambda0 = lambda;
     break;
 
   case TAGC_WT_FUNC:
@@ -1605,7 +1605,7 @@ void retrieve_MT_parameter(double *lambda, /* Parameter value */
   case TAGC_TIME_CONST5:
   case TAGC_TIME_CONST6:
   case TAGC_TIME_CONST7:
-    *lambda = ve_glob[mn][mpr - TAGC_TIME_CONST]->time_const;
+    *lambda = ve_glob[mn][mpr - TAGC_TIME_CONST]->time_const_st->lambda0;
     break;
 
   case TAGC_WT_FUNC:

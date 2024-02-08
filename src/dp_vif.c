@@ -2281,8 +2281,21 @@ void noahs_ark(void) {
       ddd_add_member(n, &ve_glob[i][mode]->gn->DilVisc0, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->gn->DilViscModel, 1, MPI_INT);
 
-      ddd_add_member(n, &ve_glob[i][mode]->time_const, 1, MPI_DOUBLE);
-      ddd_add_member(n, &ve_glob[i][mode]->time_constModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->ConstitutiveEquation, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->lambda0, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->lambda0Model, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->pos_ls_lambda, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->nexp, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->nexpModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->lambdainf, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->lambdainfModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->carreau_lambda, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->carreau_lambdaModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->aexp, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->aexpModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->atexp, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->time_const_st->atexpModel, 1, MPI_INT);
+
       ddd_add_member(n, &ve_glob[i][mode]->alpha, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->alphaModel, 1, MPI_INT);
       ddd_add_member(n, &ve_glob[i][mode]->xi, 1, MPI_DOUBLE);
@@ -2302,7 +2315,6 @@ void noahs_ark(void) {
       ddd_add_member(n, &ve_glob[i][mode]->extensibility, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->extensibilityModel, 1, MPI_INT);
 
-      ddd_add_member(n, &ve_glob[i][mode]->pos_ls.time_const, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->pos_ls.alpha, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->pos_ls.xi, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->pos_ls.eps, 1, MPI_DOUBLE);

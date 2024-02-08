@@ -1132,9 +1132,30 @@ struct Generalized_Newtonian {
   dbl *u_thixo_factor;
 };
 typedef struct Generalized_Newtonian GEN_NEWT_STRUCT;
+typedef struct PolymerTimeConstants {
+  //! Integer describing the polymer time constant model
+  /*!
+   *   Constant, Power Law, Carreau, Bingham,  Carreau_wlf
+   *   or Carreau_Suspension etc
+   */
+  int ConstitutiveEquation;
+
+  dbl lambda0;
+  int lambda0Model;
+  dbl pos_ls_lambda;
+  dbl nexp;
+  int nexpModel;
+  dbl lambdainf;
+  int lambdainfModel;
+  dbl carreau_lambda;
+  int carreau_lambdaModel;
+  dbl aexp;
+  int aexpModel;
+  dbl atexp;
+  int atexpModel;
+} POLYMER_TIME_CONST_STRUCT;
 
 struct Positive_LS_Viscoelastic_Properties {
-  double time_const; /* relaxation constant */
 
   double alpha; /* This is the Geisekus mobility parameter */
 
@@ -1148,11 +1169,9 @@ struct Viscoelastic_Constitutive {
    * if it is shearthinning etc or NEWTONIAN
    */
   GEN_NEWT_STRUCT *gn;
+  POLYMER_TIME_CONST_STRUCT *time_const_st;
 
-  dbl time_const;      /* relaxation constant */
-  int time_constModel; /* this is either CONSTANT or POWERLAW or CARREAU */
-                       /* The same model must be used for the viscosity! */
-  dbl alpha;           /* This is the Geisekus mobility parameter */
+  dbl alpha; /* This is the Geisekus mobility parameter */
   int alphaModel;
 
   dbl xi; /* This is the PTT upper convected / lower convected weight parameter */

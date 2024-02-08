@@ -10656,7 +10656,8 @@ int look_for_modal_prop(FILE *imp,                 /* ptr to input stream (in)*/
                         const int modes,           /* number of viscoelastic modes (in) */
                         int *MaterialModel,        /* int material model (out)*/
                         dbl *modal_const,          /* modal data (out) */
-                        char *echo_string)         /*character array to pass back echoed input */
+                        char *model_name,
+                        char *echo_string) /*character array to pass back echoed input */
 {
   char input[MAX_CHAR_IN_INPUT]; /* dummy storage for input strings */
   int iread = -1;                /* status flag  */
@@ -10664,7 +10665,6 @@ int look_for_modal_prop(FILE *imp,                 /* ptr to input stream (in)*/
   char line[132];
   char *arguments[MAX_NUMBER_PARAMS];
   int num_const, i, got_it;
-  char model_name[MAX_CS_KEYWORD_LENGTH];
 
   got_it = look_forward_optional(imp, search_string, input, '=');
   if (got_it == 1) {
@@ -10701,14 +10701,6 @@ int look_for_modal_prop(FILE *imp,                 /* ptr to input stream (in)*/
       }
       *MaterialModel = DumModel;
       iread = 1;
-    } else if (!strcmp(model_name, "HERSCHEL_BULKLEY")) {
-      *MaterialModel = HERSCHEL_BULKLEY;
-      iread = 1;
-      printf("HERSCHEL_BULKLEY model used for %s\n", search_string);
-    } else if (!strcmp(model_name, "POWER_LAW")) {
-      *MaterialModel = POWER_LAW;
-      iread = 1;
-      printf("POWER_LAW model used for %s\n", search_string);
     } else {
       iread = -2;
     }
