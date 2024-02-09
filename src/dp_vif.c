@@ -570,6 +570,7 @@ void noahs_ark(void) {
 #endif
   ddd_add_member(n, &Guess_Flag, 1, MPI_INT);
   ddd_add_member(n, &Conformation_Flag, 1, MPI_INT);
+  ddd_add_member(n, &Print3DBCDup, 1, MPI_INT);
 
   /*
    * The variable initialization structures are of fixed size, but only
