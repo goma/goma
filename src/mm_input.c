@@ -917,6 +917,19 @@ void rd_genl_specs(FILE *ifp, char *input) {
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Debug", Debug_Flag);
   ECHO(echo_string, echo_file);
 
+  iread = look_for_optional(ifp, "Print 3D BC Dup", input, '=');
+  if (iread == 1) {
+    if (fscanf(ifp, "%d", &Print3DBCDup) != 1) {
+      DPRINTF(stderr, "%s:\tError reading Print 3D BC Dup Level\n", yo);
+      exit(-1);
+    }
+  } else {
+    Print3DBCDup = 0;
+  }
+
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Debug", Debug_Flag);
+  ECHO(echo_string, echo_file);
+
 #ifdef MATRIX_DUMP
   (void)look_for_optional_int(ifp, "Number of Jacobian File Dumps", &Number_Jac_Dump, 0);
 
