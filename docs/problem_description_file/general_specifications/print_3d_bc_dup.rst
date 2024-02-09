@@ -21,6 +21,9 @@ Level           Results Output
 1               BC Duplication information
 2               Same as level 1 with additional rotation and node Duplication
                 debugging
+==============  ===============================================================
+
+
 ------------
 Examples
 ------------
@@ -29,6 +32,7 @@ Following is a sample card:
 ::
 
 	Print 3D BC Dup = 1
+
 
 -------------------------
 Technical Discussion
