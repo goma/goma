@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Liquid Phase Darcy Velocity in Porous Media &#8212; Goma User Manual 7.0.0 documentation</title>
+    <title>Print 3D BC Dup &#8212; Goma User Manual 7.0.0 documentation</title>
   <script>
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
@@ -37,12 +37,11 @@
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/sphinx_highlight.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'problem_description_file/post_processing/liquid_phase_darcy_velocity_in_porous_media';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'problem_description_file/general_specifications/print_3d_bc_dup';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Capillary Pressure in Porous Media" href="capillary_pressure_in_porous_media.html" />
-    <link rel="prev" title="Gas Phase Darcy Velocity in Porous Media" href="gas_phase_darcy_velocity_in_porous_media.html" />
+    <link rel="next" title="Number of Jacobian File Dumps" href="number_of_jacobian_file_dumps.html" />
+    <link rel="prev" title="Debug" href="debug.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
   </head>
@@ -241,18 +240,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../file_specifications/decomposition_type.html">Decomposition Type</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../general_specifications.html">General Specifications</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../general_specifications/output_level.html"><strong>Output Level</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../general_specifications/debug.html"><strong>Debug</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../general_specifications/print_3d_bc_dup.html">Print 3D BC Dup</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../general_specifications/number_of_jacobian_file_dumps.html"><strong>Number of Jacobian File Dumps</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../general_specifications/initial_guess.html"><strong>Initial Guess</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../general_specifications/initialize.html"><strong>Initialize</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../general_specifications/external_field.html"><strong>External Field</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../general_specifications/export_field.html"><strong>Export Field</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../general_specifications/external_pixel_field.html"><strong>External Pixel Field</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../general_specifications/pressure_datum.html"><strong>Pressure Datum</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../general_specifications/anneal_mesh_on_output.html"><strong>Anneal Mesh on Output</strong></a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../general_specifications.html">General Specifications</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="output_level.html"><strong>Output Level</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="debug.html"><strong>Debug</strong></a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Print 3D BC Dup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="number_of_jacobian_file_dumps.html"><strong>Number of Jacobian File Dumps</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="initial_guess.html"><strong>Initial Guess</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="initialize.html"><strong>Initialize</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="external_field.html"><strong>External Field</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="export_field.html"><strong>Export Field</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="external_pixel_field.html"><strong>External Pixel Field</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pressure_datum.html"><strong>Pressure Datum</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="anneal_mesh_on_output.html"><strong>Anneal Mesh on Output</strong></a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../time_integration.html">Time Integration Specifications</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -475,60 +474,60 @@
 <li class="toctree-l3"><a class="reference internal" href="../problem_description/end_of_mat.html"><strong>END OF MAT</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l2 current active has-children"><a class="reference internal" href="../post_processing.html">Post Processing Specifications</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="stream_function.html"><strong>Stream Function</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="streamwise_normal_stress.html"><strong>Streamwise Normal Stress</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="cross_stream_shear_rate.html"><strong>Cross-Stream Shear Rate</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="mean_shear_rate.html"><strong>Mean Shear Rate</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="pressure_contours.html"><strong>Pressure Contours</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fill_contours.html"><strong>Fill Contours</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="concentration_contours.html"><strong>Concentration Contours</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="stress_contours.html"><strong>Stress Contours</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="first_invariant_of_strain.html"><strong>First Invariant of Strain</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="second_invariant_of_strain.html"><strong>Second Invariant of Strain</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="third_invariant_of_strain.html"><strong>Third Invariant of Strain</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="velocity_divergence.html"><strong>Velocity Divergence</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="particle_velocity_divergence.html"><strong>Particle Velocity Divergence</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="total_velocity_divergence.html"><strong>Total Velocity Divergence</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="electric_field.html"><strong>Electric Field</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="electric_field_magnitude.html"><strong>Electric Field Magnitude</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="enormsq_field.html"><strong>Enormsq Field</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="enormsq_field_norm.html"><strong>Enormsq Field Norm</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="viscosity.html"><strong>Viscosity</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="density.html"><strong>Density</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="lame_mu.html"><strong>Lame MU</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="lame_lambda.html"><strong>Lame LAMBDA</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="von_mises_strain.html"><strong>Von Mises Strain</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="von_mises_stress.html"><strong>Von Mises Stress</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="navier_stokes_residuals.html"><strong>Navier Stokes Residuals</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="moving_mesh_residuals.html"><strong>Moving Mesh Residuals</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="mass_diffusion_vectors.html"><strong>Mass Diffusion Vectors</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="diffusive_mass_flux_vectors.html"><strong>Diffusive Mass Flux Vectors</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="mass_fluxlines.html"><strong>Mass Fluxlines</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="energy_conduction_vectors.html"><strong>Energy Conduction Vectors</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="energy_fluxlines.html"><strong>Energy Fluxlines</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="time_derivatives.html"><strong>Time Derivatives</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="mesh_stress_tensor.html"><strong>Mesh Stress Tensor</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="real_solid_stress_tensor.html"><strong>Real Solid Stress Tensor</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="mesh_strain_tensor.html"><strong>Mesh Strain Tensor</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="viscoplastic_def_grad_tensor.html"><strong>Viscoplastic Def_Grad Tensor</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="lagrangian_convection.html"><strong>Lagrangian Convection</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="normal_and_tangent_vectors.html"><strong>Normal and Tangent Vectors</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="error_zz_velocity.html"><strong>Error ZZ Velocity</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="error_zz_heat_flux.html"><strong>Error ZZ Heat Flux</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="error_zz_pressure.html"><strong>Error ZZ Pressure</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="user_defined_post_processing.html"><strong>User-Defined Post Processing</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="porous_saturation.html"><strong>Porous Saturation</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="total_density_of_solvents_in_porous_media.html"><strong>Total Density of Solvents in Porous Media</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="density_of_solvents_in_gas_phase_in_porous_media.html"><strong>Density of Solvents in Gas Phase in Porous Media</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="density_of_liquid_phase_in_porous_media.html"><strong>Density of Liquid Phase in Porous Media</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="gas_phase_darcy_velocity_in_porous_media.html"><strong>Gas Phase Darcy Velocity in Porous Media</strong></a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#"><strong>Liquid Phase Darcy Velocity in Porous Media</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="capillary_pressure_in_porous_media.html"><strong>Capillary Pressure in Porous Media</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="grid_peclet_number_in_porous_media.html"><strong>Grid Peclet Number in Porous Media</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="supg_velocity_in_porous_media.html"><strong>SUPG Velocity in Porous Media</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="vorticity_vector.html"><strong>Vorticity Vector</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="map_conf_stress.html">Map Conf Stress</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../post_processing.html">Post Processing Specifications</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/stream_function.html"><strong>Stream Function</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/streamwise_normal_stress.html"><strong>Streamwise Normal Stress</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/cross_stream_shear_rate.html"><strong>Cross-Stream Shear Rate</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/mean_shear_rate.html"><strong>Mean Shear Rate</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/pressure_contours.html"><strong>Pressure Contours</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/fill_contours.html"><strong>Fill Contours</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/concentration_contours.html"><strong>Concentration Contours</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/stress_contours.html"><strong>Stress Contours</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/first_invariant_of_strain.html"><strong>First Invariant of Strain</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/second_invariant_of_strain.html"><strong>Second Invariant of Strain</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/third_invariant_of_strain.html"><strong>Third Invariant of Strain</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/velocity_divergence.html"><strong>Velocity Divergence</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/particle_velocity_divergence.html"><strong>Particle Velocity Divergence</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/total_velocity_divergence.html"><strong>Total Velocity Divergence</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/electric_field.html"><strong>Electric Field</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/electric_field_magnitude.html"><strong>Electric Field Magnitude</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/enormsq_field.html"><strong>Enormsq Field</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/enormsq_field_norm.html"><strong>Enormsq Field Norm</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/viscosity.html"><strong>Viscosity</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/density.html"><strong>Density</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/lame_mu.html"><strong>Lame MU</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/lame_lambda.html"><strong>Lame LAMBDA</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/von_mises_strain.html"><strong>Von Mises Strain</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/von_mises_stress.html"><strong>Von Mises Stress</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/navier_stokes_residuals.html"><strong>Navier Stokes Residuals</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/moving_mesh_residuals.html"><strong>Moving Mesh Residuals</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/mass_diffusion_vectors.html"><strong>Mass Diffusion Vectors</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/diffusive_mass_flux_vectors.html"><strong>Diffusive Mass Flux Vectors</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/mass_fluxlines.html"><strong>Mass Fluxlines</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/energy_conduction_vectors.html"><strong>Energy Conduction Vectors</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/energy_fluxlines.html"><strong>Energy Fluxlines</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/time_derivatives.html"><strong>Time Derivatives</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/mesh_stress_tensor.html"><strong>Mesh Stress Tensor</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/real_solid_stress_tensor.html"><strong>Real Solid Stress Tensor</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/mesh_strain_tensor.html"><strong>Mesh Strain Tensor</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/viscoplastic_def_grad_tensor.html"><strong>Viscoplastic Def_Grad Tensor</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/lagrangian_convection.html"><strong>Lagrangian Convection</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/normal_and_tangent_vectors.html"><strong>Normal and Tangent Vectors</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/error_zz_velocity.html"><strong>Error ZZ Velocity</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/error_zz_heat_flux.html"><strong>Error ZZ Heat Flux</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/error_zz_pressure.html"><strong>Error ZZ Pressure</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/user_defined_post_processing.html"><strong>User-Defined Post Processing</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/porous_saturation.html"><strong>Porous Saturation</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/total_density_of_solvents_in_porous_media.html"><strong>Total Density of Solvents in Porous Media</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/density_of_solvents_in_gas_phase_in_porous_media.html"><strong>Density of Solvents in Gas Phase in Porous Media</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/density_of_liquid_phase_in_porous_media.html"><strong>Density of Liquid Phase in Porous Media</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/gas_phase_darcy_velocity_in_porous_media.html"><strong>Gas Phase Darcy Velocity in Porous Media</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/liquid_phase_darcy_velocity_in_porous_media.html"><strong>Liquid Phase Darcy Velocity in Porous Media</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/capillary_pressure_in_porous_media.html"><strong>Capillary Pressure in Porous Media</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/grid_peclet_number_in_porous_media.html"><strong>Grid Peclet Number in Porous Media</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/supg_velocity_in_porous_media.html"><strong>SUPG Velocity in Porous Media</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/vorticity_vector.html"><strong>Vorticity Vector</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/map_conf_stress.html">Map Conf Stress</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../post_processing_fluxes.html">Post Processing Fluxes and Data</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -785,53 +784,43 @@
             
             <article class="bd-article" role="main">
               
-  <section id="liquid-phase-darcy-velocity-in-porous-media">
-<h1><strong>Liquid Phase Darcy Velocity in Porous Media</strong><a class="headerlink" href="#liquid-phase-darcy-velocity-in-porous-media" title="Permalink to this heading">#</a></h1>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Liquid</span> <span class="n">phase</span> <span class="n">Darcy</span> <span class="n">velocity</span> <span class="ow">in</span> <span class="n">porous</span> <span class="n">media</span> <span class="o">=</span> <span class="p">{</span><span class="n">yes</span> <span class="o">|</span> <span class="n">no</span><span class="p">}</span>
+  <section id="print-3d-bc-dup">
+<h1>Print 3D BC Dup<a class="headerlink" href="#print-3d-bc-dup" title="Permalink to this heading">#</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Print</span> <span class="mi">3</span><span class="n">D</span> <span class="n">BC</span> <span class="n">Dup</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this heading">#</a></h2>
-<p>This post-processing option will lead to the explicit calculation and storage of the
-Darcy velocity components in the liquid phase, viz. the velocity of the liquid phase due
-to liquid phase pressure gradients. This option is available for all porous media types
-(cf. <em>Media Type</em> card). The velocity components appear in the output EXODUS II file
-as the nodal variables <strong>Darcy_Vel_l_0, Darcy_Vel_l_1</strong> and <strong>Darcy_Vel_l_2</strong>.</p>
-<p>The permissible values for this postprocessing option are:</p>
+<h2>Description / Usage<a class="headerlink" href="#description-usage" title="Permalink to this heading">#</a></h2>
+<p>This optional card specifies the level of information output to the 3D BC dup file “bc3D_output.txt”</p>
 <table class="table">
-<tbody>
-<tr class="row-odd"><td><p><strong>yes</strong></p></td>
-<td><p>Calculate the liquid-phase Darcy velocity components and
-write to the output EXODUSII file.</p></td>
+<thead>
+<tr class="row-odd"><th class="head"><p>Level</p></th>
+<th class="head"><p>Results Output</p></th>
 </tr>
-<tr class="row-even"><td><p><strong>no</strong></p></td>
-<td><p>Do not calculate the liquid phase velocity components.</p></td>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>No output (default).</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>BC Duplication information</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>Same as level 1 with additional rotation and node Duplication
+debugging</p></td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
-<p>This input example turns on calculation of the liquid phase velocity components:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Liquid</span> <span class="n">phase</span> <span class="n">Darcy</span> <span class="n">velocity</span> <span class="ow">in</span> <span class="n">porous</span> <span class="n">media</span> <span class="o">=</span> <span class="n">yes</span>
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
+<p>Following is a sample card:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Print</span> <span class="mi">3</span><span class="n">D</span> <span class="n">BC</span> <span class="n">Dup</span> <span class="o">=</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this heading">#</a></h2>
-<p>The liquid-phase Darcy velocity is given by the extended Darcy law, which accounts
-for the relative reduced flow due to the presence of another phase, viz.</p>
-<figure class="align-center">
-<a class="reference internal image-reference" href="../../_images/332_goma_physics.png"><img alt="../../_images/332_goma_physics.png" src="../../_images/332_goma_physics.png" style="width: 90%;" /></a>
-</figure>
-<p>Here <span class="math notranslate nohighlight">\(v_l\)</span> represents the Darcy flux, or Darcy velocity, in the gas phase, k is the
-permeability of the porous medium, <span class="math notranslate nohighlight">\(k_l\)</span> is the relative permeabilities for the liquid and
-liquid phases respectively, <span class="math notranslate nohighlight">\(\mu_l\)</span> are the liquid viscosity, <span class="math notranslate nohighlight">\(p_l\)</span> is the pressure in the liquid phase, and g is the gravitational force vector. <span class="math notranslate nohighlight">\(\rho_l\)</span> is the density of the liquid phase.</p>
-</section>
-<section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
-<p>GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
-September 1, 2002, P. R. Schunk</p>
+<h2>Technical Discussion<a class="headerlink" href="#technical-discussion" title="Permalink to this heading">#</a></h2>
 </section>
 </section>
 
@@ -843,17 +832,17 @@ September 1, 2002, P. R. Schunk</p>
             <footer class="bd-footer-article">
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-  <a class='left-prev' id="prev-link" href="gas_phase_darcy_velocity_in_porous_media.html" title="previous page">
+  <a class='left-prev' id="prev-link" href="debug.html" title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title"><strong>Gas Phase Darcy Velocity in Porous Media</strong></p>
+          <p class="prev-next-title"><strong>Debug</strong></p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="capillary_pressure_in_porous_media.html" title="next page">
+  <a class='right-next' id="next-link" href="number_of_jacobian_file_dumps.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title"><strong>Capillary Pressure in Porous Media</strong></p>
+      <p class="prev-next-title"><strong>Number of Jacobian File Dumps</strong></p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>
@@ -875,30 +864,17 @@ September 1, 2002, P. R. Schunk</p>
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#description-usage">
-   <strong>
-    Description / Usage
-   </strong>
+   Description / Usage
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#examples">
-   <strong>
-    Examples
-   </strong>
+   Examples
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#technical-discussion">
-   <strong>
-    Technical Discussion
-   </strong>
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#references">
-   <strong>
-    References
-   </strong>
+   Technical Discussion
   </a>
  </li>
 </ul>
@@ -918,7 +894,7 @@ September 1, 2002, P. R. Schunk</p>
 <div class="toc-item">
   
 <div class="tocsection sourcelink">
-    <a href="../../_sources/problem_description_file/post_processing/liquid_phase_darcy_velocity_in_porous_media.rst.txt">
+    <a href="../../_sources/problem_description_file/general_specifications/print_3d_bc_dup.rst.txt">
         <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
 </div>
