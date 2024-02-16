@@ -927,7 +927,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
     Print3DBCDup = 0;
   }
 
-  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Debug", Debug_Flag);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Print 3D BC Dup", Print3DBCDup);
   ECHO(echo_string, echo_file);
 
 #ifdef MATRIX_DUMP
