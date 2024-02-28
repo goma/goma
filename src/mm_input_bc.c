@@ -2949,6 +2949,10 @@ void rd_bc_specs(FILE *ifp, char *input) {
 
       break;
 
+    case SHEAR_STRESS_APPLIED_BC:
+    // TODO Read Shear Stress Applied BC
+    break;
+
       /*
        *
        * Read in Lagrange multiplier boundary conditions and add

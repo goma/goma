@@ -4851,6 +4851,385 @@ void sheet_tension(double cfunc[MDE][DIM],
   return;
 }
 
+#if 0
+void shear_stress_applied(double func[DIM],
+                          double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                          const int id_side, /* ID of the side of the element             */
+                          double *user,      /* surface tension                           */
+                          struct elem_side_bc_struct *elem_side_bc,
+                          const int iconnect_ptr,
+                          dbl *xi, /* Natural coordinates of the integration point */
+                          const Exo_DB *exo)
+
+{
+  dbl shear_stress = -500;
+  if (fv->x[0] > 0.64) {
+    shear_stress = 0;
+  }
+  int eqn = VELOCITY1;
+
+  // shear stress is applied in the tangential direction
+  func[0] = 0;
+  // normal dot T dot t
+
+  int v_s[MAX_MODES][DIM][DIM];
+  int v_g[DIM][DIM];
+  (void)stress_eqn_pointer(v_s);
+
+  v_g[0][0] = VELOCITY_GRADIENT11;
+  v_g[0][1] = VELOCITY_GRADIENT12;
+  v_g[1][0] = VELOCITY_GRADIENT21;
+  v_g[1][1] = VELOCITY_GRADIENT22;
+  v_g[0][2] = VELOCITY_GRADIENT13;
+  v_g[1][2] = VELOCITY_GRADIENT23;
+  v_g[2][0] = VELOCITY_GRADIENT31;
+  v_g[2][1] = VELOCITY_GRADIENT32;
+  v_g[2][2] = VELOCITY_GRADIENT33;
+  dbl Pi[DIM][DIM];
+  STRESS_DEPENDENCE_STRUCT d_Pi_struct;
+  STRESS_DEPENDENCE_STRUCT *d_Pi = &d_Pi_struct;
+  fluid_stress(Pi, d_Pi);
+
+  dbl n_dot_T[DIM];
+  for (int p = 0; p < pd->Num_Dim; p++) {
+    n_dot_T[p] = 0;
+    for (int q = 0; q < pd->Num_Dim; q++) {
+      n_dot_T[p] += fv->snormal[p] * Pi[p][q];
+    }
+  }
+
+  dbl invbeta = 1e6;
+
+    dbl tmp = 0;
+    for (int i = 0; i < pd->Num_Dim; i++) {
+      tmp += n_dot_T[i] * fv->stangent[0][i];
+    }
+    func[0] += (tmp - shear_stress);
+
+  if (af->Assemble_Jacobian) {
+    int var = TEMPERATURE;
+    if (pd->v[pg->imtrx][var]) {
+      for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        dbl d_n_dot_T[DIM];
+        for (int p = 0; p < pd->Num_Dim; p++) {
+          d_n_dot_T[p] = 0;
+          for (int q = 0; q < pd->Num_Dim; q++) {
+            d_n_dot_T[p] += fv->snormal[p] * d_Pi->T[p][q][j];
+          }
+        }
+
+        for (int q = 0; q < pd->Num_Dim; q++) {
+          d_func[0][var][j] += fv->stangent[0][q] * d_n_dot_T[q];
+        }
+      }
+    }
+
+    var = PRESSURE;
+    if (pd->v[pg->imtrx][var]) {
+        for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          dbl d_n_dot_T[DIM];
+          for (int p = 0; p < pd->Num_Dim; p++) {
+            d_n_dot_T[p] = 0;
+            for (int q = 0; q < pd->Num_Dim; q++) {
+              d_n_dot_T[p] += fv->snormal[p] * d_Pi->P[p][q][j];
+            }
+          }
+
+          for (int q = 0; q < pd->Num_Dim; q++) {
+            d_func[0][var][j] += fv->stangent[0][q] * d_n_dot_T[q];
+          }
+        }
+    }
+
+    if (pd->v[pg->imtrx][VELOCITY1]) {
+        for (int b = 0; b < VIM; b++) {
+          var = VELOCITY1 + b;
+          for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            dbl d_n_dot_T[DIM];
+            for (int p = 0; p < pd->Num_Dim; p++) {
+              d_n_dot_T[p] = 0;
+              for (int q = 0; q < pd->Num_Dim; q++) {
+                d_n_dot_T[p] += fv->snormal[p] * d_Pi->v[p][q][b][j];
+              }
+            }
+
+            for (int q = 0; q < pd->Num_Dim; q++) {
+              d_func[0][var][j] += fv->stangent[0][q] * d_n_dot_T[q];
+            }
+          }
+        }
+    }
+
+    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+        for (int b = 0; b < VIM; b++) {
+          var = MESH_DISPLACEMENT1 + b;
+          for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            dbl d_n_dot_T[DIM];
+            for (int p = 0; p < pd->Num_Dim; p++) {
+              d_n_dot_T[p] = 0;
+              for (int q = 0; q < pd->Num_Dim; q++) {
+                d_n_dot_T[p] += fv->snormal[p] * d_Pi->v[p][q][b][j];
+                d_n_dot_T[p] += fv->dsnormal_dx[p][b][j] * Pi[p][q];
+              }
+            }
+
+            for (int q = 0; q < pd->Num_Dim; q++) {
+              d_func[0][var][j] += fv->stangent[0][q] * d_n_dot_T[q];
+              d_func[0][var][j] += fv->dstangent_dx[0][q][b][j] * n_dot_T[q];
+            }
+          }
+        }
+    }
+
+    if (pd->v[pg->imtrx][POLYMER_STRESS11]) {
+      for (int r = 0; r < VIM; r++) {
+        for (int mode = 0; mode < vn->modes; mode++) {
+          for (int b = 0; b < VIM; b++) {
+            for (int c = 0; c < VIM; c++) {
+              var = v_s[mode][b][c];
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                dbl d_n_dot_T[DIM];
+                for (int p = 0; p < pd->Num_Dim; p++) {
+                  d_n_dot_T[p] = 0;
+                  for (int q = 0; q < pd->Num_Dim; q++) {
+                    d_n_dot_T[p] += fv->snormal[p] * d_Pi->S[p][q][mode][b][c][j];
+                  }
+                }
+
+                for (int q = 0; q < pd->Num_Dim; q++) {
+                  d_func[0][var][j] += fv->stangent[0][q] * d_n_dot_T[q];
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (gn->ConstitutiveEquation == BINGHAM_MIXED ||
+        (pd->v[pg->imtrx][POLYMER_STRESS11] &&
+         (vn->evssModel == EVSS_F || vn->evssModel == SQRT_CONF || vn->evssModel == LOG_CONF ||
+          vn->evssModel == EVSS_GRADV || vn->evssModel == CONF ||
+          vn->evssModel == LOG_CONF_GRADV))) {
+        for (int b = 0; b < VIM; b++) {
+          for (int c = 0; c < VIM; c++) {
+            var = v_g[b][c];
+            for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              dbl d_n_dot_T[DIM];
+              for (int p = 0; p < pd->Num_Dim; p++) {
+                d_n_dot_T[p] = 0;
+                for (int q = 0; q < pd->Num_Dim; q++) {
+                  d_n_dot_T[p] += fv->snormal[p] * d_Pi->g[p][q][b][c][j];
+                }
+              }
+
+              for (int q = 0; q < pd->Num_Dim; q++) {
+                d_func[0][var][j] += fv->stangent[0][q] * d_n_dot_T[q];
+              }
+            }
+          }
+        }
+    }
+  } /*  end of if Assemble_Jacobian  */
+}
+#elif 0
+void shear_stress_applied(double func[DIM],
+                          double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                          const int id_side, /* ID of the side of the element             */
+                          double *user,      /* surface tension                           */
+                          struct elem_side_bc_struct *elem_side_bc,
+                          const int iconnect_ptr,
+                          dbl *xi, /* Natural coordinates of the integration point */
+                          const Exo_DB *exo)
+
+{
+  dbl  shear_stress = 300;
+  dbl x = fv->x[0];
+
+  if (fv->x[0] > 0.25) {
+  shear_stress = 3198*x - 3198*x*x;
+
+  shear_stress = 1 / sqrt((1.0 / 400.) * (1.0/400.) * (1.0)/(shear_stress * shear_stress));
+  }
+  int eqn = VELOCITY1;
+
+  // shear stress is applied in the tangential direction
+  func[0] = 0;
+  // normal dot T dot t
+
+  int v_s[MAX_MODES][DIM][DIM];
+  int v_g[DIM][DIM];
+  (void)stress_eqn_pointer(v_s);
+
+  v_g[0][0] = VELOCITY_GRADIENT11;
+  v_g[0][1] = VELOCITY_GRADIENT12;
+  v_g[1][0] = VELOCITY_GRADIENT21;
+  v_g[1][1] = VELOCITY_GRADIENT22;
+  v_g[0][2] = VELOCITY_GRADIENT13;
+  v_g[1][2] = VELOCITY_GRADIENT23;
+  v_g[2][0] = VELOCITY_GRADIENT31;
+  v_g[2][1] = VELOCITY_GRADIENT32;
+  v_g[2][2] = VELOCITY_GRADIENT33;
+  dbl Pi[DIM][DIM];
+  STRESS_DEPENDENCE_STRUCT d_Pi_struct;
+  STRESS_DEPENDENCE_STRUCT *d_Pi = &d_Pi_struct;
+  fluid_stress(Pi, d_Pi);
+
+  dbl n_dot_T[DIM];
+  for (int p = 0; p < pd->Num_Dim; p++) {
+    n_dot_T[p] = 0;
+    for (int q = 0; q < pd->Num_Dim; q++) {
+      n_dot_T[p] += fv->snormal[p] * Pi[p][q];
+    }
+  }
+  dbl sign = -1;
+
+  dbl tmp = 0;
+  for (int i = 0; i < pd->Num_Dim; i++) {
+    tmp += (fv->v[i]) * fv->stangent[0][i];
+  }
+  func[0] = tmp - sign * sqrt(shear_stress);
+
+  if (af->Assemble_Jacobian) {
+    for (int kdir = 0; kdir < pd->Num_Dim; kdir++) {
+      for (int p = 0; p < pd->Num_Dim; p++) {
+        int var = MESH_DISPLACEMENT1 + p;
+        if (pd->v[pg->imtrx][var]) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            dbl phi_j = bf[var]->phi[j];
+            d_func[0][var][j] +=
+                (fv->v[kdir]) * fv->dstangent_dx[0][kdir][p][j];
+
+          }
+        }
+      }
+
+      int var = VELOCITY1 + kdir;
+      if (pd->v[pg->imtrx][var]) {
+        for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          dbl phi_j = bf[var]->phi[j];
+          d_func[0][var][j] += phi_j * fv->stangent[0][kdir];
+        }
+      }
+    }
+  } /* end of if Assemble_Jacobian */
+}
+
+#else
+void shear_stress_applied(double func[DIM],
+                          double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                          const int id_side, /* ID of the side of the element             */
+                          double *user,      /* surface tension                           */
+                          struct elem_side_bc_struct *elem_side_bc,
+                          const int iconnect_ptr,
+                          dbl *xi, /* Natural coordinates of the integration point */
+                          const Exo_DB *exo)
+
+{
+  dbl shear_stress = 800;
+  dbl x = fv->x[0];
+  dbl y = fv->x[1];
+  // shear_stress = 3198*x - 3198*x*x;
+  // shear_stress = 4471*x - 6966*x*x;
+  // shear_stress = fmax(0, shear_stress);
+
+  shear_stress = fmin(x*2500 + 10, shear_stress);
+
+  // shear_stress = -1137 + 8080*x - 8294 * x* x;
+  if (fv->x[0] > 0.64) {
+    shear_stress = 0;
+  }
+  int eqn = VELOCITY1;
+
+  // shear stress is applied in the tangential direction
+  func[0] = 0;
+  // normal dot T dot t
+
+  int v_s[MAX_MODES][DIM][DIM];
+  int v_g[DIM][DIM];
+  (void)stress_eqn_pointer(v_s);
+
+  v_g[0][0] = VELOCITY_GRADIENT11;
+  v_g[0][1] = VELOCITY_GRADIENT12;
+  v_g[1][0] = VELOCITY_GRADIENT21;
+  v_g[1][1] = VELOCITY_GRADIENT22;
+  v_g[0][2] = VELOCITY_GRADIENT13;
+  v_g[1][2] = VELOCITY_GRADIENT23;
+  v_g[2][0] = VELOCITY_GRADIENT31;
+  v_g[2][1] = VELOCITY_GRADIENT32;
+  v_g[2][2] = VELOCITY_GRADIENT33;
+  dbl Pi[DIM][DIM];
+  STRESS_DEPENDENCE_STRUCT d_Pi_struct;
+  STRESS_DEPENDENCE_STRUCT *d_Pi = &d_Pi_struct;
+  fluid_stress(Pi, d_Pi);
+  dbl gamma[DIM][DIM]; /* shrearrate tensor based on velocity */
+  for (int a = 0; a < VIM; a++) {
+    for (int b = 0; b < VIM; b++) {
+      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+    }
+  }
+  dbl polymer_stress[DIM][DIM] = {{0.0}};
+  STRESS_DEPENDENCE_STRUCT d_polymer_stress_struct;
+  STRESS_DEPENDENCE_STRUCT *d_polymer_stress = NULL;
+  if (pd->gv[POLYMER_STRESS11]) {
+    if (d_Pi != NULL) {
+      d_polymer_stress = &d_polymer_stress_struct;
+      memset(d_polymer_stress, 0, sizeof(STRESS_DEPENDENCE_STRUCT));
+    }
+  }
+
+  dbl n_dot_T[DIM];
+  for (int p = 0; p < pd->Num_Dim; p++) {
+    n_dot_T[p] = 0;
+    for (int q = 0; q < pd->Num_Dim; q++) {
+      n_dot_T[p] += fv->snormal[p] * (Pi[p][q] - polymer_stress[p][q]);
+    }
+  }
+
+  dbl invbeta = 1e1;
+  dbl vtan[DIM] = {0.};
+  dbl sign = 1.0;
+  // if (fv->stangent[0][0] < 0) {
+  //   sign = -1.0;
+  // }
+
+ for (int i = 0; i < pd->Num_Dim; i++) {
+   vtan[i] = (fv->v[i]) * fv->stangent[0][i];
+ }
+  for (int r = 0; r < VIM; r++) {
+    // func[r] += invbeta * ((tmp) * fv->stangent[0][r] - fv->stangent[0][r] * (vtan[r] - sqrt(shear_stress)) * invbeta);
+    func[r] += invbeta*(vtan[r] - fv->stangent[0][r] * sign*sqrt(shear_stress));
+  }
+
+  if (af->Assemble_Jacobian) {
+    if (pd->v[pg->imtrx][VELOCITY1]) {
+      for (int r = 0; r < VIM; r++) {
+        for (int b = 0; b < VIM; b++) {
+          int var = VELOCITY1 + b;
+          for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            dbl dvtan = bf[eqn]->phi[j] * fv->stangent[0][b];
+            d_func[r][var][j] += dvtan * invbeta;
+          }
+        }
+      }
+    }
+
+    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+      for (int r = 0; r < VIM; r++) {
+        for (int b = 0; b < VIM; b++) {
+          int var = MESH_DISPLACEMENT1 + b;
+          for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            for (int q = 0; q < pd->Num_Dim; q++) {
+              d_func[r][var][j] += (fv->v[q] * fv->dstangent_dx[0][q][b][j] -sign*fv->dstangent_dx[0][r][b][j]*sqrt(shear_stress)) * invbeta;
+            }
+          }
+        }
+      }
+    }
+  } /*  end of if Assemble_Jacobian  */
+}
+#endif
+
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
