@@ -105,6 +105,7 @@ extern int LOCA_UMF_ID;  /* UMFPACK SYSTEM ID */
 extern int Max_Newton_Steps;  /* Maximum number of Newton steps to take.     */
 extern int Guess_Flag;        /* Indicates the type of initial guess         */
 extern int Conformation_Flag; /* Indicates mapping from stress to log-conformation tensor */
+extern int Print3DBCDup;
 
 extern double damp_factor;
 extern double damp_factor1; /* Relaxation factor for Newton iteration */

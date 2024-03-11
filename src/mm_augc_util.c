@@ -392,7 +392,7 @@ void load_extra_unknownsAC(int iAC,     /* ID NUMBER OF AC'S */
     case TAGC_TIME_CONST5:
     case TAGC_TIME_CONST6:
     case TAGC_TIME_CONST7:
-      xa[iAC] = ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const;
+      xa[iAC] = ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const_st->lambda0;
       break;
 
     case TAGC_WT_FUNC:
@@ -1206,7 +1206,7 @@ void update_parameterAC(
     case TAGC_TIME_CONST5:
     case TAGC_TIME_CONST6:
     case TAGC_TIME_CONST7:
-      ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const = lambda;
+      ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const_st->lambda0 = lambda;
       break;
 
     case TAGC_WT_FUNC:

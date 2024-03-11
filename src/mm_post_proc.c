@@ -70,6 +70,7 @@
 #include "mm_std_models_shell.h"
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
+#include "polymer_time_const.h"
 #include "rd_mesh.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
@@ -721,9 +722,7 @@ static int calc_standard_fields(double **post_proc_vect,
           compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
           mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
-          if (ve[ve_mode]->time_constModel == CONSTANT) {
-            lambda = ve[ve_mode]->time_const;
-          }
+          lambda = polymer_time_const(ve[ve_mode]->time_const_st, gamma, NULL);
           for (a = 0; a < VIM; a++) {
             for (b = 0; b < VIM; b++) {
               ves[a][b] += mup / lambda * (exp_s[a][b] - (double)delta(a, b));
@@ -798,9 +797,7 @@ static int calc_standard_fields(double **post_proc_vect,
           compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
           mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
-          if (ve[ve_mode]->time_constModel == CONSTANT) {
-            lambda = ve[ve_mode]->time_const;
-          }
+          lambda = polymer_time_const(ve[ve_mode]->time_const_st, gamma, NULL);
           for (a = 0; a < VIM; a++) {
             for (b = 0; b < VIM; b++) {
               ves[a][b] += mup / lambda * (exp_s[a][b] - (double)delta(a, b));
@@ -889,9 +886,7 @@ static int calc_standard_fields(double **post_proc_vect,
           compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
           mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
-          if (ve[ve_mode]->time_constModel == CONSTANT) {
-            lambda = ve[ve_mode]->time_const;
-          }
+          lambda = polymer_time_const(ve[ve_mode]->time_const_st, gamma, NULL);
           for (a = 0; a < VIM; a++) {
             for (b = 0; b < VIM; b++) {
               ves[a][b] += mup / lambda * (exp_s[a][b] - (double)delta(a, b));
@@ -1152,19 +1147,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (POLYMER_TIME_CONST != -1 && pd->e[pg->imtrx][R_STRESS11]) {
     mode = 0;
-    double lambda = 0;
-    double mup = viscosity(ve[mode]->gn, gamma, NULL);
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    } else if (ls != NULL && ve[mode]->time_constModel == VE_LEVEL_SET) {
-      double pos_lambda = ve[mode]->pos_ls.time_const;
-      double neg_lambda = ve[mode]->time_const;
-      double width = ls->Length_Scale;
-      err = level_set_property(neg_lambda, pos_lambda, width, &lambda, NULL);
-      GOMA_EH(err, "level_set_property() failed for polymer time constant.");
-    }
+    double lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
     local_post[POLYMER_TIME_CONST] = lambda;
     local_lumped[POLYMER_TIME_CONST] = 1.;
   }
@@ -3397,9 +3380,6 @@ static int calc_standard_fields(double **post_proc_vect,
       (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF ||
        vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)) {
     index = 0;
-    VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
-    VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-    d_mup = NULL;
     double lambda;
     double R1[DIM][DIM];
     double eig_values[DIM];
@@ -3419,18 +3399,9 @@ static int calc_standard_fields(double **post_proc_vect,
         compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
 #endif
       }
-      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+      mup = viscosity(ve[mode]->gn, gamma, NULL);
       // Polymer time constant
-      lambda = 0.0;
-      if (ve[mode]->time_constModel == CONSTANT) {
-        lambda = ve[mode]->time_const;
-      }
-      /* Looks like these models are not working right now
-       *else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
-       * {
-       *   lambda = mup/ve[mode]->time_const;
-       * }
-       */
+      lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
       if (lambda == 0.0) {
         GOMA_EH(GOMA_ERROR, "The conformation tensor needs a non-zero polymer time constant.");
       }
@@ -3458,12 +3429,9 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] && (vn->evssModel == SQRT_CONF)) {
     index = 0;
-    VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
-    VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-    d_mup = NULL;
     double lambda;
     for (mode = 0; mode < vn->modes; mode++) {
-      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+      mup = viscosity(ve[mode]->gn, gamma, NULL);
 
       dbl b_dot_b[DIM][DIM];
       dbl cb[DIM][DIM];
@@ -3478,16 +3446,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
       tensor_dot(cb, cb, b_dot_b, VIM);
       // Polymer time constant
-      lambda = 0.0;
-      if (ve[mode]->time_constModel == CONSTANT) {
-        lambda = ve[mode]->time_const;
-      }
-      /* Looks like these models are not working right now
-       *else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
-       * {
-       *   lambda = mup/ve[mode]->time_const;
-       * }
-       */
+      lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
       if (lambda == 0.0) {
         GOMA_EH(GOMA_ERROR, "The conformation tensor needs a non-zero polymer time constant.");
       }
