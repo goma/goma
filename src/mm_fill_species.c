@@ -2471,7 +2471,7 @@ void mass_flux_surf_SULFIDATION(dbl mass_flux[MAX_CONC],
     c_H2S = fv->c[0]; /* H2S is the 1st diffusing species  */
     c_O2 = fv->c[1];  /* O2 is the 2nd diffusion species   */
     mass_flux[wspec] = nu * k1 * exp(-E1 / R / T) * c_H2S * sqrt(c_O2);
-  } else if (mode == FULL) {
+  } else if (mode == METAL_CORROSION_FULL) {
     fprintf(stderr, "The full model has not yet implemented - awaits future efforts\n");
     exit(1);
   } else if (mode == ANNIHILATION_ELECTRONEUTRALITY) {
@@ -2542,7 +2542,7 @@ void mass_flux_surf_SULFIDATION(dbl mass_flux[MAX_CONC],
       }
       d_mass_flux[wspec][TEMPERATURE] =
           nu * k1 * (E1 / R / T / T) * exp(-E1 / R / T) * c_H2S * c_O2;
-    } else if (mode == FULL) {
+    } else if (mode == METAL_CORROSION_FULL) {
       fprintf(stderr, "The full model has not yet implemented - awaits future efforts\n");
       exit(1);
     } else if (mode == ANNIHILATION_ELECTRONEUTRALITY) {
@@ -7312,7 +7312,7 @@ void compute_leak_velocity(double *vnorm,
           } else if (mode == GAS_DIFFUSION) {
             StoiCoef[wspec] = -1.0; /* 1 mole of Cu2S produced    */
             /* per mole of H2S consumped  */
-          } else if (mode == FULL) {
+          } else if (mode == METAL_CORROSION_FULL) {
             fprintf(stderr, "The full model has not yet implemented - awaits future efforts\n");
             exit(1);
           }

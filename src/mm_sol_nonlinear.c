@@ -17,6 +17,7 @@
  */
 
 #include "bc_contact.h"
+#include "linalg/sparse_matrix.h"
 #include "sl_epetra_interface.h"
 #include "sl_util_structs.h"
 
@@ -741,6 +742,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     /* Zero matrix values */
     if (strcmp(Matrix_Format, "epetra") == 0) {
       EpetraPutScalarRowMatrix(ams->RowMatrix, 0.0);
+    } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+      GomaSparseMatrix matrix = (GomaSparseMatrix) ams->GomaMatrixData;
+      matrix->put_scalar(matrix, 0.0);
     } else {
       init_vec_value(a, 0.0, ams->nnz);
     }
@@ -935,7 +939,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
        * within the solver
        */
       if (!Norm_below_tolerance || !Rate_above_tolerance) {
-        row_sum_scaling_scale(ams, resid_vector, scale);
+        // row_sum_scaling_scale(ams, resid_vector, scale);
       } else {
         vector_scaling(NumUnknowns[pg->imtrx], resid_vector, scale);
       }
@@ -1437,6 +1441,15 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         int iterations;
         int err =
             stratimikos_solve(ams, delta_x, resid_vector, &iterations, Stratimikos_File, pg->imtrx);
+        if (err) {
+          GOMA_EH(err, "Error in stratimikos solve");
+          check_parallel_error("Error in solve - stratimikos");
+        }
+        aztec_stringer(AZ_normal, iterations, &stringer[0]);
+      }else if (strcmp(Matrix_Format, "tpetra") == 0) {
+        int iterations;
+        int err =
+            stratimikos_solve_tpetra(ams, delta_x, resid_vector, &iterations, Stratimikos_File, pg->imtrx);
         if (err) {
           GOMA_EH(err, "Error in stratimikos solve");
           check_parallel_error("Error in solve - stratimikos");

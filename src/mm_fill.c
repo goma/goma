@@ -40,6 +40,7 @@
 #include "el_elm_info.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "linalg/sparse_matrix.h"
 #include "load_field_variables.h"
 #include "md_timer.h"
 #include "mm_as.h"
@@ -5002,6 +5003,10 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
 
   if (strcmp(Matrix_Format, "epetra") == 0) {
     EpetraLoadLec(ielem, ams, resid_vector);
+  }
+  else if (strcmp(Matrix_Format, "tpetra") == 0) {
+    GomaSparseMatrix matrix = (GomaSparseMatrix) ams->GomaMatrixData;
+    GomaSparseMatrix_LoadLec(matrix, ielem, lec, resid_vector);
   }
 #ifdef GOMA_ENABLE_PETSC
 #if PETSC_USE_COMPLEX

@@ -6089,6 +6089,10 @@ void rd_solver_specs(FILE *ifp, char *input) {
     ECHO(echo_string, echo_file);
   }
 
+  for (int i = 1; i < MAX_NUM_MATRICES; i++) {
+    strcpy(Stratimikos_File[i], Stratimikos_File[0]);
+  }
+
   strcpy(search_string, "Preconditioner");
 
   iread = look_for_optional(ifp, search_string, input, '=');
@@ -8099,9 +8103,6 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "Stratimikos file = %s for matrix %d", input,
                mtrx_index1);
       ECHO(echo_string, echo_file);
-    } else {
-      // Set stratimikos.xml as defualt stratimikos file
-      strcpy(Stratimikos_File[imtrx], "stratimikos.xml");
     }
 
     iread = look_forward_optional_until(ifp, "Normalized Residual Tolerance", "MATRIX", input, '=');

@@ -48,7 +48,7 @@
 #include "Epetra_SerialComm.h"
 #endif
 
-#if 0
+#if 1
 #include "EpetraExt_RowMatrixOut.h"
 #include "EpetraExt_VectorOut.h"
 #endif
@@ -98,9 +98,10 @@ void amesos_solve(char *choice,
   Epetra_Vector x(Copy, map, x_);
   Epetra_Vector b(Copy, map, b_);
 
-#if 0
-  EpetraExt::RowMatrixToMatrixMarketFile("Jnext.mm", *A);
-  EpetraExt::VectorToMatrixMarketFile("bnext.mm", b);
+#if 1
+  EpetraExt::RowMatrixToMatrixMarketFile("Jep.mm", *A[imtrx]);
+  EpetraExt::VectorToMatrixMarketFile("xep.mm", x);
+  EpetraExt::VectorToMatrixMarketFile("bep.mm", b);
   MPI_Finalize();
   exit(0);
 #endif

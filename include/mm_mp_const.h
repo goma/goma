@@ -563,7 +563,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define SOLID_DIFFUSION_ELECTRONEUTRALITY        911
 #define SOLID_DIFFUSION                          912
 #define GAS_DIFFUSION                            913
-#define FULL                                     914
+#define METAL_CORROSION_FULL                     914
 #define ANNIHILATION_ELECTRONEUTRALITY           915
 #define ANNIHILATION                             916
 #define NET_CHARGE                               917 /* refer to F multiplied by sum of ci zi   */
