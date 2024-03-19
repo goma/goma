@@ -56,13 +56,32 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 
 /* Moment Property Models */
 // growth rate
-#define VISCOSITY_SCALED_GROWTH_RATE   4
-#define VISCOSITY_PRESSURE_GROWTH_RATE 5
+#define VISCOSITY_SCALED_GROWTH_RATE     4
+#define VISCOSITY_PRESSURE_GROWTH_RATE   5
+#define MASS_FRACTION_SCALED_GROWTH_RATE 6
+#define ARRHENIUS_GROWTH_RATE            7
 
 // coalescence
 #define ADDITION_COALESCENCE               4
 #define VISCOSITY_SCALED_COALESCENCE       5
 #define VISCOSITY_BUBBLE_RATIO_COALESCENCE 6
+
+// breakage
+#define POWERLAW_BREAKAGE    4
+#define EXPONENTIAL_BREAKAGE 5
+#define VISCOSITY_AND_SHEAR_DEPENDENT_BREAKAGE 11
+
+// fragment
+#define SYMMETRIC_FRAGMENT 6
+#define EROSION_FRAGMENT   7
+#define ONEFOUR_FRAGMENT   8
+#define PARABOLIC_FRAGMENT 9
+
+// nucleation
+#define TIME_CONTROLLED_NUCLEATION   7
+#define CONCENTRATION_DEPENDENT_PMDI 8
+#define SUSPENSION_NUCLEATION        9
+#define CONSTANT_NUC                 10
 
 /* Source term models */
 #define BOUSS                                      \
@@ -332,9 +351,21 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define MOMENT_CONSTANT_GROWTH            50
 #define MOMENT_SIZE_DEPENDENT_COALESCENCE 51
 
-/* Turbulent viscosity models for Reynolds Averaged NS */
-#define TURBULENT_SA         52 /* Spallart Allmaras */
-#define TURBULENT_SA_DYNAMIC 53 /* Spallart Allmaras */
+#define MOMENT_SUSPENSION                               52
+#define SUSPENSION_LIQUID_SOURCE_CONSTANT               53
+#define SUSPENSION_SOLID_SOURCE_CONSTANT                54
+#define SUSPENSION_LIQUID_SOURCE_ARRHENIUS              55
+#define SUSPENSION_SOLID_SOURCE_ARRHENIUS               56
+#define SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS 57
+#define SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS  58
+#define MOMENT_SUSPENSION_PLUS_MOMENTS                  59
+
+#define GILLETTE_RHEOMETER     60
+#define GILLETTE_FOAMY_LIQUID  61
+#define GILLETTE_FOAMY_GASEOUS 62
+
+#define TURBULENT_SA         63 /* Spallart Allmaras */
+#define TURBULENT_SA_DYNAMIC 64 /* Spallart Allmaras */
 
 /*
  *  Heat source modeling

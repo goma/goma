@@ -1676,7 +1676,7 @@ int suspension_viscosity(int species, /* species for solid volume fraction track
   /* Implement a cutoff concentration that caps the viscosity at a lower
      value. This should make the viscosity more stable and allow the
      solidification Brinkman porous source term to slow the flow appropriately.
-     Here I have chosen a cutoff value 10% below maximum packing. However,
+     Here I have chosen a cutoff value 2% below maximum packing. However,
      this may be too low and I will have to adjust it.
      */
 

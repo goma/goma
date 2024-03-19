@@ -2710,7 +2710,7 @@ int rd_vectors_from_exoII(double u[],
           }
         }
 
-        exchange_node(cx[0], DPI_ptr, efv->ext_fld_ndl_val[variable_no]);
+        exchange_node(cx[pg->imtrx], DPI_ptr, efv->ext_fld_ndl_val[variable_no]);
         free(tmp_vector);
 
         GOMA_EH(error, "ex_get_var nodal");
