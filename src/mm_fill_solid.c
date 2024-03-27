@@ -4683,8 +4683,7 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
      *  u_mu_ns[0....len_u_mu_ns]  are the node sets for the critical points
      *  multi_contact_line_distances are the distances from the critical points
      */
-    dist = fv->multi_contact_line_distance / 
-           elc_ptr->u_mu[2];
+    dist = fv->multi_contact_line_distance / elc_ptr->u_mu[2];
     *mu = elc_ptr->lame_mu = elc_ptr->u_mu[0] + 0.1 / (pow(dist, 3.0) + 0.1 / elc_ptr->u_mu[1]);
 
   } else if (elc_ptr->lame_mu_model == CONTACT_LINE) {

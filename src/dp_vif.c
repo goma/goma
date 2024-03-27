@@ -3127,7 +3127,7 @@ void ark_landing(void) {
     e = elc_glob[i];
 
     dalloc(e->len_u_mu, e->u_mu);
-    e->u_mu_ns = malloc(e->len_u_mu_ns*sizeof(int));
+    e->u_mu_ns = malloc(e->len_u_mu_ns * sizeof(int));
 
     dalloc(e->len_u_lambda, e->u_lambda);
 
@@ -3146,7 +3146,7 @@ void ark_landing(void) {
     e = elc_rs_glob[i];
 
     dalloc(e->len_u_mu, e->u_mu);
-    e->u_mu_ns = malloc(e->len_u_mu_ns*sizeof(int));
+    e->u_mu_ns = malloc(e->len_u_mu_ns * sizeof(int));
 
     dalloc(e->len_u_lambda, e->u_lambda);
 

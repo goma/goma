@@ -10080,8 +10080,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     WALL_DISTANCE = index_post;
     index_post++;
   }
-  if (CONTACT_DISTANCE != -1 &&
-      (Num_Var_In_Type[pg->imtrx][R_MESH1])) {
+  if (CONTACT_DISTANCE != -1 && (Num_Var_In_Type[pg->imtrx][R_MESH1])) {
     set_nv_tkud(rd, index, 0, 0, -2, "CONTACT_DISTANCE", "[1]", "Contact distance", FALSE);
     index++;
     if (CONTACT_DISTANCE == 2) {

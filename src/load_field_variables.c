@@ -1768,7 +1768,8 @@ int load_fv(void)
       dofs = ei[pg->imtrx]->dof[pd->ShapeVar];
       for (i = 0; i < dofs; i++) {
         fv->multi_contact_line_distance +=
-            elc_glob[ei[pg->imtrx]->mn]->multi_contact_line_distances[ei[pg->imtrx]->gnn_list[pd->ShapeVar][i]] *
+            elc_glob[ei[pg->imtrx]->mn]
+                ->multi_contact_line_distances[ei[pg->imtrx]->gnn_list[pd->ShapeVar][i]] *
             bf[pd->ShapeVar]->phi[i];
       }
     }

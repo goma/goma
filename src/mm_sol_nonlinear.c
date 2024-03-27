@@ -925,9 +925,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
          is properly communicated */
       exchange_dof(cx, dpi, x, pg->imtrx);
 
-  err = assemble_prefill(ams, x, exo, dpi);
-  if (err == -1)
-    return (err);
+      err = assemble_prefill(ams, x, exo, dpi);
+      if (err == -1)
+        return (err);
 
       err = matrix_fill_full(ams, x, resid_vector, x_old, x_older, xdot, xdot_old, x_update,
                              &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], &time_value,
