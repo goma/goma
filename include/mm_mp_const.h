@@ -483,6 +483,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define DENSE_POWER_LAW 8
 #define POISSON_RATIO   9
 #define SHRINKAGE       10
+#define MULTI_CONTACT_LINE    11
 
 /* Diffusion Constitutive equation parameters */
 #define FICKIAN                3

@@ -1781,6 +1781,9 @@ static void init_Elastic_Constitutive(struct Elastic_Constitutive *e) {
     e->d_lame_mu[i] = (double)0;
   }
   e->lame_mu_tableid = 0;
+  e->u_mu_ns = NULL;
+  e->len_u_mu_ns = 0;
+  e->multi_contact_line_distances = NULL;
 
   e->lame_lambda = (double)0;
   e->lame_lambda_model = 0;

@@ -4672,6 +4672,21 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
     }
   } else if (elc_ptr->lame_mu_model == CONSTANT) {
     *mu = elc_ptr->lame_mu;
+  } else if (elc_ptr->lame_mu_model == MULTI_CONTACT_LINE) {
+    /* make mu (shear modulus) become very large near a critical points,
+     * and decay to lower value radially from that point
+     * this helps keep elements near critical point from shearing excessively
+     * while elements far away won't dilate much
+     *  u_mu[0]  is minimum value of the shear modulus (comparable to lambda, e.g. 0.5)
+     *  u_mu[1]  is the maximum value of the shear modulus (large, e.g. 1e4)
+     *  u_mu[2]  is the decay length (problem dependent)
+     *  u_mu_ns[0....len_u_mu_ns]  are the node sets for the critical points
+     *  multi_contact_line_distances are the distances from the critical points
+     */
+    dist = fv->multi_contact_line_distance / 
+           elc_ptr->u_mu[2];
+    *mu = elc_ptr->lame_mu = elc_ptr->u_mu[0] + 0.1 / (pow(dist, 3.0) + 0.1 / elc_ptr->u_mu[1]);
+
   } else if (elc_ptr->lame_mu_model == CONTACT_LINE) {
     /* make mu (shear modulus) become very large near a critical point,
      * and decay to lower value radially from that point

@@ -1731,6 +1731,7 @@ struct Field_Variables {
 
   dbl eddy_nu;       /* Eddy viscosity for turbulent flow */
   dbl wall_distance; /* Distance to nearest wall */
+  dbl multi_contact_line_distance; /* Distance to multi contact line points */
 
   /*
    * Grads of scalars...

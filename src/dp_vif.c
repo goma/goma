@@ -2381,6 +2381,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &elc_glob[i]->lame_mu_model, 1, MPI_INT);
 
     ddd_add_member(n, &elc_glob[i]->len_u_mu, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->len_u_mu_ns, 1, MPI_INT);
 
     ddd_add_member(n, elc_glob[i]->d_lame_mu, MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->lame_mu_tableid, 1, MPI_INT);
@@ -2449,6 +2450,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &elc_rs_glob[i]->lame_mu_model, 1, MPI_INT);
 
     ddd_add_member(n, &elc_rs_glob[i]->len_u_mu, 1, MPI_INT);
+    ddd_add_member(n, &elc_rs_glob[i]->len_u_mu_ns, 1, MPI_INT);
 
     ddd_add_member(n, elc_rs_glob[i]->d_lame_mu, MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
     ddd_add_member(n, &elc_rs_glob[i]->lame_mu_tableid, 1, MPI_INT);
@@ -3125,6 +3127,7 @@ void ark_landing(void) {
     e = elc_glob[i];
 
     dalloc(e->len_u_mu, e->u_mu);
+    e->u_mu_ns = malloc(e->len_u_mu_ns*sizeof(int));
 
     dalloc(e->len_u_lambda, e->u_lambda);
 
@@ -3143,6 +3146,7 @@ void ark_landing(void) {
     e = elc_rs_glob[i];
 
     dalloc(e->len_u_mu, e->u_mu);
+    e->u_mu_ns = malloc(e->len_u_mu_ns*sizeof(int));
 
     dalloc(e->len_u_lambda, e->u_lambda);
 
@@ -3435,6 +3439,9 @@ void noahs_dove(void) {
     crdv(m->len_u_DiffCoeff_function_constants, m->u_DiffCoeff_function_constants);
 
     crdv(e->len_u_mu, e->u_mu);
+    if (e->len_u_mu_ns > 0) {
+      ddd_add_member(n, e->u_mu_ns, e->len_u_mu_ns, MPI_INT);
+    }
 
     crdv(e->len_u_lambda, e->u_lambda);
 
@@ -3453,6 +3460,9 @@ void noahs_dove(void) {
     e = elc_rs_glob[i];
 
     crdv(e->len_u_mu, e->u_mu);
+    if (e->len_u_mu_ns > 0) {
+      ddd_add_member(n, e->u_mu_ns, e->len_u_mu_ns, MPI_INT);
+    }
 
     crdv(e->len_u_lambda, e->u_lambda);
 

@@ -336,6 +336,7 @@ int FIRST_STRAINRATE_INVAR = -1;
 int SEC_STRAINRATE_INVAR = -1;
 int THIRD_STRAINRATE_INVAR = -1;
 int WALL_DISTANCE = -1;
+int CONTACT_DISTANCE = -1;
 
 int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
                           * actually is */
@@ -1589,6 +1590,11 @@ static int calc_standard_fields(double **post_proc_vect,
   if (WALL_DISTANCE != -1 && (pd->e[pg->imtrx][VELOCITY1] || pd->e[pg->imtrx][R_LUBP])) {
     local_post[WALL_DISTANCE] = fv->wall_distance;
     local_lumped[WALL_DISTANCE] = 1.;
+  }
+
+  if (CONTACT_DISTANCE != -1 && (pd->e[pg->imtrx][MESH_DISPLACEMENT1])) {
+    local_post[CONTACT_DISTANCE] = fv->multi_contact_line_distance;
+    local_lumped[CONTACT_DISTANCE] = 1.;
   }
 
   if (DIELECTROPHORETIC_FIELD != -1 && pd->e[pg->imtrx][R_ENORM]) {
@@ -7774,6 +7780,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Second StrainRate Invariant", &SEC_STRAINRATE_INVAR);
   iread = look_for_post_proc(ifp, "Third StrainRate Invariant", &THIRD_STRAINRATE_INVAR);
   iread = look_for_post_proc(ifp, "Wall Distance", &WALL_DISTANCE);
+  iread = look_for_post_proc(ifp, "Contact Distance", &CONTACT_DISTANCE);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
@@ -10071,6 +10078,17 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
       index_post_export++;
     }
     WALL_DISTANCE = index_post;
+    index_post++;
+  }
+  if (CONTACT_DISTANCE != -1 &&
+      (Num_Var_In_Type[pg->imtrx][R_MESH1])) {
+    set_nv_tkud(rd, index, 0, 0, -2, "CONTACT_DISTANCE", "[1]", "Contact distance", FALSE);
+    index++;
+    if (CONTACT_DISTANCE == 2) {
+      Export_XP_ID[index_post_export] = index_post;
+      index_post_export++;
+    }
+    CONTACT_DISTANCE = index_post;
     index_post++;
   }
 
