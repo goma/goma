@@ -856,7 +856,27 @@ far from the contact line, and :math:`G_0 + G_1\)</span> is the modulus at the c
 </div></blockquote>
 </td>
 </tr>
-<tr class="row-even"><td><p><strong>SHEAR_HARDEN</strong> &lt;float1&gt; &lt;float2&gt;</p></td>
+<tr class="row-even"><td><p><strong>MULTI_CONTACT_LINE</strong> &lt;float1&gt; &lt;float2&gt; &lt;float3&gt; &lt;ns1&gt; … &lt;nsN&gt;</p></td>
+<td><p>The <strong>MULTI_CONTACT_LINE</strong> model is a based on the CONTACT_LINE model and allows multiple nodesets</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../_images/361_goma_physics.png"><img alt="../../_images/361_goma_physics.png" src="../../_images/361_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p><em>r</em> is the distance from the fixed point, <span class="math notranslate nohighlight">\(r_0\)</span> is a decay length, <span class="math notranslate nohighlight">\(G_0`is the modulus
+far from the contact line, and :math:`G_0 + G_1\)</span> is the modulus at the contact line.</p>
+<p>The {float_list} contains four values for this model, where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>&lt;float1&gt; - <span class="math notranslate nohighlight">\(G_0\)</span> (or <span class="math notranslate nohighlight">\(\mu_0\)</span>)</p></li>
+<li><p>&lt;float2&gt; - <span class="math notranslate nohighlight">\(G_1\)</span></p></li>
+<li><p>&lt;float3&gt; - <span class="math notranslate nohighlight">\(r_0\)</span></p></li>
+<li><p>&lt;ns1&gt; - Node set number of points to calculate distance</p></li>
+<li><p>&lt;ns2&gt; - Optional second node set number calculate distance</p></li>
+<li><p>&lt;nsN&gt; - Optional N’th node set number calculate distance</p></li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+<tr class="row-odd"><td><p><strong>SHEAR_HARDEN</strong> &lt;float1&gt; &lt;float2&gt;</p></td>
 <td><p>The <strong>SHEAR_HARDEN</strong> model is:</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/362_goma_physics.png"><img alt="../../_images/362_goma_physics.png" src="../../_images/362_goma_physics.png" style="width: 90%;" /></a>
@@ -872,7 +892,7 @@ strain tensor (see <em>Solid Constitutive Equation</em> card), <span class="math
 </div></blockquote>
 </td>
 </tr>
-<tr class="row-odd"><td><p><strong>EXPONENTIAL</strong> &lt;float1&gt; &lt;float2&gt; &lt;float3&gt;</p></td>
+<tr class="row-even"><td><p><strong>EXPONENTIAL</strong> &lt;float1&gt; &lt;float2&gt; &lt;float3&gt;</p></td>
 <td><p>The <strong>EXPONENTIAL</strong> model is used exclusively for poroelastic problems, and allows for an
 exponential dependence of the shear modulus <span class="math notranslate nohighlight">\(\mu\)</span> (or G) on porosity:</p>
 <figure class="align-center">
@@ -889,7 +909,7 @@ state, <span class="math notranslate nohighlight">\(G_0\)</span> is the modulus 
 </div></blockquote>
 </td>
 </tr>
-<tr class="row-even"><td><p><strong>DENSE_POWER_LAW</strong> &lt;float1&gt; &lt;float2&gt;</p></td>
+<tr class="row-odd"><td><p><strong>DENSE_POWER_LAW</strong> &lt;float1&gt; &lt;float2&gt;</p></td>
 <td><p>The <strong>DENSE_POWER_LAW</strong> model is used mostly for drying/consolidation problems for which it is
 desired to have a plateau max-pack modulus behavior. This option requires input from the <em>Stress
 Free Solvent Vol Frac</em> card (<span class="math notranslate nohighlight">\(y_0\)</span> in equation below), and is used for solvent drying from a
@@ -909,11 +929,11 @@ clipped at the low end value at G=:math:<cite>10^-12</cite>.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="row-odd"><td><p><strong>TABLE</strong> &lt;integer1&gt; &lt;character_string1&gt; {LINEAR | BILINEAR} [integer2]</p></td>
+<tr class="row-even"><td><p><strong>TABLE</strong> &lt;integer1&gt; &lt;character_string1&gt; {LINEAR | BILINEAR} [integer2]</p></td>
 <td><p>Please see discussion at the beginning of the material properties chapter 5 for input description
 and options.</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>USER</strong> &lt;float1&gt;,…, &lt;floatn&gt;</p></td>
+<tr class="row-odd"><td><p><strong>USER</strong> &lt;float1&gt;,…, &lt;floatn&gt;</p></td>
 <td><p>For the <strong>USER</strong> model, {float_list} is of arbitrary length, and the values are used through the
 param[] array in usr_lame_mu function to parameterize a user-defined model. See examples in
 user_mp.c.</p></td>
