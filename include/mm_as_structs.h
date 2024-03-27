@@ -1729,8 +1729,9 @@ struct Field_Variables {
   dbl sh_sat_2;   /* Porous shell saturation layer 2 */
   dbl sh_sat_3;   /* Porous shell saturation layer 3 */
 
-  dbl eddy_nu;       /* Eddy viscosity for turbulent flow */
-  dbl wall_distance; /* Distance to nearest wall */
+  dbl eddy_nu;                     /* Eddy viscosity for turbulent flow */
+  dbl wall_distance;               /* Distance to nearest wall */
+  dbl multi_contact_line_distance; /* Distance to multi contact line points */
 
   /*
    * Grads of scalars...

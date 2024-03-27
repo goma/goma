@@ -477,12 +477,13 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 
 /* Modulus parameters */
 /*#define POWER_LAW    4  - defined rf_fem_const.h*/
-#define CONTACT_LINE    5
-#define SHEAR_HARDEN    6
-#define EXPONENTIAL     7
-#define DENSE_POWER_LAW 8
-#define POISSON_RATIO   9
-#define SHRINKAGE       10
+#define CONTACT_LINE       5
+#define SHEAR_HARDEN       6
+#define EXPONENTIAL        7
+#define DENSE_POWER_LAW    8
+#define POISSON_RATIO      9
+#define SHRINKAGE          10
+#define MULTI_CONTACT_LINE 11
 
 /* Diffusion Constitutive equation parameters */
 #define FICKIAN                3
