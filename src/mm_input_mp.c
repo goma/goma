@@ -843,6 +843,21 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         GOMA_EH(GOMA_ERROR, err_msg);
       }
       elc_glob[mn]->len_u_mu = num_const;
+    } else if (!strcmp(model_name, "MULTI_CONTACT_LINE")) {
+      elc_glob[mn]->lame_mu_model = MULTI_CONTACT_LINE;
+      elc_glob[mn]->u_mu = (double *)alloc_void_struct_1(sizeof(double), 3);
+      elc_glob[mn]->len_u_mu = 3;
+      if (fscanf(imp, "%lf %lf %lf", &(elc_glob[mn]->u_mu[0]), &(elc_glob[mn]->u_mu[1]),
+                 &(elc_glob[mn]->u_mu[2])) != 3) {
+        GOMA_EH(GOMA_ERROR, "error reading MULTI_CONTACT_LINE constants");
+      }
+      num_const = read_constants_int(imp, &(elc_glob[mn]->u_mu_ns));
+      if (num_const < 1) {
+        sr = sprintf(err_msg, "Matl %s expected at least 1 constant for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Lame MU", "MULTI_CONTACT_LINE");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      elc_glob[mn]->len_u_mu_ns = num_const;
     } else if (!strcmp(model_name, "SHEAR_HARDEN")) {
       elc_glob[mn]->lame_mu_model = SHEAR_HARDEN;
       num_const = read_constants(imp, &(elc_glob[mn]->u_mu), NO_SPECIES);
@@ -876,7 +891,12 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       GOMA_EH(model_read, err_msg);
     }
 
-    SPF_DBL_VEC(endofstring(es), num_const, elc_glob[mn]->u_mu);
+    if (elc_glob[mn]->lame_mu_model == MULTI_CONTACT_LINE) {
+      SPF_DBL_VEC(endofstring(es), 3, elc_glob[mn]->u_mu);
+      SPF_INT_VEC(endofstring(es), num_const, elc_glob[mn]->u_mu_ns);
+    } else {
+      SPF_DBL_VEC(endofstring(es), num_const, elc_glob[mn]->u_mu);
+    }
   }
 
   ECHO(es, echo_file);
