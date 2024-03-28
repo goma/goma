@@ -383,12 +383,12 @@ void shell_n_dot_curv_bc(double func[DIM],
 
   /* Prepare weighting for artificial diffusion term */
   const double K_diff = mp->Lub_Curv_Diff;
-  if(fabs(fv->F) < 2.*lsi->alpha) {
+  if (fabs(fv->F) < 2. * lsi->alpha) {
     curv_near = 1;
-    if(lsi->near) {
+    if (lsi->near) {
       curvX = 1.;
     } else {
-      curvX = 2. - SGN(fv->F)*fv->F/lsi->alpha;
+      curvX = 2. - SGN(fv->F) * fv->F / lsi->alpha;
     }
   }
 
