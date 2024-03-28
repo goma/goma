@@ -439,6 +439,8 @@ set(GOMA_INCLUDES
     include/el_quality.h
     include/exo_conn.h
     include/exo_struct.h
+    include/linalg/sparse_matrix.h
+    include/linalg/sparse_matrix_tpetra.h
     include/load_field_variables.h
     include/loca_const.h
     include/loca_util_const.h
@@ -591,6 +593,8 @@ set(GOMA_SOURCES
     src/el_quality.c
     src/exo_conn.c
     src/globals.c
+    src/linalg/sparse_matrix.cpp
+    src/linalg/sparse_matrix_tpetra.cpp
     src/load_field_variables.c
     src/loca_bord.c
     src/loca_eigen_c2f.F

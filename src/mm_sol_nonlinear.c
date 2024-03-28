@@ -17,6 +17,7 @@
  */
 
 #include "bc_contact.h"
+#include "linalg/sparse_matrix.h"
 #include "mm_eh.h"
 #include "mm_mp_const.h"
 #include "sl_epetra_interface.h"
@@ -769,6 +770,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     /* Zero matrix values */
     if (strcmp(Matrix_Format, "epetra") == 0) {
       EpetraPutScalarRowMatrix(ams->RowMatrix, 0.0);
+    } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+      GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+      matrix->put_scalar(matrix, 0.0);
     } else {
       init_vec_value(a, 0.0, ams->nnz);
     }
@@ -1474,6 +1478,15 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           check_parallel_error("Error in solve - stratimikos");
         }
         aztec_stringer(AZ_normal, iterations, &stringer[0]);
+      } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+        int iterations;
+        int err = stratimikos_solve_tpetra(ams, delta_x, resid_vector, &iterations,
+                                           Stratimikos_File, pg->imtrx);
+        if (err) {
+          GOMA_EH(err, "Error in stratimikos solve");
+          check_parallel_error("Error in solve - stratimikos");
+        }
+        aztec_stringer(AZ_normal, iterations, &stringer[0]);
       } else {
         GOMA_EH(GOMA_ERROR,
                 "Sorry, only Epetra matrix formats are currently supported with the Stratimikos "
@@ -1626,6 +1639,15 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             } else {
               aztec_stringer(AZ_normal, iterations, &stringer[0]);
             }
+          } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+            int iterations;
+            int err = stratimikos_solve_tpetra(ams, &wAC[iAC][0], &bAC[iAC][0], &iterations,
+                                               Stratimikos_File, pg->imtrx);
+            if (err) {
+              GOMA_EH(err, "Error in stratimikos solve");
+              check_parallel_error("Error in solve - stratimikos");
+            }
+            aztec_stringer(AZ_normal, iterations, &stringer[0]);
           } else {
             GOMA_EH(
                 GOMA_ERROR,
@@ -3449,6 +3471,15 @@ static int soln_sens(double lambda,  /*  parameter */
       } else {
         aztec_stringer(AZ_normal, iterations, &stringer[0]);
       }
+    } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+      int iterations;
+      int err = stratimikos_solve_tpetra(ams, x_sens, resid_vector_sens, &iterations,
+                                         Stratimikos_File, pg->imtrx);
+      if (err) {
+        GOMA_EH(err, "Error in stratimikos solve");
+        check_parallel_error("Error in solve - stratimikos");
+      }
+      aztec_stringer(AZ_normal, iterations, &stringer[0]);
     } else {
       GOMA_EH(GOMA_ERROR,
               "Sorry, only Epetra matrix formats are currently supported with the Stratimikos "

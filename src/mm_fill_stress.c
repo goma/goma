@@ -6006,8 +6006,8 @@ void load_neighbor_pointers(Exo_DB *exo,
         }
       }
     }
-  } else if (strcmp(Matrix_Format, "epetra") == 0) {
-    GOMA_EH(GOMA_ERROR, "load_neighbor_pointers unsupported by epetra");
+  } else {
+    GOMA_EH(GOMA_ERROR, "load_neighbor_pointers unsupported by %s", Matrix_Format);
   }
 }
 /***************************************************************************/
