@@ -1262,7 +1262,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = PRESSURE;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = PHASE1;
@@ -1677,7 +1677,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = MESH_DISPLACEMENT3;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
 
@@ -1708,7 +1708,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = MESH_DISPLACEMENT3;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
 
@@ -1785,7 +1785,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = PRESSURE;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
 
@@ -2473,7 +2473,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = SHEAR_RATE;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
 
@@ -2580,7 +2580,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = SHEAR_RATE;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -3222,7 +3222,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = MESH_DISPLACEMENT3;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -3248,7 +3248,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = MESH_DISPLACEMENT3;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -3281,7 +3281,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = MESH_DISPLACEMENT3;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -3305,7 +3305,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = MESH_DISPLACEMENT3;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -3323,7 +3323,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = MESH_DISPLACEMENT3;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = SHELL_SAT_CLOSED;
@@ -3411,7 +3411,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = MESH_DISPLACEMENT3;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = PHASE1;
@@ -3583,7 +3583,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = LUBP;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = SHELL_LUB_CURV;
@@ -3607,7 +3607,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = LUBP_2;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = PHASE1;
@@ -3628,7 +3628,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = LUBP_2;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = SHELL_PRESS_OPEN_2;
@@ -3703,7 +3703,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = LUBP;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = SHELL_DELTAH;
@@ -3764,7 +3764,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = MESH_DISPLACEMENT3;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -3794,7 +3794,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = SHELL_SAT_CLOSED;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = MESH_DISPLACEMENT1;
@@ -3944,7 +3944,7 @@ static void set_interaction_masks(Exo_DB *exo)
         break;
 
       case R_FILL:
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = VELOCITY1;
@@ -4067,7 +4067,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = CURVATURE;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = MESH_DISPLACEMENT1;
@@ -4148,7 +4148,7 @@ static void set_interaction_masks(Exo_DB *exo)
 
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = MESH_DISPLACEMENT1;
@@ -4261,7 +4261,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = POR_SATURATION;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = SHEAR_RATE;
@@ -4350,7 +4350,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = VELOCITY_GRADIENT33;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -4428,7 +4428,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = VELOCITY_GRADIENT33;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -4505,7 +4505,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = VELOCITY_GRADIENT33;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -4582,7 +4582,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = VELOCITY_GRADIENT33;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -4659,7 +4659,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = VELOCITY_GRADIENT33;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -4736,7 +4736,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = VELOCITY_GRADIENT33;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -4813,7 +4813,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = VELOCITY_GRADIENT33;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = FILL;
+        v = LEVEL_SET_FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -5126,7 +5126,7 @@ static void set_interaction_masks(Exo_DB *exo)
     for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
       for (e = 0; e < MAX_EQNS; e++) {
         for (v = 0; v < MAX_VARIABLE_TYPES; v++) {
-          if ((e == R_FILL && v != FILL) || (e != R_FILL && v == FILL))
+          if ((e == R_FILL && v != LEVEL_SET_FILL) || (e != R_FILL && v == LEVEL_SET_FILL))
             eqn_var_mask[imtrx][e][v] = 0;
         }
       }

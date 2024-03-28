@@ -1463,7 +1463,7 @@ int assemble_embedded_bc(int ielem,    /* element number */
   /* Determine if this is the augmenting condition pass */
   pass = ((Do_Overlap && oAC >= 0) ? 2 : 1);
 
-  if (ls->var == FILL) {
+  if (ls->var == LEVEL_SET_FILL) {
     bcref = ls->embedded_bc;
   } else {
     bcref = pfd->ls[ls->var - PHASE1]->embedded_bc;

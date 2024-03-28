@@ -298,7 +298,7 @@ int apply_strong_fill_ca_bc(
 
 /******************************************************************************
   Function which applies contact angle for fill equation (level set)
-  This is applied as a stong integrated condition ON THE FILL EQN
+  This is applied as a stong integrated condition ON THE LEVEL_SET_FILL EQN
   specified through STRONG_FILL_CA_BC
 
   Author:         D. R. Noble
@@ -333,7 +333,7 @@ int apply_strong_fill_ca_bc(
      -this is assumed independent of the surface */
   ip_total = elem_info(NQUAD_SURF, ielem_type);
 
-  eqn = FILL;
+  eqn = LEVEL_SET_FILL;
   dim = pd->Num_Dim;
 
   /* initialize grad_F */
@@ -478,13 +478,13 @@ int apply_strong_fill_ca_bc(
  * exo               = Exodus file pointer.
  * cx                =
  * dpi               =
- * num_ls_unknowns   = Total number of FILL unknowns.
+ * num_ls_unknowns   = Total number of LEVEL_SET_FILL unknowns.
  * num_total_unkns   = Total number of unknowns.
  * time              = The, uh, time.
  *
  * Output
  * ======
- * x                 = Modified vector of unknowns (FILL modified)
+ * x                 = Modified vector of unknowns (LEVEL_SET_FILL modified)
  *
  * Return
  * ======
@@ -2251,7 +2251,7 @@ significant_current_element_crossing ()
     {
           switch (ls->var )
           {
-                  case FILL:
+                  case LEVEL_SET_FILL:
                           value =  *(esp->F[i]);
                           break;
                   case PHASE1:
@@ -2696,7 +2696,7 @@ double find_LS_global_flux(const Exo_DB *exo,
 
 /******************************************************************************
  * find_LS_vel: computes the average of a velocity component in either the
- * positive or negative phases (w.r.t. level set FILL).  The 'chosen_vel'
+ * positive or negative phases (w.r.t. level set LEVEL_SET_FILL).  The 'chosen_vel'
  * parameter should be one of I_{NEG,POS}_V{X,Y,Z}.  I copied the find_LS_mass
  * function for this....
  *
@@ -4077,7 +4077,7 @@ static double scalar_value_at_local_node(
   load_basis_functions(xi, bfd);
 
   switch (var) {
-  case FILL:
+  case LEVEL_SET_FILL:
     if (pd->v[pg->imtrx][var])
       scalar_fv_fill(esp->F, esp_dot->F, esp_old->F, bf[var]->phi, ei[pg->imtrx]->dof[var], &fv->F,
                      &scr1, &scr2);
@@ -4275,10 +4275,10 @@ find_LS_value_on_side( int ielem_type,
  *
  * So, to compute Jacobian terms like d normal[a]/d F_j:
  *
- * d normal[a] / d F_j = d_normal_dF[a]        * bf[FILL]->phi[j]
- *                     + d_normal_dgradF[a][0] * bf[FILL]->grad_phi[j][0]
- *                     + d_normal_dgradF[a][1] * bf[FILL]->grad_phi[j][1]
- *                     + d_normal_dgradF[a][2] * bf[FILL]->grad_phi[j][2]
+ * d normal[a] / d F_j = d_normal_dF[a]        * bf[LEVEL_SET_FILL]->phi[j]
+ *                     + d_normal_dgradF[a][0] * bf[LEVEL_SET_FILL]->grad_phi[j][0]
+ *                     + d_normal_dgradF[a][1] * bf[LEVEL_SET_FILL]->grad_phi[j][1]
+ *                     + d_normal_dgradF[a][2] * bf[LEVEL_SET_FILL]->grad_phi[j][2]
  *
  ******************************************************************************/
 int level_set_interface(const double F,
@@ -4372,13 +4372,13 @@ int level_set_interface(const double F,
  *
  * Input
  * -----
- *   p0	   = Material property for FILL < 0 ("minus" side)
- *   p1	   = Material property for FILL > 0 ("plus" side)
+ *   p0	   = Material property for LEVEL_SET_FILL < 0 ("minus" side)
+ *   p1	   = Material property for LEVEL_SET_FILL > 0 ("plus" side)
  *
  * Output
  * ------
  *   pp		  = Material property at the current coordinate.
- *   d_pp_dF[MDE] = Derivative of the material property w.r.t. the FILL
+ *   d_pp_dF[MDE] = Derivative of the material property w.r.t. the LEVEL_SET_FILL
  *                  variable. N.B. If d_pp_dF == NULL, this derivative
  *                  is not calculated.
  *
@@ -4420,7 +4420,7 @@ int level_set_property(
 
   load_lsi_derivs();
 
-  /* Calculate the deriviatives of the material property w.r.t. FILL. */
+  /* Calculate the deriviatives of the material property w.r.t. LEVEL_SET_FILL. */
   var = ls->var;
   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
     /* Calculate the Jacobian terms. */
@@ -4481,7 +4481,7 @@ int level_set_property_offset(
 
   load_lsi_derivs();
 
-  /* Calculate the deriviatives of the material property w.r.t. FILL. */
+  /* Calculate the deriviatives of the material property w.r.t. LEVEL_SET_FILL. */
   var = ls->var;
   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
     /* Calculate the Jacobian terms. */
@@ -4525,13 +4525,13 @@ int level_set_property_offset(
  *
  * Input
  * -----
- *   p0	   = Material property for FILL < 0 ("minus" side)
- *   p1	   = Material property for FILL > 0 ("plus" side)
+ *   p0	   = Material property for LEVEL_SET_FILL < 0 ("minus" side)
+ *   p1	   = Material property for LEVEL_SET_FILL > 0 ("plus" side)
  *
  * Output
  * ------
  *   pp		  = Material property at the current coordinate.
- *   d_pp_dF      = Derivative of the material property w.r.t. the FILL
+ *   d_pp_dF      = Derivative of the material property w.r.t. the LEVEL_SET_FILL
  *                  variable. N.B. If d_pp_dF == NULL, this derivative
  *                  is not calculated.
  *
@@ -4570,7 +4570,7 @@ int ls_transport_property(
 
   load_lsi_derivs();
 
-  /* Calculate the deriviatives of the material property w.r.t. FILL. */
+  /* Calculate the deriviatives of the material property w.r.t. LEVEL_SET_FILL. */
   if (ls->Elem_Sign == 0)
     *d_pp_dF = (p1 - p0) * lsi->dH;
   else
@@ -4680,9 +4680,9 @@ void load_xfem_for_stu(const double xi[]) {
 
       if (pd->i[pg->imtrx][ls->var] == I_Q1) {
         F_elem_type = pd->Num_Dim == 2 ? BILINEAR_QUAD : TRILINEAR_HEX;
-      } else if (pd->i[pg->imtrx][FILL] == I_Q2) {
+      } else if (pd->i[pg->imtrx][LEVEL_SET_FILL] == I_Q2) {
         F_elem_type = pd->Num_Dim == 2 ? BIQUAD_QUAD : TRIQUAD_HEX;
-      } else if (pd->i[pg->imtrx][FILL] == I_NOTHING) {
+      } else if (pd->i[pg->imtrx][LEVEL_SET_FILL] == I_NOTHING) {
         xfem->near = FALSE;
         xfem->F = 2. * ls->Length_Scale;
         xfem->H = 1.;
@@ -4700,7 +4700,7 @@ void load_xfem_for_stu(const double xi[]) {
         xfem->grad_F_plus[2] = 0.;
         return;
       } else
-        GOMA_EH(GOMA_ERROR, "Unexpected interpolation for FILL");
+        GOMA_EH(GOMA_ERROR, "Unexpected interpolation for LEVEL_SET_FILL");
 
       xfem->F = 0.;
       for (i = 0; i < dof_ls; i++) {
@@ -5470,7 +5470,7 @@ int load_lsi_old(const double width, struct Level_Set_Interface *lsi_old) {
   double F_old = 0, alpha, *grad_F_old = NULL;
   int a;
 
-  if (ls->var != FILL) {
+  if (ls->var != LEVEL_SET_FILL) {
     GOMA_EH(GOMA_ERROR, "Unknown level set variable");
   }
 
@@ -5798,7 +5798,7 @@ static void copy_distance_function(double *F, double **grad_F) {
   int offset = 0;
 
   switch (ls->var) {
-  case FILL:
+  case LEVEL_SET_FILL:
     *F = fv->F;
     *grad_F = fv->grad_F;
     break;
@@ -5911,7 +5911,7 @@ int load_lsi_derivs(void) {
   }
 
   /* DRN: this is required to get path dependence terms right */
-  var = FILL;
+  var = LEVEL_SET_FILL;
   if (ls->on_sharp_surf) {
     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
       /* Fetch the basis functions. */
@@ -5930,7 +5930,7 @@ int load_lsi_derivs(void) {
   lsi->dH = 0.5 * (1.0 / alpha) * (1. + cos(M_PIE * F / alpha));
 
   /*
-   * Derivatives w.r.t. FILL for non-zero alpha
+   * Derivatives w.r.t. LEVEL_SET_FILL for non-zero alpha
    */
   var = ls->var;
   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -5988,7 +5988,7 @@ int load_lsi_adjmatr(const double width) {
   int lvdesc, lvdof, var_type, num_dofs;
 
   lvdesc = 0;
-  while ((var_type = ei[pg->imtrx]->Lvdesc_to_Var_Type[lvdesc]) != FILL)
+  while ((var_type = ei[pg->imtrx]->Lvdesc_to_Var_Type[lvdesc]) != LEVEL_SET_FILL)
     lvdesc++;
 
   num_dofs = ei[pg->imtrx]->Lvdesc_Numdof[lvdesc];
@@ -7582,7 +7582,7 @@ int current_elem_overlaps_interface(double width) {
 
   for (i = 0; i < ei[pd->mi[ls->var]]->dof[ls->var]; i++) {
     switch (ls->var) {
-    case FILL:
+    case LEVEL_SET_FILL:
       value = *(esp->F[i]);
       break;
     case PHASE1:
@@ -8747,7 +8747,7 @@ static int fail_courant_condition(void) {
 
   max_F = *F_old[0];
   min_F = *F_old[0];
-  for (i = 0; i < ei[pg->imtrx]->dof[FILL]; i++) {
+  for (i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++) {
     if (*F_old[i] > max_F)
       max_F = *F_old[i];
     if (*F_old[i] < min_F)

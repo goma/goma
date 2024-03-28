@@ -977,7 +977,7 @@ int assemble_energy(
       /*
        * J_e_F
        */
-      var = FILL;
+      var = LEVEL_SET_FILL;
       if (pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -1152,7 +1152,7 @@ double conductivity(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time)
  *    dbl d_k->X[a][j] -> derivative of conductivity wrt the jth
  *                          mesh displacement in the ath direction.
  *    dbl d_k->F[j]    -> derivative of conductivity wrt the jth
- *                          FILL unknown in an element
+ *                          LEVEL_SET_FILL unknown in an element
  *
  *  Return
  * --------
@@ -1301,11 +1301,11 @@ double conductivity(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time)
   } else if (mp->ConductivityModel == LEVEL_SET) {
     ls_transport_property(mp->u_thermal_conductivity[0], mp->u_thermal_conductivity[1],
                           mp->u_thermal_conductivity[2], &mp->thermal_conductivity,
-                          &mp->d_thermal_conductivity[FILL]);
+                          &mp->d_thermal_conductivity[LEVEL_SET_FILL]);
 
     k = mp->thermal_conductivity;
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var] && d_k != NULL) {
 
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -1364,7 +1364,7 @@ double heat_capacity(HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, dbl time)
  *    dbl d_Cp->X[a][j] -> derivative of heat capacity wrt the jth
  *                          mesh displacement in the ath direction.
  *    dbl d_Cp->F[j]    -> derivative of heat capacity wrt the jth
- *                          FILL unknown in an element
+ *                          LEVEL_SET_FILL unknown in an element
  *
  *  Return
  * --------
@@ -1414,8 +1414,8 @@ double heat_capacity(HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, dbl time)
       }
     }
 
-    if (d_Cp != NULL && pd->v[pg->imtrx][FILL]) {
-      var = FILL;
+    if (d_Cp != NULL && pd->v[pg->imtrx][LEVEL_SET_FILL]) {
+      var = LEVEL_SET_FILL;
 
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         d_Cp->F[j] = mp->d_heat_capacity[var] * bf[var]->phi[j];
@@ -1454,11 +1454,11 @@ double heat_capacity(HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, dbl time)
     Cp = foam_pmdi_10_heat_cap(d_Cp, time);
   } else if (mp->HeatCapacityModel == LEVEL_SET) {
     ls_transport_property(mp->u_heat_capacity[0], mp->u_heat_capacity[1], mp->u_heat_capacity[2],
-                          &mp->heat_capacity, &mp->d_heat_capacity[FILL]);
+                          &mp->heat_capacity, &mp->d_heat_capacity[LEVEL_SET_FILL]);
 
     Cp = mp->heat_capacity;
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (d_Cp != NULL && pd->v[pg->imtrx][var]) {
 
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -1651,7 +1651,7 @@ void heat_flux(double q[DIM], HEAT_FLUX_DEPENDENCE_STRUCT *d_q, double time) {
       }
     }
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (d_q != NULL && pd->v[pg->imtrx][var]) {
       for (p = 0; p < VIM; p++) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -2578,7 +2578,7 @@ fprintf(stderr,"visc %g %g %g %g %g %g %g\n",mu,visc_cmb,gamma[0][0], visc_first
       }
     }
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (d_h != NULL && pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         d_h->F[j] += param[0] * ap_square *
@@ -2687,7 +2687,7 @@ double em_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       }
     }
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (d_h != NULL && pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         d_h->F[j] += param[0] * ap_square *

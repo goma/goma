@@ -839,7 +839,7 @@ int assemble_continuity(dbl time_value, /* current time */
        *  J_c_F this is primarily the foam volume source terms
        */
 
-      var = FILL;
+      var = LEVEL_SET_FILL;
       if (source_on && pdv[var] && ls != NULL) {
         pvar = upd->vp[pg->imtrx][var];
 
@@ -1808,7 +1808,7 @@ double FoamVolumeSource(double time,
             dFVS_dC[wCO2Liq][j] = inv_rho * (source_a + source_b) + source_c;
           }
         }
-        var = FILL;
+        var = LEVEL_SET_FILL;
         if (pd->v[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             source_c = inv_rho * d_rho->F[j] * source;
@@ -2041,7 +2041,7 @@ double FoamVolumeSource(double time,
           }
         }
 
-        var = FILL;
+        var = LEVEL_SET_FILL;
         if (pd->v[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             source_c = inv_rho * d_rho->F[j] * source;
@@ -2145,7 +2145,7 @@ double FoamVolumeSource(double time,
             dFVS_dC[0][j] = 0;
           }
         }
-        var = FILL;
+        var = LEVEL_SET_FILL;
         if (pd->v[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             source_c = inv_rho * d_rho->F[j] * source;

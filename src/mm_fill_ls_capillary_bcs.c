@@ -81,7 +81,7 @@ static int continuous_surface_tension_old(double st,
 
   var = ls->var;
 
-  if (var != FILL) {
+  if (var != LEVEL_SET_FILL) {
     GOMA_EH(GOMA_ERROR, "Unknown fill variable");
   }
 
@@ -712,7 +712,7 @@ int assemble_div_s_n_source(void) {
           /*
            * J_m_F
            */
-          var = FILL;
+          var = LEVEL_SET_FILL;
           if (pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];
 

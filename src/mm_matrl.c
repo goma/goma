@@ -456,8 +456,8 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
     rho = matrl->u_density[0] /
           (1. + matrl->u_density[1] * (stateVector[TEMPERATURE] - matrl->reference[TEMPERATURE]));
 
-  } else if (matrl->DensityModel == FILL) {
-    F = stateVector[FILL];
+  } else if (matrl->DensityModel == LEVEL_SET_FILL) {
+    F = stateVector[LEVEL_SET_FILL];
     if (F < 0.1) {
       rho = matrl->u_density[1];
     } else {
@@ -582,7 +582,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
   } else if (matrl->DensityModel == LEVEL_SET) {
     double *param = matrl->u_density;
     double alpha = param[2];
-    F = stateVector[FILL];
+    F = stateVector[LEVEL_SET_FILL];
     if (F > alpha) {
       rho = param[1];
     } else if (F < -alpha) {

@@ -257,15 +257,15 @@ void put_fill_vector(const int N, double x[], const double fill_vector[], const 
  *
  * put_fill_vector:
  *
- *     Insert the value of the FILL variable type unknowns corresponding
+ *     Insert the value of the LEVEL_SET_FILL variable type unknowns corresponding
  *     to the non-specific material case or the first material back into
  *     the main solution vector.
  *
  *  Input
  *     N = Number of nodes (internal plus boundary and maybe external
- *     fill_vector[] = FILL variable type solution vector
+ *     fill_vector[] = LEVEL_SET_FILL variable type solution vector
  *     node_to_fill[] = index of the first unknown at a node into the
- *                      FILL variable type solution vector.
+ *                      LEVEL_SET_FILL variable type solution vector.
  *  Output
  *     x[] = Main solution vector
  *************************************************************************/
@@ -278,7 +278,7 @@ void put_fill_vector(const int N, double x[], const double fill_vector[], const 
   int ki;    /* counter from 0 to the number of dofs      */
 
   for (i = 0; i < N; i++) {
-    nvdof = Dolphin[pg->imtrx][i][R_FILL]; /* Number of FILL dofs at this node. */
+    nvdof = Dolphin[pg->imtrx][i][R_FILL]; /* Number of LEVEL_SET_FILL dofs at this node. */
     for (ki = 0; ki < nvdof; ki++) {
       ie = Index_Solution(i, R_FILL, 0, ki, -1, pg->imtrx);
       if (ie != -1) {
@@ -384,10 +384,10 @@ count_fill_unknowns ( int N,
   num_fill_unknowns = 0;
   for (i = 0; i < N; i++)
     {
-      if ( Dolphin[pg_imtrx][i][FILL] )
+      if ( Dolphin[pg_imtrx][i][LEVEL_SET_FILL] )
 	{
 	  node_to_fill[i] = num_fill_unknowns;
-	  num_fill_unknowns += Dolphin[pg->imtrx][i][FILL];
+	  num_fill_unknowns += Dolphin[pg->imtrx][i][LEVEL_SET_FILL];
 	}
     }
 } /* END of routine count_fill_unknowns */
@@ -870,8 +870,8 @@ double time_step_control(const double delta_t,
 
   if (use_var_norm[8]) /* LS equation is set with special card in Level Set section */
   {
-    Err_norm += ecp[FILL];
-    num_unknowns += ncp[FILL];
+    Err_norm += ecp[LEVEL_SET_FILL];
+    num_unknowns += ncp[LEVEL_SET_FILL];
     Err_norm += ecp[PHASE1];
     num_unknowns += ncp[PHASE1];
   }
@@ -964,7 +964,7 @@ double time_step_control(const double delta_t,
              ecp[SHELL_DELTAH] + ecp[SHELL_LUB_CURV] + ecp[SHELL_LUB_CURV_2] +
              ecp[SHELL_PRESS_OPEN] + ecp[SHELL_PRESS_OPEN_2] + ecp[SHELL_SAT_1] + ecp[SHELL_SAT_2] +
              ecp[SHELL_SAT_3];
-  e_F = ecp[FILL] + ecp[PHASE1];
+  e_F = ecp[LEVEL_SET_FILL] + ecp[PHASE1];
   e_ap = ecp[ACOUS_PREAL] + ecp[ACOUS_PIMAG] + ecp[ACOUS_REYN_STRESS];
   e_extv = ecp[EXT_VELOCITY];
   e_int = ecp[LIGHT_INTP] + ecp[LIGHT_INTM] + ecp[LIGHT_INTD] + ecp[RESTIME];
@@ -1042,7 +1042,7 @@ double time_step_control(const double delta_t,
     if (ncp[SHELL_USER]) {
       DPRINTF(stdout, ", %7.1e", e_shu);
     }
-    if (ncp[FILL] || ncp[PHASE1]) {
+    if (ncp[LEVEL_SET_FILL] || ncp[PHASE1]) {
       DPRINTF(stdout, ", %7.1e", e_F);
     }
     if (ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]) {
@@ -1107,7 +1107,7 @@ double time_step_control(const double delta_t,
     if (ncp[SHELL_USER]) {
       DPRINTF(stdout, ", %7.1e", e_shu);
     }
-    if (ncp[FILL] || ncp[PHASE1]) {
+    if (ncp[LEVEL_SET_FILL] || ncp[PHASE1]) {
       DPRINTF(stdout, ", %7.1e", e_F);
     }
     if (ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]) {
@@ -1172,7 +1172,7 @@ double time_step_control(const double delta_t,
     if (ncp[SHELL_USER]) {
       DPRINTF(stdout, ", %7.1e", e_shu);
     }
-    if (ncp[FILL] || ncp[PHASE1]) {
+    if (ncp[LEVEL_SET_FILL] || ncp[PHASE1]) {
       DPRINTF(stdout, ", %7.1e", e_F);
     }
     if (ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]) {
@@ -1237,7 +1237,7 @@ double time_step_control(const double delta_t,
   if (ncp[SHELL_USER]) {
     DPRINTF(stdout, ",   %1d Su ", 1);
   }
-  if (ncp[FILL] || ncp[PHASE1]) {
+  if (ncp[LEVEL_SET_FILL] || ncp[PHASE1]) {
     DPRINTF(stdout, ",   %1d F  ", 1);
   }
   if (ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]) {

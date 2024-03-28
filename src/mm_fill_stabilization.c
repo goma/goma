@@ -245,8 +245,8 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
       tau_terms->d_tau_dP[k] = inv_rho * -0.5 * (d_mu->P[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }
-  if (pd->e[pg->imtrx][FILL]) {
-    for (int k = 0; k < ei[pg->imtrx]->dof[FILL]; k++) {
+  if (pd->e[pg->imtrx][LEVEL_SET_FILL]) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; k++) {
       tau_terms->d_tau_dF[k] = inv_rho * -0.5 * (d_mu->F[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }

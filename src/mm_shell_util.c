@@ -3512,11 +3512,11 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
   /* Confined lubrication flow - Newtonian */
   /* The next else block is for film flow) */
-  VAR = FILL;
+  VAR = LEVEL_SET_FILL;
   dmu_df = d_mu->F;
   if ((EQN == R_LUBP) || (EQN == R_LUBP_2)) {
 
-    /* Set proper fill variable first.   If in lub_p layer, then use FILL,
+    /* Set proper fill variable first.   If in lub_p layer, then use LEVEL_SET_FILL,
      * but if in LUBP_2 layer use PHASE1.  This will have to be made more general
      * if you wanted to do both LS phases and R_phaseN fields in same layer.
      * We will leave that to the next sucker to develop
@@ -5015,13 +5015,13 @@ void calculate_lub_q_v_old(
   /* Confined lubrication flow - Newtonian */
   if ((EQN == R_LUBP) || (EQN == R_LUBP_2)) {
 
-    /* Set proper fill variable first.   If in lub_p layer, then use FILL,
+    /* Set proper fill variable first.   If in lub_p layer, then use LEVEL_SET_FILL,
      * but if in LUBP_2 layer use PHASE1.  This will have to be made more general
      * if you wanted to do both LS phases and R_phaseN fields in same layer.
      * We will leave that to the next sucker to develop
      */
 
-    VAR = FILL;
+    VAR = LEVEL_SET_FILL;
     if (EQN == R_LUBP_2) {
       VAR = PHASE1;
     }

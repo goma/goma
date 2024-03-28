@@ -7339,7 +7339,7 @@ int assemble_shell_energy(double time,            /* present time value */
   }
 
   double if_liquid = 1.0; /*bolean to determine if in liquid phase (F<0) or not */
-  if (pd->v[pg->imtrx][FILL]) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     load_lsi(ls->Length_Scale);
     load_lsi_derivs();
     if_liquid = (1. - lsi->H);
@@ -7398,7 +7398,7 @@ int assemble_shell_energy(double time,            /* present time value */
       q[i] = 0.0;
       q[i] -= pow(H, 3) * grad_P[i] / (k_turb * mu);
       q[i] += H * (veloL[i] + veloU[i]) / 2;
-      if (pd->v[pg->imtrx][FILL])
+      if (pd->v[pg->imtrx][LEVEL_SET_FILL])
         q[i] -= pow(H, 3) * gradII_Hside[i] * curv * mp->surface_tension / (k_turb * mu);
     }
 
@@ -7458,12 +7458,12 @@ int assemble_shell_energy(double time,            /* present time value */
       /*this next piece is to pick up dependence on H on lubp from the deform spring equation */
       dqdp_1[i] = -3. * pow(H, 2) * dH_U_dp * grad_P[i] / (k_turb * mu) +
                   dH_U_dp * (veloL[i] + veloU[i]) / 2.;
-      if (pd->v[pg->imtrx][FILL])
+      if (pd->v[pg->imtrx][LEVEL_SET_FILL])
         dqdp_1[i] -=
             3. * pow(H, 2) * dH_U_dp * gradII_Hside[i] * curv * mp->surface_tension / (k_turb * mu);
 
       dqdmu[i] = pow(H, 3) * grad_P[i] * (d_k_turb_dmu * mu + k_turb) / (k_turb * k_turb * mu * mu);
-      if (pd->v[pg->imtrx][FILL])
+      if (pd->v[pg->imtrx][LEVEL_SET_FILL])
         dqdmu[i] += pow(H, 3) * gradII_Hside[i] * curv * mp->surface_tension *
                     (d_k_turb_dmu * mu + k_turb) / (k_turb * k_turb * mu * mu);
       if (pd->v[pg->imtrx][SHELL_DELTAH] && (mp->HeightUFunctionModel == CONSTANT_SPEED_DEFORM ||
@@ -7471,7 +7471,7 @@ int assemble_shell_energy(double time,            /* present time value */
                                              mp->HeightUFunctionModel == FLAT_GRAD_FLAT_MELT ||
                                              mp->HeightUFunctionModel == CIRCLE_MELT))
         dq_lub_dH[i] += -3 * pow(H, 2) * grad_P[i] / (k_turb * mu) + (veloL[i] + veloU[i]) / 2.;
-      if (pd->v[pg->imtrx][FILL]) {
+      if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
         if (pd->v[pg->imtrx][SHELL_DELTAH])
           dqdh[i] -= 3. * pow(H, 2) * gradII_Hside[i] * curv * mp->surface_tension / (k_turb * mu);
         for (j = 0; j < ei[pg->imtrx]->dof[eqn]; j++) {
@@ -11013,7 +11013,7 @@ void dPdz_calc(dbl tt,
   dbl slopeL_F[MDE] = {0.0};
   dbl curv_F[MDE] = {0.0};
   dbl oldlsls = 0.0;
-  if (pd->v[pg->imtrx][FILL]) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     oldlsls = ls->Length_Scale;
     load_lsi(ls->Length_Scale);
     load_lsi_derivs();
@@ -11023,13 +11023,13 @@ void dPdz_calc(dbl tt,
     for (b = 0; b < DIM; b++) {
       slopeU += dH_U_dX[b] * lsi->normal[b];
       slopeL += dH_L_dX[b] * lsi->normal[b];
-      for (i = 0; i < ei[pg->imtrx]->dof[FILL]; i++) {
+      for (i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++) {
         slopeU_F[i] += dH_U_dX[b] * lsi->d_normal_dF[b][i];
         slopeL_F[i] += dH_L_dX[b] * lsi->d_normal_dF[b][i];
       }
     }
     curv = (cos(M_PIE - dcaU - atan(slopeU)) + cos(M_PIE - dcaL - atan(-slopeL))) / Hlub;
-    for (i = 0; i < ei[pg->imtrx]->dof[FILL]; i++) {
+    for (i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++) {
       curv_F[i] -= sin(-M_PIE + dcaU + atan(slopeU)) * slopeU_F[i] / (Hlub * (1 + pow(slopeU, 2)));
       curv_F[i] += sin(-M_PIE + dcaL - atan(slopeL)) * slopeL_F[i] / (Hlub * (1 + pow(slopeL, 2)));
     }
@@ -11040,10 +11040,10 @@ void dPdz_calc(dbl tt,
 
   /* Correct pressure field for surface tension */
   dbl plub_F[MDE] = {0.0};
-  if (pd->v[pg->imtrx][FILL]) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     plub = plub + sigma * curv * lsi->Hn;
-    for (i = 0; i < ei[pg->imtrx]->dof[FILL]; i++) {
-      // plub_F[i] = sigma*curv*lsi->d_Hn_dF[i]*bf[FILL]->phi[i] + sigma*curv_F[i]*lsi->Hn;
+    for (i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++) {
+      // plub_F[i] = sigma*curv*lsi->d_Hn_dF[i]*bf[LEVEL_SET_FILL]->phi[i] + sigma*curv_F[i]*lsi->Hn;
       plub_F[i] = sigma * curv * lsi->d_Hn_dF[i] + sigma * curv_F[i] * lsi->Hn;
     }
   }
@@ -11090,12 +11090,12 @@ void dPdz_calc(dbl tt,
   }
 
   /* Calculate sensitivity for curvature */
-  if (pd->v[pg->imtrx][FILL])
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL])
     *dPdz_curv = *dPdz_Plub * sigma * lsi->Hn;
 
   /* Calculate weighting for level set fields */
   dbl HsideM = 1.0, d_HsideM_dF[MDE] = {0.0};
-  if (pd->v[pg->imtrx][FILL]) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     HsideM = 1 - 2 * lsi->Hn;
     for (i = 0; i < ei[pg->imtrx]->dof[R_FILL]; i++) {
       d_HsideM_dF[i] = -2 * lsi->d_Hn_dF[i];
@@ -11104,7 +11104,7 @@ void dPdz_calc(dbl tt,
 
   /* Bang with heaviside function to not use it outside the drop */
   dbl bang;
-  if (pd->v[pg->imtrx][FILL]) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     bang = HsideM;
     if (bang < 0) {
       *dPdz = 0.0;
@@ -11127,7 +11127,7 @@ void dPdz_calc(dbl tt,
   }
 
   /* Reset level set field */
-  if (pd->v[pg->imtrx][FILL])
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL])
     load_lsi(oldlsls);
 
   return;
@@ -11360,7 +11360,7 @@ int assemble_porous_shell_closed(dbl tt, // Time integration form
       } // End of LUBP sensitivities
 
       // Assemble sensitivities for F
-      var = FILL;
+      var = LEVEL_SET_FILL;
       if (pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
 
@@ -11548,7 +11548,7 @@ int assemble_porous_shell_closed(dbl tt, // Time integration form
       } // End of sensitivity for LUBP
 
       // Assemble sensitivities for F
-      var = FILL;
+      var = LEVEL_SET_FILL;
       if (pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
 
@@ -11731,7 +11731,7 @@ int assemble_porous_shell_gasn(dbl tt,           // Time integration form
 
   // Prepare heaviside function for multiphase flow
   dbl HsideM = 1.0, d_HsideM_dF[MDE] = {0.0};
-  if (pd->v[pg->imtrx][FILL]) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     load_lsi(ls->Length_Scale);
     HsideM = 1 - lsi->Hn;
     for (i = 0; i < ei[pg->imtrx]->dof[R_FILL]; i++)
@@ -11767,7 +11767,7 @@ int assemble_porous_shell_gasn(dbl tt,           // Time integration form
   }
 
   // Hit with heaviside function for multiphase flow
-  if (pd->v[pg->imtrx][FILL]) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     flux *= HsideM;
     flux_N *= HsideM;
     flux_S *= HsideM;
@@ -11882,8 +11882,8 @@ int assemble_porous_shell_gasn(dbl tt,           // Time integration form
 
       } // End of SH_SAT_CLOSED sensitivities
 
-      // Assemble sensitivities for FILL
-      var = FILL;
+      // Assemble sensitivities for LEVEL_SET_FILL
+      var = LEVEL_SET_FILL;
       if (pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
 
@@ -11908,7 +11908,7 @@ int assemble_porous_shell_gasn(dbl tt,           // Time integration form
 
         } // End of loop over DOF (j)
 
-      } // End of FILL sensitivities
+      } // End of LEVEL_SET_FILL sensitivities
 
       // Assemble sensitivities for MESH_DISPLACEMENT
       var = MESH_DISPLACEMENT1;
@@ -12045,10 +12045,10 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
 
   // Load heaviside for level set weighting
   dbl Hside = 1.0, d_Hside_dF[MDE] = {0.0};
-  if (pd->v[pg->imtrx][FILL]) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     load_lsi(ls->Length_Scale);
     Hside = 1 - lsi->Hn;
-    for (i = 0; i < ei[pg->imtrx]->dof[FILL]; i++)
+    for (i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++)
       d_Hside_dF[i] = -lsi->d_Hn_dF[i];
   }
 
@@ -12135,7 +12135,7 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
     E_SOUR_P -= kappa / mu * (fv->sh_p_open - Peff) / (2 * pow(S, 2) * H) * dSdP;
     E_SOUR_PLUB = -kappa / mu / (2 * S * H) * Hside;
     if (pd->e[pg->imtrx][R_FILL]) {
-      for (i = 0; i < ei[pg->imtrx]->dof[FILL]; i++) {
+      for (i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++) {
         E_SOUR_F[i] = kappa / mu * (-1) / (2 * S * H) * (fv->lubp - Pmin) * d_Hside_dF[i];
       }
     }
@@ -12145,7 +12145,7 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
     // E_SOUR = 0.0;
     //  E_SOUR_P = 0.0;
     // E_SOUR_PLUB = 0.0;
-    // for ( i = 0; i < ei[pg->imtrx]->dof[FILL]; i++) E_SOUR_F[i] = 0.0;
+    // for ( i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++) E_SOUR_F[i] = 0.0;
   }
 
   // OK, if we have multilayer, we need to get source terms from the second-story lubrication field,
@@ -12167,7 +12167,7 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
     if (upd->vp[pg->imtrx][PHASE1] >= 0) {
       load_lsi_shell_second(ls->Length_Scale);
       Hside_2 = 1 - lsi->Hn;
-      for (i = 0; i < ei[pg->imtrx]->dof[FILL]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++)
         d_Hside_2_dpF[i] = -lsi->d_Hn_dF[i];
     }
 
@@ -12186,14 +12186,14 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
     E_SOUR_P_2 -= kappa / mu * (fv->sh_p_open - Peff) / (2 * pow(S, 2) * H) * dSdP;
     E_SOUR_2_PLUB_2 = -kappa / mu / (2 * S * H) * Hside_2;
     if (upd->ep[pg->imtrx][R_PHASE1] >= 0) {
-      for (i = 0; i < ei[pg->imtrx]->dof[FILL]; i++) {
+      for (i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++) {
         E_SOUR_2_PF[i] = kappa / mu * (-1) / (2 * S * H) * (lubp_2 - Pmin) * d_Hside_2_dpF[i];
       }
     }
 
     // Now convert back to level set field
     ls = ls_old;
-    if (upd->vp[pg->imtrx][FILL] >= 0) {
+    if (upd->vp[pg->imtrx][LEVEL_SET_FILL] >= 0) {
       load_lsi(ls->Length_Scale);
     }
   }
@@ -12472,8 +12472,8 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
 
       } // End of LUBP sensitivities
 
-      // Assemble sensitivities for FILL
-      var = FILL;
+      // Assemble sensitivities for LEVEL_SET_FILL
+      var = LEVEL_SET_FILL;
       if (pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
 
@@ -12496,7 +12496,7 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
 
         } // End of loop over DOF (j)
 
-      } // End of FILL sensitivities
+      } // End of LEVEL_SET_FILL sensitivities
 
       // Assemble sensitivities for PHASE1
       var = PHASE1;
@@ -12591,8 +12591,8 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
 
       } // End of LUBP sensitivities
 
-      // Assemble sensitivities for FILL
-      var = FILL;
+      // Assemble sensitivities for LEVEL_SET_FILL
+      var = LEVEL_SET_FILL;
       if (pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
 
@@ -12615,7 +12615,7 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
 
         } // End of loop over DOF (j)
 
-      } // End of FILL sensitivities
+      } // End of LEVEL_SET_FILL sensitivities
 
     } // End of loop over DOF (i)
 
@@ -12684,7 +12684,7 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
 
       } // End of LUBP sensitivities
 
-      // Assemble sensitivities for FILL
+      // Assemble sensitivities for LEVEL_SET_FILL
       var = PHASE1;
       if (upd->vp[pg->imtrx][var] >= 0) {
         pvar = upd->vp[pg->imtrx][var];
@@ -12708,7 +12708,7 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
 
         } // End of loop over DOF (j)
 
-      } // End of FILL sensitivities
+      } // End of LEVEL_SET_FILL sensitivities
 
     } // End of loop over DOF (i)
 
@@ -13824,7 +13824,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
   /* Bail out fast if there's nothing to do */
   if (!pd->e[pg->imtrx][eqn])
     return (status);
-  if (!pd->e[pg->imtrx][FILL])
+  if (!pd->e[pg->imtrx][LEVEL_SET_FILL])
     GOMA_EH(GOMA_ERROR, "Must activate level set equation to calculate curvature.");
 
   /* Prepare shell geometry */
@@ -13902,8 +13902,8 @@ int assemble_lubrication_curvature(double time,            /* present time value
   dbl d_LSnormal_dF[DIM][MDE];
   memset(d_LSnormal_mag_dF, 0.0, sizeof(double) * MDE);
   memset(d_LSnormal_dF, 0.0, sizeof(double) * MDE * DIM);
-  var = FILL;
-  for (i = 0; i < ei[pg->imtrx]->dof[FILL]; i++) {
+  var = LEVEL_SET_FILL;
+  for (i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++) {
 
     /* Basis functions */
     ShellBF(eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh,
@@ -14081,8 +14081,8 @@ int assemble_lubrication_curvature(double time,            /* present time value
         }   // End of loop over mesh dimensions
       }     // End of DMX assembly
 
-      /*** FILL ***/
-      var = FILL;
+      /*** LEVEL_SET_FILL ***/
+      var = LEVEL_SET_FILL;
       if (pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
 
@@ -14102,7 +14102,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += div;
 
         } // End of loop over DOFs (j)
-      }   // End of FILL assembly
+      }   // End of LEVEL_SET_FILL assembly
 
     } // End of loop over DOFs (i)
   }   // End of jacobian assembly
@@ -14423,7 +14423,7 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += div;
 
         } // End of loop over DOFs (j)
-      }   // End of FILL assembly
+      }   // End of LEVEL_SET_FILL assembly
 
     } // End of loop over DOFs (i)
   }   // End of jacobian assembly

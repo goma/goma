@@ -1510,7 +1510,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         &(mp_glob[mn]->viscosity_tableid), model_name, SCALAR_INPUT, &NO_SPECIES, es);
 
     if (model_read == -1 && !strcmp(model_name, "FILL")) {
-      mat_ptr->ViscosityModel = FILL;
+      mat_ptr->ViscosityModel = LEVEL_SET_FILL;
 
       num_const = read_constants(imp, &(mat_ptr->u_viscosity), 0);
 

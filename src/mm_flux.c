@@ -4248,7 +4248,7 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
               get_subgrid_integration_pts(start_tree, &element_search_grid, &s, &weight, width);
         }
       } else if (subelement_vol_integration_active) {
-        if ((Use_Subelement_Integration = current_elem_on_isosurface(FILL, 0.))) {
+        if ((Use_Subelement_Integration = current_elem_on_isosurface(LEVEL_SET_FILL, 0.))) {
           if (quantity == I_NEG_FILL || quantity == I_MASS_NEGATIVE_FILL ||
               quantity == I_NEG_VOLPLANE || quantity == I_NEG_VX || quantity == I_NEG_VY ||
               quantity == I_NEG_VZ || quantity == I_NEG_CENTER_X || quantity == I_NEG_CENTER_Y ||
@@ -4266,7 +4266,7 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
         }
       } else if (subelement_surf_integration_active) {
         ip_total = 0;
-        if ((Use_Subelement_Integration = current_elem_on_isosurface(FILL, 0.))) {
+        if ((Use_Subelement_Integration = current_elem_on_isosurface(LEVEL_SET_FILL, 0.))) {
           ip_total = get_subelement_integration_pts(&s, &weight, NULL, 0., -1, 0);
           ls->Elem_Sign = 0;
           ls->on_sharp_surf = TRUE;
@@ -4921,7 +4921,7 @@ int compute_volume_integrand(const int quantity,
         }
       }
 
-      var = FILL;
+      var = LEVEL_SET_FILL;
       if (pd->v[pg->imtrx][var]) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           J_AC[ei[pg->imtrx]->gun_list[var][j]] += weight * det * d_rho->F[j] * H;
@@ -6373,7 +6373,7 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
               }
               /* * Fill...  */
 
-              v = FILL;
+              v = LEVEL_SET_FILL;
               if (pd->v[pg->imtrx][v]) {
                 dofs = ei[pg->imtrx]->dof[v];
                 for (j = 0; j < dofs; j++) {
@@ -7250,7 +7250,7 @@ static int load_fv_sens(void) {
    * Fill...
    */
 
-  v = FILL;
+  v = LEVEL_SET_FILL;
   fv_sens->F = 0.;
   if (pd->v[pg->imtrx][v]) {
     dofs = ei[pg->imtrx]->dof[v];
@@ -8138,7 +8138,7 @@ static int load_fv_grads_sens(void) {
   /*
    * grad(F)
    */
-  v = FILL;
+  v = LEVEL_SET_FILL;
   if (pd->v[pg->imtrx][v]) {
     dofs = ei[pg->imtrx]->dof[v];
     for (p = 0; p < VIM; p++) {
@@ -9553,7 +9553,7 @@ void surfdet_chev_coeff_2DQ(const int interface_type,
   /*  find basis function for level-set field - maybe it should be mesh? */
 
   for (j = 0; j < Num_Basis_Functions; j++) {
-    if (pd_glob[ei[pg->imtrx]->mn]->i[pg->imtrx][FILL] == bfd[j]->interpolation) {
+    if (pd_glob[ei[pg->imtrx]->mn]->i[pg->imtrx][LEVEL_SET_FILL] == bfd[j]->interpolation) {
       fill_interp = j;
     }
   }

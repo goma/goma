@@ -46,8 +46,8 @@ static void transferMultipleOfDerivatives(const dbl ratioVisc,
       d_dilMu->T[j] = ratioVisc * d_mu->T[j];
     }
   }
-  if (pd->v[pg->imtrx][FILL]) {
-    for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
+    for (j = 0; j < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; j++) {
       d_dilMu->F[j] = ratioVisc * d_mu->F[j];
     }
   }
@@ -157,7 +157,7 @@ static void transferGPDerivatives(const dbl multFac,
  *   d_mu->T	= derivative of viscosity wrt to temperature
  *   d_mu->P	= derivative of viscosity wrt to pressure
  *   d_mu->C	= derivative of viscosity wrt to concentration/species
- *   d_mu->F	= derivative of viscosity wrt to FILL (Level Set / VoF)
+ *   d_mu->F	= derivative of viscosity wrt to LEVEL_SET_FILL (Level Set / VoF)
  *   d_mu->nn	= derivative of viscosity wrt to bond concentration
  *
  *  This routine takes care of zeroing out the d_mu structure every time it is
@@ -189,8 +189,8 @@ double dil_viscosity(GEN_NEWT_STRUCT *gn_local,
       GOMA_EH(GOMA_ERROR, "User Dilational Viscosity Model is Unimplemented");
     } else if (mp->DilationalViscosityModel == USER_GEN) {
       GOMA_EH(GOMA_ERROR, "UserGen Dilational Viscosity Model is Unimplemented");
-    } else if (mp->DilationalViscosityModel == FILL) {
-      GOMA_EH(GOMA_ERROR, " Dilational Viscosity Model for FILL is Unimplemented");
+    } else if (mp->DilationalViscosityModel == LEVEL_SET_FILL) {
+      GOMA_EH(GOMA_ERROR, " Dilational Viscosity Model for LEVEL_SET_FILL is Unimplemented");
     } else if (mp->DilationalViscosityModel == TABLE) {
       GOMA_EH(GOMA_ERROR, " Dilational Viscosity Model for TABLE is Unimplemented");
     } else if (mp->DilationalViscosityModel == LEVEL_SET) {

@@ -19,8 +19,6 @@
 #ifndef GOMA_EL_ELM_H
 #define GOMA_EL_ELM_H
 
-#include "rf_fem_const.h"
-
 typedef enum type_elem {
   BILINEAR_QUAD = 0,
   C_BILINEAR_QUAD, /* 5-node quad.  4 corner nodes + centroid node*/

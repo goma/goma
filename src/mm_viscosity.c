@@ -98,7 +98,7 @@
  *   d_mu->T	= derivative of viscosity wrt to temperature variables
  *   d_mu->P	= derivative of viscosity wrt to pressure variables
  *   d_mu->C	= derivative of viscosity wrt to concentration/species variables
- *   d_mu->F	= derivative of viscosity wrt to FILL (Level Set / VoF) variables
+ *   d_mu->F	= derivative of viscosity wrt to LEVEL_SET_FILL (Level Set / VoF) variables
  *   d_mu->nn	= derivative of viscosity wrt to bond concentration variables
  *
  *
@@ -142,7 +142,7 @@ double viscosity(struct Generalized_Newtonian *gn_local,
         }
       }
 
-      var = FILL;
+      var = LEVEL_SET_FILL;
       if (d_mu != NULL && pd->v[pg->imtrx][var]) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           d_mu->F[j] = mp->d_viscosity[var] * bf[var]->phi[j];
@@ -188,7 +188,7 @@ double viscosity(struct Generalized_Newtonian *gn_local,
     } else if (mp->ViscosityModel == USER_GEN) {
       err = usr_viscosity_gen(&mu, gamma_dot, &d_mu->gd, d_mu->v, d_mu->X, d_mu->T, d_mu->P,
                               d_mu->C, mp->u_viscosity);
-    } else if (mp->ViscosityModel == FILL) {
+    } else if (mp->ViscosityModel == LEVEL_SET_FILL) {
       /* let d_mu->F be zero here since mu is discontinuous */
       err = fill_viscosity(mp->u_viscosity);
       mu = mp->viscosity;
@@ -1569,7 +1569,7 @@ double carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
 }
 
 /*
- * Viscosity model for FILL equation with a
+ * Viscosity model for LEVEL_SET_FILL equation with a
  * fluid of one viscosity displacing a fluid
  * of a different viscosity
  */
@@ -1595,7 +1595,7 @@ int fill_viscosity(dbl *param) /* ptr to the user-defined parameter list    */
 
   /**********************************************************/
   if (ls != NULL) {
-    GOMA_EH(GOMA_ERROR, "Use LEVEL_SET instead of FILL viscosity model.");
+    GOMA_EH(GOMA_ERROR, "Use LEVEL_SET instead of LEVEL_SET_FILL viscosity model.");
     return (0);
   }
 

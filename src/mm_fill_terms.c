@@ -1819,9 +1819,9 @@ int assemble_LSvelocity(bool owner, int ielem) {
     }
   }
 
-  /* sensitivity to FILL                                  */
+  /* sensitivity to LEVEL_SET_FILL                                  */
 
-  var = FILL;
+  var = LEVEL_SET_FILL;
   if (pd->v[pg->imtrx][var]) {
     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 
@@ -2144,7 +2144,7 @@ int assemble_ls_momentum_source(void) {
   load_lsi_derivs();
 
   /* Calculate the derivatives. */
-  var = FILL;
+  var = LEVEL_SET_FILL;
   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
     for (p = 0; p < VIM; p++) {
       for (q = 0; q < VIM; q++) {
@@ -2430,7 +2430,7 @@ double acoustic_impedance(CONDUCTIVITY_DEPENDENCE_STRUCT *d_R, dbl time)
  *    dbl d_R->X[a][j] -> derivative of conductivity wrt the jth
  *                          mesh displacement in the ath direction.
  *    dbl d_R->F[j]    -> derivative of conductivity wrt the jth
- *                          FILL unknown in an element
+ *                          LEVEL_SET_FILL unknown in an element
  *
  *  Return
  * --------
@@ -2512,11 +2512,11 @@ double acoustic_impedance(CONDUCTIVITY_DEPENDENCE_STRUCT *d_R, dbl time)
   } else if (mp->Acoustic_ImpedanceModel == LEVEL_SET) {
     ls_transport_property(mp->u_acoustic_impedance[0], mp->u_acoustic_impedance[1],
                           mp->u_acoustic_impedance[2], &mp->acoustic_impedance,
-                          &mp->d_acoustic_impedance[FILL]);
+                          &mp->d_acoustic_impedance[LEVEL_SET_FILL]);
 
     R = mp->acoustic_impedance;
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var] && d_R != NULL) {
 
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -2590,11 +2590,11 @@ double wave_number(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time) {
     }
   } else if (mp->wave_numberModel == LEVEL_SET) {
     ls_transport_property(mp->u_wave_number[0], mp->u_wave_number[1], mp->u_wave_number[2],
-                          &mp->wave_number, &mp->d_wave_number[FILL]);
+                          &mp->wave_number, &mp->d_wave_number[LEVEL_SET_FILL]);
 
     k = mp->wave_number;
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var] && d_k != NULL) {
 
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -2646,7 +2646,7 @@ double acoustic_absorption(CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha, dbl time)
  *    dbl d_R->X[a][j] -> derivative of conductivity wrt the jth
  *                          mesh displacement in the ath direction.
  *    dbl d_R->F[j]    -> derivative of conductivity wrt the jth
- *                          FILL unknown in an element
+ *                          LEVEL_SET_FILL unknown in an element
  *
  *  Return
  * --------
@@ -2732,11 +2732,11 @@ double acoustic_absorption(CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha, dbl time)
   } else if (mp->Acoustic_AbsorptionModel == LEVEL_SET) {
     ls_transport_property(mp->u_acoustic_absorption[0], mp->u_acoustic_absorption[1],
                           mp->u_acoustic_absorption[2], &mp->acoustic_absorption,
-                          &mp->d_acoustic_absorption[FILL]);
+                          &mp->d_acoustic_absorption[LEVEL_SET_FILL]);
 
     alpha = mp->acoustic_absorption;
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var] && d_alpha != NULL) {
 
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -2790,7 +2790,7 @@ double light_absorption(CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha, dbl time)
  *    dbl d_R->X[a][j] -> derivative of conductivity wrt the jth
  *                          mesh displacement in the ath direction.
  *    dbl d_R->F[j]    -> derivative of conductivity wrt the jth
- *                          FILL unknown in an element
+ *                          LEVEL_SET_FILL unknown in an element
  *
  *  Return
  * --------
@@ -2876,11 +2876,11 @@ double light_absorption(CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha, dbl time)
   } else if (mp->Light_AbsorptionModel == LEVEL_SET) {
     ls_transport_property(mp->u_light_absorption[0], mp->u_light_absorption[1],
                           mp->u_light_absorption[2], &mp->light_absorption,
-                          &mp->d_light_absorption[FILL]);
+                          &mp->d_light_absorption[LEVEL_SET_FILL]);
 
     alpha = mp->light_absorption;
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var] && d_alpha != NULL) {
 
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -2934,7 +2934,7 @@ double refractive_index(CONDUCTIVITY_DEPENDENCE_STRUCT *d_n, dbl time)
  *    dbl d_R->X[a][j] -> derivative of ref. index wrt the jth
  *                          mesh displacement in the ath direction.
  *    dbl d_R->F[j]    -> derivative of ref. index wrt the jth
- *                          FILL unknown in an element
+ *                          LEVEL_SET_FILL unknown in an element
  *
  *  Return
  * --------
@@ -3020,11 +3020,11 @@ double refractive_index(CONDUCTIVITY_DEPENDENCE_STRUCT *d_n, dbl time)
   } else if (mp->Refractive_IndexModel == LEVEL_SET) {
     ls_transport_property(mp->u_refractive_index[0], mp->u_refractive_index[1],
                           mp->u_refractive_index[2], &mp->refractive_index,
-                          &mp->d_refractive_index[FILL]);
+                          &mp->d_refractive_index[LEVEL_SET_FILL]);
 
     n = mp->refractive_index;
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var] && d_n != NULL) {
 
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -3077,7 +3077,7 @@ double extinction_index(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time)
  *    dbl d_k->X[a][j] -> derivative of ext. index wrt the jth
  *                          mesh displacement in the ath direction.
  *    dbl d_k->F[j]    -> derivative of ext. index wrt the jth
- *                          FILL unknown in an element
+ *                          LEVEL_SET_FILL unknown in an element
  *
  *  Return
  * --------
@@ -3162,11 +3162,11 @@ double extinction_index(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time)
   } else if (mp->Extinction_IndexModel == LEVEL_SET) {
     ls_transport_property(mp->u_extinction_index[0], mp->u_extinction_index[1],
                           mp->u_extinction_index[2], &mp->extinction_index,
-                          &mp->d_extinction_index[FILL]);
+                          &mp->d_extinction_index[LEVEL_SET_FILL]);
 
     k = mp->extinction_index;
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var] && d_k != NULL) {
 
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -3825,7 +3825,7 @@ table_distance_search(struct Data_Table *table, double x[], double *sloper, doub
  * -----
  *   csf	  = The "Continuous Surface Force" contribution to the fluid
  *                  stress tensor.
- *   d_csf_dF	  = Jacobian derivative of csf w.r.t. FILL.  If this is NULL,
+ *   d_csf_dF	  = Jacobian derivative of csf w.r.t. LEVEL_SET_FILL.  If this is NULL,
  *                  then no Jacobian terms are computed.
  *
  *   NB: It is assumed that csf and d_csf_dF are zeroed.
@@ -4528,7 +4528,7 @@ void load_matrl_statevector(MATRL_PROP_STRUCT *mp_local)
   int matID = mp_local->MatID;
 
   sv[TEMPERATURE] = sv_mp[TEMPERATURE];
-  sv[FILL] = sv_mp[FILL];
+  sv[LEVEL_SET_FILL] = sv_mp[LEVEL_SET_FILL];
   sv[VOLTAGE] = sv_mp[VOLTAGE];
   sv[PRESSURE] = sv_mp[PRESSURE];
   for (k = 0; k < mp->Num_Species; k++) {
@@ -4557,7 +4557,7 @@ void load_matrl_statevector(MATRL_PROP_STRUCT *mp_local)
         sv[var_type] = scalar_fv_fill_altmatrl(esp->v[k], lvdesc, num_dofs, var_type);
       } else if (var_type == PRESSURE) {
         sv[var_type] = scalar_fv_fill_altmatrl(esp->P, lvdesc, num_dofs, var_type);
-      } else if (var_type == FILL) {
+      } else if (var_type == LEVEL_SET_FILL) {
         sv[var_type] = scalar_fv_fill_altmatrl(esp->F, lvdesc, num_dofs, var_type);
       } else if (var_type == LIGHT_INTP) {
         sv[var_type] = scalar_fv_fill_altmatrl(esp->poynt[0], lvdesc, num_dofs, var_type);
@@ -5631,7 +5631,7 @@ int assemble_q_source(double flux) {
         /*
          * J_e_F
          */
-        var = FILL;
+        var = LEVEL_SET_FILL;
 
         if (pd->v[pg->imtrx][var]) {
           pvar = upd->vp[pg->imtrx][var];
@@ -5900,7 +5900,7 @@ int assemble_t_source(double T, double time) {
           /*
            * J_e_F
            */
-          var = FILL;
+          var = LEVEL_SET_FILL;
 
           if (pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];
@@ -6099,7 +6099,7 @@ int assemble_qlaser_source(const double p[], double time) {
         /*
          * J_e_F
          */
-        var = FILL;
+        var = LEVEL_SET_FILL;
 
         if (pd->v[pg->imtrx][var]) {
           pvar = upd->vp[pg->imtrx][var];
@@ -6251,7 +6251,7 @@ int assemble_qvapor_source(const double p[]) {
         /*
          * J_e_F
          */
-        var = FILL;
+        var = LEVEL_SET_FILL;
 
         if (pd->v[pg->imtrx][var]) {
           pvar = upd->vp[pg->imtrx][var];
@@ -6399,7 +6399,7 @@ int assemble_qrad_source(double htc, double Tref, double emiss, double sigma) {
         /*
          * J_e_F
          */
-        var = FILL;
+        var = LEVEL_SET_FILL;
 
         if (pd->v[pg->imtrx][var]) {
           pvar = upd->vp[pg->imtrx][var];
@@ -6559,7 +6559,7 @@ int assemble_cont_t_source(double *xi) {
             /*
              * J_e_F
              */
-            var = FILL;
+            var = LEVEL_SET_FILL;
 
             if (pd->v[pg->imtrx][var]) {
               pvar = upd->vp[pg->imtrx][var];
@@ -6588,7 +6588,7 @@ int assemble_cont_t_source(double *xi) {
             /*
              * J_e_F
              */
-            var = FILL;
+            var = LEVEL_SET_FILL;
             if (pd->v[pg->imtrx][var]) {
               pvar = upd->vp[pg->imtrx][var];
 
@@ -7010,7 +7010,7 @@ int assemble_cont_vel_source(double *xi, Exo_DB *exo) {
               /*
                * J_m_F
                */
-              var = FILL;
+              var = LEVEL_SET_FILL;
 
               if (pd->v[pg->imtrx][var]) {
                 pvar = upd->vp[pg->imtrx][var];
@@ -7039,7 +7039,7 @@ int assemble_cont_vel_source(double *xi, Exo_DB *exo) {
               /*
                * J_m_F
                */
-              var = FILL;
+              var = LEVEL_SET_FILL;
               if (pd->v[pg->imtrx][var]) {
                 pvar = upd->vp[pg->imtrx][var];
 
@@ -7151,7 +7151,7 @@ int assemble_extv_kinematic(dbl tt, /* parameter to vary time integration from
       }
     }
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         d_vnorm->F[j] = 0.;
@@ -7196,7 +7196,7 @@ int assemble_extv_kinematic(dbl tt, /* parameter to vary time integration from
         }
       }
 
-      var = FILL;
+      var = LEVEL_SET_FILL;
       if (pd->v[pg->imtrx][var]) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           d_vnorm->F[j] = 0.;
@@ -7688,7 +7688,7 @@ int assemble_interface_extension_velocity_sic(int ext_vel_sign) {
         /*
          * J_ext_v_F
          */
-        var = FILL;
+        var = LEVEL_SET_FILL;
 
         if (pd->v[pg->imtrx][var]) {
           pvar = upd->vp[pg->imtrx][var];
@@ -7808,7 +7808,7 @@ int assemble_eik_kinematic(dbl tt, /* parameter to vary time integration from
 	        }
 	    }
         }
-      var = FILL;
+      var = LEVEL_SET_FILL;
       if ( pd->v[pg->imtrx][var] )
         {
           for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
@@ -7823,7 +7823,7 @@ int assemble_eik_kinematic(dbl tt, /* parameter to vary time integration from
 #else
     memset(d_vnorm->v, 0, sizeof(dbl) * DIM * MDE);
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         d_vnorm->F[j] = 0.;
@@ -7869,7 +7869,7 @@ int assemble_eik_kinematic(dbl tt, /* parameter to vary time integration from
         }
       }
 
-      var = FILL;
+      var = LEVEL_SET_FILL;
       if (pd->v[pg->imtrx][var]) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           d_vnorm->F[j] = 0.;
@@ -8128,7 +8128,7 @@ int assemble_eik_kinematic(dbl tt, /* parameter to vary time integration from
         /*
          * J_ls_F
          */
-        var = FILL;
+        var = LEVEL_SET_FILL;
 
         if (pd->v[pg->imtrx][var]) {
           pvar = upd->vp[pg->imtrx][var];
@@ -9032,7 +9032,7 @@ int assemble_precoil_source(const double p[]) {
           /*
            * J_m_F
            */
-          var = FILL;
+          var = LEVEL_SET_FILL;
 
           if (pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];
@@ -9237,7 +9237,7 @@ assemble_uvw_source ( int eqn, double val )
                   /*
                    * J_m_F
                    */
-                  var = FILL;
+                  var = LEVEL_SET_FILL;
 
                   if ( pd->v[pg->imtrx][var] )
                     {
@@ -9286,7 +9286,7 @@ assemble_uvw_source ( int eqn, double val )
                   /*
                    * J_m_F
                    */
-                  var = FILL;
+                  var = LEVEL_SET_FILL;
                   if( pd->v[pg->imtrx][var])
                     {
                       pvar = upd->vp[pg->imtrx][var];
@@ -9629,7 +9629,7 @@ int assemble_uvw_source(int eqn, double val) {
           /*
            * J_m_F
            */
-          var = FILL;
+          var = LEVEL_SET_FILL;
 
           if (pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];
@@ -9674,7 +9674,7 @@ int assemble_uvw_source(int eqn, double val) {
           /*
            * J_m_F
            */
-          var = FILL;
+          var = LEVEL_SET_FILL;
           if (pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];
 
@@ -9831,7 +9831,7 @@ int assemble_fill_path_dependence(void) {
         /*
          * J_ls_F
          */
-        var = FILL;
+        var = LEVEL_SET_FILL;
 
         if (pd->v[pg->imtrx][var]) {
           pvar = upd->vp[pg->imtrx][var];
@@ -10069,7 +10069,7 @@ int assemble_energy_path_dependence(
 
       energy_residual = mass + advection + diffusion + source;
 
-      var = FILL;
+      var = LEVEL_SET_FILL;
       pvar = upd->vp[pg->imtrx][var];
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += lsi->d_H_dF[j] * energy_residual * sign;
@@ -10189,7 +10189,7 @@ int assemble_momentum_path_dependence(dbl time, /* currentt time step */
    */
 
   eqn = R_MOMENTUM1;
-  var = FILL;
+  var = LEVEL_SET_FILL;
 
   /*
    * Bail out fast if there's nothing to do...
@@ -10470,7 +10470,7 @@ int assemble_momentum_path_dependence(dbl time, /* currentt time step */
           momentum_residual =
               mass + advection + porous + diffusion + source + continuity_stabilization;
 
-          var = FILL;
+          var = LEVEL_SET_FILL;
           pvar = upd->vp[pg->imtrx][var];
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 
@@ -10577,7 +10577,7 @@ int assemble_continuity_path_dependence(dbl time_value,
    * Bail out fast if there's nothing to do...
    */
 
-  if (!pd->e[pg->imtrx][eqn] || !pd->v[pg->imtrx][FILL]) {
+  if (!pd->e[pg->imtrx][eqn] || !pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     return (status);
   }
 
@@ -10904,7 +10904,7 @@ int assemble_continuity_path_dependence(dbl time_value,
 
       continuity = mass + advection + source + pressure_stabilization + h_flux;
 
-      var = FILL;
+      var = LEVEL_SET_FILL;
       pvar = upd->vp[pg->imtrx][var];
       dofs = ei[pg->imtrx]->dof[var];
       j = 0;
@@ -12391,7 +12391,7 @@ void acoustic_flux(double q[DIM],
     }
   }
 
-  var = FILL;
+  var = LEVEL_SET_FILL;
   if (d_q != NULL && pd->v[pg->imtrx][var]) {
     for (p = 0; p < VIM; p++) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -12562,7 +12562,7 @@ int assemble_ars_source(double ars_jump, double grad_jump) {
           /*
            * J_m_F
            */
-          var = FILL;
+          var = LEVEL_SET_FILL;
 
           if (pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];

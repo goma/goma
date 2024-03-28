@@ -7591,7 +7591,7 @@ struct Equation_Names Var_Name[] = {
     {"VELOCITY_GRADIENT33", "G33", VELOCITY_GRADIENT33},
 
     {"VOLTAGE", "V", VOLTAGE},
-    {"FILL", "F", FILL}, /* 29 */
+    {"FILL", "F", LEVEL_SET_FILL}, /* 29 */
     {"SHEAR_RATE", "SH", SHEAR_RATE},
     {"PVELOCITY1", "PVX", PVELOCITY1},
     {"PVELOCITY2", "PVY", PVELOCITY2},
@@ -7863,7 +7863,7 @@ struct Equation_Names Exo_Var_Names[] = {
     {"Velocity Gradient, zz component", "G33", VELOCITY_GRADIENT33},
 
     {"Voltage", "VOLT", VOLTAGE},
-    {"Fill", "F", FILL},
+    {"Fill", "F", LEVEL_SET_FILL},
     {"Shear Rate", "SH", SHEAR_RATE},
     {"Particle velocity, x-comp", "PVX", PVELOCITY1},
     {"Particle velocity, y-comp", "PVY", PVELOCITY2},
@@ -8169,7 +8169,7 @@ struct Equation_Names Var_Units[] = {
     {"Velocity Gradient, zz component", "[1]", VELOCITY_GRADIENT33},
 
     {"Voltage", "[1]", VOLTAGE},
-    {"Fill", "[1]", FILL},
+    {"Fill", "[1]", LEVEL_SET_FILL},
     {"Shear Rate", "[1]", SHEAR_RATE},
     {"Particle velocity, x-comp", "[1]", PVELOCITY1},
     {"Particle velocity, y-comp", "[1]", PVELOCITY2},

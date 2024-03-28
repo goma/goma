@@ -18,7 +18,7 @@ typedef struct {
   dbl d_tau_dT[MDE];           /* temperature dependence. */
   dbl d_tau_dC[MAX_CONC][MDE]; /* conc dependence. */
   dbl d_tau_dP[MDE];           /* pressure dependence. */
-  dbl d_tau_dF[MDE];           /* FILL dependence. */
+  dbl d_tau_dF[MDE];           /* LEVEL_SET_FILL dependence. */
   dbl d_tau_dnn[MDE];          /* bond concentration dependence */
   dbl d_tau_dEDDY_NU[MDE];     /* Turbulent viscosity */
 } momentum_tau_terms;

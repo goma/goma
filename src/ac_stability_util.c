@@ -554,7 +554,7 @@ void modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   }
 
   /* d(grad(F))/dmesh */
-  v = FILL;
+  v = LEVEL_SET_FILL;
   if (pd->v[pg->imtrx][v]) {
     for (b = 0; b < dim; b++) {
       for (j = 0; j < mdof; j++) {

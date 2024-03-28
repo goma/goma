@@ -655,7 +655,7 @@ Revised:         Summer 1998, SY Tam (UNM)
           ->iconnect_ptr; /* find pointer to beginning  of this element's connectivity list */
 
   /* subgrid or subelement integration setup */
-  if (pd->gv[FILL] && ls != NULL && ls->Integration_Depth > 0 && ls->elem_overlap_state) {
+  if (pd->gv[LEVEL_SET_FILL] && ls != NULL && ls->Integration_Depth > 0 && ls->elem_overlap_state) {
     Subgrid_Int.active = TRUE;
 
 #ifdef SUBELEMENT_FOR_SUBGRID
@@ -673,7 +673,7 @@ Revised:         Summer 1998, SY Tam (UNM)
 #if 0
       print_subgrid_integration_pts ( Subgrid_Int.s, Subgrid_Int.wt, Subgrid_Int.ip_total );
 #endif
-  } else if (pd->gv[FILL] && ls != NULL && ls->SubElemIntegration && ls->elem_overlap_state) {
+  } else if (pd->gv[LEVEL_SET_FILL] && ls != NULL && ls->SubElemIntegration && ls->elem_overlap_state) {
     Subgrid_Int.active = TRUE;
     Subgrid_Int.ip_total = get_subelement_integration_pts(&Subgrid_Int.s, &Subgrid_Int.wt,
                                                           &Subgrid_Int.ip_sign, 0., -2, 0);
@@ -692,7 +692,7 @@ Revised:         Summer 1998, SY Tam (UNM)
 #if 0
       print_subgrid_integration_pts ( Subgrid_Int.s, Subgrid_Int.wt, Subgrid_Int.ip_total );
 #endif
-  } else if (pd->gv[FILL] && ls != NULL && ls->AdaptIntegration && ls->elem_overlap_state) {
+  } else if (pd->gv[LEVEL_SET_FILL] && ls != NULL && ls->AdaptIntegration && ls->elem_overlap_state) {
     Subgrid_Int.active = TRUE;
   } else {
     Subgrid_Int.active = FALSE;
@@ -798,7 +798,7 @@ Revised:         Summer 1998, SY Tam (UNM)
     }
   }
 
-  if (pd->gv[FILL] || pd->gv[PHASE1]) /* UMR fix for non-FILL problems */
+  if (pd->gv[LEVEL_SET_FILL] || pd->gv[PHASE1]) /* UMR fix for non-LEVEL_SET_FILL problems */
   {
     if (ls != NULL) {
       h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
@@ -1030,7 +1030,7 @@ Revised:         Summer 1998, SY Tam (UNM)
 
   /* Loop over all the Volume Quadrature integration points */
 
-  if (pde[R_FILL]) /* No need to do this loop if there is no LS/FILL variable OK */
+  if (pde[R_FILL]) /* No need to do this loop if there is no LS/LEVEL_SET_FILL variable OK */
   {
     struct LS_Mass_Lumped_Penalty mass_lumped_penalty;
     if (ls != NULL && ls->Toure_Penalty) {
@@ -3262,7 +3262,7 @@ Revised:         Summer 1998, SY Tam (UNM)
           ls = pfd->ls[0];
         } else {
           GOMA_EH(GOMA_ERROR,
-                  "YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
+                  "YOU cannot apply CONTACT_SURF BCs in mm_names.h with LEVEL_SET_FILL field. R_PHASE only");
         }
 
         err = apply_contact_bc(x, resid_vector, delta_t, theta, pg_data.h_elem_avg, pg_data.h,
@@ -3444,14 +3444,14 @@ Revised:         Summer 1998, SY Tam (UNM)
     for (eqn = V_FIRST; eqn < V_LAST; eqn++) {
       peqn = upd->ep[pg->imtrx][eqn];
       if (peqn != -1 && eqn != R_FILL) {
-        var = FILL;
+        var = LEVEL_SET_FILL;
         pvar = upd->vp[pg->imtrx][var];
         for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] = 0.;
             /*
               if ( lec->J[LEC_J_INDEX(peqn,pvar,i,j)] != 0. )
-              DPRINTF(stderr,"lec->J[eqn=%d][var=FILL][%d][%d] =
+              DPRINTF(stderr,"lec->J[eqn=%d][var=LEVEL_SET_FILL][%d][%d] =
               %g\n",eqn,i,j,lec->J[LEC_J_INDEX(peqn,pvar,i,j)]);
             */
           }
@@ -4735,7 +4735,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
           ls = pfd->ls[0];
         } else {
           GOMA_EH(GOMA_ERROR,
-                  "YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
+                  "YOU cannot apply CONTACT_SURF BCs in mm_names.h with LEVEL_SET_FILL field. R_PHASE only");
         }
 
         err = apply_contact_bc(x, resid_vector, delta_t, theta, pg_data.h_elem_avg, pg_data.h,

@@ -360,8 +360,8 @@ void shell_n_dot_curv_bc(double func[DIM],
   dbl d_LSnormal_dF[DIM][MDE];
   memset(d_LSnormal_mag_dF, 0.0, sizeof(double) * MDE);
   memset(d_LSnormal_dF, 0.0, sizeof(double) * MDE * DIM);
-  var = FILL;
-  for (ii = 0; ii < ei[pg->imtrx]->dof[FILL]; ii++) {
+  var = LEVEL_SET_FILL;
+  for (ii = 0; ii < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; ii++) {
 
     /* Basis functions */
     ShellBF(eqn, ii, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh,
@@ -425,7 +425,7 @@ void shell_n_dot_curv_bc(double func[DIM],
     /*
      * J_Curv_DF
      */
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var]) {
 
       /* Loop over DOFs (j) */
@@ -437,7 +437,7 @@ void shell_n_dot_curv_bc(double func[DIM],
           }
         }
       } // End of loop over DOFs (j)
-    }   // End of FILL assembly
+    }   // End of LEVEL_SET_FILL assembly
     /*** SHELL_LUB_CURV ***/
     var = SHELL_LUB_CURV;
     if (pd->v[pg->imtrx][var]) {
@@ -607,7 +607,7 @@ void shell_n_dot_flow_wall(double func[DIM],
       }
     }
     /* Calculate F sensitivity */
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         for (ii = 0; ii < pd->Num_Dim; ii++) {
@@ -823,15 +823,15 @@ void lub_static_pressure(double func[DIM],
   memset(D_Hn_DF, 0.0, sizeof(double) * MDE);
   memset(D_Hn_DX, 0.0, sizeof(double) * DIM * MDE);
 
-  if (pd->v[pg->imtrx][FILL]) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     load_lsi(ls->Length_Scale);
     load_lsi_derivs();
     Hn = 1.0 - lsi->Hn;
   }
 
   /* Calculate F sensitivity */
-  if (pd->v[pg->imtrx][FILL]) {
-    for (i = 0; i < ei[pg->imtrx]->dof[FILL]; i++) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
+    for (i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++) {
       D_Hn_DF[i] = -lsi->d_Hn_dF[i];
     }
   }
@@ -847,7 +847,7 @@ void lub_static_pressure(double func[DIM],
   /* Curvature - analytic in the "z" direction  */
   dbl dcaU, dcaL, slopeU, slopeL;
   dcaU = dcaL = slopeU = slopeL = 0;
-  if (pd->v[pg->imtrx][FILL]) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     dcaU = mp->dcaU * M_PIE / 180.0;
     dcaL = mp->dcaL * M_PIE / 180.0;
     slopeU = slopeL = 0.;
@@ -859,12 +859,12 @@ void lub_static_pressure(double func[DIM],
   }
 
   /* Sensitivity to height */
-  if (pd->v[pg->imtrx][FILL])
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL])
     D_CURV_DH = -(cos(M_PIE - dcaU - atan(slopeU)) + cos(M_PIE - dcaL - atan(-slopeL))) / (H * H);
 
   /* Sensitivity to level set F */
-  if (pd->v[pg->imtrx][FILL]) {
-    for (i = 0; i < ei[pg->imtrx]->dof[FILL]; i++) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
+    for (i = 0; i < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; i++) {
       for (j = 0; j < dim; j++) {
         D_CURV_DF[i] += sin(dcaU + atan(slopeU)) / (H * (1 + slopeU * slopeU)) * dH_U_dX[j] *
                         *lsi->d_normal_dF[j];
@@ -875,7 +875,7 @@ void lub_static_pressure(double func[DIM],
   }
 
   /* Sensitivity to mesh */
-  if (pd->v[pg->imtrx][FILL]) {
+  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
     for (i = 0; i < dim; i++) {
       for (j = 0; j < n_dof[MESH_DISPLACEMENT1]; j++) {
         D_CURV_DX[i][j] += D_CURV_DH * D_H_DX[i][j];
@@ -902,7 +902,7 @@ void lub_static_pressure(double func[DIM],
     }
 
     /* Sensitivity w.r.t. level set */
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         d_func[0][var][j] = -mp->surface_tension * (D_Hn_DF[j] * CURV + Hn * D_CURV_DF[j]);

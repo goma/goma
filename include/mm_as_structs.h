@@ -2884,7 +2884,7 @@ struct Level_Set_Data {
 
 /*
  * This data structure holds useful level-set related functions and
- * their derivatives with respect to FILL and MESH_DISPLACEMENT{1,2,3}.
+ * their derivatives with respect to LEVEL_SET_FILL and MESH_DISPLACEMENT{1,2,3}.
  */
 struct Level_Set_Interface {
   /* Flag indicating if we're in the interfacial region. */
@@ -3058,7 +3058,7 @@ struct momentum_source_dependence {
   double X[DIM][DIM][MDE];             /* spatial dependence. */
   double C[DIM][MAX_CONC][MDE];        /* conc dependence. */
   double v[DIM][DIM][MDE];             /* velocity dependence. */
-  double F[DIM][MDE];                  /* FILL dependence. */
+  double F[DIM][MDE];                  /* LEVEL_SET_FILL dependence. */
   double E[DIM][DIM][MDE];             /* electric field dependence */
   double pf[DIM][MAX_PHASE_FUNC][MDE]; /* phase function dependence */
   double ars[DIM][MDE];                /* acoustic energy density. */
@@ -3072,7 +3072,7 @@ struct viscosity_dependence {
   double T[MDE];                  /* temperature dependence. */
   double C[MAX_CONC][MDE];        /* conc dependence. */
   double P[MDE];                  /* pressure dependence. */
-  double F[MDE];                  /* FILL dependence. */
+  double F[MDE];                  /* LEVEL_SET_FILL dependence. */
   double nn[MDE];                 /* bond concentration dependence */
   double gd;                      /* strain rate dependence */
   double pf[MAX_PHASE_FUNC][MDE]; /* phase function */
@@ -3084,7 +3084,7 @@ typedef struct polymer_time_const_dependence {
   double v[DIM][MDE]; /* velocity dependence. */
   double X[DIM][MDE]; /* mesh dependence. */
   double T[MDE];      /* temperature dependence. */
-  double F[MDE];      /* FILL dependence. */
+  double F[MDE];      /* LEVEL_SET_FILL dependence. */
   double gd;          /* strain rate dependence */
 } POLYMER_TIME_CONST_DEPENDENCE_STRUCT;
 
@@ -3102,7 +3102,7 @@ struct dilViscosity_dependence {
   double T[MDE];                  /* temperature dependence. */
   double C[MAX_CONC][MDE];        /* conc dependence. */
   double P[MDE];                  /* pressure dependence. */
-  double F[MDE];                  /* FILL dependence. */
+  double F[MDE];                  /* LEVEL_SET_FILL dependence. */
   double nn[MDE];                 /* bond concentration dependence */
   double gd;                      /* strain rate dependence */
   double pf[MAX_PHASE_FUNC][MDE]; /* phase function */
@@ -3126,7 +3126,7 @@ struct normal_velocity_dependence {
   double T[MDE];           /* temperature dependence. */
   double C[MAX_CONC][MDE]; /* conc dependence. */
   double V[MDE];           /* voltage dependence. */
-  double F[MDE];           /* FILL dependence. */
+  double F[MDE];           /* LEVEL_SET_FILL dependence. */
   double X[DIM][MDE];      /* mesh dependence. */
 };
 typedef struct normal_velocity_dependence NORMAL_VELOCITY_DEPENDENCE_STRUCT;
@@ -3137,7 +3137,7 @@ struct normal_energy_dependence {
   double T[MDE];           /* temperature dependence. */
   double C[MAX_CONC][MDE]; /* conc dependence. */
   double V[MDE];           /* voltage dependence. */
-  double F[MDE];           /* FILL dependence. */
+  double F[MDE];           /* LEVEL_SET_FILL dependence. */
 };
 typedef struct normal_energy_dependence NORMAL_ENERGY_DEPENDENCE_STRUCT;
 

@@ -11040,7 +11040,7 @@ void porous_liq_fill(double *func,
         d_func[var] += (1.0 - lsi->H);
       }
 
-      var = FILL;
+      var = LEVEL_SET_FILL;
 
       if (upd->ep[pg->imtrx][var]) {
         d_func[var] += -fv->p_liq * lsi->dH;
@@ -11063,7 +11063,7 @@ void porous_liq_fill(double *func,
 
     *func += -(1.0 - H) * (pc1 + (pc2 - pc1) * H);
 
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var]) {
       d_func[var] = -(1.0 - H) * ((pc2 - pc1) * lsi->dH) + lsi->dH * (pc1 + (pc2 - pc1) * H);
     }

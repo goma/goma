@@ -234,8 +234,8 @@ int load_fv(void)
    * Fill...
    */
 
-  if (pdgv[FILL]) {
-    v = FILL;
+  if (pdgv[LEVEL_SET_FILL]) {
+    v = LEVEL_SET_FILL;
     scalar_fv_fill(esp->F, esp_dot->F, esp_old->F, bf[v]->phi, ei[upd->matrix_index[v]]->dof[v],
                    &(fv->F), &(fv_dot->F), &(fv_old->F));
     stateVector[v] = fv->F;
@@ -1852,7 +1852,7 @@ int load_fv(void)
         fv_old->porosity = fv_old->external_field[w];
         fv_dot->porosity = fv_dot->external_field[w];
       }
-      if (strcmp(efv->name[w], "F") == 0 && !pd->v[pg->imtrx][FILL]) {
+      if (strcmp(efv->name[w], "F") == 0 && !pd->v[pg->imtrx][LEVEL_SET_FILL]) {
         fv->F = fv->external_field[w];
         fv_old->F = fv_old->external_field[w];
         fv_dot->F = fv_dot->external_field[w];
@@ -2173,8 +2173,8 @@ int load_fv_grads(void)
    * grad(F)
    */
 
-  if (pd->gv[FILL]) {
-    v = FILL;
+  if (pd->gv[LEVEL_SET_FILL]) {
+    v = LEVEL_SET_FILL;
     dofs = ei[upd->matrix_index[v]]->dof[v];
 #ifdef DO_NO_UNROLL
     for (p = 0; p < VIM; p++) {
@@ -2201,7 +2201,7 @@ int load_fv_grads(void)
     }
 #endif
 
-  } else if (zero_unused_grads && upd->vp[pg->imtrx][FILL] == -1) {
+  } else if (zero_unused_grads && upd->vp[pg->imtrx][LEVEL_SET_FILL] == -1) {
     for (p = 0; p < VIM; p++) {
       fv->grad_F[p] = 0.0;
       fv_old->grad_F[p] = 0.0;
@@ -5317,8 +5317,8 @@ int load_fv_mesh_derivs(int okToZero)
   /*
    * d(grad(F))/dmesh
    */
-  if (pd->gv[FILL]) {
-    v = FILL;
+  if (pd->gv[LEVEL_SET_FILL]) {
+    v = LEVEL_SET_FILL;
     vdofs = ei[upd->matrix_index[v]]->dof[v];
 #ifdef DO_NO_UNROLL
     siz = sizeof(double) * DIM * DIM * MDE;
@@ -5368,7 +5368,7 @@ int load_fv_mesh_derivs(int okToZero)
     }
 #endif
 
-  } else if (upd->vp[pg->imtrx][FILL] != -1) {
+  } else if (upd->vp[pg->imtrx][LEVEL_SET_FILL] != -1) {
     siz = sizeof(double) * DIM * DIM * MDE;
     memset(fv->d_grad_F_dmesh, 0, siz);
   }

@@ -1739,7 +1739,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           break;
 
         case STRONG_FILL_CA_BC:
-          /* nothing to be done here, this condition applied to FILL EQN */
+          /* nothing to be done here, this condition applied to LEVEL_SET_FILL EQN */
           break;
 
         case TABLE_WICV_BC:

@@ -1828,7 +1828,7 @@ void rotate_res_jac_mom(int irow_index,           /* Elemental stiffness matrix 
     }   /* end of if variable */
 
     /* momentum wrt. temperature */
-    var = FILL;
+    var = LEVEL_SET_FILL;
     if (pd->v[pg->imtrx][var]) {
       pvar = upd->vp[pg->imtrx][var];
       for (n = 0; n < ei[pg->imtrx]->dof[var]; n++) {

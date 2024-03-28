@@ -265,13 +265,13 @@ extern int Num_Var_In_Type[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES];
 /* are either zero or one, usually.               */
 
 /*
- *   FILL variable type variables for each processor
+ *   LEVEL_SET_FILL variable type variables for each processor
  */
-extern int num_fill_unknowns;      /*  Number of FILL unknowns           */
-extern int owned_fill_unknowns;    /*  Number of owned FILL unknowns     */
-extern int internal_fill_unknowns; /*  Number of internal FILL unknowns  */
-extern int boundary_fill_unknowns; /*  Number of boundary FILL unknowns  */
-extern int external_fill_unknowns; /*  Number of external FILL unknowns  */
+extern int num_fill_unknowns;      /*  Number of LEVEL_SET_FILL unknowns           */
+extern int owned_fill_unknowns;    /*  Number of owned LEVEL_SET_FILL unknowns     */
+extern int internal_fill_unknowns; /*  Number of internal LEVEL_SET_FILL unknowns  */
+extern int boundary_fill_unknowns; /*  Number of boundary LEVEL_SET_FILL unknowns  */
+extern int external_fill_unknowns; /*  Number of external LEVEL_SET_FILL unknowns  */
 
 /*
  * Local_Offset:
