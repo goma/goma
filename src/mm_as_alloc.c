@@ -960,8 +960,8 @@ int assembly_alloc(Exo_DB *exo)
       esp->qs = (dbl **)alloc_ptr_1(MDE);
     }
 
-    /* LEVEL_SET_FILL */
-    if (Num_Var_In_Type[imtrx][LEVEL_SET_FILL]) {
+    /* FILL */
+    if (Num_Var_In_Type[imtrx][FILL]) {
       esp->F = (dbl **)alloc_ptr_1(MDE);
     }
 

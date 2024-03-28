@@ -1194,8 +1194,8 @@ int assemble_momentum(dbl time,       /* current time */
            * J_m_F
            */
 
-          if (pdv[LEVEL_SET_FILL]) {
-            var = LEVEL_SET_FILL;
+          if (pdv[FILL]) {
+            var = FILL;
             pvar = upd->vp[pg->imtrx][var];
 
             J = &(lec->J[LEC_J_INDEX(peqn, pvar, ii, 0)]);
@@ -2919,7 +2919,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
       }
     }
 
-    var = LEVEL_SET_FILL;
+    var = FILL;
     if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         d_mu->F[j] = mu_num * d_mus->F[j];
@@ -3025,7 +3025,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
         }
       }
 
-      var = LEVEL_SET_FILL;
+      var = FILL;
       if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           d_mu->F[j] += mu_num * at * d_mup->F[j];
@@ -3199,7 +3199,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
     }
   }
 
-  var = LEVEL_SET_FILL;
+  var = FILL;
   if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
     for (p = 0; p < VIM; p++) {
       for (q = 0; q < VIM; q++) {
@@ -3526,7 +3526,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
    *   df->X == Derivative w.r.t. mesh displacements
    *   df->C == Derivative w.r.t. concentration
    *   df->v == Derivative w.r.t. velocity
-   *   df->F == Derivative w.r.t. LEVEL_SET_FILL
+   *   df->F == Derivative w.r.t. FILL
    *   df->E == Derivative w.r.t. electric field
    *
    ******************************************************************************/
@@ -3576,8 +3576,8 @@ int momentum_source_term(dbl f[DIM], /* Body force. */
             df->T[a][j] = mp->d_momentum_source[a][var] * phi[j];
           }
         }
-        if (df != NULL && pd->v[pg->imtrx][LEVEL_SET_FILL]) {
-          var = LEVEL_SET_FILL;
+        if (df != NULL && pd->v[pg->imtrx][FILL]) {
+          var = FILL;
           phi = bf[var]->phi;
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             df->F[a][j] = mp->d_momentum_source[a][var] * phi[j];
@@ -3671,8 +3671,8 @@ int momentum_source_term(dbl f[DIM], /* Body force. */
             df->T[a][j] = d_rho->T[j] * mp->momentum_source[a];
           }
         }
-        if (df != NULL && pd->v[pg->imtrx][LEVEL_SET_FILL]) {
-          var = LEVEL_SET_FILL;
+        if (df != NULL && pd->v[pg->imtrx][FILL]) {
+          var = FILL;
           phi = bf[var]->phi;
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             df->F[a][j] = d_rho->F[j] * mp->momentum_source[a];
@@ -3716,8 +3716,8 @@ int momentum_source_term(dbl f[DIM], /* Body force. */
             df->T[a][j] = Heaviside * d_rho->T[j] * mp->momentum_source[a];
           }
         }
-        if (df != NULL && pd->v[pg->imtrx][LEVEL_SET_FILL]) {
-          var = LEVEL_SET_FILL;
+        if (df != NULL && pd->v[pg->imtrx][FILL]) {
+          var = FILL;
           phi = bf[var]->phi;
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             df->F[a][j] = Heaviside * d_rho->F[j] * mp->momentum_source[a];
@@ -3751,7 +3751,7 @@ int momentum_source_term(dbl f[DIM], /* Body force. */
     GOMA_EH(err, "Problems in GRAV_VIBRATIONAL force routine");
   } else if (mp->MomentumSourceModel == FILL_SRC) {
     err = fill_momentum_source(f);
-  } else if (mp->MomentumSourceModel == LEVEL_SET && pd->gv[LEVEL_SET_FILL]) {
+  } else if (mp->MomentumSourceModel == LEVEL_SET && pd->gv[FILL]) {
     DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
     DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
     double rho = density(d_rho, time);
@@ -3759,7 +3759,7 @@ int momentum_source_term(dbl f[DIM], /* Body force. */
     for (a = 0; a < pd->Num_Dim; a++) {
       f[a] = mp->momentum_source[a] * rho;
       if (df != NULL) {
-        for (j = 0; j < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; j++)
+        for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++)
           df->F[a][j] = mp->momentum_source[a] * d_rho->F[j];
       }
     }

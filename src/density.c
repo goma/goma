@@ -87,7 +87,7 @@ double density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
  *    dbl d_rho->C[k][j] -> derivative of density wrt the jth
  *                          species unknown of ktype, k, in the element.
  *    dbl d_rho->F[j]    -> derivative of density wrt the jth
- *                          LEVEL_SET_FILL unknown in an element
+ *                          FILL unknown in an element
  *
  *  Return
  * --------
@@ -165,7 +165,7 @@ double density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
       }
     }
 
-  } else if (mp->DensityModel == LEVEL_SET_FILL) {
+  } else if (mp->DensityModel == FILL) {
 
     rho = mp->u_density[0];
 

@@ -392,9 +392,9 @@ int variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "VOLTAGE"))
     var = VOLTAGE;
   else if (!strcmp(input, "FILL"))
-    var = LEVEL_SET_FILL;
+    var = FILL;
   else if (!strcmp(input, "LS"))
-    var = LEVEL_SET_FILL;
+    var = FILL;
   else if (!strcmp(input, "SHEAR_RATE"))
     var = SHEAR_RATE;
 

@@ -1420,10 +1420,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       }
 
       /*
-       * Initial Start up (t=0) for the LEVEL_SET_FILL/LEVEL_SET equations
+       * Initial Start up (t=0) for the FILL/LEVEL_SET equations
        */
 
-      if (upd->ep[pg->imtrx][LEVEL_SET_FILL] > -1 && nt == 0) { /*  Start of LS initialization */
+      if (upd->ep[pg->imtrx][FILL] > -1 && nt == 0) { /*  Start of LS initialization */
 
         if (ls != NULL || pfd != NULL) {
 
@@ -1432,7 +1432,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
           switch (ls->Evolution) {
           case LS_EVOLVE_ADVECT_EXPLICIT:
-            DPRINTF(stdout, "\n\t Using decoupled / subcycling for LEVEL_SET_FILL equation.\n");
+            DPRINTF(stdout, "\n\t Using decoupled / subcycling for FILL equation.\n");
             break;
           case LS_EVOLVE_ADVECT_COUPLED:
             DPRINTF(stdout, "\n\t Using Coupled Level Set evolution!\n");
@@ -1605,7 +1605,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
               tmp_surf = create_surf(LS_SURF_ISOSURFACE);
               tmp_data = (struct LS_Surf_Iso_Data *)tmp_surf->data;
-              tmp_data->isovar = LEVEL_SET_FILL;
+              tmp_data->isovar = FILL;
               tmp_data->isoval = 0.0;
 
               append_surf(ls->last_surf_list, tmp_surf);
@@ -1635,9 +1635,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           if (upd->vp[pg->imtrx][PHASE1] > -1) {
             switch (pfd->ls[0]->Evolution) {
             case LS_EVOLVE_ADVECT_EXPLICIT:
-              DPRINTF(
-                  stdout,
-                  "\n\t Using decoupled / subcycling for LEVEL_SET_FILL equation for R_PHASE0.\n");
+              DPRINTF(stdout,
+                      "\n\t Using decoupled / subcycling for FILL equation for R_PHASE0.\n");
               break;
             case LS_EVOLVE_ADVECT_COUPLED:
               DPRINTF(stdout, "\n\t Using Coupled Level Set evolution! for R_PHASE0\n");

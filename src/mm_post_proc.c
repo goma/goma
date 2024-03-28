@@ -1325,7 +1325,7 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[SH_CURV_CONT] = 1.;
   }
 
-  if (FILL_CONT != -1 && pd->v[pg->imtrx][LEVEL_SET_FILL]) {
+  if (FILL_CONT != -1 && pd->v[pg->imtrx][FILL]) {
     local_post[FILL_CONT] = fv->F;
     local_lumped[FILL_CONT] = 1.;
   }

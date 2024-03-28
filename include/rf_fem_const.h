@@ -222,10 +222,10 @@
 #define VELOCITY_GRADIENT32 26 /* aka G32, 32 of the velocity gradient tensor */
 #define VELOCITY_GRADIENT33 27 /* aka G33, 33 of the velocity gradient tensor */
 
-#define VOLTAGE        28             /* aka "V" */
-#define LEVEL_SET_FILL 29             /* aka "F" */
-#define LS             LEVEL_SET_FILL /* That is LEVEL_SET_FILL and LS share the same index */
-#define SHEAR_RATE     30             /* aka "SH", shear rate from second invariant of ros tensor */
+#define VOLTAGE    28   /* aka "V" */
+#define FILL       29   /* aka "F" */
+#define LS         FILL /* That is FILL and LS share the same index */
+#define SHEAR_RATE 30   /* aka "SH", shear rate from second invariant of ros tensor */
 
 #define PVELOCITY1 31 /* aka "P_U", particle momentum */
 #define PVELOCITY2 32 /* aka "P_V", particle momentum */

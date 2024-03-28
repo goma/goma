@@ -174,7 +174,7 @@ int assemble_fill(double tt,
 
   dbl zero[3] = {0.0, 0.0, 0.0}; /* An array of zeros, for convienience. */
 
-  dbl phi_i;       /* i-th basis function for the LEVEL_SET_FILL equation. */
+  dbl phi_i;       /* i-th basis function for the FILL equation. */
   dbl *grad_phi_i; /* Gradient of phi_i. */
   dbl grad_II_phi_i[DIM];
   dbl d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
@@ -568,7 +568,7 @@ int assemble_fill(double tt,
   if (af->Assemble_Residual) {
     peqn = upd->ep[pg->imtrx][eqn];
     if (ls == NULL)
-      var = LEVEL_SET_FILL;
+      var = FILL;
     else
       var = ls->var;
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
@@ -751,12 +751,12 @@ int assemble_fill(double tt,
 
       /*************************************************************
        *
-       * Derivatives of fill equation w.r.t. to LEVEL_SET_FILL variable
+       * Derivatives of fill equation w.r.t. to FILL variable
        *
        *************************************************************/
 
       if (ls == NULL)
-        var = LEVEL_SET_FILL;
+        var = FILL;
       else
         var = ls->var;
       if (pd->v[pg->imtrx][var]) {
@@ -881,9 +881,9 @@ int assemble_fill(double tt,
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] +=
               (mass + advection + source + discontinuity_capturing) * wt * h3 * det_J;
 
-        } /* for: LEVEL_SET_FILL DoFs */
+        } /* for: FILL DoFs */
 
-      } /* if: LEVEL_SET_FILL exisits */
+      } /* if: FILL exisits */
 
       /*************************************************************
        *
@@ -1409,7 +1409,7 @@ int assemble_fill(double tt,
 
       } /* if: SHELL_DELTAH exisits */
 
-    } /* for 'i': LEVEL_SET_FILL DoFs */
+    } /* for 'i': FILL DoFs */
 
   } /* if: af->Assemble_Jacobian */
 
@@ -1465,7 +1465,7 @@ int assemble_fill_ext_v(
 
   dbl zero[3] = {0.0, 0.0, 0.0}; /* An array of zeros, for convienience. */
 
-  dbl phi_i; /* i-th basis function for the LEVEL_SET_FILL equation. */
+  dbl phi_i; /* i-th basis function for the FILL equation. */
 
   dbl phi_j;       /* j-th basis function of a field variable. */
   dbl *grad_phi_i; /* Gradient of phi_i. */
@@ -1626,7 +1626,7 @@ int assemble_fill_ext_v(
     v_old_dot_DF = v_rel_n_old * lsi->gfmag;
   }
 
-  var = LEVEL_SET_FILL;
+  var = FILL;
   eqn = R_FILL;
   for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
     gradF_gradphi[i] = 0.;
@@ -1673,7 +1673,7 @@ int assemble_fill_ext_v(
                          (sign_adv * lsi->gfmag - num * sign_ext_v * lsi->gfmag / den);
     }
 
-    var = LEVEL_SET_FILL;
+    var = FILL;
     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
       phi_j = bf[var]->phi[j];
       d_visc_dF[j] = h_elem * visc_coeff / den *
@@ -1691,7 +1691,7 @@ int assemble_fill_ext_v(
    */
   if (Fill_Weight_Fcn == FILL_WEIGHT_SC || Fill_Weight_Fcn == FILL_WEIGHT_GLS) {
     n_dot_dF = lsi->d_gfmag_dF;
-    var = LEVEL_SET_FILL;
+    var = FILL;
     for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         d_n_dot_dF_dF[i][j] = 0.;
@@ -1831,7 +1831,7 @@ int assemble_fill_ext_v(
 
       /*************************************************************
        *
-       * Derivatives of fill equation w.r.t. to LEVEL_SET_FILL variable
+       * Derivatives of fill equation w.r.t. to FILL variable
        *
        *************************************************************/
       var = ls->var;
@@ -1928,9 +1928,9 @@ int assemble_fill_ext_v(
 
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += wt * h3 * det_J * (mass + advection + source);
 
-        } /* for: LEVEL_SET_FILL DoFs */
+        } /* for: FILL DoFs */
 
-      } /* if: LEVEL_SET_FILL exisits */
+      } /* if: FILL exisits */
 
       /*************************************************************
        *
@@ -2076,7 +2076,7 @@ int assemble_fill_ext_v(
 
       } /* for 'b': MESH componenets */
 
-    } /* for 'i': LEVEL_SET_FILL DoFs */
+    } /* for 'i': FILL DoFs */
 
   } /* if: af->Assemble_Jacobian */
 
@@ -2107,7 +2107,7 @@ int assemble_fill_gradf(
   int i, j, a, b;
 
   dbl *grad_F; /* Fill gradient. */
-  dbl phi_i;   /* i-th basis function for the LEVEL_SET_FILL equation. */
+  dbl phi_i;   /* i-th basis function for the FILL equation. */
 
   dbl phi_j;                     /* j-th basis function of a field variable. */
   dbl *grad_phi_j;               /* Gradient of phi_j. */
@@ -2136,7 +2136,7 @@ int assemble_fill_gradf(
 
   status = 0;
   eqn = R_FILL;
-  var = LEVEL_SET_FILL;
+  var = FILL;
 
   /*
    * Bail out fast if there's nothing to do...
@@ -2183,7 +2183,7 @@ int assemble_fill_gradf(
     }
   }
 
-  var = LEVEL_SET_FILL;
+  var = FILL;
   for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
     grad_phi_i = bf[eqn]->grad_phi[i];
     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -2210,7 +2210,7 @@ int assemble_fill_gradf(
   else
     visc = h_elem * visc_coeff * ( lsi->gfmag - 1. );
     
-  var = LEVEL_SET_FILL;
+  var = FILL;
   for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
     {
       if ( ( lsi->gfmag - 1. ) > 0.25 )
@@ -2227,7 +2227,7 @@ int assemble_fill_gradf(
   visc_coeff = 0.5;
   visc = h_elem * visc_coeff;
   
-  var = LEVEL_SET_FILL;
+  var = FILL;
   for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
     {
       d_visc_dF[j] = 0.;
@@ -2238,7 +2238,7 @@ int assemble_fill_gradf(
   visc_coeff = 0.5;
   visc = h_elem * visc_coeff * ( 1. - lsi->gfmaginv );
     
-  var = LEVEL_SET_FILL;
+  var = FILL;
   for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
     {
       d_visc_dF[j] = -h_elem * visc_coeff * lsi->d_gfmaginv_dF[j];
@@ -2252,7 +2252,7 @@ int assemble_fill_gradf(
   else
     visc = h_elem * visc_coeff * (1. - lsi->gfmaginv);
 
-  var = LEVEL_SET_FILL;
+  var = FILL;
   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
     if (lsi->gfmag < 1.)
       d_visc_dF[j] = 0.;
@@ -2326,10 +2326,10 @@ int assemble_fill_gradf(
 
       /*************************************************************
        *
-       * Derivatives of fill equation w.r.t. to LEVEL_SET_FILL variable
+       * Derivatives of fill equation w.r.t. to FILL variable
        *
        *************************************************************/
-      var = LEVEL_SET_FILL;
+      var = FILL;
       if (pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -2362,9 +2362,9 @@ int assemble_fill_gradf(
 
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += wt * h3 * det_J * tmp;
 
-        } /* for: LEVEL_SET_FILL DoFs */
+        } /* for: FILL DoFs */
 
-      } /* if: LEVEL_SET_FILL exisits */
+      } /* if: FILL exisits */
 
       /*************************************************************
        *
@@ -2430,7 +2430,7 @@ int assemble_fill_gradf(
 
       } /* for 'b': MESH componenets */
 
-    } /* for 'i': LEVEL_SET_FILL DoFs */
+    } /* for 'i': FILL DoFs */
 
   } /* if: af->Assemble_Jacobian */
 
@@ -2553,7 +2553,7 @@ int assemble_surface(Exo_DB *exo,    /* ptr to basic exodus ii mesh information 
      -this is assumed independent of the surface */
   ip_total = elem_info(NQUAD_SURF, ielem_type);
 
-  eqn = LEVEL_SET_FILL;
+  eqn = FILL;
 
   /* Use one point surface quadrature integration
      to get the sign of v*n */
@@ -2851,7 +2851,7 @@ static int neighbor_fill(Exo_DB *exo,
      *  the current element will work on the neighbor element that
      *  we are trying to get information for
      */
-    v = LEVEL_SET_FILL;
+    v = FILL;
     /* first load phi for the fill function */
     for (i = 0; i < ei[pg->imtrx]->dof[v]; i++) {
       phi[i] = newshape(xi, ielem_type, PSI, ei[pg->imtrx]->dof_list[v][i], ielem_shape,
@@ -2881,9 +2881,9 @@ static int neighbor_fill(Exo_DB *exo,
 
     for (i = 0; i < num_local_nodes; i++) {
       gnn = Proc_Elem_Connect[iconnect_ptr + i];
-      nvdof = num_varType_at_node(gnn, LEVEL_SET_FILL);
+      nvdof = num_varType_at_node(gnn, FILL);
       for (j = 0; j < nvdof; j++) {
-        ie = Index_Solution(gnn, LEVEL_SET_FILL, ktype, j, -1, pg->imtrx);
+        ie = Index_Solution(gnn, FILL, ktype, j, -1, pg->imtrx);
         GOMA_EH(ie, "Could not find vbl in sparse matrix.");
 
         F_neighbor[ip] += x[ie] * phi[j];

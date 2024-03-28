@@ -191,7 +191,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
  *       2 USER
  *       3 USER_GEN
  */
-#define DENSITY_FILL             29   /* same designation as LEVEL_SET_FILL in rf_fem_const.h */
+#define DENSITY_FILL             29   /* same designation as FILL in rf_fem_const.h */
 #define DENSITY_LEVEL_SET        1212 /* same designation as LEVEL_SET source model */
 #define DENSITY_IDEAL_GAS        5    /* Ideal gas law. */
 #define DENSITY_SUSPENSION       6    /* same designation as SUSPENSION IN mm_mp_const.h */
@@ -249,7 +249,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define PBE_R_11      0
 #define PBE_N_PENTANE 1
 
-/* #define LEVEL_SET_FILL xxx already defined in rf_fem_const.h */
+/* #define FILL xxx already defined in rf_fem_const.h */
 
 #define SOLVENT_POLYMER 100
 #define REACTIVE_FOAM   101

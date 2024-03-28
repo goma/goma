@@ -2414,7 +2414,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
               /*
                * J_S_F
                */
-              var = LEVEL_SET_FILL;
+              var = FILL;
               if (pd->v[pg->imtrx][var]) {
                 pvar = upd->vp[pg->imtrx][var];
                 for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -8441,7 +8441,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
               /*
                * J_S_F
                */
-              var = LEVEL_SET_FILL;
+              var = FILL;
               if (pd->v[pg->imtrx][var]) {
                 pvar = upd->vp[pg->imtrx][var];
                 for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -9746,7 +9746,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
               /*
                * J_S_F
                */
-              var = LEVEL_SET_FILL;
+              var = FILL;
               if (pd->v[pg->imtrx][var]) {
                 pvar = upd->vp[pg->imtrx][var];
                 for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {

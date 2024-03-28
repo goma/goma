@@ -1929,7 +1929,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
 
     if ((strcmp(input, "ON") == 0) || (strcmp(input, "YES") == 0)) {
       ls = alloc_struct_1(struct Level_Set_Data, 1);
-      ls->var = LEVEL_SET_FILL;
+      ls->var = FILL;
       ls->MatrixNum = 0;
       ls->embedded_bc = NULL;
       ls->init_surf_list = NULL;
@@ -8898,7 +8898,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       } else if (!strcasecmp(ts, "P")) {
         cv = set_var(PRESSURE, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "F")) {
-        cv = set_var(LEVEL_SET_FILL, mtrx_index0, pd_ptr);
+        cv = set_var(FILL, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "V")) {
         cv = set_var(VOLTAGE, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "QS")) {

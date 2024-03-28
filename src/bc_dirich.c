@@ -121,7 +121,7 @@ int put_dirichlet_in_matrix(double x[], const int num_total_nodes)
                                   dirichlets from materials that the variables
                                   isn't defined */
             {
-              // Add for F_DIODE_BC if((var_type != LEVEL_SET_FILL) )
+              // Add for F_DIODE_BC if((var_type != FILL) )
               // Add for F_DIOD_BC  {
 
               if (BC_Types[ibc].BC_Name != DX_NOTHING_BC &&

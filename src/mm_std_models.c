@@ -624,25 +624,25 @@ int fill_momentum_source(double f[DIM]) {
   double rho;
   double *param = mp->u_density;
 
-  if (mp->DensityModel != LEVEL_SET_FILL) {
+  if (mp->DensityModel != FILL) {
     GOMA_EH(GOMA_ERROR, "No fill momentum source without fill density model.");
     return (0);
   }
 
   if (ls != NULL) {
-    GOMA_EH(GOMA_ERROR, "Use LEVEL_SET instead of LEVEL_SET_FILL density model.");
+    GOMA_EH(GOMA_ERROR, "Use LEVEL_SET instead of FILL density model.");
     return (0);
   }
 
   rho = param[0] * fv->F + param[1] * (1.0 - fv->F);
 
   /* Now fill in momentum source vector using gravity vector
-   * stored in mp->momentum_source .  Note that since LEVEL_SET_FILL
+   * stored in mp->momentum_source .  Note that since FILL
    * is an explicit variable if makes no contributions to the
    * Jacobian.
    */
 
-  if (pd->v[pg->imtrx][LEVEL_SET_FILL]) {
+  if (pd->v[pg->imtrx][FILL]) {
     f[0] = mp->momentum_source[0] * rho;
     f[1] = mp->momentum_source[1] * rho;
     f[2] = mp->momentum_source[2] * rho;
@@ -2768,7 +2768,7 @@ int Diffusivity(void)
     case LEVEL_SET:
       err = ls_transport_property(mp->u_diffusivity[w][0], mp->u_diffusivity[w][1],
                                   mp->u_diffusivity[w][2], &mp->diffusivity[w],
-                                  &mp->d_diffusivity[w][LEVEL_SET_FILL]);
+                                  &mp->d_diffusivity[w][FILL]);
       break;
     case CHAPMAN_GAS:
       if (pd->gv[TEMPERATURE]) {

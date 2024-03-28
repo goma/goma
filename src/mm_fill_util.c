@@ -3168,7 +3168,7 @@ static int find_problem_graph_fill(int *ija[],         /* column pointer array *
      * which is one for this case.
      */
 
-    inum_unknowns = num_varType_at_node(inode, LEVEL_SET_FILL);
+    inum_unknowns = num_varType_at_node(inode, FILL);
 
     for (iunknown = 0; iunknown < inum_unknowns; iunknown++) {
       (*ija)[irow_index] = nz_ptr;
@@ -3187,7 +3187,7 @@ static int find_problem_graph_fill(int *ija[],         /* column pointer array *
          *
          */
 
-        inter_node_unknowns = num_varType_at_node(inter_node, LEVEL_SET_FILL);
+        inter_node_unknowns = num_varType_at_node(inter_node, FILL);
 
         for (inter_unknown = 0; inter_unknown < inter_node_unknowns; inter_unknown++) {
           icol_index = node_to_fill[inter_node] + inter_unknown;

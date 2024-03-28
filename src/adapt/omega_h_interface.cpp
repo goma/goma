@@ -330,7 +330,7 @@ void convert_goma_to_omega_h(Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool
           Omega_h::parallel_for(mesh->nverts(), f0, "set_iso_metric_values");
           mesh->add_tag(Omega_h::VERT, "iso_size_metric", Omega_h::symm_ncomps(mesh->dim()),
                         Omega_h::Reals(target_metrics));
-        } else if (ls != NULL && ls->adapt && (j == LEVEL_SET_FILL)) {
+        } else if (ls != NULL && ls->adapt && (j == FILL)) {
           auto target_metrics =
               Omega_h::Write<Omega_h::Real>(mesh->nverts() * Omega_h::symm_ncomps(mesh->dim()));
           auto f0 = OMEGA_H_LAMBDA(Omega_h::LO index) {

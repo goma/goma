@@ -1118,7 +1118,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
         xfem = matrix_xfem[pg->imtrx];
       }
 
-      if (upd->ep[pg->imtrx][LEVEL_SET_FILL] > -1 && nt == 0) { /*  Start of LS initialization */
+      if (upd->ep[pg->imtrx][FILL] > -1 && nt == 0) { /*  Start of LS initialization */
 
         Fill_Matrix = pg->imtrx;
         ls->MatrixNum = pg->imtrx;
@@ -1130,7 +1130,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
 
           switch (ls->Evolution) {
           case LS_EVOLVE_ADVECT_EXPLICIT:
-            DPRINTF(stdout, "\n\t Using decoupled / subcycling for LEVEL_SET_FILL equation.\n");
+            DPRINTF(stdout, "\n\t Using decoupled / subcycling for FILL equation.\n");
             break;
           case LS_EVOLVE_ADVECT_COUPLED:
             DPRINTF(stdout, "\n\t Using Coupled Level Set evolution!\n");
@@ -1274,7 +1274,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
 
               tmp_surf = create_surf(LS_SURF_ISOSURFACE);
               tmp_data = (struct LS_Surf_Iso_Data *)tmp_surf->data;
-              tmp_data->isovar = LEVEL_SET_FILL;
+              tmp_data->isovar = FILL;
               tmp_data->isoval = 0.0;
 
               append_surf(ls->last_surf_list, tmp_surf);

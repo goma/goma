@@ -651,7 +651,7 @@ double height_function_model(double *H_U,
       if ((ls != NULL || pfd != NULL) && Fwall_model) {
         H *= (1. - lsi->H) * exp_term2 + lsi->H;
         dh_grad = (1. - lsi->H) * alpha / (2. * powerlaw + 1.) * pow(exp_term2, -2. * powerlaw);
-        for (j = 0; j < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; j++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
           dH_dF[j] = H_orig * lsi->d_H_dF[j] * (1. - exp_term2);
         }
       } else {

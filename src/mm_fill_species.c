@@ -2018,7 +2018,7 @@ int assemble_mass_transport_path_dependence(
           /*
            * Path dependence is residual times derivative of H wrt to F
            */
-          var = LEVEL_SET_FILL;
+          var = FILL;
           pvar = upd->vp[pg->imtrx][var];
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] +=

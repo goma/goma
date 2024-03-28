@@ -443,7 +443,7 @@ int numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
   }
   /* for level set problems we have an inherent scale */
   if (ls != NULL && ls->Length_Scale != 0.)
-    x_scale[LEVEL_SET_FILL] = ls->Length_Scale;
+    x_scale[FILL] = ls->Length_Scale;
 
   /* copy x vector */
   memcpy(x_1, x, numProcUnknowns * (sizeof(double)));
@@ -895,7 +895,7 @@ void numerical_jacobian(struct GomaLinearSolverData *ams,
   }
   /* for level set problems we have an inherent scale */
   if (ls != NULL && ls->Length_Scale != 0.)
-    x_scale[LEVEL_SET_FILL] = ls->Length_Scale;
+    x_scale[FILL] = ls->Length_Scale;
 
   /* copy x vector */
   for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
@@ -997,7 +997,7 @@ void numerical_jacobian(struct GomaLinearSolverData *ams,
      * Perturb one variable at a time
      */
 
-    if (ls != NULL && ls->Ignore_F_deps && idv[pg->imtrx][j][0] == LEVEL_SET_FILL)
+    if (ls != NULL && ls->Ignore_F_deps && idv[pg->imtrx][j][0] == FILL)
       continue;
 
 #ifdef FORWARD_DIFF_NUMJAC

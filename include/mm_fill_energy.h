@@ -28,7 +28,7 @@ struct conductivity_dependence {
   double X[DIM][MDE];      /* mesh dependence. */
   double T[MDE];           /* temperature dependence. */
   double C[MAX_CONC][MDE]; /* conc dependence. */
-  double F[MDE];           /* LEVEL_SET_FILL dependence. */
+  double F[MDE];           /* FILL dependence. */
   double moment[MAX_MOMENTS][MDE];
 };
 typedef struct conductivity_dependence CONDUCTIVITY_DEPENDENCE_STRUCT;
@@ -40,7 +40,7 @@ struct heat_capacity_dependence {
   double T[MDE];           /* temperature dependence. */
   double C[MAX_CONC][MDE]; /* conc dependence. */
   double V[MDE];           /* voltage dependence. */
-  double F[MDE];           /* LEVEL_SET_FILL dependence. */
+  double F[MDE];           /* FILL dependence. */
 };
 typedef struct heat_capacity_dependence HEAT_CAPACITY_DEPENDENCE_STRUCT;
 

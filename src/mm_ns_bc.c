@@ -3267,19 +3267,19 @@ void fvelo_slip_bc(double func[MAX_PDIM],
     memset(d_betainv_dF, 0, sizeof(double) * MDE);
     if ((type == VELO_SLIP_FILL_BC || type == VELO_SLIP_ROT_FILL_BC) && ls != NULL) {
       /*
-       * NB, here: dist = |F| = |LEVEL_SET_FILL|
+       * NB, here: dist = |F| = |FILL|
        * Before  : betainv = 1 / beta
        * Now     : betainv = exp(alpha*|F|) / beta
        *
-       * Need to update the sensitivity of betainv w.r.t. LEVEL_SET_FILL.
+       * Need to update the sensitivity of betainv w.r.t. FILL.
        *
        * dist = |F| = sign(F) * F = sign(F) * SUM_j ( phi_j * F_j )
        *
        * If F == 0, then exp(alpha*dist) == 1 so we'll just take sign = 0.0.
        */
       sign = fv->F == 0.0 ? 0.0 : (fv->F > 0.0 ? +1.0 : -1.0);
-      for (j = 0; j < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; j++) {
-        d_betainv_dF[j] = betainv * sign * alpha * bf[LEVEL_SET_FILL]->phi[j];
+      for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
+        d_betainv_dF[j] = betainv * sign * alpha * bf[FILL]->phi[j];
       }
 #if 0
 	  DPRINTF(stderr,"VELO_SLIP_FILL x=(%g,%g), fv->F=%g, betainv=%g, alpha*dist=%g\n", 
@@ -3467,7 +3467,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
       }
     }
 
-    var = LEVEL_SET_FILL;
+    var = FILL;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         for (p = 0; p < pd->Num_Dim; p++) {
@@ -6287,7 +6287,7 @@ void flow_n_dot_T_nobc(double func[DIM],
       }
     }
 
-    var = LEVEL_SET_FILL;
+    var = FILL;
     if (pd->v[pg->imtrx][var]) {
       for (p = 0; p < pd->Num_Dim; p++) {
         for (q = 0; q < pd->Num_Dim; q++) {
@@ -6695,7 +6695,7 @@ void flow_n_dot_T_gradv_t(double func[DIM],
         }
       }
 
-      var = LEVEL_SET_FILL;
+      var = FILL;
       if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           d_mup->F[j] += at * d_muptmp->F[j];
@@ -6763,7 +6763,7 @@ void flow_n_dot_T_gradv_t(double func[DIM],
       }
     }
 
-    var = LEVEL_SET_FILL;
+    var = FILL;
     if (pd->v[pg->imtrx][var]) {
       for (p = 0; p < pd->Num_Dim; p++) {
         for (q = 0; q < pd->Num_Dim; q++) {
@@ -8640,7 +8640,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
               /*
                * J_S_F
                */
-              var = LEVEL_SET_FILL;
+              var = FILL;
               if (pd->v[pg->imtrx][var]) {
                 for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                   phi_j = bf[var]->phi[j];
@@ -11362,8 +11362,8 @@ void apply_CA_FILL(double func[MAX_PDIM],
       return;
     /* Compute the jacobian contributions. */
 
-    /* Derivatives w.r.t LEVEL_SET_FILL */
-    var = LEVEL_SET_FILL;
+    /* Derivatives w.r.t FILL */
+    var = FILL;
     for (p = 0; p < dim; p++) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         /* Fetch the basis functions and derivatives. */
@@ -11376,7 +11376,7 @@ void apply_CA_FILL(double func[MAX_PDIM],
                              (t[0] * lsi->d_normal_dF[0][j] + t[1] * lsi->d_normal_dF[1][j]) *
                              (sin_ca * fv->snormal[p] + cos_ca * t[p]);
 
-      } /* for: j=0,...,ei[pg->imtrx]->dof[LEVEL_SET_FILL] */
+      } /* for: j=0,...,ei[pg->imtrx]->dof[FILL] */
     }   /* for: p=0,...,dim */
 
     /* Derivatives w.r.t MESH */
@@ -11452,8 +11452,8 @@ void apply_CA_FILL(double func[MAX_PDIM],
     if (!af->Assemble_Jacobian)
       return;
 
-    /* Derivatives w.r.t. LEVEL_SET_FILL */
-    var = LEVEL_SET_FILL;
+    /* Derivatives w.r.t. FILL */
+    var = FILL;
     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
       /* Precompute ddp_dF */
       for (ddp_dFj = 0.0, a = 0; a < dim; a++)
@@ -11583,7 +11583,7 @@ void apply_sharp_ca(double func[MAX_PDIM],
       func[p] = mp->surface_tension * dot_prod * (sin_ca * fv->snormal[p] + cos_ca * t[p]);
     }
     if (af->Assemble_Jacobian) {
-      for (j = 0; j < ei[pg->imtrx]->dof[LEVEL_SET_FILL]; j++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
         d_dot_prod_dF[j] = 0.0;
 
         for (p = 0; p < dim; p++) {
@@ -11593,7 +11593,7 @@ void apply_sharp_ca(double func[MAX_PDIM],
 
       for (p = 0; p < dim; p++) {
 
-        var = LEVEL_SET_FILL;
+        var = FILL;
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           d_func[p][var][j] =
               mp->surface_tension * d_dot_prod_dF[j] * (sin_ca * fv->snormal[p] + cos_ca * t[p]);
@@ -14300,7 +14300,7 @@ void qnobc_surf(double func[DIM],
       }
     }
 
-    var = LEVEL_SET_FILL;
+    var = FILL;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         for (p = 0; p < VIM; p++) {
@@ -14550,7 +14550,7 @@ void acoustic_nobc_surf(double func[DIM],
       }
     }
 
-    var = LEVEL_SET_FILL;
+    var = FILL;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         for (p = 0; p < VIM; p++) {
@@ -16282,7 +16282,7 @@ void ls_wall_angle_bc(double func[DIM],
         }
       }
 
-      var = LEVEL_SET_FILL;
+      var = FILL;
       if (pd->v[pg->imtrx][var]) {
         for (j = 0; j < ei[pd->mi[var]]->dof[var]; j++) {
           d_func[0][var][j] += bf[var]->grad_phi[j][kdir] * fv->snormal[kdir];
