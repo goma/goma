@@ -673,7 +673,8 @@ Revised:         Summer 1998, SY Tam (UNM)
 #if 0
       print_subgrid_integration_pts ( Subgrid_Int.s, Subgrid_Int.wt, Subgrid_Int.ip_total );
 #endif
-  } else if (pd->gv[LEVEL_SET_FILL] && ls != NULL && ls->SubElemIntegration && ls->elem_overlap_state) {
+  } else if (pd->gv[LEVEL_SET_FILL] && ls != NULL && ls->SubElemIntegration &&
+             ls->elem_overlap_state) {
     Subgrid_Int.active = TRUE;
     Subgrid_Int.ip_total = get_subelement_integration_pts(&Subgrid_Int.s, &Subgrid_Int.wt,
                                                           &Subgrid_Int.ip_sign, 0., -2, 0);
@@ -692,7 +693,8 @@ Revised:         Summer 1998, SY Tam (UNM)
 #if 0
       print_subgrid_integration_pts ( Subgrid_Int.s, Subgrid_Int.wt, Subgrid_Int.ip_total );
 #endif
-  } else if (pd->gv[LEVEL_SET_FILL] && ls != NULL && ls->AdaptIntegration && ls->elem_overlap_state) {
+  } else if (pd->gv[LEVEL_SET_FILL] && ls != NULL && ls->AdaptIntegration &&
+             ls->elem_overlap_state) {
     Subgrid_Int.active = TRUE;
   } else {
     Subgrid_Int.active = FALSE;
@@ -3261,8 +3263,8 @@ Revised:         Summer 1998, SY Tam (UNM)
         if (pfd != NULL) {
           ls = pfd->ls[0];
         } else {
-          GOMA_EH(GOMA_ERROR,
-                  "YOU cannot apply CONTACT_SURF BCs in mm_names.h with LEVEL_SET_FILL field. R_PHASE only");
+          GOMA_EH(GOMA_ERROR, "YOU cannot apply CONTACT_SURF BCs in mm_names.h with LEVEL_SET_FILL "
+                              "field. R_PHASE only");
         }
 
         err = apply_contact_bc(x, resid_vector, delta_t, theta, pg_data.h_elem_avg, pg_data.h,
@@ -4734,8 +4736,8 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
         if (pfd != NULL) {
           ls = pfd->ls[0];
         } else {
-          GOMA_EH(GOMA_ERROR,
-                  "YOU cannot apply CONTACT_SURF BCs in mm_names.h with LEVEL_SET_FILL field. R_PHASE only");
+          GOMA_EH(GOMA_ERROR, "YOU cannot apply CONTACT_SURF BCs in mm_names.h with LEVEL_SET_FILL "
+                              "field. R_PHASE only");
         }
 
         err = apply_contact_bc(x, resid_vector, delta_t, theta, pg_data.h_elem_avg, pg_data.h,

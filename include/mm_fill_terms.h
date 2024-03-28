@@ -163,7 +163,7 @@ EXTERN dbl solidification_permeability(dbl, dbl[MAX_CONC][MDE]); /* continuous s
 
 EXTERN int continuous_surface_tension(double,
                                       double[DIM][DIM], /* continuous surface tension            */
-                                      double[DIM][DIM][MDE], /* derivative w.r.t. LEVEL_SET_FILL       */
+                                      double[DIM][DIM][MDE], /* derivative w.r.t. LEVEL_SET_FILL */
                                       double[DIM][DIM][DIM][MDE]); /* d with respect to mesh */
 
 EXTERN double quad_isomap_invert(const double,   /*  coordinate1  */

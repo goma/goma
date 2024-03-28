@@ -109,7 +109,8 @@ int resetup_problem(Exo_DB *exo, /* ptr to the finite element mesh database */
    */
   num_fill_unknowns = count_vardofs(LEVEL_SET_FILL, dpi->num_universe_nodes);
   internal_fill_unknowns = count_vardofs(LEVEL_SET_FILL, dpi->num_internal_nodes);
-  owned_fill_unknowns = count_vardofs(LEVEL_SET_FILL, (dpi->num_internal_nodes + dpi->num_boundary_nodes));
+  owned_fill_unknowns =
+      count_vardofs(LEVEL_SET_FILL, (dpi->num_internal_nodes + dpi->num_boundary_nodes));
   boundary_fill_unknowns = owned_fill_unknowns - internal_fill_unknowns;
   external_fill_unknowns = num_fill_unknowns - owned_fill_unknowns;
 

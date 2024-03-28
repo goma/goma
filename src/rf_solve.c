@@ -1635,8 +1635,9 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           if (upd->vp[pg->imtrx][PHASE1] > -1) {
             switch (pfd->ls[0]->Evolution) {
             case LS_EVOLVE_ADVECT_EXPLICIT:
-              DPRINTF(stdout,
-                      "\n\t Using decoupled / subcycling for LEVEL_SET_FILL equation for R_PHASE0.\n");
+              DPRINTF(
+                  stdout,
+                  "\n\t Using decoupled / subcycling for LEVEL_SET_FILL equation for R_PHASE0.\n");
               break;
             case LS_EVOLVE_ADVECT_COUPLED:
               DPRINTF(stdout, "\n\t Using Coupled Level Set evolution! for R_PHASE0\n");
