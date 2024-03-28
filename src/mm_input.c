@@ -3325,8 +3325,8 @@ void rd_turbulent_specs(FILE *ifp, char *input) {
       }
 
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s", "Turbulence Wall Node Sets");
-      for (int i = 0; i < upd->turbulent_info->num_side_sets; i++) {
-        SPF(endofstring(echo_string), " %d", upd->turbulent_info->side_set_ids[i]);
+      for (int i = 0; i < upd->turbulent_info->num_node_sets; i++) {
+        SPF(endofstring(echo_string), " %d", upd->turbulent_info->node_set_ids[i]);
       }
       ECHO(echo_string, echo_file);
     }
