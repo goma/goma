@@ -10012,7 +10012,30 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   /* Shell Energy Cards - heat sources, sinks, etc. */
 
   if (pd_glob[mn]->gv[R_SHELL_ENERGY] == 1) {
-    /* no source terms available.  Feel free to add some!  */
+  /*  Shell Lubrication Heat Transfer Coefficient */
+    strcpy(search_string, "Lubrication Heat Transfer");
+    model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Heat_XferModel),
+                                   &(mat_ptr->Lub_Heat_Xfer), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+    if (model_read == -1) {
+      mat_ptr->Lub_Heat_XferModel = CONSTANT;
+      mat_ptr->Lub_Heat_Xfer = 1.0;
+      GOMA_WH(model_read, "Defaulting on Lubrication Heat Transfer");
+    }
+    ECHO(es, echo_file);
+
+  /*  Shell Lubrication Heat Transfer Ambient Temperature */
+    strcpy(search_string, "Lubrication Ambient Temperature");
+    model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Heat_TambModel),
+                                   &(mat_ptr->Lub_Heat_Tamb), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+    if (model_read == -1) {
+      mat_ptr->Lub_Heat_TambModel = CONSTANT;
+      mat_ptr->Lub_Heat_Tamb = 25.0;
+      GOMA_WH(model_read, "Defaulting on Lubrication Heat Transfer Ambient Temperature");
+    }
+    ECHO(es, echo_file);
+
   } /* End of shell_energy cards */
 
   if (pd_glob[mn]->gv[R_SHELL_FILMP] && pd_glob[mn]->gv[R_SHELL_FILMH]) {
@@ -10343,6 +10366,22 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       }
       ECHO(es, echo_file);
     }
+    strcpy(search_string, "Lubrication Curvature Normal");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+    if (!strcasecmp(model_name, "GRADH") || !strcasecmp(model_name, "gradient")) {
+      mat_ptr->Lub_Curv_NormalModel = TRUE;
+      SPF(es, "\t(%s = %s)", search_string, "GRADH");
+    } else if (!strcasecmp(model_name, "DELTA") || !strcasecmp(model_name, "delta")) {
+      mat_ptr->Lub_Curv_NormalModel = FALSE;
+      SPF(es, "\t(%s = %s)", search_string, "DELTA");
+    } else {
+      mat_ptr->Lub_Curv_NormalModel = TRUE;
+      GOMA_WH(model_read, "Defaulting on Lubrication Curvature Normal");
+      SPF(es, "\t(%s = %s)", search_string, "GRADH");
+    }
+    ECHO(es, echo_file);
+
   }
 
   /*  Shell Lubrication Curvature Diffusion Term */
@@ -10357,7 +10396,77 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       GOMA_WH(model_read, "Defaulting on Lubrication Curvature Diffusion");
     }
     ECHO(es, echo_file);
-  }
+
+    /*  Shell Lubrication Curvature Relaxation Time */
+    strcpy(search_string, "Lubrication Curvature Relaxation");
+    model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Curv_RelaxModel),
+                                   &(mat_ptr->Lub_Curv_Relax), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+    if (model_read == -1) {
+      mat_ptr->Lub_Curv_RelaxModel = CONSTANT;
+      mat_ptr->Lub_Curv_Relax = 0.0;
+      GOMA_WH(model_read, "Defaulting on Lubrication Curvature Relaxation");
+    }
+    ECHO(es, echo_file);
+
+    strcpy(search_string, "Lubrication Curvature Weight Function");
+    model_read =
+      look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Kwt_funcModel), &(mat_ptr->Lub_Kwt_func),
+                        NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+    if (strncmp(model_name, " ", 1) != 0) {
+      if (!strcmp(model_name, "GALERKIN")) {
+        mat_ptr->Lub_Kwt_funcModel = GALERKIN;
+        mat_ptr->Lub_Kwt_func = 0.;
+        SPF(endofstring(es), " %.4g", mat_ptr->Lub_Kwt_func);
+      } else if (!strcmp(model_name, "SUPG")) {
+        int err;
+        mat_ptr->Lub_Kwt_funcModel = SUPG;
+        err = fscanf(imp, "%lg", &(mat_ptr->Lub_Kwt_func));
+        if (err != 1) {
+          GOMA_EH(GOMA_ERROR, "Expected to read one double for Energy Weight Function SUPG");
+        }
+        SPF(endofstring(es), " %.4g", mat_ptr->Lub_Kwt_func);
+      } else {
+        SPF(err_msg, "Syntax error or invalid model for %s\n", search_string);
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+    } else {
+      mat_ptr->Lub_Kwt_funcModel = GALERKIN;
+      mat_ptr->Lub_Kwt_func = 0.;
+      SPF(es, "\t(%s = %s)", search_string, "GALERKIN");
+    }
+
+    ECHO(es, echo_file);
+
+    /*  Shell Lubrication Curvature MassLump */
+    strcpy(search_string, "Lubrication Curvature MassLump");
+    model_read = look_for_mat_prop(imp, "Lubrication Curvature MassLump", NULL, NULL, NO_USER, NULL,
+                                   model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
+      mat_ptr->Lub_Curv_MassLump = TRUE;
+      SPF(es, "\t(%s = %s)", search_string, "on");
+    } else if (!strcasecmp(model_name, "no") || !strcasecmp(model_name, "false")) {
+      mat_ptr->Lub_Curv_MassLump = FALSE;
+      SPF(es, "\t(%s = %s)", search_string, "off");
+    } else {
+      mat_ptr->Lub_Curv_MassLump = TRUE;
+      SPF(es, "\t(%s = %s)", search_string, "on");
+    }
+    ECHO(es, echo_file);
+
+    strcpy(search_string, "Lubrication Curvature MassLump");
+    model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Curv_RelaxModel),
+                                   &(mat_ptr->Lub_Curv_Relax), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+    if (model_read == -1) {
+      mat_ptr->Lub_Curv_RelaxModel = CONSTANT;
+      mat_ptr->Lub_Curv_Relax = 0.0;
+      GOMA_WH(model_read, "Defaulting on Lubrication Curvature Relaxation");
+    }
+    ECHO(es, echo_file);
+  }  /* End of Lubrication Curvature Section  */
+
 
   /*
    * Input conditions for the structured porous shell equations

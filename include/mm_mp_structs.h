@@ -764,8 +764,20 @@ struct Material_Properties {
   dbl Lub_wts[MAX_LUB_NGP];
   dbl LubInt_PL;
 
+  int Lub_Curv_NormalModel;
   int Lub_Curv_DiffModel;
   double Lub_Curv_Diff;
+  int Lub_Curv_RelaxModel;
+  double Lub_Curv_Relax;
+  int Lub_Kwt_funcModel;
+  double Lub_Kwt_func;
+  int Lub_Curv_MassLump;
+
+
+  int Lub_Heat_XferModel;
+  double Lub_Heat_Xfer;
+  int Lub_Heat_TambModel;
+  double Lub_Heat_Tamb;
 
   int TurbulentLubricationModel;
 
