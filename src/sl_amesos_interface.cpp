@@ -98,7 +98,7 @@ void amesos_solve(char *choice,
   Epetra_Vector x(Copy, map, x_);
   Epetra_Vector b(Copy, map, b_);
 
-#if 1
+#if 0
   EpetraExt::RowMatrixToMatrixMarketFile("Jep.mm", *A[imtrx]);
   EpetraExt::VectorToMatrixMarketFile("xep.mm", x);
   EpetraExt::VectorToMatrixMarketFile("bep.mm", b);

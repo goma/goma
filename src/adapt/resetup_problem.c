@@ -10,12 +10,15 @@
 #include "dp_map_comm_vec.h"
 #include "dp_types.h"
 #include "dpi.h"
+#include "linalg/sparse_matrix.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "mm_unknown_map.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
+#include "rf_io.h"
+#include "rf_masks.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
 #include "rf_solver.h"
@@ -194,6 +197,20 @@ int resetup_matrix(struct GomaLinearSolverData **ams, Exo_DB *exo, Dpi *dpi) {
       ams[pg->imtrx]->RowMatrix =
           EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
       EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
+    }
+    pg->imtrx = 0;
+    ams[pg->imtrx]->solveSetup = 0;
+  } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+      GomaSparseMatrix goma_matrix = ams[pg->imtrx]->GomaMatrixData;
+      GomaSparseMatrix_Destroy(&goma_matrix);
+      GomaSparseMatrix_Create(&goma_matrix, GOMA_SPARSE_MATRIX_TYPE_TPETRA);
+      ams[pg->imtrx]->GomaMatrixData = goma_matrix;
+      int local_nodes = exo->num_nodes;
+      GomaSparseMatrix_SetProblemGraph(goma_matrix, num_internal_dofs[pg->imtrx],
+                                       num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx],
+                                       local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
+                                       dpi, cx[pg->imtrx], pg->imtrx, Debug_Flag, ams[JAC]);
     }
     pg->imtrx = 0;
     ams[pg->imtrx]->solveSetup = 0;

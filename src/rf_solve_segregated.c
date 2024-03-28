@@ -25,6 +25,7 @@
 #include "dpi.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "linalg/sparse_matrix.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_augc_util.h"
@@ -50,6 +51,7 @@
 #include "rf_io.h"
 #include "rf_io_const.h"
 #include "rf_io_structs.h"
+#include "rf_masks.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
 #include "rf_solve.h"
@@ -552,7 +554,23 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
   a = malloc(upd->Total_Num_Matrices * sizeof(double *));
   a_old = malloc(upd->Total_Num_Matrices * sizeof(double *));
 
-  if (strcmp(Matrix_Format, "epetra") == 0) {
+  if (strcmp(Matrix_Format, "tpetra") == 0) {
+    err = check_compatible_solver();
+    GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
+    check_parallel_error("Matrix format / Solver incompatibility");
+
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+      GomaSparseMatrix goma_matrix;
+      GomaSparseMatrix_Create(&goma_matrix, GOMA_SPARSE_MATRIX_TYPE_TPETRA);
+      int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
+      GomaSparseMatrix_SetProblemGraph(goma_matrix, num_internal_dofs[pg->imtrx],
+                                       num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx],
+                                       local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
+                                       dpi, cx[pg->imtrx], pg->imtrx, Debug_Flag, ams[JAC]);
+      ams[pg->imtrx]->GomaMatrixData = goma_matrix;
+    }
+
+  } else if (strcmp(Matrix_Format, "epetra") == 0) {
     err = check_compatible_solver();
     GOMA_EH(err, "Incompatible matrix solver for epetra, epetra supports amesos and "
                  "aztecoo solvers.");

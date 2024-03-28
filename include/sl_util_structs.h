@@ -51,7 +51,6 @@
 #define JAC      0
 #define NUM_ALSS 1
 
-
 struct GomaLinearSolverData {
   int proc_config[AZ_PROC_SIZE];
 

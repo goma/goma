@@ -723,8 +723,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   ams[JAC]->GomaMatrixData = NULL;
   if (strcmp(Matrix_Format, "tpetra") == 0) {
     err = check_compatible_solver();
-    GOMA_EH(err,
-            "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
+    GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
     check_parallel_error("Matrix format / Solver incompatibility");
     GomaSparseMatrix goma_matrix;
     GomaSparseMatrix_Create(&goma_matrix, GOMA_SPARSE_MATRIX_TYPE_TPETRA);
@@ -2734,7 +2733,6 @@ free_and_clear:
 
   if (file != NULL)
     fclose(file);
-
 
   return;
 } /* END of routine solve_problem()  */

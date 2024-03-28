@@ -831,8 +831,7 @@ int check_compatible_solver(void) {
     default:
       return GOMA_ERROR;
     }
-  } else
-  if (strcmp(Matrix_Format, "epetra") == 0) {
+  } else if (strcmp(Matrix_Format, "epetra") == 0) {
     switch (Linear_Solver) {
     case AZTECOO:
     case AMESOS:

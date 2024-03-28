@@ -36,6 +36,7 @@
 #include "exo_conn.h"
 #include "exo_struct.h"
 #include "exodusII.h"
+#include "linalg/sparse_matrix.h"
 #include "load_field_variables.h"
 #include "mm_as_alloc.h"
 #include "mm_fill_aux.h"
@@ -10601,6 +10602,26 @@ void check_xfem_contribution(
       if (fabs(xfem->active_vol[irow]) < eps * xfem->tot_vol[irow]) {
 
         EpetraSetDiagonalOnly(ams, ams->GlobalIDs[irow]);
+        resid[irow] = x[irow] - x_old_static[irow];
+
+        if (FALSE && xfem->active_vol[irow] != 0.) /* debugging */
+        {
+          DPRINTF(stderr, "kill partial equation, row=%d, n = %d, active/tot=%g\n", irow,
+                  idv[pg->imtrx][irow][2] + 1, fabs(xfem->active_vol[irow]) / xfem->tot_vol[irow]);
+        }
+      }
+    }
+  } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+    for (irow = 0; irow < N; irow++) {
+      eqn = idv[pg->imtrx][irow][0];
+      if (eqn == R_MASS || eqn == R_ENERGY) {
+        eps = eps_diffusive;
+      } else {
+        eps = eps_standard;
+      }
+      if (fabs(xfem->active_vol[irow]) < eps * xfem->tot_vol[irow]) {
+        GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+        matrix->zero_global_row_set_diag(matrix, matrix->global_ids[irow]);
         resid[irow] = x[irow] - x_old_static[irow];
 
         if (FALSE && xfem->active_vol[irow] != 0.) /* debugging */

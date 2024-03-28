@@ -5003,9 +5003,8 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
 
   if (strcmp(Matrix_Format, "epetra") == 0) {
     EpetraLoadLec(ielem, ams, resid_vector);
-  }
-  else if (strcmp(Matrix_Format, "tpetra") == 0) {
-    GomaSparseMatrix matrix = (GomaSparseMatrix) ams->GomaMatrixData;
+  } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+    GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
     GomaSparseMatrix_LoadLec(matrix, ielem, lec, resid_vector);
   }
 #ifdef GOMA_ENABLE_PETSC

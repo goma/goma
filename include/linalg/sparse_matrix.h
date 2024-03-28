@@ -25,7 +25,6 @@ typedef int GomaGlobalOrdinal;
 #undef DISABLE_CPP
 #endif
 
-
 enum GomaSparseMatrixType {
   GOMA_SPARSE_MATRIX_TYPE_EPETRA,
   GOMA_SPARSE_MATRIX_TYPE_AZTEC_MRS,
@@ -46,8 +45,8 @@ struct g_GomaSparseMatrix {
   goma_error (*create_graph)(struct g_GomaSparseMatrix *matrix,
                              GomaGlobalOrdinal n_rows,
                              GomaGlobalOrdinal *row_list,
-                                      GomaGlobalOrdinal n_cols,
-                                      GomaGlobalOrdinal *col_list,
+                             GomaGlobalOrdinal n_cols,
+                             GomaGlobalOrdinal *col_list,
                              GomaGlobalOrdinal local_nnz,
                              GomaGlobalOrdinal max_nz_per_row,
                              GomaGlobalOrdinal *coo_rows,
@@ -70,6 +69,11 @@ struct g_GomaSparseMatrix {
   goma_error (*put_scalar)(struct g_GomaSparseMatrix *matrix, double scalar);
   // row sum scaling, compute row sum scale, scale matrix and b, and return scaling vector
   goma_error (*row_sum_scaling)(struct g_GomaSparseMatrix *matrix, double *b, double *scale);
+  // Zeros a global row
+  goma_error (*zero_global_row)(struct g_GomaSparseMatrix *matrix, GomaGlobalOrdinal global_row);
+  // Zeros a global row and sets diagonal to 1.0
+  goma_error (*zero_global_row_set_diag)(struct g_GomaSparseMatrix *matrix,
+                                         GomaGlobalOrdinal global_row);
   // delete the allocated matrix;
   goma_error (*destroy)(struct g_GomaSparseMatrix *matrix);
 };
@@ -97,7 +101,10 @@ goma_error GomaSparseMatrix_SetProblemGraph(
     int Debug_Flag,
     struct GomaLinearSolverData *ams);
 
-goma_error GomaSparseMatrix_LoadLec(GomaSparseMatrix matrix, int ielem, struct Local_Element_Contributions *lec, double resid_vector[]);
+goma_error GomaSparseMatrix_LoadLec(GomaSparseMatrix matrix,
+                                    int ielem,
+                                    struct Local_Element_Contributions *lec,
+                                    double resid_vector[]);
 
 goma_error GomaSparseMatrix_Destroy(GomaSparseMatrix *matrix);
 

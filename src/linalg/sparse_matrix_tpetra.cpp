@@ -4,22 +4,22 @@
 #include <Teuchos_DefaultMpiComm.hpp>
 #include <Teuchos_RCPDecl.hpp>
 #include <Tpetra_CrsMatrix.hpp>
+#include <Tpetra_Details_EquilibrationInfo.hpp>
 #include <Tpetra_Map.hpp>
-#include <Tpetra_computeRowAndColumnOneNorms_decl.hpp>
+#include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <mpi.h>
 #include <unordered_set>
-#include <iostream>
 
 extern "C" {
-#include "rf_io.h"
 #include "mm_eh.h"
+#include "rf_io.h"
 }
 #include "linalg/sparse_matrix.h"
 #include "linalg/sparse_matrix_tpetra.h"
 
 using Teuchos::RCP;
-
 
 extern "C" goma_error GomaSparseMatrix_Tpetra_Create(GomaSparseMatrix *matrix) {
   TpetraSparseMatrix *tmp = new TpetraSparseMatrix();
@@ -31,19 +31,21 @@ extern "C" goma_error GomaSparseMatrix_Tpetra_Create(GomaSparseMatrix *matrix) {
   (*matrix)->sum_into_row_values = g_tpetra_sum_into_row_values;
   (*matrix)->put_scalar = g_tpetra_put_scalar;
   (*matrix)->row_sum_scaling = g_tpetra_row_sum_scaling;
+  (*matrix)->zero_global_row = g_tpetra_zero_row;
+  (*matrix)->zero_global_row_set_diag = g_tpetra_zero_row_set_diag;
   (*matrix)->destroy = g_tpetra_destroy;
   return GOMA_SUCCESS;
 }
 
 extern "C" goma_error g_tpetra_create_graph(GomaSparseMatrix matrix,
-                                      GomaGlobalOrdinal n_rows,
-                                      GomaGlobalOrdinal *row_list,
-                                      GomaGlobalOrdinal n_cols,
-                                      GomaGlobalOrdinal *col_list,
-                                      GomaGlobalOrdinal local_nnz,
-                                      GomaGlobalOrdinal max_per_row,
-                                      GomaGlobalOrdinal *coo_rows,
-                                      GomaGlobalOrdinal *coo_cols) {
+                                            GomaGlobalOrdinal n_rows,
+                                            GomaGlobalOrdinal *row_list,
+                                            GomaGlobalOrdinal n_cols,
+                                            GomaGlobalOrdinal *col_list,
+                                            GomaGlobalOrdinal local_nnz,
+                                            GomaGlobalOrdinal max_per_row,
+                                            GomaGlobalOrdinal *coo_rows,
+                                            GomaGlobalOrdinal *coo_cols) {
   auto *tmp = static_cast<TpetraSparseMatrix *>(matrix->data);
   RCP<const Teuchos::MpiComm<int>> comm(new Teuchos::MpiComm<int>(MPI_COMM_WORLD));
   GomaGlobalOrdinal global_n_rows;
@@ -56,8 +58,8 @@ extern "C" goma_error g_tpetra_create_graph(GomaSparseMatrix matrix,
 
   tmp->row_map = Teuchos::rcp(new Tpetra::Map<LO, GO>(global_n_rows, row_list_view, 0, comm));
   tmp->col_map = Teuchos::rcp(new Tpetra::Map<LO, GO>(global_n_rows, row_list_view, 0, comm));
-  tmp->crs_graph = Teuchos::rcp(new Tpetra::FECrsGraph<LO, GO>(tmp->row_map, tmp->col_map, max_per_row));
-
+  tmp->crs_graph =
+      Teuchos::rcp(new Tpetra::FECrsGraph<LO, GO>(tmp->row_map, tmp->col_map, max_per_row));
 
   GomaGlobalOrdinal current_row = row_list[0];
   std::vector<GomaGlobalOrdinal> indices(max_per_row);
@@ -65,7 +67,8 @@ extern "C" goma_error g_tpetra_create_graph(GomaSparseMatrix matrix,
   GomaGlobalOrdinal row_count = 0;
   for (GomaGlobalOrdinal i = 0; i < local_nnz; i++) {
     if (coo_rows[i] != current_row) {
-      tmp->crs_graph->insertGlobalIndices(current_row, Teuchos::ArrayView<GomaGlobalOrdinal>(indices.data(), row_count));
+      tmp->crs_graph->insertGlobalIndices(
+          current_row, Teuchos::ArrayView<GomaGlobalOrdinal>(indices.data(), row_count));
       current_row = coo_rows[i];
       row_count = 0;
     }
@@ -73,7 +76,8 @@ extern "C" goma_error g_tpetra_create_graph(GomaSparseMatrix matrix,
     values[row_count] = coo_cols[i];
     row_count++;
   }
-   tmp->crs_graph->insertGlobalIndices(current_row, Teuchos::ArrayView<GomaGlobalOrdinal>(indices.data(), row_count));
+  tmp->crs_graph->insertGlobalIndices(
+      current_row, Teuchos::ArrayView<GomaGlobalOrdinal>(indices.data(), row_count));
 
   if (Debug_Flag > 2) {
     RCP<Teuchos::FancyOStream> fos = Teuchos::fancyOStream(Teuchos::rcpFromRef(std::cout));
@@ -94,28 +98,26 @@ extern "C" goma_error complete_graph(GomaSparseMatrix matrix) {
 }
 
 extern "C" goma_error g_tpetra_insert_row_values(GomaSparseMatrix matrix,
-                                           GomaGlobalOrdinal global_row,
-                                           GomaGlobalOrdinal num_entries,
-                                           double *values,
-                                           GomaGlobalOrdinal *indices) {
+                                                 GomaGlobalOrdinal global_row,
+                                                 GomaGlobalOrdinal num_entries,
+                                                 double *values,
+                                                 GomaGlobalOrdinal *indices) {
   auto *tmp = static_cast<TpetraSparseMatrix *>(matrix->data);
   GO global_row_t = static_cast<GO>(global_row);
-  tmp->matrix->insertGlobalValues(global_row_t, Teuchos::ArrayView<GomaGlobalOrdinal>(indices, num_entries),
+  tmp->matrix->insertGlobalValues(global_row_t,
+                                  Teuchos::ArrayView<GomaGlobalOrdinal>(indices, num_entries),
                                   Teuchos::ArrayView<double>(values, num_entries));
   return GOMA_SUCCESS;
 }
 
 extern "C" goma_error g_tpetra_sum_into_row_values(GomaSparseMatrix matrix,
-                                             GomaGlobalOrdinal global_row,
-                                             GomaGlobalOrdinal num_entries,
-                                             double *values,
-                                             GomaGlobalOrdinal *indices) {
+                                                   GomaGlobalOrdinal global_row,
+                                                   GomaGlobalOrdinal num_entries,
+                                                   double *values,
+                                                   GomaGlobalOrdinal *indices) {
   auto *tmp = static_cast<TpetraSparseMatrix *>(matrix->data);
   GO global_row_t = static_cast<GO>(global_row);
-  tmp->matrix->sumIntoGlobalValues(global_row_t,
-                                   num_entries,
-                                   values,
-                                   indices);
+  tmp->matrix->sumIntoGlobalValues(global_row_t, num_entries, values, indices);
   return GOMA_SUCCESS;
 }
 
@@ -126,12 +128,14 @@ extern "C" goma_error g_tpetra_put_scalar(GomaSparseMatrix matrix, double scalar
 }
 
 extern "C" goma_error g_tpetra_row_sum_scaling(GomaSparseMatrix matrix, double *b, double *scale) {
-  // noop
-  return GOMA_SUCCESS;
   auto *tmp = static_cast<TpetraSparseMatrix *>(matrix->data);
+  if (!tmp->matrix->isFillComplete()) {
+    tmp->matrix->endAssembly();
+  }
   RCP<Tpetra::Vector<double, LO, GO>> b_vec =
       Teuchos::rcp(new Tpetra::Vector<double, LO, GO>(tmp->row_map));
   auto n_rows = tmp->matrix->getLocalNumRows();
+
   using crs_t = Tpetra::CrsMatrix<double, LO, GO>;
   typename crs_t::local_inds_host_view_type indices;
   typename crs_t::values_host_view_type values;
@@ -146,7 +150,47 @@ extern "C" goma_error g_tpetra_row_sum_scaling(GomaSparseMatrix matrix, double *
   tmp->matrix->leftScale(*b_vec);
   auto data = b_vec->getData();
   for (size_t i = 0; i < n_rows; i++) {
-    scale[i] = data[i];
+    auto local = tmp->matrix->getRowMap()->getLocalElement(matrix->global_ids[i]);
+    scale[local] = 1 / data[local];
+    b[local] *= data[local];
+  }
+  return GOMA_SUCCESS;
+}
+
+extern "C" goma_error g_tpetra_zero_row(GomaSparseMatrix matrix, GomaGlobalOrdinal global_row) {
+  auto *tmp = static_cast<TpetraSparseMatrix *>(matrix->data);
+  using crs_t = Tpetra::CrsMatrix<double, LO, GO>;
+  typename crs_t::nonconst_global_inds_host_view_type Indices;
+  typename crs_t::nonconst_values_host_view_type Values;
+  size_t NumEntries;
+  tmp->matrix->getGlobalRowCopy(global_row, Indices, Values, NumEntries);
+  if (NumEntries == Teuchos::OrdinalTraits<size_t>::invalid()) {
+    GOMA_EH(GOMA_ERROR, "Global row does not exist on this processor, g_tptra_zero_row");
+  }
+  for (size_t i = 0; i < NumEntries; i++) {
+    Values[i] = 0;
+  }
+
+  return GOMA_SUCCESS;
+}
+
+extern "C" goma_error g_tpetra_zero_row_set_diag(GomaSparseMatrix matrix,
+                                                 GomaGlobalOrdinal global_row) {
+  auto *tmp = static_cast<TpetraSparseMatrix *>(matrix->data);
+  using crs_t = Tpetra::CrsMatrix<double, LO, GO>;
+  typename crs_t::nonconst_global_inds_host_view_type Indices;
+  typename crs_t::nonconst_values_host_view_type Values;
+  size_t NumEntries;
+  tmp->matrix->getGlobalRowCopy(global_row, Indices, Values, NumEntries);
+  if (NumEntries == Teuchos::OrdinalTraits<size_t>::invalid()) {
+    GOMA_EH(GOMA_ERROR, "Global row does not exist on this processor, g_tptra_zero_row");
+  }
+  for (size_t i = 0; i < NumEntries; i++) {
+    if (Indices[i] == global_row) {
+      Values[i] = 1;
+    } else {
+      Values[i] = 0;
+    }
   }
   return GOMA_SUCCESS;
 }

@@ -28,16 +28,16 @@
 #include "Thyra_SolveSupportTypes.hpp"
 #include "Thyra_VectorBase.hpp"
 
-#include "Thyra_TpetraThyraWrappers.hpp"
-#include "Thyra_LinearOpTester.hpp"
-#include "Thyra_LinearOpWithSolveTester.hpp"
-#include "Thyra_LinearOpWithSolveFactoryHelpers.hpp"
-#include "Thyra_TpetraLinearOp.hpp"
-#include "Thyra_TpetraVector.hpp"
-#include "sl_epetra_interface.h"
-#include "linalg/sparse_matrix_tpetra.h"
 #include "MatrixMarket_Tpetra.hpp"
 #include "Teuchos_YamlParameterListCoreHelpers.hpp"
+#include "Thyra_LinearOpTester.hpp"
+#include "Thyra_LinearOpWithSolveFactoryHelpers.hpp"
+#include "Thyra_LinearOpWithSolveTester.hpp"
+#include "Thyra_TpetraLinearOp.hpp"
+#include "Thyra_TpetraThyraWrappers.hpp"
+#include "Thyra_TpetraVector.hpp"
+#include "linalg/sparse_matrix_tpetra.h"
+#include "sl_epetra_interface.h"
 
 #include "EpetraExt_RowMatrixOut.h"
 #include "EpetraExt_VectorOut.h"
@@ -60,11 +60,11 @@
 
 extern "C" {
 int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
-                      double *x_,
-                      double *b_,
-                      int *iterations,
-                      char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
-                      int imtrx) {
+                             double *x_,
+                             double *b_,
+                             int *iterations,
+                             char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
+                             int imtrx) {
   using Teuchos::RCP;
   auto matrix = static_cast<GomaSparseMatrix>(ams->GomaMatrixData);
   auto *tpetra_data = static_cast<TpetraSparseMatrix *>(matrix->data);
@@ -76,11 +76,14 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
 
   try {
     RCP<const Tpetra::FECrsMatrix<double, LO, GO>> tpetra_A = tpetra_data->matrix;
-   tpetra_data->matrix->endAssembly();
+    if (!tpetra_data->matrix->isFillComplete()) {
+      tpetra_data->matrix->endAssembly();
+    }
 
-
-    RCP<Tpetra::Vector<double,LO,GO>> tpetra_x = rcp(new Tpetra::Vector<double,LO,GO>(tpetra_A->getDomainMap()));
-    RCP<Tpetra::Vector<double,LO,GO>> tpetra_b = rcp(new Tpetra::Vector<double,LO,GO>(tpetra_A->getRangeMap()));
+    RCP<Tpetra::Vector<double, LO, GO>> tpetra_x =
+        rcp(new Tpetra::Vector<double, LO, GO>(tpetra_A->getDomainMap()));
+    RCP<Tpetra::Vector<double, LO, GO>> tpetra_b =
+        rcp(new Tpetra::Vector<double, LO, GO>(tpetra_A->getRangeMap()));
 
     auto n_rows = tpetra_data->matrix->getLocalNumRows();
     for (size_t i = 0; i < n_rows; i++) {
@@ -88,19 +91,16 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
       tpetra_b->replaceGlobalValue(matrix->global_ids[i], b_[i]);
     }
 
+    Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<double, LO, GO>>::writeSparseFile("A.mm",
+                                                                                     tpetra_A);
+    Tpetra::MatrixMarket::Writer<Tpetra::Vector<double, LO, GO>>::writeDenseFile("x.mm", tpetra_x);
+    Tpetra::MatrixMarket::Writer<Tpetra::Vector<double, LO, GO>>::writeDenseFile("b.mm", tpetra_b);
 
-    Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<double,LO,GO> >::writeSparseFile("A.mm", tpetra_A);
-    Tpetra::MatrixMarket::Writer<Tpetra::Vector<double,LO,GO> >::writeDenseFile("x.mm", tpetra_x);
-    Tpetra::MatrixMarket::Writer<Tpetra::Vector<double,LO,GO> >::writeDenseFile("b.mm", tpetra_b);
+    RCP<const Thyra::LinearOpBase<double>> A = Thyra::createConstLinearOp(
+        Teuchos::rcp_dynamic_cast<const Tpetra::Operator<double, LO, GO>>(tpetra_A));
 
-    
-    RCP<const Thyra::LinearOpBase<double> >
-      A = Thyra::createConstLinearOp(Teuchos::rcp_dynamic_cast<const Tpetra::Operator<double,LO,GO>>(tpetra_A));
-
-   RCP<Thyra::VectorBase<double> >
-      x = Thyra::createVector( tpetra_x);
-   RCP<const Thyra::VectorBase<double> >
-      b = Thyra::createVector( tpetra_b); 
+    RCP<Thyra::VectorBase<double>> x = Thyra::createVector(tpetra_x);
+    RCP<const Thyra::VectorBase<double>> b = Thyra::createVector(tpetra_b);
 
     Teuchos::RCP<Teuchos::FancyOStream> outstream = Teuchos::VerboseObjectBase::getDefaultOStream();
 
@@ -165,7 +165,7 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
     }
   }
   TEUCHOS_STANDARD_CATCH_STATEMENTS(verbose, std::cerr, success)
-   tpetra_data->matrix->beginAssembly();
+  tpetra_data->matrix->beginAssembly();
 
   if (success) {
     return 0;

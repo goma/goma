@@ -6,20 +6,19 @@
 
 extern "C" {
 #define DISABLE_CPP
-#include "sl_util_structs.h"
-#include "mm_unknown_map.h"
 #include "dp_comm.h"
 #include "dp_types.h"
-#include "rf_masks.h"
-#include "mm_eh.h"
-#include "rf_node_const.h"
-#include "mm_as_const.h"
 #include "mm_as.h"
-#include "mm_mp.h"
+#include "mm_as_const.h"
+#include "mm_eh.h"
 #include "mm_fill_util.h"
+#include "mm_mp.h"
+#include "mm_unknown_map.h"
+#include "rf_masks.h"
+#include "rf_node_const.h"
+#include "sl_util_structs.h"
 #undef DISABLE_CPP
 }
-
 
 extern "C" goma_error GomaSparseMatrix_Create(GomaSparseMatrix *matrix,
                                               enum GomaSparseMatrixType type) {
@@ -36,21 +35,22 @@ extern "C" goma_error GomaSparseMatrix_Create(GomaSparseMatrix *matrix,
   return GOMA_SUCCESS;
 }
 
-extern "C" goma_error GomaSparseMatrix_SetProblemGraph(GomaSparseMatrix matrix,
-                                                       int num_internal_dofs,
-                                                       int num_boundary_dofs,
-                                                       int num_external_dofs,
-                                                       int local_nodes,
-                                                       NODE_INFO_STRUCT **Nodes,
-                                                       int MaxVarPerNode,
-                                                       int *Matilda,
+extern "C" goma_error GomaSparseMatrix_SetProblemGraph(
+    GomaSparseMatrix matrix,
+    int num_internal_dofs,
+    int num_boundary_dofs,
+    int num_external_dofs,
+    int local_nodes,
+    NODE_INFO_STRUCT **Nodes,
+    int MaxVarPerNode,
+    int *Matilda,
     int Inter_Mask[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES],
-                                                       Exo_DB *exo,
-                                                       Dpi *dpi,
-                                                       Comm_Ex *cx,
-                                                       int imtrx,
-                                                       int Debug_Flag,
-                                                       struct GomaLinearSolverData *ams) {
+    Exo_DB *exo,
+    Dpi *dpi,
+    Comm_Ex *cx,
+    int imtrx,
+    int Debug_Flag,
+    struct GomaLinearSolverData *ams) {
   int j, inode, i1, i2, eb1;
   int iunknown, inter_unknown, inter_node, row_num_unknowns, col_num_unknowns;
   int irow_index = 0;
@@ -77,7 +77,7 @@ extern "C" goma_error GomaSparseMatrix_SetProblemGraph(GomaSparseMatrix matrix,
   for (int i = 0; i < NumMyRows; i++) {
     GlobalIDs[i] = i + RowOffset;
   }
-  matrix->global_ids = (GomaGlobalOrdinal *) malloc(sizeof(GomaGlobalOrdinal) * NumMyCols);
+  matrix->global_ids = (GomaGlobalOrdinal *)malloc(sizeof(GomaGlobalOrdinal) * NumMyCols);
 
 #ifdef GOMA_MATRIX_GO_LONG_LONG
   exchange_dof_long_long(cx, dpi, GlobalIDs.data(), imtrx);
@@ -211,11 +211,11 @@ extern "C" goma_error GomaSparseMatrix_SetProblemGraph(GomaSparseMatrix matrix,
     }
   }
 
-  matrix->create_graph(matrix, NumMyRows, rows.data(), NumMyCols, cols.data(), nnz, max_nz_per_row, coo_rows.data(),
-                       coo_cols.data());
+  matrix->create_graph(matrix, NumMyRows, rows.data(), NumMyCols, cols.data(), nnz, max_nz_per_row,
+                       coo_rows.data(), coo_cols.data());
 
   if (matrix->complete_graph != NULL) {
-  //  matrix->complete_graph(matrix);
+    //  matrix->complete_graph(matrix);
   }
 
   /*
@@ -245,7 +245,10 @@ extern "C" goma_error GomaSparseMatrix_SetProblemGraph(GomaSparseMatrix matrix,
   return GOMA_SUCCESS;
 }
 
-extern "C" goma_error GomaSparseMatrix_LoadLec(GomaSparseMatrix matrix, int ielem, struct Local_Element_Contributions *lec, double resid_vector[]) {
+extern "C" goma_error GomaSparseMatrix_LoadLec(GomaSparseMatrix matrix,
+                                               int ielem,
+                                               struct Local_Element_Contributions *lec,
+                                               double resid_vector[]) {
   int e, v, i, j, pe, pv;
   int dofs;
   int gnn, row_index, ke, kv, nvdof;
@@ -327,8 +330,8 @@ extern "C" goma_error GomaSparseMatrix_LoadLec(GomaSparseMatrix matrix, int iele
                     }
                   }
                 }
-              matrix->sum_into_row_values(matrix, matrix->global_ids[row_index], Indices.size(),
-                                         &Values[0], &Indices[0]);
+                matrix->sum_into_row_values(matrix, matrix->global_ids[row_index], Indices.size(),
+                                            &Values[0], &Indices[0]);
                 Indices.clear();
                 Values.clear();
               }
@@ -421,7 +424,7 @@ extern "C" goma_error GomaSparseMatrix_LoadLec(GomaSparseMatrix matrix, int iele
                 }
               }
               matrix->sum_into_row_values(matrix, matrix->global_ids[row_index], Indices.size(),
-                                         &Values[0], &Indices[0]);
+                                          &Values[0], &Indices[0]);
               Indices.clear();
               Values.clear();
             }
@@ -434,7 +437,7 @@ extern "C" goma_error GomaSparseMatrix_LoadLec(GomaSparseMatrix matrix, int iele
 }
 
 extern "C" goma_error GomaSparseMatrix_Destroy(GomaSparseMatrix *matrix) {
-  if (matrix == NULL) {
+  if (*matrix == NULL) {
     return GOMA_SUCCESS;
   }
   if ((*matrix)->destroy != NULL) {
