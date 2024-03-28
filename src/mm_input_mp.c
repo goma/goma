@@ -10012,7 +10012,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   /* Shell Energy Cards - heat sources, sinks, etc. */
 
   if (pd_glob[mn]->gv[R_SHELL_ENERGY] == 1) {
-  /*  Shell Lubrication Heat Transfer Coefficient */
+    /*  Shell Lubrication Heat Transfer Coefficient */
     strcpy(search_string, "Lubrication Heat Transfer");
     model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Heat_XferModel),
                                    &(mat_ptr->Lub_Heat_Xfer), NO_USER, NULL, model_name,
@@ -10024,7 +10024,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
-  /*  Shell Lubrication Heat Transfer Ambient Temperature */
+    /*  Shell Lubrication Heat Transfer Ambient Temperature */
     strcpy(search_string, "Lubrication Ambient Temperature");
     model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Heat_TambModel),
                                    &(mat_ptr->Lub_Heat_Tamb), NO_USER, NULL, model_name,
@@ -10381,7 +10381,6 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       SPF(es, "\t(%s = %s)", search_string, "GRADH");
     }
     ECHO(es, echo_file);
-
   }
 
   /*  Shell Lubrication Curvature Diffusion Term */
@@ -10410,9 +10409,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
 
     strcpy(search_string, "Lubrication Curvature Weight Function");
-    model_read =
-      look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Kwt_funcModel), &(mat_ptr->Lub_Kwt_func),
-                        NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+    model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Kwt_funcModel),
+                                   &(mat_ptr->Lub_Kwt_func), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
     if (strncmp(model_name, " ", 1) != 0) {
       if (!strcmp(model_name, "GALERKIN")) {
         mat_ptr->Lub_Kwt_funcModel = GALERKIN;
@@ -10465,8 +10464,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       GOMA_WH(model_read, "Defaulting on Lubrication Curvature Relaxation");
     }
     ECHO(es, echo_file);
-  }  /* End of Lubrication Curvature Section  */
-
+  } /* End of Lubrication Curvature Section  */
 
   /*
    * Input conditions for the structured porous shell equations

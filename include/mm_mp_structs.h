@@ -773,7 +773,6 @@ struct Material_Properties {
   double Lub_Kwt_func;
   int Lub_Curv_MassLump;
 
-
   int Lub_Heat_XferModel;
   double Lub_Heat_Xfer;
   int Lub_Heat_TambModel;

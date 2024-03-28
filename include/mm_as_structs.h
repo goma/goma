@@ -3250,7 +3250,7 @@ struct Lubrication_Auxiliaries {
   double dv_avg_dcross_shear[DIM][MDE]; /* Average velocity sensitivities w.r.t.
                                            cross stream shear stress */
   double dv_dgradp[DIM][DIM];     /* Average velocity sensitivities w.r.t. pressure gradient */
-  double dv_avg_dT[DIM];                /* Average velosity sensitivities w.r.t. Temperature */
+  double dv_avg_dT[DIM];          /* Average velosity sensitivities w.r.t. Temperature */
   double dH_dmesh[DIM][MDE];      /* lubrication gap sensitivities w.r.t. mesh */
   double dH_drealsolid[DIM][MDE]; /* lubrication gap sensitivities w.r.t. real
                                      solid */
