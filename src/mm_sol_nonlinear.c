@@ -17,9 +17,9 @@
  */
 
 #include "bc_contact.h"
+#include "linalg/sparse_matrix.h"
 #include "mm_eh.h"
 #include "mm_mp_const.h"
-#include "linalg/sparse_matrix.h"
 #include "sl_epetra_interface.h"
 #include "sl_util_structs.h"
 
