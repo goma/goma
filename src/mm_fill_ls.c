@@ -5365,7 +5365,7 @@ int load_lsi(const double width) {
     memset(lsi->d_gradHn_dF, 0.0, sizeof(double) * DIM * MDE);
     memset(lsi->d_Hn_dmesh, 0.0, sizeof(double) * DIM * MDE);
     memset(lsi->d_gradHn_dmesh, 0.0, sizeof(double) * DIM * DIM * MDE);
-    if (lsi->near) {
+    if (1 || lsi->near) {
       if (pd->gv[LUBP] || pd->gv[SHELL_SAT_CLOSED] || pd->gv[SHELL_PRESS_OPEN] ||
           pd->gv[SHELL_SAT_GASN]) {
         for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
