@@ -3741,7 +3741,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     if (pd->v[pg->imtrx][VAR]) {
       if (mp->Lub_Curv_NormalModel) {
         load_lsi(ls->Length_Scale);
-        if (1 || lsi->near) {
+        if (lsi->near) {
           load_lsi_derivs();
           for (i = 0; i < dim; i++) {
             for (j = 0; j < dim; j++) {
@@ -3766,7 +3766,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       } else {
         double deltan[DIM];
         load_lsi(ls->Length_Scale);
-        if (1 || lsi->near) {
+        if (lsi->near) {
           load_lsi_derivs();
           for (i = 0; i < dim; i++) {
             deltan[i] = lsi->delta * lsi->normal[i];
