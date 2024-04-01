@@ -10454,16 +10454,23 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
-    strcpy(search_string, "Lubrication Curvature MassLump");
-    model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Lub_Curv_RelaxModel),
-                                   &(mat_ptr->Lub_Curv_Relax), NO_USER, NULL, model_name,
-                                   SCALAR_INPUT, &NO_SPECIES, es);
-    if (model_read == -1) {
-      mat_ptr->Lub_Curv_RelaxModel = CONSTANT;
-      mat_ptr->Lub_Curv_Relax = 0.0;
-      GOMA_WH(model_read, "Defaulting on Lubrication Curvature Relaxation");
+    /*  Shell Lubrication Curvature Field Modulation */
+    strcpy(search_string, "Lubrication Curvature Modulation");
+    model_read = look_for_mat_prop(imp, "Lubrication Curvature Modulation", NULL, NULL, NO_USER,
+                                   NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
+      mat_ptr->Lub_Curv_Modulation = TRUE;
+      SPF(es, "\t(%s = %s)", search_string, "on");
+    } else if (!strcasecmp(model_name, "no") || !strcasecmp(model_name, "false")) {
+      mat_ptr->Lub_Curv_Modulation = FALSE;
+      SPF(es, "\t(%s = %s)", search_string, "off");
+    } else {
+      mat_ptr->Lub_Curv_Modulation = FALSE;
+      SPF(es, "\t(%s = %s)", search_string, "off");
     }
     ECHO(es, echo_file);
+
   } /* End of Lubrication Curvature Section  */
 
   /*

@@ -13703,7 +13703,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
   int peqn, var, pvar;
   int status = 0;
   int masslump_bit = mp->Lub_Curv_MassLump, curv_near = 0;
-  double curvX = 0.;
+  double curvX;
   int i, j, k, a, jj, b;
   dbl phi_i, grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
   dbl phi_j, grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
@@ -13815,13 +13815,18 @@ int assemble_lubrication_curvature(double time,            /* present time value
   const dbl *hsquared = pg_data->hsquared;
   const double K_diff = mp->Lub_Curv_Diff;
   const double lambda = mp->Lub_Curv_Relax; /* Pseudo Relaxation Time  */
-  if (fabs(fv->F) < 2. * lsi->alpha) {
-    curv_near = 1;
-    if (lsi->near) {
-      curvX = 1.;
-    } else {
-      curvX = 2. - SGN(fv->F) * fv->F / lsi->alpha;
+  if (mp->Lub_Curv_Modulation) {
+    curvX = 0.;
+    if (fabs(fv->F) < 2. * lsi->alpha) {
+      curv_near = 1;
+      if (lsi->near) {
+        curvX = 1.;
+      } else {
+        curvX = 2. - SGN(fv->F) * fv->F / lsi->alpha;
+      }
     }
+  } else {
+    curvX = 1.;
   }
 
   if (pd->gv[R_LUBP]) {
@@ -13887,12 +13892,12 @@ int assemble_lubrication_curvature(double time,            /* present time value
         for (a = 0; a < VIM; a++) {
           diff += hsquared[a] * gradII_kappa[a] * grad_II_phi_i[a];
         }
+        diff *= K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
       }
-      diff *= K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
       /* Assemble divergence terms */
       div = 0.0;
-      if (curv_near) {
+      if (1 || curv_near) {
         if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
           for (a = 0; a < VIM; a++) {
             div += LSnormal[a] * grad_II_phi_i[a];
@@ -13947,28 +13952,28 @@ int assemble_lubrication_curvature(double time,            /* present time value
             } else {
               mass += phi_i * phi_j;
             }
-          }
-          /* Add advection terms */
-          if (pd->TimeIntegration != STEADY) {
-            if (pd->e[pg->imtrx][eqn] & T_MASS) {
-              if (masslump_bit) {
-                if (i == j)
-                  mass += lambda * (1 + 2. * tt) / dt * phi_i;
-              } else {
-                mass += lambda * (1 + 2. * tt) * phi_j / dt * phi_i;
+            /* Add advection terms */
+            if (pd->TimeIntegration != STEADY) {
+              if (pd->e[pg->imtrx][eqn] & T_MASS) {
+                if (masslump_bit) {
+                  if (i == j)
+                    mass += lambda * (1 + 2. * tt) / dt * phi_i;
+                } else {
+                  mass += lambda * (1 + 2. * tt) * phi_j / dt * phi_i;
+                }
               }
             }
-          }
-          /* Add advection term */
-          advection = 0.0;
-          for (a = 0; a < VIM; a++) {
-            advection += LubAux->v_avg[a] * grad_II_phi_j[a];
-            advection += LubAux->dv_avg_dk[a] * gradII_kappa[a];
-          }
-          advection *= wt_func;
-          mass += lambda * advection;
+            /* Add advection term */
+            advection = 0.0;
+            for (a = 0; a < VIM; a++) {
+              advection += LubAux->v_avg[a] * grad_II_phi_j[a];
+              advection += LubAux->dv_avg_dk[a] * gradII_kappa[a];
+            }
+            advection *= wt_func;
+            mass += lambda * advection;
 
-          mass *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+            mass *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+          }
 
           /* Assemble diffusion terms */
           diff = 0.0;
@@ -13976,8 +13981,8 @@ int assemble_lubrication_curvature(double time,            /* present time value
             for (a = 0; a < VIM; a++) {
               diff += hsquared[a] * grad_II_phi_i[a] * grad_II_phi_j[a];
             }
+            diff *= K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
           }
-          diff *= K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
           /* Assemble jacobian */
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + diff;
@@ -14012,8 +14017,8 @@ int assemble_lubrication_curvature(double time,            /* present time value
               } else {
                 mass += fv->sh_l_curv * phi_i;
               }
+              mass *= fv->dsurfdet_dx[b][jj] * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
             }
-            mass *= fv->dsurfdet_dx[b][jj] * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 
             /* Assemble diffusion terms */
             diff = 0.0;
@@ -14023,20 +14028,20 @@ int assemble_lubrication_curvature(double time,            /* present time value
                 diff += hsquared[a] * gradII_kappa[a] * d_grad_II_phi_i_dmesh[a][b][jj] * det_J;
                 diff += hsquared[a] * gradII_kappa[a] * grad_II_phi_i[a] * fv->dsurfdet_dx[b][jj];
               }
+              diff *= K_diff * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
             }
-            diff *= K_diff * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
             /* Assemble divergence terms */
             div = 0.0;
-            if (curv_near) {
+            if (1 || curv_near) {
               if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
                 for (a = 0; a < VIM; a++) {
                   div += d_LSnormal_dmesh[a][b][jj] * grad_II_phi_i[a] * det_J;
                   div += LSnormal[a] * d_grad_II_phi_i_dmesh[a][b][jj] * det_J;
                   div += LSnormal[a] * grad_II_phi_i[a] * fv->dsurfdet_dx[b][jj];
                 }
+                div *= curvX * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
               }
-              div *= curvX * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
             }
 
             /* Assemble jacobian */
@@ -14062,13 +14067,13 @@ int assemble_lubrication_curvature(double time,            /* present time value
 
           /* Assemble divergence terms */
           div = 0.0;
-          if (curv_near) {
+          if (1 || curv_near) {
             if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
               for (a = 0; a < VIM; a++) {
                 div += d_LSnormal_dF[a][j] * grad_II_phi_i[a];
               }
+              div *= curvX * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
             }
-            div *= curvX * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
           }
 
           /* Assemble jacobian */
