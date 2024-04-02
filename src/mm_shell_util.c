@@ -3741,49 +3741,53 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     if (pd->v[pg->imtrx][VAR]) {
       if (mp->Lub_Curv_NormalModel) {
         load_lsi(ls->Length_Scale);
-        load_lsi_derivs();
-        for (i = 0; i < dim; i++) {
-          for (j = 0; j < dim; j++) {
-            for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
-              jk = dof_map[k];
-              d_grad_Hside_dmx[i][j][jk] = lsi->d_gradHn_dmesh[i][j][k];
+	if (!mp->Lub_Curv_Modulation && lsi->near) {
+          load_lsi_derivs();
+          for (i = 0; i < dim; i++) {
+            for (j = 0; j < dim; j++) {
+              for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+                jk = dof_map[k];
+                d_grad_Hside_dmx[i][j][jk] = lsi->d_gradHn_dmesh[i][j][k];
+              }
             }
           }
-        }
-        ShellRotate(lsi->gradHn, d_grad_Hside_dmx, GRADH, D_GRADH_DX, n_dof[MESH_DISPLACEMENT1]);
+          ShellRotate(lsi->gradHn, d_grad_Hside_dmx, GRADH, D_GRADH_DX, n_dof[MESH_DISPLACEMENT1]);
 
-        /* Calculate F sensitivity */
-        for (i = 0; i < dim; i++) {
-          for (j = 0; j < dim; j++) {
-            for (k = 0; k < ei[pg->imtrx]->dof[VAR]; k++) {
-              D_GRADH_DF[i][k] += lsi->d_gradHn_dF[j][k] * delta(i, j);
-              D_GRADH_DF[i][k] -= lsi->d_gradHn_dF[j][k] * fv->snormal[i] * fv->snormal[j];
+          /* Calculate F sensitivity */
+          for (i = 0; i < dim; i++) {
+            for (j = 0; j < dim; j++) {
+              for (k = 0; k < ei[pg->imtrx]->dof[VAR]; k++) {
+                D_GRADH_DF[i][k] += lsi->d_gradHn_dF[j][k] * delta(i, j);
+                D_GRADH_DF[i][k] -= lsi->d_gradHn_dF[j][k] * fv->snormal[i] * fv->snormal[j];
+              }
             }
           }
         }
       } else {
         double deltan[DIM];
         load_lsi(ls->Length_Scale);
-        load_lsi_derivs();
-        for (i = 0; i < dim; i++) {
-          deltan[i] = lsi->delta * lsi->normal[i];
-          for (j = 0; j < dim; j++) {
-            for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
-              jk = dof_map[k];
-              d_grad_Hside_dmx[i][j][jk] = lsi->d_delta_dmesh[j][k] * lsi->normal[i] +
+	if (!mp->Lub_Curv_Modulation && lsi->near) {
+          load_lsi_derivs();
+          for (i = 0; i < dim; i++) {
+            deltan[i] = lsi->delta * lsi->normal[i];
+            for (j = 0; j < dim; j++) {
+              for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+                jk = dof_map[k];
+                d_grad_Hside_dmx[i][j][jk] = lsi->d_delta_dmesh[j][k] * lsi->normal[i] +
                                            lsi->delta * lsi->d_normal_dmesh[i][j][k];
+              }
             }
           }
-        }
-        ShellRotate(deltan, d_grad_Hside_dmx, GRADH, D_GRADH_DX, n_dof[MESH_DISPLACEMENT1]);
+          ShellRotate(deltan, d_grad_Hside_dmx, GRADH, D_GRADH_DX, n_dof[MESH_DISPLACEMENT1]);
 
-        /* Calculate F sensitivity */
-        for (i = 0; i < dim; i++) {
-          for (j = 0; j < dim; j++) {
-            for (k = 0; k < ei[pg->imtrx]->dof[VAR]; k++) {
-              D_GRADH_DF[i][k] +=
+          /* Calculate F sensitivity */
+          for (i = 0; i < dim; i++) {
+            for (j = 0; j < dim; j++) {
+              for (k = 0; k < ei[pg->imtrx]->dof[VAR]; k++) {
+                D_GRADH_DF[i][k] +=
                   (lsi->delta * lsi->d_normal_dF[i][k] + lsi->d_delta_dF[k] * lsi->normal[i]) *
                   (delta(i, j) - fv->snormal[i] * fv->snormal[j]);
+              }
             }
           }
         }
