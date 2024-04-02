@@ -64,6 +64,11 @@ else()
   endif()
 endif()
 
+option(GOMA_MATRIX_GO_LONG_LONG OFF)
+if (GOMA_MATRIX_GO_LONG_LONG)
+  list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_MATRIX_GO_LONG_LONG)
+endif()
+
 option(ENABLE_CCACHE OFF)
 if(ENABLE_CCACHE)
   message(STATUS "Searching for ccache.")

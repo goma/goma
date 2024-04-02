@@ -1,8 +1,8 @@
 #ifdef GOMA_ENABLE_STRATIMIKOS
 
+#include <filesystem>
 #include <iostream>
 #include <string>
-#include <filesystem>
 #include <utility>
 
 #include "Epetra_DataAccess.h"
@@ -40,7 +40,7 @@
 #include "Thyra_TpetraThyraWrappers.hpp"
 #include "Thyra_TpetraVector.hpp"
 #include "linalg/sparse_matrix_tpetra.h"
-#endif 
+#endif
 
 #include "EpetraExt_RowMatrixOut.h"
 #include "EpetraExt_VectorOut.h"
