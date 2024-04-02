@@ -3493,7 +3493,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
   int i, j, k, jk, w;
   dbl H;
   dbl veloL[DIM], veloU[DIM];
-  dbl mu, dmu_dc = 0., dmu_dT = 0., srate = 0.;
+  dbl mu, dmu_dc = 0., srate = 0.;
   dbl *dmu_df;
   dbl rho;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
@@ -3544,7 +3544,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     } else {
       mu = viscosity(gn, NULL, d_mu);
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
-      dmu_dT = mp->d_viscosity[SHELL_TEMPERATURE];
+      /*dmu_dT = mp->d_viscosity[SHELL_TEMPERATURE];  */
     }
 
     /* Extract wall velocities */
