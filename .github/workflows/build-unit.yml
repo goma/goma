@@ -14,13 +14,12 @@ jobs:
 
     defaults:
       run:
-        shell: bash
+        shell: bash -e {0}
 
     steps:
     - uses: actions/checkout@v3
     - name: Check versions
       run: |
-        source /etc/profile
         echo $PETSC_DIR
         mpirun --version
         cmake --version
