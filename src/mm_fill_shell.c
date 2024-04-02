@@ -14154,7 +14154,6 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
   double wt_func, supg = 1.0, h_elem, h_elem_inv;
   // const double *vcent = pg_data->v_avg;
 
-
   /* Bail out fast if there's nothing to do */
   if (!pd->e[pg->imtrx][eqn])
     return (status);
@@ -14400,7 +14399,7 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
                   n_dof[MESH_DISPLACEMENT1], dof_map);
 
           /* Assemble mass term */
-	  mass = 0.0;
+          mass = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_MASS) {
             // mass += phi_i * phi_j;
             if (masslump_bit) {
@@ -14433,7 +14432,7 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
           }
 
           /* Assemble diffusion terms */
-	  diff = 0.0;
+          diff = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
             for (a = 0; a < VIM; a++) {
               diff += hsquared[a] * grad_II_phi_i[a] * grad_II_phi_j[a];
@@ -14467,7 +14466,7 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
                     n_dof[MESH_DISPLACEMENT1], dof_map);
 
             /* Assemble mass term */
-	    mass = 0.0;
+            mass = 0.0;
             if (pd->e[pg->imtrx][eqn] & T_MASS) {
               if (masslump_bit) {
                 mass += *esp->sh_l_curv_2[i] * phi_i;
@@ -14478,7 +14477,7 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
             }
 
             /* Assemble diffusion terms */
-	    diff = 0.0;
+            diff = 0.0;
             if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
               for (a = 0; a < VIM; a++) {
                 diff += hsquared[a] * d_gradII_kappa_dmesh[a][b][jj] * grad_II_phi_i[a] * det_J;
@@ -14489,7 +14488,7 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
             }
 
             /* Assemble divergence terms */
-	    div = 0.0;
+            div = 0.0;
             if (curv_near) {
               if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
                 for (a = 0; a < VIM; a++) {
@@ -14516,7 +14515,7 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
         /* Loop over DOFs (j) */
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 
-	  /* Add advection term */
+          /* Add advection term */
           advection = 0.0;
           for (a = 0; a < VIM; a++) {
             advection += LubAux->dv_avg_df[a][j] * gradII_kappa[a];
