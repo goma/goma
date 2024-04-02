@@ -13702,7 +13702,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
   int eqn = R_SHELL_LUB_CURV;
   int peqn, var, pvar;
   int status = 0;
-  int masslump_bit = mp->Lub_Curv_MassLump, curv_near = 0;
+  int masslump_bit = mp->Lub_Curv_MassLump, curv_near;
   double curvX;
   int i, j, k, a, jj, b;
   dbl phi_i, grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
@@ -13817,6 +13817,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
   const double lambda = mp->Lub_Curv_Relax; /* Pseudo Relaxation Time  */
   if (mp->Lub_Curv_Modulation) {
     curvX = 0.;
+    curv_near = 0;
     if (fabs(fv->F) < 2. * lsi->alpha) {
       curv_near = 1;
       if (lsi->near) {
@@ -13827,6 +13828,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
     }
   } else {
     curvX = 1.;
+    curv_near = 1;
   }
 
   if (pd->gv[R_LUBP]) {
@@ -13897,7 +13899,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
 
       /* Assemble divergence terms */
       div = 0.0;
-      if (1 || curv_near) {
+      if (curv_near) {
         if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
           for (a = 0; a < VIM; a++) {
             div += LSnormal[a] * grad_II_phi_i[a];
@@ -14033,7 +14035,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
 
             /* Assemble divergence terms */
             div = 0.0;
-            if (1 || curv_near) {
+            if (curv_near) {
               if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
                 for (a = 0; a < VIM; a++) {
                   div += d_LSnormal_dmesh[a][b][jj] * grad_II_phi_i[a] * det_J;
@@ -14067,7 +14069,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
 
           /* Assemble divergence terms */
           div = 0.0;
-          if (1 || curv_near) {
+          if (curv_near) {
             if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
               for (a = 0; a < VIM; a++) {
                 div += d_LSnormal_dF[a][j] * grad_II_phi_i[a];

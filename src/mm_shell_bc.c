@@ -275,8 +275,8 @@ void shell_n_dot_curv_bc(double func[DIM],
   double grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
   double grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
   double bound_normal[DIM], bound_dnormal_dx[DIM][DIM][MDE];
-  int curv_near = 0;
-  double curvX = 0.;
+  int curv_near;
+  double curvX;
 
   int eqn = R_SHELL_LUB_CURV;
   if (ei[pg->imtrx]->ielem_dim == 3)
@@ -383,13 +383,20 @@ void shell_n_dot_curv_bc(double func[DIM],
 
   /* Prepare weighting for artificial diffusion term */
   const double K_diff = mp->Lub_Curv_Diff;
-  if (fabs(fv->F) < 2. * lsi->alpha) {
-    curv_near = 1;
-    if (lsi->near) {
-      curvX = 1.;
-    } else {
-      curvX = 2. - SGN(fv->F) * fv->F / lsi->alpha;
+  if (mp->Lub_Curv_Modulation) {
+    curvX = 0.;
+    curv_near = 0;
+    if (fabs(fv->F) < 2. * lsi->alpha) {
+      curv_near = 1;
+      if (lsi->near) {
+        curvX = 1.;
+      } else {
+        curvX = 2. - SGN(fv->F) * fv->F / lsi->alpha;
+      }
     }
+  } else {
+    curvX = 1.;
+    curv_near = 1;
   }
 
   if (af->Assemble_LSA_Mass_Matrix) {
