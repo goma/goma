@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     container: westonortiz/goma-libs
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
     - uses: actions/checkout@v3
     - name: Check versions
