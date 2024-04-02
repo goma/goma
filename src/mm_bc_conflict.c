@@ -39,6 +39,7 @@
 #include "rf_io_const.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
+#include "rf_solver.h"
 #include "rf_vars_const.h"
 #include "std.h"
 #ifndef MAX_NODAL_BCS
@@ -2531,7 +2532,7 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                                                                                      * BC_list
                                                                                      */
                 BC_dup_ptr[pg->imtrx]++;
-                if (Debug_Flag > 1 && Unlimited_Output) {
+                if ((Print3DBCDup > 1 || Debug_Flag > 1) && Unlimited_Output) {
                   fprintf(ofbc, "New Rot node in dup list %d %d\n", inode + 1,
                           BC_dup_ptr[pg->imtrx]);
                 }
@@ -2709,24 +2710,24 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                 BC_dup_nodes[pg->imtrx][BC_dup_ptr[pg->imtrx]] = inode;
                 BC_dup_list[pg->imtrx][BC_dup_ptr[pg->imtrx]] = BC_Unk_List[inode];
                 BC_dup_ptr[pg->imtrx]++;
-                if (Debug_Flag > 1 && Unlimited_Output) {
+                if ((Print3DBCDup > 1 || Debug_Flag > 1) && Unlimited_Output) {
                   fprintf(ofbc, "New node in duplication list %d %d\n", inode + 1,
                           BC_dup_ptr[pg->imtrx]);
                 }
               }
 
               idup = 0;
-              if (Debug_Flag > 0 && Unlimited_Output) {
+              if ((Print3DBCDup > 0 || Debug_Flag > 0) && Unlimited_Output) {
                 fprintf(ofbc, "  DUPLICATE BC at node %d equation %d: ", inode + 1, eqn);
               }
               while (BC_Unk_List[inode][offset][idup] != -1) {
                 ibc = BC_Unk_List[inode][offset][idup];
-                if (Debug_Flag > 0 && Unlimited_Output) {
+                if ((Print3DBCDup > 0 || Debug_Flag > 0) && Unlimited_Output) {
                   fprintf(ofbc, "%s, ", BC_Types[ibc].desc->name2);
                 }
                 idup++;
               }
-              if (Debug_Flag > 0 && Unlimited_Output) {
+              if ((Print3DBCDup > 0 || Debug_Flag > 0) && Unlimited_Output) {
                 fprintf(ofbc, "\n");
               }
 
@@ -2786,7 +2787,7 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                     ibc2 = BC_Unk_List[inode][offset][j_DC];
                     bct2 = BC_Types[ibc2].BC_Name;
                     /* RESOLVE CONFLICT */
-                    if (Debug_Flag > 0 && Unlimited_Output) {
+                    if ((Print3DBCDup > 0 || Debug_Flag > 0) && Unlimited_Output) {
                       ibc = BC_Unk_List[inode][offset][j_DC];
                       fprintf(ofbc, "    TWO DBC's %s and %s at node %d \n",
                               BC_Types[ibc1].desc->name2, BC_Types[ibc].desc->name2, inode + 1);
@@ -2817,20 +2818,20 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                       if ((bct1 <= GD_TIME_BC && bct1 >= GD_CONST_BC) &&
                           (bct2 <= GD_TIME_BC && bct2 >= GD_CONST_BC)) {
                         if (BC_Types[ibc1].BC_ID == BC_Types[ibc2].BC_ID) {
-                          if (Debug_Flag > 0 && Unlimited_Output) {
+                          if ((Print3DBCDup > 0 || Debug_Flag > 0) && Unlimited_Output) {
                             fprintf(ofbc, "    MULTIPLE GD %s at node %d\n",
                                     BC_Types[ibc2].desc->name2, inode + 1);
                           }
                           save_this_bc[j] = 1;
                         } else {
-                          if (Debug_Flag > 0 && Unlimited_Output) {
+                          if ((Print3DBCDup > 0 || Debug_Flag > 0) && Unlimited_Output) {
                             fprintf(ofbc, "    REMOVE %s in favor of %s at node %d\n",
                                     BC_Types[ibc2].desc->name2, BC_Types[ibc1].desc->name2,
                                     inode + 1);
                           }
                         }
                       } else {
-                        if (Debug_Flag > 0 && Unlimited_Output) {
+                        if ((Print3DBCDup > 0 || Debug_Flag > 0) && Unlimited_Output) {
                           fprintf(ofbc, "    REMOVE %s in favor of %s at node %d\n",
                                   BC_Types[ibc2].desc->name2, BC_Types[ibc1].desc->name2,
                                   inode + 1);
@@ -2854,7 +2855,7 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                         ibc2 = BC_Unk_List[inode][offset][j_SI];
                         bct2 = BC_Types[ibc2].BC_Name;
                         /* RESOLVE CONFLICT */
-                        if (Debug_Flag > 0 && Unlimited_Output) {
+                        if ((Print3DBCDup > 0 || Debug_Flag > 0) && Unlimited_Output) {
                           fprintf(ofbc, "    REMOVE %s in favor of %s at node %d\n",
                                   BC_Types[ibc2].desc->name2, BC_Types[ibc1].desc->name2,
                                   inode + 1);
@@ -2878,7 +2879,7 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                         if (j_CSWI != -1) {
                           ibc2 = BC_Unk_List[inode][offset][j_CSWI];
                           bct2 = BC_Types[ibc2].BC_Name;
-                          if (Debug_Flag > 0 && Unlimited_Output) {
+                          if ((Print3DBCDup > 0 || Debug_Flag > 0) && Unlimited_Output) {
                             fprintf(ofbc, "    REMOVE %s in favor of %s at node %d\n",
                                     BC_Types[ibc1].desc->name2, BC_Types[ibc2].desc->name2,
                                     inode + 1);

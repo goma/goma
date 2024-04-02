@@ -17,6 +17,8 @@
  */
 
 #include "bc_contact.h"
+#include "mm_eh.h"
+#include "mm_mp_const.h"
 #include "sl_epetra_interface.h"
 #include "sl_util_structs.h"
 
@@ -174,6 +176,31 @@ int neg_lub_height_global = FALSE;
 
 int zero_detJ = FALSE;
 int zero_detJ_global = FALSE;
+static goma_error
+assemble_prefill(struct GomaLinearSolverData *ams, double x[], Exo_DB *exo, Dpi *dpi) {
+
+  // check for multi contact line
+  for (int mn = 0; mn < upd->Num_Mat; mn++) {
+    if (elc_glob[mn]->lame_mu_model == MULTI_CONTACT_LINE) {
+      if (elc_glob[mn]->multi_contact_line_distances == NULL) {
+        elc_glob[mn]->multi_contact_line_distances =
+            (double *)malloc(sizeof(double) * exo->num_nodes);
+      }
+      bool apply_displacements = false;
+      if (upd->matrix_index[R_MESH1] != -1) {
+        apply_displacements = true;
+      }
+
+      goma_error err = find_current_distances(exo, dpi, x, apply_displacements,
+                                              elc_glob[mn]->len_u_mu_ns, elc_glob[mn]->u_mu_ns, 0,
+                                              NULL, elc_glob[mn]->multi_contact_line_distances);
+      if (err != GOMA_SUCCESS) {
+        return err;
+      }
+    }
+  }
+  return GOMA_SUCCESS;
+}
 
 /*
 
@@ -705,10 +732,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     DPRINTF(stdout, "-------");
   DPRINTF(stdout, "\n");
 
-  if (Num_ROT == 0 /*&& inewton == 0*/ && exo->num_dim == 3) {
-    setup_rotated_bc_nodes(exo, dpi, BC_Types, Num_BC, x);
-  }
-
   // Setup turbulence information
   if (upd->turbulent_info->use_internal_wall_distance) {
     bool already_setup = true;
@@ -728,6 +751,11 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                              upd->turbulent_info->side_set_ids,
                              upd->turbulent_info->wall_distances);
     }
+  }
+
+  // 3D Automatic rotation setup
+  if (Num_ROT == 0 /*&& inewton == 0*/ && exo->num_dim == 3) {
+    setup_rotated_bc_nodes(exo, dpi, BC_Types, Num_BC, x);
   }
 
   /*********************************************************************************
@@ -896,6 +924,10 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       /* Exchange dof before matrix fill so parallel information
          is properly communicated */
       exchange_dof(cx, dpi, x, pg->imtrx);
+
+      err = assemble_prefill(ams, x, exo, dpi);
+      if (err == -1)
+        return (err);
 
       err = matrix_fill_full(ams, x, resid_vector, x_old, x_older, xdot, xdot_old, x_update,
                              &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], &time_value,
@@ -3184,6 +3216,10 @@ static int soln_sens(double lambda,  /*  parameter */
     }
   }
 
+  err = assemble_prefill(ams, x, exo, dpi);
+  if (err == -1)
+    return (err);
+
   err = matrix_fill_full(ams, x, res_p, x_old, x_older, xdot, xdot_old, x_update, &delta_t, &theta,
                          First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo, dpi,
                          &num_total_nodes, &h_elem_avg, &U_norm, NULL);
@@ -3223,6 +3259,9 @@ static int soln_sens(double lambda,  /*  parameter */
       augc[iAC].evol = 0.0;
     }
   }
+  err = assemble_prefill(ams, x, exo, dpi);
+  if (err == -1)
+    return (err);
 
   err = matrix_fill_full(ams, x, res_m, x_old, x_older, xdot, xdot_old, x_update, &delta_t, &theta,
                          First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo, dpi,

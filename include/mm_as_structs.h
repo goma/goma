@@ -1729,8 +1729,9 @@ struct Field_Variables {
   dbl sh_sat_2;   /* Porous shell saturation layer 2 */
   dbl sh_sat_3;   /* Porous shell saturation layer 3 */
 
-  dbl eddy_nu;       /* Eddy viscosity for turbulent flow */
-  dbl wall_distance; /* Distance to nearest wall */
+  dbl eddy_nu;                     /* Eddy viscosity for turbulent flow */
+  dbl wall_distance;               /* Distance to nearest wall */
+  dbl multi_contact_line_distance; /* Distance to multi contact line points */
 
   /*
    * Grads of scalars...
@@ -3222,6 +3223,7 @@ struct Lubrication_Auxiliaries {
   double dq_dcross_shear[DIM][MDE]; /* Flow rate sensitivities w.r.t. cross
                                        stream shear stress */
   double dq_dgradp[DIM][DIM];       /* Flow rate sensitivities w.r.t. pressure gradient */
+  double dq_dT[DIM];                /* Flow rate sensitivities w.r.t. Temperature */
 
   double dv_avg_dh[DIM][MDE];           /* Average velocity sensitivities w.r.t. height */
   double dv_avg_dh1[DIM][MDE];          /* Average velocity sensitivities w.r.t. height */
@@ -3248,10 +3250,12 @@ struct Lubrication_Auxiliaries {
   double dv_avg_dcross_shear[DIM][MDE]; /* Average velocity sensitivities w.r.t.
                                            cross stream shear stress */
   double dv_dgradp[DIM][DIM];     /* Average velocity sensitivities w.r.t. pressure gradient */
+  double dv_avg_dT[DIM];          /* Average velosity sensitivities w.r.t. Temperature */
   double dH_dmesh[DIM][MDE];      /* lubrication gap sensitivities w.r.t. mesh */
   double dH_drealsolid[DIM][MDE]; /* lubrication gap sensitivities w.r.t. real
                                      solid */
-  double dH_dP[MDE];              /* lubrication gap sensitivities w.r.t. pressure */
+  double dH_dp;                   /* lubrication gap sensitivities w.r.t. pressure */
+  double dH_ddh;                  /* lubrication gap sensitivities w.r.t. added height */
 };
 
 typedef struct Lubrication_Auxiliaries LUBRICATION_AUXILIARIES_STRUCT;

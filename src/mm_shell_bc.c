@@ -275,6 +275,8 @@ void shell_n_dot_curv_bc(double func[DIM],
   double grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
   double grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
   double bound_normal[DIM], bound_dnormal_dx[DIM][DIM][MDE];
+  int curv_near;
+  double curvX;
 
   int eqn = R_SHELL_LUB_CURV;
   if (ei[pg->imtrx]->ielem_dim == 3)
@@ -381,6 +383,21 @@ void shell_n_dot_curv_bc(double func[DIM],
 
   /* Prepare weighting for artificial diffusion term */
   const double K_diff = mp->Lub_Curv_Diff;
+  if (mp->Lub_Curv_Modulation) {
+    curvX = 0.;
+    curv_near = 0;
+    if (fabs(fv->F) < 2. * lsi->alpha) {
+      curv_near = 1;
+      if (lsi->near) {
+        curvX = 1.;
+      } else {
+        curvX = 2. - SGN(fv->F) * fv->F / lsi->alpha;
+      }
+    }
+  } else {
+    curvX = 1.;
+    curv_near = 1;
+  }
 
   if (af->Assemble_LSA_Mass_Matrix) {
     return;
@@ -391,7 +408,7 @@ void shell_n_dot_curv_bc(double func[DIM],
      * J_Curv_DMX
      */
     var = MESH_DISPLACEMENT1;
-    if (pd->v[pg->imtrx][var] &&
+    if (pd->v[pg->imtrx][var] && lsi->near &&
         (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_MESH_UNDEF)) {
 
       /*** Loop over dimensions of mesh displacement ***/
@@ -426,14 +443,14 @@ void shell_n_dot_curv_bc(double func[DIM],
      * J_Curv_DF
      */
     var = FILL;
-    if (pd->v[pg->imtrx][var]) {
+    if (pd->v[pg->imtrx][var] && curv_near) {
 
       /* Loop over DOFs (j) */
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 
         if (pd->e[pg->imtrx][var] && (ibc_flag != -1)) {
           for (ii = 0; ii < pd->Num_Dim; ii++) {
-            d_func[0][var][j] -= d_LSnormal_dF[ii][j] * bound_normal[ii];
+            d_func[0][var][j] -= curvX * d_LSnormal_dF[ii][j] * bound_normal[ii];
           }
         }
       } // End of loop over DOFs (j)
@@ -459,11 +476,13 @@ void shell_n_dot_curv_bc(double func[DIM],
   } /* end of if Assemble_Jacobian */
 
   /* Calculate the residual contribution        */
-  if (ibc_flag == -1) {
-    func[0] -= cos(M_PIE * theta_deg / 180.);
-  } else {
-    for (ii = 0; ii < pd->Num_Dim; ii++) {
-      func[0] -= LSnormal[ii] * bound_normal[ii];
+  if (curv_near) {
+    if (ibc_flag == -1) {
+      func[0] -= curvX * cos(M_PIE * theta_deg / 180.);
+    } else {
+      for (ii = 0; ii < pd->Num_Dim; ii++) {
+        func[0] -= curvX * LSnormal[ii] * bound_normal[ii];
+      }
     }
   }
   /* Diffusion boundary term */

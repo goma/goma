@@ -570,6 +570,7 @@ void noahs_ark(void) {
 #endif
   ddd_add_member(n, &Guess_Flag, 1, MPI_INT);
   ddd_add_member(n, &Conformation_Flag, 1, MPI_INT);
+  ddd_add_member(n, &Print3DBCDup, 1, MPI_INT);
 
   /*
    * The variable initialization structures are of fixed size, but only
@@ -1569,6 +1570,13 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->TurbulentLubricationModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->LubIntegrationModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->Lub_Curv_DiffModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->Lub_Curv_RelaxModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->Lub_Kwt_funcModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->Lub_Curv_MassLump, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->Lub_Curv_NormalModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->Lub_Curv_Modulation, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->Lub_Heat_XferModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->Lub_Heat_TambModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedPorosityModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedRadiusModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedHeightModel, 1, MPI_INT);
@@ -1847,6 +1855,10 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->LubInt_NGP, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->LubInt_PL, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->Lub_Curv_Diff, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->Lub_Curv_Relax, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->Lub_Kwt_func, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->Lub_Heat_Xfer, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->Lub_Heat_Tamb, 1, MPI_DOUBLE);
 
     /*
      * Material property constants that are vectors over the concentration
@@ -2380,6 +2392,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &elc_glob[i]->lame_mu_model, 1, MPI_INT);
 
     ddd_add_member(n, &elc_glob[i]->len_u_mu, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->len_u_mu_ns, 1, MPI_INT);
 
     ddd_add_member(n, elc_glob[i]->d_lame_mu, MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->lame_mu_tableid, 1, MPI_INT);
@@ -2448,6 +2461,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &elc_rs_glob[i]->lame_mu_model, 1, MPI_INT);
 
     ddd_add_member(n, &elc_rs_glob[i]->len_u_mu, 1, MPI_INT);
+    ddd_add_member(n, &elc_rs_glob[i]->len_u_mu_ns, 1, MPI_INT);
 
     ddd_add_member(n, elc_rs_glob[i]->d_lame_mu, MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
     ddd_add_member(n, &elc_rs_glob[i]->lame_mu_tableid, 1, MPI_INT);
@@ -2642,6 +2656,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &SEC_STRAINRATE_INVAR, 1, MPI_INT);
   ddd_add_member(n, &THIRD_STRAINRATE_INVAR, 1, MPI_INT);
   ddd_add_member(n, &WALL_DISTANCE, 1, MPI_INT);
+  ddd_add_member(n, &CONTACT_DISTANCE, 1, MPI_INT);
   ddd_add_member(n, &USER_POST, 1, MPI_INT);
   if (len_u_post_proc > 0) {
     ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);
@@ -3124,6 +3139,7 @@ void ark_landing(void) {
     e = elc_glob[i];
 
     dalloc(e->len_u_mu, e->u_mu);
+    e->u_mu_ns = malloc(e->len_u_mu_ns * sizeof(int));
 
     dalloc(e->len_u_lambda, e->u_lambda);
 
@@ -3142,6 +3158,7 @@ void ark_landing(void) {
     e = elc_rs_glob[i];
 
     dalloc(e->len_u_mu, e->u_mu);
+    e->u_mu_ns = malloc(e->len_u_mu_ns * sizeof(int));
 
     dalloc(e->len_u_lambda, e->u_lambda);
 
@@ -3434,6 +3451,9 @@ void noahs_dove(void) {
     crdv(m->len_u_DiffCoeff_function_constants, m->u_DiffCoeff_function_constants);
 
     crdv(e->len_u_mu, e->u_mu);
+    if (e->len_u_mu_ns > 0) {
+      ddd_add_member(n, e->u_mu_ns, e->len_u_mu_ns, MPI_INT);
+    }
 
     crdv(e->len_u_lambda, e->u_lambda);
 
@@ -3452,6 +3472,9 @@ void noahs_dove(void) {
     e = elc_rs_glob[i];
 
     crdv(e->len_u_mu, e->u_mu);
+    if (e->len_u_mu_ns > 0) {
+      ddd_add_member(n, e->u_mu_ns, e->len_u_mu_ns, MPI_INT);
+    }
 
     crdv(e->len_u_lambda, e->u_lambda);
 
