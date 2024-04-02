@@ -14,7 +14,7 @@ jobs:
 
     defaults:
       run:
-        shell: bash -e {0}
+        shell: bash -l -e {0}
 
     steps:
     - uses: actions/checkout@v3
