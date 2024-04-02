@@ -1,3 +1,4 @@
+#ifdef GOMA_ENABLE_TPETRA
 #include "Tpetra_computeRowAndColumnOneNorms.hpp"
 #include "std.h"
 #include <Teuchos_ArrayViewDecl.hpp>
@@ -199,3 +200,4 @@ extern "C" goma_error g_tpetra_destroy(GomaSparseMatrix matrix) {
   delete static_cast<TpetraSparseMatrix *>(matrix->data);
   return GOMA_SUCCESS;
 }
+#endif // GOMA_ENABLE_TPETRA

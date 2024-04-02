@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <filesystem>
 #include <utility>
 
 #include "Epetra_DataAccess.h"
@@ -28,16 +29,18 @@
 #include "Thyra_SolveSupportTypes.hpp"
 #include "Thyra_VectorBase.hpp"
 
-#include "MatrixMarket_Tpetra.hpp"
 #include "Teuchos_YamlParameterListCoreHelpers.hpp"
 #include "Thyra_LinearOpTester.hpp"
 #include "Thyra_LinearOpWithSolveFactoryHelpers.hpp"
 #include "Thyra_LinearOpWithSolveTester.hpp"
+#include "sl_epetra_interface.h"
+
+#ifdef GOMA_ENABLE_TPETRA
 #include "Thyra_TpetraLinearOp.hpp"
 #include "Thyra_TpetraThyraWrappers.hpp"
 #include "Thyra_TpetraVector.hpp"
 #include "linalg/sparse_matrix_tpetra.h"
-#include "sl_epetra_interface.h"
+#endif 
 
 #include "EpetraExt_RowMatrixOut.h"
 #include "EpetraExt_VectorOut.h"
@@ -58,6 +61,7 @@
 #include "sl_stratimikos_interface.h"
 #include "sl_util_structs.h"
 
+#ifdef GOMA_ENABLE_TPETRA
 extern "C" {
 int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
                              double *x_,
@@ -90,11 +94,12 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
       tpetra_x->replaceGlobalValue(matrix->global_ids[i], x_[i]);
       tpetra_b->replaceGlobalValue(matrix->global_ids[i], b_[i]);
     }
-
+#if 0
     Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<double, LO, GO>>::writeSparseFile("A.mm",
                                                                                      tpetra_A);
     Tpetra::MatrixMarket::Writer<Tpetra::Vector<double, LO, GO>>::writeDenseFile("x.mm", tpetra_x);
     Tpetra::MatrixMarket::Writer<Tpetra::Vector<double, LO, GO>>::writeDenseFile("b.mm", tpetra_b);
+#endif
 
     RCP<const Thyra::LinearOpBase<double>> A = Thyra::createConstLinearOp(
         Teuchos::rcp_dynamic_cast<const Tpetra::Operator<double, LO, GO>>(tpetra_A));
@@ -107,7 +112,12 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
     // Get parameters from file
     if (!param_set[imtrx]) {
       param_set[imtrx] = true;
-      solverParams_static[imtrx] = Teuchos::getParametersFromXmlFile(stratimikos_file[imtrx]);
+      std::filesystem::path path(stratimikos_file[imtrx]);
+      if (path.extension() == ".yaml") {
+        solverParams_static[imtrx] = Teuchos::getParametersFromYamlFile(stratimikos_file[imtrx]);
+      } else {
+        solverParams_static[imtrx] = Teuchos::getParametersFromXmlFile(stratimikos_file[imtrx]);
+      }
     }
 
     RCP<Teuchos::ParameterList> solverParams = solverParams_static[imtrx];
@@ -173,6 +183,7 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
     return -1;
   }
 }
+#endif /* GOMA_ENABLE_TPETRA */
 
 int stratimikos_solve(struct GomaLinearSolverData *ams,
                       double *x_,
@@ -204,7 +215,12 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
     // Get parameters from file
     if (!param_set[imtrx]) {
       param_set[imtrx] = true;
-      solverParams_static[imtrx] = Teuchos::getParametersFromXmlFile(stratimikos_file[imtrx]);
+      std::filesystem::path path(stratimikos_file[imtrx]);
+      if (path.extension() == ".yaml") {
+        solverParams_static[imtrx] = Teuchos::getParametersFromYamlFile(stratimikos_file[imtrx]);
+      } else {
+        solverParams_static[imtrx] = Teuchos::getParametersFromXmlFile(stratimikos_file[imtrx]);
+      }
     }
 
     RCP<Teuchos::ParameterList> solverParams = solverParams_static[imtrx];

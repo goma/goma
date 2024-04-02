@@ -108,6 +108,15 @@ if(${stratimikos_package_index} GREATER_EQUAL 0)
   endif()
 endif()
 
+list(FIND Trilinos_PACKAGE_LIST Tpetra tpetra_package_index)
+if(${tpetra_package_index} GREATER_EQUAL 0)
+  option(ENABLE_TPETRA "ENABLE_TPETRA" ON)
+  if(ENABLE_TPETRA)
+    message(STATUS "TRILINOS: Tpetra found, enabling in Goma")
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TPETRA)
+  endif()
+endif()
+
 # Exodus
 find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 message(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")

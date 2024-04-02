@@ -1,5 +1,6 @@
 #ifndef GOMA_SPARSE_MATRIX_TPETRA
 #define GOMA_SPARSE_MATRIX_TPETRA
+#ifdef GOMA_ENABLE_TPETRA
 #ifdef __cplusplus
 #include "Teuchos_RCP.hpp"
 #include <Tpetra_FECrsMatrix.hpp>
@@ -59,5 +60,5 @@ goma_error g_tpetra_destroy(GomaSparseMatrix matrix);
 #ifdef __cplusplus
 }
 #endif
-
+#endif
 #endif // GOMA_SPARSE_MATRIX_TPETRA

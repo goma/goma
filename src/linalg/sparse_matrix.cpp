@@ -2,7 +2,9 @@
 #include <vector>
 
 #include "linalg/sparse_matrix.h"
+#ifdef GOMA_ENABLE_TPETRA
 #include "linalg/sparse_matrix_tpetra.h"
+#endif
 
 extern "C" {
 #define DISABLE_CPP
@@ -24,9 +26,11 @@ extern "C" goma_error GomaSparseMatrix_Create(GomaSparseMatrix *matrix,
                                               enum GomaSparseMatrixType type) {
   *matrix = (GomaSparseMatrix)malloc(sizeof(struct g_GomaSparseMatrix));
   switch (type) {
+#ifdef GOMA_ENABLE_TPETRA
   case GOMA_SPARSE_MATRIX_TYPE_TPETRA:
     return GomaSparseMatrix_Tpetra_Create(matrix);
     break;
+#endif
   default:
     GOMA_EH(GOMA_ERROR, "Unknown matrix type, GomaSparseMatrix_Create");
     return GOMA_ERROR;
