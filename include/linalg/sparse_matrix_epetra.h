@@ -15,7 +15,6 @@ using GO = GomaGlobalOrdinal;
 struct EpetraSparseMatrix {
   Teuchos::RCP<Epetra_CrsMatrix> matrix;
   Teuchos::RCP<Epetra_Map> row_map;
-  Teuchos::RCP<Epetra_Map> col_map;
   Teuchos::RCP<Epetra_CrsGraph> crs_graph;
   EpetraSparseMatrix() = default;
 };

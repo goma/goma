@@ -64,9 +64,7 @@ extern "C" goma_error g_epetra_create_graph(GomaSparseMatrix matrix,
   MPI_Allreduce(&n_cols, &global_n_cols, 1, MPI_GOMA_ORDINAL, MPI_SUM, MPI_COMM_WORLD);
 
   tmp->row_map = Teuchos::rcp(new Epetra_Map(global_n_rows, n_rows, row_list, 0, comm));
-  tmp->col_map = Teuchos::rcp(new Epetra_Map(global_n_rows, n_cols, col_list, 0, comm));
-  tmp->crs_graph =
-      Teuchos::rcp(new Epetra_CrsGraph(Copy, *(tmp->row_map), *(tmp->col_map), max_per_row));
+  tmp->crs_graph = Teuchos::rcp(new Epetra_CrsGraph(Copy, *(tmp->row_map), max_per_row));
 
   GomaGlobalOrdinal current_row = row_list[0];
   std::vector<GomaGlobalOrdinal> indices(max_per_row);
