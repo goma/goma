@@ -3544,6 +3544,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     } else {
       mu = viscosity(gn, NULL, d_mu);
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
+      /*dmu_dT = mp->d_viscosity[SHELL_TEMPERATURE];  */
     }
 
     /* Extract wall velocities */
@@ -3558,7 +3559,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     /***** DEFORM HEIGHT AND CALCULATE SENSITIVITIES *****/
 
     /* Define variables */
-    dbl D_H_DX[DIM][MDE], D_H_DP;
+    dbl D_H_DX[DIM][MDE], D_H_DP, D_H_ddh;
     dbl D_H_DRS[DIM][MDE];
     dbl D_H_DNORMAL[DIM][MDE];
     memset(D_H_DX, 0.0, sizeof(double) * DIM * MDE);
@@ -3674,6 +3675,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     /* Calculate height sensitivity to pressure */
     D_H_DP = dH_U_dp;
+    D_H_ddh = dH_U_ddh;
 
     /* Calculate height sensitivity to melting */
 
@@ -3737,24 +3739,56 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dbl d_grad_Hside_dmx[DIM][DIM][MDE];
     memset(d_grad_Hside_dmx, 0.0, sizeof(double) * DIM * DIM * MDE);
     if (pd->v[pg->imtrx][VAR]) {
-      load_lsi(ls->Length_Scale);
-      load_lsi_derivs();
-      for (i = 0; i < dim; i++) {
-        for (j = 0; j < dim; j++) {
-          for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
-            jk = dof_map[k];
-            d_grad_Hside_dmx[i][j][jk] = lsi->d_gradHn_dmesh[i][j][k];
+      if (mp->Lub_Curv_NormalModel) {
+        load_lsi(ls->Length_Scale);
+        if (!mp->Lub_Curv_Modulation || lsi->near) {
+          load_lsi_derivs();
+          for (i = 0; i < dim; i++) {
+            for (j = 0; j < dim; j++) {
+              for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+                jk = dof_map[k];
+                d_grad_Hside_dmx[i][j][jk] = lsi->d_gradHn_dmesh[i][j][k];
+              }
+            }
+          }
+          ShellRotate(lsi->gradHn, d_grad_Hside_dmx, GRADH, D_GRADH_DX, n_dof[MESH_DISPLACEMENT1]);
+
+          /* Calculate F sensitivity */
+          for (i = 0; i < dim; i++) {
+            for (j = 0; j < dim; j++) {
+              for (k = 0; k < ei[pg->imtrx]->dof[VAR]; k++) {
+                D_GRADH_DF[i][k] += lsi->d_gradHn_dF[j][k] * delta(i, j);
+                D_GRADH_DF[i][k] -= lsi->d_gradHn_dF[j][k] * fv->snormal[i] * fv->snormal[j];
+              }
+            }
           }
         }
-      }
-      ShellRotate(lsi->gradHn, d_grad_Hside_dmx, GRADH, D_GRADH_DX, n_dof[MESH_DISPLACEMENT1]);
+      } else {
+        double deltan[DIM];
+        load_lsi(ls->Length_Scale);
+        if (!mp->Lub_Curv_Modulation || lsi->near) {
+          load_lsi_derivs();
+          for (i = 0; i < dim; i++) {
+            deltan[i] = lsi->delta * lsi->normal[i];
+            for (j = 0; j < dim; j++) {
+              for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+                jk = dof_map[k];
+                d_grad_Hside_dmx[i][j][jk] = lsi->d_delta_dmesh[j][k] * lsi->normal[i] +
+                                             lsi->delta * lsi->d_normal_dmesh[i][j][k];
+              }
+            }
+          }
+          ShellRotate(deltan, d_grad_Hside_dmx, GRADH, D_GRADH_DX, n_dof[MESH_DISPLACEMENT1]);
 
-      /* Calculate F sensitivity */
-      for (i = 0; i < dim; i++) {
-        for (j = 0; j < dim; j++) {
-          for (k = 0; k < ei[pg->imtrx]->dof[VAR]; k++) {
-            D_GRADH_DF[i][k] += lsi->d_gradHn_dF[j][k] * delta(i, j);
-            D_GRADH_DF[i][k] -= lsi->d_gradHn_dF[j][k] * fv->snormal[i] * fv->snormal[j];
+          /* Calculate F sensitivity */
+          for (i = 0; i < dim; i++) {
+            for (j = 0; j < dim; j++) {
+              for (k = 0; k < ei[pg->imtrx]->dof[VAR]; k++) {
+                D_GRADH_DF[i][k] +=
+                    (lsi->delta * lsi->d_normal_dF[i][k] + lsi->d_delta_dF[k] * lsi->normal[i]) *
+                    (delta(i, j) - fv->snormal[i] * fv->snormal[j]);
+              }
+            }
           }
         }
       }
@@ -3812,32 +3846,37 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       if (pd->e[pg->imtrx][SHELL_LUB_CURV_2]) {
         CURV += fv->sh_l_curv_2;
       }
+      if (pd->e[pg->imtrx][NORMAL1]) {
+        CURV += fv->div_n;
+      }
 
       /* Sensitivity to height */
-      D_CURV_DH = (cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / (H_cap * H_cap);
+      if (!pd->e[pg->imtrx][SHELL_LUB_CURV]) {
+        D_CURV_DH = (cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / (H_cap * H_cap);
 
-      /* Sensitivity to level set F */
-      for (i = 0; i < ei[pg->imtrx]->dof[VAR]; i++) {
-        for (j = 0; j < DIM; j++) {
-          D_CURV_DF[i] += sin(dcaU + atan(slopeU)) / (H_cap * (1 + slopeU * slopeU)) * dHc_U_dX[j] *
-                          lsi->d_normal_dF[j][i];
-          D_CURV_DF[i] += sin(dcaL + atan(-slopeL)) / (H_cap * (1 + slopeL * slopeL)) *
-                          dHc_L_dX[j] * lsi->d_normal_dF[j][i];
+        /* Sensitivity to level set F */
+        for (i = 0; i < ei[pg->imtrx]->dof[VAR]; i++) {
+          for (j = 0; j < DIM; j++) {
+            D_CURV_DF[i] += sin(dcaU + atan(slopeU)) / (H_cap * (1 + slopeU * slopeU)) *
+                            dHc_U_dX[j] * lsi->d_normal_dF[j][i];
+            D_CURV_DF[i] += sin(dcaL + atan(-slopeL)) / (H_cap * (1 + slopeL * slopeL)) *
+                            dHc_L_dX[j] * lsi->d_normal_dF[j][i];
+          }
+          D_CURV_DF[i] += D_CURV_DH * dH_dF[i];
         }
-        D_CURV_DF[i] += D_CURV_DH * dH_dF[i];
-      }
 
-      /* Sensitivity to mesh */
-      for (i = 0; i < dim; i++) {
-        for (j = 0; j < n_dof[MESH_DISPLACEMENT1]; j++) {
-          D_CURV_DX[i][j] += D_CURV_DH * D_Hc_DX[i][j];
+        /* Sensitivity to mesh */
+        for (i = 0; i < dim; i++) {
+          for (j = 0; j < n_dof[MESH_DISPLACEMENT1]; j++) {
+            D_CURV_DX[i][j] += D_CURV_DH * D_Hc_DX[i][j];
+          }
         }
-      }
 
-      /* Sensitivity to shell normal */
-      for (i = 0; i < dim; i++) {
-        for (j = 0; j < ei[pg->imtrx]->dof[SHELL_NORMAL1]; j++) {
-          D_CURV_DNORMAL[i][j] += D_CURV_DH * D_H_DNORMAL[i][j];
+        /* Sensitivity to shell normal */
+        for (i = 0; i < dim; i++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[SHELL_NORMAL1]; j++) {
+            D_CURV_DNORMAL[i][j] += D_CURV_DH * D_H_DNORMAL[i][j];
+          }
         }
       }
     }
@@ -3912,11 +3951,12 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dbl dq_dH = 0., dv_dH = 0., H_inv = 1. / H;
     dbl dqmag_dF[MDE], factor, ratio = 0., q_mag2;
     dbl q[DIM], ev[DIM], pgrad, pg_cmp[DIM], dev_dpg[DIM][DIM];
-    dbl v_avg[DIM];
+    dbl v_avg[DIM], dq_dT;
     double DQ_DH[DIM];
-    double D_Q_DF[DIM][MDE], D_V_DF[DIM][MDE], DGRADP_DF[DIM][MDE];
+    double D_Q_DF[DIM][MDE], D_V_DF[DIM][MDE], DGRADP_DF[DIM][MDE], DGRADP_DK = 0.;
     double DGRADP_DX[DIM][DIM][MDE], DGRADP_DNORMAL[DIM][DIM][MDE];
     double D_Q_DGRADP[DIM][DIM], D_V_DGRADP[DIM][DIM];
+    double D_Q_DT[DIM], D_V_DT[DIM];
     dbl D_Q_DP2[DIM];
     dbl D_V_DP2[DIM];
     int nonmoving_model =
@@ -3951,6 +3991,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
               mp->surface_tension * (GRADH[i] * D_CURV_DF[j] + CURV * D_GRADH_DF[i][j]) -
               D_GRAV_DF[i][j];
         }
+        DGRADP_DK += GRADH[i] * mp->surface_tension;
       }
       for (j = 0; j < dim; j++) {
         for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
@@ -4030,8 +4071,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       } else if (nonmoving_model) {
         if (isnan(tau_w))
           GOMA_WH(GOMA_ERROR, "Trouble, tau_w is nan...\n");
-        err =
-            lub_viscosity_integrate(tau_w, H, &q_mag, &dq_gradp, &dq_dH, &srate, &pre_delP, &vis_w);
+        err = lub_viscosity_integrate(tau_w, H, &q_mag, &dq_gradp, &dq_dH, &srate, &pre_delP,
+                                      &vis_w, &dq_dT);
         if (isnan(srate))
           DPRINTF(stderr, "lub_srate isnan %g %g %g %g\n", tau_w, q_mag, srate, vis_w);
         if (err < 0) {
@@ -4060,6 +4101,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         factor += ratio;
         dq_gradp *= factor;
         dq_dH *= factor;
+        dq_dT *= factor;
         pre_delP *= factor;
         vis_w /= factor;
       }
@@ -4339,8 +4381,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
                                            mp->HeightUFunctionModel == FLAT_GRAD_FLAT_MELT ||
                                            mp->HeightUFunctionModel == CIRCLE_MELT)) {
       for (i = 0; i < dim; i++) {
-        D_Q_DdH[i] = D_Q_DH[i] * dH_U_ddh;
-        D_V_DdH[i] = D_V_DH[i] * dH_U_ddh;
+        D_Q_DdH[i] = D_Q_DH[i] * D_H_ddh;
+        D_V_DdH[i] = D_V_DH[i] * D_H_ddh;
       }
     }
 
@@ -4358,6 +4400,14 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         for (j = 0; j < ei[pg->imtrx]->dof[SHELL_PARTC]; j++) {
           D_V_DC[i][j] += v_mag * (-dmu_dc / mu) * ev[i];
         }
+      }
+    }
+
+    /* Sensitivity w.r.t. sh_t , i.e., scalar viscosity dependencies */
+    if (pd->v[pg->imtrx][SHELL_TEMPERATURE]) {
+      for (i = 0; i < dim; i++) {
+        D_Q_DT[i] = dq_dT * ev[i];
+        D_V_DT[i] = H_inv * dq_dT * ev[i];
       }
     }
 
@@ -4392,6 +4442,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     memset(LubAux->dq_dnormal, 0.0, sizeof(double) * DIM * DIM * MDE);
 
     LubAux->H = H;
+    LubAux->dH_dp = D_H_DP;
+    LubAux->dH_ddh = D_H_ddh;
     LubAux->gradP_mag = 0;
     LubAux->srate = srate;
     LubAux->mu_star = vis_w;
@@ -4406,6 +4458,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       LubAux->dv_avg_dk[i] = D_V_DK[i];
       LubAux->dq_ddh[i] = D_Q_DdH[i];
       LubAux->dv_avg_ddh[i] = D_V_DdH[i];
+      LubAux->dq_dT[i] = D_Q_DT[i];
+      LubAux->dv_avg_dT[i] = D_V_DT[i];
       for (j = 0; j < dim; j++) {
         LubAux->dq_dgradp[i][j] = D_Q_DGRADP[i][j];
         LubAux->dv_dgradp[i][j] = D_V_DGRADP[i][j];
@@ -4698,7 +4752,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     memset(v_avg, 0.0, sizeof(double) * DIM);
     dbl q_mag = 0., pre_delP = 0., dq_gradp = 1., vpre_delP = 1.;
     dbl k_turb = 3., tau_w, vis_w, dq_gradpt, dv_gradp;
-    dbl vsqr, dq_dH = 0., dv_dH = 0.;
+    dbl vsqr, dq_dH = 0., dv_dH = 0., dq_dT = 0.;
     double DGRADP_DX[DIM][DIM][MDE];
 
     for (i = 0; i < dim; i++) {
@@ -4751,7 +4805,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
                gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF) {
       if (isnan(tau_w))
         GOMA_WH(GOMA_ERROR, "Trouble, tau_w is nan...\n");
-      err = lub_viscosity_integrate(tau_w, H, &q_mag, &dq_gradp, &dq_dH, &srate, &pre_delP, &vis_w);
+      err = lub_viscosity_integrate(tau_w, H, &q_mag, &dq_gradp, &dq_dH, &srate, &pre_delP, &vis_w,
+                                    &dq_dT);
       if (isnan(srate))
         fprintf(stderr, "srate isnan %g %g %g %g\n", tau_w, q_mag, srate, vis_w);
       if (err < 0) {
@@ -5153,6 +5208,9 @@ void calculate_lub_q_v_old(
     if (pd->e[pg->imtrx][SHELL_LUB_CURV_2]) {
       CURV += fv_old->sh_l_curv_2;
     }
+    if (pd->e[pg->imtrx][NORMAL1]) {
+      CURV += fv_old->div_n;
+    }
 
     /******* CALCULATE FLOW RATE AND AVERAGE VELOCITY ***********/
 
@@ -5218,7 +5276,7 @@ void calculate_lub_q_v_old(
         int err;
         if (isnan(tau_w))
           GOMA_WH(GOMA_ERROR, "Trouble, tau_w is nan...\n");
-        err = lub_viscosity_integrate(tau_w, H_old, &q_mag, NULL, NULL, NULL, NULL, NULL);
+        err = lub_viscosity_integrate(tau_w, H_old, &q_mag, NULL, NULL, NULL, NULL, NULL, NULL);
         if (err < 0) {
           GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
         }
@@ -5396,7 +5454,7 @@ void calculate_lub_q_v_old(
       int err;
       if (isnan(tau_w))
         GOMA_WH(GOMA_ERROR, "Trouble, tau_w is nan...\n");
-      err = lub_viscosity_integrate(tau_w, H_old, &q_mag, NULL, NULL, &srate, NULL, &vis_w);
+      err = lub_viscosity_integrate(tau_w, H_old, &q_mag, NULL, NULL, &srate, NULL, &vis_w, NULL);
       if (isnan(srate))
         fprintf(stderr, "srate isnan %g %g %g %g\n", tau_w, q_mag, srate, vis_w);
       if (err < 0) {
@@ -6054,7 +6112,8 @@ int lub_viscosity_integrate(const double strs,
                             double *dq_dh,
                             double *srate,
                             double *pre_P,
-                            double *mu_star)
+                            double *mu_star,
+                            double *dq_dT)
 /******************************************************************************
  *
  * lub_viscosity_integrate()
@@ -6066,11 +6125,12 @@ int lub_viscosity_integrate(const double strs,
  ******************************************************************************/
 {
   double shr, shrw, vis_w = 1., visd = 0.;
-  double nexp = gn->nexp, lam = gn->lam, aexp = gn->aexp, muinf = gn->muinf;
-  double yield = gn->tau_y, F = gn->fexp, mu0 = gn->mu0, P_eps = gn->epsilon;
+  double nexp = gn->nexp, lam, aexp = gn->aexp, muinf;
+  double yield = gn->tau_y, F, mu0, P_eps = gn->epsilon;
   double eps, res, TOL_CEIL = 1.e-6, res_tol, soln_tol;
   int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0, a_visc_type;
   double xint = 0., xint_a = 0., visc_a = 0., xintold = 0., temp, at = 1.;
+  double xintdT = 0.;
 
   res_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][0]);
   soln_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][2]);
@@ -6093,10 +6153,11 @@ int lub_viscosity_integrate(const double strs,
     } else if (gn->ConstitutiveEquation == CARREAU_WLF || gn->ConstitutiveEquation == BINGHAM_WLF) {
       at = exp(gn->atexp * (mp->reference[TEMPERATURE] - temp) /
                (gn->wlfc2 + temp - mp->reference[TEMPERATURE]));
-      ;
     }
   }
+  mu0 = at * gn->mu0;
   muinf = at * gn->muinf;
+  lam = at * gn->lam;
   F = at * gn->fexp;
 
   /**  Take care of de-generate case first **/
@@ -6124,6 +6185,8 @@ int lub_viscosity_integrate(const double strs,
       *srate = 0.;
     if (mu_star != NULL)
       *mu_star = vis_w;
+    if (dq_dT != NULL)
+      *dq_dT = 0.;
     return (ierr);
   }
 
@@ -6364,6 +6427,79 @@ int lub_viscosity_integrate(const double strs,
   if (eps > soln_tol) {
     ierr = -1;
     GOMA_EH(GOMA_ERROR, "Viscosity Integral not converged!");
+  }
+
+  /**  Compute temperature sensitivity integral **/
+  if (dq_dT != NULL && pd->gv[SHELL_TEMPERATURE]) {
+    double dlnat_dT = 0., dvis_dT = 0., dlnvis_w_dT = 0., dlnvis = 0.;
+    double xfact, tmp, tp2, tpe, P_sig;
+    if (DOUBLE_NONZERO(temp) && DOUBLE_NONZERO(mp->reference[TEMPERATURE])) {
+      if (gn->ConstitutiveEquation == BINGHAM) {
+        dlnat_dT = -gn->atexp / SQUARE(temp);
+      } else if (gn->ConstitutiveEquation == CARREAU_WLF ||
+                 gn->ConstitutiveEquation == BINGHAM_WLF) {
+        dlnat_dT = -gn->atexp * gn->wlfc2 / SQUARE(gn->wlfc2 + temp - mp->reference[TEMPERATURE]);
+      }
+    }
+    xintold = 0.;
+    switch (gn->ConstitutiveEquation) {
+    case CARREAU_WLF:
+      dlnvis_w_dT = dlnat_dT * (vis_w + aexp * pow(lam * shrw, aexp));
+      break;
+    case BINGHAM:
+    case BINGHAM_WLF:
+      tp2 = F * shrw;
+      P_sig = pow(1. + tp2, P_eps);
+      tpe = (1. - exp(-tp2)) / shrw * P_sig;
+      dlnvis_w_dT = dlnat_dT * (vis_w + (mu0 - muinf + yield * tpe) * aexp * pow(lam * shrw, aexp));
+      break;
+    default:
+      GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
+    }
+    for (jdi = 0; jdi < JDI_MAX; jdi++) {
+      double cee, x0, delx, vis = 1., jdiv;
+      int idiv, l;
+      jdiv = pow(2., jdi);
+      delx = 1. / jdiv;
+      x0 = 0.0;
+      xintdT = 0.;
+      for (idiv = 0; idiv < jdiv; idiv++) {
+        for (l = 0; l < mp->LubInt_NGP; l++) {
+          cee = x0 + mp->Lub_gpts[l] * delx;
+          xfact = 1. + pow(lam * cee * shrw, aexp);
+          tmp = 1. / pow(xfact, (1. - nexp) / aexp);
+          switch (gn->ConstitutiveEquation) {
+          case CARREAU_WLF:
+            vis = muinf + (mu0 - muinf) * tmp;
+            dvis_dT = dlnat_dT * vis * (1. + nexp * pow(lam * cee * shrw, aexp)) / xfact;
+            dlnvis = (mu0 - muinf) * (nexp - 1.) * tmp / xfact * pow(lam * cee * shrw, aexp);
+            break;
+          case BINGHAM:
+          case BINGHAM_WLF:
+            tp2 = F * cee * shrw;
+            P_sig = pow(1. + tp2, P_eps);
+            tpe = (1. - exp(-tp2)) / (cee * shrw) * P_sig;
+            vis = muinf + (mu0 - muinf + yield * tpe) * tmp;
+            break;
+          default:
+            GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
+          }
+          xintdT += 2 * dvis_dT * (vis - dlnvis) * SQUARE(cee) * delx * mp->Lub_wts[l];
+        }
+        x0 += delx;
+      }
+      xintdT /= SQUARE(vis_w);
+      eps = fabs(xintdT - xintold);
+      xintold = xintdT;
+      if (eps < soln_tol)
+        break;
+    }
+    if (eps > soln_tol) {
+      ierr = -1;
+      GOMA_EH(GOMA_ERROR, "Temperature Sensitivity Integral not converged!");
+    }
+    xintdT += -2. / SQUARE(vis_w) * dlnvis_w_dT * xint;
+    *dq_dT = 0.25 * SQUARE(H) * shrw * (xintdT * dlnvis_w_dT * (1. - xint));
   }
 
   /**  Compute flow magnitude  **/
