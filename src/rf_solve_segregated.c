@@ -57,8 +57,6 @@
 #include "rf_solve.h"
 #include "rf_solver.h"
 #include "rf_util.h"
-#include "sl_epetra_interface.h"
-#include "sl_epetra_util.h"
 #include "sl_matrix_util.h"
 #include "sl_petsc.h"
 #include "sl_petsc_complex.h"
@@ -554,14 +552,15 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
   a = malloc(upd->Total_Num_Matrices * sizeof(double *));
   a_old = malloc(upd->Total_Num_Matrices * sizeof(double *));
 
-  if (strcmp(Matrix_Format, "tpetra") == 0) {
+  if ((strcmp(Matrix_Format, "tpetra") == 0)
+  || (strcmp(Matrix_Format, "epetra") == 0)) {
     err = check_compatible_solver();
     GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
     check_parallel_error("Matrix format / Solver incompatibility");
 
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
       GomaSparseMatrix goma_matrix;
-      GomaSparseMatrix_Create(&goma_matrix, GOMA_SPARSE_MATRIX_TYPE_TPETRA);
+      GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
       int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
       GomaSparseMatrix_SetProblemGraph(goma_matrix, num_internal_dofs[pg->imtrx],
                                        num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx],
@@ -570,16 +569,6 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
       ams[pg->imtrx]->GomaMatrixData = goma_matrix;
     }
 
-  } else if (strcmp(Matrix_Format, "epetra") == 0) {
-    err = check_compatible_solver();
-    GOMA_EH(err, "Incompatible matrix solver for epetra, epetra supports amesos and "
-                 "aztecoo solvers.");
-    check_parallel_error("Matrix format / Solver incompatibility");
-    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-      ams[pg->imtrx]->RowMatrix =
-          EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
-      EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
-    }
 #ifdef GOMA_ENABLE_PETSC
 #if !(PETSC_USE_COMPLEX)
   } else if (strcmp(Matrix_Format, "petsc") == 0) {

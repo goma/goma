@@ -5,6 +5,9 @@
 #ifdef GOMA_ENABLE_TPETRA
 #include "linalg/sparse_matrix_tpetra.h"
 #endif
+#ifdef GOMA_ENABLE_EPETRA
+#include "linalg/sparse_matrix_epetra.h"
+#endif
 
 extern "C" {
 #define DISABLE_CPP
@@ -22,6 +25,16 @@ extern "C" {
 #undef DISABLE_CPP
 }
 
+extern "C" goma_error GomaSparseMatrix_CreateFromFormat(GomaSparseMatrix *matrix,
+                                              char *matrix_format) {
+  if (strcmp(matrix_format, "tpetra") == 0) {
+    return GomaSparseMatrix_Create(matrix, GOMA_SPARSE_MATRIX_TYPE_TPETRA);
+  } else if (strcmp(matrix_format, "epetra") == 0) {
+    return GomaSparseMatrix_Create(matrix, GOMA_SPARSE_MATRIX_TYPE_EPETRA);
+  }
+  return GOMA_ERROR;
+}
+
 extern "C" goma_error GomaSparseMatrix_Create(GomaSparseMatrix *matrix,
                                               enum GomaSparseMatrixType type) {
   *matrix = (GomaSparseMatrix)malloc(sizeof(struct g_GomaSparseMatrix));
@@ -29,6 +42,11 @@ extern "C" goma_error GomaSparseMatrix_Create(GomaSparseMatrix *matrix,
 #ifdef GOMA_ENABLE_TPETRA
   case GOMA_SPARSE_MATRIX_TYPE_TPETRA:
     return GomaSparseMatrix_Tpetra_Create(matrix);
+    break;
+#endif
+#ifdef GOMA_ENABLE_EPETRA
+  case GOMA_SPARSE_MATRIX_TYPE_EPETRA:
+    return GomaSparseMatrix_Epetra_Create(matrix);
     break;
 #endif
   default:

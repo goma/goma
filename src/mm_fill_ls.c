@@ -90,7 +90,6 @@
 #include "sl_util.h"
 
 #define GOMA_MM_FILL_LS_C
-#include "sl_epetra_util.h"
 
 struct Extended_Shape_Fcn_Basics
     *xfem;             /* This is a global structure for the basic pieces needed for XFEM */
@@ -10591,27 +10590,7 @@ void check_xfem_contribution(
         }
       }
     }
-  } else if (strcmp(Matrix_Format, "epetra") == 0) {
-    for (irow = 0; irow < N; irow++) {
-      eqn = idv[pg->imtrx][irow][0];
-      if (eqn == R_MASS || eqn == R_ENERGY) {
-        eps = eps_diffusive;
-      } else {
-        eps = eps_standard;
-      }
-      if (fabs(xfem->active_vol[irow]) < eps * xfem->tot_vol[irow]) {
-
-        EpetraSetDiagonalOnly(ams, ams->GlobalIDs[irow]);
-        resid[irow] = x[irow] - x_old_static[irow];
-
-        if (FALSE && xfem->active_vol[irow] != 0.) /* debugging */
-        {
-          DPRINTF(stderr, "kill partial equation, row=%d, n = %d, active/tot=%g\n", irow,
-                  idv[pg->imtrx][irow][2] + 1, fabs(xfem->active_vol[irow]) / xfem->tot_vol[irow]);
-        }
-      }
-    }
-  } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+  } else if (ams->GomaMatrixData != NULL) {
     for (irow = 0; irow < N; irow++) {
       eqn = idv[pg->imtrx][irow][0];
       if (eqn == R_MASS || eqn == R_ENERGY) {

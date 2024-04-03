@@ -60,6 +60,8 @@
 #include "Epetra_Map.h"
 #include "Epetra_Vector.h"
 #include "Trilinos_Util.h"
+#include "linalg/sparse_matrix.h"
+#include "linalg/sparse_matrix_epetra.h"
 #include "sl_util_structs.h"
 
 static void GomaMsr2EpetraCsr(struct GomaLinearSolverData *ams, Epetra_CrsMatrix *A, int newmatrix);
@@ -84,7 +86,7 @@ void amesos_solve(char *choice,
   Amesos A_Factory;
 
   /* Convert to Epetra format */
-  if (ams->RowMatrix == 0) {
+  if (ams->GomaMatrixData == NULL) {
     if (!ams->solveSetup) {
       if (A[imtrx] != nullptr)
         delete A[imtrx];
@@ -92,7 +94,9 @@ void amesos_solve(char *choice,
     }
     GomaMsr2EpetraCsr(ams, A[imtrx], !ams->solveSetup);
   } else {
-    A[imtrx] = dynamic_cast<Epetra_CrsMatrix *>(ams->RowMatrix);
+  GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+  EpetraSparseMatrix *epetra_matrix = static_cast<EpetraSparseMatrix *>(matrix->data);
+    A[imtrx] = dynamic_cast<Epetra_CrsMatrix *>(epetra_matrix->matrix.get());
   }
   const Epetra_Map &map = A[imtrx]->RowMatrixRowMap();
   Epetra_Vector x(Copy, map, x_);

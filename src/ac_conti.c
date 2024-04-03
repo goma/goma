@@ -65,7 +65,6 @@
 #include "rf_solver_const.h"
 #include "rf_util.h"
 #include "sl_auxutil.h"
-#include "sl_epetra_util.h"
 #include "sl_petsc.h"
 #include "sl_petsc_complex.h"
 #include "sl_util.h" /* defines sl_init() */
@@ -550,26 +549,19 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
   pg->matrices[pg->imtrx].resid_vector = resid_vector;
 
   /* Allocate sparse matrix */
-  if (strcmp(Matrix_Format, "tpetra") == 0) {
+  if ((strcmp(Matrix_Format, "tpetra") == 0) 
+  || (strcmp(Matrix_Format, "epetra") == 0)) {
     err = check_compatible_solver();
     GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
     check_parallel_error("Matrix format / Solver incompatibility");
     GomaSparseMatrix goma_matrix;
-    GomaSparseMatrix_Create(&goma_matrix, GOMA_SPARSE_MATRIX_TYPE_TPETRA);
+    GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
     int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
     GomaSparseMatrix_SetProblemGraph(goma_matrix, num_internal_dofs[pg->imtrx],
                                      num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx],
                                      local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
                                      dpi, cx, pg->imtrx, Debug_Flag, ams[JAC]);
     ams[JAC]->GomaMatrixData = goma_matrix;
-  } else if (strcmp(Matrix_Format, "epetra") == 0) {
-    err = check_compatible_solver();
-    GOMA_EH(err,
-            "Incompatible matrix solver for epetra, epetra supports amesos and aztecoo solvers.");
-    check_parallel_error("Matrix format / Solver incompatibility");
-    ams[JAC]->RowMatrix =
-        EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
-    EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
   } else if (strcmp(Matrix_Format, "msr") == 0) {
     log_msg("alloc_MSR_sparse_arrays...");
     alloc_MSR_sparse_arrays(&ija, &a, &a_old, 0, node_to_fill, exo, dpi);

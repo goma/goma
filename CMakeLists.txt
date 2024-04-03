@@ -122,6 +122,15 @@ if(${tpetra_package_index} GREATER_EQUAL 0)
   endif()
 endif()
 
+list(FIND Trilinos_PACKAGE_LIST Epetra epetra_package_index)
+if(${epetra_package_index} GREATER_EQUAL 0)
+  option(ENABLE_EPETRA "ENABLE_EPETRA" ON)
+  if(ENABLE_EPETRA)
+    message(STATUS "TRILINOS: Epetra found, enabling in Goma")
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_EPETRA)
+  endif()
+endif()
+
 # Exodus
 find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 message(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
@@ -455,6 +464,7 @@ set(GOMA_INCLUDES
     include/exo_struct.h
     include/linalg/sparse_matrix.h
     include/linalg/sparse_matrix_tpetra.h
+    include/linalg/sparse_matrix_epetra.h
     include/load_field_variables.h
     include/loca_const.h
     include/loca_util_const.h
@@ -557,8 +567,6 @@ set(GOMA_INCLUDES
     include/sl_aztecoo_interface.h
     include/sl_eggroll_def.h
     include/sl_eggroll.h
-    include/sl_epetra_interface.h
-    include/sl_epetra_util.h
     include/sl_lu.h
     include/sl_petsc.h
     include/sl_petsc_complex.h
@@ -609,6 +617,7 @@ set(GOMA_SOURCES
     src/globals.c
     src/linalg/sparse_matrix.cpp
     src/linalg/sparse_matrix_tpetra.cpp
+    src/linalg/sparse_matrix_epetra.cpp
     src/load_field_variables.c
     src/loca_bord.c
     src/loca_eigen_c2f.F
@@ -712,8 +721,6 @@ set(GOMA_SOURCES
     src/sl_eggroll05.c
     src/sl_eggrollutil.c
     src/sl_eggrollwrap.c
-    src/sl_epetra_interface.cpp
-    src/sl_epetra_util.cpp
     src/sl_leastsquares.cpp
     src/sl_lu.c
     src/sl_lu_fill.c

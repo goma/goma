@@ -27,7 +27,7 @@ extern "C" goma_error GomaSparseMatrix_Tpetra_Create(GomaSparseMatrix *matrix) {
   (*matrix)->type = GOMA_SPARSE_MATRIX_TYPE_TPETRA;
   (*matrix)->data = reinterpret_cast<void *>(tmp);
   (*matrix)->create_graph = g_tpetra_create_graph;
-  (*matrix)->complete_graph = complete_graph;
+  (*matrix)->complete_graph = g_tpetra_complete_graph;
   (*matrix)->insert_row_values = g_tpetra_insert_row_values;
   (*matrix)->sum_into_row_values = g_tpetra_sum_into_row_values;
   (*matrix)->put_scalar = g_tpetra_put_scalar;
@@ -91,7 +91,7 @@ extern "C" goma_error g_tpetra_create_graph(GomaSparseMatrix matrix,
   return GOMA_SUCCESS;
 }
 
-extern "C" goma_error complete_graph(GomaSparseMatrix matrix) {
+extern "C" goma_error g_tpetra_complete_graph(GomaSparseMatrix matrix) {
   auto *tmp = static_cast<TpetraSparseMatrix *>(matrix->data);
   tmp->matrix->fillComplete();
   tmp->matrix->resumeFill();
@@ -146,6 +146,10 @@ extern "C" goma_error g_tpetra_row_sum_scaling(GomaSparseMatrix matrix, double *
     for (size_t j = 0; j < values.size(); j++) {
       row_sum += std::abs(values[j]);
     }
+    if (row_sum == 0) {
+      GOMA_WH_MANY(GOMA_ERROR, "Row sum is zero, g_tpetra_row_sum_scaling");
+    }
+    row_sum = 1.0;
     b_vec->replaceLocalValue(i, 1.0 / row_sum);
   }
   tmp->matrix->leftScale(*b_vec);

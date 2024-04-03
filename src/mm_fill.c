@@ -94,7 +94,6 @@
 #include "rf_node_const.h"
 #include "rf_solver.h"
 #include "rf_solver_const.h"
-#include "sl_epetra_util.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
 #include "std.h"
@@ -5001,9 +5000,7 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
   fprintf(rrrr, "\nGlobal_NN Proc_NN  Equation    idof    Proc_SolnNum     ResidValue\n");
 #endif
 
-  if (strcmp(Matrix_Format, "epetra") == 0) {
-    EpetraLoadLec(ielem, ams, resid_vector);
-  } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+  if (ams->GomaMatrixData != NULL) {
     GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
     GomaSparseMatrix_LoadLec(matrix, ielem, lec, resid_vector);
   }

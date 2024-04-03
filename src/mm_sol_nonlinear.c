@@ -20,7 +20,6 @@
 #include "linalg/sparse_matrix.h"
 #include "mm_eh.h"
 #include "mm_mp_const.h"
-#include "sl_epetra_interface.h"
 #include "sl_util_structs.h"
 
 #define GOMA_MM_SOL_NONLINEAR_C
@@ -768,9 +767,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     init_vec_value(resid_vector, 0.0, numProcUnknowns);
     init_vec_value(delta_x, 0.0, numProcUnknowns);
     /* Zero matrix values */
-    if (strcmp(Matrix_Format, "epetra") == 0) {
-      EpetraPutScalarRowMatrix(ams->RowMatrix, 0.0);
-    } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+    if (ams->GomaMatrixData != NULL) {
       GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
       matrix->put_scalar(matrix, 0.0);
     } else {

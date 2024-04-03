@@ -41,7 +41,6 @@
 #endif
 
 #include "az_aztec.h"
-#include "sl_epetra_interface.h"
 
 /*
  * NUM_ALSS - Number of Aztec Linear Solver Systems. Here we have one.
@@ -109,9 +108,6 @@ struct GomaLinearSolverData {
 #endif
 
   int solveSetup;
-
-  C_Epetra_RowMatrix_t *RowMatrix; /* This is a Epetra_RowMatrix object */
-  int *GlobalIDs;                  /* Pointer to global ids of DOFs (only available with epetra) */
 
   void *PetscMatrixData;
   void *GomaMatrixData;

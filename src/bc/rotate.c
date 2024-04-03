@@ -27,6 +27,7 @@
 #include "el_geom.h"
 #include "exo_struct.h"
 #include "gds/gds_vector.h"
+#include "linalg/sparse_matrix.h"
 #include "load_field_variables.h"
 #include "mm_as.h"
 #include "mm_as_alloc.h"
@@ -59,6 +60,7 @@
 #include "sl_util_structs.h"
 #include "std.h"
 #include "util/goma_normal.h"
+#include "linalg/sparse_matrix.h"
 
 /*
  *  Variable Definitions
@@ -69,7 +71,6 @@ int dup_blks_list[MAX_MAT_PER_SS + 1];
 int rotation_allocated = FALSE;
 
 #define GOMA_BC_ROTATE_C
-#include "sl_epetra_interface.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E *************************
  *
@@ -782,7 +783,8 @@ void rotate_mesh_eqn(int id,           /* Elemental stiffness matrix row index *
                 }
               }
             }
-          } else if (strcmp(Matrix_Format, "epetra") == 0) {
+          } else if (ams->GomaMatrixData != NULL) {
+            GomaSparseMatrix matrix = (GomaSparseMatrix )ams->GomaMatrixData;
             if (I < (DPI_ptr->num_internal_nodes + DPI_ptr->num_boundary_nodes)) {
               /*
                * Find the global equation number
@@ -813,10 +815,9 @@ void rotate_mesh_eqn(int id,           /* Elemental stiffness matrix row index *
                       sum_val +=
                           rot->d_vector_dx[ldir][b][j] * lec->R[LEC_R_INDEX(peqn_mesh[ldir], id)];
                     }
-                    global_row = ams->GlobalIDs[index_eqn];
-                    global_col = ams->GlobalIDs[index_var];
-                    EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, global_row, 1, &sum_val,
-                                                 &global_col);
+                    global_row = matrix->global_ids[index_eqn];
+                    global_col = matrix->global_ids[index_var];
+                    matrix->sum_into_row_values(matrix, global_row, 1, &sum_val, &global_col);
                   }
                 }
               }
@@ -1133,7 +1134,8 @@ void rotate_momentum_eqn(int id,           /* Elemental stiffness matrix row ind
               }
             }
 
-          } else if (strcmp(Matrix_Format, "epetra") == 0) {
+          } else if (ams->GomaMatrixData != NULL) {
+            GomaSparseMatrix matrix = (GomaSparseMatrix )ams->GomaMatrixData;
             if (I < (DPI_ptr->num_internal_nodes + DPI_ptr->num_boundary_nodes)) {
               // Direct translation from MSR
               for (j = 0; j < rotation[I][eq][kdir]->d_vector_n; j++) {
@@ -1164,10 +1166,9 @@ void rotate_momentum_eqn(int id,           /* Elemental stiffness matrix row ind
                     sum_val += rotation[I][eq][kdir]->d_vector_dx[ldir][b][j] *
                                lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][R_MESH1 + ldir], id)];
                   }
-                  global_row = ams->GlobalIDs[index_eqn];
-                  global_col = ams->GlobalIDs[index_var];
-                  EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, global_row, 1, &sum_val,
-                                               &global_col);
+                  global_row = matrix->global_ids[index_eqn];
+                  global_col = matrix->global_ids[index_var];
+                  matrix->sum_into_row_values(matrix, global_row, 1, &sum_val, &global_col);
                 } /* end of Baby_dolphin */
               }
             }

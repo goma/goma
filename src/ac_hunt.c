@@ -64,7 +64,6 @@
 #include "rf_solver.h"
 #include "rf_util.h"
 #include "sl_auxutil.h"
-#include "sl_epetra_util.h"
 #include "sl_matrix_util.h"
 #ifdef GOMA_ENABLE_PETSC
 #include "sl_petsc.h"
@@ -541,26 +540,20 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 
   /* Allocate sparse matrix */
 
-  if (strcmp(Matrix_Format, "tpetra") == 0) {
+  if ((strcmp(Matrix_Format, "tpetra") == 0) || (strcmp(Matrix_Format, "epetra") == 0)) {
     err = check_compatible_solver();
-    GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
+    GOMA_EH(err, "Incompatible matrix solver for matrix format %s", Matrix_Format);
     check_parallel_error("Matrix format / Solver incompatibility");
     GomaSparseMatrix goma_matrix;
-    GomaSparseMatrix_Create(&goma_matrix, GOMA_SPARSE_MATRIX_TYPE_TPETRA);
+    goma_error err = GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
+    GOMA_EH(err, "GomaSparseMatrix_CreateFromFormat");
+
     int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
     GomaSparseMatrix_SetProblemGraph(goma_matrix, num_internal_dofs[pg->imtrx],
                                      num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx],
                                      local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
                                      dpi, cx, pg->imtrx, Debug_Flag, ams[JAC]);
     ams[JAC]->GomaMatrixData = goma_matrix;
-  } else if (strcmp(Matrix_Format, "epetra") == 0) {
-    err = check_compatible_solver();
-    GOMA_EH(err,
-            "Incompatible matrix solver for epetra, epetra supports amesos and aztecoo solvers.");
-    check_parallel_error("Matrix format / Solver incompatibility");
-    ams[JAC]->RowMatrix =
-        EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
-    EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
 #ifdef GOMA_ENABLE_PETSC
 #if PETSC_USE_COMPLEX
   } else if (strcmp(Matrix_Format, "petsc_complex") == 0) {

@@ -33,7 +33,6 @@
 #include "Thyra_LinearOpTester.hpp"
 #include "Thyra_LinearOpWithSolveFactoryHelpers.hpp"
 #include "Thyra_LinearOpWithSolveTester.hpp"
-#include "sl_epetra_interface.h"
 
 #ifdef GOMA_ENABLE_TPETRA
 #include "Thyra_TpetraLinearOp.hpp"
@@ -60,6 +59,8 @@
 #include "Epetra_Vector.h"
 #include "sl_stratimikos_interface.h"
 #include "sl_util_structs.h"
+#include "linalg/sparse_matrix.h"
+#include "linalg/sparse_matrix_epetra.h"
 
 #ifdef GOMA_ENABLE_TPETRA
 extern "C" {
@@ -198,11 +199,14 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
   static bool param_set[MAX_NUM_MATRICES] = {false};
   static bool param_echo[MAX_NUM_MATRICES] = {false};
 
+  GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+  EpetraSparseMatrix *epetra_matrix = static_cast<EpetraSparseMatrix *>(matrix->data);
+
   try {
-    Epetra_Map map = ams->RowMatrix->RowMatrixRowMap();
+    Epetra_Map map = epetra_matrix->matrix->RowMatrixRowMap();
 
     // Assign A with false so it doesn't get garbage collected.
-    RCP<Epetra_RowMatrix> epetra_A = Teuchos::rcp(ams->RowMatrix, false);
+    RCP<Epetra_CrsMatrix> epetra_A = epetra_matrix->matrix;
     RCP<Epetra_Vector> epetra_x = Teuchos::rcp(new Epetra_Vector(Copy, map, x_));
     RCP<Epetra_Vector> epetra_b = Teuchos::rcp(new Epetra_Vector(Copy, map, b_));
 

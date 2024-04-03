@@ -24,8 +24,6 @@
 #include "rf_solver.h"
 #include "rf_util.h"
 #include "rf_vars_const.h"
-#include "sl_epetra_interface.h"
-#include "sl_epetra_util.h"
 #include "sl_util_structs.h"
 
 int resetup_problem(Exo_DB *exo, /* ptr to the finite element mesh database */
@@ -191,20 +189,12 @@ int resetup_problem(Exo_DB *exo, /* ptr to the finite element mesh database */
 }
 
 int resetup_matrix(struct GomaLinearSolverData **ams, Exo_DB *exo, Dpi *dpi) {
-  if (strcmp(Matrix_Format, "epetra") == 0) {
-    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-      EpetraDeleteRowMatrix(ams[pg->imtrx]->RowMatrix);
-      ams[pg->imtrx]->RowMatrix =
-          EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
-      EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
-    }
-    pg->imtrx = 0;
-    ams[pg->imtrx]->solveSetup = 0;
-  } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+  if ((strcmp(Matrix_Format, "tpetra") == 0) 
+  || (strcmp(Matrix_Format, "epetra") == 0)) {
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
       GomaSparseMatrix goma_matrix = ams[pg->imtrx]->GomaMatrixData;
       GomaSparseMatrix_Destroy(&goma_matrix);
-      GomaSparseMatrix_Create(&goma_matrix, GOMA_SPARSE_MATRIX_TYPE_TPETRA);
+      GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
       ams[pg->imtrx]->GomaMatrixData = goma_matrix;
       int local_nodes = exo->num_nodes;
       GomaSparseMatrix_SetProblemGraph(goma_matrix, num_internal_dofs[pg->imtrx],
