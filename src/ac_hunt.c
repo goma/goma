@@ -549,11 +549,16 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
     GOMA_EH(err, "GomaSparseMatrix_CreateFromFormat");
 
     int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
-    GomaSparseMatrix_SetProblemGraph(goma_matrix, num_internal_dofs[pg->imtrx],
-                                     num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx],
-                                     local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
-                                     dpi, cx, pg->imtrx, Debug_Flag, ams[JAC]);
+    err = GomaSparseMatrix_SetProblemGraph(
+        goma_matrix, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx],
+        num_external_dofs[pg->imtrx], local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
+        dpi, cx, pg->imtrx, Debug_Flag, ams[JAC]);
+    GOMA_EH(err, "GomaSparseMatrix_SetProblemGraph");
+
     ams[JAC]->GomaMatrixData = goma_matrix;
+    ams[JAC]->npu = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
+    ams[JAC]->npu_plus = num_universe_dofs[pg->imtrx];
+
 #ifdef GOMA_ENABLE_PETSC
 #if PETSC_USE_COMPLEX
   } else if (strcmp(Matrix_Format, "petsc_complex") == 0) {

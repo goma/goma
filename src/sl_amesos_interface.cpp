@@ -94,8 +94,8 @@ void amesos_solve(char *choice,
     }
     GomaMsr2EpetraCsr(ams, A[imtrx], !ams->solveSetup);
   } else {
-  GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
-  EpetraSparseMatrix *epetra_matrix = static_cast<EpetraSparseMatrix *>(matrix->data);
+    GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+    EpetraSparseMatrix *epetra_matrix = static_cast<EpetraSparseMatrix *>(matrix->data);
     A[imtrx] = dynamic_cast<Epetra_CrsMatrix *>(epetra_matrix->matrix.get());
   }
   const Epetra_Map &map = A[imtrx]->RowMatrixRowMap();

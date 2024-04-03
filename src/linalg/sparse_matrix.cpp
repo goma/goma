@@ -26,7 +26,7 @@ extern "C" {
 }
 
 extern "C" goma_error GomaSparseMatrix_CreateFromFormat(GomaSparseMatrix *matrix,
-                                              char *matrix_format) {
+                                                        char *matrix_format) {
   if (strcmp(matrix_format, "tpetra") == 0) {
     return GomaSparseMatrix_Create(matrix, GOMA_SPARSE_MATRIX_TYPE_TPETRA);
   } else if (strcmp(matrix_format, "epetra") == 0) {

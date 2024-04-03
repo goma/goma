@@ -1,12 +1,12 @@
 #ifdef GOMA_ENABLE_EPETRA
 #include "std.h"
+#include <Epetra_BlockMap.h>
+#include <Epetra_CrsGraph.h>
+#include <Epetra_CrsMatrix.h>
+#include <Epetra_Vector.h>
 #include <Teuchos_ArrayViewDecl.hpp>
 #include <Teuchos_DefaultMpiComm.hpp>
 #include <Teuchos_RCPDecl.hpp>
-#include <Epetra_CrsMatrix.h>
-#include <Epetra_Vector.h>
-#include <Epetra_BlockMap.h>
-#include <Epetra_CrsGraph.h>
 #ifdef EPETRA_MPI
 #include "Epetra_MpiComm.h"
 #else
@@ -74,16 +74,14 @@ extern "C" goma_error g_epetra_create_graph(GomaSparseMatrix matrix,
   GomaGlobalOrdinal row_count = 0;
   for (GomaGlobalOrdinal i = 0; i < local_nnz; i++) {
     if (coo_rows[i] != current_row) {
-      tmp->crs_graph->InsertGlobalIndices(
-          current_row, row_count, indices.data());
+      tmp->crs_graph->InsertGlobalIndices(current_row, row_count, indices.data());
       current_row = coo_rows[i];
       row_count = 0;
     }
     indices[row_count] = coo_cols[i];
     row_count++;
   }
-  tmp->crs_graph->InsertGlobalIndices(
-      current_row, row_count, indices.data());
+  tmp->crs_graph->InsertGlobalIndices(current_row, row_count, indices.data());
 
   tmp->crs_graph->FillComplete();
 
@@ -106,9 +104,7 @@ extern "C" goma_error g_epetra_insert_row_values(GomaSparseMatrix matrix,
                                                  GomaGlobalOrdinal *indices) {
   auto *tmp = static_cast<EpetraSparseMatrix *>(matrix->data);
   GO global_row_t = static_cast<GO>(global_row);
-  tmp->matrix->InsertGlobalValues(global_row_t,
-                                  num_entries,
-                                  values, indices);
+  tmp->matrix->InsertGlobalValues(global_row_t, num_entries, values, indices);
   return GOMA_SUCCESS;
 }
 

@@ -3,9 +3,9 @@
 #ifdef GOMA_ENABLE_EPETRA
 #ifdef __cplusplus
 #include "Teuchos_RCP.hpp"
+#include <Epetra_CrsGraph.h>
 #include <Epetra_CrsMatrix.h>
 #include <Epetra_Map.h>
-#include <Epetra_CrsGraph.h>
 
 #include "linalg/sparse_matrix.h"
 

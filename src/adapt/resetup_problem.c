@@ -189,8 +189,7 @@ int resetup_problem(Exo_DB *exo, /* ptr to the finite element mesh database */
 }
 
 int resetup_matrix(struct GomaLinearSolverData **ams, Exo_DB *exo, Dpi *dpi) {
-  if ((strcmp(Matrix_Format, "tpetra") == 0) 
-  || (strcmp(Matrix_Format, "epetra") == 0)) {
+  if ((strcmp(Matrix_Format, "tpetra") == 0) || (strcmp(Matrix_Format, "epetra") == 0)) {
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
       GomaSparseMatrix goma_matrix = ams[pg->imtrx]->GomaMatrixData;
       GomaSparseMatrix_Destroy(&goma_matrix);

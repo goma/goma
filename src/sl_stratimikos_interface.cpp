@@ -57,10 +57,10 @@
 #include "Epetra_Map.h"
 #include "Epetra_RowMatrix.h"
 #include "Epetra_Vector.h"
-#include "sl_stratimikos_interface.h"
-#include "sl_util_structs.h"
 #include "linalg/sparse_matrix.h"
 #include "linalg/sparse_matrix_epetra.h"
+#include "sl_stratimikos_interface.h"
+#include "sl_util_structs.h"
 
 #ifdef GOMA_ENABLE_TPETRA
 extern "C" {

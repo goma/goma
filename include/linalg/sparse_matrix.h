@@ -38,6 +38,7 @@ struct g_GomaSparseMatrix {
   GomaGlobalOrdinal *global_ids;
   GomaGlobalOrdinal n_rows;
   GomaGlobalOrdinal n_cols;
+  GomaGlobalOrdinal nnz;
   // Create matrix with given rows and columns
   // coo_rows and coo_cols are the COO representation of the matrix ordered by row
   // local_nnz is the number of non-zero entries in the local partition
@@ -79,8 +80,7 @@ struct g_GomaSparseMatrix {
 };
 typedef struct g_GomaSparseMatrix *GomaSparseMatrix;
 
-goma_error GomaSparseMatrix_CreateFromFormat(GomaSparseMatrix *matrix,
-                                              char *matrix_format);
+goma_error GomaSparseMatrix_CreateFromFormat(GomaSparseMatrix *matrix, char *matrix_format);
 goma_error GomaSparseMatrix_Create(GomaSparseMatrix *matrix, enum GomaSparseMatrixType type);
 // populates:
 //   - global_ids

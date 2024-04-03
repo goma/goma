@@ -719,18 +719,19 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   /* Allocate sparse matrix */
 
   ams[JAC]->GomaMatrixData = NULL;
-  if ((strcmp(Matrix_Format, "tpetra") == 0) ||
-   (strcmp(Matrix_Format, "epetra") == 0)) {
+  if ((strcmp(Matrix_Format, "tpetra") == 0) || (strcmp(Matrix_Format, "epetra") == 0)) {
     err = check_compatible_solver();
     GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
     check_parallel_error("Matrix format / Solver incompatibility");
     GomaSparseMatrix goma_matrix;
-    GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
+    goma_error err = GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
+    GOMA_EH(err, "GomaSparseMatrix_CreateFromFormat");
     int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
-    GomaSparseMatrix_SetProblemGraph(goma_matrix, num_internal_dofs[pg->imtrx],
-                                     num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx],
-                                     local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
-                                     dpi, cx[pg->imtrx], pg->imtrx, Debug_Flag, ams[JAC]);
+    err = GomaSparseMatrix_SetProblemGraph(
+        goma_matrix, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx],
+        num_external_dofs[pg->imtrx], local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
+        dpi, cx[pg->imtrx], pg->imtrx, Debug_Flag, ams[JAC]);
+    GOMA_EH(err, "GomaSparseMatrix_SetProblemGraph");
     ams[JAC]->GomaMatrixData = goma_matrix;
 #ifdef GOMA_ENABLE_PETSC
 #if PETSC_USE_COMPLEX

@@ -60,7 +60,6 @@
 #include "sl_util_structs.h"
 #include "std.h"
 #include "util/goma_normal.h"
-#include "linalg/sparse_matrix.h"
 
 /*
  *  Variable Definitions
@@ -784,7 +783,7 @@ void rotate_mesh_eqn(int id,           /* Elemental stiffness matrix row index *
               }
             }
           } else if (ams->GomaMatrixData != NULL) {
-            GomaSparseMatrix matrix = (GomaSparseMatrix )ams->GomaMatrixData;
+            GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
             if (I < (DPI_ptr->num_internal_nodes + DPI_ptr->num_boundary_nodes)) {
               /*
                * Find the global equation number
@@ -1135,7 +1134,7 @@ void rotate_momentum_eqn(int id,           /* Elemental stiffness matrix row ind
             }
 
           } else if (ams->GomaMatrixData != NULL) {
-            GomaSparseMatrix matrix = (GomaSparseMatrix )ams->GomaMatrixData;
+            GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
             if (I < (DPI_ptr->num_internal_nodes + DPI_ptr->num_boundary_nodes)) {
               // Direct translation from MSR
               for (j = 0; j < rotation[I][eq][kdir]->d_vector_n; j++) {
