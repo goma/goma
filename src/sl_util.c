@@ -337,6 +337,9 @@ void sl_free(unsigned int option_mask, struct GomaLinearSolverData *ams[]) {
  */
 
 void free_ams(struct GomaLinearSolverData *a) {
+  if (a->DestroySolverData) {
+    a->DestroySolverData(a);
+  }
   safer_free((void **)&(a->data_org));
   safer_free((void **)&(a->val));
   safer_free((void **)&(a->indx));

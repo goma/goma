@@ -111,6 +111,8 @@ struct GomaLinearSolverData {
 
   void *PetscMatrixData;
   void *GomaMatrixData;
+  void *SolverData;
+  void (*DestroySolverData)(struct GomaLinearSolverData *ams);
 };
 
 struct Matrix_Data {

@@ -315,9 +315,6 @@ int main(int argc, char **argv)
 
   /********************** BEGIN EXECUTION ***************************************/
 
-#ifdef FP_EXCEPT
-  feenableexcept((FE_OVERFLOW | FE_DIVBYZERO | FE_INVALID));
-#endif
 
   /* assume number of commands is less than or equal to the number of
    * arguments in the command line minus 1 (1st is program name) */
@@ -836,6 +833,9 @@ int main(int argc, char **argv)
       }
     }
 
+#ifdef FP_EXCEPT
+  feenableexcept((FE_OVERFLOW | FE_DIVBYZERO | FE_INVALID));
+#endif
     if (TimeIntegration == TRANSIENT) {
       Continuation = ALC_NONE;
       if (Debug_Flag) {
