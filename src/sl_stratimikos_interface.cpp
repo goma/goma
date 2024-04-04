@@ -1,3 +1,4 @@
+#include <cstddef>
 #ifdef GOMA_ENABLE_STRATIMIKOS
 
 #include <filesystem>
@@ -90,9 +91,10 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
     RCP<Tpetra::Vector<double, LO, GO>> tpetra_b =
         rcp(new Tpetra::Vector<double, LO, GO>(tpetra_A->getRangeMap()));
 
-    auto n_rows = tpetra_data->matrix->getLocalNumRows();
-    for (size_t i = 0; i < n_rows; i++) {
+    for (size_t i = 0; i < tpetra_x->getLocalLength(); i++) {
       tpetra_x->replaceGlobalValue(matrix->global_ids[i], x_[i]);
+    }
+    for (size_t i = 0; i < tpetra_b->getLocalLength(); i++) {
       tpetra_b->replaceGlobalValue(matrix->global_ids[i], b_[i]);
     }
 #if 0

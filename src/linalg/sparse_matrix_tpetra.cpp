@@ -130,8 +130,10 @@ extern "C" goma_error g_tpetra_put_scalar(GomaSparseMatrix matrix, double scalar
 
 extern "C" goma_error g_tpetra_row_sum_scaling(GomaSparseMatrix matrix, double *b, double *scale) {
   auto *tmp = static_cast<TpetraSparseMatrix *>(matrix->data);
+  bool ended_assembly = false;
   if (!tmp->matrix->isFillComplete()) {
     tmp->matrix->endAssembly();
+    ended_assembly=true;
   }
   RCP<Tpetra::Vector<double, LO, GO>> b_vec =
       Teuchos::rcp(new Tpetra::Vector<double, LO, GO>(tmp->row_map));
@@ -147,12 +149,16 @@ extern "C" goma_error g_tpetra_row_sum_scaling(GomaSparseMatrix matrix, double *
       row_sum += std::abs(values[j]);
     }
     if (row_sum == 0) {
-      GOMA_WH_MANY(GOMA_ERROR, "Row sum is zero, g_tpetra_row_sum_scaling");
+      GOMA_WH_MANY(GOMA_ERROR, "Row sum is zero setting to 1.0, g_tpetra_row_sum_scaling");
+      row_sum = 1.0;
     }
-    row_sum = 1.0;
     b_vec->replaceLocalValue(i, 1.0 / row_sum);
   }
   tmp->matrix->leftScale(*b_vec);
+  if (ended_assembly) {
+    tmp->matrix->beginAssembly();
+  }
+  // tmp->matrix->beginAssembly();
   auto data = b_vec->getData();
   for (size_t i = 0; i < n_rows; i++) {
     auto local = tmp->matrix->getRowMap()->getLocalElement(matrix->global_ids[i]);
