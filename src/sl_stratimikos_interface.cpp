@@ -232,7 +232,7 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
     return -1;
   }
 }
-#else /* GOMA_ENABLE_TPETRA */
+#else  /* GOMA_ENABLE_TPETRA */
 int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
                              double *x_,
                              double *b_,
@@ -333,11 +333,11 @@ extern "C" {
 #include "mm_eh.h"
 #include "std.h"
 int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
-                      double *x_,
-                      double *b_,
-                      int *iterations,
-                      char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
-                      int imtrx) {
+                             double *x_,
+                             double *b_,
+                             int *iterations,
+                             char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
+                             int imtrx) {
   GOMA_EH(GOMA_ERROR, "Not built with stratimikos support!");
   return -1;
 }
