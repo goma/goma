@@ -15,6 +15,7 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
                              int *iterations,
                              char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
                              int imtrx);
+
 int stratimikos_solve(struct GomaLinearSolverData *ams,
                       double *x_,
                       double *b_,

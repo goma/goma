@@ -135,8 +135,8 @@ static void stratimikos_solve_setup(RCP<const Thyra::LinearOpBase<double>> A,
   }
 }
 
-#ifdef GOMA_ENABLE_TPETRA
 extern "C" {
+#ifdef GOMA_ENABLE_TPETRA
 int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
                              double *x_,
                              double *b_,
@@ -232,6 +232,16 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
     return -1;
   }
 }
+#else /* GOMA_ENABLE_TPETRA */
+int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
+                             double *x_,
+                             double *b_,
+                             int *iterations,
+                             char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
+                             int imtrx) {
+  GOMA_EH(GOMA_ERROR, "Not built with Tpetra Stratimikos support!");
+  return -1;
+}
 #endif /* GOMA_ENABLE_TPETRA */
 
 int stratimikos_solve(struct GomaLinearSolverData *ams,
@@ -318,14 +328,16 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
 
 #include "mpi.h"
 
+#include "sl_stratimikos_interface.h"
 extern "C" {
 #include "mm_eh.h"
 #include "std.h"
 int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
-                             double *x_,
-                             double *b_,
-                             int *iterations,
-                             char *stratimikos_file) {
+                      double *x_,
+                      double *b_,
+                      int *iterations,
+                      char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
+                      int imtrx) {
   GOMA_EH(GOMA_ERROR, "Not built with stratimikos support!");
   return -1;
 }
@@ -334,7 +346,8 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
                       double *x_,
                       double *b_,
                       int *iterations,
-                      char *stratimikos_file) {
+                      char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
+                      int imtrx) {
   GOMA_EH(GOMA_ERROR, "Not built with stratimikos support!");
   return -1;
 }
