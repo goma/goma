@@ -797,8 +797,8 @@ void rotate_mesh_eqn(int id,           /* Elemental stiffness matrix row index *
                */
               for (j = 0; j < rot->d_vector_n; j++) {
                 double sum_val;
-                int global_row;
-                int global_col;
+                GomaGlobalOrdinal global_row;
+                GomaGlobalOrdinal global_col;
 
                 J = rot->d_vector_J[j];
                 if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 &&
@@ -1139,8 +1139,8 @@ void rotate_momentum_eqn(int id,           /* Elemental stiffness matrix row ind
               // Direct translation from MSR
               for (j = 0; j < rotation[I][eq][kdir]->d_vector_n; j++) {
                 double sum_val;
-                int global_row;
-                int global_col;
+                GomaGlobalOrdinal global_row;
+                GomaGlobalOrdinal global_col;
                 int ktype, ndof, index_eqn, index_var;
                 J = rotation[I][eq][kdir]->d_vector_J[j];
                 if (Dolphin[pg->imtrx][I][R_MOMENTUM1] > 0 &&
