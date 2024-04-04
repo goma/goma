@@ -71,6 +71,7 @@
 #include "rf_solver.h"
 #include "rf_solver_const.h"
 #include "rf_util.h"
+#include "sl_amesos2_interface.h"
 #include "sl_amesos_interface.h"
 #include "sl_auxutil.h"
 #include "sl_aztecoo_interface.h"
@@ -1414,6 +1415,18 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                 "the Amesos solver suite\n");
       }
       amesos_solve(Amesos_Package, ams, delta_x, resid_vector, 1, pg->imtrx);
+      strcpy(stringer, " 1 ");
+      break;
+    case AMESOS2:
+
+      if (ams->GomaMatrixData != NULL) {
+        GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+        if (matrix->type != GOMA_SPARSE_MATRIX_TYPE_TPETRA) {
+          GOMA_EH(GOMA_ERROR, " Sorry, only Tpetra matrix formats are currently supported with "
+                              "the Amesos2 solver suite\n");
+        }
+      }
+      amesos2_solve(ams, delta_x, resid_vector, Amesos2_Package, Amesos2_File[pg->imtrx]);
       strcpy(stringer, " 1 ");
       break;
 

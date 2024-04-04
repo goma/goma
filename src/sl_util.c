@@ -339,6 +339,8 @@ void sl_free(unsigned int option_mask, struct GomaLinearSolverData *ams[]) {
 void free_ams(struct GomaLinearSolverData *a) {
   if (a->DestroySolverData) {
     a->DestroySolverData(a);
+    a->DestroySolverData = NULL;
+    a->SolverData = NULL;
   }
   safer_free((void **)&(a->data_org));
   safer_free((void **)&(a->val));
@@ -425,6 +427,9 @@ void set_aztec_options_params(int options[], double params[]) {
     options[AZ_solver] = -1;
   } else if (strcmp(Matrix_Solver, "amesos") == 0) {
     Linear_Solver = AMESOS;
+    options[AZ_solver] = -1;
+  } else if (strcmp(Matrix_Solver, "amesos2") == 0) {
+    Linear_Solver = AMESOS2;
     options[AZ_solver] = -1;
   } else if (strcmp(Matrix_Solver, "stratimikos") == 0) {
     Linear_Solver = STRATIMIKOS;

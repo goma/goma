@@ -19,6 +19,7 @@
 #include "Teuchos_VerboseObject.hpp"
 #include "Teuchos_VerbosityLevel.hpp"
 #include "Teuchos_XMLParameterListCoreHelpers.hpp"
+#include "Teuchos_YamlParameterListCoreHelpers.hpp"
 #include "Teuchos_config.h"
 #include "Thyra_EpetraLinearOp.hpp"
 #include "Thyra_EpetraThyraWrappers.hpp"
@@ -30,7 +31,6 @@
 #include "Thyra_SolveSupportTypes.hpp"
 #include "Thyra_VectorBase.hpp"
 
-#include "Teuchos_YamlParameterListCoreHelpers.hpp"
 #include "Thyra_LinearOpTester.hpp"
 #include "Thyra_LinearOpWithSolveFactoryHelpers.hpp"
 #include "Thyra_LinearOpWithSolveTester.hpp"
@@ -321,8 +321,16 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
 extern "C" {
 #include "mm_eh.h"
 #include "std.h"
+int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
+                             double *x_,
+                             double *b_,
+                             int *iterations,
+                             char *stratimikos_file) {
+  GOMA_EH(GOMA_ERROR, "Not built with stratimikos support!");
+  return -1;
+}
 
-int stratimikos_solve(struct Aztec_Linear_Solver_System *ams,
+int stratimikos_solve(struct GomaLinearSolverData *ams,
                       double *x_,
                       double *b_,
                       int *iterations,

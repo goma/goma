@@ -460,7 +460,7 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
     METIS_PartGraphRecursive(&monolith->num_elems, &n_con, elem_adj_pntr, elem_adj_list, vwgt, NULL,
                              NULL, &n_parts, NULL, NULL, options, &edgecut, partitions);
 
-  } else if (Decompose_Type == 2 || (Decompose_Type == 0 && n_parts >= 8)) {
+  } else if (Decompose_Type == 2) {
     DPRINTF(stdout, "\nInternal METIS decomposition using KWAY.\n\n");
     METIS_PartGraphKway(&monolith->num_elems, &n_con, elem_adj_pntr, elem_adj_list, vwgt, NULL,
                         NULL, &n_parts, NULL, NULL, options, &edgecut, partitions);

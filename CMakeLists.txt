@@ -119,6 +119,14 @@ if(${tpetra_package_index} GREATER_EQUAL 0)
   if(ENABLE_TPETRA)
     message(STATUS "TRILINOS: Tpetra found, enabling in Goma")
     list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TPETRA)
+    list(FIND Trilinos_PACKAGE_LIST Amesos2 amesos2_package_index)
+    if(${amesos2_package_index} GREATER_EQUAL 0)
+      option(ENABLE_AMESOS2 "ENABLE_AMESOS2" ON)
+      if(ENABLE_AMESOS2)
+        message(STATUS "TRILINOS: Amesos2 found, enabling in Goma")
+        list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_AMESOS2)
+      endif()
+    endif()
   endif()
 endif()
 
@@ -562,6 +570,7 @@ set(GOMA_INCLUDES
     include/shell_tfmp_struct.h
     include/shell_tfmp_util.h
     include/sl_amesos_interface.h
+    include/sl_amesos2_interface.h
     include/sl_aux.h
     include/sl_auxutil.h
     include/sl_aztecoo_interface.h
@@ -711,6 +720,7 @@ set(GOMA_SOURCES
     src/bc/rotate_coordinates.c
     src/shell_tfmp_util.c
     src/sl_amesos_interface.cpp
+    src/sl_amesos2_interface.cpp
     src/sl_aux.c
     src/sl_auxutil.c
     src/sl_aztecoo_interface.cpp

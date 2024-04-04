@@ -5832,6 +5832,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
   strcpy(Matrix_Absolute_Threshold, "0");
   strcpy(Matrix_Reorder, "none");
   strcpy(Amesos_Package, "KLU");
+  strcpy(Amesos2_Package, "KLU2");
 
   /*  Read in Solver specifications */
 
@@ -5956,6 +5957,9 @@ void rd_solver_specs(FILE *ifp, char *input) {
   } else if (strcmp(Matrix_Solver, "amesos") == 0) {
     Linear_Solver = AMESOS;
     is_Solver_Serial = FALSE;
+  } else if (strcmp(Matrix_Solver, "amesos2") == 0) {
+    Linear_Solver = AMESOS2;
+    is_Solver_Serial = FALSE;
   } else if (strcmp(Matrix_Solver, "aztecoo") == 0) {
     Linear_Solver = AZTECOO;
     is_Solver_Serial = FALSE;
@@ -5994,6 +5998,10 @@ void rd_solver_specs(FILE *ifp, char *input) {
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, Matrix_Format);
   } else if (strcmp(Matrix_Solver, "petsc_complex") == 0) {
     strcpy(Matrix_Format, "petsc_complex"); /* save string for aztec use */
+    strcpy(search_string, "Matrix storage format");
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, Matrix_Format);
+  } else if (strcmp(Matrix_Solver, "amesos2") == 0) {
+    strcpy(Matrix_Format, "tpetra"); /* save string for aztec use */
     strcpy(search_string, "Matrix storage format");
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, Matrix_Format);
   } else if (strcmp(Matrix_Solver, "front") != 0) {
@@ -6091,6 +6099,23 @@ void rd_solver_specs(FILE *ifp, char *input) {
 
   for (int i = 1; i < MAX_NUM_MATRICES; i++) {
     strcpy(Stratimikos_File[i], Stratimikos_File[0]);
+  }
+
+  strcpy(search_string, "Amesos2 File");
+  iread = look_for_optional(ifp, search_string, input, '=');
+  if (iread == 1) {
+    read_string(ifp, input, '\n');
+    strip(input);
+    strcpy(Amesos2_File[0], input);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, input);
+    ECHO(echo_string, echo_file);
+  } else {
+    // Set stratimikos.xml as defualt stratimikos file
+    strcpy(Amesos2_File[0], "");
+  }
+
+  for (int i = 1; i < MAX_NUM_MATRICES; i++) {
+    strcpy(Amesos2_File[i], Amesos2_File[0]);
   }
 
   strcpy(search_string, "Preconditioner");
@@ -6432,6 +6457,19 @@ void rd_solver_specs(FILE *ifp, char *input) {
     strip(input);
     stringup(input);
     strcpy(Amesos_Package, input);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, input);
+    ECHO(echo_string, echo_file);
+  } else {
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form, search_string, "KLU", default_string);
+    ECHO(echo_string, echo_file);
+  }
+
+  strcpy(search_string, "Amesos2 Solver Package");
+  iread = look_for_optional(ifp, search_string, input, '=');
+  if (iread == 1) {
+    read_string(ifp, input, '\n');
+    strip(input);
+    strcpy(Amesos2_Package, input);
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, input);
     ECHO(echo_string, echo_file);
   } else {

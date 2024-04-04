@@ -2655,6 +2655,7 @@ free_and_clear:
     for (i = 0; i < MAX_NUMBER_MATLS; i++) {
       for (n = 0; n < MAX_MODES; n++) {
         safer_free((void **)&(ve_glob[i][n]->gn));
+        safer_free((void **)&(ve_glob[i][n]->time_const_st));
         safer_free((void **)&(ve_glob[i][n]));
       }
       safer_free((void **)&(vn_glob[i]));

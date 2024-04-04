@@ -98,6 +98,21 @@ amesos
 							  
     Of these four options, we currently recommend **mumps**.
     All options can be run in parallel.
+amesos2
+    Allows access to direct solver options implemented in parallel. Please see
+    the user-notes below for Goma build options that must be exercised.  With
+    this option, you must add an additional input card to specify the parallel
+    direct solvers:
+
+    ::
+
+        Amesos2 Solver Package = {SuperLUDist | Mumps | KLU2}
+        # Optional Amesos2 File to set parameters for the solver
+        # xml or yaml supported through Trilinos
+        # Amesos2 File = params_file.(xml | yaml)
+							  
+    Of these four options, we currently recommend **Mumps**.
+    All options can be run in parallel.
 stratimikos
     Interface to Trilino's Stratimikos package
     requires:
@@ -105,6 +120,7 @@ stratimikos
     ::
 
         Matrix storage format = epetra
+        # Or tpetra
     
     Allows block solvers, see also ref:`Stratimikos File`
 petsc

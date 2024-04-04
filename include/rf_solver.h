@@ -83,10 +83,12 @@ extern String_line Matrix_Relative_Threshold; /* Trilinos 2 */
 extern String_line Matrix_Absolute_Threshold; /* Trilinos 2 */
 
 extern String_line Amesos_Package;
+extern String_line Amesos2_Package;
 
 extern String_line AztecOO_Solver;
 
 extern String_line Stratimikos_File[MAX_NUM_MATRICES];
+extern String_line Amesos2_File[MAX_NUM_MATRICES];
 
 /*
 extern  * A new Aztec 2.0 option. There are more and difft options and our

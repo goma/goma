@@ -820,6 +820,7 @@ int check_compatible_solver(void) {
   if (strcmp(Matrix_Format, "tpetra") == 0) {
     switch (Linear_Solver) {
     case STRATIMIKOS:
+    case AMESOS2:
       return GOMA_SUCCESS;
     default:
       return GOMA_ERROR;
