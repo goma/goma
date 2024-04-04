@@ -133,7 +133,7 @@ extern "C" goma_error g_tpetra_row_sum_scaling(GomaSparseMatrix matrix, double *
   bool ended_assembly = false;
   if (!tmp->matrix->isFillComplete()) {
     tmp->matrix->endAssembly();
-    ended_assembly=true;
+    ended_assembly = true;
   }
   RCP<Tpetra::Vector<double, LO, GO>> b_vec =
       Teuchos::rcp(new Tpetra::Vector<double, LO, GO>(tmp->row_map));

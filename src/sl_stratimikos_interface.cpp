@@ -67,7 +67,7 @@ struct Stratimikos_Solver_Data {
   Teuchos::RCP<Thyra::LinearOpWithSolveBase<double>> solver;
   Teuchos::RCP<Teuchos::ParameterList> solverParams;
   Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<double>> solverFactory;
-    Teuchos::RCP<const Thyra::LinearOpBase<double>> A;
+  Teuchos::RCP<const Thyra::LinearOpBase<double>> A;
 
   Stratimikos_Solver_Data() {
     solver = Teuchos::null;
@@ -198,12 +198,12 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
       }
     }
 
-    stratimikos_solve_setup(solver_data->A,solver_data,stratimikos_file[imtrx], param_echo[imtrx]);
+    stratimikos_solve_setup(solver_data->A, solver_data, stratimikos_file[imtrx],
+                            param_echo[imtrx]);
     param_echo[imtrx] = true;
 
     Thyra::SolveStatus<double> status =
         Thyra::solve<double>(*(solver_data->solver), Thyra::NOTRANS, *b, x.ptr());
-
 
     *iterations = 1;
     if (!status.extraParameters.is_null()) {
@@ -263,7 +263,8 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
 
     solver_data->A = Thyra::epetraLinearOp(epetra_A);
     RCP<Thyra::VectorBase<double>> x = Thyra::create_Vector(epetra_x, solver_data->A->domain());
-    RCP<const Thyra::VectorBase<double>> b = Thyra::create_Vector(epetra_b, solver_data->A->range());
+    RCP<const Thyra::VectorBase<double>> b =
+        Thyra::create_Vector(epetra_b, solver_data->A->range());
 
     Teuchos::RCP<Teuchos::FancyOStream> outstream = Teuchos::VerboseObjectBase::getDefaultOStream();
 
@@ -277,7 +278,8 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
       }
     }
 
-    stratimikos_solve_setup(solver_data->A,solver_data,stratimikos_file[imtrx], param_echo[imtrx]);
+    stratimikos_solve_setup(solver_data->A, solver_data, stratimikos_file[imtrx],
+                            param_echo[imtrx]);
     param_echo[imtrx] = true;
 
     Thyra::SolveStatus<double> status =
