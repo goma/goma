@@ -455,7 +455,7 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
   int *partitions = malloc(sizeof(int) * monolith->num_elems);
   idx_t n_parts = Num_Proc;
 
-  if (Decompose_Type == 1 || (Decompose_Type == 0 && n_parts < 8)) {
+  if (Decompose_Type == 1 || Decompose_Type == 0) {
     DPRINTF(stdout, "\nInternal METIS decomposition using Recursive Bisection.\n\n");
     METIS_PartGraphRecursive(&monolith->num_elems, &n_con, elem_adj_pntr, elem_adj_list, vwgt, NULL,
                              NULL, &n_parts, NULL, NULL, options, &edgecut, partitions);
