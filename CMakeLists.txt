@@ -116,16 +116,17 @@ endif()
 list(FIND Trilinos_PACKAGE_LIST Tpetra tpetra_package_index)
 if(${tpetra_package_index} GREATER_EQUAL 0)
   option(ENABLE_TPETRA "ENABLE_TPETRA" ON)
+  if ((NOT ${HAVE_TPETRA_INST_INT_INT}) AND (NOT ${GOMA_MATRIX_GO_LONG_LONG}))
+    message(WARNING "Trilinos not built with Tpetra with int int, "
+    "enable GOMA_MATRIX_GO_LONG_LONG (experimental), "
+    "or rebuild Trilinos with Tpetra int int")
+    set(ENABLE_TPETRA OFF)
+  endif()
   if(ENABLE_TPETRA)
     option(GOMA_MATRIX_GO_LONG_LONG "GOMA_MATRIX_GO_LONG_LONG" OFF)
     if (GOMA_MATRIX_GO_LONG_LONG)
       message(WARNING "GOMA_MATRIX_GO_LONG_LONG is enabled, using long long for Tpetra this is experimental")
       list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_MATRIX_GO_LONG_LONG)
-    endif()
-    if ((NOT ${HAVE_TPETRA_INST_INT_INT}) AND (NOT ${GOMA_MATRIX_GO_LONG_LONG}))
-      message(FATAL_ERROR "Trilinos not built with Tpetra with int int, "
-      "please disable Tpetra, or enable GOMA_MATRIX_GO_LONG_LONG, "
-      "or rebuild Trilinos with Tpetra int int")
     endif()
     message(STATUS "TRILINOS: Tpetra found, enabling in Goma")
     list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TPETRA)
