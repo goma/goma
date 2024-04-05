@@ -1,3 +1,12 @@
+## Changes in version 7.6.0
+
+- Tpetra and Amesos2 support, currently expects `TPETRA_INST_INT_INT` [goma#456](https://github.com/goma/goma/pull/456)
+- `MULTI_CONTACT_LINE` Lame Mu model for multi CA problems (also 3D) [goma#454](https://github.com/goma/goma/pull/454)
+- Output BC dup in 3D  [goma#452](https://github.com/goma/goma/pull/453)
+- White Metzner type models [goma#450](https://github.com/goma/goma/pull/450)
+- Support for Trilinos 14 and 15 [goma#442](https://github.com/goma/goma/pull/442)
+- Elliptic mesh for single materials [goma#440](https://github.com/goma/goma/pull/440)
+
 ## Changes in version 7.5.0
 
 - Addition of Rolie-Poly Viscoelastic Model [goma#433](https://github.com/goma/goma/pull/433)
