@@ -113,7 +113,7 @@ if(${stratimikos_package_index} GREATER_EQUAL 0)
   endif()
 endif()
 
-if($Trilinos_VERSION VERSION_LESS 14.0.0)
+if(${Trilinos_VERSION} VERSION_LESS 14.0.0)
   message(WARNING "Trilinos version less than 14.0.0, Tpetra not supported")
 else()
   list(FIND Trilinos_PACKAGE_LIST Tpetra tpetra_package_index)
@@ -1002,12 +1002,12 @@ if(ENABLE_PETSC AND PETSC_FOUND)
                             ${PETSC_STATIC_LIBRARY_DIRS})
 endif()
 
-if($Trilinos_VERSION VERSION_LESS 14.0.0)
+# if(${Trilinos_VERSION} VERSION_LESS 14.0.0)
   set(GOMA_TRILINOS_LIBRARIES ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES}
                               ${Trilinos_EXTRA_LD_FLAGS})
-else()
-  set(GOMA_TRILINOS_LIBRARIES Trilinos::all_libs)
-endif()
+# else()
+# set(GOMA_TRILINOS_LIBRARIES Trilinos::all_libs)
+# endif()
 
 set(GOMA_TPL_LIBRARIES
     ${SEACASExodus_LIBRARIES}
