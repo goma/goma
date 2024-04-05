@@ -1663,7 +1663,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
                 }
                 for (int i = 0; i < 4; i++) {
                   if (moment_floored[i]) {
-                    printf("moment %d floored", i + 1);
+                    printf("Proc %d moment %d floored\n", ProcID, i);
                   }
                 }
 
