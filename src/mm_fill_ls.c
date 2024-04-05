@@ -36,6 +36,7 @@
 #include "exo_conn.h"
 #include "exo_struct.h"
 #include "exodusII.h"
+#include "linalg/sparse_matrix.h"
 #include "load_field_variables.h"
 #include "mm_as_alloc.h"
 #include "mm_fill_aux.h"
@@ -89,7 +90,6 @@
 #include "sl_util.h"
 
 #define GOMA_MM_FILL_LS_C
-#include "sl_epetra_util.h"
 
 struct Extended_Shape_Fcn_Basics
     *xfem;             /* This is a global structure for the basic pieces needed for XFEM */
@@ -10590,7 +10590,7 @@ void check_xfem_contribution(
         }
       }
     }
-  } else if (strcmp(Matrix_Format, "epetra") == 0) {
+  } else if (ams->GomaMatrixData != NULL) {
     for (irow = 0; irow < N; irow++) {
       eqn = idv[pg->imtrx][irow][0];
       if (eqn == R_MASS || eqn == R_ENERGY) {
@@ -10599,8 +10599,8 @@ void check_xfem_contribution(
         eps = eps_standard;
       }
       if (fabs(xfem->active_vol[irow]) < eps * xfem->tot_vol[irow]) {
-
-        EpetraSetDiagonalOnly(ams, ams->GlobalIDs[irow]);
+        GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+        matrix->zero_global_row_set_diag(matrix, matrix->global_ids[irow]);
         resid[irow] = x[irow] - x_old_static[irow];
 
         if (FALSE && xfem->active_vol[irow] != 0.) /* debugging */

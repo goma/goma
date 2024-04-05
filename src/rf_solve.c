@@ -40,6 +40,7 @@
 #include "el_elm_info.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "linalg/sparse_matrix.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_augc_util.h"
@@ -71,14 +72,13 @@
 #include "rf_io.h"
 #include "rf_io_const.h"
 #include "rf_io_structs.h"
+#include "rf_masks.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
 #include "rf_solve_segregated.h"
 #include "rf_solver.h"
 #include "rf_util.h"
 #include "sl_auxutil.h"
-#include "sl_epetra_interface.h"
-#include "sl_epetra_util.h"
 #include "sl_matrix_util.h"
 #include "sl_petsc.h"
 #include "sl_petsc_complex.h"
@@ -718,14 +718,21 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
   /* Allocate sparse matrix */
 
-  if (strcmp(Matrix_Format, "epetra") == 0) {
+  ams[JAC]->GomaMatrixData = NULL;
+  if ((strcmp(Matrix_Format, "tpetra") == 0) || (strcmp(Matrix_Format, "epetra") == 0)) {
     err = check_compatible_solver();
-    GOMA_EH(err,
-            "Incompatible matrix solver for epetra, epetra supports amesos and aztecoo solvers.");
+    GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
     check_parallel_error("Matrix format / Solver incompatibility");
-    ams[JAC]->RowMatrix =
-        EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
-    EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
+    GomaSparseMatrix goma_matrix;
+    goma_error err = GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
+    GOMA_EH(err, "GomaSparseMatrix_CreateFromFormat");
+    int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
+    err = GomaSparseMatrix_SetProblemGraph(
+        goma_matrix, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx],
+        num_external_dofs[pg->imtrx], local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
+        dpi, cx[pg->imtrx], pg->imtrx, Debug_Flag, ams[JAC]);
+    GOMA_EH(err, "GomaSparseMatrix_SetProblemGraph");
+    ams[JAC]->GomaMatrixData = goma_matrix;
 #ifdef GOMA_ENABLE_PETSC
 #if PETSC_USE_COMPLEX
   } else if (strcmp(Matrix_Format, "petsc_complex") == 0) {
@@ -787,8 +794,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
     ams[JAC]->nnz = ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] - 1;
     ams[JAC]->nnz_plus = ija[num_universe_dofs[pg->imtrx]];
-
-    ams[JAC]->RowMatrix = NULL;
 
   } else if (strcmp(Matrix_Format, "vbr") == 0) {
     log_msg("alloc_VBR_sparse_arrays...");
@@ -2650,6 +2655,7 @@ free_and_clear:
     for (i = 0; i < MAX_NUMBER_MATLS; i++) {
       for (n = 0; n < MAX_MODES; n++) {
         safer_free((void **)&(ve_glob[i][n]->gn));
+        safer_free((void **)&(ve_glob[i][n]->time_const_st));
         safer_free((void **)&(ve_glob[i][n]));
       }
       safer_free((void **)&(vn_glob[i]));
@@ -2664,14 +2670,10 @@ free_and_clear:
   }
 
   if (last_call) {
-    if (strcmp(Matrix_Format, "epetra") == 0) {
-      EpetraDeleteRowMatrix(ams[JAC]->RowMatrix);
-      if (ams[JAC]->GlobalIDs != NULL) {
-        free(ams[JAC]->GlobalIDs);
-      }
-    }
+    GomaSparseMatrix goma_matrix = ams[JAC]->GomaMatrixData;
+    GomaSparseMatrix_Destroy(&goma_matrix);
 #ifdef GOMA_ENABLE_PETSC
-    else if (strcmp(Matrix_Format, "petsc") == 0) {
+    if (strcmp(Matrix_Format, "petsc") == 0) {
       err = goma_petsc_free_matrix(ams[JAC]);
       GOMA_EH(err, "free petsc matrix");
     }

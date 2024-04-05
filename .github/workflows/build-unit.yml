@@ -12,10 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     container: westonortiz/goma-libs
 
+    defaults:
+      run:
+        shell: bash -l -e {0}
+
     steps:
     - uses: actions/checkout@v3
     - name: Check versions
       run: |
+        echo $PETSC_DIR
         mpirun --version
         cmake --version
     - name: CMake Configure Goma
