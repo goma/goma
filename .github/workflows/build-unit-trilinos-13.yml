@@ -1,0 +1,41 @@
+name: Goma Unit Tests Trilinos 13 Build
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+jobs:
+  build-unit:
+    name: build release unittest
+    runs-on: ubuntu-latest
+    container: westonortiz/goma-libs:2023-01-17
+
+    defaults:
+      run:
+        shell: bash -l -e {0}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Check versions
+      run: |
+        echo $PETSC_DIR
+        mpirun --version
+        cmake --version
+    - name: CMake Configure Goma
+      run: |
+        cmake -DCMAKE_BUILD_TYPE=Release -Bbuild -DENABLE_TESTING=ON .
+    - name: Build Goma
+      run: |
+        cp scripts/gcc-warnings.json "$HOME/"
+        echo "::add-matcher::$HOME/gcc-warnings.json"
+        cd build
+        make -j 2
+        ./goma -v
+    - name: Goma Unit Tests
+      run: |
+        export OMPI_MCA_btl_base_warn_component_unused='0'
+        cd build
+        make -j2 
+        ctest --output-on-failure -j 2
