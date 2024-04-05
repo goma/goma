@@ -1003,8 +1003,8 @@ if(ENABLE_PETSC AND PETSC_FOUND)
 endif()
 
 # if(${Trilinos_VERSION} VERSION_LESS 14.0.0)
-  set(GOMA_TRILINOS_LIBRARIES ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES}
-                              ${Trilinos_EXTRA_LD_FLAGS})
+set(GOMA_TRILINOS_LIBRARIES ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES}
+                            ${Trilinos_EXTRA_LD_FLAGS})
 # else()
 # set(GOMA_TRILINOS_LIBRARIES Trilinos::all_libs)
 # endif()
