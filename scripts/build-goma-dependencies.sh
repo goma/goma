@@ -239,13 +239,17 @@ NETCDF_VERSION="c-4.9.0"
 NETCDF_VERSION_ONLY="4.9.0"
 NETCDF_MD5="26cfd1b2e32d511bd82477803976365d"
 
-TRILINOS_VERSION="14.4.0"
-TRILINOS_VERSION_DASH="14-4-0"
-TRILINOS_MD5="334f9c3700c72f6ed5658eaa783ffccd"
+PNETCDF_VERSION="1.13.0"
+PNETCDF_MD5="31b94d39462b1f1f2293f735c9819bf2"
+PNETCDF_URL="https://parallel-netcdf.github.io/Release/pnetcdf-$PNETCDF_VERSION.tar.gz"
 
-MUMPS_VERSION="5.5.1"
+TRILINOS_VERSION="15.1.0"
+TRILINOS_VERSION_DASH="15-1-0"
+TRILINOS_MD5="79237697af4fc42eaaf70f23104a8e12"
+
+MUMPS_VERSION="5.6.2"
 MUMPS_URL="https://graal.ens-lyon.fr/MUMPS/MUMPS_$MUMPS_VERSION.tar.gz"
-MUMPS_MD5="da26c4b43d53a9a6096775245cee847f"
+MUMPS_MD5="adc38b6cca34dfcc8f7036b7d39cf260"
 
 OPENMPI_VERSION="4.1.6"
 OPENMPI_MD5="c9b1c974cfc23c77c0fbdb965cd58a1c"
@@ -296,6 +300,7 @@ PARMETIS_EXTRACT_NAME="petsc-pkg-parmetis-5777d7ec2084"
 
 ARCHIVE_NAMES=("arpack-ng-$ARPACK_NG_VERSION.tar.gz" \
 "hdf5-${HDF5_VERSION}.tar.bz2" \
+"pnetcdf-$PNETCDF_VERSION.tar.gz" \
 "netcdf-${NETCDF_VERSION}.tar.gz" \
 "metis-$METIS_VERSION.tar.gz" \
 "parmetis-$PARMETIS_VERSION.tar.gz" \
@@ -313,6 +318,7 @@ ARCHIVE_NAMES=("arpack-ng-$ARPACK_NG_VERSION.tar.gz" \
 #meaning each y12m tar has a unique MD5SUM.
 ARCHIVE_MD5SUMS=("$ARPACK_NG_MD5" \
 "${HDF5_MD5}" \
+"$PNETCDF_MD5" \
 "${NETCDF_MD5}" \
 "$METIS_MD5" \
 "$PARMETIS_MD5" \
@@ -327,6 +333,7 @@ $MUMPS_MD5 \
 
 ARCHIVE_URLS=("$ARPACK_NG_URL" \
 "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.bz2" \
+"$PNETCDF_URL" \
 "https://downloads.unidata.ucar.edu/netcdf-c/${NETCDF_VERSION_ONLY}/netcdf-${NETCDF_VERSION}.tar.gz" \
 "https://bitbucket.org/petsc/pkg-metis/get/v$METIS_VERSION.tar.gz" \
 "https://bitbucket.org/petsc/pkg-parmetis/get/v$PARMETIS_VERSION.tar.gz" \
@@ -343,6 +350,7 @@ ARCHIVE_URLS=("$ARPACK_NG_URL" \
 # When in reality it isn't
 ARCHIVE_DIR_NAMES=("arpack-ng-${ARPACK_NG_VERSION}" \
 "hdf5-${HDF5_VERSION}" \
+"pnetcdf-$PNETCDF_VERSION" \
 "netcdf-${NETCDF_VERSION}" \
 "metis-$METIS_VERSION" \
 "parmetis-$PARMETIS_VERSION" \
@@ -357,6 +365,7 @@ ARCHIVE_DIR_NAMES=("arpack-ng-${ARPACK_NG_VERSION}" \
 
 ARCHIVE_HOMEPAGES=("https://github.com/opencollab/arpack-ng/" \
 "https://www.hdfgroup.org/" \
+"https://parallel-netcdf.github.io/" \
 "https://www.unidata.ucar.edu/software/netcdf/" \
 "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview" \
 "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview" \
@@ -371,6 +380,7 @@ ARCHIVE_HOMEPAGES=("https://github.com/opencollab/arpack-ng/" \
 
 ARCHIVE_REAL_NAMES=("arpack-ng" \
 "HDF5" \
+"PNetCDF" \
 "NetCDF" \
 "METIS" \
 "ParMETIS" \
@@ -988,9 +998,36 @@ else
         exit 1
     fi
 fi
-cd $GOMA_LIB
 
-#netcdf
+# PNetCDF
+cd $GOMA_LIB
+if [ -e pnetcdf-${PNETCDF_VERSION}/lib/libpnetcdf.a ]
+then
+    log_echo "PNetCDF already built."
+else
+    if ! [ -e pnetcdf-${NETCDF_VERSION}/.goma-extracted ]
+    then
+    mv pnetcdf-${PNETCDF_VERSION} tmpdir
+    mkdir pnetcdf-${PNETCDF_VERSION}
+    mv tmpdir pnetcdf-${PNETCDF_VERSION}/src
+    touch pnetcdf-${PNETCDF_VERSION}/.goma-extracted
+    fi
+    cd pnetcdf-${PNETCDF_VERSION}/src
+    CC=${MPI_C_COMPILER} ./configure --disable-fortran --enable-shared=off --disable-cxx --prefix=$GOMA_LIB/pnetcdf-${PNETCDF_VERSION} 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make install 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/pnetcdf-${PNETCDF_VERSION}/lib/libpnetcdf.a ]
+    then
+        log_echo "Built PNetCDF $PNETCDF_VERSION"
+    else
+        log_echo "Failed to build PNetCDF $PNETCDF_VERSION"
+        exit 1
+    fi
+fi
+
+
+# NetCDF
+cd $GOMA_LIB
 if [ -e netcdf-${NETCDF_VERSION}/lib/libnetcdf.a ]
 then
     log_echo "netcdf already built"
@@ -1003,17 +1040,19 @@ else
 	touch netcdf-${NETCDF_VERSION}/.goma-extracted
     fi
     cd $GOMA_LIB/netcdf-${NETCDF_VERSION}/src
-    export CPPFLAGS=-I$GOMA_LIB/hdf5-${HDF5_VERSION}/include
+    export CPPFLAGS="-I$GOMA_LIB/hdf5-${HDF5_VERSION}/include -I$GOMA_LIB/pnetcdf-${PNETCDF_VERSION}/include"
+    export LDFLAGS="-L${GOMA_LIB}/hdf5-${HDF5_VERSION}/lib -L${GOMA_LIB}/pnetcdf-${PNETCDF_VERSION}/lib" 
     log_echo $CPPFLAGS
     log_echo $LDFLAGS
 
-    CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-${HDF5_VERSION}/include" \
+    CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-${HDF5_VERSION}/include -I${GOMA_LIB}/pnetcdf-${PNETCDF_VERSION}/include" \
       CPP="${MPI_C_COMPILER} -E" \
-      CPPFLAGS="-I${GOMA_LIB}/hdf5-${HDF5_VERSION}/include" \
-      LDFLAGS="-L${GOMA_LIB}/hdf5-${HDF5_VERSION}/lib" \
+      CPPFLAGS="-I${GOMA_LIB}/hdf5-${HDF5_VERSION}/include -I${GOMA_LIB}/pnetcdf-${PNETCDF_VERSION}/include" \
+      LDFLAGS="-L${GOMA_LIB}/hdf5-${HDF5_VERSION}/lib -L${GOMA_LIB}/pnetcdf-${PNETCDF_VERSION}/lib" \
       ./configure \
       --prefix=$GOMA_LIB/netcdf-${NETCDF_VERSION} \
       --enable-shared=off \
+      --enable-pnetcdf \
       --disable-dap 2>&1 | tee -a $COMPILE_LOG
 
     make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
@@ -1025,10 +1064,10 @@ else
         log_echo "Failed to build NetCDF $NETCDF_VERSION"
         exit 1
     fi
-    cd ../..
 fi
 
 #parmetis patch
+cd $GOMA_LIB
 read -d '' PARMETIS_PATCH << "EOF"
 55c55,58
 <     CONFIG_FLAGS += -DCMAKE_C_COMPILER=$(cc)
@@ -1607,123 +1646,6 @@ TRILINOS_INSTALL=$GOMA_LIB/trilinos-$TRILINOS_VERSION
 if [ -e $TRILINOS_INSTALL/bin/aprepro ]; then
     log_echo "Trilinos is already built!"
 else
-cd $GOMA_LIB/Trilinos-trilinos-release-$TRILINOS_VERSION_DASH/packages/aztecoo/src
-cat << "EOF" > az_aztec_h.patch 
-731c731
-<   extern char *AZ_allocate(unsigned int iii);
----
->   extern char *AZ_allocate(size_t iii);
-1024c1024
-<   extern double *AZ_manage_memory(unsigned int size, int action, int type,
----
->   extern double *AZ_manage_memory(size_t size, int action, int type,
-1198c1198
-<   extern char *AZ_realloc(void *ptr, unsigned int size);
----
->   extern char *AZ_realloc(void *ptr, size_t size);
-EOF
-patch -f az_aztec.h < az_aztec_h.patch
-rm az_aztec_h.patch
-
-cat << "EOF" > az_util_c.patch 
-843c843
-<   (void) AZ_manage_memory((unsigned int) 0, AZ_CLEAR, label, (char *) NULL,
----
->   (void) AZ_manage_memory((size_t) 0, AZ_CLEAR, label, (char *) NULL,
-851c851
-< double *AZ_manage_memory(unsigned int input_size, int action, int type,
----
-> double *AZ_manage_memory(size_t input_size, int action, int type,
-936c936
-<     int     size;
----
->     size_t  size;
-941c941
-<   long int size;
----
->   size_t                size, aligned_size;
-945,946c945,946
-<   long int aligned_str_mem, aligned_j, aligned_size;
-< double *dtmp;
----
->   unsigned int          aligned_str_mem, aligned_j;
->   double *dtmp;
-949c949
-<   size = (long int) input_size;
----
->   size = input_size;
-997,998c997
-<       dtmp = (double *) AZ_allocate((unsigned int) (aligned_str_mem+aligned_j+
-<                                                 aligned_size) );
----
->       dtmp = (double *) AZ_allocate(aligned_str_mem+aligned_j+aligned_size);
-1183,1184c1182
-<     dtmp    = (double *) AZ_realloc((char *) dtmp,(unsigned int)
-<                                     aligned_str_mem+aligned_j+aligned_size);
----
->     dtmp    = (double *) AZ_realloc((char *) dtmp, aligned_str_mem+aligned_j+aligned_size);
-1872c1870
-<    int size;
----
->    size_t size;
-1902c1900
-< char *AZ_allocate(unsigned int isize) {
----
-> char *AZ_allocate(size_t isize) {
-1917,1918c1915,1917
-<     int *size_ptr, i;
-<     unsigned int size;
----
->     int i;
->     size_t size;
->     size_t *size_ptr; 
-1952c1951
-<     size_ptr = (int *) ptr;
----
->     size_ptr = (size_t *) ptr;
-1992c1991
-<    int *iptr, size, i;
----
->    int i;
-1993a1993,1994
->    size_t size;
->    size_t* iptr;
-2023c2024
-<            iptr = (int *) ptr;
----
->            iptr = (size_t *) ptr;
-2073c2074
-< char *AZ_realloc(void *vptr, unsigned int new_size) {
----
-> char *AZ_realloc(void *vptr, size_t new_size) {
-2076c2077
-<    int i, *iptr, size, *new_size_ptr;
----
->    int i;
-2079d2079
-<    int newmsize, smaller;
-2080a2081,2082
->    size_t size, newmsize, smaller;
->    size_t *iptr, *new_size_ptr; 
-2108c2110
-<            iptr = (int *) ptr;
----
->            iptr = (size_t *) ptr;
-2128c2130
-<     new_size_ptr = (int *) new_ptr;
----
->     new_size_ptr = (size_t *) new_ptr;
-2175c2177
-< char *AZ_allocate(unsigned int size) {
----
-> char *AZ_allocate(size_t size) {
-2185c2187
-< char *AZ_realloc(void *ptr, unsigned int size) {
----
-> char *AZ_realloc(void *ptr, size_t size) {
-EOF
-patch -f az_util.c < az_util_c.patch
-rm az_util_c.patch 
 cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
     cmake \
 -D CMAKE_AR=/usr/bin/ar \
@@ -1737,7 +1659,6 @@ cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
 -D TPL_ENABLE_Boost:BOOL=OFF \
 -D Trilinos_ENABLE_Triutils:BOOL=ON \
 -D Trilinos_ENABLE_SEACAS:BOOL=ON \
--D Trilinos_GOMA_ENABLE_AMESOS:BOOL=ON \
 -D Trilinos_ENABLE_Epetra:BOOL=ON \
 -D Trilinos_ENABLE_Xpetra:BOOL=ON \
 -D Trilinos_ENABLE_Ifpack:BOOL=ON \
@@ -1748,7 +1669,6 @@ cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
 -D Trilinos_ENABLE_AztecOO:BOOL=ON \
 -D Trilinos_ENABLE_Stratimikos:BOOL=ON \
 -D Trilinos_ENABLE_Teko:BOOL=ON \
--D Trilinos_GOMA_ENABLE_AMESOS2:BOOL=ON \
 -D Trilinos_ENABLE_Belos:BOOL=ON \
 -D Trilinos_ENABLE_Amesos2:BOOL=ON \
 -D Trilinos_ENABLE_Sacado:BOOL=ON \
@@ -1764,9 +1684,10 @@ cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
       -D TPL_HDF5_INCLUDE_DIRS:PATH="$GOMA_LIB/hdf5-${HDF5_VERSION}/include" \
       -D HDF5_LIBRARY_DIRS:PATH="$GOMA_LIB/hdf5-${HDF5_VERSION}/lib" \
       -D HDF5_LIBRARY_NAMES:STRING="hdf5_hl;hdf5;z;dl" \
-      -D Netcdf_LIBRARY_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/lib" \
+      -D Netcdf_LIBRARY_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/lib;$GOMA_LIB/pnetcdf-${PNETCDF_VERSION}/lib" \
       -D TPL_ENABLE_Netcdf:BOOL=ON \
-      -D TPL_Netcdf_INCLUDE_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/include" \
+      -D TPL_Netcdf_INCLUDE_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/include;$GOMA_LIB/pnetcdf-${PNETCDF_VERSION}/include" \
+      -D Netcdf_LIBRARY_NAMES:STRING="netcdf;pnetcdf" \
       -D Matio_LIBRARY_DIRS:PATH=$GOMA_LIB/matio-$MATIO_VERSION/lib \
       -D Matio_INCLUDE_DIRS:PATH=$GOMA_LIB/matio-$MATIO_VERSION/include \
 -D TPL_ENABLE_MPI:BOOL=ON \
@@ -1795,7 +1716,6 @@ cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
   -D SuperLUDist_INCLUDE_DIRS:PATH=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION/include \
 -D TPL_ENABLE_ParMETIS:BOOL=ON \
   -D ParMETIS_LIBRARY_DIRS:PATH="$GOMA_LIB/parmetis-$PARMETIS_VERSION/lib;$GOMA_LIB/metis-$METIS_VERSION/lib" \
-  -D ParMETIS_INCLUDE_DIRS:PATH="$GOMA_LIB/parmetis-$PARMETIS_VERSION/include;$GOMA_LIB/metis-$METIS_VERSION/include" \
   -D TPL_ParMETIS_INCLUDE_DIRS:PATH="$GOMA_LIB/parmetis-$PARMETIS_VERSION/include;$GOMA_LIB/metis-$METIS_VERSION/include" \
 -D TPL_ENABLE_MUMPS:BOOL=ON \
   -D MUMPS_LIBRARY_NAMES:STRING="dmumps;mumps_common;pord;$BLACS_LIBRARY_NAME" \
@@ -1820,6 +1740,8 @@ cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
 -D Tpetra_INST_INT_INT:BOOL=ON \
 $EXTRA_ARGS \
 $GOMA_LIB/Trilinos-trilinos-release-$TRILINOS_VERSION_DASH 2>&1 | tee -a $COMPILE_LOG
+# can set LONG LONG but only one is valid
+# -D Tpetra_INST_INT_LONG_LONG:BOOL=ON \
 
     make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
     make install 2>&1 | tee -a $COMPILE_LOG
