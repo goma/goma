@@ -1,3 +1,7 @@
+## Changes in version 7.6.1
+
+- bugfix for Trilinos 13 [goma#458](https://github.com/goma/goma/pull/458)
+
 ## Changes in version 7.6.0
 
 - Tpetra and Amesos2 support, currently expects `TPETRA_INST_INT_INT` [goma#456](https://github.com/goma/goma/pull/456)

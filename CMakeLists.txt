@@ -113,33 +113,37 @@ if(${stratimikos_package_index} GREATER_EQUAL 0)
   endif()
 endif()
 
-list(FIND Trilinos_PACKAGE_LIST Tpetra tpetra_package_index)
-if(${tpetra_package_index} GREATER_EQUAL 0)
-  option(ENABLE_TPETRA "ENABLE_TPETRA" ON)
-  if((NOT ${HAVE_TPETRA_INST_INT_INT}) AND (NOT ${GOMA_MATRIX_GO_LONG_LONG}))
-    message(
-      WARNING
-        "Trilinos not built with Tpetra with int int, enable GOMA_MATRIX_GO_LONG_LONG (experimental), or rebuild Trilinos with Tpetra int int"
-    )
-    set(ENABLE_TPETRA OFF)
-  endif()
-  if(ENABLE_TPETRA)
-    option(GOMA_MATRIX_GO_LONG_LONG "GOMA_MATRIX_GO_LONG_LONG" OFF)
-    if(GOMA_MATRIX_GO_LONG_LONG)
+if(${Trilinos_VERSION} VERSION_LESS 14.0.0)
+  message(WARNING "Trilinos version less than 14.0.0, Tpetra not supported")
+else()
+  list(FIND Trilinos_PACKAGE_LIST Tpetra tpetra_package_index)
+  if(${tpetra_package_index} GREATER_EQUAL 0)
+    option(ENABLE_TPETRA "ENABLE_TPETRA" ON)
+    if((NOT ${HAVE_TPETRA_INST_INT_INT}) AND (NOT ${GOMA_MATRIX_GO_LONG_LONG}))
       message(
         WARNING
-          "GOMA_MATRIX_GO_LONG_LONG is enabled, using long long for Tpetra this is experimental"
+          "Trilinos not built with Tpetra with int int, enable GOMA_MATRIX_GO_LONG_LONG (experimental), or rebuild Trilinos with Tpetra int int"
       )
-      list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_MATRIX_GO_LONG_LONG)
+      set(ENABLE_TPETRA OFF)
     endif()
-    message(STATUS "TRILINOS: Tpetra found, enabling in Goma")
-    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TPETRA)
-    list(FIND Trilinos_PACKAGE_LIST Amesos2 amesos2_package_index)
-    if(${amesos2_package_index} GREATER_EQUAL 0)
-      option(ENABLE_AMESOS2 "ENABLE_AMESOS2" ON)
-      if(ENABLE_AMESOS2)
-        message(STATUS "TRILINOS: Amesos2 found, enabling in Goma")
-        list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_AMESOS2)
+    if(ENABLE_TPETRA)
+      option(GOMA_MATRIX_GO_LONG_LONG "GOMA_MATRIX_GO_LONG_LONG" OFF)
+      if(GOMA_MATRIX_GO_LONG_LONG)
+        message(
+          WARNING
+            "GOMA_MATRIX_GO_LONG_LONG is enabled, using long long for Tpetra this is experimental"
+        )
+        list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_MATRIX_GO_LONG_LONG)
+      endif()
+      message(STATUS "TRILINOS: Tpetra found, enabling in Goma")
+      list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TPETRA)
+      list(FIND Trilinos_PACKAGE_LIST Amesos2 amesos2_package_index)
+      if(${amesos2_package_index} GREATER_EQUAL 0)
+        option(ENABLE_AMESOS2 "ENABLE_AMESOS2" ON)
+        if(ENABLE_AMESOS2)
+          message(STATUS "TRILINOS: Amesos2 found, enabling in Goma")
+          list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_AMESOS2)
+        endif()
       endif()
     endif()
   endif()
@@ -998,12 +1002,12 @@ if(ENABLE_PETSC AND PETSC_FOUND)
                             ${PETSC_STATIC_LIBRARY_DIRS})
 endif()
 
-if($Trilinos_VERSION VERSION_LESS 14.0.0)
-  set(GOMA_TRILINOS_LIBRARIES ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES}
-                              ${Trilinos_EXTRA_LD_FLAGS})
-else()
-  set(GOMA_TRILINOS_LIBRARIES Trilinos::all_libs)
-endif()
+# if(${Trilinos_VERSION} VERSION_LESS 14.0.0)
+set(GOMA_TRILINOS_LIBRARIES ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES}
+                            ${Trilinos_EXTRA_LD_FLAGS})
+# else()
+# set(GOMA_TRILINOS_LIBRARIES Trilinos::all_libs)
+# endif()
 
 set(GOMA_TPL_LIBRARIES
     ${SEACASExodus_LIBRARIES}

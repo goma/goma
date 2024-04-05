@@ -1,7 +1,9 @@
 #include <cstddef>
 #ifdef GOMA_ENABLE_STRATIMIKOS
 
+#ifdef GOMA_ENABLE_CPP_FILESYSTEM
 #include <filesystem>
+#endif
 #include <iostream>
 #include <string>
 #include <utility>
@@ -75,6 +77,19 @@ struct Stratimikos_Solver_Data {
     solverFactory = Teuchos::null;
   }
 };
+
+static std::string get_file_extension(const std::string &filename) {
+#ifdef GOMA_ENABLE_CPP_FILESYSTEM
+  std::filesystem::path path(stratimikos_file[imtrx]);
+  return path.extension();
+#else
+  size_t pos = filename.find_last_of('.');
+  if (pos != std::string::npos) {
+    return filename.substr(pos + 1);
+  }
+  return "";
+#endif
+}
 
 extern "C" void stratimikos_solver_destroy(struct GomaLinearSolverData *ams) {
   auto solver_data = static_cast<Stratimikos_Solver_Data *>(ams->SolverData);
@@ -190,8 +205,7 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
 
     // Get parameters from file
     if (solver_data->solverParams.is_null()) {
-      std::filesystem::path path(stratimikos_file[imtrx]);
-      if (path.extension() == ".yaml") {
+      if (get_file_extension(stratimikos_file[imtrx]) == ".yaml") {
         solver_data->solverParams = Teuchos::getParametersFromYamlFile(stratimikos_file[imtrx]);
       } else {
         solver_data->solverParams = Teuchos::getParametersFromXmlFile(stratimikos_file[imtrx]);
@@ -280,8 +294,7 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
 
     // Get parameters from file
     if (solver_data->solverParams.is_null()) {
-      std::filesystem::path path(stratimikos_file[imtrx]);
-      if (path.extension() == ".yaml") {
+      if (get_file_extension(stratimikos_file[imtrx]) == ".yaml") {
         solver_data->solverParams = Teuchos::getParametersFromYamlFile(stratimikos_file[imtrx]);
       } else {
         solver_data->solverParams = Teuchos::getParametersFromXmlFile(stratimikos_file[imtrx]);
