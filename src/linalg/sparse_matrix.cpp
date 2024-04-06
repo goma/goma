@@ -1,63 +1,78 @@
-#ifndef __cplusplus
-#define __cplusplus
-#endif
-
-#if defined(PARALLEL) && !defined(EPETRA_MPI)
-#define EPETRA_MPI
-#endif
-
-#include <algorithm>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <vector>
 
-#include "Epetra_ConfigDefs.h"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Map.h"
-#include "Epetra_Vector.h"
-#include "dpi.h"
-#include "exo_struct.h"
-
-#ifdef EPETRA_MPI
-#else
-#include "Epetra_SerialComm.h"
+#include "linalg/sparse_matrix.h"
+#ifdef GOMA_ENABLE_TPETRA
+#include "linalg/sparse_matrix_tpetra.h"
+#endif
+#ifdef GOMA_ENABLE_EPETRA
+#include "linalg/sparse_matrix_epetra.h"
 #endif
 
 extern "C" {
+#define DISABLE_CPP
 #include "dp_comm.h"
 #include "dp_types.h"
-#include "el_geom.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
-#include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "mm_fill_util.h"
 #include "mm_mp.h"
-#include "mm_mp_structs.h"
 #include "mm_unknown_map.h"
-#include "rf_fem.h"
-#include "rf_fem_const.h"
-#include "rf_io.h"
 #include "rf_masks.h"
 #include "rf_node_const.h"
-#include "rf_solve.h"
-#include "rf_vars_const.h"
 #include "sl_util_structs.h"
-#include "std.h"
+#undef DISABLE_CPP
 }
 
-#include "sl_epetra_util.h"
+extern "C" goma_error GomaSparseMatrix_CreateFromFormat(GomaSparseMatrix *matrix,
+                                                        char *matrix_format) {
+  if (strcmp(matrix_format, "tpetra") == 0) {
+    return GomaSparseMatrix_Create(matrix, GOMA_SPARSE_MATRIX_TYPE_TPETRA);
+  } else if (strcmp(matrix_format, "epetra") == 0) {
+    return GomaSparseMatrix_Create(matrix, GOMA_SPARSE_MATRIX_TYPE_EPETRA);
+  }
+  return GOMA_ERROR;
+}
 
-#include "sl_epetra_interface.h"
+extern "C" goma_error GomaSparseMatrix_Create(GomaSparseMatrix *matrix,
+                                              enum GomaSparseMatrixType type) {
+  *matrix = (GomaSparseMatrix)malloc(sizeof(struct g_GomaSparseMatrix));
+  switch (type) {
+#ifdef GOMA_ENABLE_TPETRA
+  case GOMA_SPARSE_MATRIX_TYPE_TPETRA:
+    return GomaSparseMatrix_Tpetra_Create(matrix);
+    break;
+#endif
+#ifdef GOMA_ENABLE_EPETRA
+  case GOMA_SPARSE_MATRIX_TYPE_EPETRA:
+    return GomaSparseMatrix_Epetra_Create(matrix);
+    break;
+#endif
+  default:
+    GOMA_EH(GOMA_ERROR, "Unknown matrix type, GomaSparseMatrix_Create");
+    return GOMA_ERROR;
+    break;
+  }
+  return GOMA_SUCCESS;
+}
 
-extern "C" {
-
-/**
- * Create the goma problem graph in the epetra matrix ams->RowMatrix
- * @param ams ams structure containing appropriate RowMatrix
- * @param exo exodus file for this processor
- */
-void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo, Dpi *dpi) {
+extern "C" goma_error GomaSparseMatrix_SetProblemGraph(
+    GomaSparseMatrix matrix,
+    int num_internal_dofs,
+    int num_boundary_dofs,
+    int num_external_dofs,
+    int local_nodes,
+    NODE_INFO_STRUCT **Nodes,
+    int MaxVarPerNode,
+    int *Matilda,
+    int Inter_Mask[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES],
+    Exo_DB *exo,
+    Dpi *dpi,
+    Comm_Ex *cx,
+    int imtrx,
+    int Debug_Flag,
+    struct GomaLinearSolverData *ams) {
   int j, inode, i1, i2, eb1;
   int iunknown, inter_unknown, inter_node, row_num_unknowns, col_num_unknowns;
   int irow_index = 0;
@@ -68,49 +83,46 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
   int inode_varType[MaxVarPerNode], inode_matID[MaxVarPerNode];
   int inter_node_varType[MaxVarPerNode], inter_node_matID[MaxVarPerNode];
   int nnz = 0;
-  int total_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
-  std::vector<int> Indices;
-  std::vector<double> Values;
 
-  int NumMyRows = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
-  int NumExternal = num_external_dofs[pg->imtrx];
-  int NumMyCols = NumMyRows + NumExternal;
+  GomaGlobalOrdinal NumMyRows = num_internal_dofs + num_boundary_dofs;
+  GomaGlobalOrdinal NumExternal = num_external_dofs;
+  GomaGlobalOrdinal NumMyCols = NumMyRows + NumExternal;
+  matrix->n_rows = NumMyRows;
+  matrix->n_cols = NumMyCols;
 
-  /*
-   * This is kind of hacky the way it is being done,
-   * modified from the amesos interface for gomamsr to epetra
-   *
-   * Creates an array to be communicated of ints cast to double to use the exchange_dof
-   * communicator, then casts doubles back to int and sets those as global ids
-   * for the epetra array
-   *
-   * TODO: replace with non-double conversion routine
-   */
+  GomaGlobalOrdinal RowOffset;
+  MPI_Scan(&NumMyRows, &RowOffset, 1, MPI_GOMA_ORDINAL, MPI_SUM, MPI_COMM_WORLD);
+  RowOffset -= NumMyRows;
 
-  // get the row map from the row matrix
-  Epetra_Map RowMap = ams->RowMatrix->RowMatrixRowMap();
+  std::vector<GomaGlobalOrdinal> GlobalIDs(NumMyCols);
 
-  // get the global elements for this processor
-  int *MyGlobalElements = RowMap.MyGlobalElements();
-
-  double *dblColGIDs = new double[NumMyCols];
-  ams->GlobalIDs = (int *)malloc(sizeof(int) * NumMyCols);
-
-  // copy global id's and convert to double for boundary exchange
-  for (int i = 0; i < NumMyRows; i++)
-    dblColGIDs[i] = (double)MyGlobalElements[i];
-
-  exchange_dof(cx[pg->imtrx], dpi, dblColGIDs, pg->imtrx);
-
-  // convert back to int with known global id's from all processors
-  for (int j = 0; j < NumMyCols; j++) {
-    ams->GlobalIDs[j] = (int)dblColGIDs[j];
+  for (int i = 0; i < NumMyRows; i++) {
+    GlobalIDs[i] = i + RowOffset;
   }
+  matrix->global_ids = (GomaGlobalOrdinal *)malloc(sizeof(GomaGlobalOrdinal) * NumMyCols);
+
+#ifdef GOMA_MATRIX_GO_LONG_LONG
+  exchange_dof_long_long(cx, dpi, GlobalIDs.data(), imtrx);
+#else
+  exchange_dof_int(cx, dpi, GlobalIDs.data(), imtrx);
+#endif
+
+  for (size_t i = 0; i < GlobalIDs.size(); i++) {
+    matrix->global_ids[i] = GlobalIDs[i];
+  }
+
+  std::vector<GomaGlobalOrdinal> rows(GlobalIDs.begin(), GlobalIDs.begin() + NumMyRows);
+  std::vector<GomaGlobalOrdinal> cols(GlobalIDs.begin(), GlobalIDs.end());
+  std::vector<GomaGlobalOrdinal> coo_rows;
+  std::vector<GomaGlobalOrdinal> coo_cols;
+
+  int max_nz_per_row = 0;
+  int row_nz;
 
   /*
    * loop over all of the nodes on this processor
    */
-  for (inode = 0; inode < total_nodes; inode++) {
+  for (inode = 0; inode < local_nodes; inode++) {
     nv = Nodes[inode]->Nodal_Vars_Info[pg->imtrx];
     /*
      * Fill the vector list which points to the unknowns defined at this
@@ -129,13 +141,11 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
      * Loop over the unknowns defined at this row node
      */
     for (iunknown = 0; iunknown < row_num_unknowns; iunknown++) {
+      row_nz = 0;
       /*
        * Retrieve the var type of the current unknown
        */
       rowVarType = inode_varType[iunknown];
-
-      Indices.clear();
-      Values.clear();
 
       /*
        * Loop over the nodes which are determined to have an interaction
@@ -209,20 +219,26 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
              * Determine the equation number of the current unknown
              */
             icol_index = nodeCol->First_Unknown[pg->imtrx] + inter_unknown;
-            Indices.push_back(ams->GlobalIDs[icol_index]);
-            Values.push_back(0);
+            coo_rows.push_back(GlobalIDs[irow_index]);
+            coo_cols.push_back(GlobalIDs[icol_index]);
+            nnz++;
+            row_nz++;
           }
         }
       }
-      EpetraInsertGlobalRowMatrix(ams->RowMatrix, ams->GlobalIDs[irow_index], Indices.size(),
-                                  &Values[0], &Indices[0]);
-      nnz += Indices.size();
+      if (row_nz > max_nz_per_row) {
+        max_nz_per_row = row_nz;
+      }
       irow_index++;
     }
   }
 
-  EpetraFillCompleteRowMatrix(ams->RowMatrix);
-  EpetraPutScalarRowMatrix(ams->RowMatrix, 0);
+  matrix->create_graph(matrix, NumMyRows, rows.data(), NumMyCols, cols.data(), nnz, max_nz_per_row,
+                       coo_rows.data(), coo_cols.data());
+
+  if (matrix->complete_graph != NULL) {
+    //  matrix->complete_graph(matrix);
+  }
 
   /*
    * Add ams values that are needed elsewhere
@@ -234,13 +250,11 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
   ;
   ams->npn_plus = dpi->num_universe_nodes;
 
-  ams->npu = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
-  ams->npu_plus = num_universe_dofs[pg->imtrx];
-
-  delete[] dblColGIDs;
+  ams->npu = num_internal_dofs + num_boundary_dofs;
+  ams->npu_plus = num_internal_dofs + num_boundary_dofs + num_external_dofs;
 
   int64_t num_unknowns;
-  int64_t my_unknowns = num_universe_dofs[pg->imtrx];
+  int64_t my_unknowns = ams->npu_plus;
 
   int64_t num_nzz_global;
   int64_t my_nnz = nnz;
@@ -250,27 +264,20 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
 
   DPRINTF(stdout, "\n%-30s= %ld\n", "Number of unknowns", num_unknowns);
   DPRINTF(stdout, "\n%-30s= %ld\n", "Number of matrix nonzeroes", num_nzz_global);
+  return GOMA_SUCCESS;
 }
 
-/**
- * Load local element contributions into the local matrix on this processor
- *
- * Modified from MSR version in mm_fill load_lec
- *
- * @param exo ptr to EXODUS II finite element mesh db
- * @param ielem Element number we are working on
- * @param ams Matrix contianer
- * @param x Solution vector
- * @param resid_vector residual vector
- */
-void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams, double resid_vector[]) {
+extern "C" goma_error GomaSparseMatrix_LoadLec(GomaSparseMatrix matrix,
+                                               int ielem,
+                                               struct Local_Element_Contributions *lec,
+                                               double resid_vector[]) {
   int e, v, i, j, pe, pv;
   int dofs;
   int gnn, row_index, ke, kv, nvdof;
   int col_index, ledof;
   int je_new;
   struct Element_Indices *ei_ptr;
-  std::vector<int> Indices;
+  std::vector<GomaGlobalOrdinal> Indices;
   std::vector<double> Values;
 
   for (e = V_FIRST; e < V_LAST; e++) {
@@ -320,7 +327,7 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams, double resid_vec
                                                      ei_ptr->Baby_Dolphin[v][j],
                                                      ei_ptr->matID_ledof[ledof], pg->imtrx);
                           GOMA_EH(col_index, "Bad var index.");
-                          Indices.push_back(ams->GlobalIDs[col_index]);
+                          Indices.push_back(matrix->global_ids[col_index]);
                           Values.push_back(lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                         }
                       }
@@ -339,14 +346,14 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams, double resid_vec
                           GOMA_EH(GOMA_ERROR, "LEC Indexing error");
                         }
                         GOMA_EH(col_index, "Bad var index.");
-                        Indices.push_back(ams->GlobalIDs[col_index]);
+                        Indices.push_back(matrix->global_ids[col_index]);
                         Values.push_back(lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                       }
                     }
                   }
                 }
-                EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, ams->GlobalIDs[row_index],
-                                             Indices.size(), &Values[0], &Indices[0]);
+                matrix->sum_into_row_values(matrix, matrix->global_ids[row_index], Indices.size(),
+                                            &Values[0], &Indices[0]);
                 Indices.clear();
                 Values.clear();
               }
@@ -403,7 +410,7 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams, double resid_vec
                           }
                         }
                         GOMA_EH(col_index, "Bad var index.");
-                        Indices.push_back(ams->GlobalIDs[col_index]);
+                        Indices.push_back(matrix->global_ids[col_index]);
                         Values.push_back(lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                       }
                     }
@@ -432,14 +439,14 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams, double resid_vec
                         GOMA_EH(GOMA_ERROR, "LEC Indexing error");
                       }
                       GOMA_EH(col_index, "Bad var index.");
-                      Indices.push_back(ams->GlobalIDs[col_index]);
+                      Indices.push_back(matrix->global_ids[col_index]);
                       Values.push_back(lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                     }
                   }
                 }
               }
-              EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, ams->GlobalIDs[row_index],
-                                           Indices.size(), &Values[0], &Indices[0]);
+              matrix->sum_into_row_values(matrix, matrix->global_ids[row_index], Indices.size(),
+                                          &Values[0], &Indices[0]);
               Indices.clear();
               Values.clear();
             }
@@ -448,50 +455,18 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams, double resid_vec
       }
     }
   }
+  return GOMA_SUCCESS;
 }
 
-/**
- * Inverse row sum scale, used by goma for scaling matrix and residual
- * @param ams Aztec structure containing RowMatrix
- * @param b b from Ax = b
- * @param scale array for scale values to be placed for further usage (b[i] will equal old b[i] /
- * scale[i])
- */
-void EpetraRowSumScale(struct GomaLinearSolverData *ams, double *b, double *scale) {
-  Epetra_Vector vector_scale(ams->RowMatrix->RowMatrixRowMap(), false);
-  ams->RowMatrix->InvRowSums(vector_scale);
-  ams->RowMatrix->LeftScale(vector_scale);
-  int local;
-  for (int i = 0; i < ams->RowMatrix->NumMyRows(); i++) {
-    local = ams->RowMatrix->RowMatrixRowMap().LID(ams->GlobalIDs[i]);
-    b[i] *= vector_scale[local];
-    scale[i] = 1 / vector_scale[local];
+extern "C" goma_error GomaSparseMatrix_Destroy(GomaSparseMatrix *matrix) {
+  if (*matrix == NULL) {
+    return GOMA_SUCCESS;
   }
-}
-
-/**
- * Set the GlobalRow to zero and set the diagonal column to 1 in that row
- *
- * @param ams Aztec_Linear_Solver_System matrix struct containing epetra matrix
- * @param GlobalRow global row to set to diagonal only
- */
-void EpetraSetDiagonalOnly(struct GomaLinearSolverData *ams, int GlobalRow) {
-  Epetra_CrsMatrix *CrsMatrix = dynamic_cast<Epetra_CrsMatrix *>(ams->RowMatrix);
-  int size = CrsMatrix->NumGlobalEntries(GlobalRow);
-  double *values = new double[size];
-  int *indices = new int[size];
-  int NumEntries;
-  CrsMatrix->ExtractGlobalRowCopy(GlobalRow, size, NumEntries, values, indices);
-  for (int i = 0; i < NumEntries; i++) {
-    if (indices[i] == GlobalRow) {
-      values[i] = 1;
-    } else {
-      values[i] = 0;
-    }
+  if ((*matrix)->destroy != NULL) {
+    (*matrix)->destroy(*matrix);
   }
-  CrsMatrix->ReplaceGlobalValues(GlobalRow, NumEntries, values, indices);
-  delete[] indices;
-  delete[] values;
+  free((*matrix)->global_ids);
+  free(*matrix);
+  *matrix = NULL;
+  return GOMA_SUCCESS;
 }
-}
-/* End extern "C" */

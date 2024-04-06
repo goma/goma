@@ -26,7 +26,6 @@
 #include <vector>
 
 // not needed except to avoid including as a C file
-#include "sl_epetra_interface.h"
 
 #include "dp_ghost.h"
 

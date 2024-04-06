@@ -34,6 +34,7 @@
 #include "el_geom.h"
 #include "el_quality.h"
 #include "exo_struct.h"
+#include "linalg/sparse_matrix.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_augc_util.h"
@@ -56,6 +57,7 @@
 #include "rf_io.h"
 #include "rf_io_const.h"
 #include "rf_io_structs.h"
+#include "rf_masks.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
 #include "rf_solve.h"
@@ -547,7 +549,21 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
   pg->matrices[pg->imtrx].resid_vector = resid_vector;
 
   /* Allocate sparse matrix */
-  if (strcmp(Matrix_Format, "msr") == 0) {
+  if ((strcmp(Matrix_Format, "tpetra") == 0) || (strcmp(Matrix_Format, "epetra") == 0)) {
+    err = check_compatible_solver();
+    GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
+    check_parallel_error("Matrix format / Solver incompatibility");
+    GomaSparseMatrix goma_matrix;
+    goma_error err = GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
+    GOMA_EH(err, "GomaSparseMatrix_CreateFromFormat");
+    int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
+    err = GomaSparseMatrix_SetProblemGraph(
+        goma_matrix, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx],
+        num_external_dofs[pg->imtrx], local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
+        dpi, cx, pg->imtrx, Debug_Flag, ams[JAC]);
+    GOMA_EH(err, "GomaSparseMatrix_SetProblemGraph");
+    ams[JAC]->GomaMatrixData = goma_matrix;
+  } else if (strcmp(Matrix_Format, "msr") == 0) {
     log_msg("alloc_MSR_sparse_arrays...");
     alloc_MSR_sparse_arrays(&ija, &a, &a_old, 0, node_to_fill, exo, dpi);
     /*

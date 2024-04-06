@@ -1270,7 +1270,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
         } else if (!strcmp(input, "GAS_DIFFUSION")) {
           BC_Types[ibc].BC_Data_Int[2] = GAS_DIFFUSION;
         } else if (!strcmp(input, "FULL")) {
-          BC_Types[ibc].BC_Data_Int[2] = FULL;
+          BC_Types[ibc].BC_Data_Int[2] = METAL_CORROSION_FULL;
         } else if (!strcmp(input, "ANNIHILATION_ELECTRONEUTRALITY")) {
           BC_Types[ibc].BC_Data_Int[2] = ANNIHILATION_ELECTRONEUTRALITY;
         } else if (!strcmp(input, "ANNIHILATION")) {
