@@ -23,6 +23,7 @@
 #include "dpi.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "linalg/sparse_matrix.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
@@ -35,7 +36,6 @@
 #include "rf_solver.h"
 #include "rf_solver_const.h"
 #include "rf_vars_const.h"
-#include "sl_epetra_util.h"
 #include "sl_matrix_util.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
@@ -444,8 +444,9 @@ void row_sum_scaling_scale(struct GomaLinearSolverData *ams, double b[], double 
   } else if (strcmp(Matrix_Format, "vbr") == 0) {
     row_sum_scale_VBR(ams->npn, ams->val, ams->bpntr, ams->bindx, ams->indx, ams->rpntr, ams->cpntr,
                       b, scale);
-  } else if (strcmp(Matrix_Format, "epetra") == 0) {
-    row_sum_scale_epetra(ams, b, scale);
+  } else if (ams->GomaMatrixData != NULL) {
+    GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+    matrix->row_sum_scaling(matrix, b, scale);
 #ifdef GOMA_ENABLE_PETSC
 #if PETSC_USE_COMPLEX
   } else if (strcmp(Matrix_Format, "petsc_complex") == 0) {
@@ -661,10 +662,6 @@ void row_sum_scale_VBR(int N,
   }
 } /* END of routine row_sum_scale_VBR */
 
-void row_sum_scale_epetra(struct GomaLinearSolverData *ams, double *b, double *scale) {
-  EpetraRowSumScale(ams, b, scale);
-}
-
 /******************************************************************************/
 /******************************************************************************/ /******************************************************************************/
 /*
@@ -820,7 +817,15 @@ void vector_scaling(const int N, double b[], double scale[]) {
  * @return 0 if compatible, -1 if not
  */
 int check_compatible_solver(void) {
-  if (strcmp(Matrix_Format, "epetra") == 0) {
+  if (strcmp(Matrix_Format, "tpetra") == 0) {
+    switch (Linear_Solver) {
+    case STRATIMIKOS:
+    case AMESOS2:
+      return GOMA_SUCCESS;
+    default:
+      return GOMA_ERROR;
+    }
+  } else if (strcmp(Matrix_Format, "epetra") == 0) {
     switch (Linear_Solver) {
     case AZTECOO:
     case AMESOS:

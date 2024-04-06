@@ -40,6 +40,7 @@
 #include "el_elm_info.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "linalg/sparse_matrix.h"
 #include "load_field_variables.h"
 #include "md_timer.h"
 #include "mm_as.h"
@@ -93,7 +94,6 @@
 #include "rf_node_const.h"
 #include "rf_solver.h"
 #include "rf_solver_const.h"
-#include "sl_epetra_util.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
 #include "std.h"
@@ -5000,8 +5000,9 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
   fprintf(rrrr, "\nGlobal_NN Proc_NN  Equation    idof    Proc_SolnNum     ResidValue\n");
 #endif
 
-  if (strcmp(Matrix_Format, "epetra") == 0) {
-    EpetraLoadLec(ielem, ams, resid_vector);
+  if (ams->GomaMatrixData != NULL) {
+    GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+    GomaSparseMatrix_LoadLec(matrix, ielem, lec, resid_vector);
   }
 #ifdef GOMA_ENABLE_PETSC
 #if PETSC_USE_COMPLEX

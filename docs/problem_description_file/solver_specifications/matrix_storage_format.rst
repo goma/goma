@@ -21,6 +21,9 @@ vbr
     selected when an Aztec iterative solver is chosen.
 epetra
     Compressed Sparse Row format using the Epetra library from Trilinos
+tpetra
+    FECRSMatrix Compressed Sparse Row format using the Tpetra library from Trilinos
+    currently only works using Stratimikos and Amesos2
 
 ------------
 Examples

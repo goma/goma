@@ -48,7 +48,7 @@
 #include "Epetra_SerialComm.h"
 #endif
 
-#if 0
+#if 1
 #include "EpetraExt_RowMatrixOut.h"
 #include "EpetraExt_VectorOut.h"
 #endif
@@ -60,6 +60,8 @@
 #include "Epetra_Map.h"
 #include "Epetra_Vector.h"
 #include "Trilinos_Util.h"
+#include "linalg/sparse_matrix.h"
+#include "linalg/sparse_matrix_epetra.h"
 #include "sl_util_structs.h"
 
 static void GomaMsr2EpetraCsr(struct GomaLinearSolverData *ams, Epetra_CrsMatrix *A, int newmatrix);
@@ -84,7 +86,7 @@ void amesos_solve(char *choice,
   Amesos A_Factory;
 
   /* Convert to Epetra format */
-  if (ams->RowMatrix == 0) {
+  if (ams->GomaMatrixData == NULL) {
     if (!ams->solveSetup) {
       if (A[imtrx] != nullptr)
         delete A[imtrx];
@@ -92,15 +94,18 @@ void amesos_solve(char *choice,
     }
     GomaMsr2EpetraCsr(ams, A[imtrx], !ams->solveSetup);
   } else {
-    A[imtrx] = dynamic_cast<Epetra_CrsMatrix *>(ams->RowMatrix);
+    GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+    EpetraSparseMatrix *epetra_matrix = static_cast<EpetraSparseMatrix *>(matrix->data);
+    A[imtrx] = dynamic_cast<Epetra_CrsMatrix *>(epetra_matrix->matrix.get());
   }
   const Epetra_Map &map = A[imtrx]->RowMatrixRowMap();
   Epetra_Vector x(Copy, map, x_);
   Epetra_Vector b(Copy, map, b_);
 
 #if 0
-  EpetraExt::RowMatrixToMatrixMarketFile("Jnext.mm", *A);
-  EpetraExt::VectorToMatrixMarketFile("bnext.mm", b);
+  EpetraExt::RowMatrixToMatrixMarketFile("Jep.mm", *A[imtrx]);
+  EpetraExt::VectorToMatrixMarketFile("xep.mm", x);
+  EpetraExt::VectorToMatrixMarketFile("bep.mm", b);
   MPI_Finalize();
   exit(0);
 #endif

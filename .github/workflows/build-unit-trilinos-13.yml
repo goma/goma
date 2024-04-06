@@ -1,4 +1,4 @@
-name: Goma Unit Tests
+name: Goma Unit Tests Trilinos 13 Build
 
 on: [push, pull_request]
 
@@ -10,7 +10,7 @@ jobs:
   build-unit:
     name: build release unittest
     runs-on: ubuntu-latest
-    container: westonortiz/goma-libs
+    container: westonortiz/goma-libs:2023-01-17
 
     defaults:
       run:
