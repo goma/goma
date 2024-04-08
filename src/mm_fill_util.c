@@ -67,18 +67,18 @@
  *    ------------             ---------               --------------
  *
  *  beer_belly()
- *  calc_surf_det ()             double		mm_fill.c:  matrix_fill
- *  calc_surf_normal ()          void		mm_fill.c:  matrix_fill
- *  calc_surf_tangent ()         void		mm_fill.c:  matrix_fill
- *  fill_surf_shape ()		void		mm_fill.c:  matrix_fill
- *  alloc_MSR_sparse_arrays ()   void		rf_solve.c: solve_problem
- *  alloc_VBR_sparse_arrays ()   void		rf_solve.c: solve_problem
- *  find_problem_graph_fill ()   static int	alloc_MSR_sparse_arrays
- *  find_MSR_problem_graph ()    static int	alloc_MSR_sparse_arrays
- *  find_VBR_problem graph ()    static int      alloc_VBR_sparse_arrays
- *  fill_variable_vector()       static int      find_MSR_problem_graph
- *  set_diag_to_one ()           void		mm_fill.c:  matrix_fill
- *  set_diag_to_large ()         void		mm_fill.c:  matrix_fill
+ *  calc_surf_det ()             double       mm_fill.c:  matrix_fill
+ *  calc_surf_normal ()          void         mm_fill.c:  matrix_fill
+ *  calc_surf_tangent ()         void         mm_fill.c:  matrix_fill
+ *  fill_surf_shape ()		     void         mm_fill.c:  matrix_fill
+ *  alloc_MSR_sparse_arrays ()   void         rf_solve.c: solve_problem
+ *  alloc_VBR_sparse_arrays ()   void         rf_solve.c: solve_problem
+ *  find_problem_graph_fill ()   static int   alloc_MSR_sparse_arrays
+ *  find_MSR_problem_graph ()    static int   alloc_MSR_sparse_arrays
+ *  find_VBR_problem graph ()    static int   alloc_VBR_sparse_arrays
+ *  fill_variable_vector()       static int   find_MSR_problem_graph
+ *  set_diag_to_one ()           void         mm_fill.c:  matrix_fill
+ *  set_diag_to_large ()         void         mm_fill.c:  matrix_fill
  *
  *******************************************************************************/
 

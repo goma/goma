@@ -1547,11 +1547,25 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->light_absorption, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->extinction_index, 1, MPI_DOUBLE);
 
+    ddd_add_member(n, &mp_glob[i]->moment_nucleation_kernel_model, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->moment_nucleation_kernel_rate_coeff, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->moment_nucleation_min_conc, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->moment_nucleation_kernel_nucelli_volume, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->moment_fragment_model, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->moment_breakage_kernel_model, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->moment_breakage_kernel_rate_coeff, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->moment_breakage_kernel_exp, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_coalescence_model, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->moment_coalescence_scale, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_growth_model, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->moment_growth_Tramp, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->moment_growth_Toff, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_growth_scale, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_growth_reference_pressure, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->moment_growth_max_frac, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->moment_growth_molar_mass, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->moment_growth_solute_density, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->moment_growth_E_over_R, 1, MPI_DOUBLE);
 
     ddd_add_member(n, &mp_glob[i]->CapStress, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->ConductivityModel, 1, MPI_INT);
@@ -1794,6 +1808,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->len_u_Volume_Expansion, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->len_u_current_source, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->len_u_moment_source, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->len_u_moment_breakage, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->len_u_density, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->len_u_electrical_conductivity, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->len_u_permittivity, 1, MPI_INT);
@@ -2945,6 +2960,8 @@ void ark_landing(void) {
     dalloc(m->len_u_current_source, m->u_current_source);
 
     dalloc(m->len_u_moment_source, m->u_moment_source);
+    
+    dalloc(m->len_u_moment_breakage, m->u_moment_breakage);
 
     dalloc(m->len_u_density, m->u_density);
 
@@ -3254,6 +3271,8 @@ void noahs_dove(void) {
     crdv(m->len_u_current_source, m->u_current_source);
 
     crdv(m->len_u_moment_source, m->u_moment_source);
+    
+    crdv(m->len_u_moment_breakage, m->u_moment_breakage);
 
     crdv(m->len_u_density, m->u_density);
 
