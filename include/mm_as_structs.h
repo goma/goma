@@ -3078,6 +3078,7 @@ struct viscosity_dependence {
   double pf[MAX_PHASE_FUNC][MDE]; /* phase function */
   double degrade[MDE];            /* amount of degradation */
   double eddy_nu[MDE];            /* Turbulent viscosity */
+  double sh_t[MDE];               /* shell temperature */
 };
 typedef struct viscosity_dependence VISCOSITY_DEPENDENCE_STRUCT;
 typedef struct polymer_time_const_dependence {
