@@ -4762,7 +4762,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     double q[DIM], v_avg[DIM], pg_cmp[DIM], pgrad, ev[DIM], dev_dpg[DIM][DIM];
     double DGRADP_DX[DIM][DIM][MDE];
-    double H_inv = 1./H;
+    double H_inv = 1. / H;
     memset(q, 0.0, sizeof(double) * DIM);
     memset(v_avg, 0.0, sizeof(double) * DIM);
     dbl q_mag = 0., pre_delP = 0., dq_gradp = 1., vpre_delP = 1.;
