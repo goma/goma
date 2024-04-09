@@ -7529,7 +7529,7 @@ int assemble_shell_energy(double time,            /* present time value */
 
             for (a = 0; a < VIM; a++) {
               advection += LubAux->q[a] * grad_II_phi_j[a];
-              advection += LubAux->dq_dT[a] * grad_T[a];
+              advection += LubAux->dq_dT[a] * grad_T[a] * phi_j;
             }
 
             advection *= -rho * Cp * det_J * wt * wt_func;
@@ -7958,19 +7958,12 @@ int assemble_shell_energy(double time,            /* present time value */
           advection = 0.;
           if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
 
-#if 1
             for (a = 0; a < VIM; a++) {
               advection += LubAux->dq_dp2[a] * phi_j * grad_T[a];
               for (b = 0; b < VIM; b++) {
                 advection += LubAux->dq_dgradp[a][b] * grad_II_phi_j[b] * grad_T[a];
               }
             }
-#else
-            for (a = 0; a < VIM; a++) {
-              advection += dqdp[a] * grad_II_phi_j[a] * grad_T[a];
-              advection += dqdp_1[a] * phi_j * grad_T[a];
-            }
-#endif
 
             advection *= -rho * Cp * det_J * wt * wt_func;
             advection *= h3;
@@ -14103,6 +14096,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
             for (b = 0; b < VIM; b++) {
               advection += LubAux->dv_dgradp[a][b] * grad_II_phi_j[b] * gradII_kappa[a];
             }
+            div *= curvX * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
           }
           advection *= lambda * wt_func * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 
