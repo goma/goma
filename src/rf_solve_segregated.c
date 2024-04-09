@@ -1015,7 +1015,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
           }
 
           write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot, xdot_old, tev_post,
-                                    gv, rd, gvec, &nprint, delta_t, theta, time1, NULL, exo, dpi);
+                                    gv, rd, gvec, gvec_elem, &nprint, delta_t, theta, time1, NULL,
+                                    exo, dpi);
 
           if (ProcID == 0) {
             printf("\n Steady state reached \n");
@@ -1346,7 +1347,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
 
     if (Write_Initial_Solution) {
       write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot, xdot_old, tev_post, gv,
-                                rd, gvec, &nprint, delta_t, theta, time1, NULL, exo, dpi);
+                                rd, gvec, gvec_elem, &nprint, delta_t, theta, time1, NULL, exo,
+                                dpi);
       nprint++;
     }
 
@@ -2159,7 +2161,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
         if (i_print) {
           if (Write_Intermediate_Solutions == 0) {
             write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot, xdot_old, tev_post,
-                                      gv, rd, gvec, &nprint, delta_t, theta, time1, NULL, exo, dpi);
+                                      gv, rd, gvec, gvec_elem, &nprint, delta_t, theta, time1, NULL,
+                                      exo, dpi);
             nprint++;
           }
 
