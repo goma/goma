@@ -73,7 +73,7 @@ int amesos2_solve(struct GomaLinearSolverData *ams,
 
     if (solver_data->solver.is_null()) {
       Teuchos::RCP<MAT> crs_matrix = Teuchos::rcp_dynamic_cast<MAT>(tpetra_data->matrix);
-      solver_data->solver = Amesos2::create<MAT, MV>("Mumps", crs_matrix);
+      solver_data->solver = Amesos2::create<MAT, MV>(amesos2_solver, crs_matrix);
       if (amesos2_file != NULL && strlen(amesos2_file) > 0) {
         std::filesystem::path path(amesos2_file);
         Teuchos::RCP<Teuchos::ParameterList> amesos2_params;
