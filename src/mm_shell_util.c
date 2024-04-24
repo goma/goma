@@ -3493,7 +3493,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
   int i, j, k, jk, w;
   dbl H;
   dbl veloL[DIM], veloU[DIM];
-  dbl mu, dmu_dc = 0., srate = 0.;
+  dbl mu, dmu_dc = 0., dmu_dT = 0., srate = 0.;
   dbl *dmu_df;
   dbl rho;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
@@ -3544,7 +3544,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     } else {
       mu = viscosity(gn, NULL, d_mu);
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
-      /*dmu_dT = mp->d_viscosity[SHELL_TEMPERATURE];  */
+      if (gn->ConstitutiveEquation == THERMAL || gn->ConstitutiveEquation == TABLE) {
+        dmu_dT = mp->d_viscosity[SHELL_TEMPERATURE];
+      }
     }
 
     /* Extract wall velocities */
@@ -3951,7 +3953,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dbl dq_dH = 0., dv_dH = 0., H_inv = 1. / H;
     dbl dqmag_dF[MDE], factor, ratio = 0., q_mag2;
     dbl q[DIM], ev[DIM], pgrad, pg_cmp[DIM], dev_dpg[DIM][DIM];
-    dbl v_avg[DIM], dq_dT;
+    dbl v_avg[DIM], dq_dT = 0.;
     double DQ_DH[DIM];
     double D_Q_DF[DIM][MDE], D_V_DF[DIM][MDE], DGRADP_DF[DIM][MDE], DGRADP_DK = 0.;
     double DGRADP_DX[DIM][DIM][MDE], DGRADP_DNORMAL[DIM][DIM][MDE];
@@ -4089,6 +4091,10 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
           dqmag_dF[j] += q_mag * (-d_k_turb_dmu * dmu_df[j] / k_turb - dmu_df[j] / mu);
         }
+        /*  Only temperature-dependent Newtonian type model is THERMAL  */
+        if (gn->ConstitutiveEquation == THERMAL || gn->ConstitutiveEquation == TABLE) {
+          dq_dT = q_mag * (-dmu_dT / mu);
+        }
       }
       /* modulate q (stationary wall part) if level-set interface present */
       if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
@@ -4142,6 +4148,10 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         vis_w = mu;
         for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
           dqmag_dF[j] += q_mag * (-d_k_turb_dmu * dmu_df[j] / k_turb - dmu_df[j] / mu);
+        }
+        /*  Only temperature-dependent Newtonian type model is THERMAL  */
+        if (gn->ConstitutiveEquation == THERMAL || gn->ConstitutiveEquation == TABLE) {
+          dq_dT = q_mag * (-dmu_dT / mu);
         }
         memset(q, 0.0, sizeof(double) * DIM);
         for (i = 0; i < dim; i++) {
@@ -4539,6 +4549,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     } else {
       mu = viscosity(gn, NULL, d_mu);
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
+      if (gn->ConstitutiveEquation == THERMAL || gn->ConstitutiveEquation == TABLE) {
+        dmu_dT = mp->d_viscosity[SHELL_TEMPERATURE];
+      }
     }
 
     /* Extract bottom wall velocity */
@@ -4748,12 +4761,13 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     /******* CALCULATE FLOW RATE AND AVERAGE VELOCITY ***********/
 
     double q[DIM], v_avg[DIM], pg_cmp[DIM], pgrad, ev[DIM], dev_dpg[DIM][DIM];
+    double DGRADP_DX[DIM][DIM][MDE];
+    double H_inv = 1. / H;
     memset(q, 0.0, sizeof(double) * DIM);
     memset(v_avg, 0.0, sizeof(double) * DIM);
     dbl q_mag = 0., pre_delP = 0., dq_gradp = 1., vpre_delP = 1.;
     dbl k_turb = 3., tau_w, vis_w, dq_gradpt, dv_gradp;
     dbl vsqr, dq_dH = 0., dv_dH = 0., dq_dT = 0.;
-    double DGRADP_DX[DIM][DIM][MDE];
 
     for (i = 0; i < dim; i++) {
       pg_cmp[i] = GRADP[i] - GRAV[i] - GRAD_DISJ_PRESS[i];
@@ -4792,7 +4806,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         q_mag = -SQUARE(H) / k_turb * pow(tau_w / mu, 1. / nexp);
         pre_delP = -CUBE(H) / (k_turb * mu) * pow(tau_w / mu, 1. / nexp - 1.);
         dq_gradp = pre_delP / nexp;
-        dq_dH = (2. + 1. / nexp) / H * q_mag;
+        dq_dH = (2. + 1. / nexp) * H_inv * q_mag;
         srate = pow(fabs(tau_w) / mu, 1. / nexp);
         vis_w = tau_w / srate;
       } else {
@@ -4833,7 +4847,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
             -CUBE(H) / (k_turb * mu) * pow((tau_w - yield) / mu, 1. / nexp - 1.) *
             (1. + (nexp - 1.) / (nexp + 1.) * yield / tau_w *
                       (1. + 2. * nexp * yield / tau_w * (1. + nexp / (1. - nexp) * yield / tau_w)));
-        dq_dH = 2 * q_mag / H + dq_gradp / H * pgrad;
+        dq_dH = 2 * q_mag * H_inv + dq_gradp * H_inv * pgrad;
         srate = pow((fabs(tau_w) - yield) / mu, 1. / nexp);
       } else {
         q_mag = 0.;
@@ -4846,12 +4860,16 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       dq_dH = (-3. * SQUARE(H) / (k_turb * mu) - 2. * H * beta_slip) * pgrad;
       srate = fabs(tau_w / mu);
       vis_w = mu;
+      /*  Only temperature-dependent Newtonian type model is THERMAL  */
+      if (gn->ConstitutiveEquation == THERMAL || gn->ConstitutiveEquation == TABLE) {
+        dq_dT = q_mag * (-dmu_dT / mu);
+      }
     } /*  End of Viscosity Models **/
 
     dq_gradpt = dq_gradp - beta_slip * SQUARE(H);
-    dv_gradp = dq_gradp / H - beta_slip * H;
-    dv_dH = dq_dH / H - q_mag / SQUARE(H);
-    vpre_delP = pre_delP / H;
+    dv_gradp = dq_gradp * H_inv - beta_slip * H;
+    dv_dH = dq_dH * H_inv - q_mag / SQUARE(H);
+    vpre_delP = pre_delP * H_inv;
 
     for (i = 0; i < dim; i++) {
       q[i] += q_mag * ev[i];
@@ -4869,7 +4887,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     memset(v_avg, 0.0, sizeof(double) * DIM);
     for (i = 0; i < dim; i++) {
-      v_avg[i] += q[i] / H;
+      v_avg[i] += q[i] * H_inv;
     }
 
     /******* CALCULATE FLOW RATE SENSITIVITIES ***********/
@@ -4945,6 +4963,14 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       }
     }
 
+    /* Sensitivity w.r.t. sh_t , i.e., scalar viscosity dependencies */
+    dbl D_Q_DT[DIM], D_V_DT[DIM];
+    if (pd->v[pg->imtrx][SHELL_TEMPERATURE]) {
+      for (i = 0; i < dim; i++) {
+        D_Q_DT[i] = dq_dT * ev[i];
+        D_V_DT[i] = H_inv * dq_dT * ev[i];
+      }
+    }
     /*Evaluate flowrate sensitivity w.r.t. mesh and/or real-solid */
     dbl D_Q_DX[DIM][DIM][MDE];
     dbl D_Q_DRS[DIM][DIM][MDE];
@@ -4986,6 +5012,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       LubAux->q[i] = q[i];
       LubAux->v_avg[i] = v_avg[i];
       LubAux->gradP_mag += SQUARE(pg_cmp[i]);
+      LubAux->dq_dT[i] = D_Q_DT[i];
+      LubAux->dv_avg_dT[i] = D_V_DT[i];
 
       for (j = 0; j < ei[pg->imtrx]->dof[SHELL_FILMH]; j++) {
         LubAux->dq_dh1[i][j] = D_Q_DH1[i][j];
