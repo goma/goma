@@ -919,7 +919,7 @@ void foam_pbe_ba_gas_source(struct Species_Conservation_Terms *st,
   if (err)
     return;
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  MGR = calloc(1, sizeof(struct moment_growth_rate));
   err = get_moment_growth_rate_term(MGR);
 
   double source = 0;
@@ -967,7 +967,7 @@ void foam_pbe_ba_liquid_source(struct Species_Conservation_Terms *st,
   if (err)
     return;
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  MGR = calloc(1, sizeof(struct moment_growth_rate));
   err = get_moment_growth_rate_term(MGR);
 
   double source = 0;
@@ -1018,7 +1018,7 @@ void foam_pbe_co2_gas_source(struct Species_Conservation_Terms *st,
   if (err)
     return;
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  MGR = calloc(1, sizeof(struct moment_growth_rate));
   err = get_moment_growth_rate_term(MGR);
 
   double source = 0;
@@ -1068,7 +1068,7 @@ void foam_pbe_co2_liquid_source(struct Species_Conservation_Terms *st,
   if (err)
     return;
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  MGR = calloc(1, sizeof(struct moment_growth_rate));
   err = get_moment_growth_rate_term(MGR);
 
   double source = 0;
@@ -1471,7 +1471,7 @@ int moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource) {
     if (err)
       return err;
 
-    MGR = calloc(sizeof(struct moment_growth_rate), 1);
+    MGR = calloc(1, sizeof(struct moment_growth_rate));
     if (H > PBE_FP_SMALL) {
       err = get_moment_growth_rate_term(MGR);
     }
@@ -1543,7 +1543,7 @@ int moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource) {
       H = 1 - lsi->H;
     }
     int err = 0;
-    MGR = calloc(sizeof(struct moment_growth_rate), 1);
+    MGR = calloc(1, sizeof(struct moment_growth_rate));
     err = get_moment_growth_rate_term(MGR);
 
     if (err) {
@@ -1569,7 +1569,7 @@ int moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource) {
       H = 1 - lsi->H;
     }
     int err = 0;
-    MGR = calloc(sizeof(struct moment_growth_rate), 1);
+    MGR = calloc(1, sizeof(struct moment_growth_rate));
     err = get_moment_growth_rate_term(MGR);
 
     if (err) {
@@ -2223,7 +2223,7 @@ int assemble_moments(double time, /* present time value */
     return (status);
   }
 
-  d_msource = calloc(sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT), 1);
+  d_msource = calloc(1, sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT));
   moment_source(msource, d_msource);
 
   wt = fv->wt; /* Gauss point weight. */

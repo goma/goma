@@ -28,7 +28,6 @@
 #include "rf_fem_const.h"
 #include "rf_mp.h"
 #include "sl_util_structs.h"
-#include "std.h"
 #include "stdbool.h"
 
 #ifndef GOMA_MAX_NORMALS_PER_NODE
@@ -400,7 +399,7 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
   for (int i = 0; i < dpi->num_side_sets_global; i++) {
     ss_elem_sides_count_local[i] = 0;
     if (ss_global_nodes[i] > 0) {
-      ss_elem_sides_local[i] = calloc(sizeof(int_pair), ss_global_nodes[i]);
+      ss_elem_sides_local[i] = calloc(ss_global_nodes[i], sizeof(int_pair));
     } else {
       ss_elem_sides_local[i] = NULL;
     }
