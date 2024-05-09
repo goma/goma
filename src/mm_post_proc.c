@@ -1471,7 +1471,7 @@ static int calc_standard_fields(double **post_proc_vect,
   if (MOMENT_SOURCES != -1 && pd->v[pg->imtrx][MOMENT0]) {
     double msource[MAX_MOMENTS];
     MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource;
-    d_msource = calloc(sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT), 1);
+    d_msource = calloc(1, sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT));
     moment_source(msource, d_msource);
 
     for (int mom = 0; mom < MAX_MOMENTS; mom++) {

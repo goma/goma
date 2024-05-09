@@ -1339,7 +1339,7 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
     return -1;
   }
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  MGR = calloc(1, sizeof(struct moment_growth_rate));
   int err = get_moment_growth_rate_term(MGR);
   if (err) {
     free(MGR);
@@ -1454,7 +1454,7 @@ int foam_pmdi10_co2_gas_species_source(int species_no, /* Current species number
     return -1;
   }
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  MGR = calloc(1, sizeof(struct moment_growth_rate));
   int err = get_moment_growth_rate_term(MGR);
   if (err) {
     free(MGR);
