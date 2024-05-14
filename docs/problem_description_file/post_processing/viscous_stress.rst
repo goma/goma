@@ -35,7 +35,7 @@ Following is a sample card:
 Calculates the viscous stress tensor:
 
 .. math::
-    \sigma_{ij} = \mu \left( \nabla u + \nabla u^T \right)
+    \sigma = \mu \left( \nabla u + \nabla u^T \right)
 
 where :math:`\mu` is the dynamic viscosity of the fluid.
 
