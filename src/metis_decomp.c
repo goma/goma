@@ -810,7 +810,7 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
     int num_time_steps = ex_inquire_int(exoid, EX_INQ_TIME);
 
     if (num_time_steps > 0) {
-      dbl *times = calloc(sizeof(dbl), num_time_steps);
+      dbl *times = calloc(num_time_steps, sizeof(dbl));
       int err = ex_get_all_times(exoid, times);
       CHECK_EX_ERROR(err, "ex_get_get_all_times");
 

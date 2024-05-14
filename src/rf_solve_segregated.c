@@ -20,7 +20,6 @@
 #include "az_aztec.h"
 #include "brkfix/fix.h"
 #include "dp_comm.h"
-#include "dp_types.h"
 #include "dp_utils.h"
 #include "dpi.h"
 #include "el_geom.h"
@@ -59,7 +58,11 @@
 #include "rf_util.h"
 #include "sl_matrix_util.h"
 #include "sl_petsc.h"
+#ifdef GOMA_ENABLE_PETSC
+#if !(PETSC_USE_COMPLEX)
 #include "sl_petsc_complex.h"
+#endif
+#endif
 #include "sl_util.h"
 #include "sl_util_structs.h"
 #include "std.h"
@@ -674,7 +677,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
   double *global_x_AC = NULL;
 
   if (nAC > 0) {
-    global_x_AC = calloc(sizeof(double), nAC);
+    global_x_AC = calloc(nAC, sizeof(double));
   }
 
   /* Read initial values from exodus file */
@@ -701,7 +704,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
 
   totalnAC = nAC;
   matrix_augc = malloc(sizeof(struct AC_Information *) * upd->Total_Num_Matrices);
-  matrix_nAC = calloc(sizeof(int), upd->Total_Num_Matrices);
+  matrix_nAC = calloc(upd->Total_Num_Matrices, sizeof(int));
 
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
     matrix_nAC[pg->imtrx] = 0;

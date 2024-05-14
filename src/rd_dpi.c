@@ -149,8 +149,8 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn, bool parallel_call) {
                                 d->elem_cmap_elem_counts, ProcID);
   CHECK_EX_ERROR(ex_error, "ex_get_cmake_params");
 
-  d->node_map_node_ids = calloc(sizeof(int *), d->num_node_cmaps);
-  d->node_map_proc_ids = calloc(sizeof(int *), d->num_node_cmaps);
+  d->node_map_node_ids = calloc(d->num_node_cmaps, sizeof(int *));
+  d->node_map_proc_ids = calloc(d->num_node_cmaps, sizeof(int *));
 
   for (int i = 0; i < d->num_node_cmaps; i++) {
     d->node_map_node_ids[i] = alloc_int_1(d->node_cmap_node_counts[i], 0);
@@ -161,9 +161,9 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn, bool parallel_call) {
   }
 
   if (d->num_elem_cmaps > 0) {
-    d->elem_cmap_elem_ids = calloc(sizeof(int *), d->num_elem_cmaps);
-    d->elem_cmap_side_ids = calloc(sizeof(int *), d->num_elem_cmaps);
-    d->elem_cmap_proc_ids = calloc(sizeof(int *), d->num_elem_cmaps);
+    d->elem_cmap_elem_ids = calloc(d->num_elem_cmaps, sizeof(int *));
+    d->elem_cmap_side_ids = calloc(d->num_elem_cmaps, sizeof(int *));
+    d->elem_cmap_proc_ids = calloc(d->num_elem_cmaps, sizeof(int *));
   }
 
   for (int i = 0; i < d->num_elem_cmaps; i++) {
@@ -178,8 +178,8 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn, bool parallel_call) {
   // Setup old dpi information
 
   d->eb_id_global = calloc(d->num_elem_blocks_global, sizeof(int));
-  int *eb_num_nodes_local = calloc(sizeof(int), d->num_elem_blocks_global);
-  d->eb_num_nodes_per_elem_global = calloc(sizeof(int), d->num_elem_blocks_global);
+  int *eb_num_nodes_local = calloc(d->num_elem_blocks_global, sizeof(int));
+  d->eb_num_nodes_per_elem_global = calloc(d->num_elem_blocks_global, sizeof(int));
   for (int i = 0; i < exo->num_elem_blocks; i++) {
     for (int j = 0; j < d->num_elem_blocks_global; j++) {
       if (d->global_elem_block_ids[j] == exo->eb_id[i]) {
@@ -343,7 +343,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn, bool parallel_call) {
     int *num_recv_nodes = alloc_int_1(d->num_neighbors, 0);
     int **global_recv_nodes = malloc(sizeof(int *) * d->num_neighbors);
 
-    MPI_Request *requests = calloc(sizeof(MPI_Request), 2 * d->num_neighbors);
+    MPI_Request *requests = calloc(2 * d->num_neighbors, sizeof(MPI_Request));
 
     for (int i = 0; i < d->num_neighbors; i++) {
       MPI_Irecv(&num_send_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD,

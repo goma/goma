@@ -20,6 +20,7 @@
 
 #include "load_field_variables.h"
 #include "mm_fill_em.h"
+#include "mm_fill_momentum.h"
 #include "rf_solve.h"
 #include <math.h>
 #include <stdio.h>
@@ -337,6 +338,7 @@ int SEC_STRAINRATE_INVAR = -1;
 int THIRD_STRAINRATE_INVAR = -1;
 int WALL_DISTANCE = -1;
 int CONTACT_DISTANCE = -1;
+int PP_FLUID_STRESS = -1; /* Fluid Stress without Pressure contribution */
 
 int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
                           * actually is */
@@ -1471,7 +1473,7 @@ static int calc_standard_fields(double **post_proc_vect,
   if (MOMENT_SOURCES != -1 && pd->v[pg->imtrx][MOMENT0]) {
     double msource[MAX_MOMENTS];
     MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource;
-    d_msource = calloc(sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT), 1);
+    d_msource = calloc(1, sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT));
     moment_source(msource, d_msource);
 
     for (int mom = 0; mom < MAX_MOMENTS; mom++) {
@@ -2138,6 +2140,21 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[LIGHT_INTENSITY] = 1.0;
   } /* end of LIGHT_INTENSITY */
 
+  if (PP_FLUID_STRESS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+    dbl Pi[DIM][DIM];
+    fluid_stress(Pi, NULL);
+    for (a = 0; a < Num_Dim; a++) {
+      for (b = 0; b < Num_Dim; b++) {
+        local_post[PP_FLUID_STRESS + a * Num_Dim + b] = Pi[a][b] + fv->P * delta(a, b);
+        local_lumped[PP_FLUID_STRESS + a * Num_Dim + b] = 1.;
+      }
+    }
+    if (Num_Dim == 2 && VIM == 3) {
+      local_post[PP_FLUID_STRESS + 4] = Pi[2][2] + fv->P * delta(a, b);
+      local_lumped[PP_FLUID_STRESS + 4] = 1.;
+    }
+  }
+
   if (UNTRACKED_SPEC != -1 && pd->e[pg->imtrx][R_MASS]) {
     double density_tot = 0.;
     switch (mp->Species_Var_Type) {
@@ -2511,8 +2528,8 @@ static int calc_standard_fields(double **post_proc_vect,
 
     mu = viscosity(gn, gamma, NULL);
     // printf("%lf", mu);
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
+    for (a = 0; a < Num_Dim; a++) {
+      for (b = 0; b < Num_Dim; b++) {
         local_post[VISCOUS_STRESS + a * Num_Dim + b] = mu * gamma[a][b];
         local_lumped[VISCOUS_STRESS + a * Num_Dim + b] = 1.;
       }
@@ -7781,6 +7798,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Third StrainRate Invariant", &THIRD_STRAINRATE_INVAR);
   iread = look_for_post_proc(ifp, "Wall Distance", &WALL_DISTANCE);
   iread = look_for_post_proc(ifp, "Contact Distance", &CONTACT_DISTANCE);
+  iread = look_for_post_proc(ifp, "Fluid Stress", &PP_FLUID_STRESS);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
@@ -10749,6 +10767,74 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
 
       if (VIM == 3) {
         set_nv_tkud(rd, index, 0, 0, -2, "VS33", "[1]", "Viscous stress zz", FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  }
+
+  if (PP_FLUID_STRESS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+    if (Num_Dim > 2) {
+      PP_FLUID_STRESS = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "FS11", "[1]", "Viscous stress xx", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "FS12", "[1]", "Viscous stress xy", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS13", "[1]", "Viscous stress xz", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS21", "[1]", "Viscous stress yx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS22", "[1]", "Viscous stress yy", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS23", "[1]", "Viscous stress yz", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS31", "[1]", "Viscous stress zx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS32", "[1]", "Viscous stress zy", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS33", "[1]", "Viscous stress zz", FALSE);
+      index++;
+      index_post++;
+
+    } else {
+      PP_FLUID_STRESS = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "FS11", "[1]", "Viscous stress xx", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "FS12", "[1]", "Viscous stress xy", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS21", "[1]", "Viscous stress yx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS22", "[1]", "Viscous stress yy", FALSE);
+      index++;
+      index_post++;
+
+      if (VIM == 3) {
+        set_nv_tkud(rd, index, 0, 0, -2, "FS33", "[1]", "Viscous stress zz", FALSE);
         index++;
         index_post++;
       }
