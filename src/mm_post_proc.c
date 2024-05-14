@@ -3076,10 +3076,11 @@ static int calc_standard_fields(double **post_proc_vect,
 
   } /* end of LUB_FLUID_SOURCE */
 
-  if ((LUB_CONVECTION != -1) && pd->e[pg->imtrx][R_MOMENTUM1] && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP])) {
+  if ((LUB_CONVECTION != -1) && pd->e[pg->imtrx][R_MOMENTUM1] &&
+      (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP])) {
     int i, j;
     double cvect[DIM];
- 
+
     /* Calculate convective forces  */
     memset(cvect, 0.0, sizeof(double) * DIM);
     for (i = 0; i < dim; i++) {
@@ -3097,7 +3098,6 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[LUB_CONVECTION + 2] = 1.0;
 
   } /* end of LUB_CONVECTION */
-
 
   if ((PP_LAME_MU != -1) && (pd->e[pg->imtrx][R_MESH1])) {
 
@@ -4337,7 +4337,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
   double p_xold[MAX_PDIM], p_x[MAX_PDIM], sum;
   double p_vel[MAX_PDIM], p_velold[MAX_PDIM];
   double f_vel[MAX_PDIM], f_velold[MAX_PDIM];
-  FILE *jfp = NULL;    /*  file pointer  */
+  FILE *jfp = NULL;     /*  file pointer  */
   int velo_interp = -1; /*  velocity basis functions  */
 
   struct Porous_Media_Terms pm_terms; /*added for POROUS_LIQUID_ACCUM_RATE*/

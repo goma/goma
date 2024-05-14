@@ -48,6 +48,7 @@ static char rcsid[] = "$Id: mm_fill_shell.c,v 5.62 2010-07-30 21:14:52 prschun E
 #include "mm_mp.h"
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
+#include "mm_ns_bc.h"
 #include "mm_post_def.h"
 #include "mm_shell_util.h"
 #include "mm_std_models.h"
@@ -70,7 +71,6 @@ static char rcsid[] = "$Id: mm_fill_shell.c,v 5.62 2010-07-30 21:14:52 prschun E
 #include "shell_tfmp_struct.h"
 #include "shell_tfmp_util.h"
 #include "sl_util.h"
-#include "mm_ns_bc.h"
 #include "user_mp.h"
 
 /*
@@ -6507,7 +6507,8 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
   if (mp->SurfaceTensionModel != CONSTANT) {
     double dsigma_dx[DIM][MDE];
     load_surface_tension(dsigma_dx);
-    if (neg_elem_volume) return (status);
+    if (neg_elem_volume)
+      return (status);
   }
 
   /*** CALCULATE FLOW RATE FROM FUNCTION **************************************/
@@ -6790,7 +6791,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
         } // End of loop over j
       }   // End of J_lubp_velocity
-
 
       /*
        * J_lubp_curv
@@ -7655,7 +7655,8 @@ int assemble_shell_energy(double time,            /* present time value */
           if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
             source = q_tot;
           }
-          source *= phi_i * (-lsi->d_H_dF[j]) * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+          source *=
+              phi_i * (-lsi->d_H_dF[j]) * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + advection + diffusion + source;
 
