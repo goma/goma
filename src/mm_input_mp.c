@@ -3299,6 +3299,20 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_surface_tension);
 
+    } else if (!strcmp(model_name, "TIME_RAMP")) {
+      mat_ptr->SurfaceTensionModel = TIME_RAMP;
+
+      num_const = read_constants(imp, &(mat_ptr->u_surface_tension), NO_SPECIES);
+
+      if (num_const < 2) {
+        sr = snprintf(err_msg, MAX_CHAR_ERR_MSG,
+                      "Matl %s expected at least 2 constants for %s %s model.\n",
+                      pd_glob[mn]->MaterialName, search_string, model_name);
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      mat_ptr->len_u_surface_tension = num_const;
+
+      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_surface_tension);
     } else {
       mat_ptr->SurfaceTensionModel = CONSTANT;
       mat_ptr->surface_tension =

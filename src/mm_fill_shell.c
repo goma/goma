@@ -70,6 +70,7 @@ static char rcsid[] = "$Id: mm_fill_shell.c,v 5.62 2010-07-30 21:14:52 prschun E
 #include "shell_tfmp_struct.h"
 #include "shell_tfmp_util.h"
 #include "sl_util.h"
+#include "mm_ns_bc.h"
 #include "user_mp.h"
 
 /*
@@ -6502,6 +6503,13 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
     dt = 1.0;
   }
 
+  /*  Calculate non-constant surface tension, if needed  */
+  if (mp->SurfaceTensionModel != CONSTANT) {
+    double dsigma_dx[DIM][MDE];
+    load_surface_tension(dsigma_dx);
+    if (neg_elem_volume) return (status);
+  }
+
   /*** CALCULATE FLOW RATE FROM FUNCTION **************************************/
   calculate_lub_q_v(EQN, time, dt, xi, exo); // PRS: NEED TO DO SOMETHING HERE
 
@@ -6753,6 +6761,36 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion + source;
         } // End of loop over j
       }   // End of J_lubp_p
+
+      /*
+       * J_lubp_velocity
+       */
+      var = VELOCITY1;
+      if (pd->v[pg->imtrx][var]) {
+        pvar = upd->vp[pg->imtrx][var];
+
+        /*** Loop over DOFs (j) ***/
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+
+          /* Load basis functions (j) */
+          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                  n_dof[MESH_DISPLACEMENT1], dof_map);
+
+          /* Add diffusion term */
+          diffusion = 0.0;
+          if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+            for (b = 0; b < dim; b++) {
+              for (p = 0; p < dim; p++) {
+                diffusion += LubAux->dq_dv[b][p][j] * grad_II_phi_i[b];
+              }
+            }
+          }
+          diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
+        } // End of loop over j
+      }   // End of J_lubp_velocity
+
 
       /*
        * J_lubp_curv
@@ -7560,7 +7598,7 @@ int assemble_shell_energy(double time,            /* present time value */
       }   // End of J_shell_energy_d_shell_temperature
 
       /*
-       * J_shell_energy_LS
+       * J_shell_energy_LS  (ignoring any dH_dF dependencies for now)
        */
       var = LS;
       if (pd->v[pg->imtrx][var]) {
@@ -7580,7 +7618,46 @@ int assemble_shell_energy(double time,            /* present time value */
             }
           }
 
-          GOMA_WH(GOMA_ERROR, " Haven't added LS sensitivities to shell energy equation yet");
+          /* Add mass term */
+          mass = 0.0;
+          if (pd->TimeIntegration != STEADY) {
+            if (pd->e[pg->imtrx][eqn] & T_MASS) {
+              mass = fv_dot->sh_t;
+              mass *= -H * phi_i * det_J * wt * (rho * d_Cp->F[j] + d_rho->F[j] * Cp);
+              mass *= h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+            }
+          }
+
+          /* Add advection term */
+          advection = 0.;
+          if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+
+            for (a = 0; a < VIM; a++) {
+              advection += LubAux->dq_df[a][j] * grad_T[a];
+            }
+
+            advection *= -(rho * d_Cp->F[j] + d_rho->F[j] * Cp) * det_J * wt * wt_func;
+            advection *= h3;
+            advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+          }
+
+          /* Add diffusion term */
+          diffusion = 0.0;
+          if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+            for (a = 0; a < dim; a++) {
+              diffusion += H * d_k->F[j] * grad_T[a] * grad_II_phi_i[a];
+            }
+          }
+          diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+
+          /* Add source term */
+          source = 0;
+          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+            source = q_tot;
+          }
+          source *= phi_i * (-lsi->d_H_dF[j]) * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + advection + diffusion + source;
 
         } // End of loop over j
       }   // End of J_lubp_LS

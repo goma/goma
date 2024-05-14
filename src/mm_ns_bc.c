@@ -4344,6 +4344,21 @@ void load_surface_tension(double dsigma_dx[][MDE]) /* dimensions [DIM][MDE] */
         }
       }
     }
+  } else if (mp->SurfaceTensionModel == TIME_RAMP) {
+    double factor;
+
+    for (p = 0; p < DIM; p++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
+        dsigma_dx[p][j] = 0.;
+      }
+    }
+    if (tran->time_value < (tran->init_time + mp->u_surface_tension[1])) {
+      factor = (tran->time_value - tran->init_time) / mp->u_surface_tension[1];
+      mp->surface_tension = factor * mp->u_surface_tension[0];
+    } else {
+      mp->surface_tension = mp->u_surface_tension[0];
+    }
+
   } else {
     GOMA_EH(GOMA_ERROR, "Surface tension model not defined");
   }

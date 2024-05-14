@@ -1002,14 +1002,18 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
               break;
 
             case VOLUME_FLUX:
-              for (a = 0; a < WIM; a++) {
-                if (cr->MeshMotion == ARBITRARY)
-                  local_q += fv->snormal[a] * (fv->v[a] - x_dot[a]);
-                else if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
-                  local_q += fv->snormal[a] * (fv->d[a]);
-                else
-                  GOMA_EH(GOMA_ERROR,
+              if (pd->CoordinateSystem == CARTESIAN_2pt5D) {
+                local_q += fv->v[2] - x_dot[2];
+	      } else {
+                for (a = 0; a < WIM; a++) {
+                  if (cr->MeshMotion == ARBITRARY)
+                    local_q += fv->snormal[a] * (fv->v[a] - x_dot[a]);
+                  else if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
+                    local_q += fv->snormal[a] * (fv->d[a]);
+                  else
+                    GOMA_EH(GOMA_ERROR,
                           "Inconsistency in volume-flux specification. Contact Developers");
+                }
               }
               local_flux += weight * det * local_q;
               break;
