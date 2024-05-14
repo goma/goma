@@ -61,3 +61,5 @@ The sections below list the post-processing options and a brief description of e
    post_processing/supg_velocity_in_porous_media
    post_processing/vorticity_vector
    post_processing/map_conf_stress
+   post_processing/viscous_stress
+   post_processing/fluid_stress
