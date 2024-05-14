@@ -35,14 +35,14 @@ Following is a sample card:
 For Newtonian and Generalized Newtonian fluids the fluid stress tensor is given by:
 
 .. math::
-    \sigma_{ij} = \mu \left( \nabla u + \nabla u^T \right)
+    \sigma = \mu \left( \nabla u + \nabla u^T \right)
 
 where :math:`\mu` is the dynamic viscosity of the fluid.
 
 For a viscoelastic fluid the fluid stress tensor is given by:
 
 .. math::
-    \sigma_{ij} = \mu \left( \nabla u + \nabla u^T \right) + \tau 
+    \sigma = \mu \left( \nabla u + \nabla u^T \right) + \tau 
 
 where :math:`\mu` is the dynamic viscosity of the fluid and :math:`\tau` is the viscoelastic stress tensor.
 
