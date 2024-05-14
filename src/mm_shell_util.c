@@ -3957,8 +3957,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         for (j = 0; j < VIM; j++) {
           convf[i] += rho * fv->v[j] * fv->grad_v[j][i];
           for (k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
-            D_CONV_DV[i][j][k] += rho * (fv->v[j] * bf[VELOCITY1]->grad_phi[k][j] 
-                                            + bf[VELOCITY1]->phi[k] * fv->grad_v[j][i]);
+            D_CONV_DV[i][j][k] += rho * (fv->v[j] * bf[VELOCITY1]->grad_phi[k][j] +
+                                         bf[VELOCITY1]->phi[k] * fv->grad_v[j][i]);
           }
           for (w = 0; w < dim; w++) {
             for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
@@ -4042,7 +4042,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           DGRADP_DF[i][j] +=
               mp->surface_tension * (GRADH[i] * D_CURV_DF[j] + CURV * D_GRADH_DF[i][j]) -
               D_GRAV_DF[i][j];
-          if (do_convection) DGRADP_DF[i][j] += D_CONV_DF[i][j];
+          if (do_convection)
+            DGRADP_DF[i][j] += D_CONV_DF[i][j];
         }
         DGRADP_DK += GRADH[i] * mp->surface_tension;
       }
@@ -4165,8 +4166,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
           q_mag2 = q_mag * ratio;
           q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+                                       (double)mp->mp2nd->viscositymask[0],
+                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
           factor *= (1. - ratio);
           factor += ratio;
           dq_gradp *= factor;
@@ -4180,13 +4181,14 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           dq_gradp2 = pre_delP2 = -CUBE(H) / (k_turb * mp->mp2nd->viscosity);
           q_mag2 = pre_delP2 * pgrad;
           q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+                                       (double)mp->mp2nd->viscositymask[0],
+                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
           dq_gradp = dq_gradp * factor + dq_gradp2 * (1. - factor);
           pre_delP = pre_delP * factor + pre_delP2 * (1. - factor);
-          dq_dH = dq_dH * factor + (1. - factor) * (-3. * SQUARE(H) / (k_turb * mp->mp2nd->viscosity) * pgrad);
-          dq_dT *= factor;  // mp2nd->viscosity is independent of Temperature
-          srate = srate * factor + (1. -factor) * fabs(tau_w / mp->mp2nd->viscosity);
+          dq_dH = dq_dH * factor +
+                  (1. - factor) * (-3. * SQUARE(H) / (k_turb * mp->mp2nd->viscosity) * pgrad);
+          dq_dT *= factor; // mp2nd->viscosity is independent of Temperature
+          srate = srate * factor + (1. - factor) * fabs(tau_w / mp->mp2nd->viscosity);
           vis_w = vis_w * factor + (1. - factor) * mp->mp2nd->viscosity;
         } else {
           GOMA_WH(GOMA_ERROR, "mp2nd->ViscosityModel needs to be RATIO or CONSTANT...\n");
@@ -4255,11 +4257,11 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
           q_mag2 = q_mag * ratio;
           q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+                                       (double)mp->mp2nd->viscositymask[0],
+                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
           factor *= (1. - ratio);
           factor += ratio;
-        /* Possibly lots different here since dq_gradp not really used for moving wall */
+          /* Possibly lots different here since dq_gradp not really used for moving wall */
           dq_gradp *= factor;
           dq_dH *= factor;
           pre_delP *= factor;
@@ -4270,13 +4272,14 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           dq_gradp2 = pre_delP2 = -CUBE(H) / (k_turb * mp->mp2nd->viscosity);
           q_mag2 = pre_delP2 * pgrad;
           q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+                                       (double)mp->mp2nd->viscositymask[0],
+                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
           dq_gradp = dq_gradp * factor + dq_gradp2 * (1. - factor);
           pre_delP = pre_delP * factor + pre_delP2 * (1. - factor);
-          dq_dH = dq_dH * factor + (1. - factor) * (-3. * SQUARE(H) / (k_turb * mp->mp2nd->viscosity) * pgrad);
-          dq_dT *= factor;  // mp2nd->viscosity is independent of Temperature
-          srate = srate * factor + (1. -factor) * fabs(tau_w / mp->mp2nd->viscosity);
+          dq_dH = dq_dH * factor +
+                  (1. - factor) * (-3. * SQUARE(H) / (k_turb * mp->mp2nd->viscosity) * pgrad);
+          dq_dT *= factor; // mp2nd->viscosity is independent of Temperature
+          srate = srate * factor + (1. - factor) * fabs(tau_w / mp->mp2nd->viscosity);
           vis_w = vis_w * factor + (1. - factor) * mp->mp2nd->viscosity;
         } else {
           GOMA_WH(GOMA_ERROR, "mp2nd->ViscosityModel needs to be RATIO or CONSTANT...\n");
@@ -4633,7 +4636,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         }
       }
     }
-    if( do_convection) {
+    if (do_convection) {
       for (i = 0; i < dim; i++) {
         for (j = 0; j < dim; j++) {
           for (k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
@@ -4900,8 +4903,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         for (j = 0; j < VIM; j++) {
           convf[i] += rho * fv->v[j] * fv->grad_v[j][i];
           for (k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
-            D_CONV_DV[i][j][k] += rho * (fv->v[j] * bf[VELOCITY1]->grad_phi[k][j]
-                                            + bf[VELOCITY1]->phi[k] * fv->grad_v[j][i]);
+            D_CONV_DV[i][j][k] += rho * (fv->v[j] * bf[VELOCITY1]->grad_phi[k][j] +
+                                         bf[VELOCITY1]->phi[k] * fv->grad_v[j][i]);
           }
           for (w = 0; w < dim; w++) {
             for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
@@ -5541,15 +5544,15 @@ void calculate_lub_q_v_old(
       if (mp->mp2nd->ViscosityModel == RATIO) {
         ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
         q_mag2 = q_mag * ratio;
-        q_mag =
-          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                     (double)mp->mp2nd->viscositymask[0],
+                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
       } else if (mp->mp2nd->ViscosityModel == CONSTANT) {
         k_turb = 12.;
         q_mag2 = -CUBE(H_old) / (k_turb * mp->mp2nd->viscosity) * pgrad;
         q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                   (double)mp->mp2nd->viscositymask[0],
-                                   (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+                                     (double)mp->mp2nd->viscositymask[0],
+                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
       } else {
         GOMA_WH(GOMA_ERROR, "mp2nd->ViscosityModel needs to be RATIO or CONSTANT...\n");
       }
