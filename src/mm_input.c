@@ -5695,8 +5695,7 @@ void rd_ac_specs(FILE *ifp, char *input) {
 
     if (augc[iAC].BCID == APREPRO_LIB_AC_BCID ||
         ((augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_FLUX ||
-          augc[iAC].Type == AC_FLUX_MAT || augc[iAC].Type == AC_POSITION ||
-          augc[iAC].Type == AC_VOLUME) &&
+          augc[iAC].Type == AC_FLUX_MAT || augc[iAC].Type == AC_POSITION) &&
          augc[iAC].BCID == APREPRO_AC_BCID)) {
 
       if (fscanf(ifp, "%s", string) != 1) {

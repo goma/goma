@@ -4337,8 +4337,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
   double p_xold[MAX_PDIM], p_x[MAX_PDIM], sum;
   double p_vel[MAX_PDIM], p_velold[MAX_PDIM];
   double f_vel[MAX_PDIM], f_velold[MAX_PDIM];
-  FILE *jfp = NULL;     /*  file pointer  */
-  int velo_interp = -1; /*  velocity basis functions  */
+  FILE *jfp = NULL;    /*  file pointer  */
+  int velo_interp = 0; /*  velocity basis functions  */
 
   struct Porous_Media_Terms pm_terms; /*added for POROUS_LIQUID_ACCUM_RATE*/
 
