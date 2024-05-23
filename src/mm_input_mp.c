@@ -2123,7 +2123,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     stringup(model_name);
 
-    if (!strcmp(model_name, "CONSTANT") || !strcmp(model_name, "RATIO") || !strcmp(model_name, "TIME_RAMP")) {
+    if (!strcmp(model_name, "CONSTANT") || !strcmp(model_name, "RATIO") ||
+        !strcmp(model_name, "TIME_RAMP")) {
       if (fscanf(imp, "%s", input) != 1) {
         GOMA_EH(GOMA_ERROR, "Expecting trailing keyword for Second Level Set Viscosity.\n");
       }
