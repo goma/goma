@@ -10364,7 +10364,8 @@ int look_for_mat_prop(FILE *imp,              /* ptr to input stream (in)*/
      *                 Material_Property[]
      *                 Material_Model
      */
-    if (!strcmp(model_name, "CONSTANT") || !strcmp(model_name, "RATIO") || !strcmp(model_name, "TIME_RAMP")) {
+    if (!strcmp(model_name, "CONSTANT") || !strcmp(model_name, "RATIO") ||
+        !strcmp(model_name, "TIME_RAMP")) {
       if (!strcmp(model_name, "CONSTANT"))
         DumModel = CONSTANT;
       if (!strcmp(model_name, "RATIO"))
