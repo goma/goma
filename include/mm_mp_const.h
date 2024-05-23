@@ -523,6 +523,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define DILATION       3
 #define GIBBS_ISOTHERM 35
 #define TIME_RAMP      353
+#define TIME_RAMP_SIGMA      354
 
 /* species only diffusion choices */
 #define DIFF_OFF      0

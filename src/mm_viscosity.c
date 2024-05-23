@@ -619,7 +619,7 @@ double viscosity(struct Generalized_Newtonian *gn_local,
 
   if (ls != NULL && gn_local->ConstitutiveEquation != VE_LEVEL_SET &&
       mp->ViscosityModel != LEVEL_SET && mp->ViscosityModel != LS_QUADRATIC && mp->mp2nd != NULL &&
-      (mp->mp2nd->ViscosityModel == CONSTANT || mp->mp2nd->ViscosityModel == RATIO)) {
+      (mp->mp2nd->ViscosityModel == CONSTANT || mp->mp2nd->ViscosityModel == RATIO || mp->mp2nd->ViscosityModel == TIME_RAMP)) {
     /* kludge for solidification tracking with phase function 0 */
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
@@ -3214,6 +3214,14 @@ int ls_modulate_viscosity(double *mu1,
     ratio = mu2;
     mu2 = *mu1 * ratio;
   }
+  else if (model == TIME_RAMP) {
+    ratio = 1.0;
+    if (tran->time_value < (tran->init_time + 10. *tran->Delta_t0)) {
+      ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
+    }
+    mu2 = *mu1 + ratio * (mu2 - *mu1);
+  }
+
   if (d_mu == NULL) {
     *mu1 = ls_modulate_property(*mu1, mu2, width, pm_minus, pm_plus, NULL, &factor);
     return (1);
@@ -3224,6 +3232,9 @@ int ls_modulate_viscosity(double *mu1,
   if (model == RATIO) {
     factor *= (1. - ratio);
     factor += ratio;
+  }
+  else if (model == TIME_RAMP) {
+    factor *= (1. - ratio);
   }
 
   d_mu->gd *= factor;

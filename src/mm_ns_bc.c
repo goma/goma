@@ -4344,7 +4344,7 @@ void load_surface_tension(double dsigma_dx[][MDE]) /* dimensions [DIM][MDE] */
         }
       }
     }
-  } else if (mp->SurfaceTensionModel == TIME_RAMP) {
+  } else if (mp->SurfaceTensionModel == TIME_RAMP_SIGMA) {
     double factor;
 
     for (p = 0; p < DIM; p++) {

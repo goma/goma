@@ -1239,7 +1239,7 @@ static int calc_standard_fields(double **post_proc_vect,
       } else {
         calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
       }
-      local_post[PP_Viscosity] = LubAux->srate;
+      local_post[MEAN_SHEAR] = LubAux->srate;
       local_lumped[MEAN_SHEAR] = 1.;
     }
   }
@@ -9683,7 +9683,9 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     index_post++;
   }
 
-  if (MEAN_SHEAR != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+  if (MEAN_SHEAR != -1 &&
+      (Num_Var_In_Type[pg->imtrx][R_MOMENTUM1] || Num_Var_In_Type[pg->imtrx][R_LUBP] ||
+       Num_Var_In_Type[pg->imtrx][R_SHELL_FILMP])) {
     set_nv_tkud(rd, index, 0, 0, -2, "SHEAR", "[1]", "Mean shear rate", FALSE);
     index++;
     if (MEAN_SHEAR == 2) {

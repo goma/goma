@@ -2123,7 +2123,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     stringup(model_name);
 
-    if (!strcmp(model_name, "CONSTANT") || !strcmp(model_name, "RATIO")) {
+    if (!strcmp(model_name, "CONSTANT") || !strcmp(model_name, "RATIO") || !strcmp(model_name, "TIME_RAMP")) {
       if (fscanf(imp, "%s", input) != 1) {
         GOMA_EH(GOMA_ERROR, "Expecting trailing keyword for Second Level Set Viscosity.\n");
       }
@@ -3299,8 +3299,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_surface_tension);
 
-    } else if (!strcmp(model_name, "TIME_RAMP")) {
-      mat_ptr->SurfaceTensionModel = TIME_RAMP;
+    } else if (!strcmp(model_name, "TIME_RAMP_SIGMA")) {
+      mat_ptr->SurfaceTensionModel = TIME_RAMP_SIGMA;
 
       num_const = read_constants(imp, &(mat_ptr->u_surface_tension), NO_SPECIES);
 

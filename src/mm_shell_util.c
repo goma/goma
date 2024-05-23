@@ -4175,7 +4175,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           dq_dT *= factor;
           pre_delP *= factor;
           vis_w /= factor;
-        } else if (mp->mp2nd->ViscosityModel == CONSTANT) {
+        } else if (mp->mp2nd->ViscosityModel == CONSTANT || mp->mp2nd->ViscosityModel == TIME_RAMP) {
           double dq_gradp2, pre_delP2;
           k_turb = 12.;
           dq_gradp2 = pre_delP2 = -CUBE(H) / (k_turb * mp->mp2nd->viscosity);
@@ -4266,7 +4266,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           dq_dH *= factor;
           pre_delP *= factor;
           vis_w /= factor;
-        } else if (mp->mp2nd->ViscosityModel == CONSTANT) {
+        } else if (mp->mp2nd->ViscosityModel == CONSTANT || mp->mp2nd->ViscosityModel == TIME_RAMP) {
           double dq_gradp2, pre_delP2;
           k_turb = 12.;
           dq_gradp2 = pre_delP2 = -CUBE(H) / (k_turb * mp->mp2nd->viscosity);
@@ -5547,7 +5547,7 @@ void calculate_lub_q_v_old(
         q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
                                      (double)mp->mp2nd->viscositymask[0],
                                      (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-      } else if (mp->mp2nd->ViscosityModel == CONSTANT) {
+      } else if (mp->mp2nd->ViscosityModel == CONSTANT || mp->mp2nd->ViscosityModel == TIME_RAMP) {
         k_turb = 12.;
         q_mag2 = -CUBE(H_old) / (k_turb * mp->mp2nd->viscosity) * pgrad;
         q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
@@ -6621,67 +6621,94 @@ int lub_viscosity_integrate(const double strs,
                tmp_pl3 * SQUARE(mu0 - muinf) / (1. + 2. * nexp) * tmp_cy2;
     } break;
     }
-  }
-  for (jdi = 0; jdi < JDI_MAX; jdi++) {
-    double cee, x0, delx, vis = 1., jdiv, xfact, tmp, tpe, tp2, P_sig;
-    int idiv, l;
-    double tmp_pl;
-    jdiv = pow(2., jdi);
-    delx = 1. / jdiv;
-    x0 = 0.0;
-    xint = 0.;
-    for (idiv = 0; idiv < jdiv; idiv++) {
-      for (l = 0; l < mp->LubInt_NGP; l++) {
-        cee = x0 + mp->Lub_gpts[l] * delx;
-        xfact = 1. + pow(lam * cee * shrw, aexp);
-        tmp = 1. / pow(xfact, (1. - nexp) / aexp);
-        switch (gn->ConstitutiveEquation) {
-        case CARREAU:
-        case CARREAU_WLF:
-          vis = muinf + (mu0 - muinf) * tmp;
-          break;
-        case BINGHAM:
-        case BINGHAM_WLF:
-          tp2 = F * shrw;
-          P_sig = pow(1. + tp2, P_eps);
-          tpe = (1. - exp(-tp2)) / shrw * P_sig;
-          vis = muinf + (mu0 - muinf + yield * tpe) * tmp;
-          break;
-        default:
-          GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
-        }
-        if (a_visc_type) {
+    eps = 0.0;
+    for (jdi = 0; jdi < JDI_MAX; jdi++) {
+      double cee, x0, delx, vis = 1., jdiv, xfact, tmp, tpe, tp2, P_sig;
+      int idiv, l;
+      double shrF = 1. / F;
+      double shrY = pow(yield * pow(lam, 1. - nexp) / (mu0 - muinf), 1. / nexp);
+      jdiv = pow(2., jdi);
+      delx = 1. / jdiv;
+      x0 = 0.0;
+      xint = 0.;
+      for (idiv = 0; idiv < jdiv; idiv++) {
+        for (l = 0; l < mp->LubInt_NGP; l++) {
+          cee = x0 + mp->Lub_gpts[l] * delx;
+          xfact = 1. + pow(lam * cee * shrw, aexp);
+          tmp = 1. / pow(xfact, (1. - nexp) / aexp);
           switch (gn->ConstitutiveEquation) {
+          case CARREAU:
+          case CARREAU_WLF:
+            vis = muinf + (mu0 - muinf) * tmp;
+            visc_a = muinf + (mu0 - muinf) / pow(1. + CUBE(cee * lam * shrw), (1. - nexp) / 3.);
+            break;
           case BINGHAM:
-          case BINGHAM_WLF: {
-            double shrF = 1. / F;
-            double shrY = pow(yield * pow(lam, 1. - nexp) / (mu0 - muinf), 1. / nexp);
+          case BINGHAM_WLF:
+            tp2 = F * shrw;
+            P_sig = pow(1. + tp2, P_eps);
+            tpe = (1. - exp(-tp2)) / shrw * P_sig;
+            vis = muinf + (mu0 - muinf + yield * tpe) * tmp;
             if (cee * shrw < shrF) {
               visc_a = F * yield + mu0;
             } else if (cee * shrw < shrY) {
               visc_a = mu0 + yield / (cee * shrw);
             } else {
-              tmp_pl = 1. / pow(1. + CUBE(cee * lam * shrw), (1. - nexp) / 3.);
-              visc_a = muinf + (mu0 - muinf) * tmp_pl;
+              visc_a = muinf + (mu0 - muinf) / pow(1. + CUBE(cee * lam * shrw), (1. - nexp) / 3.);
             }
-          } break;
-          case CARREAU:
-          case CARREAU_WLF:
-            tmp_pl = 1. / pow(1. + CUBE(cee * lam * shrw), (1. - nexp) / 3.);
-            visc_a = muinf + (mu0 - muinf) * tmp_pl;
             break;
+          default:
+            GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
           }
+          xint += (vis * vis - visc_a * visc_a) * SQUARE(cee) * delx * mp->Lub_wts[l];
         }
-        xint += (vis * vis - visc_a * visc_a) * SQUARE(cee) * delx * mp->Lub_wts[l];
+        x0 += delx;
       }
-      x0 += delx;
+      eps = fabs(xint - xintold) / xint_a;
+      xintold = xint;
+      if (eps < soln_tol)
+        break;
     }
     xint += xint_a;
     xint /= SQUARE(vis_w);
-    eps = fabs(xint - xintold);
-    xintold = xint;
-    if (eps < soln_tol)
-      break;
+
+  } else {
+    for (jdi = 0; jdi < JDI_MAX; jdi++) {
+      double cee, x0, delx, vis = 1., jdiv, xfact, tmp, tpe, tp2, P_sig;
+      int idiv, l;
+      jdiv = pow(2., jdi);
+      delx = 1. / jdiv;
+      x0 = 0.0;
+      xint = 0.;
+      for (idiv = 0; idiv < jdiv; idiv++) {
+        for (l = 0; l < mp->LubInt_NGP; l++) {
+          cee = x0 + mp->Lub_gpts[l] * delx;
+          xfact = 1. + pow(lam * cee * shrw, aexp);
+          tmp = 1. / pow(xfact, (1. - nexp) / aexp);
+          switch (gn->ConstitutiveEquation) {
+          case CARREAU:
+          case CARREAU_WLF:
+            vis = muinf + (mu0 - muinf) * tmp;
+            break;
+          case BINGHAM:
+          case BINGHAM_WLF:
+            tp2 = F * shrw;
+            P_sig = pow(1. + tp2, P_eps);
+            tpe = (1. - exp(-tp2)) / shrw * P_sig;
+            vis = muinf + (mu0 - muinf + yield * tpe) * tmp;
+            break;
+          default:
+            GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
+          }
+          xint += SQUARE(cee * vis) * delx * mp->Lub_wts[l];
+        }
+        x0 += delx;
+      }
+      xint /= SQUARE(vis_w);
+      eps = fabs(xint - xintold);
+      xintold = xint;
+      if (eps < soln_tol)
+        break;
+    }
   }
   if (eps > soln_tol) {
     ierr = -1;
