@@ -12503,7 +12503,7 @@ int count_datalines(FILE *ifp, char *input, const char *endlist) {
 #ifndef tflop
   fgetpos(ifp, &file_position); /* OK everybody, remember where we parked */
 #else
-  file_position = ftell(ifp);          /* OK everybody, remember where we parked */
+  file_position = ftell(ifp); /* OK everybody, remember where we parked */
 #endif
 
   if (endlist != NULL) /* Table data is in input deck */
