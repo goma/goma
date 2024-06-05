@@ -57,7 +57,7 @@
  *                                                  current gauss point
  */
 
-double user_post(dbl *param) /* ptr to the user-defined parameter list */
+double user_post(dbl *param MAYBE_UNUSED) /* ptr to the user-defined parameter list */
 {
   /* Local Variables */
   double post_value;
@@ -150,15 +150,15 @@ double user_post(dbl *param) /* ptr to the user-defined parameter list */
  *
  */
 
-int usr_ptracking(FILE *jfp,                /*  filename for output */
-                  const int part_id,        /*  particle id - starts at 1 */
-                  const double part_x[],    /*  current particle coords   */
-                  const double part_v[],    /*  current particle velocity */
-                  const double part_xold[], /*  past coords         */
-                  const double part_vold[], /*  past velocity       */
-                  const int heading,        /*  flag for writing headings */
-                  const double time_value,  /*  porticle time       */
-                  const double time_step)   /*  time step           */
+int usr_ptracking(FILE *jfp,                             /*  filename for output */
+                  const int part_id,                     /*  particle id - starts at 1 */
+                  const double part_x[],                 /*  current particle coords   */
+                  const double part_v[],                 /*  current particle velocity */
+                  const double part_xold[] MAYBE_UNUSED, /*  past coords         */
+                  const double part_vold[] MAYBE_UNUSED, /*  past velocity       */
+                  const int heading,                     /*  flag for writing headings */
+                  const double time_value,               /*  porticle time       */
+                  const double time_step MAYBE_UNUSED)   /*  time step           */
 
 {
   if (heading) {
