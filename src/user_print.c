@@ -52,7 +52,7 @@ int usr_print(double *t MAYBE_UNUSED, /* time value */
    * Safety catch line -- comment out the line below if you can verify this
    * routine does what you want.
    */
-  GOMA_EH(GOMA_ERROR, "No usr_print defined.");
+  // GOMA_EH(GOMA_ERROR, "No usr_print defined.");
 
   /*
   if ( first_call )
