@@ -212,6 +212,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
   double **x_previous = NULL;
 
   double **x_pred = NULL;
+  double **x_prev = NULL;
 
   double **x_update = NULL;          /* update at last iteration          */
   double **resid_vector = NULL;      /* residual                          */
@@ -515,6 +516,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
     xdot_old = malloc(upd->Total_Num_Matrices * sizeof(double *));
     xdot_older = malloc(upd->Total_Num_Matrices * sizeof(double *));
     x_pred = malloc(upd->Total_Num_Matrices * sizeof(double *));
+    x_prev = malloc(upd->Total_Num_Matrices * sizeof(double *));
     delta_x = malloc(upd->Total_Num_Matrices * sizeof(double *));
     x_previous = malloc(upd->Total_Num_Matrices * sizeof(double *));
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
@@ -526,6 +528,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
       xdot_old[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       xdot_older[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       x_pred[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
+      x_prev[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       delta_x[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       x_previous[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
     }
@@ -1378,6 +1381,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
       for (int subcycle = 0;
            subcycle < upd->SegregatedSubcycles || subcycle < renorm_subcycle_count; subcycle++) {
 
+        dbl relaxation_diff[MAX_NUM_MATRICES] = {0.0};
+
         for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
           /*
            * Calculate the absolute time for the current step, time1
@@ -1429,6 +1434,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
               realloc_dbl_1(&x_pred[imtrx], numProcUnknowns[imtrx], 0);
               realloc_dbl_1(&gvec[imtrx], Num_Node, 0);
               realloc_dbl_1(&xdot_older[imtrx], numProcUnknowns[imtrx], 0);
+              realloc_dbl_1(&x_prev[imtrx], numProcUnknowns[imtrx], 0);
               memset(xdot[imtrx], 0, sizeof(double) * numProcUnknowns[imtrx]);
               memset(xdot_older[imtrx], 0, sizeof(double) * numProcUnknowns[imtrx]);
               memset(x_pred[imtrx], 0, sizeof(double) * numProcUnknowns[imtrx]);
@@ -1437,6 +1443,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
               memset(x_update[imtrx], 0,
                      sizeof(double) * (numProcUnknowns[imtrx] + numProcUnknowns[imtrx]));
               dcopy1(numProcUnknowns[imtrx], xdot[imtrx], xdot_old[imtrx]);
+              dcopy1(numProcUnknowns[pg->imtrx], x[imtrx], x_prev[imtrx]);
             }
             wr_result_prelim_exo_segregated(rd, exo, ExoFileOut, gvec_elem);
             pg->imtrx = 0;
@@ -1889,6 +1896,22 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
                 rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx], gvec_elem[pg->imtrx], time1, exo, dpi,
                 cx[pg->imtrx], 0, &time_step_reform, 0, x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1,
                 NULL, NULL, NULL, NULL);
+
+            // Relax the solution
+            P0PRINTF("Relaxing solution with %g\n", tran->relaxation[pg->imtrx]);
+            dbl sol_norm_diff = 0;
+            for (int i = 0; i < numProcUnknowns[pg->imtrx]; i++) {
+              dbl tmp = x[pg->imtrx][i] - x_prev[pg->imtrx][i];
+              sol_norm_diff += tmp * tmp;
+              x[pg->imtrx][i] = x_prev[pg->imtrx][i] + tran->relaxation[pg->imtrx] *
+                                                           (x[pg->imtrx][i] - x_prev[pg->imtrx][i]);
+            }
+            dbl global_diff;
+            MPI_Allreduce(&sol_norm_diff, &global_diff, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            P0PRINTF("Relax diff current: %g target: %g\n", sqrt(global_diff),
+                     tran->relaxation_tolerance[pg->imtrx]);
+            relaxation_diff[pg->imtrx] = sqrt(global_diff);
+            dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_prev[pg->imtrx]);
           } // sub-time loop if else
 
           if (pd_glob[0]->v[pg->imtrx][MOMENT0] || pd_glob[0]->v[pg->imtrx][MOMENT1] ||
@@ -2022,6 +2045,20 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
 
           if (!converged)
             goto finish_step;
+        }
+
+        // check if we have already converged
+
+        int tolerance_met = TRUE;
+        for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+          if (relaxation_diff[pg->imtrx] > tran->relaxation_tolerance[pg->imtrx]) {
+            tolerance_met = FALSE;
+            break;
+          }
+        }
+        if (tolerance_met) {
+          P0PRINTF("Relaxation tolerance met\n");
+          goto finish_step;
         }
       } // subcycle loop
 

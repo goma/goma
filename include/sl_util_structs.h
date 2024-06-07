@@ -118,6 +118,7 @@ struct GomaLinearSolverData {
 struct Matrix_Data {
   struct GomaLinearSolverData *ams;
   double *x;       /* Solution vector */
+  double *x_prev;       /* Solution vector */
   double *x_old;   /* Solution vector , previous last time step */
   double *x_older; /* Solution vector , previous prev time step */
   double *x_oldest;
