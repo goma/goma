@@ -1897,21 +1897,24 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
                 cx[pg->imtrx], 0, &time_step_reform, 0, x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1,
                 NULL, NULL, NULL, NULL);
 
-            // Relax the solution
-            P0PRINTF("Relaxing solution with %g\n", tran->relaxation[pg->imtrx]);
-            dbl sol_norm_diff = 0;
-            for (int i = 0; i < numProcUnknowns[pg->imtrx]; i++) {
-              dbl tmp = x[pg->imtrx][i] - x_prev[pg->imtrx][i];
-              sol_norm_diff += tmp * tmp;
-              x[pg->imtrx][i] = x_prev[pg->imtrx][i] + tran->relaxation[pg->imtrx] *
-                                                           (x[pg->imtrx][i] - x_prev[pg->imtrx][i]);
+            if (upd->SegregatedSubcycles > 1) {
+              // Relax the solution
+              P0PRINTF("Relaxing solution with %g\n", tran->relaxation[pg->imtrx]);
+              dbl sol_norm_diff = 0;
+              for (int i = 0; i < numProcUnknowns[pg->imtrx]; i++) {
+                dbl tmp = x[pg->imtrx][i] - x_prev[pg->imtrx][i];
+                sol_norm_diff += tmp * tmp;
+                x[pg->imtrx][i] =
+                    x_prev[pg->imtrx][i] +
+                    tran->relaxation[pg->imtrx] * (x[pg->imtrx][i] - x_prev[pg->imtrx][i]);
+              }
+              dbl global_diff;
+              MPI_Allreduce(&sol_norm_diff, &global_diff, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+              P0PRINTF("Relax diff current: %g target: %g\n", sqrt(global_diff),
+                       tran->relaxation_tolerance[pg->imtrx]);
+              relaxation_diff[pg->imtrx] = sqrt(global_diff);
+              dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_prev[pg->imtrx]);
             }
-            dbl global_diff;
-            MPI_Allreduce(&sol_norm_diff, &global_diff, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            P0PRINTF("Relax diff current: %g target: %g\n", sqrt(global_diff),
-                     tran->relaxation_tolerance[pg->imtrx]);
-            relaxation_diff[pg->imtrx] = sqrt(global_diff);
-            dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_prev[pg->imtrx]);
           } // sub-time loop if else
 
           if (pd_glob[0]->v[pg->imtrx][MOMENT0] || pd_glob[0]->v[pg->imtrx][MOMENT1] ||
@@ -2048,17 +2051,18 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
         }
 
         // check if we have already converged
-
-        int tolerance_met = TRUE;
-        for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-          if (relaxation_diff[pg->imtrx] > tran->relaxation_tolerance[pg->imtrx]) {
-            tolerance_met = FALSE;
-            break;
+        if (upd->SegregatedSubcycles > 1) {
+          int tolerance_met = TRUE;
+          for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+            if (relaxation_diff[pg->imtrx] > tran->relaxation_tolerance[pg->imtrx]) {
+              tolerance_met = FALSE;
+              break;
+            }
           }
-        }
-        if (tolerance_met) {
-          P0PRINTF("Relaxation tolerance met\n");
-          goto finish_step;
+          if (tolerance_met) {
+            P0PRINTF("Relaxation tolerance met\n");
+            goto finish_step;
+          }
         }
       } // subcycle loop
 
@@ -2408,7 +2412,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
           }
         }
 
-      }    /*  if(converged && success_dt) */
+      } /*  if(converged && success_dt) */
       else /* not converged or unsuccessful time step */
       {
         /* Set bit TRUE in next line to enable retries for failed first
@@ -2486,7 +2490,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
         break;
       }
     } /* end of time step loop */
-  }   /* end of if steady else transient */
+  } /* end of if steady else transient */
 free_and_clear:
 
   if (timestep_subcycle) {
