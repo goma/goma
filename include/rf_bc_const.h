@@ -709,6 +709,7 @@
 #define FLORY                   24700000
 #define FLORY_CC                24800000
 #define YREACT_BC               30000000
+#define Y_LS_BC                 30100000
 
 /* Shear rate conditions */
 #define SH_BC 310000001

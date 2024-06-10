@@ -1402,6 +1402,30 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                      time_intermediate);
           break;
 
+        case Y_LS_BC:
+          if( ls != NULL) {
+            double saved_ls = ls->Length_Scale;
+            if( ls->Length_Scale != bc->BC_Data_Float[1]) {
+              load_lsi(bc->BC_Data_Float[1]);
+            }
+            *func = fv->c[bc->species_eq] - bc->BC_Data_Float[0] * (1.0 - lsi->H);
+            var = MASS_FRACTION;
+            if (pd->v[pg->imtrx][var]) {
+              for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++) {
+                d_func[0][MAX_VARIABLE_TYPES + bc->species_eq][j] = bf[var]->phi[j];
+              }
+            }
+
+            var = FILL;
+            if (pd->v[pg->imtrx][var]) {
+              for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++) {
+                d_func[0][MAX_VARIABLE_TYPES + bc->species_eq][j] = bc->BC_Data_Float[0] * lsi->d_Hn_dF[j];
+              }
+            }
+            load_lsi(saved_ls);
+          }
+          break;
+
         case YFLUX_ALLOY_BC:
           mass_flux_alloy_surf(func, d_func, BC_Types[bc_input_id].BC_Data_Int[0],
                                BC_Types[bc_input_id].u_BC, time_intermediate);

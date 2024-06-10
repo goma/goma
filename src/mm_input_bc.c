@@ -1942,6 +1942,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
           BC_Types[ibc].BC_Name == KIN_DISPLACEMENT_PETROV_BC) {
         num_const = read_constants(ifp, &(BC_Types[ibc].u_BC), NO_SPECIES);
         BC_Types[ibc].len_u_BC = num_const;
+        BC_Types[ibc].max_DFlt = num_const;
 
         for (i = 0; i < num_const; i++)
           SPF(endofstring(echo_string), " %g", BC_Types[ibc].u_BC[i]);
@@ -1966,12 +1967,14 @@ void rd_bc_specs(FILE *ifp, char *input) {
       }
       SPF(endofstring(echo_string), " %d %.4g", BC_Types[ibc].BC_Data_Int[0],
           BC_Types[ibc].BC_Data_Float[0]);
+      BC_Types[ibc].max_DFlt = 1;
 
       if (BC_Types[ibc].BC_Name == DVZDR_ZERO_BC) {
         // specify the radial direction as the wall
         BC_Types[ibc].BC_Data_Float[1] = 0.0;
         BC_Types[ibc].BC_Data_Float[2] = 1.0;
         BC_Types[ibc].BC_Data_Float[3] = 0.0;
+        BC_Types[ibc].max_DFlt = 4;
       }
       break;
 
@@ -2006,6 +2009,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case KINEMATIC_SPECIES_BC:
     case SURFACE_CHARGE_BC:
     case FICK_CHRGD_SURF_GRAD_BC:
+    case Y_LS_BC:
 
       if (fscanf(ifp, "%d %lf", &BC_Types[ibc].BC_Data_Int[0], &BC_Types[ibc].BC_Data_Float[0]) !=
           2) {
@@ -2016,6 +2020,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
 
       SPF(endofstring(echo_string), " %d %.4g", BC_Types[ibc].BC_Data_Int[0],
           BC_Types[ibc].BC_Data_Float[0]);
+      BC_Types[ibc].max_DFlt = 1;
 
       if (!strcmp(BC_Types[ibc].Set_Type, "NS")) {
         if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_relax) != 1) {
@@ -2024,6 +2029,19 @@ void rd_bc_specs(FILE *ifp, char *input) {
 
           SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_relax);
 
+          if (fscanf(ifp, "%d", &BC_Types[ibc].BC_EBID_Apply) != 1) {
+            BC_Types[ibc].BC_EBID_Apply = -1;
+          } else
+            SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_EBID_Apply);
+        }
+      }
+      else if (!strcmp(BC_Types[ibc].Set_Type, "SS")) {
+        if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[1]) != 1) {
+          BC_Types[ibc].BC_Data_Float[1] = ls->Length_Scale;
+        } else {
+
+          SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_Data_Float[1]);
+          BC_Types[ibc].max_DFlt = 2;
           if (fscanf(ifp, "%d", &BC_Types[ibc].BC_EBID_Apply) != 1) {
             BC_Types[ibc].BC_EBID_Apply = -1;
           } else

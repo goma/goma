@@ -7174,7 +7174,7 @@ int assemble_shell_energy(double time,            /* present time value */
   int i = -1, ii;
   int j, jj, status;
 
-  dbl H; /* Temperature derivative of viscosity */
+  dbl H; 
   dbl dH_dtime_dmesh[DIM][MDE];
   dbl dH_dtime_drealsolid[DIM][MDE];
 
@@ -8130,19 +8130,22 @@ int assemble_shell_species(double time,            /* present time value */
                            double xi[DIM],         /* Local stu coordinates */
                            const PG_DATA *pg_data, /*Upwinding stuff */
                            const Exo_DB *exo) {
-  int eqn, var, pvar, dim, a, w, w1;
+  int eqn, var, pvar, dim, a, b, w, w1;
   int err;
   int *n_dof = NULL;
   int dof_map[MDE];
   int i = -1, ii;
-  int j, jj, status;
+  int j, jj, jk, k, status;
 
-  dbl H; /* Shell heights */
-  dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
-  dbl dH_U_dX[DIM], dH_L_dX[DIM];
-  dbl dH_U_dp, dH_U_ddh, dH_dF[MDE];
+  double H; /* Shell heights */
+  double H_U, dH_U_dtime, H_L, dH_L_dtime;
+  double dH_U_dX[DIM], dH_L_dX[DIM];
+  double dH_U_dp, dH_U_ddh, dH_dF[MDE];
+  double dH_dtime_dmesh[DIM][MDE];
+  double dH_dtime_drealsolid[DIM][MDE];
+  double lub_q[DIM] = {0.0};
 
-  dbl grad_c[MAX_CONC][DIM] = {{0.0}}; /* Shell concentration gradient. */
+  dbl grad_c[MAX_CONC][DIM]; /* Shell concentration gradient. */
 
   dbl mass, advection, diffusion, source;
 
@@ -8202,11 +8205,77 @@ int assemble_shell_species(double time,            /* present time value */
 
   /*** CALCULATE PHYSICAL PROPERTIES AND SENSITIVITIES ************************/
 
-  /* Lubrication height from model */
-  H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
+  /* Call q calculator if lubrication equation is on */
+  if (pd->gv[R_LUBP]) {
+    calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
+    H = LubAux->H;
+    for (a = 0; a < dim; a++) {
+      lub_q[a] = LubAux->q[a];
+    }
+  } else {
+    double grad_p[DIM] = {0.0};
+    double Bouss[DIM] = {0.0};
+    /* Lubrication height from model */
+    H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
                             &dH_U_ddh, dH_dF, time, dt);
+    /* For some reason, using Boussinesq body force contribution from LubAux->q does not work
+       so I use a stripped down version below  */
+    for (i = 0; i < dim; i++) {
+      for (j = 0; j < dim; j++) {
+        grad_p[i] +=
+            (fv->grad_lubp[j] * delta(i, j) - fv->grad_lubp[j] * (fv->snormal[i] * fv->snormal[j]));
+      }
+    }
+
+    for (a = 0; a < dim; a++) {
+      Bouss[a] = mp->momentum_source[a] * mp->density;
+      for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        Bouss[a] += -mp->momentum_source[a] * mp->density * mp->species_vol_expansion[w] *
+                  (fv->c[w] - mp->reference_concn[w]);
+      }
+    }
+    for (a = 0; a < dim; a++) {
+      lub_q[a] = pow(H, 3) / (12.0 * mp->viscosity) * (-grad_p[a] + Bouss[a]);
+    }
+  }
+
+  /* Deform wall slope for FSI interaction */
+  /* Lubrication height - mesh sensitivity */
+  memset(dH_dtime_dmesh, 0.0, sizeof(double) * DIM * MDE);
+  switch (mp->FSIModel) {
+  case FSI_MESH_CONTINUUM:
+  case FSI_MESH_UNDEF:
+    for (i = 0; i < VIM; i++) {
+      for (b = 0; b < dim; b++) {
+        for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+          jk = dof_map[k];
+          dH_dtime_dmesh[b][jk] -=
+              fv->dsnormal_dx[i][b][k] * fv_dot->d[i] +
+              delta(i, b) * fv->snormal[i] * bf[MESH_DISPLACEMENT1]->phi[k] * (1 + 2 * tt) / dt;
+        }
+      }
+    }
+    break;
+  case FSI_REALSOLID_CONTINUUM:
+    memset(dH_dtime_drealsolid, 0.0, sizeof(double) * DIM * MDE);
+    for (i = 0; i < VIM; i++) {
+      for (b = 0; b < dim; b++) {
+        for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+          jk = dof_map[k];
+          dH_dtime_dmesh[b][k] -= fv->dsnormal_dx[i][b][jk] * fv_dot->d_rs[i];
+        }
+        for (k = 0; k < ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1]; k++) {
+          jk = dof_map[k];
+          dH_dtime_drealsolid[b][k] -=
+              delta(i, b) * fv->snormal[i] * bf[SOLID_DISPLACEMENT1]->phi[jk] * (1 + 2 * tt) / dt;
+        }
+      }
+    }
+    break;
+  }
 
   /* Concentration gradient */
+  memset(grad_c, 0.0, sizeof(double) * MAX_CONC * DIM);
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
     for (i = 0; i < dim; i++) {
       for (j = 0; j < dim; j++) {
@@ -8216,34 +8285,8 @@ int assemble_shell_species(double time,            /* present time value */
     }
   }
 
-  /* Call q calculator if lubrication equation is on */
-  if (pd->gv[R_LUBP]) {
-    calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
-  }
 
-  /* For some reason, using Boussinesq body force contribution from LubAux->q does not work
-     so I use a stripped down version below  */
-  double lub_q[DIM] = {0.0};
-  double grad_p[DIM] = {0.0};
-  double Bouss[DIM] = {0.0};
-  for (i = 0; i < dim; i++) {
-    for (j = 0; j < dim; j++) {
-      grad_p[i] +=
-          (fv->grad_lubp[j] * delta(i, j) - fv->grad_lubp[j] * (fv->snormal[i] * fv->snormal[j]));
-    }
-  }
 
-  for (a = 0; a < dim; a++) {
-    Bouss[a] = mp->momentum_source[a] * mp->density;
-    for (w = 0; w < pd->Num_Species_Eqn; w++) {
-      Bouss[a] += -mp->momentum_source[a] * mp->density * mp->species_vol_expansion[w] *
-                  (fv->c[w] - mp->reference_concn[w]);
-    }
-  }
-
-  for (a = 0; a < dim; a++) {
-    lub_q[a] = pow(H, 3) / (12.0 * mp->viscosity) * (-grad_p[a] + Bouss[a]);
-  }
 
   /*** RESIDUAL ASSEMBLY ******************************************************/
   if (af->Assemble_Residual) {
