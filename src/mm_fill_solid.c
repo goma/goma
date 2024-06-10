@@ -5230,7 +5230,8 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
         case SPECIES_MASS_FRACTION:
         case SPECIES_UNDEFINED_FORM:
           speciesexp[w] = mp->species_vol_expansion[w];
-          /* Dispense with mp->density multiplication so Species Expansion doesn´t need to divide by same */
+          /* Dispense with mp->density multiplication so Species Expansion doesn´t need to divide by
+           * same */
           break;
         case SPECIES_MOLE_FRACTION:
           speciesexp[w] = mp->species_vol_expansion[w] * mp->density / mp->molecular_weight[w];
