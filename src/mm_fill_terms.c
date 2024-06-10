@@ -235,7 +235,8 @@ int assemble_mesh(double time,
    *      problem dimension.
    */
   /* Allow it for Fickian Shells, i.e. species expansion  */
-  if (!pd->e[pg->imtrx][eqn] || (ei[pg->imtrx]->ielem_dim < dim && cr->MassFluxModel != FICKIAN_SHELL)) {
+  if (!pd->e[pg->imtrx][eqn] ||
+      (ei[pg->imtrx]->ielem_dim < dim && cr->MassFluxModel != FICKIAN_SHELL)) {
     return (status);
   }
 

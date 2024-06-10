@@ -7174,7 +7174,7 @@ int assemble_shell_energy(double time,            /* present time value */
   int i = -1, ii;
   int j, jj, status;
 
-  dbl H; 
+  dbl H;
   dbl dH_dtime_dmesh[DIM][MDE];
   dbl dH_dtime_drealsolid[DIM][MDE];
 
@@ -8217,7 +8217,7 @@ int assemble_shell_species(double time,            /* present time value */
     double Bouss[DIM] = {0.0};
     /* Lubrication height from model */
     H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, dH_dF, time, dt);
+                              &dH_U_ddh, dH_dF, time, dt);
     /* For some reason, using Boussinesq body force contribution from LubAux->q does not work
        so I use a stripped down version below  */
     for (i = 0; i < dim; i++) {
@@ -8231,7 +8231,7 @@ int assemble_shell_species(double time,            /* present time value */
       Bouss[a] = mp->momentum_source[a] * mp->density;
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
         Bouss[a] += -mp->momentum_source[a] * mp->density * mp->species_vol_expansion[w] *
-                  (fv->c[w] - mp->reference_concn[w]);
+                    (fv->c[w] - mp->reference_concn[w]);
       }
     }
     for (a = 0; a < dim; a++) {
@@ -8284,9 +8284,6 @@ int assemble_shell_species(double time,            /* present time value */
       }
     }
   }
-
-
-
 
   /*** RESIDUAL ASSEMBLY ******************************************************/
   if (af->Assemble_Residual) {

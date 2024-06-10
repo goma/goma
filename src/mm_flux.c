@@ -1088,7 +1088,8 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
               for (a = 0; a < VIM; a++) {
                 if (cr->MassFluxModel == FICKIAN || cr->MassFluxModel == STEFAN_MAXWELL ||
                     cr->MassFluxModel == STEFAN_MAXWELL_CHARGED ||
-                    cr->MassFluxModel == STEFAN_MAXWELL_VOLUME || cr->MassFluxModel == FICKIAN_SHELL) {
+                    cr->MassFluxModel == STEFAN_MAXWELL_VOLUME ||
+                    cr->MassFluxModel == FICKIAN_SHELL) {
                   if (Diffusivity())
                     GOMA_EH(-1, "Error in Diffusivity.");
 

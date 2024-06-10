@@ -8852,7 +8852,7 @@ int get_convection_velocity(
           volso -= fv->c[w] * mp->specific_volume[w];
         }
         GOMA_WH(-1, "negative nonvolatile volume fraction %g %g", volsolid, fv->c[0]);
-        fprintf(stderr,"density %g %g\n",mp->density,mp->specific_volume[0]);
+        fprintf(stderr, "density %g %g\n", mp->density, mp->specific_volume[0]);
       }
 
       for (p = 0; p < VIM; p++) {
@@ -8860,8 +8860,8 @@ int get_convection_velocity(
         vconv_old[p] = 0.;
         if (cr->MassFluxModel == FICKIAN || cr->MassFluxModel == STEFAN_MAXWELL ||
             cr->MassFluxModel == STEFAN_MAXWELL_CHARGED ||
-            cr->MassFluxModel ==
-                STEFAN_MAXWELL_VOLUME || cr->MassFluxModel == FICKIAN_SHELL) /* Last modified; KSC: 9/98  and  RSL 6/29/00  */
+            cr->MassFluxModel == STEFAN_MAXWELL_VOLUME ||
+            cr->MassFluxModel == FICKIAN_SHELL) /* Last modified; KSC: 9/98  and  RSL 6/29/00  */
         {
           if (Diffusivity())
             GOMA_EH(-1, "Error in Diffusivity.");

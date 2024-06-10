@@ -9622,7 +9622,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] ||
       (pd_glob[mn]->gv[R_SHELL_FILMP] && pd_glob[mn]->gv[R_SHELL_FILMH]) ||
-      pd_glob[mn]->gv[R_TFMP_MASS] || pd_glob[mn]->gv[R_TFMP_BOUND] || 
+      pd_glob[mn]->gv[R_TFMP_MASS] || pd_glob[mn]->gv[R_TFMP_BOUND] ||
       ((pd_glob[mn]->gv[R_MASS]) && (pd_glob[mn]->MassFluxModel == FICKIAN_SHELL))) {
 
     model_read = look_for_mat_proptable(
@@ -9727,7 +9727,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   } /* End of LUBP, LUBP_2, SHELL_FILMP, SHELL_FILMH, TFMP_MASS, and TFMP_BOUND cards */
 
   if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] || pd_glob[mn]->gv[R_TFMP_MASS] ||
-      pd_glob[mn]->gv[R_TFMP_BOUND] || (pd_glob[mn]->gv[R_MASS] && (pd_glob[mn]->MassFluxModel == FICKIAN_SHELL))) {
+      pd_glob[mn]->gv[R_TFMP_BOUND] ||
+      (pd_glob[mn]->gv[R_MASS] && (pd_glob[mn]->MassFluxModel == FICKIAN_SHELL))) {
     model_read =
         look_for_mat_prop(imp, "Upper Velocity Function Constants", &(mat_ptr->VeloUFunctionModel),
                           mat_ptr->veloU, NO_USER, NULL, model_name, VECTOR_INPUT, &NO_SPECIES, es);
@@ -9780,7 +9781,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] ||
       (pd_glob[mn]->gv[R_SHELL_FILMP] && pd_glob[mn]->gv[R_SHELL_FILMH]) ||
-      pd_glob[mn]->gv[R_TFMP_MASS] || pd_glob[mn]->gv[R_TFMP_BOUND] || 
+      pd_glob[mn]->gv[R_TFMP_MASS] || pd_glob[mn]->gv[R_TFMP_BOUND] ||
       (pd_glob[mn]->gv[R_MASS] && (pd_glob[mn]->MassFluxModel == FICKIAN_SHELL))) {
     model_read = look_for_mat_prop(
         imp, "Lower Velocity Function Constants", &(mat_ptr->VeloLFunctionModel), mat_ptr->veloL,
