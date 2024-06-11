@@ -2009,7 +2009,6 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case KINEMATIC_SPECIES_BC:
     case SURFACE_CHARGE_BC:
     case FICK_CHRGD_SURF_GRAD_BC:
-    case Y_LS_BC:
 
       if (fscanf(ifp, "%d %lf", &BC_Types[ibc].BC_Data_Int[0], &BC_Types[ibc].BC_Data_Float[0]) !=
           2) {
@@ -2034,18 +2033,6 @@ void rd_bc_specs(FILE *ifp, char *input) {
           } else
             SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_EBID_Apply);
         }
-      /* } else if (!strcmp(BC_Types[ibc].Set_Type, "SS")) {
-        if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[1]) != 1) {
-          BC_Types[ibc].BC_Data_Float[1] = ls->Length_Scale;
-        } else {
-
-          SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_Data_Float[1]);
-          BC_Types[ibc].max_DFlt = 2;
-          if (fscanf(ifp, "%d", &BC_Types[ibc].BC_EBID_Apply) != 1) {
-            BC_Types[ibc].BC_EBID_Apply = -1;
-          } else
-            SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_EBID_Apply);
-        }  */
       }
       BC_Types[ibc].species_eq = BC_Types[ibc].BC_Data_Int[0];
       break;
