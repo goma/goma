@@ -3660,7 +3660,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           }
           for (k = 0; k < ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1]; k++) {
             jk = dof_map[k];
-            D_H_DRS[j][jk] -= fv->snormal[i] * delta(i, j) * bf[SOLID_DISPLACEMENT1]->phi[k];
+            D_H_DRS[j][jk] -= fv->snormal[i] * delta(i, j) * bf[SOLID_DISPLACEMENT1]->phi[jk];
           }
         }
       }
@@ -3992,7 +3992,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     for (i = 0; i < dim; i++) {
       for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
         jk = dof_map[k];
-        D_MU_DX[i][jk] = d_mu->X[i][jk];
+        D_MU_DX[i][jk] = d_mu->X[i][k];
       }
     }
     if (pd->v[pg->imtrx][SHELL_PARTC]) {
@@ -4603,8 +4603,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
         jk = dof_map[j];
         for (k = 0; k < dim; k++) {
-          LubAux->dq_dx[i][k][jk] = D_Q_DX[i][k][jk];
-          LubAux->dv_avg_dx[i][jk][j] = D_V_DX[i][k][jk];
+          LubAux->dq_dx[i][k][j] = D_Q_DX[i][k][jk];
+          LubAux->dv_avg_dx[i][k][j] = D_V_DX[i][k][jk];
         }
       }
       if ((pd->v[pg->imtrx][SHELL_NORMAL1]) && (pd->v[pg->imtrx][SHELL_NORMAL2]) &&
@@ -4619,8 +4619,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       for (j = 0; j < ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1]; j++) {
         jk = dof_map[j];
         for (k = 0; k < dim; k++) {
-          LubAux->dq_drs[i][k][jk] = D_Q_DRS[i][k][jk];
-          LubAux->dv_avg_drs[i][k][jk] = D_V_DRS[i][k][jk];
+          LubAux->dq_drs[i][k][j] = D_Q_DRS[i][k][jk];
+          LubAux->dv_avg_drs[i][k][j] = D_V_DRS[i][k][jk];
         }
       }
       for (j = 0; j < ei[pg->imtrx]->dof[SHELL_PARTC]; j++) {
@@ -4652,8 +4652,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
       jk = dof_map[j];
       for (k = 0; k < dim; k++) {
-        LubAux->dH_dmesh[k][jk] = D_H_DX[k][jk];
-        LubAux->dH_drealsolid[k][jk] = D_H_DRS[k][jk];
+        LubAux->dH_dmesh[k][j] = D_H_DX[k][jk];
+        LubAux->dH_drealsolid[k][j] = D_H_DRS[k][jk];
       }
     }
 
@@ -4826,7 +4826,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
           jk = dof_map[k];
           d_grad_H_dmesh[i][j][jk] =
-              fv->d_grad_sh_fh_dmesh[i][j][jk]; // Ignore dH_L_dX dependency on mesh for now
+              fv->d_grad_sh_fh_dmesh[i][j][k]; // Ignore dH_L_dX dependency on mesh for now
         }
       }
     }
@@ -5229,9 +5229,10 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         }
       }
       for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
+        jk = dof_map[j];
         for (k = 0; k < dim; k++) {
-          LubAux->dq_dx[i][k][j] = D_Q_DX[i][k][j];
-          LubAux->dv_avg_dx[i][k][j] = D_V_DX[i][k][j];
+          LubAux->dq_dx[i][k][j] = D_Q_DX[i][k][jk];
+          LubAux->dv_avg_dx[i][k][j] = D_V_DX[i][k][jk];
         }
       }
     }
