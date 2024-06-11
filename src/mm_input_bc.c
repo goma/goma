@@ -2034,7 +2034,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
           } else
             SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_EBID_Apply);
         }
-      } else if (!strcmp(BC_Types[ibc].Set_Type, "SS")) {
+      /* } else if (!strcmp(BC_Types[ibc].Set_Type, "SS")) {
         if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[1]) != 1) {
           BC_Types[ibc].BC_Data_Float[1] = ls->Length_Scale;
         } else {
@@ -2045,7 +2045,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
             BC_Types[ibc].BC_EBID_Apply = -1;
           } else
             SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_EBID_Apply);
-        }
+        }  */
       }
       BC_Types[ibc].species_eq = BC_Types[ibc].BC_Data_Int[0];
       break;
