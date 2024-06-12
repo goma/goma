@@ -3522,7 +3522,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
   /* Confined lubrication flow - Newtonian */
   /* The next else block is for film flow) */
   VAR = FILL;
-  dmu_df = d_mu->F;
   if ((EQN == R_LUBP) || (EQN == R_LUBP_2)) {
 
     /* Set proper fill variable first.   If in lub_p layer, then use FILL,
@@ -3533,7 +3532,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     if (EQN == R_LUBP_2) {
       VAR = PHASE1;
-      dmu_df = d_mu->pf[0];
     }
 
     /***** INITIALIZE LUBRICATION COMPONENTS AND LOAD IN VARIABLES *****/
@@ -3546,16 +3544,13 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     /* Load viscosity and density */
     rho = density(d_rho, time);
-    if (gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == BINGHAM ||
-        gn->ConstitutiveEquation == HERSCHEL_BULKLEY || gn->ConstitutiveEquation == CARREAU ||
-        gn->ConstitutiveEquation == CARREAU_WLF || gn->ConstitutiveEquation == BINGHAM_WLF) {
+    if (movwall_model || nonmoving_model) {
       mu = gn->mu0;
     } else {
       mu = viscosity(gn, NULL, d_mu); // This viscosity has already been modulated by H(F), fyi.
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
       dmu_df = d_mu->F;
       if (EQN == R_LUBP_2) {
-        VAR = PHASE1;
         dmu_df = d_mu->pf[0];
       }
       if (gn->ConstitutiveEquation == THERMAL || gn->ConstitutiveEquation == TABLE) {
@@ -4020,6 +4015,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     double DGRADP_DV[DIM][DIM][MDE];
     double D_Q_DGRADP[DIM][DIM], D_V_DGRADP[DIM][DIM];
     double D_Q_DT[DIM], D_V_DT[DIM];
+    double D_Q_DH[DIM], D_V_DH[DIM];
     dbl D_Q_DP2[DIM];
     dbl D_V_DP2[DIM];
     int movingwall = FALSE;
@@ -4034,6 +4030,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     memset(DGRADP_DX, 0.0, sizeof(double) * DIM * DIM * MDE);
     memset(DGRADP_DNORMAL, 0.0, sizeof(double) * DIM * DIM * MDE);
     memset(DGRADP_DV, 0.0, sizeof(double) * DIM * DIM * MDE);
+    memset(D_Q_DH, 0.0, sizeof(double) * DIM);
+    memset(D_V_DH, 0.0, sizeof(double) * DIM);
 
     /* Calculate flow rate and velocity */
     memset(ev, 0.0, sizeof(double) * DIM);
@@ -4165,8 +4163,11 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           dq_dT = q_mag * (-dmu_dT / mu);
         }
       }
-      /* modulate q (stationary wall part) if level-set interface present */
-      if (pd->v[pg->imtrx][VAR]) {
+      /* modulate q (stationary wall part) if level-set interface present
+         Newtonian models are modulated through the viscosity functions,
+         so need to exclude those                                       */
+      if (pd->v[pg->imtrx][VAR] && (nonmoving_model || gn->ConstitutiveEquation == POWER_LAW ||
+                                    gn->ConstitutiveEquation == HERSCHEL_BULKLEY)) {
         if (mp->mp2nd->ViscosityModel == RATIO) {
           ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
           q_mag2 = q_mag * ratio;
@@ -4214,8 +4215,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         for (j = 0; j < dim; j++) {
           D_Q_DGRADP[i][j] = dq_gradp * ev[i] * ev[j] + pre_delP * dev_dpg[i][j];
         }
-        DQ_DH[i] = dq_dH * ev[i];
-        DQ_DH[i] += 0.5 * (veloL[i] + veloU[i]);
+        D_Q_DH[i] = dq_dH * ev[i];
+        D_V_DH[i] = dq_dH * ev[i] / H - q[i] / SQUARE(H);
       }
       /* moving wall parts  */
     } else {
@@ -4243,23 +4244,10 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         if (gn->ConstitutiveEquation == THERMAL || gn->ConstitutiveEquation == TABLE) {
           dq_dT = q_mag * (-dmu_dT / mu);
         }
-        memset(q, 0.0, sizeof(double) * DIM);
-        for (i = 0; i < dim; i++) {
-          q[i] += q_mag * ev[i];
-          q[i] += 0.5 * H * (veloL[i] + veloU[i]);
-        }
-        /* Convert to more general nomenclature  */
-        for (i = 0; i < dim; i++) {
-          for (j = 0; j < dim; j++) {
-            D_Q_DGRADP[i][j] = dq_gradp * ev[i] * ev[j] + pre_delP * dev_dpg[i][j];
-          }
-          DQ_DH[i] = dq_dH * ev[i];
-          DQ_DH[i] += 0.5 * (veloL[i] + veloU[i]);
-        }
       } /*  End of Viscosity Models **/
 
       /* modulate q (moving wall part) if level-set interface present */
-      if (pd->v[pg->imtrx][VAR]) {
+      if (pd->v[pg->imtrx][VAR] && movwall_model) {
         if (mp->mp2nd->ViscosityModel == RATIO) {
           ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
           q_mag2 = q_mag * ratio;
@@ -4273,8 +4261,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           dq_dH *= factor;
           pre_delP *= factor;
           vis_w /= factor;
-        } else if (movwall_model && (mp->mp2nd->ViscosityModel == CONSTANT ||
-                                     mp->mp2nd->ViscosityModel == TIME_RAMP)) {
+        } else if (mp->mp2nd->ViscosityModel == CONSTANT ||
+                   mp->mp2nd->ViscosityModel == TIME_RAMP) {
           double dq_gradp2, pre_delP2;
           k_turb = 12.;
           dq_gradp2 = pre_delP2 = -CUBE(H) / (k_turb * mp->mp2nd->viscosity);
@@ -4293,23 +4281,25 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           GOMA_WH(GOMA_ERROR, "mp2nd->ViscosityModel needs to be RATIO or CONSTANT...\n");
         }
       }
-
+      memset(q, 0.0, sizeof(double) * DIM);
+      for (i = 0; i < dim; i++) {
+        q[i] += q_mag * ev[i];
+        q[i] += 0.5 * H * (veloL[i] + veloU[i]);
+      }
+      /* Convert to more general nomenclature  */
+      for (i = 0; i < dim; i++) {
+        for (j = 0; j < dim; j++) {
+          D_Q_DGRADP[i][j] = dq_gradp * ev[i] * ev[j] + pre_delP * dev_dpg[i][j];
+        }
+        DQ_DH[i] = dq_dH * ev[i];
+        DQ_DH[i] += 0.5 * (veloL[i] + veloU[i]);
+      }
       v_mag = q_mag / H;
       dv_gradp = dq_gradp / H;
       dv_dH = dq_dH / H - q_mag / SQUARE(H);
       vpre_delP = pre_delP / H;
-      /** Will need conversion to general here too  */
-    } /* End of moving wall part  */
 
-    memset(v_avg, 0.0, sizeof(double) * DIM);
-    for (i = 0; i < dim; i++) {
-      v_avg[i] += q[i] / H;
-    }
-
-    /* Sensitivity w.r.t. height */
-    dbl D_Q_DH[DIM] = {0.0};
-    dbl D_V_DH[DIM] = {0.0};
-    if (movingwall) {
+      /* Sensitivity w.r.t. height */
       if (movwall_model) {
         for (i = 0; i < dim; i++) {
           D_Q_DH[i] += DQ_DH[i];
@@ -4321,14 +4311,18 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         for (i = 0; i < dim; i++) {
           D_Q_DH[i] += dq_dH * ev[i];
           D_Q_DH[i] += q_mag * (-d_k_turb_dH / k_turb) * ev[i];
-          if (gn->ConstitutiveEquation == NEWTONIAN || 1)
-            D_Q_DH[i] += 0.5 * (veloL[i] + veloU[i]);
+          D_Q_DH[i] += 0.5 * (veloL[i] + veloU[i]);
         }
         for (i = 0; i < dim; i++) {
           D_V_DH[i] += dv_dH * ev[i];
           D_V_DH[i] += v_mag * (-d_k_turb_dH / k_turb) * ev[i];
         }
       }
+    } /* End of moving wall part  */
+
+    memset(v_avg, 0.0, sizeof(double) * DIM);
+    for (i = 0; i < dim; i++) {
+      v_avg[i] += q[i] / H;
     }
 
     /* Sensitivity w.r.t. pressure */
@@ -5298,6 +5292,7 @@ void calculate_lub_q_v_old(
       (gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
        gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF ||
        gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == HERSCHEL_BULKLEY);
+  int movingwall = FALSE;
 
   /* Calculate flow rate and average velocity with their sensitivities
    * depending on the lubrication model employed
@@ -5467,7 +5462,6 @@ void calculate_lub_q_v_old(
     dbl k_turb = 12.;
     dbl vsqr, q_mag = 0., tau_w, q_mag2;
     dbl dqmag_dF[MDE], factor, ratio;
-    int movingwall = FALSE;
 
     /* Calculate flow rate and velocity */
     memset(ev, 0.0, sizeof(double) * DIM);
@@ -5491,6 +5485,7 @@ void calculate_lub_q_v_old(
     } else {
       ev[0] = 1.;
     }
+    movingwall = DOUBLE_NONZERO(vsqr);
 
     if (!movingwall) {
       /*  First non-Newtonian models with analytical viscosity integration */
@@ -5543,7 +5538,7 @@ void calculate_lub_q_v_old(
       } /*  End of Viscosity Models **/
     }
 
-    if (pd->v[pg->imtrx][VAR]) {
+    if (pd->v[pg->imtrx][VAR] && movwall_model) {
       if (mp->mp2nd->ViscosityModel == RATIO) {
         ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
         q_mag2 = q_mag * ratio;
@@ -5565,7 +5560,7 @@ void calculate_lub_q_v_old(
     for (i = 0; i < dim; i++) {
       q_old[i] += q_mag * ev[i];
     }
-    if (DOUBLE_NONZERO(vsqr) && movwall_model) {
+    if (movingwall && movwall_model) {
       GOMA_EH(GOMA_ERROR, "Shear-thining moving wall model not finished yet.\n");
     } else {
       for (i = 0; i < dim; i++) {
@@ -5693,6 +5688,8 @@ void calculate_lub_q_v_old(
       pgrad += SQUARE(pg_cmp[i]);
       vsqr += SQUARE(veloL_old[i]);
     }
+    movingwall = DOUBLE_NONZERO(vsqr);
+
     pgrad = sqrt(pgrad);
     if (DOUBLE_NONZERO(pgrad)) {
       for (i = 0; i < dim; i++) {
@@ -5750,7 +5747,7 @@ void calculate_lub_q_v_old(
     for (i = 0; i < dim; i++) {
       q_old[i] += q_mag * ev[i];
     }
-    if (DOUBLE_NONZERO(vsqr) && movwall_model) {
+    if (movingwall && movwall_model) {
       GOMA_EH(GOMA_ERROR, "Shear-thining moving wall model not finished yet.\n");
     } else {
       for (i = 0; i < dim; i++) {
