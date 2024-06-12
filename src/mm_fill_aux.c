@@ -902,7 +902,7 @@ void h_elem_siz(dbl hsquared[DIM],
   if (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
       mp->FSIModel == FSI_SHELL_ONLY_MESH)
     DeformingMeshShell = 1;
-
+#if 0
   if (pd->gv[MESH_DISPLACEMENT1 + p] && (DeformingMesh || DeformingMeshShell)) {
     j = Proc_Connect_Ptr[ei[pg->imtrx]->ielem];
     for (p = 0; p < dim; p++) {
@@ -922,6 +922,25 @@ void h_elem_siz(dbl hsquared[DIM],
       }
     }
   }
+#else
+  j = Proc_Connect_Ptr[ei[pg->imtrx]->ielem];
+  for (p = 0; p < dim; p++) {
+    if (DeformingMesh || DeformingMeshShell) {
+      var = MESH_DISPLACEMENT1 + p;
+      for (i = 0; i < ei[pd->mi[var]]->num_local_nodes; i++) {
+        idof = ei[pd->mi[var]]->ln_to_dof[var][i];
+        index = Proc_Elem_Connect[j + i];
+        if (idof != -1)
+          xnode[p][i] = Coor[p][index] + *esp->d[p][idof];
+      }
+    } else {
+      for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
+        index = Proc_Elem_Connect[j + i];
+        xnode[p][i] = Coor[p][index];
+      }
+    }
+  }
+#endif
 
   if (dim == 2 && (elem_shape == TRIANGLE)) {
     GOMA_WH(-1, "Beware that SUPG for trishells is held constant so you need a uniform, "
