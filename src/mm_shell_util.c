@@ -3551,8 +3551,13 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         gn->ConstitutiveEquation == CARREAU_WLF || gn->ConstitutiveEquation == BINGHAM_WLF) {
       mu = gn->mu0;
     } else {
-      mu = viscosity(gn, NULL, d_mu);
+      mu = viscosity(gn, NULL, d_mu); // This viscosity has already been modulated by H(F), fyi.
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
+      dmu_df = d_mu->F;
+      if (EQN == R_LUBP_2) {
+        VAR = PHASE1;
+        dmu_df = d_mu->pf[0];
+      }
       if (gn->ConstitutiveEquation == THERMAL || gn->ConstitutiveEquation == TABLE) {
         dmu_dT = mp->d_viscosity[SHELL_TEMPERATURE];
       }
@@ -4175,12 +4180,13 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           dq_dT *= factor;
           pre_delP *= factor;
           vis_w /= factor;
-        } else if (mp->mp2nd->ViscosityModel == CONSTANT ||
-                   mp->mp2nd->ViscosityModel == TIME_RAMP) {
+        } else if (nonmoving_model && (mp->mp2nd->ViscosityModel == CONSTANT ||
+                                       mp->mp2nd->ViscosityModel == TIME_RAMP)) {
           double dq_gradp2, pre_delP2;
           k_turb = 12.;
           dq_gradp2 = pre_delP2 = -CUBE(H) / (k_turb * mp->mp2nd->viscosity);
           q_mag2 = pre_delP2 * pgrad;
+          memset(dqmag_dF, 0.0, sizeof(double) * MDE);
           q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
                                        (double)mp->mp2nd->viscositymask[0],
                                        (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
@@ -4267,8 +4273,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           dq_dH *= factor;
           pre_delP *= factor;
           vis_w /= factor;
-        } else if (mp->mp2nd->ViscosityModel == CONSTANT ||
-                   mp->mp2nd->ViscosityModel == TIME_RAMP) {
+        } else if (movwall_model && (mp->mp2nd->ViscosityModel == CONSTANT ||
+                                     mp->mp2nd->ViscosityModel == TIME_RAMP)) {
           double dq_gradp2, pre_delP2;
           k_turb = 12.;
           dq_gradp2 = pre_delP2 = -CUBE(H) / (k_turb * mp->mp2nd->viscosity);
@@ -4355,18 +4361,12 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
           D_Q_DF[i][j] += dqmag_dF[j] * ev[i];
           D_Q_DF[i][j] += D_Q_DH[i] * dH_dF[j];
-          for (k = 0; k < dim; k++) {
-            D_Q_DF[i][j] += D_Q_DGRADP[i][k] * DGRADP_DF[k][j];
-          }
         }
       }
       for (i = 0; i < dim; i++) {
         for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
           D_V_DF[i][j] += dqmag_dF[j] / H * ev[i];
           D_V_DF[i][j] += D_V_DH[i] * dH_dF[j];
-          for (k = 0; k < dim; k++) {
-            D_V_DF[i][j] += D_V_DGRADP[i][k] * DGRADP_DF[k][j];
-          }
         }
       }
     }

@@ -6463,7 +6463,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
    * Bail out fast if there's nothing to do...
    */
   status = 0;
-  // eqn   = R_LUBP;  //PRS: NEED TO DO SOMETHING HERE
   eqn = EQN;
   if (!pd->e[pg->imtrx][eqn])
     return (status);
@@ -6670,8 +6669,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
   /*** RESIDUAL ASSEMBLY ******************************************************/
   if (af->Assemble_Residual) {
-    // eqn = R_LUBP; //PRS: NEED TO DO SOMETHING HERE
-    eqn = EQN;
     peqn = upd->ep[pg->imtrx][eqn];
 
     /*** Loop over DOFs (i) ***/
@@ -6708,8 +6705,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
   /*** JACOBIAN ASSEMBLY ******************************************************/
 
   if (af->Assemble_Jacobian) {
-    // eqn   = R_LUBP; //PRS: NEED TO DO SOMETHING HERE
-    eqn = EQN;
     peqn = upd->ep[pg->imtrx][eqn];
 
     /*** Loop over DOFs (i) ***/
