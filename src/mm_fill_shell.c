@@ -6768,10 +6768,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 
-          /* Load basis functions (j) */
-          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
-
           /* Add diffusion term */
           diffusion = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
@@ -6796,10 +6792,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          /* Load basis functions (j) */
-          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
+          phi_j = bf[var]->phi[j];
 
           /* Add diffusion term */
           diffusion = 0.0;
@@ -6823,10 +6816,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          /* Load basis functions (j) */
-          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
+          phi_j = bf[var]->phi[j];
 
           /* Add diffusion term */
           diffusion = 0.0;
@@ -6853,10 +6843,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          /* Load basis functions (j) */
-          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
 
           /* Add diffusion term */
           diffusion = 0.0;
@@ -6889,10 +6875,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           /*** Loop over DOFs (j) ***/
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             jk = dof_map[j];
-
-            /* Load basis functions (j) */
-            ShellBF(eqn, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                    n_dof[MESH_DISPLACEMENT1], dof_map);
 
             /* Add diffusion term */
             diffusion = 0.0;
@@ -6938,10 +6920,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           /*** Loop over DOFs (j) ***/
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             jk = dof_map[j];
-
-            /* Load basis functions (j) */
-            ShellBF(eqn, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                    n_dof[MESH_DISPLACEMENT1], dof_map);
 
             /* Add diffusion term */
             diffusion = 0.0;
@@ -7034,10 +7012,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          /* Load basis functions (j) */
-          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
+          phi_j = bf[var]->phi[j];
 
           /* Add diffusion term */
           diffusion = 0.0;
@@ -7097,7 +7072,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
       if (pd->v[pg->imtrx][var]) {
         for (w = 0; w < pd->Num_Species_Eqn; w++) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            phi_j = bf[var]->phi[j];
 
             diffusion = 0.;
             if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
