@@ -3494,7 +3494,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
   dbl H;
   dbl veloL[DIM], veloU[DIM];
   dbl mu, dmu_dc = 0., dmu_dT = 0., srate = 0.;
-  dbl *dmu_df;
+  dbl *dmu_df = NULL;
   dbl rho;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
