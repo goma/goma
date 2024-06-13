@@ -4187,7 +4187,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           k_turb = 12.;
           dq_gradp2 = pre_delP2 = -CUBE(H) / (k_turb * mp->mp2nd->viscosity);
           q_mag2 = pre_delP2 * pgrad;
-          memset(dqmag_dF, 0.0, sizeof(double) * MDE);
           q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
                                        (double)mp->mp2nd->viscositymask[0],
                                        (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
@@ -4206,9 +4205,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       for (i = 0; i < dim; i++) {
         q[i] += q_mag * ev[i];
       }
-      v_mag = q_mag / H;
-      dv_gradp = dq_gradp / H;
-      dv_dH = dq_dH / H - q_mag / SQUARE(H);
+      v_mag = q_mag * H_inv;
+      dv_gradp = dq_gradp * H_inv;
+      dv_dH = dq_dH * H_inv - q_mag * SQUARE(H_inv);
       vpre_delP = pre_delP / H;
       /* Convert to more general nomenclature  */
       for (i = 0; i < dim; i++) {
@@ -4216,7 +4215,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           D_Q_DGRADP[i][j] = dq_gradp * ev[i] * ev[j] + pre_delP * dev_dpg[i][j];
         }
         D_Q_DH[i] = dq_dH * ev[i];
-        D_V_DH[i] = dq_dH * ev[i] / H - q[i] / SQUARE(H);
+        D_V_DH[i] = dq_dH * ev[i] * H_inv - q[i] * SQUARE(H_inv);
       }
       /* moving wall parts  */
     } else {
@@ -4294,10 +4293,10 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         DQ_DH[i] = dq_dH * ev[i];
         DQ_DH[i] += 0.5 * (veloL[i] + veloU[i]);
       }
-      v_mag = q_mag / H;
-      dv_gradp = dq_gradp / H;
-      dv_dH = dq_dH / H - q_mag / SQUARE(H);
-      vpre_delP = pre_delP / H;
+      v_mag = q_mag * H_inv;
+      dv_gradp = dq_gradp * H_inv;
+      dv_dH = dq_dH * H_inv - q_mag * SQUARE(H_inv);
+      vpre_delP = pre_delP * H_inv;
 
       /* Sensitivity w.r.t. height */
       if (movwall_model) {
@@ -4305,7 +4304,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           D_Q_DH[i] += DQ_DH[i];
         }
         for (i = 0; i < dim; i++) {
-          D_V_DH[i] += DQ_DH[i] / H - q[i] / SQUARE(H);
+          D_V_DH[i] += DQ_DH[i] * H_inv - q[i] * SQUARE(H_inv);
         }
       } else {
         for (i = 0; i < dim; i++) {
@@ -4322,7 +4321,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     memset(v_avg, 0.0, sizeof(double) * DIM);
     for (i = 0; i < dim; i++) {
-      v_avg[i] += q[i] / H;
+      v_avg[i] += q[i] * H_inv;
     }
 
     /* Sensitivity w.r.t. pressure */
@@ -4330,9 +4329,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     if (movingwall && movwall_model) {
       for (i = 0; i < dim; i++) {
         D_Q_DP2[i] += D_Q_DH[i] * D_H_DP;
-        D_V_DP2[i] = (D_Q_DH[i] - q[i] / H) / H * D_H_DP;
+        D_V_DP2[i] = (D_Q_DH[i] - q[i] * H_inv) * H_inv * D_H_DP;
         for (j = 0; j < dim; j++) {
-          D_V_DGRADP[i][j] = D_Q_DGRADP[i][j] / H;
+          D_V_DGRADP[i][j] = D_Q_DGRADP[i][j] * H_inv;
         }
       }
     } else {
@@ -4356,11 +4355,21 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           D_Q_DF[i][j] += dqmag_dF[j] * ev[i];
           D_Q_DF[i][j] += D_Q_DH[i] * dH_dF[j];
         }
+        for (k = 0; k < dim; k++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
+            D_Q_DF[i][j] += pre_delP * dev_dpg[i][k] * DGRADP_DF[k][j];
+          }
+        }
       }
       for (i = 0; i < dim; i++) {
         for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
-          D_V_DF[i][j] += dqmag_dF[j] / H * ev[i];
+          D_V_DF[i][j] += dqmag_dF[j] * H_inv * ev[i];
           D_V_DF[i][j] += D_V_DH[i] * dH_dF[j];
+        }
+        for (k = 0; k < dim; k++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
+            D_V_DF[i][j] += vpre_delP * dev_dpg[i][k] * DGRADP_DF[k][j];
+          }
         }
       }
     }

@@ -902,9 +902,9 @@ void h_elem_siz(dbl hsquared[DIM],
   if (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
       mp->FSIModel == FSI_SHELL_ONLY_MESH)
     DeformingMeshShell = 1;
-#if 0
+#if 1
+  j = Proc_Connect_Ptr[ei[pg->imtrx]->ielem];
   if (pd->gv[MESH_DISPLACEMENT1 + p] && (DeformingMesh || DeformingMeshShell)) {
-    j = Proc_Connect_Ptr[ei[pg->imtrx]->ielem];
     for (p = 0; p < dim; p++) {
       var = MESH_DISPLACEMENT1 + p;
       for (i = 0; i < ei[pd->mi[var]]->num_local_nodes; i++) {
