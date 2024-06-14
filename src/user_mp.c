@@ -134,7 +134,8 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
-int usr_thermal_conductivity(dbl *param, dbl time) /* user-defined parameter list */
+int usr_thermal_conductivity(dbl *param MAYBE_UNUSED,
+                             dbl time MAYBE_UNUSED) /* user-defined parameter list */
 {
   int a;
 
@@ -196,7 +197,8 @@ int usr_thermal_conductivity(dbl *param, dbl time) /* user-defined parameter lis
 } /* End of usr_thermal_conductivity */
 /*****************************************************************************/
 
-int usr_electrical_conductivity(dbl *param, dbl time) /* user-defined parameter list */
+int usr_electrical_conductivity(dbl *param MAYBE_UNUSED,
+                                dbl time MAYBE_UNUSED) /* user-defined parameter list */
 {
   int a;
 
@@ -263,7 +265,7 @@ int usr_electrical_conductivity(dbl *param, dbl time) /* user-defined parameter 
 } /* End of usr_electrical_conductivity */
 /*****************************************************************************/
 
-int usr_density(dbl *param) /* pointer to user-defined parameter list    */
+int usr_density(dbl *param MAYBE_UNUSED) /* pointer to user-defined parameter list    */
 {
   /* Local Variables */
   dbl rho, d_rho_dT;      /* density and its derivative wrt temperature*/
@@ -356,7 +358,8 @@ int usr_density(dbl *param) /* pointer to user-defined parameter list    */
  *    }
  * ----------------------------------------------------------------------------
  */
-int usr_heat_capacity(dbl *param, dbl time) /* pt to user-defined parameter list */
+int usr_heat_capacity(dbl *param MAYBE_UNUSED,
+                      dbl time MAYBE_UNUSED) /* pt to user-defined parameter list */
 {
   int a;
 
@@ -466,7 +469,8 @@ int usr_heat_capacity(dbl *param, dbl time) /* pt to user-defined parameter list
  *    }
  * ----------------------------------------------------------------------------
  */
-int usr_heat_source(dbl *param, dbl time) /* ptr to the user-defined parameter list */
+int usr_heat_source(dbl *param MAYBE_UNUSED,
+                    dbl time MAYBE_UNUSED) /* ptr to the user-defined parameter list */
 {
   int a;
 
@@ -591,8 +595,8 @@ int usr_heat_source(dbl *param, dbl time) /* ptr to the user-defined parameter l
  * ----------------------------------------------------------------------------
  */
 
-int usr_species_source(int species_no, /* Current species number                 */
-                       dbl *param)     /* pointer to user-defined parameter list    */
+int usr_species_source(int species_no MAYBE_UNUSED, /* Current species number                 */
+                       dbl *param MAYBE_UNUSED)     /* pointer to user-defined parameter list    */
 
 {
   int a;
@@ -711,7 +715,7 @@ int usr_species_source(int species_no, /* Current species number                
  * ----------------------------------------------------------------------------
  */
 
-int usr_current_source(dbl *param) /* pointer to user-defined parameter list */
+int usr_current_source(dbl *param MAYBE_UNUSED) /* pointer to user-defined parameter list */
 {
   int a;
 
@@ -828,7 +832,7 @@ int usr_current_source(dbl *param) /* pointer to user-defined parameter list */
  * ----------------------------------------------------------------------------
  */
 
-int usr_viscosity(dbl *param) /* pointer to user-defined parameter list    */
+int usr_viscosity(dbl *param MAYBE_UNUSED) /* pointer to user-defined parameter list    */
 {
   /* Local Variables */
   int a;
@@ -907,7 +911,7 @@ int usr_viscosity(dbl *param) /* pointer to user-defined parameter list    */
 } /* End of usr_viscosity */
 /*****************************************************************************/
 
-int usr_surface_tension(dbl *param) /* ptr to user-defined parameter list        */
+int usr_surface_tension(dbl *param MAYBE_UNUSED) /* ptr to user-defined parameter list        */
 {
   int a;
 
@@ -1034,7 +1038,7 @@ int usr_surface_tension(dbl *param) /* ptr to user-defined parameter list       
  * ----------------------------------------------------------------------------
  */
 
-int usr_momentum_source(dbl *param) /* ptr to user-defined parameter list        */
+int usr_momentum_source(dbl *param MAYBE_UNUSED) /* ptr to user-defined parameter list        */
 {
   int a, b;
   int w;
@@ -1133,9 +1137,9 @@ int usr_momentum_source(dbl *param) /* ptr to user-defined parameter list       
  *   NB: The user need only supply f, dfdT, dfdC, etc....elc struct is loaded up for you
  */
 
-int usr_lame_mu(struct Elastic_Constitutive *ep,
-                dbl *param, /* ptr to user-defined parameter list        */
-                const int len_pars) {
+int usr_lame_mu(struct Elastic_Constitutive *ep MAYBE_UNUSED,
+                dbl *param MAYBE_UNUSED, /* ptr to user-defined parameter list        */
+                const int len_pars MAYBE_UNUSED) {
   int a, b;
   int w;
 
@@ -1290,8 +1294,8 @@ int usr_lame_mu(struct Elastic_Constitutive *ep,
  *   NB: The user need only supply f, dfdT, dfdC, etc....elc struct is loaded up for you
  */
 
-int usr_lame_lambda(struct Elastic_Constitutive *ep,
-                    dbl *param) /* ptr to user-defined parameter list        */
+int usr_lame_lambda(struct Elastic_Constitutive *ep MAYBE_UNUSED,
+                    dbl *param MAYBE_UNUSED) /* ptr to user-defined parameter list        */
 {
   int a, b;
   int w;
@@ -1524,8 +1528,8 @@ int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
 } /* End of usr_expansion */
 /*****************************************************************************/
 
-int usr_diffusivity(int species_no, /* Species number of diffusivity etc. needed */
-                    dbl *param)     /* ptr to user-defined parameter list        */
+int usr_diffusivity(int species_no MAYBE_UNUSED, /* Species number of diffusivity etc. needed */
+                    dbl *param MAYBE_UNUSED)     /* ptr to user-defined parameter list        */
 {
   int a;
   int w;
@@ -1622,7 +1626,7 @@ int usr_diffusivity(int species_no, /* Species number of diffusivity etc. needed
 } /* End of usr_diffusivity */
 /*****************************************************************************/
 
-int usr_FlowingLiquidViscosity(dbl *param) /* ptr to user-defined parameter list */
+int usr_FlowingLiquidViscosity(dbl *param MAYBE_UNUSED) /* ptr to user-defined parameter list */
 {
   /* Local Variables */
   int a;
@@ -1908,11 +1912,11 @@ int usr_solid_dil_viscosity(dbl *param, /* ptr to user-defined parameter list   
 /********************************************
  *    user-defined heat flux model  *
  ********************************************/
-double usr_heat_flux(const double gradP[],      /*   pressure gradient  */
-                     double q[],                /*   flow vector            */
-                     double dq_gradP[DIM][DIM], /*   flow sens wrt gradP    */
-                     double dq_dX[DIM][DIM],    /*   flow sens wrt coords   */
-                     const double time) {
+double usr_heat_flux(const double gradP[] MAYBE_UNUSED,      /*   pressure gradient  */
+                     double q[] MAYBE_UNUSED,                /*   flow vector            */
+                     double dq_gradP[DIM][DIM] MAYBE_UNUSED, /*   flow sens wrt gradP    */
+                     double dq_dX[DIM][DIM] MAYBE_UNUSED,    /*   flow sens wrt coords   */
+                     const double time MAYBE_UNUSED) {
   GOMA_EH(GOMA_ERROR, "No usr_heat_flux model supplied");
   return (1.);
 } /* End of usr_heat_flux */

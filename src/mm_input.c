@@ -5853,6 +5853,10 @@ void rd_solver_specs(FILE *ifp, char *input) {
     upd->Total_Num_Matrices = 1;
   }
 
+  for (int i = 0; i < upd->Total_Num_Matrices; i++) {
+    tran->relaxation[i] = 1.0;
+  }
+
   iread = look_for_optional(ifp, "Strong Boundary Condition Replace Equation", input, '=');
   upd->strong_bc_replace = FALSE;
   if (iread == 1) {
@@ -8125,10 +8129,30 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         strip(input);
         if (strcmp(input, "yes") == 0) {
           pg->time_step_control_disabled[mtrx_index0] = TRUE;
-          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "Time step control disabled for matrix %d",
-                   mtrx_index1);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "Disable time step control = %s", input);
           ECHO(echo_string, echo_file);
         }
+      }
+
+      if (look_forward_optional_until(ifp, "Relaxation", "MATRIX", input, '=') == 1) {
+        read_string(ifp, input, '\n');
+        strip(input);
+        if (sscanf(input, "%le", &tran->relaxation[mtrx_index0]) == 1) {
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "Relaxation = %g",
+                   tran->relaxation[mtrx_index0]);
+          ECHO(echo_string, echo_file);
+        }
+      }
+      if (look_forward_optional_until(ifp, "Relaxation Tolerance", "MATRIX", input, '=') == 1) {
+        read_string(ifp, input, '\n');
+        strip(input);
+        if (sscanf(input, "%le", &tran->relaxation_tolerance[mtrx_index0]) == 1) {
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "Relaxation Tolerance = %g",
+                   tran->relaxation[mtrx_index0]);
+          ECHO(echo_string, echo_file);
+        }
+      } else {
+        tran->relaxation_tolerance[mtrx_index0] = 1.0e-4;
       }
     }
     int iread;

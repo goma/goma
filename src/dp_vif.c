@@ -631,6 +631,8 @@ void noahs_ark(void) {
   ddd_add_member(n, &tran->TimeMax, 1, MPI_DOUBLE);
   ddd_add_member(n, &tran->theta, 1, MPI_DOUBLE);
   ddd_add_member(n, &tran->eps, 1, MPI_DOUBLE);
+  ddd_add_member(n, tran->relaxation, MAX_NUM_MATRICES, MPI_DOUBLE);
+  ddd_add_member(n, tran->relaxation_tolerance, MAX_NUM_MATRICES, MPI_DOUBLE);
 
   /*
     for ( i=0; i<MAX_VARIABLE_TYPES; i++)

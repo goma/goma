@@ -78,7 +78,10 @@ static void WRITE_SENKIN_FILE(int, int, int, double[], double, int, MATRL_PROP_S
 /***************************************************************************/
 /***************************************************************************/
 
-void usr_out_hkm(int status, double time, double dt, double *soln)
+void usr_out_hkm(int status MAYBE_UNUSED,
+                 double time MAYBE_UNUSED,
+                 double dt MAYBE_UNUSED,
+                 double *soln MAYBE_UNUSED)
 
 /*************************************************************************
  * user_out_hkm:
@@ -329,7 +332,7 @@ static void PRNT_SOLN_VALS(char *soln_name,
   /*
    * Process the information for the minimum value
    */
-  print_proc = GET_PRINT_PROC_NUM(l_max, g_max);
+  print_proc = GET_PRINT_PROC_NUM(l_min, g_min);
   if (ProcID == print_proc) {
     RETN_COORD(i_min, &Xcoor, &Ycoor, &Zcoor);
     printf("\t  Min value = %g\tat Xcoor: %g\tYcoor: %g", g_min, Xcoor, Ycoor);

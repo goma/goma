@@ -64,10 +64,6 @@
  * Heat Source Model
  */
 
-// ignore warnings for user function
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-
 /*
  * int usr_heat_source_gen (h, dhdT, dhdX, dhdC, dhdV, param)
  *
@@ -86,66 +82,67 @@
  * ---------------------------------------------------------------------------
  */
 
-int usr_heat_source_gen(dbl *h,                  /* volumetric heat source */
-                        dbl dhdT[MDE],           /* temperature dependence. */
-                        dbl dhdX[DIM][MDE],      /* spatial dependence. */
-                        dbl dhdV[DIM][MDE],      /* velocity dependence. */
-                        dbl dhdC[MAX_CONC][MDE], /* concentration dependence. */
-                        dbl dhdVolt[MDE],        /* voltage dependence. */
-                        dbl *param,              /* ptr to the user-defined parameter list */
-                        dbl time) {
-  int var;
+int usr_heat_source_gen(dbl *h,                               /* volumetric heat source */
+                        dbl dhdT[MDE] MAYBE_UNUSED,           /* temperature dependence. */
+                        dbl dhdX[DIM][MDE] MAYBE_UNUSED,      /* spatial dependence. */
+                        dbl dhdV[DIM][MDE] MAYBE_UNUSED,      /* velocity dependence. */
+                        dbl dhdC[MAX_CONC][MDE] MAYBE_UNUSED, /* concentration dependence. */
+                        dbl dhdVolt[MDE] MAYBE_UNUSED,        /* voltage dependence. */
+                        dbl *param MAYBE_UNUSED, /* ptr to the user-defined parameter list */
+                        dbl time MAYBE_UNUSED) {
 
-  int dim;
-  int a, b;
+  /* Comment out our remove these 2 lines if using this routine */
+  *h = 0;
+  GOMA_EH(GOMA_ERROR, "No usr_heat_source_gen model defined.");
 
-  int eqn;
-  int err;
-  dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
-  dbl rho, Cp, K;             /* Convenient property names  */
+  // int var;
 
-  dbl dCpdT[MDE];
+  // int dim;
+  // int a, b;
 
-  int i;
-  int j;
+  // int eqn;
+  // int err;
+  // dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
+  // dbl rho, Cp, K;             /* Convenient property names  */
+
+  // dbl dCpdT[MDE];
+
+  // int i;
+  // int j;
 
   /* Begin Execution */
   /**********************************************************/
 
-  /* Comment out our remove this line if using this routine */
-
-  GOMA_EH(GOMA_ERROR, "No usr_heat_source_gen model defined.");
-
   /**********************************************************/
 
-  dim = pd->Num_Dim;
-  eqn = R_ENERGY;
+  // dim = pd->Num_Dim;
+  // eqn = R_ENERGY;
 
   /**********************************************************/
 
   /***Load up convenient local variables and properties******/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;
-  for (a = 0; a < DIM; a++)
-    X[a] = fv->x[a];
-  for (i = 0; i < pd->Num_Species_Eqn; i++)
-    C[i] = fv->c[i];
+  // T = fv->T;
+  // for (a = 0; a < DIM; a++)
+  //   X[a] = fv->x[a];
+  // for (i = 0; i < pd->Num_Species_Eqn; i++)
+  //   C[i] = fv->c[i];
 
-  rho = mp->density;
-  K = mp->thermal_conductivity;
-  /* Accounting here must be made of potentially variable heat capacity */
-  if (mp->HeatCapacityModel == CONSTANT) {
-    Cp = mp->heat_capacity;
-  } else if (mp->HeatCapacityModel == USER) {
-    err = usr_heat_capacity(mp->u_heat_capacity, time);
-    Cp = mp->heat_capacity;
-    var = TEMPERATURE;
+  // rho = mp->density;
+  // K = mp->thermal_conductivity;
+  // /* Accounting here must be made of potentially variable heat capacity */
+  // if (mp->HeatCapacityModel == CONSTANT) {
+  //   Cp = mp->heat_capacity;
+  // } else if (mp->HeatCapacityModel == USER) {
+  //   err = usr_heat_capacity(mp->u_heat_capacity, time);
+  //   Cp = mp->heat_capacity;
+  //   var = TEMPERATURE;
 
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dCpdT[j] = mp->d_heat_capacity[var] * bf[var]->phi[j];
-    }
-  }
+  //   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+  //     dCpdT[j] = mp->d_heat_capacity[var] * bf[var]->phi[j];
+  //   }
+  // }
   /**********************************************************/
 
   /*
@@ -172,65 +169,65 @@ int usr_heat_source_gen(dbl *h,                  /* volumetric heat source */
 
   /* Now do sensitivies */
 
-  if (pd->v[pg->imtrx][MASS_FRACTION]) {
-    var = MASS_FRACTION;
-    for (a = 0; a < DIM; a++) {
-      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        dhdC[0][j] += 0.;
-      }
-    }
-  }
+  // if (pd->v[pg->imtrx][MASS_FRACTION]) {
+  //   var = MASS_FRACTION;
+  //   for (a = 0; a < DIM; a++) {
+  //     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+  //       dhdC[0][j] += 0.;
+  //     }
+  //   }
+  // }
 
-  if (pd->v[pg->imtrx][TEMPERATURE]) {
-    var = TEMPERATURE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      /*
-       * Example: (contd)
-       *
-       *	  if (!strcmp(pd->MaterialName, "alloy625_e") )
-       *	    {
-       *	      dhdT[j] += -rho* Cp*      param[0]*bf[var]->grad_phi[j][0]
-       *		- rho*dCpdT[j]*param[0]*fv->grad_T[0];
-       *	    }
-       *	  if (!strcmp(pd->MaterialName, "60_20_20") )
-       *	    {
-       *	      dhdT[j] += -rho* Cp*      param[0]*bf[var]->grad_phi[j][0];
-       *	    }
-       *	  if (!strcmp(pd->MaterialName, "alloy625_i") )
-       *	    {
-       *	      dhdT[j] += -rho* Cp*      param[0]*bf[var]->grad_phi[j][0]
-       *		- rho*dCpdT[j]*param[0]*fv->grad_T[0];
-       *	    }
-       */
-    }
-  }
+  // if (pd->v[pg->imtrx][TEMPERATURE]) {
+  //   var = TEMPERATURE;
+  //   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+  //     /*
+  //      * Example: (contd)
+  //      *
+  //      *	  if (!strcmp(pd->MaterialName, "alloy625_e") )
+  //      *	    {
+  //      *	      dhdT[j] += -rho* Cp*      param[0]*bf[var]->grad_phi[j][0]
+  //      *		- rho*dCpdT[j]*param[0]*fv->grad_T[0];
+  //      *	    }
+  //      *	  if (!strcmp(pd->MaterialName, "60_20_20") )
+  //      *	    {
+  //      *	      dhdT[j] += -rho* Cp*      param[0]*bf[var]->grad_phi[j][0];
+  //      *	    }
+  //      *	  if (!strcmp(pd->MaterialName, "alloy625_i") )
+  //      *	    {
+  //      *	      dhdT[j] += -rho* Cp*      param[0]*bf[var]->grad_phi[j][0]
+  //      *		- rho*dCpdT[j]*param[0]*fv->grad_T[0];
+  //      *	    }
+  //      */
+  //   }
+  // }
 
-  if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-    for (b = 0; b < dim; b++) {
-      var = MESH_DISPLACEMENT1 + b;
-      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        /*
-         * Example: (contd)
-         *
-         *		  if (!strcmp(pd->MaterialName, "alloy625_e") )
-         *		    {
-         *		      dhdX[0][j] +=  -rho*Cp*param[0]*
-         *			fv->d_grad_T_dmesh[0][b][j];
-         *		    }
-         *		  if (!strcmp(pd->MaterialName, "60_20_20") )
-         *		    {
-         *		      dhdX[0][j] +=  -rho*Cp*param[0]*
-         *			fv->d_grad_T_dmesh[0][b][j];
-         *		    }
-         *		  if (!strcmp(pd->MaterialName, "alloy625_i") )
-         *		    {
-         *		      dhdX[0][j] +=  -rho*Cp*param[0]*
-         *			fv->d_grad_T_dmesh[0][b][j];
-         *		    }
-         */
-      }
-    }
-  }
+  // if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+  //   for (b = 0; b < dim; b++) {
+  //     var = MESH_DISPLACEMENT1 + b;
+  //     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+  //       /*
+  //        * Example: (contd)
+  //        *
+  //        *		  if (!strcmp(pd->MaterialName, "alloy625_e") )
+  //        *		    {
+  //        *		      dhdX[0][j] +=  -rho*Cp*param[0]*
+  //        *			fv->d_grad_T_dmesh[0][b][j];
+  //        *		    }
+  //        *		  if (!strcmp(pd->MaterialName, "60_20_20") )
+  //        *		    {
+  //        *		      dhdX[0][j] +=  -rho*Cp*param[0]*
+  //        *			fv->d_grad_T_dmesh[0][b][j];
+  //        *		    }
+  //        *		  if (!strcmp(pd->MaterialName, "alloy625_i") )
+  //        *		    {
+  //        *		      dhdX[0][j] +=  -rho*Cp*param[0]*
+  //        *			fv->d_grad_T_dmesh[0][b][j];
+  //        *		    }
+  //        */
+  //     }
+  //   }
+  // }
 
   /* Now add source term for Joule heating. (Recall J=-sigma*grad_Voltage
    * and we're abusing c[0] as an electric potential function.)
@@ -335,14 +332,14 @@ int usr_heat_source_gen(dbl *h,                  /* volumetric heat source */
  */
 
 int usr_viscosity_gen(dbl *mu,
-                      dbl gamma_dot[DIM][DIM], /* strain rate tensor             */
-                      dbl *d_mu_dgd,           /* deriv of viscosity wrt strain rate inv   */
-                      dbl d_mu_dv[DIM][MDE],
-                      dbl d_mu_dmesh[DIM][MDE],
-                      dbl d_mu_dT[MDE],
-                      dbl d_mu_dp[MDE],
-                      dbl d_mu_dC[MAX_CONC][MDE],
-                      dbl *param) /* user-defined parameter list               */
+                      dbl gamma_dot[DIM][DIM] MAYBE_UNUSED, /* strain rate tensor             */
+                      dbl *d_mu_dgd MAYBE_UNUSED, /* deriv of viscosity wrt strain rate inv   */
+                      dbl d_mu_dv[DIM][MDE] MAYBE_UNUSED,
+                      dbl d_mu_dmesh[DIM][MDE] MAYBE_UNUSED,
+                      dbl d_mu_dT[MDE] MAYBE_UNUSED,
+                      dbl d_mu_dp[MDE] MAYBE_UNUSED,
+                      dbl d_mu_dC[MAX_CONC][MDE] MAYBE_UNUSED,
+                      dbl *param MAYBE_UNUSED) /* user-defined parameter list               */
 {
   int a, b;
 
@@ -468,7 +465,6 @@ int usr_viscosity_gen(dbl *mu,
   return (0);
 } /* End of routine usr_viscosity_gen */
 
-#pragma GCC diagnostic pop
 /*****************************************************************************/
 /* End of routine user_mp_gen.c  */
 /*****************************************************************************/
