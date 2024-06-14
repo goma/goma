@@ -8827,6 +8827,15 @@ int get_convection_velocity(
             volsolid_old -= fv_old->c[w] * mp->molar_volume[w];
         }
         break;
+      case SPECIES_MASS_FRACTION:
+        volsolid = 1.;
+        volsolid_old = 1.;
+        for (w = 0; w < pd->Num_Species_Eqn; w++) {
+          volsolid -= MAX(fv->c[w], 0) * mp->density * mp->specific_volume[w];
+          if (pd->TimeIntegration != STEADY)
+            volsolid_old -= fv_old->c[w] * mp->density * mp->specific_volume[w];
+        }
+        break;
       default:
         volsolid = 1.;
         volsolid_old = 1.;
@@ -8837,15 +8846,13 @@ int get_convection_velocity(
         }
         break;
       }
-      if (volsolid <= 0) {
+      if (volsolid < 0) {
         double volso = 1.0;
-        fprintf(stderr, "nonvolatile fraction %g %g %g %g\n", volsolid, fv->x[0], fv->x[1],
-                fv->x[2]);
         for (w = 0; w < pd->Num_Species_Eqn; w++) {
           volso -= fv->c[w] * mp->specific_volume[w];
-          fprintf(stderr, "spec %d %g %g %g\n", w, fv->c[w], mp->specific_volume[w], volso);
         }
-        GOMA_WH(-1, "negative nonvolatile volume fraction");
+        GOMA_WH(-1, "negative nonvolatile volume fraction %g %g", volsolid, fv->c[0]);
+        fprintf(stderr, "density %g %g\n", mp->density, mp->specific_volume[0]);
       }
 
       for (p = 0; p < VIM; p++) {
@@ -8853,8 +8860,8 @@ int get_convection_velocity(
         vconv_old[p] = 0.;
         if (cr->MassFluxModel == FICKIAN || cr->MassFluxModel == STEFAN_MAXWELL ||
             cr->MassFluxModel == STEFAN_MAXWELL_CHARGED ||
-            cr->MassFluxModel ==
-                STEFAN_MAXWELL_VOLUME) /* Last modified; KSC: 9/98  and  RSL 6/29/00  */
+            cr->MassFluxModel == STEFAN_MAXWELL_VOLUME ||
+            cr->MassFluxModel == FICKIAN_SHELL) /* Last modified; KSC: 9/98  and  RSL 6/29/00  */
         {
           if (Diffusivity())
             GOMA_EH(-1, "Error in Diffusivity.");

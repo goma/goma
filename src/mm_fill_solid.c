@@ -5222,7 +5222,25 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
       (pd->MeshMotion != ARBITRARY || mp->SpecVolExpModel[0] == PHOTO_CURING)) {
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       if (mp->SpecVolExpModel[w] == CONSTANT || mp->SpecVolExpModel[w] == PHOTO_CURING) {
-        speciesexp[w] = mp->species_vol_expansion[w];
+        switch (mp->Species_Var_Type) {
+        case SPECIES_DENSITY:
+        case SPECIES_CONCENTRATION:
+          speciesexp[w] = mp->species_vol_expansion[w];
+          break;
+        case SPECIES_MASS_FRACTION:
+        case SPECIES_UNDEFINED_FORM:
+          speciesexp[w] = mp->species_vol_expansion[w];
+          /* Dispense with mp->density multiplication so Species Expansion doesn´t need to divide by
+           * same */
+          break;
+        case SPECIES_MOLE_FRACTION:
+          speciesexp[w] = mp->species_vol_expansion[w] * mp->density / mp->molecular_weight[w];
+          /* Probably should be average MW  */
+          break;
+        default:
+          speciesexp[w] = mp->species_vol_expansion[w];
+          break;
+        }
       } else {
         GOMA_EH(GOMA_ERROR, "Unrecognized species expansion model");
       }

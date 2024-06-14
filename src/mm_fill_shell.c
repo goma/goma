@@ -48,6 +48,7 @@ static char rcsid[] = "$Id: mm_fill_shell.c,v 5.62 2010-07-30 21:14:52 prschun E
 #include "mm_mp.h"
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
+#include "mm_ns_bc.h"
 #include "mm_post_def.h"
 #include "mm_shell_util.h"
 #include "mm_std_models.h"
@@ -6462,7 +6463,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
    * Bail out fast if there's nothing to do...
    */
   status = 0;
-  // eqn   = R_LUBP;  //PRS: NEED TO DO SOMETHING HERE
   eqn = EQN;
   if (!pd->e[pg->imtrx][eqn])
     return (status);
@@ -6500,6 +6500,14 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
   if (pd->TimeIntegration != TRANSIENT) {
     tt = -0.5;
     dt = 1.0;
+  }
+
+  /*  Calculate non-constant surface tension, if needed  */
+  if (mp->SurfaceTensionModel != CONSTANT) {
+    double dsigma_dx[DIM][MDE];
+    load_surface_tension(dsigma_dx);
+    if (neg_elem_volume)
+      return (status);
   }
 
   /*** CALCULATE FLOW RATE FROM FUNCTION **************************************/
@@ -6661,8 +6669,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
   /*** RESIDUAL ASSEMBLY ******************************************************/
   if (af->Assemble_Residual) {
-    // eqn = R_LUBP; //PRS: NEED TO DO SOMETHING HERE
-    eqn = EQN;
     peqn = upd->ep[pg->imtrx][eqn];
 
     /*** Loop over DOFs (i) ***/
@@ -6699,8 +6705,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
   /*** JACOBIAN ASSEMBLY ******************************************************/
 
   if (af->Assemble_Jacobian) {
-    // eqn   = R_LUBP; //PRS: NEED TO DO SOMETHING HERE
-    eqn = EQN;
     peqn = upd->ep[pg->imtrx][eqn];
 
     /*** Loop over DOFs (i) ***/
@@ -6755,6 +6759,31 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
       }   // End of J_lubp_p
 
       /*
+       * J_lubp_velocity
+       */
+      var = VELOCITY1;
+      if (pd->v[pg->imtrx][var]) {
+        pvar = upd->vp[pg->imtrx][var];
+
+        /*** Loop over DOFs (j) ***/
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+
+          /* Add diffusion term */
+          diffusion = 0.0;
+          if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+            for (b = 0; b < dim; b++) {
+              for (p = 0; p < dim; p++) {
+                diffusion += LubAux->dq_dv[b][p][j] * grad_II_phi_i[b];
+              }
+            }
+          }
+          diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
+        } // End of loop over j
+      }   // End of J_lubp_velocity
+
+      /*
        * J_lubp_curv
        */
       var = SHELL_LUB_CURV;
@@ -6763,10 +6792,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          /* Load basis functions (j) */
-          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
+          phi_j = bf[var]->phi[j];
 
           /* Add diffusion term */
           diffusion = 0.0;
@@ -6790,10 +6816,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          /* Load basis functions (j) */
-          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
+          phi_j = bf[var]->phi[j];
 
           /* Add diffusion term */
           diffusion = 0.0;
@@ -6820,10 +6843,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          /* Load basis functions (j) */
-          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
 
           /* Add diffusion term */
           diffusion = 0.0;
@@ -6856,10 +6875,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           /*** Loop over DOFs (j) ***/
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             jk = dof_map[j];
-
-            /* Load basis functions (j) */
-            ShellBF(eqn, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                    n_dof[MESH_DISPLACEMENT1], dof_map);
 
             /* Add diffusion term */
             diffusion = 0.0;
@@ -6905,10 +6920,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           /*** Loop over DOFs (j) ***/
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             jk = dof_map[j];
-
-            /* Load basis functions (j) */
-            ShellBF(eqn, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                    n_dof[MESH_DISPLACEMENT1], dof_map);
 
             /* Add diffusion term */
             diffusion = 0.0;
@@ -7001,10 +7012,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          /* Load basis functions (j) */
-          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
+          phi_j = bf[var]->phi[j];
 
           /* Add diffusion term */
           diffusion = 0.0;
@@ -7064,7 +7072,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
       if (pd->v[pg->imtrx][var]) {
         for (w = 0; w < pd->Num_Species_Eqn; w++) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            phi_j = bf[var]->phi[j];
 
             diffusion = 0.;
             if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
@@ -7136,7 +7143,7 @@ int assemble_shell_energy(double time,            /* present time value */
   int i = -1, ii;
   int j, jj, status;
 
-  dbl H; /* Temperature derivative of viscosity */
+  dbl H;
   dbl dH_dtime_dmesh[DIM][MDE];
   dbl dH_dtime_drealsolid[DIM][MDE];
 
@@ -7560,7 +7567,7 @@ int assemble_shell_energy(double time,            /* present time value */
       }   // End of J_shell_energy_d_shell_temperature
 
       /*
-       * J_shell_energy_LS
+       * J_shell_energy_LS  (ignoring any dH_dF dependencies for now)
        */
       var = LS;
       if (pd->v[pg->imtrx][var]) {
@@ -7580,7 +7587,47 @@ int assemble_shell_energy(double time,            /* present time value */
             }
           }
 
-          GOMA_WH(GOMA_ERROR, " Haven't added LS sensitivities to shell energy equation yet");
+          /* Add mass term */
+          mass = 0.0;
+          if (pd->TimeIntegration != STEADY) {
+            if (pd->e[pg->imtrx][eqn] & T_MASS) {
+              mass = fv_dot->sh_t;
+              mass *= -H * phi_i * det_J * wt * (rho * d_Cp->F[j] + d_rho->F[j] * Cp);
+              mass *= h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+            }
+          }
+
+          /* Add advection term */
+          advection = 0.;
+          if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+
+            for (a = 0; a < VIM; a++) {
+              advection += LubAux->dq_df[a][j] * grad_T[a];
+            }
+
+            advection *= -(rho * d_Cp->F[j] + d_rho->F[j] * Cp) * det_J * wt * wt_func;
+            advection *= h3;
+            advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+          }
+
+          /* Add diffusion term */
+          diffusion = 0.0;
+          if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+            for (a = 0; a < dim; a++) {
+              diffusion += H * d_k->F[j] * grad_T[a] * grad_II_phi_i[a];
+            }
+          }
+          diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+
+          /* Add source term */
+          source = 0;
+          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+            source = q_tot;
+          }
+          source *=
+              phi_i * (-lsi->d_H_dF[j]) * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + advection + diffusion + source;
 
         } // End of loop over j
       }   // End of J_lubp_LS
@@ -8052,19 +8099,22 @@ int assemble_shell_species(double time,            /* present time value */
                            double xi[DIM],         /* Local stu coordinates */
                            const PG_DATA *pg_data, /*Upwinding stuff */
                            const Exo_DB *exo) {
-  int eqn, var, pvar, dim, a, w, w1;
+  int eqn, var, pvar, dim, a, b, w, w1;
   int err;
   int *n_dof = NULL;
   int dof_map[MDE];
   int i = -1, ii;
-  int j, jj, status;
+  int j, jj, jk, k, status;
 
-  dbl H; /* Shell heights */
-  dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
-  dbl dH_U_dX[DIM], dH_L_dX[DIM];
-  dbl dH_U_dp, dH_U_ddh, dH_dF[MDE];
+  double H; /* Shell heights */
+  double H_U, dH_U_dtime, H_L, dH_L_dtime;
+  double dH_U_dX[DIM], dH_L_dX[DIM];
+  double dH_U_dp, dH_U_ddh, dH_dF[MDE];
+  double dH_dtime_dmesh[DIM][MDE];
+  double dH_dtime_drealsolid[DIM][MDE];
+  double lub_q[DIM] = {0.0};
 
-  dbl grad_c[MAX_CONC][DIM] = {{0.0}}; /* Shell concentration gradient. */
+  dbl grad_c[MAX_CONC][DIM]; /* Shell concentration gradient. */
 
   dbl mass, advection, diffusion, source;
 
@@ -8124,11 +8174,77 @@ int assemble_shell_species(double time,            /* present time value */
 
   /*** CALCULATE PHYSICAL PROPERTIES AND SENSITIVITIES ************************/
 
-  /* Lubrication height from model */
-  H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, dH_dF, time, dt);
+  /* Call q calculator if lubrication equation is on */
+  if (pd->gv[R_LUBP]) {
+    calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
+    H = LubAux->H;
+    for (a = 0; a < dim; a++) {
+      lub_q[a] = LubAux->q[a];
+    }
+  } else {
+    double grad_p[DIM] = {0.0};
+    double Bouss[DIM] = {0.0};
+    /* Lubrication height from model */
+    H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
+                              &dH_U_ddh, dH_dF, time, dt);
+    /* For some reason, using Boussinesq body force contribution from LubAux->q does not work
+       so I use a stripped down version below  */
+    for (i = 0; i < dim; i++) {
+      for (j = 0; j < dim; j++) {
+        grad_p[i] +=
+            (fv->grad_lubp[j] * delta(i, j) - fv->grad_lubp[j] * (fv->snormal[i] * fv->snormal[j]));
+      }
+    }
+
+    for (a = 0; a < dim; a++) {
+      Bouss[a] = mp->momentum_source[a] * mp->density;
+      for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        Bouss[a] += -mp->momentum_source[a] * mp->density * mp->species_vol_expansion[w] *
+                    (fv->c[w] - mp->reference_concn[w]);
+      }
+    }
+    for (a = 0; a < dim; a++) {
+      lub_q[a] = pow(H, 3) / (12.0 * mp->viscosity) * (-grad_p[a] + Bouss[a]);
+    }
+  }
+
+  /* Deform wall slope for FSI interaction */
+  /* Lubrication height - mesh sensitivity */
+  memset(dH_dtime_dmesh, 0.0, sizeof(double) * DIM * MDE);
+  switch (mp->FSIModel) {
+  case FSI_MESH_CONTINUUM:
+  case FSI_MESH_UNDEF:
+    for (i = 0; i < VIM; i++) {
+      for (b = 0; b < dim; b++) {
+        for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+          jk = dof_map[k];
+          dH_dtime_dmesh[b][jk] -=
+              fv->dsnormal_dx[i][b][k] * fv_dot->d[i] +
+              delta(i, b) * fv->snormal[i] * bf[MESH_DISPLACEMENT1]->phi[k] * (1 + 2 * tt) / dt;
+        }
+      }
+    }
+    break;
+  case FSI_REALSOLID_CONTINUUM:
+    memset(dH_dtime_drealsolid, 0.0, sizeof(double) * DIM * MDE);
+    for (i = 0; i < VIM; i++) {
+      for (b = 0; b < dim; b++) {
+        for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+          jk = dof_map[k];
+          dH_dtime_dmesh[b][k] -= fv->dsnormal_dx[i][b][jk] * fv_dot->d_rs[i];
+        }
+        for (k = 0; k < ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1]; k++) {
+          jk = dof_map[k];
+          dH_dtime_drealsolid[b][k] -=
+              delta(i, b) * fv->snormal[i] * bf[SOLID_DISPLACEMENT1]->phi[jk] * (1 + 2 * tt) / dt;
+        }
+      }
+    }
+    break;
+  }
 
   /* Concentration gradient */
+  memset(grad_c, 0.0, sizeof(double) * MAX_CONC * DIM);
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
     for (i = 0; i < dim; i++) {
       for (j = 0; j < dim; j++) {
@@ -8136,35 +8252,6 @@ int assemble_shell_species(double time,            /* present time value */
             (fv->grad_c[w][j] * delta(i, j) - fv->grad_c[w][j] * (fv->snormal[i] * fv->snormal[j]));
       }
     }
-  }
-
-  /* Call q calculator if lubrication equation is on */
-  if (pd->gv[R_LUBP]) {
-    calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
-  }
-
-  /* For some reason, using Boussinesq body force contribution from LubAux->q does not work
-     so I use a stripped down version below  */
-  double lub_q[DIM] = {0.0};
-  double grad_p[DIM] = {0.0};
-  double Bouss[DIM] = {0.0};
-  for (i = 0; i < dim; i++) {
-    for (j = 0; j < dim; j++) {
-      grad_p[i] +=
-          (fv->grad_lubp[j] * delta(i, j) - fv->grad_lubp[j] * (fv->snormal[i] * fv->snormal[j]));
-    }
-  }
-
-  for (a = 0; a < dim; a++) {
-    Bouss[a] = mp->momentum_source[a] * mp->density;
-    for (w = 0; w < pd->Num_Species_Eqn; w++) {
-      Bouss[a] += -mp->momentum_source[a] * mp->density * mp->species_vol_expansion[w] *
-                  (fv->c[w] - mp->reference_concn[w]);
-    }
-  }
-
-  for (a = 0; a < dim; a++) {
-    lub_q[a] = pow(H, 3) / (12.0 * mp->viscosity) * (-grad_p[a] + Bouss[a]);
   }
 
   /*** RESIDUAL ASSEMBLY ******************************************************/

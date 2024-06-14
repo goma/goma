@@ -904,8 +904,8 @@ void h_elem_siz(dbl hsquared[DIM],
     DeformingMeshShell = 1;
 
   j = Proc_Connect_Ptr[ei[pg->imtrx]->ielem];
-  for (p = 0; p < dim; p++) {
-    if (DeformingMesh || DeformingMeshShell) {
+  if (pd->gv[MESH_DISPLACEMENT1] && (DeformingMesh || DeformingMeshShell)) {
+    for (p = 0; p < dim; p++) {
       var = MESH_DISPLACEMENT1 + p;
       for (i = 0; i < ei[pd->mi[var]]->num_local_nodes; i++) {
         idof = ei[pd->mi[var]]->ln_to_dof[var][i];
@@ -913,7 +913,9 @@ void h_elem_siz(dbl hsquared[DIM],
         if (idof != -1)
           xnode[p][i] = Coor[p][index] + *esp->d[p][idof];
       }
-    } else {
+    }
+  } else {
+    for (p = 0; p < dim; p++) {
       for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
         index = Proc_Elem_Connect[j + i];
         xnode[p][i] = Coor[p][index];
