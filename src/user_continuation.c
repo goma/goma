@@ -21,6 +21,7 @@
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
+#include "std.h"
 
 #define GOMA_USER_AC_C
 #include "user_continuation.h"
@@ -30,8 +31,13 @@
 #define AC 3
 #define UM 4
 
-void update_user_parameter(
-    double lambda, double *x, double *xdot, double *x_AC, Comm_Ex *cx, Exo_DB *exo, Dpi *dpi)
+void update_user_parameter(double lambda MAYBE_UNUSED,
+                           double *x MAYBE_UNUSED,
+                           double *xdot MAYBE_UNUSED,
+                           double *x_AC MAYBE_UNUSED,
+                           Comm_Ex *cx MAYBE_UNUSED,
+                           Exo_DB *exo MAYBE_UNUSED,
+                           Dpi *dpi MAYBE_UNUSED)
 /************************************************************************
  *                                                                      *
  *    Created by Ed Wilkes 11/28/2001					*
@@ -215,8 +221,13 @@ void update_user_parameter(
 } /* END of routine update_user_parameter */
 /****************************************************************************/
 
-void update_user_TP_parameter(
-    double lambda, double *x, double *xdot, double *x_AC, Comm_Ex *cx, Exo_DB *exo, Dpi *dpi)
+void update_user_TP_parameter(double lambda MAYBE_UNUSED,
+                              double *x MAYBE_UNUSED,
+                              double *xdot MAYBE_UNUSED,
+                              double *x_AC MAYBE_UNUSED,
+                              Comm_Ex *cx MAYBE_UNUSED,
+                              Exo_DB *exo MAYBE_UNUSED,
+                              Dpi *dpi MAYBE_UNUSED)
 /*
  * This function handles updates to the second (TP) parameter
  * when LOCA bifurcation tracking algorithms (turning point,

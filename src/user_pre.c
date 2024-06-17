@@ -34,7 +34,8 @@
  *    user_mat_init                       rf_util.c/
  *    ------------             ---------               --------------
  *************************/
-double user_surf_object(int *int_params, dbl *param, dbl *r) {
+double
+user_surf_object(int *int_params MAYBE_UNUSED, dbl *param MAYBE_UNUSED, dbl *r MAYBE_UNUSED) {
   double distance = 0;
   static int warning = 0;
 
@@ -62,8 +63,8 @@ double user_mat_init(const int var,
                      const double init_value,
                      const double p[],
                      const double xpt[],
-                     const int mn,
-                     const double var_vals[]) {
+                     const int mn MAYBE_UNUSED,
+                     const double var_vals[] MAYBE_UNUSED) {
 
   double value = 0;
   /* Set this to a nonzero value if using this routine */
@@ -166,7 +167,7 @@ int user_initialize(const int var,
                     const double init_value,
                     const double p[],
                     const double xpt[],
-                    const double var_vals[]) {
+                    const double var_vals[] MAYBE_UNUSED) {
 
   double value = 0;
   int i, var_somewhere, idv, mn;
