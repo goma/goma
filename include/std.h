@@ -542,6 +542,10 @@ extern int zero_detJ_global;
 #endif
 #endif
 
+#ifndef MAYBE_UNUSED
+#define MAYBE_UNUSED UNUSED
+#endif
+
 /***************************************************************************/
 /*                       std.h end                                         */
 /***************************************************************************/

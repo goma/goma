@@ -631,6 +631,8 @@ void noahs_ark(void) {
   ddd_add_member(n, &tran->TimeMax, 1, MPI_DOUBLE);
   ddd_add_member(n, &tran->theta, 1, MPI_DOUBLE);
   ddd_add_member(n, &tran->eps, 1, MPI_DOUBLE);
+  ddd_add_member(n, tran->relaxation, MAX_NUM_MATRICES, MPI_DOUBLE);
+  ddd_add_member(n, tran->relaxation_tolerance, MAX_NUM_MATRICES, MPI_DOUBLE);
 
   /*
     for ( i=0; i<MAX_VARIABLE_TYPES; i++)
@@ -2660,6 +2662,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &WALL_DISTANCE, 1, MPI_INT);
   ddd_add_member(n, &CONTACT_DISTANCE, 1, MPI_INT);
   ddd_add_member(n, &PP_FLUID_STRESS, 1, MPI_INT);
+  ddd_add_member(n, &LUB_CONVECTION, 1, MPI_INT);
   ddd_add_member(n, &USER_POST, 1, MPI_INT);
   if (len_u_post_proc > 0) {
     ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);

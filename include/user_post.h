@@ -41,7 +41,7 @@ EXTERN int usr_ptracking(FILE *,         /*  jfp - filename for output          
                          const double[], /*  part_xold - past coords                  */
                          const double[], /*  part_vold - past velocity                */
                          const int,      /*  heading - flag for writing headings      */
-                         const double,   /*  time_value - porticle time               */
+                         const double,   /*  time_value - particle time               */
                          const double);  /*  time_step - time step                    */
 
 #endif /* GOMA_USER_POST_H */

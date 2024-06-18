@@ -35,6 +35,7 @@
 #include "mm_elem_block_structs.h"
 #include "mm_mp_const.h"
 #include "rf_bc_const.h"
+#include "rf_fem_const.h"
 #include "rf_io_const.h"
 #include "rf_vars_const.h"
 #include "sl_util_structs.h"
@@ -1159,6 +1160,8 @@ struct Transient_Information {
   int ale_adapt;
   int ale_adapt_freq;
   double ale_adapt_iso_size;
+  double relaxation[MAX_NUM_MATRICES];
+  double relaxation_tolerance[MAX_NUM_MATRICES];
 };
 
 struct Eigensolver_Info
@@ -3225,6 +3228,7 @@ struct Lubrication_Auxiliaries {
                                        stream shear stress */
   double dq_dgradp[DIM][DIM];       /* Flow rate sensitivities w.r.t. pressure gradient */
   double dq_dT[DIM];                /* Flow rate sensitivities w.r.t. Temperature */
+  double dq_dv[DIM][DIM][MDE];      /* Flow rate sensitivities w.r.t. velocities */
 
   double dv_avg_dh[DIM][MDE];           /* Average velocity sensitivities w.r.t. height */
   double dv_avg_dh1[DIM][MDE];          /* Average velocity sensitivities w.r.t. height */

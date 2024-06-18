@@ -1039,11 +1039,9 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter
       -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter
       -Wimplicit-fallthrough>)
 endif()
 

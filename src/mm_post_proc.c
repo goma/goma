@@ -339,6 +339,7 @@ int THIRD_STRAINRATE_INVAR = -1;
 int WALL_DISTANCE = -1;
 int CONTACT_DISTANCE = -1;
 int PP_FLUID_STRESS = -1; /* Fluid Stress without Pressure contribution */
+int LUB_CONVECTION = -1;
 
 int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
                           * actually is */
@@ -1238,7 +1239,7 @@ static int calc_standard_fields(double **post_proc_vect,
       } else {
         calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
       }
-      local_post[PP_Viscosity] = LubAux->srate;
+      local_post[MEAN_SHEAR] = LubAux->srate;
       local_lumped[MEAN_SHEAR] = 1.;
     }
   }
@@ -3074,6 +3075,29 @@ static int calc_standard_fields(double **post_proc_vect,
     safe_free((void *)n_dof);
 
   } /* end of LUB_FLUID_SOURCE */
+
+  if ((LUB_CONVECTION != -1) && pd->e[pg->imtrx][R_MOMENTUM1] &&
+      (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP])) {
+    int i, j;
+    double cvect[DIM];
+
+    /* Calculate convective forces  */
+    memset(cvect, 0.0, sizeof(double) * DIM);
+    for (i = 0; i < dim; i++) {
+      for (j = 0; j < VIM; j++) {
+        cvect[i] += mp->density * fv->v[j] * fv->grad_v[j][i];
+      }
+    }
+
+    /* Post velocities */
+    local_post[LUB_CONVECTION] = cvect[0];
+    local_lumped[LUB_CONVECTION] = 1.0;
+    local_post[LUB_CONVECTION + 1] = cvect[1];
+    local_lumped[LUB_CONVECTION + 1] = 1.0;
+    local_post[LUB_CONVECTION + 2] = cvect[2];
+    local_lumped[LUB_CONVECTION + 2] = 1.0;
+
+  } /* end of LUB_CONVECTION */
 
   if ((PP_LAME_MU != -1) && (pd->e[pg->imtrx][R_MESH1])) {
 
@@ -7874,6 +7898,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "TFMP_liq_velo", &TFMP_LIQ_VELO);
   iread = look_for_post_proc(ifp, "TFMP_inverse_Peclet", &TFMP_INV_PECLET);
   iread = look_for_post_proc(ifp, "TFMP_Krg", &TFMP_KRG);
+  iread = look_for_post_proc(ifp, "Lubrication Convection", &LUB_CONVECTION);
 
   /* Report count of post-proc vars to be exported */
   /*
@@ -9658,7 +9683,9 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     index_post++;
   }
 
-  if (MEAN_SHEAR != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+  if (MEAN_SHEAR != -1 &&
+      (Num_Var_In_Type[pg->imtrx][R_MOMENTUM1] || Num_Var_In_Type[pg->imtrx][R_LUBP] ||
+       Num_Var_In_Type[pg->imtrx][R_SHELL_FILMP])) {
     set_nv_tkud(rd, index, 0, 0, -2, "SHEAR", "[1]", "Mean shear rate", FALSE);
     index++;
     if (MEAN_SHEAR == 2) {
@@ -11616,6 +11643,29 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     DISJ_PRESS = index_post;
     sprintf(nm, "DISJ_PRESS");
     sprintf(ds, "Disjoining Pressure");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+  }
+
+  if (LUB_CONVECTION != -1 &&
+      (Num_Var_In_Type[pg->imtrx][R_LUBP] || Num_Var_In_Type[pg->imtrx][R_SHELL_FILMP])) {
+    if (LUB_CONVECTION == 2) {
+      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+    }
+    LUB_CONVECTION = index_post;
+    sprintf(nm, "LUB_CONV_X");
+    sprintf(ds, "Lubrication Convection x-component");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+    sprintf(nm, "LUB_CONV_Y");
+    sprintf(ds, "Lubrication Convection y-component");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+    sprintf(nm, "LUB_CONV_Z");
+    sprintf(ds, "Lubrication Convection z-component");
     set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
     index++;
     index_post++;
