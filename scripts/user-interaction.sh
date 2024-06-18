@@ -5,9 +5,9 @@ function thank_user {
 }
 
 function continue_check {
-    echo "Enter \"c\" to continue (any other letter to exit):"
+    echo "Enter \"(y,N)\" to continue (any other letter to exit):"
     read -N 1 user_choice
-    if [ "$user_choice" != 'c' ]
+    if [ "$user_choice" != 'y' ]
         then
         exit 24
     fi
