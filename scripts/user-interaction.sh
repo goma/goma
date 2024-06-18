@@ -5,11 +5,12 @@ function thank_user {
 }
 
 function continue_check {
-    echo "Enter to continue (Y,n)"
-    read -N 1 user_choice
-    if [ "$user_choice" != 'n' ]
-        then
-        exit 24
+    echo "Proceed? (Y,n)"
+    recommended=true
+    ok_check
+    if [ "$isok" == "false" ]; then
+        thank_user $@
+        exit 0
     fi
 }
 
