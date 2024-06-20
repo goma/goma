@@ -5,8 +5,8 @@ function thank_user {
 }
 
 function continue_check {
-    echo "Proceed? (Y,n)"
     recommended=true
+    QUESTION="Proceed?"
     ok_check
     if [ "$isok" == "false" ]; then
         thank_user $@
@@ -15,42 +15,45 @@ function continue_check {
 }
 
 function ok_check {
-    echo
     if [[ "$USE_RECOMMENDED" -eq 1 ]]; then
+	echo "USE_RECOMMENDED=$USE_RECOMMENDED"
         isok="$recommended" &&
         if [ "$recommended" == "true" ]; then echo "y"
         else echo "n"
-    fi
-    if type dialog &> /dev/null; then
-        if [ "$recommended" == "true" ]; then
-            dialog --title "Confirm"  --backtitle "Press escape to quit" --yesno "${QUESTION}"  15 60
+	fi 
+    else 
+        if type dialog &> /dev/null; then
+            if [ "$recommended" == "true" ]; then
+                dialog --title "Confirm"  --backtitle "Press escape to quit" --yesno "${QUESTION}"  15 60
+            else
+                dialog --defaultno --title "Confirm" --backtitle "Press escape to quit" --yesno "${QUESTION}" 15 60
+            fi
+            choice=$?
+            case "$choice" in
+                0 ) isok="true" ;;
+                1 ) isok="false" ;;
+                255 ) thank_user Goma script suite && exit 0 ;;
+                * ) exit 0 ;;
+            esac
         else
-            dialog --defaultno --title "Confirm" --backtitle "Press escape to quit" --yesno "${QUESTION}" 15 60
+            if [ "$recommended" == "true" ]; then
+                printf "$QUESTION (Y/n) "
+            else
+                printf "$QUESTION (y/N) "
+            fi
+            read choice
+            case "$choice" in
+                y|Y ) isok="true" ;;
+                n|N ) isok="false" ;;
+                * ) isok="$recommended" &&
+                    if [ "$recommended" == "true" ]; then echo "y"
+                    else echo "n"
+                    fi ;;
+            esac
         fi
-        choice=$?
-        case "$choice" in
-            0 ) isok="true" ;;
-            1 ) isok="false" ;;
-            255 ) thank_user Goma script suite && exit 0 ;;
-            * ) exit 0 ;;
-        esac
-    else
-        if [ "$recommended" == "true" ]; then
-            printf "$QUESTION (Y/n) "
-        else
-            printf "$QUESTION (y/N) "
-        fi
-        read choice
-        case "$choice" in
-            y|Y ) isok="true" ;;
-            n|N ) isok="false" ;;
-            * ) isok="$recommended" &&
-                if [ "$recommended" == "true" ]; then echo "y"
-                else echo "n"
-                fi ;;
-        esac
     fi
 }
+
 
 
 function compiler_test {
