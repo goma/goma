@@ -16,6 +16,11 @@ function continue_check {
 
 function ok_check {
     echo
+    if [[ "$USE_RECOMMENDED" -eq 1 ]]; then
+        isok="$recommended" &&
+        if [ "$recommended" == "true" ]; then echo "y"
+        else echo "n"
+    fi
     if type dialog &> /dev/null; then
         if [ "$recommended" == "true" ]; then
             dialog --title "Confirm"  --backtitle "Press escape to quit" --yesno "${QUESTION}"  15 60
