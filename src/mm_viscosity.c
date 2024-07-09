@@ -3234,8 +3234,7 @@ int ls_modulate_viscosity(double *mu1,
     factor += ratio;
   } else if (model == TIME_RAMP) {
     factor *= (1. - ratio);
-  }
-  else if (model == TIME_RAMP) {
+  } else if (model == TIME_RAMP) {
     factor *= (1. - ratio);
   }
 
