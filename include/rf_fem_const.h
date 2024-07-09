@@ -150,6 +150,7 @@
 #define LUB_VISCINT_ANALYTICAL 26
 #define LUB_VISCINT_POWERLAW   27
 #define MAX_LUB_NGP            5
+#define LOGARITHMIC            29
 
 /* Residence time kernel functions */
 #define LINEAR_TIMETEMP      1110
