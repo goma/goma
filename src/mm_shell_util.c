@@ -6729,8 +6729,6 @@ int lub_viscosity_integrate(const double strs,
     for (jdi = 0; jdi < JDI_MAX; jdi++) {
       double cee, x0, delx, vis = 1., jdiv, xfact, tmp, tpe, tp2, P_sig;
       int idiv, l;
-      double shrF = 1. / F;
-      double shrY = pow((yield + mu0 * shrF) * pow(lam, 1. - nexp) / mu0, 1. / nexp);
       jdiv = pow(2., jdi);
       delx = 1. / jdiv;
       x0 = 0.0;
@@ -6747,7 +6745,9 @@ int lub_viscosity_integrate(const double strs,
             visc_a = muinf + (mu0 - muinf) / pow(1. + CUBE(cee * lam * shrw), (1. - nexp) / 3.);
             break;
           case BINGHAM:
-          case BINGHAM_WLF:
+          case BINGHAM_WLF: {
+            double shrF = 1. / F;
+            double shrY = pow((yield + mu0 * shrF) * pow(lam, 1. - nexp) / mu0, 1. / nexp);
             tp2 = F * shrw;
             P_sig = pow(1. + tp2, P_eps);
             tpe = (1. - exp(-tp2)) / shrw * P_sig;
@@ -6759,7 +6759,7 @@ int lub_viscosity_integrate(const double strs,
             } else {
               visc_a = muinf + (mu0 - muinf) / pow(1. + CUBE(cee * lam * shrw), (1. - nexp) / 3.);
             }
-            break;
+          } break;
           default:
             GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
           }
