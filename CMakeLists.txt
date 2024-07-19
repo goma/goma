@@ -360,7 +360,8 @@ if(ENABLE_UMFPACK)
       message(STATUS "UMFPACK library not found")
     endif()
     if(ENABLE_UMFPACK)
-      message(STATUS "UMFPACK found")
+      message(STATUS "UMFPACK enabled")
+      message(STATUS "${UMFPACK_LIBRARIES}")
       list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_UMFPACK)
       set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${UMFPACK_LIBRARIES})
       set(GOMA_TPL_INCLUDES ${GOMA_TPL_INCLUDES} ${UMFPACK_INCLUDES})
@@ -1005,9 +1006,7 @@ endif()
 # if(${Trilinos_VERSION} VERSION_LESS 14.0.0)
 set(GOMA_TRILINOS_LIBRARIES ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES}
                             ${Trilinos_EXTRA_LD_FLAGS})
-# else()
-# set(GOMA_TRILINOS_LIBRARIES Trilinos::all_libs)
-# endif()
+# else() set(GOMA_TRILINOS_LIBRARIES Trilinos::all_libs) endif()
 
 set(GOMA_TPL_LIBRARIES
     ${SEACASExodus_LIBRARIES}
@@ -1154,6 +1153,7 @@ install(
 
 option(ENABLE_TESTING "ENABLE_TESTING" OFF)
 if(ENABLE_TESTING)
+  message(STATUS "Testing enabled.")
   enable_testing()
   add_subdirectory(tests)
 endif()
