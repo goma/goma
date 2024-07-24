@@ -8852,7 +8852,6 @@ int get_convection_velocity(
           volso -= fv->c[w] * mp->specific_volume[w];
         }
         GOMA_WH(-1, "negative nonvolatile volume fraction %g %g", volsolid, fv->c[0]);
-        fprintf(stderr, "density %g %g\n", mp->density, mp->specific_volume[0]);
       }
 
       for (p = 0; p < VIM; p++) {
