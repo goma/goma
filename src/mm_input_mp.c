@@ -10315,7 +10315,22 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           mat_ptr->Lub_gpts[1] = 0.5 * (1. - 0.538469310105683);
           mat_ptr->Lub_gpts[2] = 0.5;
           mat_ptr->Lub_gpts[3] = 0.5 * (1. + 0.538469310105683);
-          mat_ptr->Lub_gpts[0] = 0.5 * (1. + 0.906179845938664);
+          mat_ptr->Lub_gpts[4] = 0.5 * (1. + 0.906179845938664);
+        } else if (mat_ptr->LubInt_NGP == 6) {
+          mat_ptr->Lub_wts[0] = 0.5 * 0.171324492379170;
+          mat_ptr->Lub_wts[1] = 0.5 * 0.360761573048139;
+          mat_ptr->Lub_wts[2] = 0.5 * 0.467913934572691;
+          mat_ptr->Lub_wts[3] = mat_ptr->Lub_wts[2];
+          mat_ptr->Lub_wts[4] = mat_ptr->Lub_wts[1];
+          mat_ptr->Lub_wts[5] = mat_ptr->Lub_wts[0];
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. - 0.932469514203152);
+          mat_ptr->Lub_gpts[1] = 0.5 * (1. - 0.661209386466265);
+          mat_ptr->Lub_gpts[2] = 0.5 * (1. - 0.238619186083197);
+          mat_ptr->Lub_gpts[3] = 0.5 * (1. + 0.238619186083197);
+          mat_ptr->Lub_gpts[4] = 0.5 * (1. + 0.661209386466265);
+          mat_ptr->Lub_gpts[5] = 0.5 * (1. + 0.932469514203152);
+        } else if (mat_ptr->LubInt_NGP > MAX_LUB_NGP) {
+          GOMA_EH(GOMA_ERROR, "Too many Gauss points -- increase MAX_LUB_NGP!");
         } else {
           GOMA_EH(GOMA_ERROR, "Those integration points not defined yet!");
         }
