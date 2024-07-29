@@ -662,7 +662,7 @@ double height_function_model(double *H_U,
       exp_term2 = pow(MAX(exp_term, DBL_SEMI_SMALL), 1. / (2. * powerlaw + 1.));
       if ((ls != NULL || pfd != NULL) && Fwall_model) {
         double factor = (mp->mp2nd->viscositymask[1] ? (1.0 - lsi->H) : lsi->H);
-        if (1 && mp->Lub_LS_Interpolation == LOGARITHMIC) {
+        if (mp->Lub_LS_Interpolation == LOGARITHMIC) {
           if (lsi->near || (fv->F > 0 && mp->mp2nd->viscositymask[1]) ||
               (fv->F < 0 && mp->mp2nd->viscositymask[0])) {
             double H_log = (DOUBLE_NONZERO(exp_term2) ? log(1.0 / exp_term2) : 0.0);
