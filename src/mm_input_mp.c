@@ -10385,6 +10385,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       }
       ECHO(es, echo_file);
     }
+
     strcpy(search_string, "Lubrication Curvature Normal");
     model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
                                    SCALAR_INPUT, &NO_SPECIES, es);
@@ -10400,7 +10401,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       SPF(es, "\t(%s = %s)", search_string, "GRADH");
     }
     ECHO(es, echo_file);
-  }
+
+    strcpy(search_string, "Lubrication Level-Set Interpolation");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->Lub_LS_Interpolation = LINEAR;
+      SPF(es, "\t(%s = %s)", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->Lub_LS_Interpolation = LOGARITHMIC;
+      SPF(es, "\t(%s = %s)", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->Lub_LS_Interpolation = LINEAR;
+      GOMA_WH(model_read, "Defaulting on Lubrication LS Interpolation");
+      SPF(es, "\t(%s = %s)", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+
+  } /* End of Lubrication Main Section  */
 
   /*  Shell Lubrication Curvature Diffusion Term */
   if (pd_glob[mn]->gv[R_SHELL_LUB_CURV] || pd_glob[mn]->gv[R_SHELL_LUB_CURV_2]) {
