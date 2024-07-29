@@ -663,9 +663,9 @@ double height_function_model(double *H_U,
       if ((ls != NULL || pfd != NULL) && Fwall_model) {
         if (mp->Lub_LS_Interpolation == LOGARITHMIC) {
           if (lsi->near || (fv->F > 0 && mp->mp2nd->viscositymask[1]) ||
-                (fv->F < 0 && mp->mp2nd->viscositymask[0])) {
-             double factor, H_log;
-             H_log = (DOUBLE_NONZERO(exp_term2) ? log(1.0 / exp_term2) : 0.0);
+              (fv->F < 0 && mp->mp2nd->viscositymask[0])) {
+            double factor, H_log;
+            H_log = (DOUBLE_NONZERO(exp_term2) ? log(1.0 / exp_term2) : 0.0);
 
             if (fabs(fv->F) <= ls->Length_Scale) {
               factor = (mp->mp2nd->viscositymask[1] ? (1.0 - lsi->H) : lsi->H);
