@@ -415,7 +415,7 @@ fi
 
 if command -v cmake; then
     cmake_vers=$(cmake --version |grep "version" | awk '{print $NF}')
-    if [[ "$cmake_vers" = $(echo -e "$cmake_vers\n3.17.1\n" | sort -V |tail -n1) ]]; then
+    if [[ "$cmake_vers" = $(echo -e "$cmake_vers\n3.23.0\n" | sort -V |tail -n1) ]]; then
 	build_cmake="false"
     else
 	build_cmake="true"
@@ -1760,7 +1760,7 @@ export PETSC_ARCH=arch-linux-c-opt
 if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
     log_echo "PETSc is already built!"
 else
-    ./configure --with-shared-libraries=0 --with-cc=$(which mpicc) --with-cxx=$(which mpicxx) --with-fc=$(which mpif90) --with-debugging=0 COPTFLAGS='-O3' CXXOPTFLAGS='-O3' FOPTFLAGS='-O3' --download-hypre --with-scalapack=1 --with-scalapack-dir=$(readlink --canonicalize-missing "${SCALAPACK_LIBRARY_DIR}/..") --with-superlu_dist=1 --with-superlu_dist-dir=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION --with-metis=1 --with-metis-dir=$GOMA_LIB/metis-$METIS_VERSION --with-parmetis=1 --with-parmetis-dir=$GOMA_LIB/parmetis-$PARMETIS_VERSION --with-blas-lib=${NON_INTEL_BLAS_LIBRARY} --with-lapack-lib=${NON_INTEL_LAPACK_LIBRARY} --with-mumps=1 --with-mumps-dir="$GOMA_LIB/MUMPS_$MUMPS_VERSION"  2>&1 | tee -a $COMPILE_LOG
+    ./configure --with-shared-libraries=0 --with-cc=$(which mpicc) --with-cxx=$(which mpicxx) --with-fc=$(which mpif90) --with-debugging=0 COPTFLAGS='-O3' CXXOPTFLAGS='-O3' FOPTFLAGS='-O3' --download-strumpack --download-hypre --with-scalapack=1 --with-scalapack-dir=$(readlink --canonicalize-missing "${SCALAPACK_LIBRARY_DIR}/..") --with-superlu_dist=1 --with-superlu_dist-dir=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION --with-metis=1 --with-metis-dir=$GOMA_LIB/metis-$METIS_VERSION --with-parmetis=1 --with-parmetis-dir=$GOMA_LIB/parmetis-$PARMETIS_VERSION --with-blas-lib=${NON_INTEL_BLAS_LIBRARY} --with-lapack-lib=${NON_INTEL_LAPACK_LIBRARY} --with-mumps=1 --with-mumps-dir="$GOMA_LIB/MUMPS_$MUMPS_VERSION"  2>&1 | tee -a $COMPILE_LOG
     make -j$MAKE_JOBS all 2>&1 | tee -a $COMPILE_LOG
     make check 2>&1 | tee -a $COMPILE_LOG
     if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
