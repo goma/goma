@@ -80,7 +80,7 @@ the input parameters are:
    these fluxes should be printed.                                         
 
 [profile [flag0] [flag1] [flag2] [flag3] [flag4]]    
-   Inclusion of the optional string “profile’ to this card will            
+   Inclusion of the optional string "profile" to this card will            
    cause the coordinates (x,y,z), the diffusive integrand, and
    the convective integrand at each integration point to be
    printed to the file designated above. You can, for example,
@@ -89,11 +89,12 @@ the input parameters are:
    profile on always prints: x y z coords, flux and flux_conv at position
 
    flags are 0 or 1, 0 disabled, 1 enabled
-   flag0: shear rate, viscosity
-   flag1: mesh principal eigenvalues
-   flag2: surface tension
-   flag3: temperature pressure
-   flag4: x-normal y-normal z-normal 
+
+   - flag0: shear rate, viscosity
+   - flag1: mesh principal eigenvalues
+   - flag2: surface tension
+   - flag3: temperature pressure
+   - flag4: x-normal y-normal z-normal 
 
 ------------
 **Examples**
