@@ -95,166 +95,166 @@ the input parameters are:
    flag3: temperature pressure
    flag4: x-normal y-normal z-normal 
 
------------
-*Examples**
------------
+------------
+**Examples**
+------------
 
-he following example shows a sample input deck section that requests five such
-ntegrated fluxes:
-:
+The following example shows a sample input deck section that requests five such
+integrated fluxes:
+::
 
-  Post Processing Fluxes =
+   Post Processing Fluxes =
 
-:
+::
 
-  FLUX = FORCE_X 5 1 0 side5.out
+   FLUX = FORCE_X 5 1 0 side5.out
 
-:
+::
 
-  FLUX = FORCE_Y 5 1 0 side5prof.out   profile
+   FLUX = FORCE_Y 5 1 0 side5prof.out   profile
 
-:
+::
 
-  FLUX = FORCE_NORMAL 8 1 0 side8.out
+   FLUX = FORCE_NORMAL 8 1 0 side8.out
 
-:
+::
 
-  FLUX = FORCE_TANGENT1 8 1 0 side8.out
+   FLUX = FORCE_TANGENT1 8 1 0 side8.out
 
-:
+::
 
-  FLUX = VOLUME_FLUX 8 1 0 side8.out
+   FLUX = VOLUME_FLUX 8 1 0 side8.out
 
-:
+::
 
-  END OF FLUX
+   END OF FLUX
 
-------------------------
-*Technical Discussion**
-------------------------
+-------------------------
+**Technical Discussion**
+-------------------------
 
-he permissible flux types are those listed in file mm_post_def.h for struct
-Post_Processing_Flux_Names, pp_flux_names* being one variable of this struct type.
+The permissible flux types are those listed in file mm_post_def.h for struct
+*Post_Processing_Flux_Names, pp_flux_names* being one variable of this struct type.
 
-he flux integrations are carried out as follows:
+The flux integrations are carried out as follows:
 
-----------------------+--------------------------------------------+-----------------------------+
-**FLUX**              |**DIFFUSIVE FLUX**                          |**CONVECTIVE FLUX**          |
-----------------------+--------------------------------------------+-----------------------------+
-FORCE_NORMAL          |:math:`\int` n • :math:`\underline{T}` • ndA|:math:`\int\rho` n •         |
-                      |                                            |(v - :math:`v_m`) v • ndA    |
-----------------------+--------------------------------------------+-----------------------------+
-FORCE_TANGENT1        |:math:`\int_1` • :math:`\underline{T}` • ndA|:math:`\int\rho` :math:`t_1` |
-                      |                                            |(v - :math:`v_m`) v • ndA    |
-----------------------+--------------------------------------------+-----------------------------+
-FORCE_TANGENT2        |:math:`\int_2` • :math:`\underline{T}` • ndA|:math:`\int\rho` :math:`t_2` |
-                      |                                            |(v - :math:`v_m`) v • ndA    |
-----------------------+--------------------------------------------+-----------------------------+
-FORCE_X               |:math:`\int` i • :math:`\underline{T}` • ndA|:math:`\int\rho` i           |
-                      |                                            |(v - :math:`v_m`) v • ndA    |
-----------------------+--------------------------------------------+-----------------------------+
-FORCE_Y               |:math:`\int` j • :math:`\underline{T}` • ndA|:math:`\int\rho` j           |
-                      |                                            |(v - :math:`v_m`) v • ndA    |
-----------------------+--------------------------------------------+-----------------------------+
-FORCE_Z               |:math:`\int` k • :math:`\underline{T}` • ndA|:math:`\int\rho` k           |
-                      |                                            |(v - :math:`v_m`) v • ndA    |
-----------------------+--------------------------------------------+-----------------------------+
-VOLUME_FLUX           |:math:`\int` n • (v - :math:`v_m`) dA       |for ARBITRARY mesh motion.   |
-----------------------+--------------------------------------------+-----------------------------+
-                      |:math:`\int` n • ddA                        |for LAGRANGIAN mesh motion.  |
-----------------------+--------------------------------------------+-----------------------------+
-SPECIES_FLUX          |:math:`\int` (-:math:`D_jn` •               |:math:`\int\rho` n •         |
-                      |:math:`\Delta` cj) dA                       |( v - :math:`v_m` ) cjdA     |
-----------------------+--------------------------------------------+-----------------------------+
-HEAT_FLUX             |:math:`\int` (-kn • :math:`\Delta` T) dA    |:math:`\int\rho` CpTn •      |
-                      |                                            |( v - :math:`v_m` ) dA       |
-----------------------+--------------------------------------------+-----------------------------+
-TORQUE                |:math:`\int` :math:`re_r` ×                 |                             |
-                      |( :math:`\underline{T}` • n) dA             |                             |
-----------------------+--------------------------------------------+-----------------------------+
-AVERAGE_CONC          |:math:`\int` cjdA                           |                             |
-----------------------+--------------------------------------------+-----------------------------+
-SURF_DISSIP           |:math:`\int\sigma\Delta` v •                |                             |
-                      |( :math:`\zeta` - nn) dA                    |                             |
-----------------------+--------------------------------------------+-----------------------------+
-AREA                  |:math:`\int` dA                             |                             |
-----------------------+--------------------------------------------+-----------------------------+
-VOL_REVOLUTION        |:math:`\int\frac{1}{2}`                     |                             |
-                      |:math:`\frac{r}{\sqrt{}{1 + (dr/dz)^2}}` dA |                             |
-----------------------+--------------------------------------------+-----------------------------+
-POR_LIQ_FLUX          |:math:`\int` n •                            |                             |
-                      |(:math:`\rho_lv_{darcy}`) dA                |                             |
-----------------------+--------------------------------------------+-----------------------------+
-CHARGED_SPECIES_FLUX  |:math:`\int` (-Djn • :math:`\Delta` cj) dA  |:math:`\int\rho` n •         |
-                      |                                            |( v - :math:`v_m` ) cjdA     |
-----------------------+--------------------------------------------+-----------------------------+
-CURRENT_FICKIAN       |:math:`\int` (-Djn • :math:`\Delta` cj) dA  |:math:`\int\rho` n •         |
-                      |                                            |( v - :math:`v_m` ) cjdA     |
-----------------------+--------------------------------------------+-----------------------------+
-PVELOCITY[1-3]        |:math:`\int` n • pvjdA                      |                             |
-----------------------+--------------------------------------------+-----------------------------+
-ELEC_FORCE_NORMAL     |:math:`\int` n :math:`\underline{T}_e` • ndA|                             |
-----------------------+--------------------------------------------+-----------------------------+
-ELEC_FORCE_TANGENT1   |:math:`\int` :math:`t_1` •                  |                             |
-                      |:math:`\underline{T}_e` • ndA               |                             |
-----------------------+--------------------------------------------+-----------------------------+
-ELEC_FORCE_TANGENT2   |:math:`\int` :math:`t_2` •                  |                             |
-                      |:math:`\underline{T}_e` • ndA               |                             |
-----------------------+--------------------------------------------+-----------------------------+
-ELEC_FORCE_X          |:math:`\int` i •                            |                             |
-                      |:math:`\underline{T}_e` • ndA               |                             |
-----------------------+--------------------------------------------+-----------------------------+
-ELEC_FORCE_Y          |:math:`\int` j •                            |                             |
-                      |:math:`\underline{T}_e` • ndA               |                             |
-----------------------+--------------------------------------------+-----------------------------+
-ELEC_FORCE_Y          |:math:`\int` k •                            |                             |
-                      |:math:`\underline{T}_e` • ndA               |                             |
-----------------------+--------------------------------------------+-----------------------------+
-NET_SURF_CHARGE       |:math:`\int` (-:math:`\varepsilon`          |                             |
-                      |:math:`\underline{n}` •                     |                             |
-                      |:math:`\underline{E}`) dA                   |                             |
-----------------------+--------------------------------------------+-----------------------------+
-ACOUSTIC_FLUX_NORMAL  |:math:`\int` (-:math:`\frac{1}{kR}` n •     |                             |
-                      |:math:`\Delta P_{imag}`) dA                 |                             |
-                      |                                            |:math:`\int`                 |
-                      |                                            |(-:math:`\frac{1}{kR}` n •   |
-                      |                                            |:math:`\Delta P_{real}`) dA  |
-----------------------+--------------------------------------------+-----------------------------+
-ACOUSTIC_FLUX_TANGENT1|:math:`\int` (-:math:`\frac{1}{kR}`         |                             |
-                      |:math:`t_1` • :math:`\Delta P_{imag}`) dA   |                             |
-                      |                                            |:math:`\int`                 |
-                      |                                            |(-:math:`\frac{1}{kR}`       |
-                      |                                            |:math:`t_1` •                |
-                      |                                            |:math:`\Delta P_{real}`) dA  |
-----------------------+--------------------------------------------+-----------------------------+
-ACOUSTIC_FLUX_TANGENT2|:math:`\int` (-:math:`\frac{1}{kR}`         |                             |
-                      |:math:`t_2` • :math:`\Delta P_{imag}`) dA   |                             |
-                      |                                            |:math:`\int`                 |
-                      |                                            |(-:math:`\frac{1}{kR}`       |
-                      |                                            |:math:`t_2` •                |
-                      |                                            |:math:`\Delta P_{real}`) dA  |
-----------------------+--------------------------------------------+-----------------------------+
-ACOUSTIC_FLUX_X       |:math:`\int` (-:math:`\frac{1}{kR}`         |                             |
-                      |:math:`i` • :math:`\Delta P_{imag}`) dA     |                             |
-                      |                                            |:math:`\int`                 |
-                      |                                            |(-:math:`\frac{1}{kR}`       |
-                      |                                            |:math:`i` •                  |
-                      |                                            |:math:`\Delta P_{real}`) dA  |
-----------------------+--------------------------------------------+-----------------------------+
-ACOUSTIC_FLUX_Y       |:math:`\int` (-:math:`\frac{1}{kR}`         |                             |
-                      |:math:`j` • :math:`\Delta P_{imag}`) dA     |                             |
-                      |                                            |:math:`\int`                 |
-                      |                                            |(-:math:`\frac{1}{kR}`       |
-                      |                                            |:math:`j` •                  |
-                      |                                            |:math:`\Delta P_{real}`) dA  |
-----------------------+--------------------------------------------+-----------------------------+
-ACOUSTIC_FLUX_Z       |:math:`\int` (-:math:`\frac{1}{kR}`         |                             |
-                      |:math:`k` • :math:`\Delta P_{imag}`) dA     |                             |
-                      |                                            |:math:`\int`                 |
-                      |                                            |(-:math:`\frac{1}{kR}`       |
-                      |                                            |:math:`k` •                  |
-                      |                                            |:math:`\Delta P_{real}`) dA  |
-----------------------+--------------------------------------------+-----------------------------+
++----------------------+--------------------------------------------+-----------------------------+
+|**FLUX**              |**DIFFUSIVE FLUX**                          |**CONVECTIVE FLUX**          |
++----------------------+--------------------------------------------+-----------------------------+
+|FORCE_NORMAL          |:math:`\int` n • :math:`\underline{T}` • ndA|:math:`\int\rho` n •         |
+|                      |                                            |(v - :math:`v_m`) v • ndA    |
++----------------------+--------------------------------------------+-----------------------------+
+|FORCE_TANGENT1        |:math:`\int_1` • :math:`\underline{T}` • ndA|:math:`\int\rho` :math:`t_1` |
+|                      |                                            |(v - :math:`v_m`) v • ndA    |
++----------------------+--------------------------------------------+-----------------------------+
+|FORCE_TANGENT2        |:math:`\int_2` • :math:`\underline{T}` • ndA|:math:`\int\rho` :math:`t_2` |
+|                      |                                            |(v - :math:`v_m`) v • ndA    |
++----------------------+--------------------------------------------+-----------------------------+
+|FORCE_X               |:math:`\int` i • :math:`\underline{T}` • ndA|:math:`\int\rho` i           |
+|                      |                                            |(v - :math:`v_m`) v • ndA    |
++----------------------+--------------------------------------------+-----------------------------+
+|FORCE_Y               |:math:`\int` j • :math:`\underline{T}` • ndA|:math:`\int\rho` j           |
+|                      |                                            |(v - :math:`v_m`) v • ndA    |
++----------------------+--------------------------------------------+-----------------------------+
+|FORCE_Z               |:math:`\int` k • :math:`\underline{T}` • ndA|:math:`\int\rho` k           |
+|                      |                                            |(v - :math:`v_m`) v • ndA    |
++----------------------+--------------------------------------------+-----------------------------+
+|VOLUME_FLUX           |:math:`\int` n • (v - :math:`v_m`) dA       |for ARBITRARY mesh motion.   |
++----------------------+--------------------------------------------+-----------------------------+
+|                      |:math:`\int` n • ddA                        |for LAGRANGIAN mesh motion.  |
++----------------------+--------------------------------------------+-----------------------------+
+|SPECIES_FLUX          |:math:`\int` (-:math:`D_jn` •               |:math:`\int\rho` n •         |
+|                      |:math:`\Delta` cj) dA                       |( v - :math:`v_m` ) cjdA     |
++----------------------+--------------------------------------------+-----------------------------+
+|HEAT_FLUX             |:math:`\int` (-kn • :math:`\Delta` T) dA    |:math:`\int\rho` CpTn •      |
+|                      |                                            |( v - :math:`v_m` ) dA       |
++----------------------+--------------------------------------------+-----------------------------+
+|TORQUE                |:math:`\int` :math:`re_r` ×                 |                             |
+|                      |( :math:`\underline{T}` • n) dA             |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|AVERAGE_CONC          |:math:`\int` cjdA                           |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|SURF_DISSIP           |:math:`\int\sigma\Delta` v •                |                             |
+|                      |( :math:`\zeta` - nn) dA                    |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|AREA                  |:math:`\int` dA                             |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|VOL_REVOLUTION        |:math:`\int\frac{1}{2}`                     |                             |
+|                      |:math:`\frac{r}{\sqrt{}{1 + (dr/dz)^2}}` dA |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|POR_LIQ_FLUX          |:math:`\int` n •                            |                             |
+|                      |(:math:`\rho_lv_{darcy}`) dA                |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|CHARGED_SPECIES_FLUX  |:math:`\int` (-Djn • :math:`\Delta` cj) dA  |:math:`\int\rho` n •         |
+|                      |                                            |( v - :math:`v_m` ) cjdA     |
++----------------------+--------------------------------------------+-----------------------------+
+|CURRENT_FICKIAN       |:math:`\int` (-Djn • :math:`\Delta` cj) dA  |:math:`\int\rho` n •         |
+|                      |                                            |( v - :math:`v_m` ) cjdA     |
++----------------------+--------------------------------------------+-----------------------------+
+|PVELOCITY[1-3]        |:math:`\int` n • pvjdA                      |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|ELEC_FORCE_NORMAL     |:math:`\int` n :math:`\underline{T}_e` • ndA|                             |
++----------------------+--------------------------------------------+-----------------------------+
+|ELEC_FORCE_TANGENT1   |:math:`\int` :math:`t_1` •                  |                             |
+|                      |:math:`\underline{T}_e` • ndA               |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|ELEC_FORCE_TANGENT2   |:math:`\int` :math:`t_2` •                  |                             |
+|                      |:math:`\underline{T}_e` • ndA               |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|ELEC_FORCE_X          |:math:`\int` i •                            |                             |
+|                      |:math:`\underline{T}_e` • ndA               |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|ELEC_FORCE_Y          |:math:`\int` j •                            |                             |
+|                      |:math:`\underline{T}_e` • ndA               |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|ELEC_FORCE_Y          |:math:`\int` k •                            |                             |
+|                      |:math:`\underline{T}_e` • ndA               |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|NET_SURF_CHARGE       |:math:`\int` (-:math:`\varepsilon`          |                             |
+|                      |:math:`\underline{n}` •                     |                             |
+|                      |:math:`\underline{E}`) dA                   |                             |
++----------------------+--------------------------------------------+-----------------------------+
+|ACOUSTIC_FLUX_NORMAL  |:math:`\int` (-:math:`\frac{1}{kR}` n •     |                             |
+|                      |:math:`\Delta P_{imag}`) dA                 |                             |
+|                      |                                            |:math:`\int`                 |
+|                      |                                            |(-:math:`\frac{1}{kR}` n •   |
+|                      |                                            |:math:`\Delta P_{real}`) dA  |
++----------------------+--------------------------------------------+-----------------------------+
+|ACOUSTIC_FLUX_TANGENT1|:math:`\int` (-:math:`\frac{1}{kR}`         |                             |
+|                      |:math:`t_1` • :math:`\Delta P_{imag}`) dA   |                             |
+|                      |                                            |:math:`\int`                 |
+|                      |                                            |(-:math:`\frac{1}{kR}`       |
+|                      |                                            |:math:`t_1` •                |
+|                      |                                            |:math:`\Delta P_{real}`) dA  |
++----------------------+--------------------------------------------+-----------------------------+
+|ACOUSTIC_FLUX_TANGENT2|:math:`\int` (-:math:`\frac{1}{kR}`         |                             |
+|                      |:math:`t_2` • :math:`\Delta P_{imag}`) dA   |                             |
+|                      |                                            |:math:`\int`                 |
+|                      |                                            |(-:math:`\frac{1}{kR}`       |
+|                      |                                            |:math:`t_2` •                |
+|                      |                                            |:math:`\Delta P_{real}`) dA  |
++----------------------+--------------------------------------------+-----------------------------+
+|ACOUSTIC_FLUX_X       |:math:`\int` (-:math:`\frac{1}{kR}`         |                             |
+|                      |:math:`i` • :math:`\Delta P_{imag}`) dA     |                             |
+|                      |                                            |:math:`\int`                 |
+|                      |                                            |(-:math:`\frac{1}{kR}`       |
+|                      |                                            |:math:`i` •                  |
+|                      |                                            |:math:`\Delta P_{real}`) dA  |
++----------------------+--------------------------------------------+-----------------------------+
+|ACOUSTIC_FLUX_Y       |:math:`\int` (-:math:`\frac{1}{kR}`         |                             |
+|                      |:math:`j` • :math:`\Delta P_{imag}`) dA     |                             |
+|                      |                                            |:math:`\int`                 |
+|                      |                                            |(-:math:`\frac{1}{kR}`       |
+|                      |                                            |:math:`j` •                  |
+|                      |                                            |:math:`\Delta P_{real}`) dA  |
++----------------------+--------------------------------------------+-----------------------------+
+|ACOUSTIC_FLUX_Z       |:math:`\int` (-:math:`\frac{1}{kR}`         |                             |
+|                      |:math:`k` • :math:`\Delta P_{imag}`) dA     |                             |
+|                      |                                            |:math:`\int`                 |
+|                      |                                            |(-:math:`\frac{1}{kR}`       |
+|                      |                                            |:math:`k` •                  |
+|                      |                                            |:math:`\Delta P_{real}`) dA  |
++----------------------+--------------------------------------------+-----------------------------+
 
 The SURF_DISSIP card is used to compute the energy dissipated at a surface by
 surface tension (Batchelor, 1970). The VOL_REVOLUTION card is used in axi-
