@@ -801,12 +801,9 @@ may be used to compute a particular flux, e.g. FORCE_NORMAL, on different side
 sets or different fluxes on the same side set. Cards with identical fluxes and identical
 side sets could be used to output the flux calculations to different files. Definitions of
 the input parameters are:</p>
-<table class="table">
-<tbody>
-<tr class="row-odd"><td><p>{flux_type}</p></td>
-<td><p>A keyword that can have any one of the following values:</p>
-<blockquote>
-<div><ul class="simple">
+<dl>
+<dt>{flux_type}</dt><dd><dl class="simple">
+<dt>A keyword that can have any one of the following values:</dt><dd><ul class="simple">
 <li><p><strong>FORCE_NORMAL</strong></p></li>
 <li><p><strong>FORCE_TANGENT1</strong></p></li>
 <li><p><strong>FORCE_TANGENT2</strong></p></li>
@@ -839,7 +836,8 @@ the input parameters are:</p>
 <li><p><strong>ACOUSTIC_FLUX_Y</strong></p></li>
 <li><p><strong>ACOUSTIC_FLUX_Z</strong></p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 <p>For every request, the integral of the diffusive portion
 followed by that of the convective portion over the
 requested boundary will be appended to the specified file. If
@@ -848,35 +846,37 @@ the convective flux is not applicable (i.e.for flux_types
 <strong>AREA</strong>), the second quantity will be zero. In all cases the
 area of the face (covered by the entire side set) and the time
 value are also output.</p>
-</td>
-</tr>
-<tr class="row-even"><td><p>&lt;bc_id&gt;</p></td>
-<td><p>The boundary flag identifier, an integer associated with the
+</dd>
+<dt>&lt;bc_id&gt;</dt><dd><p>The boundary flag identifier, an integer associated with the
 boundary location (side set in EXODUS II) in the problem
-domain on which the integrated flux is desired.</p></td>
-</tr>
-<tr class="row-odd"><td><p>&lt;blk_id&gt;</p></td>
-<td><p>An integer that designates the mesh block (material) from
+domain on which the integrated flux is desired.</p>
+</dd>
+<dt>&lt;blk_id&gt;</dt><dd><p>An integer that designates the mesh block (material) from
 which the flux integral should be performed. This has
-implications on internal boundaries.</p></td>
-</tr>
-<tr class="row-even"><td><p>&lt;species_id&gt;</p></td>
-<td><p>An integer that identifies the species number if an integrated
-species flux is requested.</p></td>
-</tr>
-<tr class="row-odd"><td><p>&lt;file_name&gt;</p></td>
-<td><p>A character string corresponding to a file name into which
-these fluxes should be printed.</p></td>
-</tr>
-<tr class="row-even"><td><p>[profile]</p></td>
-<td><p>Inclusion of the optional string “profile’ to this card will
+implications on internal boundaries.</p>
+</dd>
+<dt>&lt;species_id&gt;</dt><dd><p>An integer that identifies the species number if an integrated
+species flux is requested.</p>
+</dd>
+<dt>&lt;file_name&gt;</dt><dd><p>A character string corresponding to a file name into which
+these fluxes should be printed.</p>
+</dd>
+<dt>[profile [flag0] [flag1] [flag2] [flag3] [flag4]]</dt><dd><p>Inclusion of the optional string “profile” to this card will
 cause the coordinates (x,y,z), the diffusive integrand, and
 the convective integrand at each integration point to be
 printed to the file designated above. You can, for example,
-print out a pressure distribution used to compute a force.</p></td>
-</tr>
-</tbody>
-</table>
+print out a pressure distribution used to compute a force.</p>
+<p>profile on always prints: x y z coords, flux and flux_conv at position</p>
+<p>flags are 0 or 1, 0 disabled, 1 enabled</p>
+<ul class="simple">
+<li><p>flag0: shear rate, viscosity</p></li>
+<li><p>flag1: mesh principal eigenvalues</p></li>
+<li><p>flag2: surface tension</p></li>
+<li><p>flag3: temperature pressure</p></li>
+<li><p>flag4: x-normal y-normal z-normal</p></li>
+</ul>
+</dd>
+</dl>
 </section>
 <section id="examples">
 <h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
