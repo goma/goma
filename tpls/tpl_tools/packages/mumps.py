@@ -37,7 +37,7 @@ class Package(packages.GenericPackage):
             f.write("IORDERINGSC = $(IMETIS) $(IPORD)\n")
             f.write("LIBEXT_SHARED  = .so\n")
             f.write("SONAME = -soname\n")
-            f.write("SHARED_OPT = -shared\n")
+            f.write("SHARED_OPT = -shared -Wl,-rpath," + builder.install_dir() + "/lib\n")
             f.write("FPIC_OPT = -fPIC\n")
             f.write("LIBEXT  = .a\n")
             f.write("OUTC    = -o\n")
