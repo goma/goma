@@ -48,7 +48,7 @@ if __name__ == "__main__":
         "--extract-dir", help="Extract and Build location", type=pathlib.Path
     )
     parser.add_argument(
-        "--build-shared", help="Build shared libraries", type=bool, default=False
+        "--build-shared", help="Build shared libraries", type=bool, default=True
     )
     parser.add_argument(
         "-j", "--jobs", help="Number of parallel jobs", type=int, default=1

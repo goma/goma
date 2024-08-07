@@ -15,9 +15,9 @@ Build with a nonstandard compiler:
 
     ./install-tpls.py --cc=gcc-13 --cxx=g++-13 --fc=gfortran-13 /path/to/install
 
-Build with a prebuilt openmpi:
+Build with a prebuilt openmpi with 4 CPUs:
 
-    ./install-tpls.py --cc=mpicc --cxx=mpicxx --fc==mpifort --openmpi-dir=$MPI_HOME /path/to/install
+    ./install-tpls.py -j 4 --cc=mpicc --cxx=mpicxx --fc==mpifort --openmpi-dir=$MPI_HOME /path/to/install
 
 Build with static libraries, shared is set by default:
 
