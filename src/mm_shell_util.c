@@ -3865,7 +3865,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       }
 
       /* Sensitivity to height */
-      if (1 || !pd->e[pg->imtrx][SHELL_LUB_CURV]) {  /* Should always go through here */
+      if (1 || !pd->e[pg->imtrx][SHELL_LUB_CURV]) { /* Should always go through here */
         D_CURV_DH = (cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / (H_cap * H_cap);
 
         /* Sensitivity to level set F */

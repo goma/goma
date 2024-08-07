@@ -10525,8 +10525,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     /*  Shell Lubrication Curvature Combination */
     strcpy(search_string, "Lubrication Curvature Combination");
-    model_read = look_for_mat_prop(imp, "Lubrication Curvature Combination", NULL, NULL, NO_USER, NULL,
-                                   model_name, SCALAR_INPUT, &NO_SPECIES, es);
+    model_read = look_for_mat_prop(imp, "Lubrication Curvature Combination", NULL, NULL, NO_USER,
+                                   NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
 
     if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
       mat_ptr->Lub_Curv_Combine = TRUE;
@@ -10539,7 +10539,6 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       SPF(es, "\t(%s = %s)", search_string, "off");
     }
     ECHO(es, echo_file);
-
 
   } /* End of Lubrication Curvature Section  */
 
