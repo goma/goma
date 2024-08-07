@@ -14,7 +14,7 @@ class Package(packages.CMakePackage):
             + self.version
             + ".tar.gz"
         )
-        self.executables = ["algebra","aprepro", "mapvar", "explore", "blot"]
+        self.executables = ["algebra","aprepro", "mapvar", "explore"]
         self.libraries = ["exodus", "aprepro_lib"]
         self.includes = ["exodusII.h", "aprepro.h"]
 
