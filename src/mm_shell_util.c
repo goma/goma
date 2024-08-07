@@ -3849,9 +3849,12 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
             this sign convention is opposite of generally accepted one for curvature
           i.e., 2H = grad-dot-normal_vector vs. 2H = -grad-dot-normal_vector       */
       CURV = -(cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / H_cap;
+      LubAux->op_curv = CURV;
 
       /* Curvature - numerical in planview direction */
-      if (pd->e[pg->imtrx][SHELL_LUB_CURV]) {
+      if (mp->Lub_Curv_Combine) {
+        CURV = fv->sh_l_curv;
+      } else if (pd->e[pg->imtrx][SHELL_LUB_CURV]) {
         CURV += fv->sh_l_curv;
       }
       if (pd->e[pg->imtrx][SHELL_LUB_CURV_2]) {
@@ -3862,7 +3865,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       }
 
       /* Sensitivity to height */
-      if (!pd->e[pg->imtrx][SHELL_LUB_CURV]) {
+      if (1 || !pd->e[pg->imtrx][SHELL_LUB_CURV]) {  /* Should always go through here */
         D_CURV_DH = (cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / (H_cap * H_cap);
 
         /* Sensitivity to level set F */

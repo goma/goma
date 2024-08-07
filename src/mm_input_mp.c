@@ -10406,10 +10406,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                    SCALAR_INPUT, &NO_SPECIES, es);
     if (!strcasecmp(model_name, "GRADH") || !strcasecmp(model_name, "gradient")) {
       mat_ptr->Lub_Curv_NormalModel = TRUE;
-      SPF(es, "\t(%s = %s)", search_string, "GRADH");
+      SPF(es, "%s = %s", search_string, "GRADH");
     } else if (!strcasecmp(model_name, "DELTA") || !strcasecmp(model_name, "delta")) {
       mat_ptr->Lub_Curv_NormalModel = FALSE;
-      SPF(es, "\t(%s = %s)", search_string, "DELTA");
+      SPF(es, "%s = %s", search_string, "DELTA");
     } else {
       mat_ptr->Lub_Curv_NormalModel = TRUE;
       GOMA_WH(model_read, "Defaulting on Lubrication Curvature Normal");
@@ -10422,10 +10422,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                    SCALAR_INPUT, &NO_SPECIES, es);
     if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
       mat_ptr->Lub_LS_Interpolation = LINEAR;
-      SPF(es, "\t(%s = %s)", search_string, "LINEAR");
+      SPF(es, "%s = %s", search_string, "LINEAR");
     } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
       mat_ptr->Lub_LS_Interpolation = LOGARITHMIC;
-      SPF(es, "\t(%s = %s)", search_string, "LOGARITHMIC");
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
     } else {
       mat_ptr->Lub_LS_Interpolation = LINEAR;
       GOMA_WH(model_read, "Defaulting on Lubrication LS Interpolation");
@@ -10496,10 +10496,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
       mat_ptr->Lub_Curv_MassLump = TRUE;
-      SPF(es, "\t(%s = %s)", search_string, "on");
+      SPF(es, "%s = %s", search_string, "on");
     } else if (!strcasecmp(model_name, "no") || !strcasecmp(model_name, "false")) {
       mat_ptr->Lub_Curv_MassLump = FALSE;
-      SPF(es, "\t(%s = %s)", search_string, "off");
+      SPF(es, "%s = %s", search_string, "off");
     } else {
       mat_ptr->Lub_Curv_MassLump = TRUE;
       SPF(es, "\t(%s = %s)", search_string, "on");
@@ -10513,15 +10513,33 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
       mat_ptr->Lub_Curv_Modulation = TRUE;
-      SPF(es, "\t(%s = %s)", search_string, "on");
+      SPF(es, "%s = %s", search_string, "on");
     } else if (!strcasecmp(model_name, "no") || !strcasecmp(model_name, "false")) {
       mat_ptr->Lub_Curv_Modulation = FALSE;
-      SPF(es, "\t(%s = %s)", search_string, "off");
+      SPF(es, "%s = %s", search_string, "off");
     } else {
       mat_ptr->Lub_Curv_Modulation = FALSE;
       SPF(es, "\t(%s = %s)", search_string, "off");
     }
     ECHO(es, echo_file);
+
+    /*  Shell Lubrication Curvature Combination */
+    strcpy(search_string, "Lubrication Curvature Combination");
+    model_read = look_for_mat_prop(imp, "Lubrication Curvature Combination", NULL, NULL, NO_USER, NULL,
+                                   model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
+      mat_ptr->Lub_Curv_Combine = TRUE;
+      SPF(es, "%s = %s", search_string, "on");
+    } else if (!strcasecmp(model_name, "no") || !strcasecmp(model_name, "false")) {
+      mat_ptr->Lub_Curv_Combine = FALSE;
+      SPF(es, "%s = %s", search_string, "off");
+    } else {
+      mat_ptr->Lub_Curv_Combine = FALSE;
+      SPF(es, "\t(%s = %s)", search_string, "off");
+    }
+    ECHO(es, echo_file);
+
 
   } /* End of Lubrication Curvature Section  */
 
