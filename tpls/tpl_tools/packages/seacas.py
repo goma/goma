@@ -1,5 +1,7 @@
 from tpl_tools.packages import packages
+from tpl_tools import utils
 import os
+
 
 class Package(packages.CMakePackage):
     def __init__(self):
@@ -37,7 +39,10 @@ class Package(packages.CMakePackage):
             builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
         builder.add_option("-D=TPL_ENABLE_Netcdf:BOOL=ON")
         builder.add_option("-D=TPL_ENABLE_MPI:BOOL=ON")
-        builder.add_option("-D=TPL_ENABLE_X11:BOOL=ON")
+        if utils.check_for_x11(builder._extract_dir, builder.env["CC"]):
+            builder.add_option("-D=TPL_ENABLE_X11:BOOL=ON")
+        else:
+            builder.add_option("-D=TPL_ENABLE_X11:BOOL=OFF")
 
         CC = builder.env["CC"]
         CXX = builder.env["CXX"]

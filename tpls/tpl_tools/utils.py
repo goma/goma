@@ -4,6 +4,7 @@ import shutil
 import os
 import hashlib
 import sys
+import subprocess
 
 
 # https://stackoverflow.com/questions/22058048/hashing-a-file-in-python
@@ -77,3 +78,20 @@ class PrintLogger(object):
 
     def log(self, *args):
         print(*args)
+
+def check_for_x11(extract_dir, cc):
+    comp = "cc"
+    if cc:
+        comp = cc
+    with open(os.path.join(extract_dir, "x11test.c")) as f:
+        f.write("int main() {}\n")
+    command = [cc, "-lX11"]
+    result = subprocess.Popen(command, cwd=extract_dir)
+    result.wait()
+    os.remove(os.path.join(extract_dir, "x11test.c"))
+    return result.returncode == 0
+
+
+
+
+

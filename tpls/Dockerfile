@@ -13,6 +13,7 @@ RUN { \
       && echo ". /opt/goma-libs/config.sh" \
       && echo 'exec "$@"'; \
     } > /entrypoint.sh \
+&& chmod a+x /entrypoint.sh
 
 ENTRYPOINT [ "/entrypoint.sh" ]
 CMD [ "/bin/bash" ]
