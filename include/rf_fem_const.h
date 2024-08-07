@@ -149,7 +149,7 @@
 #define LUB_VISCINT_GAUSSIAN   25
 #define LUB_VISCINT_ANALYTICAL 26
 #define LUB_VISCINT_POWERLAW   27
-#define MAX_LUB_NGP            5
+#define MAX_LUB_NGP            6
 #define LOGARITHMIC            29
 
 /* Residence time kernel functions */
