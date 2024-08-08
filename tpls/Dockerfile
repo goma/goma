@@ -6,7 +6,7 @@ RUN apt autoremove && apt clean
 
 RUN git clone https://github.com/wortiz/goma -b build-script /opt/goma
 
-RUN /opt/goma/tpls/install-tpls.py --cc=gcc-12 --cxx=g++-12 --fc=gfortran-12 --build-shared=yes --download-dir=/tmp/downloads -j 32 --extract-dir=/tmp/extract /opt/goma-libs
+RUN PYTHONUNBUFFERED=1 /opt/goma/tpls/install-tpls.py --cc=gcc-12 --cxx=g++-12 --fc=gfortran-12 --build-shared=yes --download-dir=/tmp/downloads -j 32 --extract-dir=/tmp/extract /opt/goma-libs
 
 RUN { \
       echo '#!/usr/bin/env bash' \

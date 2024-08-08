@@ -25,6 +25,7 @@ packages = [
     "suitesparse",
     "trilinos",
     "petsc",
+    "petsc-complex",
     "omega_h",
     "sparse",
 ]

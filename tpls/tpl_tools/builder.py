@@ -120,7 +120,7 @@ class Builder(object):
             else:
                 command.append(jobs_flag)
                 command.append(str(self._jobs))
-        self.logger.log("Running command: {}".format(command))
+        self.logger.log("Running command: {}".format(" ".join(command)))
         cwd = os.path.join(self._extract_dir, self._extracted_folder)
         self.logger.log("In directory: {}".format(cwd))
         log_directory = os.path.join(self._install_dir, "logs")

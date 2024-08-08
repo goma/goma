@@ -15,6 +15,10 @@ class Package(packages.AutotoolsPackage):
         )
         self.includes = ["petsc"]
         self.libraries = ["petsc", "HYPRE", "strumpack"]
+    
+    def set_environment(self, builder):
+        builder.env = builder._registry.get_environment().copy()
+        builder.env["PETSC_DIR"] = os.path.join(builder._extract_dir, builder._extracted_folder)
 
     def configure(self, builder):
         configure_options = ["./configure"]
@@ -37,9 +41,6 @@ class Package(packages.AutotoolsPackage):
         configure_options.append("--with-debugging=0")
         configure_options.append("--download-hypre")
         configure_options.append("--download-strumpack")
-        configure_options.append("COPTFLAGS=-O3")
-        configure_options.append("CXXOPTFLAGS=-O3")
-        configure_options.append("FOPTFLAGS=-O3")
         configure_options.append("--with-scalapack=1")
         configure_options.append("--with-scalapack-dir=" + builder.env["SCALAPACK_DIR"])
         configure_options.append("--with-superlu_dist=1")
@@ -54,6 +55,9 @@ class Package(packages.AutotoolsPackage):
         configure_options.append("--with-lapack-lib=" + builder.env["LAPACK_LIBRARIES"])
         configure_options.append("--with-mumps=1")
         configure_options.append("--with-mumps-dir=" + builder.env["MUMPS_DIR"])
+        configure_options.append("COPTFLAGS=-O3")
+        configure_options.append("CXXOPTFLAGS=-O3")
+        configure_options.append("FOPTFLAGS=-O3")
         builder.run_command(configure_options)
 
     def register(self, builder):
