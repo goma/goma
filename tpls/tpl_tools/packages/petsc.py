@@ -15,10 +15,12 @@ class Package(packages.AutotoolsPackage):
         )
         self.includes = ["petsc"]
         self.libraries = ["petsc", "HYPRE", "strumpack"]
-    
+
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
-        builder.env["PETSC_DIR"] = os.path.join(builder._extract_dir, builder._extracted_folder)
+        builder.env["PETSC_DIR"] = os.path.join(
+            builder._extract_dir, builder._extracted_folder
+        )
 
     def configure(self, builder):
         configure_options = ["./configure"]

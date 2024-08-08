@@ -40,9 +40,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="""Third party library installer for the finite element code Goma"""
     )
-    parser.add_argument("--cc", help="C compiler to use, default is CC environment variable or gcc", type=pathlib.Path)
-    parser.add_argument("--cxx", help="C++ compiler to use, default is CXX environment variable or g++", type=pathlib.Path)
-    parser.add_argument("--fc", help="Fortran compiler to use, defualt is FC environment variable or gfortran", type=pathlib.Path)
+    parser.add_argument(
+        "--cc",
+        help="C compiler to use, default is CC environment variable or gcc",
+        type=pathlib.Path,
+    )
+    parser.add_argument(
+        "--cxx",
+        help="C++ compiler to use, default is CXX environment variable or g++",
+        type=pathlib.Path,
+    )
+    parser.add_argument(
+        "--fc",
+        help="Fortran compiler to use, defualt is FC environment variable or gfortran",
+        type=pathlib.Path,
+    )
     parser.add_argument(
         "--download-dir", help="Download location of tarballs", type=pathlib.Path
     )
@@ -99,7 +111,9 @@ if __name__ == "__main__":
     if args.fc:
         if FC:
             logger.log(
-                "FC {} is an environment variable, overriding with --fc={}".format(FC, args.fc)
+                "FC {} is an environment variable, overriding with --fc={}".format(
+                    FC, args.fc
+                )
             )
         FC = str(args.fc)
 
@@ -108,7 +122,7 @@ if __name__ == "__main__":
     else:
         print("C compiler not set, defaulting to gcc, set with --cc")
         tpl_registry.set_environment_variable("CC", "gcc")
-        
+
     if CXX:
         tpl_registry.set_environment_variable("CXX", CXX)
     else:
