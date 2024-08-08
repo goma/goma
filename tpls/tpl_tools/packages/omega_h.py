@@ -6,10 +6,10 @@ class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "omega-h"
         self.version = "9.34.13"
-        self.sha256 = "a8c85314acdc30e4680d97191674d3ab6f15ee3a59cbfe169c3bf541aa9cf9d8"
+        self.sha256 = "2eadfd6d634abc0b50396a82fd446f8f0b586ba6e64788c47827162c2aadec02"
         self.filename = "omega-h-" + self.version + ".tar.gz"
         self.url = (
-            "https://github.com/sandialabs/omega_h/releases/tag/v"
+            "https://github.com/sandialabs/omega_h/archive/refs/tags/v"
             + self.version
             + ".tar.gz"
         )
