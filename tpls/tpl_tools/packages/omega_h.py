@@ -4,11 +4,11 @@ import os
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = 'omega-h'
-        self.version = "scorec-v10.8.4"
+        self.version = "9.34.13"
         self.sha256 = "a8c85314acdc30e4680d97191674d3ab6f15ee3a59cbfe169c3bf541aa9cf9d8"
         self.filename = "omega-h-" + self.version + ".tar.gz"
         self.url = (
-            "https://github.com/SCOREC/omega_h/archive/refs/tags/"
+            "https://github.com/sandialabs/omega_h/releases/tag/v"
             + self.version
             + ".tar.gz"
         )

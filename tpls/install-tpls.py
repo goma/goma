@@ -26,6 +26,7 @@ packages = [
     "trilinos",
     "petsc",
     "omega_h",
+    "sparse",
 ]
 
 
