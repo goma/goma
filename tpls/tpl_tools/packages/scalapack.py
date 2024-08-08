@@ -1,5 +1,6 @@
 from tpl_tools.packages import packages
 
+
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "scalapack"
@@ -8,8 +9,8 @@ class Package(packages.CMakePackage):
         self.filename = "scalapack-" + self.version + ".tar.gz"
         self.url = (
             "https://github.com/Reference-ScaLAPACK/scalapack/archive/"
-            + self.version +
-            ".tar.gz"
+            + self.version
+            + ".tar.gz"
         )
         self.libraries = ["scalapack"]
 

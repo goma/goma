@@ -1,9 +1,10 @@
 from tpl_tools.packages import packages
 import os
 
+
 class Package(packages.AutotoolsPackage):
     def __init__(self):
-        self.name = 'netcdf'
+        self.name = "netcdf"
         self.version = "4.9.0"
         self.sha256 = "4c956022b79c08e5e14eee8df51b13c28e6121c2b7e7faadc21b375949400b49"
         self.filename = "netcdf-c-" + self.version + ".tar.gz"
@@ -19,9 +20,9 @@ class Package(packages.AutotoolsPackage):
         self.includes = ["netcdf.h"]
 
     def setDependencies(self, builder):
-        builder.set_dependency('packages.openmpi')
-        builder.set_dependency('packages.hdf5')
-        builder.set_dependency('packages.pnetcdf')
+        builder.set_dependency("packages.openmpi")
+        builder.set_dependency("packages.hdf5")
+        builder.set_dependency("packages.pnetcdf")
         return
 
     def set_environment(self, builder):
@@ -33,8 +34,8 @@ class Package(packages.AutotoolsPackage):
         builder.env["CFLAGS"] += " -I" + builder.env["PNETCDF_DIR"] + "/include"
         builder.env["CPPFLAGS"] = "-I" + builder.env["HDF5_DIR"] + "/include"
         builder.env["CPPFLAGS"] += " -I" + builder.env["PNETCDF_DIR"] + "/include"
-        builder.env["LDFLAGS"] ="-L" + builder.env["HDF5_DIR"] + "/lib" 
-        builder.env["LDFLAGS"] +=" -L" + builder.env["PNETCDF_DIR"] + "/lib" 
+        builder.env["LDFLAGS"] = "-L" + builder.env["HDF5_DIR"] + "/lib"
+        builder.env["LDFLAGS"] += " -L" + builder.env["PNETCDF_DIR"] + "/lib"
 
     def configure_options(self, builder):
         if builder.build_shared:
@@ -49,4 +50,6 @@ class Package(packages.AutotoolsPackage):
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("NETCDF_DIR", builder.install_dir())
         registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
-        registry.append_environment_variable("PATH", os.path.join(builder.install_dir(), "bin"))
+        registry.append_environment_variable(
+            "PATH", os.path.join(builder.install_dir(), "bin")
+        )

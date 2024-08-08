@@ -7,7 +7,7 @@ class Config(object):
 
     def set_environment_variable(self, variable, value):
         self.environment[variable] = value
-    
+
     def append_environment_variable(self, variable, value):
         if variable in self.environment.keys():
             if type(self.environment[variable]) != list:
@@ -16,7 +16,7 @@ class Config(object):
             self.environment[variable].append(value)
         else:
             self.environment[variable] = value
-    
+
     def write_config(self, file, shell="bash"):
         with open(file, "w") as f:
             if shell == "bash":
@@ -46,7 +46,6 @@ class Config(object):
                         f.write("{}".format(self.environment[k]))
                         f.write("\n")
 
-                    
 
 class Registry(object):
     def __init__(self):

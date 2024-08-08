@@ -1,5 +1,6 @@
 from tpl_tools.packages import packages
 
+
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "suitesparse"
@@ -21,7 +22,6 @@ class Package(packages.CMakePackage):
         builder.set_dependency("packages.parmetis")
         return
 
-
     def configure_options(self, builder):
         if builder.build_shared:
             builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
@@ -29,8 +29,9 @@ class Package(packages.CMakePackage):
             builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
         builder.add_option("-D=BLAS_LIBRARIES=" + builder.env["BLAS_LIBRARIES"])
         builder.add_option("-D=LAPACK_LIBRARIES=" + builder.env["LAPACK_LIBRARIES"])
-        builder.add_option('-D=SUITESPARSE_ENABLE_PROJECTS=suitesparse_config;amd;camd;ccolamd;colamd;cholmod;umfpack')
-
+        builder.add_option(
+            "-D=SUITESPARSE_ENABLE_PROJECTS=suitesparse_config;amd;camd;ccolamd;colamd;cholmod;umfpack"
+        )
 
     def register(self, builder):
         registry = builder._registry

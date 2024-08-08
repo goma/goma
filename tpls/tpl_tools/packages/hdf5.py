@@ -1,9 +1,10 @@
 from tpl_tools.packages import packages
 import os
 
+
 class Package(packages.AutotoolsPackage):
     def __init__(self):
-        self.name = 'hdf5'
+        self.name = "hdf5"
         self.version = "1.12.2"
         self.sha256 = "1a88bbe36213a2cea0c8397201a459643e7155c9dc91e062675b3fb07ee38afe"
         self.filename = "hdf5-" + self.version + ".tar.bz2"
@@ -17,8 +18,8 @@ class Package(packages.AutotoolsPackage):
         self.libraries = ["hdf5"]
 
     def setDependencies(self, builder):
-        builder.set_dependency('packages.openmpi')
-    
+        builder.set_dependency("packages.openmpi")
+
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
         builder.env["CC"] = builder._registry.get_executable("mpicc")
@@ -36,5 +37,6 @@ class Package(packages.AutotoolsPackage):
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("HDF5_DIR", builder.install_dir())
         registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
-        registry.append_environment_variable("PATH", os.path.join(builder.install_dir(), 'bin'))
-    
+        registry.append_environment_variable(
+            "PATH", os.path.join(builder.install_dir(), "bin")
+        )

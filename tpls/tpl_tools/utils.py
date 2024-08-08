@@ -79,6 +79,7 @@ class PrintLogger(object):
     def log(self, *args):
         print(*args)
 
+
 def check_for_x11(extract_dir, cc):
     comp = "cc"
     if cc:
@@ -90,8 +91,3 @@ def check_for_x11(extract_dir, cc):
     result.wait()
     os.remove(os.path.join(extract_dir, "x11test.c"))
     return result.returncode == 0
-
-
-
-
-

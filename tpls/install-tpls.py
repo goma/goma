@@ -115,7 +115,14 @@ if __name__ == "__main__":
             package_dir = getattr(args, pc.name + "_dir")
 
             build = Builder(
-                pc, jobs, download_dir, extract_dir, package_dir, logger, tpl_registry, args.build_shared
+                pc,
+                jobs,
+                download_dir,
+                extract_dir,
+                package_dir,
+                logger,
+                tpl_registry,
+                args.build_shared,
             )
             if build.check(True):
                 build.logger.log("Package {} found at {}".format(pc.name, package_dir))
@@ -124,7 +131,14 @@ if __name__ == "__main__":
             build.register()
         else:
             build = Builder(
-                pc, jobs, download_dir, extract_dir, install_dir, logger, tpl_registry, args.build_shared
+                pc,
+                jobs,
+                download_dir,
+                extract_dir,
+                install_dir,
+                logger,
+                tpl_registry,
+                args.build_shared,
             )
 
             if build.check():
@@ -140,8 +154,18 @@ if __name__ == "__main__":
             if not build.check():
                 break
             build.register()
-    tpl_registry.config.write_config(os.path.join(install_dir,"config.sh"))
-    logger.log("Bash config written to {}, source with bash".format(os.path.join(install_dir, "config.sh")))
+    tpl_registry.config.write_config(os.path.join(install_dir, "config.sh"))
+    logger.log(
+        "Bash config written to {}, source with bash".format(
+            os.path.join(install_dir, "config.sh")
+        )
+    )
 
-    tpl_registry.config.write_config(os.path.join(install_dir,"config.fish"), shell="fish")
-    logger.log("Fish config written to {}, source with fish".format(os.path.join(install_dir, "config.fish")))
+    tpl_registry.config.write_config(
+        os.path.join(install_dir, "config.fish"), shell="fish"
+    )
+    logger.log(
+        "Fish config written to {}, source with fish".format(
+            os.path.join(install_dir, "config.fish")
+        )
+    )

@@ -3,14 +3,12 @@ from tpl_tools.packages import packages
 
 class Package(packages.CMakePackage):
     def __init__(self):
-        self.name = 'metis'
+        self.name = "metis"
         self.version = "5.1.0-p12"
         self.sha256 = "2f16abe87394d4fd1430d66a8995076c352af40f7a4d1c5300b3b1cc9d545663"
         self.filename = "petsc-pkg-metis-" + self.version + ".tar.gz"
         self.url = (
-            "https://bitbucket.org/petsc/pkg-metis/get/v"
-            + self.version +
-            ".tar.gz"
+            "https://bitbucket.org/petsc/pkg-metis/get/v" + self.version + ".tar.gz"
         )
         self.libraries = ["metis"]
         self.includes = ["metis.h"]

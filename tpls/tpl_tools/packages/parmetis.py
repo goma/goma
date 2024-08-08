@@ -3,14 +3,12 @@ from tpl_tools.packages import packages
 
 class Package(packages.CMakePackage):
     def __init__(self):
-        self.name = 'parmetis'
+        self.name = "parmetis"
         self.version = "4.0.3-p8"
         self.sha256 = "3f45bbf43c3a8447eb6a2eedfb713279c9dda50a3498b45914e5d5e584d31df9"
         self.filename = "petsc-pkg-parmetis-" + self.version + ".tar.gz"
         self.url = (
-            "https://bitbucket.org/petsc/pkg-parmetis/get/v"
-            + self.version +
-            ".tar.gz"
+            "https://bitbucket.org/petsc/pkg-parmetis/get/v" + self.version + ".tar.gz"
         )
         self.libraries = ["parmetis"]
         self.includes = ["parmetis.h"]
@@ -21,7 +19,6 @@ class Package(packages.CMakePackage):
         builder.env["CXX"] = builder._registry.get_executable("mpicxx")
         builder.env["FC"] = builder._registry.get_executable("mpifort")
 
-
     def configure_options(self, builder):
         if builder.build_shared:
             builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
@@ -30,7 +27,9 @@ class Package(packages.CMakePackage):
             builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
             builder.add_option("-D=SHARED:BOOL=OFF")
         builder.add_option("-D=GKLIB_PATH=./headers")
-        builder.add_option("-D=METIS_PATH=" + builder._registry.environment["METIS_DIR"])
+        builder.add_option(
+            "-D=METIS_PATH=" + builder._registry.environment["METIS_DIR"]
+        )
 
     def register(self, builder):
         registry = builder._registry

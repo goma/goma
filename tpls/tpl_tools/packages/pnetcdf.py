@@ -1,8 +1,9 @@
 from tpl_tools.packages import packages
 
+
 class Package(packages.AutotoolsPackage):
     def __init__(self):
-        self.name = 'pnetcdf'
+        self.name = "pnetcdf"
         self.version = "1.13.0"
         self.sha256 = "aba0f1c77a51990ba359d0f6388569ff77e530ee574e40592a1e206ed9b2c491"
         self.filename = "pnetcdf-" + self.version + ".tar.gz"
@@ -14,7 +15,7 @@ class Package(packages.AutotoolsPackage):
         self.libraries = ["pnetcdf"]
 
     def setDependencies(self, builder):
-        builder.set_dependency('packages.openmpi')
+        builder.set_dependency("packages.openmpi")
         return
 
     def set_environment(self, builder):

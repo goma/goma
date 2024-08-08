@@ -2,17 +2,14 @@ from tpl_tools.packages import packages
 import os
 import shutil
 
+
 class Package(packages.GenericPackage):
     def __init__(self):
         self.name = "mumps"
         self.version = "5.7.3"
         self.sha256 = "84a47f7c4231b9efdf4d4f631a2cae2bdd9adeaabc088261d15af040143ed112"
         self.filename = "mumps-" + self.version + ".tar.gz"
-        self.url = (
-            "https://mumps-solver.org/MUMPS_"
-            + self.version +
-            ".tar.gz"
-        )
+        self.url = "https://mumps-solver.org/MUMPS_" + self.version + ".tar.gz"
         self.libraries = ["dmumps", "zmumps"]
 
     def set_environment(self, builder):
@@ -22,13 +19,24 @@ class Package(packages.GenericPackage):
         builder.env["FC"] = builder._registry.get_executable("mpifort")
 
     def configure_options(self, builder):
-        with open(os.path.join(builder._extract_dir,builder._extracted_folder, "Makefile.inc"), "w") as f:
+        with open(
+            os.path.join(
+                builder._extract_dir, builder._extracted_folder, "Makefile.inc"
+            ),
+            "w",
+        ) as f:
             f.write("LPORDDIR = $(topdir)/PORD/lib/\n")
             f.write("IPORD    = -I$(topdir)/PORD/include/\n")
             f.write("LPORD    = -L$(LPORDDIR) -lpord$(PLAT)\n")
             f.write("LMETISDIR = " + builder.env["METIS_DIR"] + "/lib\n")
             f.write("LPARMETISDIR = " + builder.env["PARMETIS_DIR"] + "/lib\n")
-            f.write("IMETIS = -I" + builder.env["METIS_DIR"] + "/include -I" + builder.env["PARMETIS_DIR"] + "/include \n")
+            f.write(
+                "IMETIS = -I"
+                + builder.env["METIS_DIR"]
+                + "/include -I"
+                + builder.env["PARMETIS_DIR"]
+                + "/include \n"
+            )
             f.write("LMETIS    = -L$(LPARMETISDIR) -lparmetis -L$(LMETISDIR) -lmetis\n")
             f.write("ORDERINGSF  = -Dpord -Dmetis -Dparmetis\n")
             f.write("ORDERINGSC  = $(ORDERINGSF)\n")
@@ -37,7 +45,9 @@ class Package(packages.GenericPackage):
             f.write("IORDERINGSC = $(IMETIS) $(IPORD)\n")
             f.write("LIBEXT_SHARED  = .so\n")
             f.write("SONAME = -soname\n")
-            f.write("SHARED_OPT = -shared -Wl,-rpath," + builder.install_dir() + "/lib\n")
+            f.write(
+                "SHARED_OPT = -shared -Wl,-rpath," + builder.install_dir() + "/lib\n"
+            )
             f.write("FPIC_OPT = -fPIC\n")
             f.write("LIBEXT  = .a\n")
             f.write("OUTC    = -o\n")
@@ -51,7 +61,13 @@ class Package(packages.GenericPackage):
             f.write("AR      = ar vr \n")
             f.write("RANLIB  = ranlib \n")
             f.write("LAPACK = " + builder.env["LAPACK_LIBRARIES"] + "\n")
-            f.write("SCALAP  = -L" + builder.env["SCALAPACK_DIR"] + "/lib -lscalapack " + builder.env["LAPACK_LIBRARIES"] + "\n")
+            f.write(
+                "SCALAP  = -L"
+                + builder.env["SCALAPACK_DIR"]
+                + "/lib -lscalapack "
+                + builder.env["LAPACK_LIBRARIES"]
+                + "\n"
+            )
             f.write("BLAS = " + builder.env["BLAS_LIBRARIES"] + "\n")
             f.write("LIBOTHERS = -lpthread\n")
             f.write("CDEFS = -DAdd_\n")
@@ -65,20 +81,23 @@ class Package(packages.GenericPackage):
             f.write("LIBS = $(LIBPAR)\n")
             f.write("LIBSEQNEEDED =\n")
 
-
     def build(self, builder):
         if builder.build_shared:
             builder.run_command(["make", "allshared"], jobs_flag="-j", parallel=True)
         else:
             builder.run_command(["make", "all"], jobs_flag="-j", parallel=True)
-    
+
     def install(self, builder):
         if not os.path.exists(builder.install_dir()):
             os.makedirs(builder.install_dir())
-        build_dir = os.path.join(builder._extract_dir,builder._extracted_folder)
-        shutil.copytree(os.path.join(build_dir, "include"), os.path.join(builder.install_dir(), "include"))
-        shutil.copytree(os.path.join(build_dir, "lib"), os.path.join(builder.install_dir(), "lib"))
-        
+        build_dir = os.path.join(builder._extract_dir, builder._extracted_folder)
+        shutil.copytree(
+            os.path.join(build_dir, "include"),
+            os.path.join(builder.install_dir(), "include"),
+        )
+        shutil.copytree(
+            os.path.join(build_dir, "lib"), os.path.join(builder.install_dir(), "lib")
+        )
 
     def register(self, builder):
         registry = builder._registry

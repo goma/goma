@@ -2,24 +2,30 @@ from tpl_tools.packages import packages
 import os
 import shutil
 
+
 class Package(packages.GenericPackage):
     def __init__(self):
         self.name = "sparse"
         self.version = "1.4b"
-        self.sha256="63e6646244fd8f4d89f7f70fbf4cfd46b7688d21b22840a0ce57d294a7496d28"
+        self.sha256 = "63e6646244fd8f4d89f7f70fbf4cfd46b7688d21b22840a0ce57d294a7496d28"
         self.filename = "sparse-" + self.version + ".tar.gz"
         self.url = (
             "http://downloads.sourceforge.net/project/sparse/sparse/sparse"
-            + self.version +
-            "/sparse" 
-            + self.version +
-            ".tar.gz"
+            + self.version
+            + "/sparse"
+            + self.version
+            + ".tar.gz"
         )
         self.includes = ["spMatrix.h"]
         self.libraries = ["sparse"]
 
     def configure_options(self, builder):
-        with open(os.path.join(builder._extract_dir,builder._extracted_folder, "src", "Makefile"), "w") as f:
+        with open(
+            os.path.join(
+                builder._extract_dir, builder._extracted_folder, "src", "Makefile"
+            ),
+            "w",
+        ) as f:
             if builder.build_shared:
                 f.write("CFLAGS = -O2 -fPIC\n")
             else:
@@ -29,9 +35,13 @@ class Package(packages.GenericPackage):
             f.write("CC = " + builder.env["CC"] + "\n")
             f.write("\n")
             f.write("HFILES = spConfig.h spDefs.h spMatrix.h\n")
-            f.write("CFILES = spAllocate.c spBuild.c spFactor.c spOutput.c spSolve.c spUtils.c \\n")
+            f.write(
+                "CFILES = spAllocate.c spBuild.c spFactor.c spOutput.c spSolve.c spUtils.c \\n"
+            )
             f.write("         spFortran.c\n")
-            f.write("OFILES = spAllocate.o spBuild.o spFactor.o spOutput.o spSolve.o spUtils.o \\n")
+            f.write(
+                "OFILES = spAllocate.o spBuild.o spFactor.o spOutput.o spSolve.o spUtils.o \\n"
+            )
             f.write("         spFortran.o\n")
             if builder.build_shared:
                 f.write("LIBRARY = ../lib/libsparse.so\n")
@@ -44,7 +54,9 @@ class Package(packages.GenericPackage):
             f.write("SOURCE = $(HFILES) $(CFILES)\n")
             f.write("\n")
             f.write("$(DESTINATION)  : $(LIBRARY) $(TESTO)\n")
-            f.write("        $(CC) $(CFLAGS) -o $(DESTINATION) $(TESTO) $(LIBRARY) -lm\n")
+            f.write(
+                "        $(CC) $(CFLAGS) -o $(DESTINATION) $(TESTO) $(LIBRARY) -lm\n"
+            )
             f.write("\n")
             if builder.build_shared:
                 f.write("$(LIBRARY)      : $(OFILES)\n")
@@ -55,17 +67,20 @@ class Package(packages.GenericPackage):
                 f.write("        ranlib $(LIBRARY)\n")
             f.write("\n")
 
-
     def build(self, builder):
         builder.run_command(["make"])
-    
+
     def install(self, builder):
         if not os.path.exists(builder.install_dir()):
             os.makedirs(builder.install_dir())
-        build_dir = os.path.join(builder._extract_dir,builder._extracted_folder)
-        shutil.copytree(os.path.join(build_dir, "include"), os.path.join(builder.install_dir(), "include"))
-        shutil.copytree(os.path.join(build_dir, "lib"), os.path.join(builder.install_dir(), "lib"))
-        
+        build_dir = os.path.join(builder._extract_dir, builder._extracted_folder)
+        shutil.copytree(
+            os.path.join(build_dir, "include"),
+            os.path.join(builder.install_dir(), "include"),
+        )
+        shutil.copytree(
+            os.path.join(build_dir, "lib"), os.path.join(builder.install_dir(), "lib")
+        )
 
     def register(self, builder):
         registry = builder._registry

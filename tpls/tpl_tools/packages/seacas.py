@@ -5,7 +5,7 @@ import os
 
 class Package(packages.CMakePackage):
     def __init__(self):
-        self.name = 'seacas'
+        self.name = "seacas"
         self.version = "2024-07-10"
         self.sha256 = "b2ba6ca80359fed8ed2a8a210052582c7a3b7b837253bd1e9be941047dcab3ff"
         self.filename = "seacas-" + self.version + ".tar.gz"
@@ -14,16 +14,16 @@ class Package(packages.CMakePackage):
             + self.version
             + ".tar.gz"
         )
-        self.executables = ["algebra","aprepro", "mapvar", "explore"]
+        self.executables = ["algebra", "aprepro", "mapvar", "explore"]
         self.libraries = ["exodus", "aprepro_lib"]
         self.includes = ["exodusII.h", "aprepro.h"]
 
     def setDependencies(self, builder):
-        builder.set_dependency('packages.openmpi')
-        builder.set_dependency('packages.hdf5')
-        builder.set_dependency('packages.pnetcdf')
-        builder.set_dependency('packages.netcdf')
-        builder.set_dependency('packages.fmt')
+        builder.set_dependency("packages.openmpi")
+        builder.set_dependency("packages.hdf5")
+        builder.set_dependency("packages.pnetcdf")
+        builder.set_dependency("packages.netcdf")
+        builder.set_dependency("packages.fmt")
         return
 
     def set_environment(self, builder):
@@ -57,7 +57,7 @@ class Package(packages.CMakePackage):
         builder.add_option("-DHDF5_DIR:PATH=" + builder.env["HDF5_DIR"])
         builder.add_option("-DTPL_ENABLE_Matio=OFF")
         builder.add_option("-DSeacas_ENABLE_ALL_PACKAGES:BOOL=ON")
-        builder.add_option("-DSeacas_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON") 
+        builder.add_option("-DSeacas_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON")
         builder.add_option("-DSeacas_ENABLE_SECONDARY_TESTED_CODE:BOOL=ON")
 
     def register(self, builder):
@@ -66,6 +66,10 @@ class Package(packages.CMakePackage):
         registry.set_environment_variable("ACCESS", builder.install_dir())
         registry.set_environment_variable("SEACAS_DIR", builder.install_dir())
         registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
-        registry.append_environment_variable("PATH", os.path.join(builder.install_dir(), 'bin'))
+        registry.append_environment_variable(
+            "PATH", os.path.join(builder.install_dir(), "bin")
+        )
         if builder.build_shared:
-            registry.append_environment_variable("PYTHONPATH", os.path.join(builder.install_dir(), 'lib'))
+            registry.append_environment_variable(
+                "PYTHONPATH", os.path.join(builder.install_dir(), "lib")
+            )

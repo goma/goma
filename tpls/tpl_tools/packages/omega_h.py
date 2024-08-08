@@ -1,9 +1,10 @@
 from tpl_tools.packages import packages
 import os
 
+
 class Package(packages.CMakePackage):
     def __init__(self):
-        self.name = 'omega-h'
+        self.name = "omega-h"
         self.version = "9.34.13"
         self.sha256 = "a8c85314acdc30e4680d97191674d3ab6f15ee3a59cbfe169c3bf541aa9cf9d8"
         self.filename = "omega-h-" + self.version + ".tar.gz"
@@ -17,7 +18,7 @@ class Package(packages.CMakePackage):
         self.includes = ["Omega_h_adapt.hpp", "Omega_h_mesh.hpp"]
 
     def setDependencies(self, builder):
-        builder.set_dependency('packages.openmpi')
+        builder.set_dependency("packages.openmpi")
         return
 
     def set_environment(self, builder):

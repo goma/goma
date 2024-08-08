@@ -3,14 +3,14 @@ from tpl_tools.packages import packages
 
 class Package(packages.CMakePackage):
     def __init__(self):
-        self.name = 'arpack-ng'
+        self.name = "arpack-ng"
         self.version = "3.9.1"
         self.sha256 = "f6641deb07fa69165b7815de9008af3ea47eb39b2bb97521fbf74c97aba6e844"
         self.filename = "arpack-ng-" + self.version + ".tar.gz"
         self.url = (
             "https://github.com/opencollab/arpack-ng/archive/refs/tags/"
-            + self.version +
-            ".tar.gz"
+            + self.version
+            + ".tar.gz"
         )
         self.libraries = ["arpack", "parpack"]
 

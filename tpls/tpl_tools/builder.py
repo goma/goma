@@ -14,9 +14,11 @@ def print_and_log(line, file):
     sys.stdout.write(line)
     file.write(line)
 
+
 def print_and_log_err(line, file):
     sys.stderr.write(line)
     file.write(line)
+
 
 class Builder(object):
 
@@ -107,7 +109,9 @@ class Builder(object):
             self._install_dir, self._package.name + "-" + self._package.version
         )
 
-    def run_command(self, command_list, jobs_flag=None, parallel=False, env=None, command_id=None):
+    def run_command(
+        self, command_list, jobs_flag=None, parallel=False, env=None, command_id=None
+    ):
         command = command_list
         if parallel and jobs_flag:
             if jobs_flag[-1] == "=":
@@ -139,8 +143,6 @@ class Builder(object):
                     sys.stderr.write(line)
             raise RuntimeError("Command resulted in a non-zero error code")
 
-
-
     def check(self, skip_named_install=False):
         self.logger.log("Checking install of {}".format(self._package.name))
         install_dir = self.install_dir()
@@ -170,7 +172,9 @@ class Builder(object):
                         if os.path.exists(os.path.join(checkpath, p + lib + extension)):
                             found = True
                 if not found:
-                    self.logger.log("Failed to find library: {}".format("lib" + lib + extension))
+                    self.logger.log(
+                        "Failed to find library: {}".format("lib" + lib + extension)
+                    )
                     return False
                 self.logger.log("Found library: {}".format(lib))
         if hasattr(self._package, "includes"):

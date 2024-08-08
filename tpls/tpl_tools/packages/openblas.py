@@ -1,13 +1,14 @@
 from tpl_tools.packages import packages
 import os
 
+
 class Package(packages.GenericPackage):
     def __init__(self):
         self.name = "openblas"
         self.version = "0.3.27"
         self.sha256 = "aa2d68b1564fe2b13bc292672608e9cdeeeb6dc34995512e65c3b10f4599e897"
         self.filename = "OpenBLAS" + self.version + ".tar.gz"
-        self.compression = 'gz'
+        self.compression = "gz"
         self.url = (
             "https://github.com/OpenMathLib/OpenBLAS/releases/download/v"
             + self.version
@@ -15,8 +16,8 @@ class Package(packages.GenericPackage):
             + self.version
             + ".tar.gz"
         )
-        self.libraries = ['openblas']
-    
+        self.libraries = ["openblas"]
+
     def build(self, builder):
         self.build_command = ["make"]
         self.build_command.append("USE_THREAD=0")
@@ -40,6 +41,12 @@ class Package(packages.GenericPackage):
         if builder.build_shared:
             ext = ".so"
         registry.set_environment_variable("OPENBLAS_DIR", builder.install_dir())
-        registry.set_environment_variable("BLAS_LIBRARIES", os.path.join(builder.install_dir(), "lib/libopenblas" + ext))
-        registry.set_environment_variable("LAPACK_LIBRARIES", os.path.join(builder.install_dir(), "lib/libopenblas" + ext))
+        registry.set_environment_variable(
+            "BLAS_LIBRARIES",
+            os.path.join(builder.install_dir(), "lib/libopenblas" + ext),
+        )
+        registry.set_environment_variable(
+            "LAPACK_LIBRARIES",
+            os.path.join(builder.install_dir(), "lib/libopenblas" + ext),
+        )
         registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())

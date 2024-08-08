@@ -3,7 +3,7 @@ from tpl_tools.packages import packages
 
 class Package(packages.CMakePackage):
     def __init__(self):
-        self.name = 'fmt'
+        self.name = "fmt"
         self.version = "10.2.1"
         self.sha256 = "1250e4cc58bf06ee631567523f48848dc4596133e163f02615c97f78bab6c811"
         self.filename = "fmt-" + self.version + ".tar.gz"
@@ -16,11 +16,11 @@ class Package(packages.CMakePackage):
         self.libraries = ["fmt"]
 
     def setDependencies(self, builder):
-        builder.set_dependency('packages.openmpi')
-        builder.set_dependency('packages.hdf5')
-        builder.set_dependency('packages.pnetcdf')
-        builder.set_dependency('packages.netcdf')
-        builder.set_dependency('packages.fmt')
+        builder.set_dependency("packages.openmpi")
+        builder.set_dependency("packages.hdf5")
+        builder.set_dependency("packages.pnetcdf")
+        builder.set_dependency("packages.netcdf")
+        builder.set_dependency("packages.fmt")
         return
 
     def configure_options(self, builder):
