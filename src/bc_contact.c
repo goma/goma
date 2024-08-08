@@ -32,6 +32,7 @@
 
 #include "ac_stability.h"
 #include "ac_stability_util.h"
+#include "ad_turbulence.h"
 #include "bc_colloc.h"
 #include "bc_contact.h"
 #include "dpi.h"
@@ -2484,6 +2485,7 @@ void setup_shop_at_point(int ielem, double *xi, const Exo_DB *exo)
   err = load_fv_grads();
   GOMA_EH(err, "load_fv_grads");
 
+  fill_ad_field_variables();
   /*
    *  Just as in the main element assembly, we ensure that the current element
    *  actually has mesh equations associated with it before calculation

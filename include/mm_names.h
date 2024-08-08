@@ -477,6 +477,26 @@ struct BC_descriptions BC_Desc[] = {
      {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
      SINGLE_PHASE,
      DVI_SINGLE_PHASE_DB},
+    {"SA_WALL_FUNC",
+     "SA_WALL_FUNC_BC",
+     COLLOCATE_SURF,
+     SA_WALL_FUNC_BC,
+     R_EDDY_NU,
+     SCALAR,
+     NO_ROT,
+     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+    {"OMEGA_WALL_FUNC",
+     "OMEGA_WALL_FUNC_BC",
+     COLLOCATE_SURF,
+     OMEGA_WALL_FUNC_BC,
+     R_TURB_OMEGA,
+     SCALAR,
+     NO_ROT,
+     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
     {"P",
      "P_BC",
      DIRICHLET,
@@ -7228,6 +7248,36 @@ struct BC_descriptions BC_Desc[] = {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1},
      SINGLE_PHASE,
      DVI_SINGLE_PHASE_DB},
+    {"TURB_K",
+     "TURB_K_BC",
+     DIRICHLET,
+     TURB_K_BC,
+     R_TURB_K,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+    {"TURB_OMEGA",
+     "TURB_OMEGA_BC",
+     DIRICHLET,
+     TURB_OMEGA_BC,
+     R_TURB_OMEGA,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
 
 };
 
@@ -7501,6 +7551,8 @@ struct Equation_Names EQ_Name[] = {
     {"R_VSTAR", "VSTAR", R_VSTAR},
     {"R_WSTAR", "WSTAR", R_WSTAR},
     {"R_EDDY_NU", "EDDY_NU", R_EDDY_NU},
+    {"R_TURB_K", "TURB_K", R_TURB_K},
+    {"R_TURB_OMEGA", "TURB_OMEGA", R_TURB_OMEGA},
 
     /*
      *  Note -> these entries must remain until we get rid
@@ -7800,10 +7852,12 @@ struct Equation_Names Var_Name[] = {
     {"USTAR", "USX", USTAR},
     {"VSTAR", "USY", VSTAR},
     {"WSTAR", "USZ", WSTAR},
-    {"EDDY_NU", "EDDY_NU", EDDY_NU}, // 214
+    {"EDDY_NU", "EDDY_NU", EDDY_NU},          // 214
+    {"TURB_K", "TURB_K", TURB_K},             // 215
+    {"TURB_OMEGA", "TURB_OMEGA", TURB_OMEGA}, // 215
 
     {"MESH_POSITION1", "X", MESH_POSITION1},
-    {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 216 */
+    {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 218 */
     {"MESH_POSITION3", "Z", MESH_POSITION3},
 
     {"VEL_NORM", "VN", VEL_NORM},
@@ -7817,14 +7871,14 @@ struct Equation_Names Var_Name[] = {
 
     {"D_X1_DT", "XDOT", D_X1_DT},
     {"D_X2_DT", "YDOT", D_X2_DT},
-    {"D_X3_DT", "ZDOT", D_X3_DT}, /* 227 */
+    {"D_X3_DT", "ZDOT", D_X3_DT}, /* 229 */
     {"D_S_DT", "SDOT", D_S_DT},
 
     {"D_P_DT", "PDOT", D_P_DT},
 
     {"SOLID_POSITION1", "X_RS", SOLID_POSITION1},
     {"SOLID_POSITION2", "Y_RS", SOLID_POSITION2},
-    {"SOLID_POSITION3", "Z_RS", SOLID_POSITION3} /* 232 */
+    {"SOLID_POSITION3", "Z_RS", SOLID_POSITION3} /* 234 */
 };
 
 int Num_Var_Names = sizeof(Var_Name) / sizeof(struct Equation_Names);
@@ -8072,6 +8126,8 @@ struct Equation_Names Exo_Var_Names[] = {
     {"V Int.", "USY", VSTAR},
     {"W Int.", "USZ", WSTAR},
     {"Eddy Turbulence Viscosity.", "EDDY_NU", EDDY_NU},
+    {"Turbulent K", "TURB_K", TURB_K},
+    {"Turbulent OMEGA", "TURB_OMEGA", TURB_OMEGA},
 };
 
 int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);
@@ -8379,6 +8435,8 @@ struct Equation_Names Var_Units[] = {
     {"VSTAR", "[1]", VSTAR},
     {"WSTAR", "[1]", WSTAR},
     {"EDDY_NU", "[1]", EDDY_NU},
+    {"TURB_K", "[1]", TURB_K},
+    {"TURB_OMEGA", "[1]", TURB_OMEGA},
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);

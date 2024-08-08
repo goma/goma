@@ -21,6 +21,8 @@ typedef struct {
   dbl d_tau_dF[MDE];           /* FILL dependence. */
   dbl d_tau_dnn[MDE];          /* bond concentration dependence */
   dbl d_tau_dEDDY_NU[MDE];     /* Turbulent viscosity */
+  dbl d_tau_dturb_k[MDE];      /* Turbulent viscosity */
+  dbl d_tau_dturb_omega[MDE];  /* Turbulent viscosity */
 } momentum_tau_terms;
 
 void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn);
@@ -83,4 +85,5 @@ int calc_cont_gls /* mm_fill_terms.c                           */
      dbl, /* current time                              */
      const PG_DATA *);
 
+bool is_evss_f_model(int model);
 #endif // GOMA_MM_FILL_STABILIZATION_H

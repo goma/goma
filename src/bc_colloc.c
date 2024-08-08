@@ -28,6 +28,7 @@
 
 #include "ac_stability.h"
 #include "ac_stability_util.h"
+#include "ad_turbulence.h"
 #include "bc/rotate_coordinates.h"
 #include "bc_colloc.h"
 #include "bc_integ.h"
@@ -181,6 +182,8 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
 
       err = load_bf_mesh_derivs();
       GOMA_EH(err, "load_bf_mesh_derivs");
+
+      fill_ad_field_variables();
 
       /* calculate the shape functions and their gradients */
 
@@ -362,6 +365,19 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
                               BC_Types[bc_input_id].BC_Data_Float[1],
                               BC_Types[bc_input_id].BC_Data_Float[2], mp_2);
             } break;
+
+            case SA_WALL_FUNC_BC:
+              memset(kfunc, 0, DIM * sizeof(double));
+              ad_sa_wall_func(kfunc, d_kfunc);
+              func = kfunc[0];
+              d_func[EDDY_NU] = 1.0;
+              break;
+            case OMEGA_WALL_FUNC_BC:
+              memset(kfunc, 0, DIM * sizeof(double));
+              ad_omega_wall_func(kfunc, d_kfunc);
+              func = kfunc[0];
+              d_func[TURB_OMEGA] = 1.0;
+              break;
 
             case PLANEX_BC:
             case PLANEY_BC:
@@ -2585,6 +2601,16 @@ int load_variable(double *x_var,       /* variable value */
   case EDDY_NU:
     *x_var = fv->eddy_nu;
     var = EDDY_NU;
+    *d_x_var = 1.;
+    break;
+  case TURB_K:
+    *x_var = fv->turb_k;
+    var = TURB_K;
+    *d_x_var = 1.;
+    break;
+  case TURB_OMEGA:
+    *x_var = fv->turb_omega;
+    var = TURB_OMEGA;
     *d_x_var = 1.;
     break;
   case LIGHT_INTP:

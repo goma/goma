@@ -27,6 +27,8 @@
 
 #include "ac_stability.h"
 #include "ac_stability_util.h"
+#include "ad_momentum.h"
+#include "ad_turbulence.h"
 #include "bc/rotate.h"
 #include "bc/rotate_coordinates.h"
 #include "bc_colloc.h"
@@ -748,7 +750,7 @@ Revised:         Summer 1998, SY Tam (UNM)
     }
   }
 
-  if ((PSPG || (mp->Mwt_funcModel == SUPG)) && pde[R_PRESSURE] && pde[R_MOMENTUM1]) {
+  if ((PSPG == 1 || PSPG == 2) && pde[R_PRESSURE] && pde[R_MOMENTUM1]) {
     xi[0] = 0.0;
     xi[1] = 0.0;
     xi[2] = 0.0;
@@ -1129,6 +1131,10 @@ Revised:         Summer 1998, SY Tam (UNM)
       err = load_fv_grads();
       GOMA_EH(err, "load_fv_grads");
 
+#ifdef GOMA_ENABLE_SACADO
+      fill_ad_field_variables();
+#endif
+
       if (pd->gv[R_MESH1]) {
         err = load_fv_mesh_derivs(1);
         GOMA_EH(err, "load_fv_mesh_derivs");
@@ -1393,6 +1399,9 @@ Revised:         Summer 1998, SY Tam (UNM)
     err = load_fv_grads();
     GOMA_EH(err, "load_fv_grads");
 
+#ifdef GOMA_ENABLE_SACADO
+    fill_ad_field_variables();
+#endif
     if (pd->gv[R_MESH1]) {
       err = load_fv_mesh_derivs(1);
       GOMA_EH(err, "load_fv_mesh_derivs");
@@ -1501,6 +1510,7 @@ Revised:         Summer 1998, SY Tam (UNM)
 #endif
     } else if (vn->evssModel == SQRT_CONF) {
       err = assemble_stress_sqrt_conf(theta, delta_t, &pg_data);
+      // err = ad_assemble_stress_sqrt_conf(theta, delta_t, &pg_data);
 
       GOMA_EH(err, "assemble_stress_sqrt_conf");
       if (err)
@@ -1540,7 +1550,16 @@ Revised:         Summer 1998, SY Tam (UNM)
 #endif
     }
 
-    if (pde[R_SHEAR_RATE]) {
+    if (pde[R_SHEAR_RATE] && pd->gv[R_TURB_OMEGA]) {
+      err = ad_assemble_invariant(theta, delta_t);
+
+      GOMA_EH(err, "assemble_invariant");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_invariant");
+      if (err)
+        return -1;
+#endif
+    } else if (pde[R_SHEAR_RATE]) {
       err = assemble_invariant(theta, delta_t);
 
       GOMA_EH(err, "assemble_invariant");
@@ -2389,6 +2408,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         CHECKFINITE("assemble_momentum");
 #endif
       } else {
+        // err = ad_assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
         err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
         GOMA_EH(err, "assemble_momentum");
 #ifdef CHECK_FINITE
@@ -2409,6 +2429,11 @@ Revised:         Summer 1998, SY Tam (UNM)
 
     if (pde[R_EDDY_NU]) {
       err = assemble_spalart_allmaras(time_value, theta, delta_t, &pg_data);
+#ifdef GOMA_ENABLE_SACADO
+      // err = ad_assemble_spalart_allmaras(time_value, theta, delta_t, &pg_data);
+#else
+      err = assemble_spalart_allmaras(time_value, theta, delta_t, &pg_data);
+#endif
       GOMA_EH(err, "assemble_spalart_allmaras");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("assemble_spalart_allmaras");
@@ -2416,6 +2441,98 @@ Revised:         Summer 1998, SY Tam (UNM)
         return -1;
 #endif
     }
+    if (pde[R_TURB_K] || pde[R_TURB_OMEGA]) {
+      err = assemble_k_omega_sst_modified(time_value, theta, delta_t, &pg_data);
+      // err = ad_assemble_turb_k_omega_modified(time_value, theta, delta_t, &pg_data);
+#ifdef GOMA_ENABLE_SACADO
+      // err = ad_assemble_k_omega_sst_modified(time_value, theta, delta_t, &pg_data);
+#else
+      GOMA_EH(-1, "TURB_K requires Sacado for assembly");
+#endif
+      GOMA_EH(err, "assemble_turb_k");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_spalart_allmaras");
+      if (err)
+        return -1;
+#endif
+    }
+
+    if (pde[R_TURB_OMEGA]) {
+#ifdef GOMA_ENABLE_SACADO
+      // err = ad_assemble_turb_omega_modified(time_value, theta, delta_t, &pg_data);
+#else
+      GOMA_EH(-1, "TURB_OMEGA requires Sacado for assembly");
+#endif
+      GOMA_EH(err, "assemble_turb_omega");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_spalart_allmaras");
+      if (err)
+        return -1;
+#endif
+    }
+
+    //     if (pde[R_TURB_K] && pde[R_TURB_OMEGA]) {
+    // #ifdef GOMA_ENABLE_SACADO
+    //       err = ad_assemble_turb_k_omega_modified(time_value, theta, delta_t, &pg_data);
+    // #else
+    //       GOMA_EH(-1, "TURB_K requires Sacado for assembly");
+    // #endif
+    //     }
+    //    if (pde[R_TURB_K]) {
+    // #ifdef GOMA_ENABLE_SACADO
+    //      err = ad_assemble_turb_k(time_value, theta, delta_t, &pg_data);
+    // #else
+    //      GOMA_EH(-1, "TURB_K requires Sacado for assembly");
+    // #endif
+    //      GOMA_EH(err, "assemble_turb_k");
+    // #ifdef CHECK_FINITE
+    //      err = CHECKFINITE("assemble_spalart_allmaras");
+    //      if (err)
+    //        return -1;
+    // #endif
+    //    }
+    //
+    //    if (pde[R_TURB_OMEGA]) {
+    // #ifdef GOMA_ENABLE_SACADO
+    //      err = ad_assemble_turb_omega(time_value, theta, delta_t, &pg_data);
+    // #else
+    //      GOMA_EH(-1, "TURB_OMEGA requires Sacado for assembly");
+    // #endif
+    //      GOMA_EH(err, "assemble_turb_omega");
+    // #ifdef CHECK_FINITE
+    //      err = CHECKFINITE("assemble_spalart_allmaras");
+    //      if (err)
+    //        return -1;
+    // #endif
+    //    }
+
+    //     if (pde[R_TURB_K]) {
+    // #ifdef GOMA_ENABLE_SACADO
+    //       err = ad_assemble_turb_k(time_value, theta, delta_t, &pg_data);
+    // #else
+    //       GOMA_EH(-1, "TURB_K requires Sacado for assembly");
+    // #endif
+    //       GOMA_EH(err, "assemble_turb_k");
+    // #ifdef CHECK_FINITE
+    //       err = CHECKFINITE("assemble_spalart_allmaras");
+    //       if (err)
+    //         return -1;
+    // #endif
+    //     }
+
+    //     if (pde[R_TURB_OMEGA]) {
+    // #ifdef GOMA_ENABLE_SACADO
+    //       err = ad_assemble_turb_omega(time_value, theta, delta_t, &pg_data);
+    // #else
+    //       GOMA_EH(-1, "TURB_OMEGA requires Sacado for assembly");
+    // #endif
+    //       GOMA_EH(err, "assemble_turb_omega");
+    // #ifdef CHECK_FINITE
+    //       err = CHECKFINITE("assemble_spalart_allmaras");
+    //       if (err)
+    //         return -1;
+    // #endif
+    //     }
 
     if (pde[R_MOMENT0] || pde[R_MOMENT1] || pde[R_MOMENT2] || pde[R_MOMENT3]) {
       err = assemble_moments(time_value, theta, delta_t, &pg_data);
@@ -2486,6 +2603,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         if (neg_elem_volume)
           return -1;
       } else {
+        // err = ad_assemble_continuity(time_value, theta, delta_t, &pg_data);
         err = assemble_continuity(time_value, theta, delta_t, &pg_data);
         GOMA_EH(err, "assemble_continuity");
 #ifdef CHECK_FINITE
@@ -4087,6 +4205,10 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
       GOMA_EH(err, "load_fv_mesh_derivs");
     }
 
+#ifdef GOMA_ENABLE_SACADO
+    fill_ad_field_variables();
+#endif
+
     computeCommonMaterialProps_gp(time_value);
 
     /*
@@ -4989,8 +5111,8 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
   int Print_Zeroes = TRUE;
   lec_it++;
 
-  sprintf(lec_name, "lec_dump_%d_%d.txt", DPI_ptr->elem_index_global[ei[pg->imtrx]->ielem], ProcID);
-  sprintf(ler_name, "ler_dump_%d_%d.txt", DPI_ptr->elem_index_global[ei[pg->imtrx]->ielem], ProcID);
+  sprintf(lec_name, "lec_dump_%d.txt", ProcID);
+  sprintf(ler_name, "ler_dump_%d.txt", ProcID);
   llll = fopen(lec_name, "a");
   rrrr = fopen(ler_name, "a");
   fprintf(rrrr, "------------------------------------------------------\n");
@@ -4998,6 +5120,11 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
   fprintf(rrrr, "lec_it = %d\n", lec_it);
   fprintf(rrrr, "global element = %d\n", DPI_ptr->elem_index_global[ei[pg->imtrx]->ielem]);
   fprintf(rrrr, "\nGlobal_NN Proc_NN  Equation    idof    Proc_SolnNum     ResidValue\n");
+  fprintf(llll, "------------------------------------------------------\n");
+  fprintf(llll, "local element = %d, Proc = %d\n", ei[pg->imtrx]->ielem, ProcID);
+  fprintf(llll, "lec_it = %d\n", lec_it);
+  fprintf(llll, "global element = %d\n", DPI_ptr->elem_index_global[ei[pg->imtrx]->ielem]);
+  fprintf(llll, "\nGlobal_NN Proc_NN  Equation    idof    Proc_SolnNum     ResidValue\n");
 #endif
 
   if (ams->GomaMatrixData != NULL) {
@@ -5048,7 +5175,7 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
                   {
                     if (fabs(lec->R[LEC_R_INDEX(MAX_PROB_VAR + ke, i)]) > DBL_SMALL ||
                         Print_Zeroes) {
-                      fprintf(rrrr, "%7d %7d MF%-3d %9d -  %12d - %10.3g\n",
+                      fprintf(rrrr, "%7d %7d MF%-3d %9d -  %12d - %.10f\n",
                               DPI_ptr->node_index_global[gnn], gnn, ke, i, ie,
                               lec->R[LEC_R_INDEX(MAX_PROB_VAR + ke, i)]);
                     }
@@ -5097,7 +5224,7 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
                               {
                                 if (fabs(lec->J[LEC_J_INDEX(pe, pv, i, j)]) > DBL_SMALL ||
                                     Print_Zeroes) {
-                                  fprintf(llll, "%9d %9d %9d %9d -  %12d - %10.3g\n", pe, pv, i, j,
+                                  fprintf(llll, "%9d %9d %9d %9d -  %12d - %.10f\n", pe, pv, i, j,
                                           ja, lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                                 }
                               }
@@ -5126,8 +5253,8 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
                             {
                               if (fabs(lec->J[LEC_J_INDEX(pe, pv, i, j)]) > DBL_SMALL ||
                                   Print_Zeroes) {
-                                fprintf(llll, "%9d %9d %9d %9d -  %12d - %10.3g\n", pe, pv, i, j,
-                                        ja, lec->J[LEC_J_INDEX(pe, pv, i, j)]);
+                                fprintf(llll, "%9d %9d %9d %9d -  %12d - %.10f\n", pe, pv, i, j, ja,
+                                        lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                               }
                             }
 #endif
@@ -5157,7 +5284,7 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
                 {
                   if (fabs(lec->R[LEC_R_INDEX(pe, i)]) > DBL_SMALL || Print_Zeroes) {
 
-                    fprintf(rrrr, "%9d %9d -  %12d - %10.3g\n", pe, i, ie,
+                    fprintf(rrrr, "%9d %9d -  %12d - %.10f\n", pe, i, ie,
                             lec->R[LEC_R_INDEX(pe, i)]);
                   }
                 }
@@ -5206,8 +5333,8 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
                             {
                               if (fabs(lec->J[LEC_J_INDEX(pe, pv, i, j)]) > DBL_SMALL ||
                                   Print_Zeroes) {
-                                fprintf(llll, "%9d %9d %9d %9d -  %12d - %10.3g\n", pe, pv, i, j,
-                                        ja, lec->J[LEC_J_INDEX(pe, pv, i, j)]);
+                                fprintf(llll, "%9d %9d %9d %9d -  %12d - %.10f\n", pe, pv, i, j, ja,
+                                        lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                               }
                             }
 #endif
@@ -5244,7 +5371,7 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
                           {
                             if (fabs(lec->J[LEC_J_INDEX(pe, pv, i, j)]) > DBL_SMALL ||
                                 Print_Zeroes) {
-                              fprintf(llll, "%9d %9d %9d %9d -  %12d - %10.3g\n", pe, pv, i, j, ja,
+                              fprintf(llll, "%9d %9d %9d %9d -  %12d - %.10f\n", pe, pv, i, j, ja,
                                       lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                             }
                           }

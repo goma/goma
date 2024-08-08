@@ -1685,6 +1685,31 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
 
                 P0PRINTF("Floored %d moment values\n", global_floored);
               }
+              if (0 && (upd->ep[pg->imtrx][TURB_K] >= 0 || upd->ep[pg->imtrx][TURB_OMEGA] >= 0)) {
+                /*     Floor values to 0 */
+                int floored_values = 0;
+                for (int var = TURB_K; var <= TURB_K; var++) {
+                  for (int mn = 0; mn < upd->Num_Mat; mn++) {
+                    if (pd_glob[mn]->v[pg->imtrx][var]) {
+                      for (i = 0; i < num_total_nodes; i++) {
+                        int j = Index_Solution(i, var, 0, 0, mn, pg->imtrx);
+
+                        if (j != -1 && x[pg->imtrx][j] < 0) {
+                          pg->sub_step_solutions[pg->imtrx].x[j] = 0.0;
+                          floored_values++;
+                        }
+                      }
+                    }
+                  }
+                }
+
+                int global_floored = 0;
+                MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT, MPI_SUM,
+                              MPI_COMM_WORLD);
+
+                if (global_floored > 0)
+                  P0PRINTF("Floored %d values\n", global_floored);
+              }
 
               sub_time += pg->sub_delta_t[pg->imtrx];
               // change delta t's as this time step may have changed the
@@ -1917,37 +1942,6 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
             }
           } // sub-time loop if else
 
-          if (pd_glob[0]->v[pg->imtrx][MOMENT0] || pd_glob[0]->v[pg->imtrx][MOMENT1] ||
-              pd_glob[0]->v[pg->imtrx][MOMENT2] || pd_glob[0]->v[pg->imtrx][MOMENT3]) {
-            /*     Floor values to 0 */
-            int floored_values = 0;
-            int moment_floored[4] = {0, 0, 0, 0};
-            for (int var = MOMENT0; var <= MOMENT3; var++) {
-              for (i = 0; i < num_total_nodes; i++) {
-                if (pd_glob[0]->v[pg->imtrx][var]) {
-                  int j = Index_Solution(i, var, 0, 0, -1, pg->imtrx);
-
-                  if (j != -1 && x[pg->imtrx][j] < 0) {
-                    x[pg->imtrx][j] = 0.0;
-                    floored_values++;
-                    moment_floored[var - MOMENT0] = 1;
-                  }
-                }
-              }
-            }
-
-            int global_floored = 0;
-            MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-            for (int i = 0; i < 4; i++) {
-              if (moment_floored[i]) {
-                printf("moment %d floored", i + 1);
-              }
-            }
-
-            P0PRINTF("Floored %d moment values\n", global_floored);
-          }
-
           /*
             err = solve_linear_segregated(ams[pg->imtrx], x[pg->imtrx],
             delta_t, theta, x_old[pg->imtrx], x_older[pg->imtrx],
@@ -1972,6 +1966,97 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
             for (i = 0; matrix_nAC[pg->imtrx] > 0 && i < matrix_nAC[pg->imtrx]; i++) {
               gv[5 + invACidx[pg->imtrx][i]] = x_AC[pg->imtrx][i];
             }
+            if (pd_glob[0]->v[pg->imtrx][MOMENT0] || pd_glob[0]->v[pg->imtrx][MOMENT1] ||
+                pd_glob[0]->v[pg->imtrx][MOMENT2] || pd_glob[0]->v[pg->imtrx][MOMENT3]) {
+              /*     Floor values to 0 */
+              int floored_values = 0;
+              int moment_floored[4] = {0, 0, 0, 0};
+              for (int var = MOMENT0; var <= MOMENT3; var++) {
+                for (i = 0; i < num_total_nodes; i++) {
+                  if (pd_glob[0]->v[pg->imtrx][var]) {
+                    int j = Index_Solution(i, var, 0, 0, -1, pg->imtrx);
+
+                    if (j != -1 && x[pg->imtrx][j] < 0) {
+                      x[pg->imtrx][j] = 0.0;
+                      floored_values++;
+                      moment_floored[var - MOMENT0] = 1;
+                    }
+                  }
+                }
+              }
+
+              int global_floored = 0;
+              MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+              for (int i = 0; i < 4; i++) {
+                if (moment_floored[i]) {
+                  printf("moment %d floored", i + 1);
+                }
+              }
+
+              P0PRINTF("Floored %d moment values\n", global_floored);
+            }
+            if ((upd->ep[pg->imtrx][TURB_K] >= 0 || upd->ep[pg->imtrx][TURB_OMEGA] >= 0)) {
+              /*     Floor values to 0 */
+              int floored_values = 0;
+              for (int var = TURB_K; var <= TURB_OMEGA; var++) {
+                for (int mn = 0; mn < upd->Num_Mat; mn++) {
+                  if (pd_glob[mn]->v[pg->imtrx][var]) {
+                    for (i = 0; i < num_total_nodes; i++) {
+                      int j = Index_Solution(i, var, 0, 0, mn, pg->imtrx);
+
+                      if (var == TURB_OMEGA) {
+                        if (j != -1 && x[pg->imtrx][j] < 200) {
+                          x[pg->imtrx][j] = 200;
+                          floored_values++;
+                        }
+                      } else if (j != -1 && x[pg->imtrx][j] < 0) {
+                        x[pg->imtrx][j] = 0;
+                        floored_values++;
+                      }
+                    }
+                  }
+                }
+              }
+
+              int global_floored = 0;
+              MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+              if (global_floored > 0)
+                P0PRINTF("Floored %d values\n", global_floored);
+            }
+            // if (upd->matrix_index[SHEAR_RATE] >= 0 && upd->ep[pg->imtrx][TURB_OMEGA] >= 0) {
+            //   int shear_rate_matrix = upd->matrix_index[SHEAR_RATE];
+            //   int limited_values = 0;
+            //   for (int var = TURB_OMEGA; var <= TURB_OMEGA; var++) {
+            //     for (int mn = 0; mn < upd->Num_Mat; mn++) {
+            //       if (pd_glob[mn]->v[pg->imtrx][var]) {
+            //         for (i = 0; i < num_total_nodes; i++) {
+            //           int j_shear_rate = Index_Solution(i, SHEAR_RATE, 0, 0, mn,
+            //           shear_rate_matrix); int j = Index_Solution(i, var, 0, 0, mn, pg->imtrx);
+
+            //           if (j_shear_rate != -1 && j != -1 && x[shear_rate_matrix][j_shear_rate] >
+            //           0) {
+            //             dbl omega = x[pg->imtrx][j];
+            //             dbl shear_rate = x[shear_rate_matrix][j_shear_rate];
+            //             if (omega < (5.0 / 9.0) * shear_rate) {
+            //               limited_values++;
+            //               // P0PRINTF("Floored %d values\n", floored_values)
+            //               x[pg->imtrx][j] = (5.0 / 9.0) * shear_rate;
+            //             }
+            //           }
+            //         }
+            //       }
+            //     }
+            //   }
+
+            //   int global_limited = 0;
+            //   MPI_Allreduce(&limited_values, &global_limited, 1, MPI_INT, MPI_SUM,
+            //   MPI_COMM_WORLD);
+
+            //   if (global_limited > 0)
+            //     P0PRINTF("Limited %d values\n", global_limited);
+            // }
 
             if (nAC > 0) {
               DPRINTF(stdout, "\n------------------------------\n");
