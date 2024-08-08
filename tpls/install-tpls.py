@@ -83,31 +83,45 @@ if __name__ == "__main__":
     if args.cc:
         if CC:
             logger.log(
-                "CC {} is environment variable, overriding with --cc={}".format(
+                "CC {} is an environment variable, overriding with --cc={}".format(
                     CC, args.cc
                 )
             )
         CC = str(args.cc)
     if args.cxx:
-        CXX = str(args.cxx)
-        logger.log(
-            "CXX {} is environment variable, overriding with --cxx={}".format(
-                CXX, args.cxx
+        if CXX:
+            logger.log(
+                "CXX {} is an environment variable, overriding with --cxx={}".format(
+                    CXX, args.cxx
+                )
             )
-        )
+        CXX = str(args.cxx)
     if args.fc:
+        if FC:
+            logger.log(
+                "FC {} is an environment variable, overriding with --fc={}".format(FC, args.fc)
+            )
         FC = str(args.fc)
-        logger.log(
-            "FC {} is environment variable, overriding with --fc={}".format(FC, args.fc)
-        )
 
     if CC:
         tpl_registry.set_environment_variable("CC", CC)
+    else:
+        print("C compiler not set, defaulting to gcc, set with --cc")
+        tpl_registry.set_environment_variable("CC", "gcc")
+        
     if CXX:
         tpl_registry.set_environment_variable("CXX", CXX)
+    else:
+        print("C++ compiler not set, defaulting to g++, set with --cxx")
+        tpl_registry.set_environment_variable("CXX", "g++")
+
     if FC:
         tpl_registry.set_environment_variable("FC", FC)
         tpl_registry.set_environment_variable("F77", FC)
+    else:
+        print("Fortran compiler not set, defaulting to gfortan set with --fc")
+        tpl_registry.set_environment_variable("FC", "gfortran")
+        tpl_registry.set_environment_variable("F77", "gfortran")
 
     for p in packages:
         pm = importlib.import_module("tpl_tools." + ".".join(["packages", p]))
