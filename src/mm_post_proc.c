@@ -962,7 +962,16 @@ static int calc_standard_fields(double **post_proc_vect,
 
 #if 1
   if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
-    mu = ad_viscosity_wrap(gn);
+    if (upd->AutoDiff) {
+      mu = ad_viscosity_wrap(gn);
+    } else {
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        }
+      }
+      mu = viscosity(gn, gamma, NULL);
+    }
 
     if (pd->v[pg->imtrx][POLYMER_STRESS11]) {
       /*  shift factor  */
@@ -982,7 +991,11 @@ static int calc_standard_fields(double **post_proc_vect,
       }
       for (mode = 0; mode < vn->modes; mode++) {
         /* get polymer viscosity */
-        mup = ad_viscosity_wrap(ve[mode]->gn);
+        if (upd->AutoDiff) {
+          mup = ad_viscosity_wrap(ve[mode]->gn);
+        } else {
+          mu = viscosity(ve[mode]->gn, gamma, NULL);
+        }
         mu += at * mup;
       }
     }
@@ -3504,7 +3517,7 @@ static int calc_standard_fields(double **post_proc_vect,
               }
             }
           } // for b
-        }   // for a
+        } // for a
       }
     } // Loop over modes
   }
@@ -3549,7 +3562,7 @@ static int calc_standard_fields(double **post_proc_vect,
               }
             }
           } // for b
-        }   // for a
+        } // for a
       }
     } // Loop over modes
   }
@@ -3867,7 +3880,13 @@ void post_process_average(double x[],            /* Solution vector for the curr
       err = load_fv_grads();
       GOMA_EH(err, "load_fv_grads");
 
-      fill_ad_field_variables();
+      if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
+        fill_ad_field_variables();
+#else
+        GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
+      }
 
       if (ei[pg->imtrx]->deforming_mesh &&
           (pd->e[pg->imtrx][R_MESH1] || pd->v[pg->imtrx][R_MESH1])) {
@@ -4778,8 +4797,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
                                    ip, ip_total, rd, &pm_terms, *time_ptr, exo, xi, &pg_data);
         GOMA_EH(err, "calc_standard_fields");
       } /* END  for (ip = 0; ip < ip_total; ip++)                      */
-    }   /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }     /* END for (ieb loop) */
+    } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
+  } /* END for (ieb loop) */
 
   /* Solve linear system for requested fields and put back in rhs vector*/
 
@@ -4975,8 +4994,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
             }
           }
         } /* end of node-point loop */
-      }   /* end of element loop on side-set */
-    }     /* end of SS loop */
+      } /* end of element loop on side-set */
+    } /* end of SS loop */
 
     safer_free((void **)&local_post);
     safer_free((void **)&local_lumped);
@@ -5170,7 +5189,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
                                      listndm[w]);
 
           } /* END of loop over components */
-        }   /* END of if(FLUXLINES) */
+        } /* END of if(FLUXLINES) */
 
         if (ENERGY_FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY]) {
           /* Go for it -- Calculate the stream function at the nodes of this element */
@@ -6233,7 +6252,7 @@ static int calc_zz_error_vel(double x[], /* Solution vector                     
                                det_gp_loc[k], max_terms, s_lhs, k, tau_gp_ptch);
 
       } /* End of treating worthy nodes with valid_elem_mask values */
-    }   /* End workhorse LHS loop over this patch */
+    } /* End workhorse LHS loop over this patch */
 
     /* Now loop over needed components in tau_lsp for node i_node,
        again over the elements in the patch this time filling the rhs
@@ -6535,7 +6554,7 @@ static int calc_zz_error_vel(double x[], /* Solution vector                     
       }
 
     } /* End of treating worthy elems with valid_elem_mask values */
-  }   /* End of real loop for element error integration over entire model */
+  } /* End of real loop for element error integration over entire model */
 
 #ifdef RRL_DEBUG
 #ifdef DBG_1
@@ -8776,7 +8795,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
       }
       strcpy(pp_data_sens[i]->data_filenm, second_string);
     } /*   data card count loop  */
-  }   /*   if data_sens conditions */
+  } /*   if data_sens conditions */
 
   /*
    *  SCHEDULE POST-PROCESSING PARTICLE TRACKING CALCULATIONS, IF NEEDED

@@ -1131,9 +1131,13 @@ Revised:         Summer 1998, SY Tam (UNM)
       err = load_fv_grads();
       GOMA_EH(err, "load_fv_grads");
 
+      if (upd->AutoDiff) {
 #ifdef GOMA_ENABLE_SACADO
-      fill_ad_field_variables();
+        fill_ad_field_variables();
+#else
+        GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
 #endif
+      }
 
       if (pd->gv[R_MESH1]) {
         err = load_fv_mesh_derivs(1);
@@ -1399,9 +1403,13 @@ Revised:         Summer 1998, SY Tam (UNM)
     err = load_fv_grads();
     GOMA_EH(err, "load_fv_grads");
 
+    if (upd->AutoDiff) {
 #ifdef GOMA_ENABLE_SACADO
-    fill_ad_field_variables();
+      fill_ad_field_variables();
+#else
+      GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
 #endif
+    }
     if (pd->gv[R_MESH1]) {
       err = load_fv_mesh_derivs(1);
       GOMA_EH(err, "load_fv_mesh_derivs");
@@ -2408,8 +2416,11 @@ Revised:         Summer 1998, SY Tam (UNM)
         CHECKFINITE("assemble_momentum");
 #endif
       } else {
-        // err = ad_assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
-        err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
+        if (upd->AutoDiff) {
+          err = ad_assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
+        } else {
+          err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
+        }
         GOMA_EH(err, "assemble_momentum");
 #ifdef CHECK_FINITE
         CHECKFINITE("assemble_momentum");
@@ -2603,8 +2614,11 @@ Revised:         Summer 1998, SY Tam (UNM)
         if (neg_elem_volume)
           return -1;
       } else {
-        // err = ad_assemble_continuity(time_value, theta, delta_t, &pg_data);
-        err = assemble_continuity(time_value, theta, delta_t, &pg_data);
+        if (upd->AutoDiff) {
+          err = ad_assemble_continuity(time_value, theta, delta_t, &pg_data);
+        } else {
+          err = assemble_continuity(time_value, theta, delta_t, &pg_data);
+        }
         GOMA_EH(err, "assemble_continuity");
 #ifdef CHECK_FINITE
         CHECKFINITE("assemble_continuity");
@@ -3182,7 +3196,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   if (pde[R_MOMENTUM1] && goma_automatic_rotations.automatic_rotations) {
     /* determine if rotation is needed */
@@ -3209,7 +3223,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
   if (pde[R_MESH1] && goma_automatic_rotations.automatic_rotations) {
     /* determine if rotation is needed */
     for (i = 0; i < num_local_nodes; i++) {
@@ -3235,7 +3249,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   /******************************************************************************/
   /*                              BLOCK 9                                       */
@@ -4205,9 +4219,13 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
       GOMA_EH(err, "load_fv_mesh_derivs");
     }
 
+    if (upd->AutoDiff) {
 #ifdef GOMA_ENABLE_SACADO
-    fill_ad_field_variables();
+      fill_ad_field_variables();
+#else
+      GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
 #endif
+    }
 
     computeCommonMaterialProps_gp(time_value);
 
@@ -4228,7 +4246,11 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
         return -1;
 #endif
     } else if (vn->evssModel == SQRT_CONF) {
-      err = assemble_stress_sqrt_conf(theta, delta_t, &pg_data);
+      if (upd->AutoDiff) {
+        err = ad_assemble_stress_sqrt_conf(theta, delta_t, &pg_data);
+      } else {
+        err = assemble_stress_sqrt_conf(theta, delta_t, &pg_data);
+      }
 
       GOMA_EH(err, "assemble_stress_sqrt_conf");
       if (err)
@@ -4704,7 +4726,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   if (pde[R_MOMENTUM1] && goma_automatic_rotations.automatic_rotations) {
     int id_mom; /* local temporary things */
@@ -4730,7 +4752,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   /******************************************************************************/
   /*                              BLOCK 9                                       */

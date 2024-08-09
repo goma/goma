@@ -2485,7 +2485,13 @@ void setup_shop_at_point(int ielem, double *xi, const Exo_DB *exo)
   err = load_fv_grads();
   GOMA_EH(err, "load_fv_grads");
 
-  fill_ad_field_variables();
+      if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
+      fill_ad_field_variables();
+#else
+      GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
+      }
   /*
    *  Just as in the main element assembly, we ensure that the current element
    *  actually has mesh equations associated with it before calculation

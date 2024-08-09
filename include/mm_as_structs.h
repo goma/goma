@@ -913,6 +913,7 @@ struct Uniform_Problem_Description {
   turbulent_information *turbulent_info;
   int strong_bc_replace;
   dbl strong_penalty;
+  int AutoDiff;
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/

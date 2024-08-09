@@ -6894,6 +6894,25 @@ void rd_solver_specs(FILE *ifp, char *input) {
     upd->SegregatedSubcycles = 1;
     ECHO("(Number of Segregated Subcycles = 1) (default)", echo_file);
   }
+  upd->AutoDiff = 0;
+  iread = look_for_optional(ifp, "Use AutoDiff Assembly", input, '=');
+  if (iread == 1) {
+    upd->AutoDiff = -1;
+    if (strcmp(input, "no") == 0) {
+      upd->AutoDiff = 0;
+    } else if (strcmp(input, "yes") == 0) {
+      upd->AutoDiff = 1;
+    }
+    if (upd->SegregatedSubcycles < 1) {
+      GOMA_EH(GOMA_ERROR, "Use AutoDiff Assembly should equal yes or no, instead found %s", input);
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Use AutoDiff Assembly",
+             input);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->AutoDiff = 0;
+    ECHO("(Use AutoDiff Assembly = no) (default)", echo_file);
+  }
 
   /*IGBRK*/
   iread = look_for_optional(ifp, "Linear Stability", input, '=');

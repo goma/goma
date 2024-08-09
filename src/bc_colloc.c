@@ -183,7 +183,13 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
       err = load_bf_mesh_derivs();
       GOMA_EH(err, "load_bf_mesh_derivs");
 
+      if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
       fill_ad_field_variables();
+#else
+      GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
+      }
 
       /* calculate the shape functions and their gradients */
 
