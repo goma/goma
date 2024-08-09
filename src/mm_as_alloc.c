@@ -1233,6 +1233,12 @@ int assembly_alloc(Exo_DB *exo)
     if (Num_Var_In_Type[imtrx][EDDY_NU]) {
       esp->eddy_nu = (dbl **)alloc_ptr_1(MDE);
     }
+    if (Num_Var_In_Type[imtrx][TURB_K]) {
+      esp->turb_k = (dbl **)alloc_ptr_1(MDE);
+    }
+    if (Num_Var_In_Type[imtrx][TURB_OMEGA]) {
+      esp->turb_omega = (dbl **)alloc_ptr_1(MDE);
+    }
 
   } /* End of loop over matrices */
 

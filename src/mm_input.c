@@ -930,6 +930,19 @@ void rd_genl_specs(FILE *ifp, char *input) {
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Print 3D BC Dup", Print3DBCDup);
   ECHO(echo_string, echo_file);
 
+  iread = look_for_optional(ifp, "Print 3D BC Dup", input, '=');
+  if (iread == 1) {
+    if (fscanf(ifp, "%d", &Print3DBCDup) != 1) {
+      DPRINTF(stderr, "%s:\tError reading Print 3D BC Dup Level\n", yo);
+      exit(-1);
+    }
+  } else {
+    Print3DBCDup = 0;
+  }
+
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Print 3D BC Dup", Print3DBCDup);
+  ECHO(echo_string, echo_file);
+
 #ifdef MATRIX_DUMP
   (void)look_for_optional_int(ifp, "Number of Jacobian File Dumps", &Number_Jac_Dump, 0);
 
@@ -3335,6 +3348,33 @@ void rd_turbulent_specs(FILE *ifp, char *input) {
       GOMA_EH(GOMA_ERROR, "Turbulence Calculate Wall Distance is ON but no wall sidesets or "
                           "nodesets were specified");
     }
+  }
+
+  iread = look_for_optional(ifp, "Turbulent k infinity", input, '=');
+  if (iread == 1) {
+
+    if (fscanf(ifp, "%lf", &(upd->turbulent_info->k_inf)) != 1) {
+      GOMA_EH(GOMA_ERROR, "Error reading Turbulence k infinity");
+    }
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %f", "Turbulence k infinity",
+             upd->turbulent_info->k_inf);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->turbulent_info->k_inf = 0.0;
+  }
+  iread = look_for_optional(ifp, "Turbulent omega infinity", input, '=');
+  if (iread == 1) {
+
+    if (fscanf(ifp, "%lf", &(upd->turbulent_info->omega_inf)) != 1) {
+      GOMA_EH(GOMA_ERROR, "Error reading Turbulence omega infinity");
+    }
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %lf", "Turbulence omega infinity",
+             upd->turbulent_info->omega_inf);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->turbulent_info->omega_inf = 0.0;
   }
 }
 /*
@@ -6534,6 +6574,38 @@ void rd_solver_specs(FILE *ifp, char *input) {
     Time_Jacobian_Reformation_stride = 0;
   }
 
+  char ls_type[MAX_CHAR_IN_INPUT] = "FULL_STEP";
+  ;
+  Newton_Line_Search_Type = NLS_FULL_STEP;
+  int lsread = look_for_optional_string(ifp, "Newton line search type", ls_type, MAX_CHAR_IN_INPUT);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
+  if (lsread >= 1) {
+    if (strcmp("FULL_STEP", ls_type) == 0) {
+      Newton_Line_Search_Type = NLS_FULL_STEP;
+    } else if (strcmp("BACKTRACK", ls_type) == 0) {
+      Newton_Line_Search_Type = NLS_BACKTRACK;
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown Newton line search type: %s", ls_type);
+    }
+  }
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
+  ECHO(echo_string, echo_file);
+
+  if (fscanf(ifp, "%le %le %le %le %le", &custom_tol1, &damp_factor2, &custom_tol2, &damp_factor3,
+             &custom_tol3) != 5) {
+    damp_factor2 = damp_factor3 = -1.;
+    custom_tol1 = custom_tol2 = custom_tol3 = -1;
+    rewind(ifp); /* Added to make ibm happy when single relaxation value input. dal/1-6-99 */
+  } else {
+    if ((damp_factor1 <= 1. && damp_factor1 >= 0.) && (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
+        (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
+      SPF(endofstring(echo_string), " %.4g %.4g %.4g %.4g %.4g", custom_tol1, damp_factor2,
+          custom_tol2, damp_factor3, custom_tol3);
+    } else {
+      GOMA_EH(GOMA_ERROR, "All damping factors must be in the range 0 <= fact <=1");
+    }
+  }
+
   look_for(ifp, "Newton correction factor", input, '=');
   if (fscanf(ifp, "%le", &damp_factor1) != 1) {
     GOMA_EH(GOMA_ERROR, "error reading Newton correction factor, expected at least one float");
@@ -8530,6 +8602,10 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         ce = set_eqn(R_CUR_STRAIN, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "eddy_visc")) {
         ce = set_eqn(R_EDDY_NU, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "turb_k")) {
+        ce = set_eqn(R_TURB_K, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "turb_omega")) {
+        ce = set_eqn(R_TURB_OMEGA, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "shell_diff_flux")) {
         ce = set_eqn(R_SHELL_DIFF_FLUX, mtrx_index0, pd_ptr);
         pd_ptr->Do_Surf_Geometry = 1;
@@ -9031,6 +9107,10 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         cv = set_var(GRAD_S_V_DOT_N3, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "EDDY_NU")) {
         cv = set_var(EDDY_NU, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "TURB_K")) {
+        cv = set_var(TURB_K, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "TURB_OMEGA")) {
+        cv = set_var(TURB_OMEGA, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "APR")) {
         cv = set_var(ACOUS_PREAL, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "API")) {
@@ -9841,6 +9921,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       case R_EM_H2_IMAG:
       case R_EM_H3_IMAG:
       case R_EDDY_NU:
+      case R_TURB_K:
+      case R_TURB_OMEGA:
 
         if (fscanf(ifp, "%lf %lf %lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),

@@ -800,6 +800,8 @@
 #define DOUBLE_RAD_BC              961123500
 #define FEATURE_ROLLON_BC          961223400
 #define ROLL_FLUID_BC              961124500
+#define SA_WALL_FUNC_BC            961124501
+#define OMEGA_WALL_FUNC_BC         961124502
 #define TENSION_SHEET_BC           96210200
 #define MOVING_PLANE_BC            96110000
 #define MOVING_PLANE_ETCH_BC       96115000
@@ -902,7 +904,9 @@
 #define VELO_SLIP_FLUID_BC     964900000
 #define VELO_SLIP_ROT_FLUID_BC 964910000
 
-#define EDDY_NU_BC 966666666
+#define EDDY_NU_BC    966666666
+#define TURB_K_BC     966666667
+#define TURB_OMEGA_BC 966666668
 
 /* Structural Shells */
 #define SH_K_BC             970000000

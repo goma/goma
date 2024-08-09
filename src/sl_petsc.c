@@ -1487,6 +1487,7 @@ void petsc_load_lec(int ielem, struct GomaLinearSolverData *ams, double resid_ve
   struct Element_Indices *ei_ptr;
 
   PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
+  matrix_data->mat_entries_set = PETSC_TRUE;
   for (e = V_FIRST; e < V_LAST; e++) {
     pe = upd->ep[pg->imtrx][e];
     if (pe != -1) {
@@ -1698,11 +1699,23 @@ goma_error petsc_scale_matrix(struct GomaLinearSolverData *ams, double *b_, doub
   return GOMA_SUCCESS;
 }
 
+int petsc_zero_mat(struct GomaLinearSolverData *ams) {
+  PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
+  if (matrix_data->mat_entries_set) {
+    MatAssemblyBegin(matrix_data->mat, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(matrix_data->mat, MAT_FINAL_ASSEMBLY);
+    matrix_data->mat_entries_set = PETSC_FALSE;
+  }
+  MatZeroEntries(matrix_data->mat);
+  return 0;
+}
+
 // vim: expandtab sw=2 ts=8
 int petsc_solve(struct GomaLinearSolverData *ams, double *x_, double *b_, int *its) {
   PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
   MatAssemblyBegin(matrix_data->mat, MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(matrix_data->mat, MAT_FINAL_ASSEMBLY);
+  matrix_data->mat_entries_set = PETSC_FALSE;
   if (matrix_data->user_schur) {
     MatZeroEntries(matrix_data->SchurS);
     set_petsc_pressure_matrix(matrix_data, EXO_ptr, DPI_ptr, pg->matrices[pg->imtrx].x,
@@ -1752,7 +1765,6 @@ int petsc_solve(struct GomaLinearSolverData *ams, double *x_, double *b_, int *i
   *its = pits;
   VecGetValues(matrix_data->update, num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx],
                matrix_data->local_to_global, x_);
-  MatZeroEntries(matrix_data->mat);
   return 0;
 }
 

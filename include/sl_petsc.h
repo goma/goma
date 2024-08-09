@@ -33,6 +33,7 @@ typedef struct PetscPCDData {
 
 typedef struct PetscMatrixData {
   PetscOptions options;
+  PetscBool mat_entries_set;
   Mat mat;
   Mat SchurS;
   Vec residual;
@@ -93,6 +94,7 @@ int petsc_solve(struct GomaLinearSolverData *ams, double *x_, double *b_, int *i
 goma_error petsc_scale_matrix(struct GomaLinearSolverData *ams, double *b_, double *scale);
 
 goma_error goma_petsc_free_matrix(struct GomaLinearSolverData *ams);
+int petsc_zero_mat(struct GomaLinearSolverData *ams);
 #endif
 #endif
 #endif // GOMA_SL_PETSC_H

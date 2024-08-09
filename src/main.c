@@ -315,10 +315,6 @@ int main(int argc, char **argv)
 
   /********************** BEGIN EXECUTION ***************************************/
 
-#ifdef FP_EXCEPT
-  feenableexcept((FE_OVERFLOW | FE_DIVBYZERO | FE_INVALID));
-#endif
-
   /* assume number of commands is less than or equal to the number of
    * arguments in the command line minus 1 (1st is program name) */
 
@@ -802,6 +798,9 @@ int main(int argc, char **argv)
       wr_dpi(DPI_ptr, ExoFileOut);
     }
   }
+#ifdef FP_EXCEPT
+  feenableexcept((FE_OVERFLOW | FE_DIVBYZERO | FE_INVALID));
+#endif
 
   /***********************************************************************/
   /***********************************************************************/

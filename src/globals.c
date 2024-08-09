@@ -244,6 +244,7 @@ double var_damp[MAX_VARIABLE_TYPES]; /* variable specific damp factors */
 int Newt_Jacobian_Reformation_stride; /*Stride for reformation of jacobian for
                                    modified newton scheme               */
 int Time_Jacobian_Reformation_stride;
+int Newton_Line_Search_Type;
 int modified_newton;               /*boolean flag for modified Newton */
 int save_old_A;                    /*boolean flag for saving old A matrix
                                     for resolve reasons with AZTEC.   There

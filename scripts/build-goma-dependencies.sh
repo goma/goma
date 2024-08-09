@@ -23,9 +23,10 @@
 
 # Tells the TPL builder which C compiler to use, choices are [intel, gnu, user]
 #CC_NAME="user"
+# if using GCC >= 10 uncomment:
+# export GCC_EXTRA_FFLAGS="-fallow-argument-mismatch"
 
 # if CC_NAME="user" the following variables must be specified manually
-
 SYSTEM_COMPILER_BASE=/usr
 SYSTEM_CC=$SYSTEM_COMPILER_BASE/bin/gcc
 SYSTEM_CXX=$SYSTEM_COMPILER_BASE/bin/g++
@@ -463,7 +464,6 @@ function setMPIvars() {
 }
 
 function setCompilerVars() {
-    export GCC_EXTRA_FFLAGS=""
     if [[ "$CC_NAME" == "intel" ]]; then
         #Special flag only needed by intel compiler because reasons? No really why does GCC not need -fopenmp?
         export COMPILER_FLAG_MPI="-qopenmp"
@@ -489,6 +489,7 @@ function setCompilerVars() {
         export f90="ifort"
         EXTRA_CXX_FLAGS=""
         export FORTRAN_LIBS="-L$INTEL_PARALLEL_STUDIO_ROOT/lib/intel64 -lifcore"
+        export GCC_EXTRA_FFLAGS=""
     elif [[ "$CC_NAME" == "gnu" ]]; then
         GCC_VERSION=$(gcc --version | grep ^gcc | sed 's/^.* //g')
         if [[ "$GCC_VERSION" = $(echo -e "$GCC_VERSION\n10.0.0\n" | sort -V |tail -n1) ]]; then
@@ -516,7 +517,7 @@ function setCompilerVars() {
         export LINKER="ld"
         export ARCHIVER="ar"
     elif [[ "$CC_NAME" == "user" ]]; then
-	echo "MPI_C_COMPILER=$MPI_C_COMPILER"
+	    echo "MPI_C_COMPILER=$MPI_C_COMPILER"
         echo "MPI_CXX_COMPILER=$MPI_CXX_COMPILER"
         echo "MPI_F90_COMPILER=$MPI_F90_COMPILER"
         echo "MPI_F77_COMPILER=$MPI_F77_COMPILER"
@@ -1013,7 +1014,7 @@ else
     touch pnetcdf-${PNETCDF_VERSION}/.goma-extracted
     fi
     cd pnetcdf-${PNETCDF_VERSION}/src
-    CC=${MPI_C_COMPILER} ./configure --disable-fortran --enable-shared=off --disable-cxx --prefix=$GOMA_LIB/pnetcdf-${PNETCDF_VERSION} 2>&1 | tee -a $COMPILE_LOG
+    CC=${MPI_C_COMPILER} CXX=${MPI_CXX_COMPILER} FC=${MPI_F90_COMPILER} ./configure --disable-fortran --enable-shared=off --disable-cxx --prefix=$GOMA_LIB/pnetcdf-${PNETCDF_VERSION} 2>&1 | tee -a $COMPILE_LOG
     make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
     make install 2>&1 | tee -a $COMPILE_LOG
     if [ -e $GOMA_LIB/pnetcdf-${PNETCDF_VERSION}/lib/libpnetcdf.a ]
@@ -1667,6 +1668,10 @@ cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
 -D Trilinos_ENABLE_ML:BOOL=ON \
 -D Trilinos_ENABLE_MueLu:BOOL=ON \
 -D Trilinos_ENABLE_AztecOO:BOOL=ON \
+-D Trilinos_ENABLE_Belos:BOOL=ON \
+-D Trilinos_ENABLE_Amesos2:BOOL=ON \
+-D Trilinos_ENABLE_Sacado:BOOL=ON \
+-D Trilinos_ENABLE_Tpetra:BOOL=ON \
 -D Trilinos_ENABLE_Stratimikos:BOOL=ON \
 -D Trilinos_ENABLE_Teko:BOOL=ON \
 -D Trilinos_ENABLE_Belos:BOOL=ON \

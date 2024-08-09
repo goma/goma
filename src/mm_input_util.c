@@ -731,6 +731,10 @@ int variable_string_to_int(const char *input, const char *err_string)
     var = WSTAR;
   else if (!strcmp(input, "EDDY_NU"))
     var = EDDY_NU;
+  else if (!strcmp(input, "TURB_K"))
+    var = TURB_K;
+  else if (!strcmp(input, "TURB_OMEGA"))
+    var = TURB_OMEGA;
 
   /*
    * Kluge to break up large if block. Problems with HP compiler!

@@ -37,6 +37,8 @@
 #include "dpi.h"        /* defn of Dpi */
 #include "exo_struct.h" /* defn of Exo_DB */
 
+#define NLS_FULL_STEP 0
+#define NLS_BACKTRACK 1
 /*
  * Kinds of solvers available...
  */

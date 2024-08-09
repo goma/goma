@@ -147,9 +147,9 @@ static Coloring *find_coloring(struct GomaLinearSolverData *ams,
                                Dpi *dpi) {
   int i, j;
   /* for storing transpose in column format */
-  int *col = calloc(ams->bindx[num_unknowns], sizeof(int));
-  int *row = calloc(ams->bindx[num_unknowns], sizeof(int));
-  int *colptr = calloc(num_unknowns + 1, sizeof(int));
+  int *col = calloc(sizeof(int), ams->bindx[num_unknowns]);
+  int *row = calloc(sizeof(int), ams->bindx[num_unknowns]);
+  int *colptr = calloc(sizeof(int), num_unknowns + 1);
   int *rowidx;
   int *has_row;
   int *column_color;
@@ -175,7 +175,7 @@ static Coloring *find_coloring(struct GomaLinearSolverData *ams,
     }
   }
 
-  rowidx = calloc(nnz, sizeof(int));
+  rowidx = calloc(sizeof(int), nnz);
   /* Find CSC format */
   for (i = 0; i < nnz; i++) {
     colptr[col[i] + 1] += 1;
@@ -186,7 +186,7 @@ static Coloring *find_coloring(struct GomaLinearSolverData *ams,
     colptr[i + 1] += colptr[i];
   }
 
-  int *counts = calloc(num_unknowns, sizeof(int));
+  int *counts = calloc(sizeof(int), num_unknowns);
 
   // set rows for each column
   for (i = 0; i < nnz; i++) {
@@ -389,7 +389,7 @@ int numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
   resid_vector_1 = (double *)array_alloc(1, numProcUnknowns, sizeof(double));
   x_1 = (double *)array_alloc(1, numProcUnknowns, sizeof(double));
   dx_col = calloc(numProcUnknowns, sizeof(double));
-  nj = calloc(ams->bindx[numProcUnknowns], sizeof(double));
+  nj = calloc(sizeof(double), ams->bindx[numProcUnknowns]);
   memcpy(nj, ams->val, ams->bindx[numProcUnknowns] * (sizeof(double)));
 
   // Load stress equation pointers

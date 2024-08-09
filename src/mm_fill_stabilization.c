@@ -23,6 +23,23 @@
 #include "std.h"
 #include "user_mp.h"
 
+bool is_evss_f_model(int model) {
+  switch (model) {
+  case EVSS_F:
+  case EVSS_GRADV:
+  case LOG_CONF:
+  case LOG_CONF_GRADV:
+  case LOG_CONF_TRANSIENT:
+  case LOG_CONF_TRANSIENT_GRADV:
+  case CONF:
+  case SQRT_CONF:
+    return true;
+
+  default:
+    return false;
+  }
+}
+
 static dbl yzbeta1(dbl scale,
                    int dim,
                    dbl Y,
@@ -149,10 +166,16 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
+  VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
+  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
 
   if (pspg_scale) {
     dbl rho = density(d_rho, dt);
-    inv_rho = 1.0 / rho;
+    if (rho > 0) {
+      inv_rho = 1.0 / rho;
+    } else {
+      inv_rho = 1.0;
+    }
   }
 
   int interp_eqn = VELOCITY1;
@@ -161,18 +184,88 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
   dbl v_d_gv = 0;
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
-      v_d_gv += fabs(fv->v[i] * G[i][j] * fv->v[j]);
+      v_d_gv += fabs(fv_old->v[i] * G[i][j] * fv_old->v[j]);
     }
   }
 
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
-      gamma[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
+      gamma[i][j] = fv_old->grad_v[i][j] + fv_old->grad_v[j][i];
     }
   }
 
-  mu = viscosity(gn, gamma, d_mu);
+  mu = viscosity(gn, gamma, NULL);
+  dbl mup = 0.0;
+  if (pd->gv[POLYMER_STRESS11] && is_evss_f_model(vn->evssModel)) {
+    for (int mode = 0; mode < vn->modes; mode++) {
+      /* get polymer viscosity */
+      mup = viscosity(ve[mode]->gn, gamma, NULL);
+      mu += mup;
 
+      int var = VELOCITY1;
+      int a, j;
+      if (pd->v[pg->imtrx][var]) {
+        for (a = 0; a < WIM; a++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mu->v[a][j] += d_mup->v[a][j];
+          }
+        }
+      }
+
+      var = MESH_DISPLACEMENT1;
+      if (pd->v[pg->imtrx][var]) {
+        for (a = 0; a < dim; a++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mu->X[a][j] += d_mup->X[a][j];
+          }
+        }
+      }
+
+      var = TEMPERATURE;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mu->T[j] += d_mup->T[j];
+        }
+      }
+
+      var = BOND_EVOLUTION;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mu->nn[j] += d_mup->nn[j];
+        }
+      }
+
+      var = RESTIME;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mu->degrade[j] += d_mup->degrade[j];
+        }
+      }
+
+      var = FILL;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mu->F[j] += d_mup->F[j];
+        }
+      }
+
+      var = PRESSURE;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mu->P[j] += d_mup->P[j];
+        }
+      }
+
+      var = MASS_FRACTION;
+      if (pd->v[pg->imtrx][var]) {
+        for (int w = 0; w < pd->Num_Species_Eqn; w++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mu->C[w][j] += d_mup->C[w][j];
+          }
+        }
+      }
+    } // for mode
+  }
   dbl coeff = (12.0 * mu * mu);
   dbl diff_g_g = 0;
   for (int i = 0; i < dim; i++) {
@@ -187,8 +280,8 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
       d_v_d_gv[a][k] = 0.0;
       for (int i = 0; i < dim; i++) {
         for (int j = 0; j < dim; j++) {
-          d_v_d_gv[a][k] += delta(a, i) * bf[VELOCITY1 + a]->phi[k] * G[i][j] * fv->v[j] +
-                            delta(a, j) * fv->v[i] * G[i][j] * bf[VELOCITY1 + a]->phi[k];
+          d_v_d_gv[a][k] += 0; // delta(a, i) * bf[VELOCITY1 + a]->phi[k] * G[i][j] * fv->v[j] +
+                               //  delta(a, j) * fv->v[i] * G[i][j] * bf[VELOCITY1 + a]->phi[k];
         }
       }
     }
@@ -200,13 +293,13 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
     tau_terms->tau = inv_rho / (sqrt(v_d_gv + diff_g_g) + 1e-14);
   }
 
-  dbl d_diff_g_g_dmu = 2.0 * diff_g_g / mu;
+  dbl d_diff_g_g_dmu = 0 * 2.0 * diff_g_g / mu;
   dbl supg_tau_cubed = tau_terms->tau * tau_terms->tau * tau_terms->tau;
 
   for (int a = 0; a < dim; a++) {
     for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
       tau_terms->d_tau_dv[a][k] =
-          inv_rho * -0.5 * (d_v_d_gv[a][k] + (d_diff_g_g_dmu * d_mu->v[a][k])) * supg_tau_cubed;
+          inv_rho * -0.5 * (d_v_d_gv[a][k] + (0 * d_diff_g_g_dmu * d_mu->v[a][k])) * supg_tau_cubed;
     }
   }
 
@@ -219,18 +312,18 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
         dbl v_d_gv_dx = 0;
         for (int i = 0; i < dim; i++) {
           for (int j = 0; j < dim; j++) {
-            v_d_gv_dx += fv->v[i] * dG[i][j][a][k] * fv->v[j];
+            // v_d_gv_dx += fv->v[i] * dG[i][j][a][k] * fv->v[j];
           }
         }
 
         dbl diff_g_g_dx = 0;
         for (int i = 0; i < dim; i++) {
           for (int j = 0; j < dim; j++) {
-            diff_g_g_dx += 2 * coeff * dG[i][j][a][k] * G[i][j];
+            // diff_g_g_dx += 2 * coeff * dG[i][j][a][k] * G[i][j];
           }
         }
         tau_terms->d_tau_dX[a][k] = inv_rho * -0.5 *
-                                    (v_d_gv_dx + diff_g_g_dx + d_mu->X[a][k] * d_diff_g_g_dmu) *
+                                    (v_d_gv_dx + diff_g_g_dx + 0 * d_mu->X[a][k] * d_diff_g_g_dmu) *
                                     supg_tau_cubed;
       }
     }
@@ -259,6 +352,18 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
     for (int k = 0; k < ei[pg->imtrx]->dof[EDDY_NU]; k++) {
       tau_terms->d_tau_dEDDY_NU[k] =
           inv_rho * -0.5 * (d_mu->eddy_nu[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+    }
+  }
+  if (pd->e[pg->imtrx][TURB_K]) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[TURB_K]; k++) {
+      tau_terms->d_tau_dturb_k[k] =
+          0 * inv_rho * -0.5 * (d_mu->turb_k[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+    }
+  }
+  if (pd->e[pg->imtrx][TURB_OMEGA]) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[TURB_OMEGA]; k++) {
+      tau_terms->d_tau_dturb_omega[k] =
+          0 * inv_rho * -0.5 * (d_mu->turb_omega[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }
   if (pd->e[pg->imtrx][MASS_FRACTION]) {
