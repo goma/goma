@@ -3262,8 +3262,8 @@ struct Lubrication_Auxiliaries {
                                      solid */
   double dH_dp;                   /* lubrication gap sensitivities w.r.t. pressure */
   double dH_ddh;                  /* lubrication gap sensitivities w.r.t. added height */
-  double dop_curv_dx[DIM][MDE];      /* Out-of-plane Curvature sensitivities w.r.t. mesh deformation */
-  double dop_curv_df[MDE];           /* Out-of-plane Curvature sensitivities w.r.t. level set */
+  double dop_curv_dx[DIM][MDE];   /* Out-of-plane Curvature sensitivities w.r.t. mesh deformation */
+  double dop_curv_df[MDE];        /* Out-of-plane Curvature sensitivities w.r.t. level set */
 };
 
 typedef struct Lubrication_Auxiliaries LUBRICATION_AUXILIARIES_STRUCT;
