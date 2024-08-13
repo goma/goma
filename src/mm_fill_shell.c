@@ -7989,6 +7989,14 @@ int assemble_shell_energy(double time,            /* present time value */
 
           /* Load basis functions (j) */
           phi_j = bf[eqn]->phi[j];
+          for (ii = 0; ii < VIM; ii++) {
+            grad_phi_j[ii] = bf[eqn]->grad_phi[j][ii];
+            grad_II_phi_j[ii] = 0.0;
+            for (jj = 0; jj < VIM; jj++) {
+              grad_II_phi_j[ii] += (grad_phi_j[jj] * delta(ii, jj) -
+                                    grad_phi_j[jj] * (fv->snormal[ii] * fv->snormal[jj]));
+            }
+          }
 
           /* Mass term */
           mass = 0.;
@@ -13984,6 +13992,9 @@ int assemble_lubrication_curvature(double time,            /* present time value
           for (a = 0; a < VIM; a++) {
             div += LSnormal[a] * grad_II_phi_i[a];
           }
+          if (mp->Lub_Curv_Combine) {
+            div += LubAux->op_curv * phi_i;
+          }
         }
         div *= curvX * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
       }
@@ -14002,7 +14013,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
     /* Loop over DOFs (i) */
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
-      /* Prepare basis funcitons (i) */
+      /* Prepare basis functions (i) */
       ShellBF(eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh,
               n_dof[MESH_DISPLACEMENT1], dof_map);
 
@@ -14122,6 +14133,9 @@ int assemble_lubrication_curvature(double time,            /* present time value
                   div += LSnormal[a] * d_grad_II_phi_i_dmesh[a][b][jj] * det_J;
                   div += LSnormal[a] * grad_II_phi_i[a] * fv->dsurfdet_dx[b][jj];
                 }
+                if (mp->Lub_Curv_Combine) {
+                  div += LubAux->dop_curv_dx[b][jj] * phi_i;
+                }
                 div *= curvX * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
               }
             }
@@ -14153,6 +14167,9 @@ int assemble_lubrication_curvature(double time,            /* present time value
             if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
               for (a = 0; a < VIM; a++) {
                 div += d_LSnormal_dF[a][j] * grad_II_phi_i[a];
+              }
+              if (mp->Lub_Curv_Combine) {
+                div += LubAux->dop_curv_df[j] * phi_i;
               }
               div *= curvX * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
             }

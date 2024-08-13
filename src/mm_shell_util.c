@@ -3852,7 +3852,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       LubAux->op_curv = CURV;
 
       /* Curvature - numerical in planview direction */
-      if (mp->Lub_Curv_Combine) {
+      if (mp->Lub_Curv_Combine && pd->e[pg->imtrx][SHELL_LUB_CURV]) {
         CURV = fv->sh_l_curv;
       } else if (pd->e[pg->imtrx][SHELL_LUB_CURV]) {
         CURV += fv->sh_l_curv;
@@ -3865,28 +3865,39 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       }
 
       /* Sensitivity to height */
-      if (1 || !pd->e[pg->imtrx][SHELL_LUB_CURV]) { /* Should always go through here */
-        D_CURV_DH = (cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / (H_cap * H_cap);
+      D_CURV_DH = (cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / (H_cap * H_cap);
 
-        /* Sensitivity to level set F */
-        for (i = 0; i < ei[pg->imtrx]->dof[VAR]; i++) {
-          for (j = 0; j < DIM; j++) {
-            D_CURV_DF[i] += sin(dcaU + atan(slopeU)) / (H_cap * (1 + slopeU * slopeU)) *
-                            dHc_U_dX[j] * lsi->d_normal_dF[j][i];
-            D_CURV_DF[i] += sin(dcaL + atan(-slopeL)) / (H_cap * (1 + slopeL * slopeL)) *
-                            dHc_L_dX[j] * lsi->d_normal_dF[j][i];
-          }
-          D_CURV_DF[i] += D_CURV_DH * dH_dF[i];
+      /* Sensitivity to level set F */
+      for (i = 0; i < ei[pg->imtrx]->dof[VAR]; i++) {
+        for (j = 0; j < DIM; j++) {
+          D_CURV_DF[i] += sin(dcaU + atan(slopeU)) / (H_cap * (1 + slopeU * slopeU)) *
+                          dHc_U_dX[j] * lsi->d_normal_dF[j][i];
+          D_CURV_DF[i] += sin(dcaL + atan(-slopeL)) / (H_cap * (1 + slopeL * slopeL)) *
+                          dHc_L_dX[j] * lsi->d_normal_dF[j][i];
         }
+        D_CURV_DF[i] += D_CURV_DH * dH_dF[i];
+      }
 
-        /* Sensitivity to mesh */
+      /* Sensitivity to mesh */
+      for (i = 0; i < dim; i++) {
+        for (j = 0; j < n_dof[MESH_DISPLACEMENT1]; j++) {
+          D_CURV_DX[i][j] += D_CURV_DH * D_Hc_DX[i][j];
+        }
+      }
+      if (mp->Lub_Curv_Combine) {
+        for (i = 0; i < ei[pg->imtrx]->dof[VAR]; i++) {
+          LubAux->dop_curv_df[i] = D_CURV_DF[i];
+        }
         for (i = 0; i < dim; i++) {
           for (j = 0; j < n_dof[MESH_DISPLACEMENT1]; j++) {
-            D_CURV_DX[i][j] += D_CURV_DH * D_Hc_DX[i][j];
+            LubAux->dop_curv_dx[i][j] = D_CURV_DX[i][j];
           }
         }
+      }
 
-        /* Sensitivity to shell normal */
+      /* Sensitivity to shell normal */
+      if ((pd->e[pg->imtrx][R_SHELL_NORMAL1]) && (pd->e[pg->imtrx][R_SHELL_NORMAL2]) &&
+          (pd->e[pg->imtrx][R_SHELL_NORMAL3])) {
         for (i = 0; i < dim; i++) {
           for (j = 0; j < ei[pg->imtrx]->dof[SHELL_NORMAL1]; j++) {
             D_CURV_DNORMAL[i][j] += D_CURV_DH * D_H_DNORMAL[i][j];
