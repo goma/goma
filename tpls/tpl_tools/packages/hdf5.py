@@ -5,15 +5,16 @@ import os
 class Package(packages.AutotoolsPackage):
     def __init__(self):
         self.name = "hdf5"
-        self.version = "1.12.2"
-        self.sha256 = "1a88bbe36213a2cea0c8397201a459643e7155c9dc91e062675b3fb07ee38afe"
+        self.version = "1.14.4.3"
+        version_tag = "1.14.4-3"
+        self.sha256 = "019ac451d9e1cf89c0482ba2a06f07a46166caf23f60fea5ef3c37724a318e03"
         self.filename = "hdf5-" + self.version + ".tar.bz2"
         self.url = (
-            "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-"
+            "https://github.com/HDFGroup/hdf5/releases/download/hdf5_"
             + self.version
-            + "/src/hdf5-"
-            + self.version
-            + ".tar.bz2"
+            + "/hdf5-"
+            + version_tag
+            + ".tar.gz"
         )
         self.libraries = ["hdf5"]
 

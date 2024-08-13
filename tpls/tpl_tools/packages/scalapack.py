@@ -25,7 +25,7 @@ class Package(packages.CMakePackage):
             builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
         else:
             builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
-        builder.add_option("-D=MPI=ON")
+        builder.add_option("-D=SCALAPACK_BUILD_TESTS=OFF")
 
     def register(self, builder):
         registry = builder._registry

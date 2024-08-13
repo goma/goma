@@ -101,7 +101,7 @@ class Builder(object):
 
     def register(self):
         if hasattr(self._package, "register"):
-            self.logger.log("Registering ", self._package.name)
+            self.logger.log("Registering:", self._package.name)
             self._package.register(self)
 
     def install_dir(self):

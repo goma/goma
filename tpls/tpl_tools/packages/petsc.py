@@ -18,6 +18,7 @@ class Package(packages.AutotoolsPackage):
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
+        builder.env["PETSC_ARCH"] = "arch-c-opt"
         builder.env["PETSC_DIR"] = os.path.join(
             builder._extract_dir, builder._extracted_folder
         )
@@ -45,14 +46,17 @@ class Package(packages.AutotoolsPackage):
         configure_options.append("--download-strumpack")
         configure_options.append("--with-scalapack=1")
         configure_options.append("--with-scalapack-dir=" + builder.env["SCALAPACK_DIR"])
-        configure_options.append("--with-superlu_dist=1")
-        configure_options.append(
-            "--with-superlu_dist-dir=" + builder.env["SUPERLU_DIST_DIR"]
-        )
+        if "PARMETIS_DIR" in builder.env:
+            configure_options.append("--with-superlu_dist=1")
+            configure_options.append(
+                "--with-superlu_dist-dir=" + builder.env["SUPERLU_DIST_DIR"]
+            )
+            configure_options.append("--with-parmetis=1")
+            configure_options.append("--with-parmetis-dir=" + builder.env["PARMETIS_DIR"])
         configure_options.append("--with-metis=1")
         configure_options.append("--with-metis-dir=" + builder.env["METIS_DIR"])
-        configure_options.append("--with-parmetis=1")
-        configure_options.append("--with-parmetis-dir=" + builder.env["PARMETIS_DIR"])
+        configure_options.append("--with-ptscotch=1")
+        configure_options.append("--with-ptscotch-dir=" + builder.env["SCOTCH_DIR"])
         configure_options.append("--with-blas-lib=" + builder.env["BLAS_LIBRARIES"])
         configure_options.append("--with-lapack-lib=" + builder.env["LAPACK_LIBRARIES"])
         configure_options.append("--with-mumps=1")

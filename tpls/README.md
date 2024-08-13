@@ -21,7 +21,7 @@ Build with a prebuilt openmpi with 4 CPUs:
 
 Build with static libraries, shared is set by default:
 
-    ./install-tpls.py --build-shared=no /path/to/install
+    ./install-tpls.py --build-static /path/to/install
 
 Reuse downloads:
 
@@ -40,12 +40,12 @@ in your shell of choice and used to compile and run Goma.
 
 Usage:
     
-    usage: install-tpls.py [-h] [--cc CC] [--cxx CXX] [--fc FC] [--download-dir DOWNLOAD_DIR] [--extract-dir EXTRACT_DIR] [--build-shared BUILD_SHARED]
-                           [-j JOBS] [--cmake-dir CMAKE_DIR] [--openmpi-dir OPENMPI_DIR] [--hdf5-dir HDF5_DIR] [--pnetcdf-dir PNETCDF_DIR]
-                           [--netcdf-dir NETCDF_DIR] [--fmt-dir FMT_DIR] [--seacas-dir SEACAS_DIR] [--openblas-dir OPENBLAS_DIR] [--metis-dir METIS_DIR]
-                           [--parmetis-dir PARMETIS_DIR] [--arpack_ng-dir ARPACK_NG_DIR] [--scalapack-dir SCALAPACK_DIR] [--mumps-dir MUMPS_DIR]
-                           [--superlu_dist-dir SUPERLU_DIST_DIR] [--suitesparse-dir SUITESPARSE_DIR] [--trilinos-dir TRILINOS_DIR] [--petsc-dir PETSC_DIR]
-                           [--omega_h-dir OMEGA_H_DIR]
+    usage: install-tpls.py [-h] [--cc CC] [--cxx CXX] [--fc FC] [--download-dir DOWNLOAD_DIR] [--extract-dir EXTRACT_DIR] [--build-shared] [--build-static] [-j JOBS] [--enable-parmetis]
+                           [--disable-parmetis] [--cmake-dir CMAKE_DIR] [--openmpi-dir OPENMPI_DIR] [--hdf5-dir HDF5_DIR] [--pnetcdf-dir PNETCDF_DIR] [--netcdf-dir NETCDF_DIR] [--fmt-dir FMT_DIR]
+                           [--seacas-dir SEACAS_DIR] [--bison-dir BISON_DIR] [--flex-dir FLEX_DIR] [--openblas-dir OPENBLAS_DIR] [--metis-dir METIS_DIR] [--parmetis-dir PARMETIS_DIR]
+                           [--scotch-dir SCOTCH_DIR] [--arpack_ng-dir ARPACK_NG_DIR] [--scalapack-dir SCALAPACK_DIR] [--mumps-dir MUMPS_DIR] [--superlu_dist-dir SUPERLU_DIST_DIR]
+                           [--suitesparse-dir SUITESPARSE_DIR] [--trilinos-dir TRILINOS_DIR] [--petsc-dir PETSC_DIR] [--petsc_complex-dir PETSC_COMPLEX_DIR] [--omega_h-dir OMEGA_H_DIR]
+                           [--sparse-dir SPARSE_DIR]
                            INSTALL_DIR
     
     Third party library installer for the finite element code Goma
@@ -55,16 +55,18 @@ Usage:
     
     options:
       -h, --help            show this help message and exit
-      --cc CC               C compiler to use
-      --cxx CXX             C++ compiler to use
-      --fc FC               Fortran compiler to use
+      --cc CC               C compiler to use, default is CC environment variable or gcc
+      --cxx CXX             C++ compiler to use, default is CXX environment variable or g++
+      --fc FC               Fortran compiler to use, defualt is FC environment variable or gfortran
       --download-dir DOWNLOAD_DIR
                             Download location of tarballs
       --extract-dir EXTRACT_DIR
                             Extract and Build location
-      --build-shared BUILD_SHARED
-                            Build shared libraries
+      --build-shared        Build shared libraries (Default)
+      --build-static        Build static libraries
       -j JOBS, --jobs JOBS  Number of parallel jobs
+      --enable-parmetis     Build ParMETIS library, (Default, check license requirements)
+      --disable-parmetis    Disable ParMETIS library
       --cmake-dir CMAKE_DIR
                             System location of package cmake
       --openmpi-dir OPENMPI_DIR
@@ -77,12 +79,17 @@ Usage:
       --fmt-dir FMT_DIR     System location of package fmt
       --seacas-dir SEACAS_DIR
                             System location of package seacas
+      --bison-dir BISON_DIR
+                            System location of package bison
+      --flex-dir FLEX_DIR   System location of package flex
       --openblas-dir OPENBLAS_DIR
                             System location of package openblas
       --metis-dir METIS_DIR
                             System location of package metis
       --parmetis-dir PARMETIS_DIR
                             System location of package parmetis
+      --scotch-dir SCOTCH_DIR
+                            System location of package scotch
       --arpack_ng-dir ARPACK_NG_DIR
                             System location of package arpack-ng
       --scalapack-dir SCALAPACK_DIR
@@ -97,5 +104,9 @@ Usage:
                             System location of package trilinos
       --petsc-dir PETSC_DIR
                             System location of package petsc
+      --petsc_complex-dir PETSC_COMPLEX_DIR
+                            System location of package petsc-complex
       --omega_h-dir OMEGA_H_DIR
                             System location of package omega-h
+      --sparse-dir SPARSE_DIR
+                            System location of package sparse

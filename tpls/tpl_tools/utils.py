@@ -85,8 +85,8 @@ def check_for_x11(extract_dir, cc):
     if cc:
         comp = cc
     with open(os.path.join(extract_dir, "x11test.c"), "w") as f:
-        f.write("int main() {}\n")
-    command = [cc, "-lX11"]
+        f.write("int main() { return 0; }\n")
+    command = [cc, "-lX11", "x11test.c"]
     result = subprocess.Popen(command, cwd=extract_dir)
     result.wait()
     os.remove(os.path.join(extract_dir, "x11test.c"))

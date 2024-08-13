@@ -29,25 +29,46 @@ class Package(packages.GenericPackage):
             f.write("IPORD    = -I$(topdir)/PORD/include/\n")
             f.write("LPORD    = -L$(LPORDDIR) -lpord$(PLAT)\n")
             f.write("LMETISDIR = " + builder.env["METIS_DIR"] + "/lib\n")
-            f.write("LPARMETISDIR = " + builder.env["PARMETIS_DIR"] + "/lib\n")
+            if "PARMETIS_DIR" in builder.env:
+                f.write("LPARMETISDIR = " + builder.env["PARMETIS_DIR"] + "/lib\n")
             f.write(
                 "IMETIS = -I"
                 + builder.env["METIS_DIR"]
-                + "/include -I"
-                + builder.env["PARMETIS_DIR"]
-                + "/include \n"
-            )
+                + "/include")
+            
+            if "PARMETIS_DIR" in builder.env:
+                f.write(" -I"
+                    + builder.env["PARMETIS_DIR"]
+                    + "/include \n"
+                )
+            else:
+                f.write("\n")
             f.write("LMETIS    = -L$(LPARMETISDIR) -lparmetis -L$(LMETISDIR) -lmetis\n")
-            f.write("ORDERINGSF  = -Dpord -Dmetis -Dparmetis\n")
+            f.write("SCOTCHDIR = " + builder.env["SCOTCH_DIR"] + "\n")
+            f.write("ISCOTCH = -I" + builder.env["SCOTCH_DIR"] + "/include\n")
+            f.write(
+                "LSCOTCH = -L"
+                + builder.env["SCOTCH_DIR"]
+                + "/lib -lptesmumps -lptscotch -lptscotcherr -lscotch -lscotcherr\n"
+            )
+            f.write("ORDERINGSF  = -Dpord -Dmetis -Dptscotch")
+            if "PARMETIS_DIR" in builder.env:
+                f.write(" -Dparmetis\n")
+            else:
+                f.write("\n")
             f.write("ORDERINGSC  = $(ORDERINGSF)\n")
-            f.write("LORDERINGS = $(LMETIS) $(LPORD)\n")
-            f.write("IORDERINGSF = \n")
-            f.write("IORDERINGSC = $(IMETIS) $(IPORD)\n")
+            f.write("LORDERINGS = $(LMETIS) $(LPORD) $(LSCOTCH)\n")
+            f.write("IORDERINGSF = $(ISCOTCH)\n")
+            f.write("IORDERINGSC = $(IMETIS) $(IPORD) $(ISCOTCH)\n")
             f.write("LIBEXT_SHARED  = .so\n")
             f.write("SONAME = -soname\n")
             f.write(
-                "SHARED_OPT = -shared -Wl,-rpath," + builder.install_dir() + "/lib\n"
+                "SHARED_OPT = -shared -Wl,-rpath," + builder.install_dir() + "/lib -Wl,-rpath," + builder.env["SCOTCH_DIR"] + 
+                "/lib"
             )
+            if builder.env["PARMETIS_DIR"]:
+                f.write(" -Wl,-rpath," + builder.env["PARMETIS_DIR"] + "/lib")
+            f.write(" -Wl,-rpath,"+builder.env["METIS_DIR"] +"/lib\n")
             f.write("FPIC_OPT = -fPIC\n")
             f.write("LIBEXT  = .a\n")
             f.write("OUTC    = -o\n")

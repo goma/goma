@@ -4,8 +4,8 @@ from tpl_tools.packages import packages
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "suitesparse"
-        self.version = "7.7.0"
-        self.sha256 = "529b067f5d80981f45ddf6766627b8fc5af619822f068f342aab776e683df4f3"
+        self.version = "7.8.1"
+        self.sha256 = "b645488ec0d9b02ebdbf27d9ae307f705de2b6133edb64617a72c7b4c6c3ff44"
         self.filename = "suitesparse-" + self.version + ".tar.gz"
         self.url = (
             "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/refs/tags/v"

@@ -4,8 +4,8 @@ from tpl_tools.packages import packages
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "parmetis"
-        self.version = "4.0.3-p8"
-        self.sha256 = "3f45bbf43c3a8447eb6a2eedfb713279c9dda50a3498b45914e5d5e584d31df9"
+        self.version = "4.0.3-p9"
+        self.sha256 = "612717e85992c984f09b0f5670be421bbb90a4c04145ab5b9a3358b92765d891"
         self.filename = "petsc-pkg-parmetis-" + self.version + ".tar.gz"
         self.url = (
             "https://bitbucket.org/petsc/pkg-parmetis/get/v" + self.version + ".tar.gz"
