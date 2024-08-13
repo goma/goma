@@ -32,6 +32,7 @@ class Builder(object):
         logger,
         registry,
         build_shared,
+        prebuilt=False,
     ):
         self._dependencies = []
         self._configure_options = []
@@ -44,6 +45,7 @@ class Builder(object):
         self.logger = logger
         self._jobs = jobs
         self._registry = registry
+        self.prebuilt = prebuilt
         return
 
     def set_dependency(self, dep):
@@ -105,6 +107,11 @@ class Builder(object):
             self._package.register(self)
 
     def install_dir(self):
+        if self.prebuilt:
+            return os.path.join(
+                self._install_dir
+            )
+
         return os.path.join(
             self._install_dir, self._package.name + "-" + self._package.version
         )
