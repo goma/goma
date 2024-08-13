@@ -9,7 +9,16 @@ Please look at comments or license files for the separate license
 Third party libraries required for Goma can be installed using the `install-tpls.py` script
 available in this directory.
 
-Examples:
+## Warning on licenses
+
+By default the `install-tpls.py` script will install with `ParMETIS` but the license is quite
+restrictive. If you are not a government or education employee consider using `--disable-parmetis`
+or read the license restrictions. 
+
+Currently our main interface to SuperLU_DIST is through Trilinos and Trilinos requires SuperLU_DIST 
+be built with ParMETIS support so if ParMETIS is disabled so is SuperLU_DIST.
+
+## Examples:
 
 Build with a nonstandard compiler:
 
