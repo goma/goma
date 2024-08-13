@@ -3870,8 +3870,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       /* Sensitivity to level set F */
       for (i = 0; i < ei[pg->imtrx]->dof[VAR]; i++) {
         for (j = 0; j < DIM; j++) {
-          D_CURV_DF[i] += sin(dcaU + atan(slopeU)) / (H_cap * (1 + slopeU * slopeU)) *
-                          dHc_U_dX[j] * lsi->d_normal_dF[j][i];
+          D_CURV_DF[i] += sin(dcaU + atan(slopeU)) / (H_cap * (1 + slopeU * slopeU)) * dHc_U_dX[j] *
+                          lsi->d_normal_dF[j][i];
           D_CURV_DF[i] += sin(dcaL + atan(-slopeL)) / (H_cap * (1 + slopeL * slopeL)) *
                           dHc_L_dX[j] * lsi->d_normal_dF[j][i];
         }
