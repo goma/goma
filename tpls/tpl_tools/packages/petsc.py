@@ -52,7 +52,9 @@ class Package(packages.AutotoolsPackage):
                 "--with-superlu_dist-dir=" + builder.env["SUPERLU_DIST_DIR"]
             )
             configure_options.append("--with-parmetis=1")
-            configure_options.append("--with-parmetis-dir=" + builder.env["PARMETIS_DIR"])
+            configure_options.append(
+                "--with-parmetis-dir=" + builder.env["PARMETIS_DIR"]
+            )
         configure_options.append("--with-metis=1")
         configure_options.append("--with-metis-dir=" + builder.env["METIS_DIR"])
         configure_options.append("--with-ptscotch=1")

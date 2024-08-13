@@ -31,16 +31,10 @@ class Package(packages.GenericPackage):
             f.write("LMETISDIR = " + builder.env["METIS_DIR"] + "/lib\n")
             if "PARMETIS_DIR" in builder.env:
                 f.write("LPARMETISDIR = " + builder.env["PARMETIS_DIR"] + "/lib\n")
-            f.write(
-                "IMETIS = -I"
-                + builder.env["METIS_DIR"]
-                + "/include")
-            
+            f.write("IMETIS = -I" + builder.env["METIS_DIR"] + "/include")
+
             if "PARMETIS_DIR" in builder.env:
-                f.write(" -I"
-                    + builder.env["PARMETIS_DIR"]
-                    + "/include \n"
-                )
+                f.write(" -I" + builder.env["PARMETIS_DIR"] + "/include \n")
             else:
                 f.write("\n")
             f.write("LMETIS    = -L$(LPARMETISDIR) -lparmetis -L$(LMETISDIR) -lmetis\n")
@@ -63,12 +57,15 @@ class Package(packages.GenericPackage):
             f.write("LIBEXT_SHARED  = .so\n")
             f.write("SONAME = -soname\n")
             f.write(
-                "SHARED_OPT = -shared -Wl,-rpath," + builder.install_dir() + "/lib -Wl,-rpath," + builder.env["SCOTCH_DIR"] + 
-                "/lib"
+                "SHARED_OPT = -shared -Wl,-rpath,"
+                + builder.install_dir()
+                + "/lib -Wl,-rpath,"
+                + builder.env["SCOTCH_DIR"]
+                + "/lib"
             )
             if builder.env["PARMETIS_DIR"]:
                 f.write(" -Wl,-rpath," + builder.env["PARMETIS_DIR"] + "/lib")
-            f.write(" -Wl,-rpath,"+builder.env["METIS_DIR"] +"/lib\n")
+            f.write(" -Wl,-rpath," + builder.env["METIS_DIR"] + "/lib\n")
             f.write("FPIC_OPT = -fPIC\n")
             f.write("LIBEXT  = .a\n")
             f.write("OUTC    = -o\n")

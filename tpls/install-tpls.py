@@ -67,26 +67,33 @@ if __name__ == "__main__":
         "--extract-dir", help="Extract and Build location", type=pathlib.Path
     )
     parser.add_argument(
-        "--build-shared", help="Build shared libraries (Default)", action='store_true'
+        "--build-shared", help="Build shared libraries (Default)", action="store_true"
     )
     parser.add_argument(
-        "--build-static", help="Build static libraries", dest='enable_shared', action='store_false'
+        "--build-static",
+        help="Build static libraries",
+        dest="enable_shared",
+        action="store_false",
     )
     parser.set_defaults(build_shared=True)
     parser.add_argument(
         "-j", "--jobs", help="Number of parallel jobs", type=int, default=1
     )
     parser.add_argument(
-        "--enable-parmetis", help="Build ParMETIS library, (Default, check license requirements)", action='store_true'
+        "--enable-parmetis",
+        help="Build ParMETIS library, (Default, check license requirements)",
+        action="store_true",
     )
     parser.add_argument(
-        "--disable-parmetis", help="Disable ParMETIS library", dest='enable_parmetis', action='store_false'
+        "--disable-parmetis",
+        help="Disable ParMETIS library",
+        dest="enable_parmetis",
+        action="store_false",
     )
     parser.set_defaults(enable_parmetis=True)
     parser.add_argument(
         "INSTALL_DIR", help="Install location of TPLs", type=pathlib.Path
     )
-
 
     for p in packages:
         pm = importlib.import_module("tpl_tools." + ".".join(["packages", p]))
@@ -104,8 +111,6 @@ if __name__ == "__main__":
         packages.remove("parmetis")
         packages.remove("superlu_dist")
 
-
-
     install_dir = os.path.abspath(os.path.expanduser(args.INSTALL_DIR))
     download_dir = os.path.join(install_dir, "downloads")
     if args.download_dir:
@@ -115,8 +120,6 @@ if __name__ == "__main__":
         extract_dir = os.path.abspath(os.path.expanduser(args.extract_dir))
 
     jobs = args.jobs
-
-
 
     if args.cc:
         if CC:
@@ -178,6 +181,7 @@ if __name__ == "__main__":
                 logger,
                 tpl_registry,
                 args.build_shared,
+                prebuilt=True,
             )
             if build.check(True):
                 build.logger.log("Package {} found at {}".format(pc.name, package_dir))

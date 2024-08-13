@@ -137,14 +137,14 @@ class Package(packages.CMakePackage):
                 + "/include"
             )
             builder.add_option(
-               "-DTPL_ParMETIS_LIBRARIES="
-               + builder.env["PARMETIS_DIR"]
-               + "/lib/libparmetis"
-               + ext
-               + ";"
-               + builder.env["METIS_DIR"]
-               + "/lib/libmetis"
-               + ext
+                "-DTPL_ParMETIS_LIBRARIES="
+                + builder.env["PARMETIS_DIR"]
+                + "/lib/libparmetis"
+                + ext
+                + ";"
+                + builder.env["METIS_DIR"]
+                + "/lib/libmetis"
+                + ext
             )
         else:
             builder.add_option("-DTPL_ENABLE_ParMETIS:BOOL=OFF")

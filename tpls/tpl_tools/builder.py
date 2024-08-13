@@ -108,9 +108,7 @@ class Builder(object):
 
     def install_dir(self):
         if self.prebuilt:
-            return os.path.join(
-                self._install_dir
-            )
+            return os.path.join(self._install_dir)
 
         return os.path.join(
             self._install_dir, self._package.name + "-" + self._package.version

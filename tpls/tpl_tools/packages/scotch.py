@@ -11,7 +11,8 @@ class Package(packages.CMakePackage):
         self.filename = "scotch-" + self.version + ".tar.gz"
         self.url = (
             "https://gitlab.inria.fr/scotch/scotch/-/archive/v"
-            +self.version +"/scotch-v"
+            + self.version
+            + "/scotch-v"
             + self.version
             + ".tar.gz"
         )
@@ -45,13 +46,13 @@ class Package(packages.CMakePackage):
         builder.add_option("-DCMAKE_C_COMPILER=" + CC)
         builder.add_option("-DCMAKE_CXX_COMPILER=" + CXX)
         builder.add_option("-DCMAKE_Fortran_COMPILER=" + FC)
-    
+
     def install(self, builder):
         cmake = builder._registry.get_executable("cmake")
         builder.run_command([cmake, "--install", "build_tpl"])
         mi = os.path.join(builder.install_dir(), "include/metis.h")
         pi = os.path.join(builder.install_dir(), "include/parmetis.h")
-        for f in [mi,pi]:
+        for f in [mi, pi]:
             if os.path.exists(f):
                 os.unlink(f)
 
