@@ -2,11 +2,11 @@ from tpl_tools.packages import packages
 import os
 
 
-class Package(packages.AutotoolsPackage):
+class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "netcdf"
-        self.version = "4.9.0"
-        self.sha256 = "4c956022b79c08e5e14eee8df51b13c28e6121c2b7e7faadc21b375949400b49"
+        self.version = "4.9.2"
+        self.sha256 = "cf11babbbdb9963f09f55079e0b019f6d0371f52f8e1264a5ba8e9fdab1a6c48"
         self.filename = "netcdf-c-" + self.version + ".tar.gz"
         self.url = (
             "https://downloads.unidata.ucar.edu/netcdf-c/"
@@ -30,20 +30,17 @@ class Package(packages.AutotoolsPackage):
         builder.env["CC"] = builder._registry.get_executable("mpicc")
         builder.env["CXX"] = builder._registry.get_executable("mpicxx")
         builder.env["FC"] = builder._registry.get_executable("mpifort")
-        builder.env["CFLAGS"] = "-I" + builder.env["HDF5_DIR"] + "/include"
-        builder.env["CFLAGS"] += " -I" + builder.env["PNETCDF_DIR"] + "/include"
-        builder.env["CPPFLAGS"] = "-I" + builder.env["HDF5_DIR"] + "/include"
-        builder.env["CPPFLAGS"] += " -I" + builder.env["PNETCDF_DIR"] + "/include"
-        builder.env["LDFLAGS"] = "-L" + builder.env["HDF5_DIR"] + "/lib"
-        builder.env["LDFLAGS"] += " -L" + builder.env["PNETCDF_DIR"] + "/lib"
 
     def configure_options(self, builder):
         if builder.build_shared:
-            builder.add_option("--enable-shared")
+            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
         else:
-            builder.add_option("--enable-shared=off")
-        builder.add_option("--enable-pnetcdf")
-        builder.add_option("--disable-dap")
+            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
+        builder.add_option("-DENABLE_DAP=OFF")
+        builder.add_option("-DENABLE_BYTERANGE:BOOL=OFF")
+        builder.add_option("-DENABLE_PNETCDF:BOOL=ON")
+        builder.add_option("-DENABLE_CDF5=ON")
+        builder.add_option("-DENABLE_MMAP:BOOL=ON")
 
     def register(self, builder):
         registry = builder._registry
