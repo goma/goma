@@ -3194,6 +3194,7 @@ struct Lubrication_Auxiliaries {
   double gradP_tangent[DIM]; /* Tangent vector of the pressure gradient */
   double gradP_normal[DIM];  /* Unit vector perpendicular to the pressure */
   double H;                  /* Lubrication Gap Height */
+  double H_cap;              /* Lubrication Gap Height unaffected by wall effects */
   double srate;              /* Lubrication Characteristic Shear Rate */
   double mu_star;            /* Lubrication Characteristic Viscosity */
   double op_curv;            /* Lubrication Out-of-plane Curvature */

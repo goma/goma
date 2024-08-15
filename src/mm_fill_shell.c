@@ -7271,7 +7271,8 @@ int assemble_shell_energy(double time,            /* present time value */
   if (pd->gv[R_LUBP]) {
     calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
   }
-  H = LubAux->H;
+  /* Let's use the lubrication gap unaffected by wall effects...  */
+  H = LubAux->H_cap;
   k_eff = t_cond; /* default laminar case */
   d_k_eff_dh = 0.;
 
@@ -7403,7 +7404,7 @@ int assemble_shell_energy(double time,            /* present time value */
       if (pd->TimeIntegration != STEADY) {
         if (pd->e[pg->imtrx][eqn] & T_MASS) {
           mass = fv_dot->sh_t;
-          mass *= -H * phi_i * rho * Cp * det_J * wt;
+          mass *= H * phi_i * rho * Cp * det_J * wt;
           mass *= h3;
           mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
         }
@@ -7424,7 +7425,7 @@ int assemble_shell_energy(double time,            /* present time value */
           advection += LubAux->q[p] * grad_T[p];
         }
 
-        advection *= -rho * Cp * det_J * wt_func * wt;
+        advection *= rho * Cp * det_J * wt_func * wt;
         advection *= h3;
         advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
       }
@@ -7525,7 +7526,7 @@ int assemble_shell_energy(double time,            /* present time value */
           if (pd->TimeIntegration != STEADY) {
             if (pd->e[pg->imtrx][eqn] & T_MASS) {
               mass = (1 + 2. * tt) * phi_j / dt;
-              mass *= -H * phi_i * rho * Cp * det_J * wt;
+              mass *= H * phi_i * rho * Cp * det_J * wt;
               mass *= h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
             }
           }
@@ -7539,7 +7540,7 @@ int assemble_shell_energy(double time,            /* present time value */
               advection += LubAux->dq_dT[a] * grad_T[a] * phi_j;
             }
 
-            advection *= -rho * Cp * det_J * wt * wt_func;
+            advection *= rho * Cp * det_J * wt * wt_func;
             advection *= h3;
             advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
           }
@@ -7592,7 +7593,7 @@ int assemble_shell_energy(double time,            /* present time value */
           if (pd->TimeIntegration != STEADY) {
             if (pd->e[pg->imtrx][eqn] & T_MASS) {
               mass = fv_dot->sh_t;
-              mass *= -H * phi_i * det_J * wt * (rho * d_Cp->F[j] + d_rho->F[j] * Cp);
+              mass *= H * phi_i * det_J * wt * (rho * d_Cp->F[j] + d_rho->F[j] * Cp);
               mass *= h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
             }
           }
@@ -7605,7 +7606,7 @@ int assemble_shell_energy(double time,            /* present time value */
               advection += LubAux->dq_df[a][j] * grad_T[a];
             }
 
-            advection *= -(rho * d_Cp->F[j] + d_rho->F[j] * Cp) * det_J * wt * wt_func;
+            advection *= rho * d_Cp->F[j] + d_rho->F[j] * Cp * det_J * wt * wt_func;
             advection *= h3;
             advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
           }
@@ -7681,7 +7682,7 @@ int assemble_shell_energy(double time,            /* present time value */
             if (pd->TimeIntegration != STEADY) {
               if (pd->e[pg->imtrx][eqn] & T_MASS) {
                 mass = fv_dot->sh_t;
-                mass *= (-LubAux->dH_dmesh[b][jk] * phi_i * rho * Cp * det_J * wt -
+                mass *= (LubAux->dH_dmesh[b][jk] * phi_i * rho * Cp * det_J * wt +
                          H * phi_i * rho * Cp * fv->dsurfdet_dx[b][jk] * wt);
                 mass *= h3;
                 mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
@@ -7698,7 +7699,7 @@ int assemble_shell_energy(double time,            /* present time value */
                 advection += fv->dsurfdet_dx[b][jk] * LubAux->q[p] * grad_T[p];
               }
 
-              advection *= -rho * Cp * wt * wt_func;
+              advection *= rho * Cp * wt * wt_func;
               advection *= h3;
 
               if (supg != 0.) {
@@ -7711,7 +7712,7 @@ int assemble_shell_energy(double time,            /* present time value */
                                   LubAux->dH_dmesh[b][jk]);
                 }
                 for (p = 0; p < dim; p++) {
-                  advection += (-rho * Cp * d_wt_func * h3 * det_J * wt) * LubAux->q[p] * grad_T[p];
+                  advection += rho * Cp * d_wt_func * h3 * det_J * wt * LubAux->q[p] * grad_T[p];
                 }
               }
               advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
@@ -7789,7 +7790,7 @@ int assemble_shell_energy(double time,            /* present time value */
             if (pd->TimeIntegration != STEADY) {
               if (pd->e[pg->imtrx][eqn] & T_MASS) {
                 mass = fv_dot->sh_t;
-                mass *= (-LubAux->dH_drealsolid[b][jk] * phi_i * rho * Cp * det_J * wt);
+                mass *= LubAux->dH_drealsolid[b][jk] * phi_i * rho * Cp * det_J * wt;
                 mass *= h3;
                 mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
               }
@@ -7803,7 +7804,7 @@ int assemble_shell_energy(double time,            /* present time value */
                 advection += det_J * LubAux->dq_drs[p][b][jk] * grad_T[p];
               }
 
-              advection *= -rho * Cp * wt * wt_func;
+              advection *= rho * Cp * wt * wt_func;
               advection *= h3;
 
               if (supg != 0.) {
@@ -7813,7 +7814,7 @@ int assemble_shell_energy(double time,            /* present time value */
                                        LubAux->dH_drealsolid[b][jk]);
                 }
                 for (p = 0; p < dim; p++) {
-                  advection += (-rho * Cp * d_wt_func * h3 * det_J * wt) * LubAux->q[p] * grad_T[p];
+                  advection += rho * Cp * d_wt_func * h3 * det_J * wt * LubAux->q[p] * grad_T[p];
                 }
               }
               advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
@@ -7887,7 +7888,7 @@ int assemble_shell_energy(double time,            /* present time value */
                 }
 
                 for (p = 0; p < dim; p++) {
-                  advection += (-rho * Cp * d_wt_func * h3 * det_J * wt) * LubAux->q[p] * grad_T[p];
+                  advection += rho * Cp * d_wt_func * h3 * det_J * wt * LubAux->q[p] * grad_T[p];
                 }
               }
               advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
@@ -7927,7 +7928,7 @@ int assemble_shell_energy(double time,            /* present time value */
           if (pd->TimeIntegration != STEADY) {
             if (pd->e[pg->imtrx][eqn] & T_MASS) {
               mass = fv_dot->sh_t;
-              mass *= (-phi_j * phi_i * rho * Cp * det_J * wt);
+              mass *= phi_j * phi_i * rho * Cp * det_J * wt;
               mass *= h3;
               mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
             }
@@ -7949,7 +7950,7 @@ int assemble_shell_energy(double time,            /* present time value */
               advection += LubAux->q[p] * grad_T[p] * d_wt_func;
             }
 
-            advection *= -rho * Cp * det_J * wt;
+            advection *= rho * Cp * det_J * wt;
             advection *= h3;
             advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
           }
@@ -8003,7 +8004,7 @@ int assemble_shell_energy(double time,            /* present time value */
           if (pd->TimeIntegration != STEADY) {
             if (pd->e[pg->imtrx][eqn] & T_MASS) {
               mass = fv_dot->sh_t;
-              mass *= -LubAux->dH_dp * phi_j * phi_i * rho * Cp * det_J * wt;
+              mass *= LubAux->dH_dp * phi_j * phi_i * rho * Cp * det_J * wt;
               mass *= h3;
               mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
             }
@@ -8020,7 +8021,7 @@ int assemble_shell_energy(double time,            /* present time value */
               }
             }
 
-            advection *= -rho * Cp * det_J * wt * wt_func;
+            advection *= rho * Cp * det_J * wt * wt_func;
             advection *= h3;
             advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
@@ -8040,7 +8041,7 @@ int assemble_shell_energy(double time,            /* present time value */
                        grad_II_phi_i[p]);
                 }
               }
-              advection_b *= -rho * Cp * det_J * wt;
+              advection_b *= rho * Cp * det_J * wt;
             }
             advection += advection_b;
           }

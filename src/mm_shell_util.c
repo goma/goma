@@ -4661,6 +4661,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     memset(LubAux->dq_dnormal, 0.0, sizeof(double) * DIM * DIM * MDE);
 
     LubAux->H = H;
+    LubAux->H_cap = H_cap;
     LubAux->dH_dp = D_H_DP;
     LubAux->dH_ddh = D_H_ddh;
     LubAux->gradP_mag = 0;
@@ -5525,7 +5526,9 @@ void calculate_lub_q_v_old(
     }
 
     /* Curvature - numerical in planview direction */
-    if (pd->e[pg->imtrx][SHELL_LUB_CURV]) {
+    if (mp->Lub_Curv_Combine) {
+      CURV = fv_old->sh_l_curv;
+    } else if (pd->e[pg->imtrx][SHELL_LUB_CURV]) {
       CURV += fv_old->sh_l_curv;
     }
     if (pd->e[pg->imtrx][SHELL_LUB_CURV_2]) {
