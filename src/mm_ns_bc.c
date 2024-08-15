@@ -7922,7 +7922,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   dbl advection_a, advection_b, advection_c, advection_d;
   dbl diffusion;
   dbl source;
-  dbl source1;
   dbl source_a = 0, source_b = 0, source_c = 0;
   int err;
   dbl alpha = 0;  /* This is the Geisekus mobility parameter */
@@ -7973,7 +7972,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
 
   /* dot product tensors */
 
-  dbl s_dot_s[DIM][DIM];
   dbl b_dot_g[DIM][DIM];
 
   /* polymer viscosity and derivatives */
@@ -7988,11 +7986,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
       (vn->ConstitutiveEquation == SARAMITO_OLDROYDB || vn->ConstitutiveEquation == SARAMITO_PTT ||
        vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
 
-  dbl saramitoCoeff = 1.;
-
-  dbl d_mup_dv_pj;
-  dbl d_mup_dmesh_pj;
-
   /*  shift function */
   dbl at = 0.0;
   dbl d_at_dT[MDE];
@@ -8002,7 +7995,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   dbl v_dot_del_b[DIM][DIM];
   dbl x_dot_del_b[DIM][DIM];
 
-  dbl d_xdotdels_dm;
 
   dbl d_vdotdels_dm;
   int inv_v_s[DIM][DIM];
@@ -8279,24 +8271,12 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
      */
 
     if (af->Assemble_Jacobian) {
-      dbl R_source, R_advection; /* Places to put the raw residual portions
-                                    instead of constantly recalcing them */
       for (int ii = 0; ii < VIM; ii++) {
         for (int jj = 0; jj < VIM; jj++) {
           if (ii <= jj) /* since the stress tensor is symmetric, only assemble the upper half */
           {
             eqn = R_s[mode][ii][jj];
             k = inv_v_s[ii][jj];
-
-            R_advection = v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
-            R_advection += b_dot_g[ii][jj] + a_dot_b[ii][jj];
-
-            R_source = delta(ii, jj) - b[ii][jj];
-
-            if (DOUBLE_NONZERO(alpha))
-              R_source += alpha * lambda * (s_dot_s[ii][jj] / mup);
-            R_source *= saramitoCoeff;
-            R_source += -at * mup * (g[ii][jj] + gt[ii][jj]);
 
             for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
               int var;
@@ -8330,15 +8310,8 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                   }
 
                   source = 0.;
-                  source1 = 0.;
                   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                     source = -(g[ii][jj] + gt[ii][jj]) * (at * d_mup->T[j] + mup * d_at_dT[j]);
-
-                    if (DOUBLE_NONZERO(alpha)) {
-                      source1 -= s_dot_s[ii][jj] / (mup * mup) * d_mup->T[j];
-                      source1 *= lambda * alpha * saramitoCoeff;
-                      source += source1;
-                    }
                     source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                   }
 
@@ -8354,8 +8327,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                 if (pd->v[pg->imtrx][var]) {
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
-                    d_mup_dv_pj = d_mup->v[p][j];
-
                     mass = 0.;
 
                     if (pd->TimeIntegration != STEADY) {
@@ -8383,24 +8354,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                     source = 0.;
 
                     if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-                      source_c = -at * d_mup_dv_pj * (g[ii][jj] + gt[ii][jj]);
-                      if (evss_gradv) {
-                        if (pd->CoordinateSystem != CYLINDRICAL) {
-                          source_c -= at * mup *
-                                      (bf[VELOCITY1 + ii]->grad_phi_e[j][p][ii][jj] +
-                                       bf[VELOCITY1 + jj]->grad_phi_e[j][p][jj][ii]);
-                        } else {
-                          source_c -= at * mup *
-                                      (bf[VELOCITY1]->grad_phi_e[j][p][ii][jj] +
-                                       bf[VELOCITY1]->grad_phi_e[j][p][jj][ii]);
-                        }
-                      }
-
                       source_a = 0.;
-                      if (DOUBLE_NONZERO(alpha)) {
-                        source_a = -s_dot_s[ii][jj] / (mup * mup);
-                        source_a *= saramitoCoeff * alpha * lambda * d_mup_dv_pj;
-                      }
 
                       source_b = 0.;
                       source = source_a + source_b + source_c;
@@ -8428,10 +8382,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                       source_a = -at * d_mup->C[w][j] * (g[ii][jj] + gt[ii][jj]);
 
                       source_b = 0.;
-                      if (DOUBLE_NONZERO(alpha)) {
-                        source_b -= s_dot_s[ii][jj] / (mup * mup);
-                        source_b *= alpha * lambda * saramitoCoeff * d_mup->C[w][j];
-                      }
                       source = source_a + source_b;
                       source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                     }
@@ -8458,10 +8408,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                     source_a += -at * d_mup->P[j] * (g[ii][jj] + gt[ii][jj]);
 
                     source_b = 0.;
-                    if (DOUBLE_NONZERO(alpha)) {
-                      source_b -= (s_dot_s[ii][jj] / (mup * mup));
-                      source_b *= d_mup->P[j] * alpha * lambda * saramitoCoeff;
-                    }
                     source = source_a + source_b;
                     source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                   }
@@ -8478,7 +8424,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                 if (pd->v[pg->imtrx][var]) {
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
-                    d_mup_dmesh_pj = d_mup->X[p][j];
 
                     mass = 0.;
                     mass_a = 0.;

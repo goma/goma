@@ -705,7 +705,6 @@ int assemble_k_omega_sst_modified(dbl time_value, /* current time */
   //! WIM is the length of the velocity vector
   int i;
   int eqn, peqn;
-  int *pdv = pd->v[pg->imtrx];
 
   int status = 0;
 
@@ -736,7 +735,6 @@ int assemble_k_omega_sst_modified(dbl time_value, /* current time */
   }
 
   dbl omega = fmax(1e-20, fv_old->turb_omega);
-  dbl k = fmax(1e-20, fv_old->turb_k);
   dbl sigma_omega1 = 0.5;
   dbl sigma_omega2 = 0.856;
   dbl sigma_k1 = 0.85;

@@ -1,16 +1,11 @@
 #include "ad_turbulence.h"
 
-#ifdef __cplusplus
-void ad_ve_polymer_stress(ADType gamma[DIM][DIM], ADType stress[DIM][DIM]);
-void ad_fluid_stress(ADType Pi[DIM][DIM]);
-int ad_momentum_source_term(ADType f[DIM], /* Body force. */
-                            dbl time);
-ADType ad_viscosity(struct Generalized_Newtonian *gn_local, ADType gamma_dot[DIM][DIM]);
-#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "exo_struct.h"
 
 int ad_assemble_momentum(dbl time,       /* current time */
                          dbl tt,         /* parameter to vary time integration from
@@ -35,4 +30,11 @@ dbl ad_viscosity_wrap(struct Generalized_Newtonian *gn_local);
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef __cplusplus
+void ad_fluid_stress(ADType Pi[DIM][DIM]);
+int ad_momentum_source_term(ADType f[DIM], /* Body force. */
+                            dbl time);
+ADType ad_viscosity(struct Generalized_Newtonian *gn_local, ADType gamma_dot[DIM][DIM]);
 #endif

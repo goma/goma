@@ -199,7 +199,7 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
   if (pd->gv[POLYMER_STRESS11] && is_evss_f_model(vn->evssModel)) {
     for (int mode = 0; mode < vn->modes; mode++) {
       /* get polymer viscosity */
-      mup = viscosity(ve[mode]->gn, gamma, NULL);
+      mup = viscosity(ve[mode]->gn, gamma, d_mup);
       mu += mup;
 
       int var = VELOCITY1;

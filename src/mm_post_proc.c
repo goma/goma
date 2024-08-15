@@ -994,7 +994,7 @@ static int calc_standard_fields(double **post_proc_vect,
         if (upd->AutoDiff) {
           mup = ad_viscosity_wrap(ve[mode]->gn);
         } else {
-          mu = viscosity(ve[mode]->gn, gamma, NULL);
+          mup = viscosity(ve[mode]->gn, gamma, NULL);
         }
         mu += at * mup;
       }
@@ -10732,7 +10732,6 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
 
   if (CONF_MAP != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11]) {
     CONF_MAP = index_post;
-    char strings[3][2] = {"x", "y", "z"};
     // Loop over any additional viscoelastic modes
     for (mode = 0; mode < MAX_MODES; mode++) {
       for (a = 0; a < VIM; a++) {
