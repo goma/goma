@@ -7995,7 +7995,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   dbl v_dot_del_b[DIM][DIM];
   dbl x_dot_del_b[DIM][DIM];
 
-
   dbl d_vdotdels_dm;
   int inv_v_s[DIM][DIM];
 

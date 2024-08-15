@@ -22,6 +22,9 @@ class Package(packages.GenericPackage):
         self.build_command = ["make"]
         self.build_command.append("USE_THREAD=0")
         self.build_command.append("USE_OPENMP=0")
+        self.build_command.append("DYNAMIC_ARCH=1")
+        self.build_command.append("TARGET=GENERIC")
+        self.build_command.append("DYNAMIC_OLDER=1")
         if builder.build_shared:
             self.build_command.append("NO_SHARED=0")
         else:

@@ -2,8 +2,8 @@
 #include <Sacado.hpp>
 
 #include "ad_momentum.h"
-#include "ad_turbulence.h"
 #include "ad_stress.h"
+#include "ad_turbulence.h"
 
 extern "C" {
 

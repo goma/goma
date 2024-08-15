@@ -323,39 +323,43 @@ double viscosity(struct Generalized_Newtonian *gn_local,
     if ((gn_local->ConstitutiveEquation == TURBULENT_SA) ||
         (gn_local->ConstitutiveEquation == TURBULENT_SA_DYNAMIC)) {
 #ifdef GOMA_ENABLE_SACADO
-      mu = ad_sa_viscosity(gn_local, d_mu);
-#else
-      dbl scale = 1.0;
-      DENSITY_DEPENDENCE_STRUCT d_rho;
-      if (gn_local->ConstitutiveEquation == TURBULENT_SA_DYNAMIC) {
-        scale = density(&d_rho, tran->time_value);
-      }
-      int negative_mu_e = FALSE;
-      if (fv_old->eddy_nu < 0) {
-        negative_mu_e = TRUE;
-      }
-
-      double mu_newt = mp->viscosity;
-      if (negative_mu_e) {
-        mu = mu_newt;
+      if (upd->AutoDiff) {
+        mu = ad_sa_viscosity(gn_local, d_mu);
       } else {
+#endif
+        dbl scale = 1.0;
+        DENSITY_DEPENDENCE_STRUCT d_rho;
+        if (gn_local->ConstitutiveEquation == TURBULENT_SA_DYNAMIC) {
+          scale = density(&d_rho, tran->time_value);
+        }
+        int negative_mu_e = FALSE;
+        if (fv_old->eddy_nu < 0) {
+          negative_mu_e = TRUE;
+        }
 
-        double mu_e = fv->eddy_nu;
-        double cv1 = 7.1;
-        double chi = mu_e / mu_newt;
-        double fv1 = pow(chi, 3) / (pow(chi, 3) + pow(cv1, 3));
+        double mu_newt = mp->viscosity;
+        if (negative_mu_e) {
+          mu = mu_newt;
+        } else {
 
-        mu = scale * (mu_newt + (mu_e * fv1));
+          double mu_e = fv->eddy_nu;
+          double cv1 = 7.1;
+          double chi = mu_e / mu_newt;
+          double fv1 = pow(chi, 3) / (pow(chi, 3) + pow(cv1, 3));
 
-        double dchi_dmu_e = 1.0 / mu_newt;
-        double dfv1_dchi = 3 * pow(cv1, 3) * pow(chi, 2) / (pow((pow(chi, 3) + pow(cv1, 3)), 2));
-        double dfv1_dmu_e = dfv1_dchi * dchi_dmu_e;
+          mu = scale * (mu_newt + (mu_e * fv1));
 
-        if (d_mu != NULL) {
-          for (j = 0; j < ei[pg->imtrx]->dof[EDDY_NU]; j++) {
-            d_mu->eddy_nu[j] = scale * bf[EDDY_NU]->phi[j] * (fv1 + mu_e * dfv1_dmu_e);
+          double dchi_dmu_e = 1.0 / mu_newt;
+          double dfv1_dchi = 3 * pow(cv1, 3) * pow(chi, 2) / (pow((pow(chi, 3) + pow(cv1, 3)), 2));
+          double dfv1_dmu_e = dfv1_dchi * dchi_dmu_e;
+
+          if (d_mu != NULL) {
+            for (j = 0; j < ei[pg->imtrx]->dof[EDDY_NU]; j++) {
+              d_mu->eddy_nu[j] = scale * bf[EDDY_NU]->phi[j] * (fv1 + mu_e * dfv1_dmu_e);
+            }
           }
         }
+#ifdef GOMA_ENABLE_SACADO
       }
 #endif
     }

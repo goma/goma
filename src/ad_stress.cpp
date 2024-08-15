@@ -5,7 +5,7 @@
 
 extern "C" {
 
-  /* GOMA include files */
+/* GOMA include files */
 #include "ad_turbulence.h"
 #include "density.h"
 #include "el_elm.h"

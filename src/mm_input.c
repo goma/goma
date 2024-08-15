@@ -6820,6 +6820,81 @@ void rd_solver_specs(FILE *ifp, char *input) {
     ECHO("(Pressure Stabilization Scaling = 0.0) (default)", echo_file);
   }
 
+  iread = look_for_optional(ifp, "Pressure Stabilization Disable Tau Sens", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0 || strcmp(input, "false") == 0) {
+      upd->disable_pspg_tau_sensitivities = false;
+    } else if (strcmp(input, "yes") == 0 || strcmp(input, "true") == 0) {
+      upd->disable_pspg_tau_sensitivities = true;
+    } else {
+      GOMA_EH(GOMA_ERROR,
+              "invalid choice: Pressure Stabilization Disable Tau Sens, yes (true) or no (false)");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Pressure Stabilization Disable Tau Sens",
+             input);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->disable_pspg_tau_sensitivities = false;
+    ECHO("(Pressure Stabilization Disable Tau Sens = no) (default)", echo_file);
+  }
+  iread = look_for_optional(ifp, "Pressure Stabilization Lagged Tau", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0 || strcmp(input, "false") == 0) {
+      upd->pspg_lagged_tau = false;
+    } else if (strcmp(input, "yes") == 0 || strcmp(input, "true") == 0) {
+      upd->pspg_lagged_tau = true;
+    } else {
+      GOMA_EH(GOMA_ERROR,
+              "invalid choice: Pressure Stabilization Lagged Tau, yes (true) or no (false)");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Pressure Stabilization Lagged Tau",
+             input);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->pspg_lagged_tau = false;
+    ECHO("(Pressure Stabilization Lagged Tau = no) (default)", echo_file);
+  }
+
+  iread = look_for_optional(ifp, "SUPG Lagged Tau", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0 || strcmp(input, "false") == 0) {
+      upd->supg_lagged_tau = false;
+    } else if (strcmp(input, "yes") == 0 || strcmp(input, "true") == 0) {
+      upd->supg_lagged_tau = true;
+    } else {
+      GOMA_EH(GOMA_ERROR, "invalid choice: SUPG Lagged Tau, yes (true) or no (false)");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "SUPG Lagged Tau", input);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->supg_lagged_tau = false;
+    ECHO("(SUPG Lagged Tau = no) (default)", echo_file);
+  }
+
+  iread = look_for_optional(ifp, "SUPG Disable Tau Sens", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0 || strcmp(input, "false") == 0) {
+      upd->disable_supg_tau_sensitivities = false;
+    } else if (strcmp(input, "yes") == 0 || strcmp(input, "true") == 0) {
+      upd->disable_supg_tau_sensitivities = true;
+    } else {
+      GOMA_EH(GOMA_ERROR, "invalid choice: SUPG Disable Tau Sens, yes (true) or no (false)");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "SUPG Disable Tau Sens", input);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->disable_supg_tau_sensitivities = false;
+    ECHO("(SUPG Disable Tau Sens = no) (default)", echo_file);
+  }
+
   iread = look_for_optional(ifp, "PSPG Advection Correction", input, '=');
   if (iread == 1) {
     (void)read_string(ifp, input, '\n');
@@ -6906,8 +6981,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
     if (upd->SegregatedSubcycles < 1) {
       GOMA_EH(GOMA_ERROR, "Use AutoDiff Assembly should equal yes or no, instead found %s", input);
     }
-    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Use AutoDiff Assembly",
-             input);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Use AutoDiff Assembly", input);
     ECHO(echo_string, echo_file);
   } else {
     upd->AutoDiff = 0;

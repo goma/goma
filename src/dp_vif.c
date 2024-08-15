@@ -1013,6 +1013,10 @@ void noahs_ark(void) {
   ddd_add_member(n, &upd->SegregatedSolve, 1, MPI_INT);
   ddd_add_member(n, &upd->SegregatedSubcycles, 1, MPI_INT);
   ddd_add_member(n, &upd->AutoDiff, 1, MPI_INT);
+  ddd_add_member(n, &upd->disable_pspg_tau_sensitivities, 1, MPI_INT);
+  ddd_add_member(n, &upd->disable_supg_tau_sensitivities, 1, MPI_INT);
+  ddd_add_member(n, &upd->supg_lagged_tau, 1, MPI_INT);
+  ddd_add_member(n, &upd->pspg_lagged_tau, 1, MPI_INT);
   ddd_add_member(n, &upd->PSPG_advection_correction, 1, MPI_INT);
   ddd_add_member(n, &upd->petsc_solve_post_proc, 1, MPI_INT);
   ddd_add_member(n, &upd->devss_traceless_gradient, 1, MPI_INT);

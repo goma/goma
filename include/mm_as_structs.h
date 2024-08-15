@@ -914,6 +914,10 @@ struct Uniform_Problem_Description {
   int strong_bc_replace;
   dbl strong_penalty;
   int AutoDiff;
+  int disable_pspg_tau_sensitivities;
+  int pspg_lagged_tau;
+  int disable_supg_tau_sensitivities;
+  int supg_lagged_tau;
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/

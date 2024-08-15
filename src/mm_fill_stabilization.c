@@ -169,6 +169,14 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
 
+  int lagged_tau = upd->supg_lagged_tau;
+  int ignore_tau_sens = upd->disable_supg_tau_sensitivities;
+
+  if (lagged_tau && pd->TimeIntegration != TRANSIENT) {
+    GOMA_EH(-1, "SUPG Lagged Tau specified but we are steady state, currently only lagged between "
+                "timesteps.");
+  }
+
   if (pspg_scale) {
     dbl rho = density(d_rho, dt);
     if (rho > 0) {
@@ -184,17 +192,25 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
   dbl v_d_gv = 0;
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
-      v_d_gv += fabs(fv_old->v[i] * G[i][j] * fv_old->v[j]);
+      if (lagged_tau) {
+        v_d_gv += fabs(fv_old->v[i] * G[i][j] * fv_old->v[j]);
+      } else {
+        v_d_gv += fabs(fv->v[i] * G[i][j] * fv->v[j]);
+      }
     }
   }
 
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
-      gamma[i][j] = fv_old->grad_v[i][j] + fv_old->grad_v[j][i];
+      if (lagged_tau) {
+        gamma[i][j] = fv_old->grad_v[i][j] + fv_old->grad_v[j][i];
+      } else {
+        gamma[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
+      }
     }
   }
 
-  mu = viscosity(gn, gamma, NULL);
+  mu = viscosity(gn, gamma, d_mu);
   dbl mup = 0.0;
   if (pd->gv[POLYMER_STRESS11] && is_evss_f_model(vn->evssModel)) {
     for (int mode = 0; mode < vn->modes; mode++) {
@@ -275,13 +291,15 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
   }
 
   dbl d_v_d_gv[DIM][MDE];
-  for (int a = 0; a < dim; a++) {
-    for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
-      d_v_d_gv[a][k] = 0.0;
-      for (int i = 0; i < dim; i++) {
-        for (int j = 0; j < dim; j++) {
-          d_v_d_gv[a][k] += 0; // delta(a, i) * bf[VELOCITY1 + a]->phi[k] * G[i][j] * fv->v[j] +
-                               //  delta(a, j) * fv->v[i] * G[i][j] * bf[VELOCITY1 + a]->phi[k];
+  if (!lagged_tau && !ignore_tau_sens) {
+    for (int a = 0; a < dim; a++) {
+      for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
+        d_v_d_gv[a][k] = 0.0;
+        for (int i = 0; i < dim; i++) {
+          for (int j = 0; j < dim; j++) {
+            d_v_d_gv[a][k] += delta(a, i) * bf[VELOCITY1 + a]->phi[k] * G[i][j] * fv->v[j] +
+                              delta(a, j) * fv->v[i] * G[i][j] * bf[VELOCITY1 + a]->phi[k];
+          }
         }
       }
     }
@@ -295,36 +313,52 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
 
   dbl d_diff_g_g_dmu = 0 * 2.0 * diff_g_g / mu;
   dbl supg_tau_cubed = tau_terms->tau * tau_terms->tau * tau_terms->tau;
+  if (lagged_tau || ignore_tau_sens) {
+    supg_tau_cubed = 0; // this will remove the majority of the sensitivites.
+  }
 
   for (int a = 0; a < dim; a++) {
     for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
-      tau_terms->d_tau_dv[a][k] =
-          inv_rho * -0.5 * (d_v_d_gv[a][k] + (0 * d_diff_g_g_dmu * d_mu->v[a][k])) * supg_tau_cubed;
+      if (lagged_tau || ignore_tau_sens) {
+        tau_terms->d_tau_dv[a][k] = 0;
+      } else {
+        tau_terms->d_tau_dv[a][k] = inv_rho * -0.5 *
+                                    (d_v_d_gv[a][k] + (0 * d_diff_g_g_dmu * d_mu->v[a][k])) *
+                                    supg_tau_cubed;
+      }
     }
   }
 
   if (pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
-    dbl dG[DIM][DIM][DIM][MDE];
-    get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim,
-                            MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
-    for (int a = 0; a < dim; a++) {
-      for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; k++) {
-        dbl v_d_gv_dx = 0;
-        for (int i = 0; i < dim; i++) {
-          for (int j = 0; j < dim; j++) {
-            // v_d_gv_dx += fv->v[i] * dG[i][j][a][k] * fv->v[j];
-          }
+    if (lagged_tau || ignore_tau_sens) {
+      for (int a = 0; a < dim; a++) {
+        for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; k++) {
+          tau_terms->d_tau_dX[a][k] = 0;
         }
+      }
+    } else {
+      dbl dG[DIM][DIM][DIM][MDE];
+      get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim,
+                              MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
+      for (int a = 0; a < dim; a++) {
+        for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; k++) {
+          dbl v_d_gv_dx = 0;
+          for (int i = 0; i < dim; i++) {
+            for (int j = 0; j < dim; j++) {
+              v_d_gv_dx += fv->v[i] * dG[i][j][a][k] * fv->v[j];
+            }
+          }
 
-        dbl diff_g_g_dx = 0;
-        for (int i = 0; i < dim; i++) {
-          for (int j = 0; j < dim; j++) {
-            // diff_g_g_dx += 2 * coeff * dG[i][j][a][k] * G[i][j];
+          dbl diff_g_g_dx = 0;
+          for (int i = 0; i < dim; i++) {
+            for (int j = 0; j < dim; j++) {
+              diff_g_g_dx += 2 * coeff * dG[i][j][a][k] * G[i][j];
+            }
           }
+          tau_terms->d_tau_dX[a][k] =
+              inv_rho * -0.5 * (v_d_gv_dx + diff_g_g_dx + 0 * d_mu->X[a][k] * d_diff_g_g_dmu) *
+              supg_tau_cubed;
         }
-        tau_terms->d_tau_dX[a][k] = inv_rho * -0.5 *
-                                    (v_d_gv_dx + diff_g_g_dx + 0 * d_mu->X[a][k] * d_diff_g_g_dmu) *
-                                    supg_tau_cubed;
       }
     }
   }

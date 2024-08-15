@@ -5,6 +5,13 @@
 #include "mm_as_structs.h"
 #include "std.h"
 
+enum pspg_type {
+  PSPG_NONE = 0,
+  PSPG_GLOBAL = 1,
+  PSPG_LOCAL = 2,
+  PSPG_SHAKIB = 3,
+};
+
 typedef struct {
   dbl supg_tau;
   dbl d_supg_tau_dv[DIM][MDE];
