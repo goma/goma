@@ -338,7 +338,7 @@ endif()
 
 option(ENABLE_OMEGA_H "ENABLE_OMEGA_H" ON)
 if(ENABLE_OMEGA_H)
-  find_package(Omega_h 9)
+  find_package(Omega_h)
   if(Omega_h_FOUND)
     set_target_properties(Omega_h::omega_h PROPERTIES INTERFACE_COMPILE_OPTIONS
                                                       "")

@@ -45,6 +45,41 @@ PETSc is configured through `pkg-config` so `pkg-config` should be available on 
 
 ### Building third party libraries
 
+#### TPL build script
+
+A third party library builder is available in the `tpls` folder named `tpls/install-tpls.py`. 
+This tool should work with any semi-recent python3 (RedHat 8 or later)
+
+Some basic build dependencies should already be present on your system:
+
+For Ubuntu this will install the necessary packages to run the script:
+
+    sudo apt-get install git build-essential m4 zlib1g-dev libx11-dev gfortran pkg-config autoconf
+
+For CentOS / Fedora
+
+ .  sudo dnf install git patch gcc gcc-c++ gcc-gfortran m4 make wget bzip2 tar zlib-devel libX11-devel pkgconfig
+
+or using yum
+
+    sudo yum install git patch gcc gcc-c++ gcc-gfortran m4 make wget bzip2 tar zlib-devel libX11-devel pkgconfig
+
+X11 is used to build `blot` and is optional and should be autodetected by the build script if not present.
+
+See [tpls/README.md] for more details but a simple example would be:
+
+    /path/to/goma/tpls/install-tpls.py -j <num procs> /path/to/library/install
+
+This will install to `/path/to/library/install`
+
+After completed you would then do:
+
+    source /path/to/library/install/config.sh
+    cd /path/to/goma
+    cmake -Bbuild
+    cmake --build build -j <num proc>
+
+
 #### Spack
 
 Third party libraries can be built with spack for development of goma using:
@@ -65,7 +100,7 @@ A spack package is in progress and soon one might be able to:
 
     spack install goma
 
-#### Legacy build script
+#### Legacy build script (deprecated)
 
 The legacy build script has been updated slightly with newer libraries.
 This is missing Omega_h and PETSc support
