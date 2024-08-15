@@ -165,6 +165,12 @@ else
 fi
 
 
+echo "There is a new TPL build script in goma/tpls/ called install-tpls.py"
+echo "Please transition to using that script."
+echo "This script will be removed in a future release."
+continue_check
+
+
 if [ "$PRINT_MENU" == "false" ]; then
     if which mpiicc &> /dev/null; then
         MPI_NAME="intel"
