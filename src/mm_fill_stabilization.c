@@ -323,9 +323,8 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
       if (lagged_tau || ignore_tau_sens) {
         tau_terms->d_tau_dv[a][k] = 0;
       } else {
-        tau_terms->d_tau_dv[a][k] = inv_rho * -0.5 *
-                                    (d_v_d_gv[a][k] + (d_diff_g_g_dmu * d_mu->v[a][k])) *
-                                    supg_tau_cubed;
+        tau_terms->d_tau_dv[a][k] =
+            inv_rho * -0.5 * (d_v_d_gv[a][k] + (d_diff_g_g_dmu * d_mu->v[a][k])) * supg_tau_cubed;
       }
     }
   }
