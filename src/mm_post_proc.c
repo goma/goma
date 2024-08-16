@@ -10738,7 +10738,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
         for (b = 0; b < VIM; b++) {
           if (a <= b) {
             if (Num_Var_In_Type[pg->imtrx][v_s[mode][a][b]]) {
-              sprintf(species_name, "MS%d_%d%d", mode, a + 1, b + 1);
+              sprintf(species_name, "MS%d%d_%d", a + 1, b + 1, mode);
               sprintf(species_desc, "log conf stress %d%d_%d", a + 1, b + 1, mode);
               set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
               index++;

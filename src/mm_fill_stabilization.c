@@ -312,7 +312,7 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
     tau_terms->tau = inv_rho / (sqrt(v_d_gv + diff_g_g) + 1e-14);
   }
 
-  dbl d_diff_g_g_dmu = 0 * 2.0 * diff_g_g / mu;
+  dbl d_diff_g_g_dmu = 2.0 * diff_g_g / mu;
   dbl supg_tau_cubed = tau_terms->tau * tau_terms->tau * tau_terms->tau;
   if (lagged_tau || ignore_tau_sens) {
     supg_tau_cubed = 0; // this will remove the majority of the sensitivites.
@@ -324,7 +324,7 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
         tau_terms->d_tau_dv[a][k] = 0;
       } else {
         tau_terms->d_tau_dv[a][k] = inv_rho * -0.5 *
-                                    (d_v_d_gv[a][k] + (0 * d_diff_g_g_dmu * d_mu->v[a][k])) *
+                                    (d_v_d_gv[a][k] + (d_diff_g_g_dmu * d_mu->v[a][k])) *
                                     supg_tau_cubed;
       }
     }
@@ -392,13 +392,13 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
   if (pd->e[pg->imtrx][TURB_K]) {
     for (int k = 0; k < ei[pg->imtrx]->dof[TURB_K]; k++) {
       tau_terms->d_tau_dturb_k[k] =
-          0 * inv_rho * -0.5 * (d_mu->turb_k[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+          inv_rho * -0.5 * (d_mu->turb_k[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }
   if (pd->e[pg->imtrx][TURB_OMEGA]) {
     for (int k = 0; k < ei[pg->imtrx]->dof[TURB_OMEGA]; k++) {
       tau_terms->d_tau_dturb_omega[k] =
-          0 * inv_rho * -0.5 * (d_mu->turb_omega[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+          inv_rho * -0.5 * (d_mu->turb_omega[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }
   if (pd->e[pg->imtrx][MASS_FRACTION]) {

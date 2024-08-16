@@ -1650,6 +1650,23 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           }
           break;
 #ifdef GOMA_ENABLE_PETSC
+#if PETSC_USE_COMPLEX
+    case PETSC_COMPLEX_SOLVER:
+      if (strcmp(Matrix_Format, "petsc_complex") == 0) {
+        int its;
+        petsc_solve_complex(ams, delta_x, resid_vector, &its);
+        exchange_dof(cx, dpi, delta_x, pg->imtrx);
+        matrix_solved = 1;
+        char itsstring[10];
+        itsstring[9] = '\0';
+        snprintf(itsstring, 9, "%d", its);
+        strcpy(stringer, itsstring);
+      } else {
+        GOMA_EH(GOMA_ERROR, "Sorry, only petsc_complex matrix formats are currently supported with "
+                            "the petsc solver\n");
+      }
+      break;
+#else
         case PETSC_SOLVER:
           if (strcmp(Matrix_Format, "petsc") == 0) {
             int its;
@@ -1666,6 +1683,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                 "Sorry, only petsc matrix formats are currently supported with the petsc solver\n");
           }
           break;
+#endif
 #endif
         case STRATIMIKOS:
           if (strcmp(Matrix_Format, "epetra") == 0) {
