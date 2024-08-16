@@ -59,7 +59,7 @@
 #include "sl_matrix_util.h"
 #include "sl_petsc.h"
 #ifdef GOMA_ENABLE_PETSC
-#if !(PETSC_USE_COMPLEX)
+#if PETSC_USE_COMPLEX
 #include "sl_petsc_complex.h"
 #endif
 #endif
