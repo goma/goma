@@ -21,6 +21,7 @@ RUN { \
     } > /entrypoint.sh \
 && chmod a+x /entrypoint.sh
 
+ENV OMPI_MCA_btl "^vader"
 ENV OMPI_MCA_btl_base_warn_component_unuse "0"
 ENV OMPI_ALLOW_RUN_AS_ROOT 1
 ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM 1

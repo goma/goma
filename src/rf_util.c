@@ -833,6 +833,8 @@ double time_step_control(const double delta_t,
   Err_norm += ecp[GRAD_S_V_DOT_N1];
   Err_norm += ecp[GRAD_S_V_DOT_N2];
   Err_norm += ecp[GRAD_S_V_DOT_N3];
+  Err_norm += ecp[TURB_K];
+  Err_norm += ecp[TURB_OMEGA];
 
   num_unknowns += ncp[SURF_CHARGE];
   num_unknowns += ncp[SHELL_CURVATURE];
@@ -867,6 +869,8 @@ double time_step_control(const double delta_t,
   num_unknowns += ncp[GRAD_S_V_DOT_N1];
   num_unknowns += ncp[GRAD_S_V_DOT_N2];
   num_unknowns += ncp[GRAD_S_V_DOT_N3];
+  num_unknowns += ncp[TURB_K];
+  num_unknowns += ncp[TURB_OMEGA];
 
   if (use_var_norm[8]) /* LS equation is set with special card in Level Set section */
   {
@@ -971,6 +975,7 @@ double time_step_control(const double delta_t,
   e_rheo = ecp[SHELL_SURF_DIV_V] + ecp[SHELL_SURF_CURV] + ecp[SHELL_NORMAL1] + ecp[SHELL_NORMAL2] +
            ecp[SHELL_NORMAL3] + ecp[N_DOT_CURL_V] + ecp[GRAD_S_V_DOT_N1] + ecp[GRAD_S_V_DOT_N2] +
            ecp[GRAD_S_V_DOT_N3];
+  double e_turb = ecp[TURB_K] + ecp[TURB_OMEGA] + ecp[EDDY_NU];
 
   e_d = sqrt(e_d * scaling);
   e_v = sqrt(e_v * scaling);
@@ -991,6 +996,7 @@ double time_step_control(const double delta_t,
   e_sh_lub = sqrt(e_sh_lub * scaling);
   e_int = sqrt(e_int * scaling);
   e_rheo = sqrt(e_rheo * scaling);
+  e_turb = sqrt(e_turb * scaling);
 
   /*
    * Print out the breakdown of contributions as well as the user specified
@@ -1063,6 +1069,9 @@ double time_step_control(const double delta_t,
     if (ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1]) {
       DPRINTF(stdout, ", %7.1e", e_rheo);
     }
+    if (ncp[TURB_K] || ncp[TURB_OMEGA] || ncp[EDDY_NU]) {
+      DPRINTF(stdout, ", %7.1e", e_turb);
+    }
     if (nAC > 0) {
       DPRINTF(stdout, ", %7.1e", e_AC);
     }
@@ -1116,6 +1125,10 @@ double time_step_control(const double delta_t,
     if (ncp[EXT_VELOCITY]) {
       DPRINTF(stdout, ", %7.1e", e_extv);
     }
+    if (ncp[TURB_K] || ncp[TURB_OMEGA] || ncp[EDDY_NU]) {
+      DPRINTF(stdout, ", %7.1e", e_turb);
+    }
+
     if (ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]) {
       DPRINTF(stdout, ", %7.1e", e_int);
     }
@@ -1180,6 +1193,9 @@ double time_step_control(const double delta_t,
     }
     if (ncp[EXT_VELOCITY]) {
       DPRINTF(stdout, ", %7.1e", e_extv);
+    }
+    if (ncp[TURB_K] || ncp[TURB_OMEGA] || ncp[EDDY_NU]) {
+      DPRINTF(stdout, ", %7.1e", e_turb);
     }
     if (ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]) {
       DPRINTF(stdout, ", %7.1e", e_int);
@@ -1257,6 +1273,9 @@ double time_step_control(const double delta_t,
   }
   if (ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1]) {
     DPRINTF(stdout, ", %1d RHEO", 1);
+  }
+  if (ncp[TURB_K] || ncp[TURB_OMEGA] || ncp[EDDY_NU]) {
+    DPRINTF(stdout, ",   %1d TURB", 1);
   }
   if (nAC > 0) {
     DPRINTF(stdout, ",   %1d AC ", use_var_norm[9]);
@@ -1541,7 +1560,7 @@ void init_vec(
     /* Some Special Cases */
 
     /* Structural shell variables */
-    if (upd->vp[pg->imtrx][SHELL_X] && upd->vp[pg->imtrx][SHELL_Y]) {
+    if (upd->vp[pg->imtrx][SHELL_X] >= 0 && upd->vp[pg->imtrx][SHELL_Y] >= 0) {
       init_structural_shell_coord(u);
     }
 

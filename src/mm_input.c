@@ -3336,6 +3336,33 @@ void rd_turbulent_specs(FILE *ifp, char *input) {
                           "nodesets were specified");
     }
   }
+
+  iread = look_for_optional(ifp, "Turbulent k infinity", input, '=');
+  if (iread == 1) {
+
+    if (fscanf(ifp, "%lf", &(upd->turbulent_info->k_inf)) != 1) {
+      GOMA_EH(GOMA_ERROR, "Error reading Turbulence k infinity");
+    }
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %f", "Turbulence k infinity",
+             upd->turbulent_info->k_inf);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->turbulent_info->k_inf = 0.0;
+  }
+  iread = look_for_optional(ifp, "Turbulent omega infinity", input, '=');
+  if (iread == 1) {
+
+    if (fscanf(ifp, "%lf", &(upd->turbulent_info->omega_inf)) != 1) {
+      GOMA_EH(GOMA_ERROR, "Error reading Turbulence omega infinity");
+    }
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %lf", "Turbulence omega infinity",
+             upd->turbulent_info->omega_inf);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->turbulent_info->omega_inf = 0.0;
+  }
 }
 /*
  * rd_elem_quality_specs -- read input file for element quality specifications
@@ -6534,6 +6561,38 @@ void rd_solver_specs(FILE *ifp, char *input) {
     Time_Jacobian_Reformation_stride = 0;
   }
 
+  char ls_type[MAX_CHAR_IN_INPUT] = "FULL_STEP";
+  ;
+  Newton_Line_Search_Type = NLS_FULL_STEP;
+  int lsread = look_for_optional_string(ifp, "Newton line search type", ls_type, MAX_CHAR_IN_INPUT);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
+  if (lsread >= 1) {
+    if (strcmp("FULL_STEP", ls_type) == 0) {
+      Newton_Line_Search_Type = NLS_FULL_STEP;
+    } else if (strcmp("BACKTRACK", ls_type) == 0) {
+      Newton_Line_Search_Type = NLS_BACKTRACK;
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown Newton line search type: %s", ls_type);
+    }
+  }
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
+  ECHO(echo_string, echo_file);
+
+  if (fscanf(ifp, "%le %le %le %le %le", &custom_tol1, &damp_factor2, &custom_tol2, &damp_factor3,
+             &custom_tol3) != 5) {
+    damp_factor2 = damp_factor3 = -1.;
+    custom_tol1 = custom_tol2 = custom_tol3 = -1;
+    rewind(ifp); /* Added to make ibm happy when single relaxation value input. dal/1-6-99 */
+  } else {
+    if ((damp_factor1 <= 1. && damp_factor1 >= 0.) && (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
+        (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
+      SPF(endofstring(echo_string), " %.4g %.4g %.4g %.4g %.4g", custom_tol1, damp_factor2,
+          custom_tol2, damp_factor3, custom_tol3);
+    } else {
+      GOMA_EH(GOMA_ERROR, "All damping factors must be in the range 0 <= fact <=1");
+    }
+  }
+
   look_for(ifp, "Newton correction factor", input, '=');
   if (fscanf(ifp, "%le", &damp_factor1) != 1) {
     GOMA_EH(GOMA_ERROR, "error reading Newton correction factor, expected at least one float");
@@ -6748,6 +6807,81 @@ void rd_solver_specs(FILE *ifp, char *input) {
     ECHO("(Pressure Stabilization Scaling = 0.0) (default)", echo_file);
   }
 
+  iread = look_for_optional(ifp, "Pressure Stabilization Disable Tau Sens", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0 || strcmp(input, "false") == 0) {
+      upd->disable_pspg_tau_sensitivities = false;
+    } else if (strcmp(input, "yes") == 0 || strcmp(input, "true") == 0) {
+      upd->disable_pspg_tau_sensitivities = true;
+    } else {
+      GOMA_EH(GOMA_ERROR,
+              "invalid choice: Pressure Stabilization Disable Tau Sens, yes (true) or no (false)");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Pressure Stabilization Disable Tau Sens",
+             input);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->disable_pspg_tau_sensitivities = false;
+    ECHO("(Pressure Stabilization Disable Tau Sens = no) (default)", echo_file);
+  }
+  iread = look_for_optional(ifp, "Pressure Stabilization Lagged Tau", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0 || strcmp(input, "false") == 0) {
+      upd->pspg_lagged_tau = false;
+    } else if (strcmp(input, "yes") == 0 || strcmp(input, "true") == 0) {
+      upd->pspg_lagged_tau = true;
+    } else {
+      GOMA_EH(GOMA_ERROR,
+              "invalid choice: Pressure Stabilization Lagged Tau, yes (true) or no (false)");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Pressure Stabilization Lagged Tau",
+             input);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->pspg_lagged_tau = false;
+    ECHO("(Pressure Stabilization Lagged Tau = no) (default)", echo_file);
+  }
+
+  iread = look_for_optional(ifp, "SUPG Lagged Tau", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0 || strcmp(input, "false") == 0) {
+      upd->supg_lagged_tau = false;
+    } else if (strcmp(input, "yes") == 0 || strcmp(input, "true") == 0) {
+      upd->supg_lagged_tau = true;
+    } else {
+      GOMA_EH(GOMA_ERROR, "invalid choice: SUPG Lagged Tau, yes (true) or no (false)");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "SUPG Lagged Tau", input);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->supg_lagged_tau = false;
+    ECHO("(SUPG Lagged Tau = no) (default)", echo_file);
+  }
+
+  iread = look_for_optional(ifp, "SUPG Disable Tau Sens", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0 || strcmp(input, "false") == 0) {
+      upd->disable_supg_tau_sensitivities = false;
+    } else if (strcmp(input, "yes") == 0 || strcmp(input, "true") == 0) {
+      upd->disable_supg_tau_sensitivities = true;
+    } else {
+      GOMA_EH(GOMA_ERROR, "invalid choice: SUPG Disable Tau Sens, yes (true) or no (false)");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "SUPG Disable Tau Sens", input);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->disable_supg_tau_sensitivities = false;
+    ECHO("(SUPG Disable Tau Sens = no) (default)", echo_file);
+  }
+
   iread = look_for_optional(ifp, "PSPG Advection Correction", input, '=');
   if (iread == 1) {
     (void)read_string(ifp, input, '\n');
@@ -6821,6 +6955,24 @@ void rd_solver_specs(FILE *ifp, char *input) {
   } else {
     upd->SegregatedSubcycles = 1;
     ECHO("(Number of Segregated Subcycles = 1) (default)", echo_file);
+  }
+  upd->AutoDiff = 0;
+  iread = look_for_optional(ifp, "Use AutoDiff Assembly", input, '=');
+  if (iread == 1) {
+    upd->AutoDiff = -1;
+    if (strcmp(input, "no") == 0) {
+      upd->AutoDiff = 0;
+    } else if (strcmp(input, "yes") == 0) {
+      upd->AutoDiff = 1;
+    }
+    if (upd->SegregatedSubcycles < 1) {
+      GOMA_EH(GOMA_ERROR, "Use AutoDiff Assembly should equal yes or no, instead found %s", input);
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Use AutoDiff Assembly", input);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->AutoDiff = 0;
+    ECHO("(Use AutoDiff Assembly = no) (default)", echo_file);
   }
 
   /*IGBRK*/
@@ -8530,6 +8682,10 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         ce = set_eqn(R_CUR_STRAIN, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "eddy_visc")) {
         ce = set_eqn(R_EDDY_NU, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "turb_k")) {
+        ce = set_eqn(R_TURB_K, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "turb_omega")) {
+        ce = set_eqn(R_TURB_OMEGA, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "shell_diff_flux")) {
         ce = set_eqn(R_SHELL_DIFF_FLUX, mtrx_index0, pd_ptr);
         pd_ptr->Do_Surf_Geometry = 1;
@@ -9031,6 +9187,10 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         cv = set_var(GRAD_S_V_DOT_N3, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "EDDY_NU")) {
         cv = set_var(EDDY_NU, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "TURB_K")) {
+        cv = set_var(TURB_K, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "TURB_OMEGA")) {
+        cv = set_var(TURB_OMEGA, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "APR")) {
         cv = set_var(ACOUS_PREAL, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "API")) {
@@ -9841,6 +10001,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       case R_EM_H2_IMAG:
       case R_EM_H3_IMAG:
       case R_EDDY_NU:
+      case R_TURB_K:
+      case R_TURB_OMEGA:
 
         if (fscanf(ifp, "%lf %lf %lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
