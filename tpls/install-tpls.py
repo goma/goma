@@ -33,6 +33,7 @@ packages = [
     "petsc",
     "petsc_complex",
     "sparse",
+    "catch2",
 ]
 
 

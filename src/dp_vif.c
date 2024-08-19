@@ -711,6 +711,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &custom_tol3, 1, MPI_DOUBLE);
   ddd_add_member(n, &Newt_Jacobian_Reformation_stride, 1, MPI_INT);
   ddd_add_member(n, &Time_Jacobian_Reformation_stride, 1, MPI_INT);
+  ddd_add_member(n, &Newton_Line_Search_Type, 1, MPI_INT);
   ddd_add_member(n, &modified_newton, 1, MPI_INT);
   ddd_add_member(n, &convergence_rate_tolerance, 1, MPI_DOUBLE);
   ddd_add_member(n, &modified_newt_norm_tol, 1, MPI_DOUBLE);
@@ -1011,6 +1012,11 @@ void noahs_ark(void) {
   ddd_add_member(n, &upd->Light_Cosmu, 1, MPI_DOUBLE);
   ddd_add_member(n, &upd->SegregatedSolve, 1, MPI_INT);
   ddd_add_member(n, &upd->SegregatedSubcycles, 1, MPI_INT);
+  ddd_add_member(n, &upd->AutoDiff, 1, MPI_INT);
+  ddd_add_member(n, &upd->disable_pspg_tau_sensitivities, 1, MPI_INT);
+  ddd_add_member(n, &upd->disable_supg_tau_sensitivities, 1, MPI_INT);
+  ddd_add_member(n, &upd->supg_lagged_tau, 1, MPI_INT);
+  ddd_add_member(n, &upd->pspg_lagged_tau, 1, MPI_INT);
   ddd_add_member(n, &upd->PSPG_advection_correction, 1, MPI_INT);
   ddd_add_member(n, &upd->petsc_solve_post_proc, 1, MPI_INT);
   ddd_add_member(n, &upd->devss_traceless_gradient, 1, MPI_INT);
@@ -1025,6 +1031,8 @@ void noahs_ark(void) {
   ddd_add_member(n, &(upd->turbulent_info->use_internal_wall_distance), 1, MPI_INT);
   ddd_add_member(n, &(upd->turbulent_info->num_node_sets), 1, MPI_INT);
   ddd_add_member(n, &(upd->turbulent_info->num_side_sets), 1, MPI_INT);
+  ddd_add_member(n, &(upd->turbulent_info->k_inf), 1, MPI_DOUBLE);
+  ddd_add_member(n, &(upd->turbulent_info->omega_inf), 1, MPI_DOUBLE);
 
   for (i = 0; i < upd->Num_Mat; i++) {
     int imtrx;
