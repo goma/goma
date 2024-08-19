@@ -3198,6 +3198,7 @@ struct Lubrication_Auxiliaries {
   double srate;              /* Lubrication Characteristic Shear Rate */
   double mu_star;            /* Lubrication Characteristic Viscosity */
   double op_curv;            /* Lubrication Out-of-plane Curvature */
+  double visc_diss;          /* Lubrication Integrated Viscous Dissipation */
 
   double dgradP_mag_dP;          /* Pressure gradient magnitude sensitivities w.r.t.
                                     pressure */
@@ -3265,6 +3266,7 @@ struct Lubrication_Auxiliaries {
   double dH_ddh;                  /* lubrication gap sensitivities w.r.t. added height */
   double dop_curv_dx[DIM][MDE];   /* Out-of-plane Curvature sensitivities w.r.t. mesh deformation */
   double dop_curv_df[MDE];        /* Out-of-plane Curvature sensitivities w.r.t. level set */
+  double dvisc_diss_dT; /* Lubrication Integrated Viscous Dissipation Sensitivity to Temperature */
 };
 
 typedef struct Lubrication_Auxiliaries LUBRICATION_AUXILIARIES_STRUCT;

@@ -7247,9 +7247,6 @@ int assemble_shell_energy(double time,            /* present time value */
   /*
    * Load material property constants
    */
-#if 0
-  mu = viscosity(gn, NULL, d_mu);
-#endif
 
   rho = density(d_rho, time);
 
@@ -7329,7 +7326,11 @@ int assemble_shell_energy(double time,            /* present time value */
   if (pd->v[pg->imtrx][FILL]) {
     load_lsi(ls->Length_Scale);
     load_lsi_derivs();
-    if_liquid = (1. - lsi->H);
+    if (mp->mp2nd->viscositymask[1]) {
+      if_liquid = (1. - lsi->H);
+    } else {
+      if_liquid = lsi->H;
+    }
   }
 
   /* Temperature gradient */
@@ -7376,10 +7377,11 @@ int assemble_shell_energy(double time,            /* present time value */
   /* Finall, Load up all heat source models */
 
   /* Note all of this depend on H_lub.  You need to add those sensitivities */
-  /* No source terms available right now. Feel free to add your own.  */
+  /* No source terms available right now. Feel free to add your own.
+     Added heat energy is negative, so I guess this is heat loss from the channel */
   const double ht_coeff = mp->Lub_Heat_Xfer;
   const double ht_tamb = mp->Lub_Heat_Tamb;
-  q_tot = ht_coeff * (fv->sh_t - ht_tamb);
+  q_tot = -LubAux->visc_diss + ht_coeff * (fv->sh_t - ht_tamb);
 
   /*** RESIDUAL ASSEMBLY ******************************************************/
   if (af->Assemble_Residual) {
@@ -7559,7 +7561,7 @@ int assemble_shell_energy(double time,            /* present time value */
           if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
             /* PRS Note these are initialized to zero in mm_input_mp.c */
             source = 0.; /* add your dq_dt sensitivities here */
-            source = ht_coeff * phi_j;
+            source = (-LubAux->dvisc_diss_dT + ht_coeff) * phi_j;
           }
           source *= phi_i * if_liquid * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -8058,7 +8060,11 @@ int assemble_shell_energy(double time,            /* present time value */
           }
           source = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            source += 0.; /* Add on your dq_tot_d_lubp terms here */
+            /* Viscous dissipation term depends on pgrad and q_mag */
+            for (p = 0; p < dim; p++) {
+              source += fv->grad_lubp[p] * grad_II_phi_j[p];
+            }
+            source *= -LubAux->visc_diss / SQUARE(LubAux->gradP_mag);
           }
           source *= phi_i * if_liquid * wt * det_J * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
