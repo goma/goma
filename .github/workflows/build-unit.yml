@@ -20,14 +20,17 @@ jobs:
     - uses: actions/checkout@v3
     - name: Check versions
       run: |
+        . /opt/goma-libs/config.sh
         echo $PETSC_DIR
         mpirun --version
         cmake --version
     - name: CMake Configure Goma
       run: |
+        . /opt/goma-libs/config.sh
         cmake -DCMAKE_BUILD_TYPE=Release -Bbuild -DENABLE_TESTING=ON .
     - name: Build Goma
       run: |
+        . /opt/goma-libs/config.sh
         cp scripts/gcc-warnings.json "$HOME/"
         echo "::add-matcher::$HOME/gcc-warnings.json"
         cd build
@@ -35,6 +38,7 @@ jobs:
         ./goma -v
     - name: Goma Unit Tests
       run: |
+        . /opt/goma-libs/config.sh
         export OMPI_MCA_btl_base_warn_component_unused='0'
         cd build
         make -j2 

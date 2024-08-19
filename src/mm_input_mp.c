@@ -1490,6 +1490,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ConstitutiveEquation = TURBULENT_SA;
   } else if (!strcmp(model_name, "TURBULENT_SA_DYNAMIC")) {
     ConstitutiveEquation = TURBULENT_SA_DYNAMIC;
+  } else if (!strcmp(model_name, "TURBULENT_K_OMEGA")) {
+    ConstitutiveEquation = TURBULENT_K_OMEGA;
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognizable Constitutive Equation");
   }
@@ -1503,7 +1505,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   /* read in constants for constitutive equation if they are input */
 
-  if ((ConstitutiveEquation == NEWTONIAN) || (ConstitutiveEquation == TURBULENT_SA)) {
+  if ((ConstitutiveEquation == NEWTONIAN) || (ConstitutiveEquation == TURBULENT_SA) ||
+      (ConstitutiveEquation == TURBULENT_SA_DYNAMIC) ||
+      (ConstitutiveEquation == TURBULENT_K_OMEGA)) {
     model_read = look_for_mat_proptable(
         imp, "Viscosity", &(mp_glob[mn]->ViscosityModel), &(mp_glob[mn]->viscosity),
         &(mp_glob[mn]->u_viscosity), &(mp_glob[mn]->len_u_viscosity),
