@@ -3,7 +3,7 @@ spack:
   - cmake
   - sparse
   - catch2
-  - openmpi
+  - openmpi@4.1.6
   - arpack-ng
   - metis~int64
   - parmetis~int64
