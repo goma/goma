@@ -4,6 +4,7 @@ from tpl_tools.registry import Registry
 import importlib
 import tpl_tools.utils as utils
 import os
+import sys
 import argparse
 import pathlib
 
@@ -82,7 +83,7 @@ if __name__ == "__main__":
         "-j", "--jobs", help="Number of parallel jobs", type=int, default=1
     )
     parser.add_argument(
-        "--netlib_blas",
+        "--netlib-blas",
         help="Build using reference BLAS/LAPACK",
         action="store_true",
     )
@@ -207,7 +208,8 @@ if __name__ == "__main__":
             if build.check(True):
                 build.logger.log("Package {} found at {}".format(pc.name, package_dir))
             else:
-                break
+                print("Package {} not found check directory or let script build".format(pc.name), file=sys.stderr)
+                exit(1)
             build.register()
         else:
             build = Builder(
@@ -232,7 +234,8 @@ if __name__ == "__main__":
             build.build()
             build.install()
             if not build.check():
-                break
+                print("Package {} not built, contact developers".format(pc.name), file=sys.stderr)
+                exit(1)
             build.register()
     tpl_registry.config.write_config(os.path.join(install_dir, "config.sh"))
     logger.log(

@@ -82,9 +82,9 @@ class Package(packages.CMakePackage):
             builder.add_option("-DBLAS_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"])
             builder.add_option("-DBLAS_LIBRARY_NAMES=openblas")
         else:
-            builder.add_option("-DLAPACK_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"] + "/lib")
+            builder.add_option("-DLAPACK_LIBRARY_DIRS=" + builder.env["LAPACK_DIR"] + "/lib")
             builder.add_option("-DLAPACK_LIBRARY_NAMES=lapack;blas")
-            builder.add_option("-DBLAS_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"] + "/lib")
+            builder.add_option("-DBLAS_LIBRARY_DIRS=" + builder.env["LAPACK_DIR"] + "/lib")
             builder.add_option("-DBLAS_LIBRARY_NAMES=blas")
         builder.add_option("-DTPL_ENABLE_UMFPACK:BOOL=ON ")
         builder.add_option(
