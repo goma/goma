@@ -3295,6 +3295,7 @@ struct Lubrication_Auxiliaries {
   double dop_curv_dx[DIM][MDE];   /* Out-of-plane Curvature sensitivities w.r.t. mesh deformation */
   double dop_curv_df[MDE];        /* Out-of-plane Curvature sensitivities w.r.t. level set */
   double dvisc_diss_dT; /* Lubrication Integrated Viscous Dissipation Sensitivity to Temperature */
+  double dvisc_diss_dpgrad; /* Lubrication Integrated Viscous Dissipation Sensitivity to Pgrad */
 };
 
 typedef struct Lubrication_Auxiliaries LUBRICATION_AUXILIARIES_STRUCT;

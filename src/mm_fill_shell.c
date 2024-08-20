@@ -8064,7 +8064,7 @@ int assemble_shell_energy(double time,            /* present time value */
             for (p = 0; p < dim; p++) {
               source += fv->grad_lubp[p] * grad_II_phi_j[p];
             }
-            source *= -LubAux->visc_diss / SQUARE(LubAux->gradP_mag);
+            source *= -LubAux->dvisc_diss_dpgrad / LubAux->gradP_mag;
           }
           source *= phi_i * if_liquid * wt * det_J * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
