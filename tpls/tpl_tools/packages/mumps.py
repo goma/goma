@@ -83,7 +83,7 @@ class Package(packages.GenericPackage):
                 "SCALAP  = -L"
                 + builder.env["SCALAPACK_DIR"]
                 + "/lib -lscalapack "
-                + builder.env["LAPACK_LIBRARIES"]
+                + builder.env["LAPACK_LIBRARIES"].replace(":", " ")
                 + "\n"
             )
             f.write("BLAS = " + builder.env["BLAS_LIBRARIES"] + "\n")
