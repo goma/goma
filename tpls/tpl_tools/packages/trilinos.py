@@ -74,12 +74,18 @@ class Package(packages.CMakePackage):
         builder.add_option("-DMPI_BASE_DIR:PATH=" + builder.env["MPI_HOME"])
         builder.add_option("-DEpetraExt_BUILD_GRAPH_REORDERINGS:BOOL=ON")
         builder.add_option("-DTPL_ENABLE_LAPACK:BOOL=ON")
-        builder.add_option("-DLAPACK_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"])
-        builder.add_option("-DLAPACK_LIBRARY_NAMES=openblas")
         builder.add_option("-DTPL_ENABLE_BLAS:BOOL=ON ")
         builder.add_option("-DHAVE_EPETRA_LAPACK_GSSVD3:BOOL=ON ")
-        builder.add_option("-DBLAS_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"])
-        builder.add_option("-DBLAS_LIBRARY_NAMES=openblas")
+        if "OPENBLAS_DIR" in builder.env:
+            builder.add_option("-DLAPACK_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"])
+            builder.add_option("-DLAPACK_LIBRARY_NAMES=openblas")
+            builder.add_option("-DBLAS_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"])
+            builder.add_option("-DBLAS_LIBRARY_NAMES=openblas")
+        else:
+            builder.add_option("-DLAPACK_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"] + "/lib")
+            builder.add_option("-DLAPACK_LIBRARY_NAMES=lapack;blas")
+            builder.add_option("-DBLAS_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"] + "/lib")
+            builder.add_option("-DBLAS_LIBRARY_NAMES=blas")
         builder.add_option("-DTPL_ENABLE_UMFPACK:BOOL=ON ")
         builder.add_option(
             "-DUMFPACK_LIBRARY_NAMES:STRING=umfpack;amd;suitesparseconfig;cholmod;colamd;ccolamd;camd"

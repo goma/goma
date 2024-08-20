@@ -21,6 +21,7 @@ packages = [
     "bison",
     "flex",
     "openblas",
+    "lapack",
     "metis",
     "parmetis",
     "scotch",
@@ -81,6 +82,18 @@ if __name__ == "__main__":
         "-j", "--jobs", help="Number of parallel jobs", type=int, default=1
     )
     parser.add_argument(
+        "--netlib_blas",
+        help="Build using reference BLAS/LAPACK",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--openblas",
+    help="Build using OpenBLAS (Default)",
+    dest="netlib_blas",
+    action="store_true",
+    )
+    parser.set_defaults(netlib_blas=False)
+    parser.add_argument(
         "--enable-parmetis",
         help="Build ParMETIS library, (Default, check license requirements)",
         action="store_true",
@@ -104,6 +117,7 @@ if __name__ == "__main__":
             help="System location of package {}".format(pc.name),
             type=pathlib.Path,
         )
+
     args = parser.parse_args()
     if not args.enable_parmetis:
         print("ParMETIS has been disabled ")
@@ -111,6 +125,12 @@ if __name__ == "__main__":
         print("\tDisabling SuperLU_DIST as Trilinos requires it be built with ParMETIS")
         packages.remove("parmetis")
         packages.remove("superlu_dist")
+
+    if args.netlib_blas:
+        packages.remove("openblas")
+    else:
+        packages.remove("lapack")
+
 
     install_dir = os.path.abspath(os.path.expanduser(args.INSTALL_DIR))
     download_dir = os.path.join(install_dir, "downloads")
