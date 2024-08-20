@@ -1,15 +1,15 @@
 spack:
   specs:
-  - cmake %gcc@13
-  - sparse %gcc@13
-  - catch2 %gcc@13
-  - openmpi %gcc@13@4.1.6
-  - arpack-ng %gcc@13
-  - metis~int64 %gcc@13
-  - parmetis~int64 %gcc@13
-  - hypre~int64 %gcc@13
-  - strumpack+scotch~openmp~slate %gcc@13
-  - mumps~openmp+metis+parmetis %gcc@13
+  - cmake
+  - sparse
+  - catch2
+  - openmpi
+  - arpack-ng
+  - metis~int64
+  - parmetis~int64
+  - hypre~int64
+  - strumpack+scotch~openmp~slate
+  - mumps~openmp+metis+parmetis
   - trilinos@15.1.1+amesos+amesos2+aztec+belos+boost~chaco+epetra+epetraext~exodus+explicit_template_instantiation+fortran+hdf5~hypre+ifpack+ml+mpi+muelu+mumps+shared+stratimikos+suite-sparse+superlu-dist+teko+tpetra+piro+nox+tempus+shards+intrepid2+zoltan2+sacado+intrepid+isorropia+strumpack   build_type=Release
     gotype=long_long
   - omega-h build_type=Release
