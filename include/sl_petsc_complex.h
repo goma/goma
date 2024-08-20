@@ -16,6 +16,7 @@
 
 typedef struct PetscMatrixData {
   PetscOptions options;
+  PetscBool mat_entries_set;
   Mat mat;
   Vec residual;
   Vec update;
@@ -50,6 +51,7 @@ void petsc_load_lec_complex(int ielem, struct GomaLinearSolverData *ams, double 
 int petsc_solve_complex(struct GomaLinearSolverData *ams, double *x_, double *b_, int *its);
 goma_error goma_petsc_free_matrix(struct GomaLinearSolverData *ams);
 
+int petsc_zero_mat(struct GomaLinearSolverData *ams);
 #endif
 #endif
 #endif

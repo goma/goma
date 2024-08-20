@@ -341,6 +341,8 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case LS_SOLID_FLUID_BC:
       overlap_bc = TRUE;
       /* fall through */
+    case SA_WALL_FUNC_BC:
+    case OMEGA_WALL_FUNC_BC:
     case PSPG_BC:
     case KIN_ELECTRODEPOSITION_BC:   /*  RSL 5/27/02  */
     case VNORM_ELECTRODEPOSITION_BC: /*  RSL 5/30/02  */
@@ -719,6 +721,8 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case EM_CONT_IMAG_BC:
     case SHELL_TFMP_SAT_BC:
     case EDDY_NU_BC:
+    case TURB_K_BC:
+    case TURB_OMEGA_BC:
 
       if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {
         sprintf(err_msg, "%s: Expected 1 flt for %s.", yo, BC_Types[ibc].desc->name1);

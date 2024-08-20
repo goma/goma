@@ -7,6 +7,7 @@
 *.a
 *.o
 *.pyc
+__pycache__
 goma
 .cproject
 .project

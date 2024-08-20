@@ -18,6 +18,7 @@
 
 /* Standard include files */
 
+#include "ad_turbulence.h"
 #include "load_field_variables.h"
 #include "mm_fill_em.h"
 #include "mm_fill_momentum.h"
@@ -33,6 +34,8 @@
 #include "mm_post_proc.h"
 /* GOMA include files */
 #include "ac_particles.h"
+#include "ad_momentum.h"
+#include "ad_turbulence.h"
 #include "bc/rotate.h"
 #include "bc_contact.h"
 #include "density.h"
@@ -957,6 +960,50 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[DIV_TOTAL] = 1.0;
   }
 
+#if 1
+  if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    if (upd->AutoDiff) {
+      mu = ad_viscosity_wrap(gn);
+    } else {
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        }
+      }
+      mu = viscosity(gn, gamma, NULL);
+    }
+
+    if (pd->v[pg->imtrx][POLYMER_STRESS11]) {
+      /*  shift factor  */
+      if (pd->e[pg->imtrx][TEMPERATURE]) {
+        if (vn->shiftModel == CONSTANT) {
+          at = vn->shift[0];
+        } else if (vn->shiftModel == MODIFIED_WLF) {
+          wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
+          if (wlf_denom != 0.) {
+            at = exp(vn->shift[0] * (mp->reference[TEMPERATURE] - fv->T) / wlf_denom);
+          } else {
+            at = 1.;
+          }
+        }
+      } else {
+        at = 1.;
+      }
+      for (mode = 0; mode < vn->modes; mode++) {
+        /* get polymer viscosity */
+        if (upd->AutoDiff) {
+          mup = ad_viscosity_wrap(ve[mode]->gn);
+        } else {
+          mup = viscosity(ve[mode]->gn, gamma, NULL);
+        }
+        mu += at * mup;
+      }
+    }
+
+    local_post[PP_Viscosity] = mu;
+    local_lumped[PP_Viscosity] = 1.;
+  }
+#else
   if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (b = 0; b < VIM; b++) {
@@ -1009,6 +1056,7 @@ static int calc_standard_fields(double **post_proc_vect,
     local_post[PP_Viscosity] = mu;
     local_lumped[PP_Viscosity] = 1.;
   }
+#endif
 
   if (PP_Viscosity != -1 &&
       (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP] || pd->e[pg->imtrx][R_LUBP_2])) {
@@ -3831,6 +3879,14 @@ void post_process_average(double x[],            /* Solution vector for the curr
 
       err = load_fv_grads();
       GOMA_EH(err, "load_fv_grads");
+
+      if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
+        fill_ad_field_variables();
+#else
+        GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
+      }
 
       if (ei[pg->imtrx]->deforming_mesh &&
           (pd->e[pg->imtrx][R_MESH1] || pd->v[pg->imtrx][R_MESH1])) {
@@ -12001,7 +12057,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
           pd_glob[i]->i[pg->imtrx][var] == I_Q2_D || pd_glob[i]->i[pg->imtrx][var] == I_Q1_D ||
           pd_glob[i]->i[pg->imtrx][var] == I_SP || pd_glob[i]->i[pg->imtrx][var] == I_Q2_LSA ||
           pd_glob[i]->i[pg->imtrx][var] == I_Q2_D_LSA) {
-        if (vn_glob[i]->modes > 1) {
+        if (vn_glob[i]->modes > 1 && vn->evssModel != SQRT_CONF && vn->evssModel != LOG_CONF) {
           post_flag = 1;
         }
       }

@@ -23,7 +23,7 @@
 #include <stdlib.h>
 
 /* GOMA include files */
-
+#include "ad_turbulence.h"
 #include "density.h"
 #include "el_elm.h"
 #include "mm_as.h"
@@ -31,6 +31,7 @@
 #include "mm_eh.h"
 #include "mm_fill_ls.h"
 #include "mm_fill_terms.h"
+#include "mm_fill_turbulent.h"
 #include "mm_fill_util.h"
 #include "mm_mp.h"
 #include "mm_mp_const.h"
@@ -130,7 +131,8 @@ double viscosity(struct Generalized_Newtonian *gn_local,
 
   if ((gn_local->ConstitutiveEquation == NEWTONIAN) ||
       (gn_local->ConstitutiveEquation == TURBULENT_SA) ||
-      (gn_local->ConstitutiveEquation == TURBULENT_SA_DYNAMIC)) {
+      (gn_local->ConstitutiveEquation == TURBULENT_SA_DYNAMIC) ||
+      (gn_local->ConstitutiveEquation == TURBULENT_K_OMEGA)) {
     if (mp->ViscosityModel == USER) {
       err = usr_viscosity(mp->u_viscosity);
       mu = mp->viscosity;
@@ -320,38 +322,79 @@ double viscosity(struct Generalized_Newtonian *gn_local,
     /* Calculate contribution from turbulent viscosity */
     if ((gn_local->ConstitutiveEquation == TURBULENT_SA) ||
         (gn_local->ConstitutiveEquation == TURBULENT_SA_DYNAMIC)) {
-      dbl scale = 1.0;
-      DENSITY_DEPENDENCE_STRUCT d_rho;
-      if (TURBULENT_SA_DYNAMIC) {
-        scale = density(&d_rho, tran->time_value);
-      }
-      int negative_mu_e = FALSE;
-      if (fv_old->eddy_nu < 0) {
-        negative_mu_e = TRUE;
-      }
-
-      double mu_newt = mp->viscosity;
-      if (negative_mu_e) {
-        mu = mu_newt;
+#ifdef GOMA_ENABLE_SACADO
+      if (upd->AutoDiff) {
+        mu = ad_sa_viscosity(gn_local, d_mu);
       } else {
+#endif
+        dbl scale = 1.0;
+        DENSITY_DEPENDENCE_STRUCT d_rho;
+        if (gn_local->ConstitutiveEquation == TURBULENT_SA_DYNAMIC) {
+          scale = density(&d_rho, tran->time_value);
+        }
+        int negative_mu_e = FALSE;
+        if (fv_old->eddy_nu < 0) {
+          negative_mu_e = TRUE;
+        }
 
-        double mu_e = fv->eddy_nu;
-        double cv1 = 7.1;
-        double chi = mu_e / mu_newt;
-        double fv1 = pow(chi, 3) / (pow(chi, 3) + pow(cv1, 3));
+        double mu_newt = mp->viscosity;
+        if (negative_mu_e) {
+          mu = mu_newt;
+        } else {
 
-        mu = scale * (mu_newt + (mu_e * fv1));
+          double mu_e = fv->eddy_nu;
+          double cv1 = 7.1;
+          double chi = mu_e / mu_newt;
+          double fv1 = pow(chi, 3) / (pow(chi, 3) + pow(cv1, 3));
 
-        double dchi_dmu_e = 1.0 / mu_newt;
-        double dfv1_dchi = 3 * pow(cv1, 3) * pow(chi, 2) / (pow((pow(chi, 3) + pow(cv1, 3)), 2));
-        double dfv1_dmu_e = dfv1_dchi * dchi_dmu_e;
+          mu = scale * (mu_newt + (mu_e * fv1));
 
-        if (d_mu != NULL) {
-          for (j = 0; j < ei[pg->imtrx]->dof[EDDY_NU]; j++) {
-            d_mu->eddy_nu[j] = scale * bf[EDDY_NU]->phi[j] * (fv1 + mu_e * dfv1_dmu_e);
+          double dchi_dmu_e = 1.0 / mu_newt;
+          double dfv1_dchi = 3 * pow(cv1, 3) * pow(chi, 2) / (pow((pow(chi, 3) + pow(cv1, 3)), 2));
+          double dfv1_dmu_e = dfv1_dchi * dchi_dmu_e;
+
+          if (d_mu != NULL) {
+            for (j = 0; j < ei[pg->imtrx]->dof[EDDY_NU]; j++) {
+              d_mu->eddy_nu[j] = scale * bf[EDDY_NU]->phi[j] * (fv1 + mu_e * dfv1_dmu_e);
+            }
+          }
+        }
+#ifdef GOMA_ENABLE_SACADO
+      }
+#endif
+    }
+
+    if (gn_local->ConstitutiveEquation == TURBULENT_K_OMEGA) {
+      double W[DIM][DIM];
+      if (pd->e[pg->imtrx][VELOCITY1] >= 0) {
+        for (int i = 0; i < DIM; i++) {
+          for (int j = 0; j < DIM; j++) {
+            W[i][j] = 0.5 * (fv_old->grad_v[i][j] - fv_old->grad_v[j][i]);
+          }
+        }
+      } else {
+        for (int i = 0; i < DIM; i++) {
+          for (int j = 0; j < DIM; j++) {
+            W[i][j] = 0.5 * (fv->grad_v[i][j] - fv->grad_v[j][i]);
           }
         }
       }
+      dbl Omega = 0.0;
+      for (int i = 0; i < DIM; i++) {
+        for (int j = 0; j < DIM; j++) {
+          Omega += W[i][j] * W[i][j];
+        }
+      }
+      Omega = sqrt(fmax(Omega, 1e-20));
+
+      dbl F1, F2;
+      compute_sst_blending(&F1, &F2);
+      mu = sst_viscosity(Omega, F2);
+#ifdef GOMA_ENABLE_SACADO
+      // mu = ad_turb_k_omega_sst_viscosity(d_mu);
+#else
+      GOMA_EH(GOMA_ERROR, "TURBULENT_K_OMEGA requires Sacado");
+#endif
     }
 
   } /* end Newtonian section */
