@@ -18,9 +18,9 @@ class Package(packages.CMakePackage):
 
     def configure_options(self, builder):
         if builder.build_shared:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
 
 
     def register(self, builder):
@@ -38,6 +38,4 @@ class Package(packages.CMakePackage):
             "LAPACK_LIBRARIES",
             os.path.join(builder.install_dir(), "lib/liblapack" + ext),
         )
-        registry.append_environment_variable("LAPACK_LIBRARIES",
-            os.path.join(builder.install_dir(), "lib/libblas" + ext))
         registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
