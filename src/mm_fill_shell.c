@@ -7381,7 +7381,10 @@ int assemble_shell_energy(double time,            /* present time value */
      Added heat energy is negative, so I guess this is heat loss from the channel */
   const double ht_coeff = mp->Lub_Heat_Xfer;
   const double ht_tamb = mp->Lub_Heat_Tamb;
-  q_tot = -LubAux->visc_diss + ht_coeff * (fv->sh_t - ht_tamb);
+  q_tot = ht_coeff * (fv->sh_t - ht_tamb);
+  if (mp->HeatSourceModel == VISC_DISS) {
+    q_tot -= mp->u_heat_source[0] * LubAux->visc_diss;
+  }
 
   /*** RESIDUAL ASSEMBLY ******************************************************/
   if (af->Assemble_Residual) {
@@ -7561,7 +7564,9 @@ int assemble_shell_energy(double time,            /* present time value */
           if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
             /* PRS Note these are initialized to zero in mm_input_mp.c */
             source = 0.; /* add your dq_dt sensitivities here */
-            source = (-LubAux->dvisc_diss_dT + ht_coeff) * phi_j;
+            if (mp->HeatSourceModel == VISC_DISS) {
+              source = mp->u_heat_source[0] * (-LubAux->dvisc_diss_dT + ht_coeff) * phi_j;
+            }
           }
           source *= phi_i * if_liquid * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -8061,10 +8066,12 @@ int assemble_shell_energy(double time,            /* present time value */
           source = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
             /* Viscous dissipation term depends on pgrad and q_mag */
-            for (p = 0; p < dim; p++) {
-              source += fv->grad_lubp[p] * grad_II_phi_j[p];
+            if (mp->HeatSourceModel == VISC_DISS) {
+              for (p = 0; p < dim; p++) {
+                source += fv->grad_lubp[p] * grad_II_phi_j[p];
+              }
+              source *= -mp->u_heat_source[0] * LubAux->dvisc_diss_dpgrad / LubAux->gradP_mag;
             }
-            source *= -LubAux->dvisc_diss_dpgrad / LubAux->gradP_mag;
           }
           source *= phi_i * if_liquid * wt * det_J * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
