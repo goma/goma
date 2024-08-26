@@ -3824,6 +3824,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       memset(dHc_U_dX, 0.0, sizeof(double) * DIM);
       memset(dHc_L_dX, 0.0, sizeof(double) * DIM);
       memset(D_Hc_DX, 0.0, sizeof(double) * DIM * MDE);
+      GOMA_WH(GOMA_ERROR, "Lubrication Wall Effect assumes constant capillary height for now...");
     } else {
       H_cap = H;
       for (i = 0; i < dim; i++) {
