@@ -34,15 +34,15 @@ class Package(packages.CMakePackage):
 
     def configure_options(self, builder):
         if builder.build_shared:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
-        builder.add_option("-D=TPL_ENABLE_Netcdf:BOOL=ON")
-        builder.add_option("-D=TPL_ENABLE_MPI:BOOL=ON")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
+        builder.add_option("-DTPL_ENABLE_Netcdf:BOOL=ON")
+        builder.add_option("-DTPL_ENABLE_MPI:BOOL=ON")
         if utils.check_for_x11(builder._extract_dir, builder.env["CC"]):
-            builder.add_option("-D=TPL_ENABLE_X11:BOOL=ON")
+            builder.add_option("-DTPL_ENABLE_X11:BOOL=ON")
         else:
-            builder.add_option("-D=TPL_ENABLE_X11:BOOL=OFF")
+            builder.add_option("-DTPL_ENABLE_X11:BOOL=OFF")
 
         CC = builder.env["CC"]
         CXX = builder.env["CXX"]

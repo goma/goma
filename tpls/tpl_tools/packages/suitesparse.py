@@ -24,13 +24,13 @@ class Package(packages.CMakePackage):
 
     def configure_options(self, builder):
         if builder.build_shared:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
-        builder.add_option("-D=BLAS_LIBRARIES=" + builder.env["BLAS_LIBRARIES"])
-        builder.add_option("-D=LAPACK_LIBRARIES=" + builder.env["LAPACK_LIBRARIES"])
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
+        builder.add_option("-DBLAS_LIBRARIES=" + builder.env["BLAS_LIBRARIES"])
+        builder.add_option("-DLAPACK_LIBRARIES=" + builder.env["LAPACK_LIBRARIES"] + ";" + builder.env["BLAS_LIBRARIES"])
         builder.add_option(
-            "-D=SUITESPARSE_ENABLE_PROJECTS=suitesparse_config;amd;camd;ccolamd;colamd;cholmod;umfpack"
+            "-DSUITESPARSE_ENABLE_PROJECTS=suitesparse_config;amd;camd;ccolamd;colamd;cholmod;umfpack"
         )
 
     def register(self, builder):

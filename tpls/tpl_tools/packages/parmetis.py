@@ -21,14 +21,14 @@ class Package(packages.CMakePackage):
 
     def configure_options(self, builder):
         if builder.build_shared:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
-            builder.add_option("-D=SHARED:BOOL=ON")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
+            builder.add_option("-DSHARED:BOOL=ON")
         else:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
-            builder.add_option("-D=SHARED:BOOL=OFF")
-        builder.add_option("-D=GKLIB_PATH=./headers")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
+            builder.add_option("-DSHARED:BOOL=OFF")
+        builder.add_option("-DGKLIB_PATH=./headers")
         builder.add_option(
-            "-D=METIS_PATH=" + builder._registry.environment["METIS_DIR"]
+            "-DMETIS_PATH=" + builder._registry.environment["METIS_DIR"]
         )
 
     def register(self, builder):

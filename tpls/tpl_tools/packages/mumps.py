@@ -78,12 +78,13 @@ class Package(packages.GenericPackage):
             f.write("FL      = " + builder.env["FC"] + "\n")
             f.write("AR      = ar vr \n")
             f.write("RANLIB  = ranlib \n")
-            f.write("LAPACK = " + builder.env["LAPACK_LIBRARIES"] + "\n")
+            f.write("LAPACK = " + builder.env["LAPACK_LIBRARIES"] + " " + builder.env["BLAS_LIBRARIES"] + "\n")
             f.write(
                 "SCALAP  = -L"
                 + builder.env["SCALAPACK_DIR"]
                 + "/lib -lscalapack "
                 + builder.env["LAPACK_LIBRARIES"]
+                + " " + builder.env["BLAS_LIBRARIES"]
                 + "\n"
             )
             f.write("BLAS = " + builder.env["BLAS_LIBRARIES"] + "\n")
