@@ -3222,8 +3222,11 @@ struct Lubrication_Auxiliaries {
   double gradP_tangent[DIM]; /* Tangent vector of the pressure gradient */
   double gradP_normal[DIM];  /* Unit vector perpendicular to the pressure */
   double H;                  /* Lubrication Gap Height */
+  double H_cap;              /* Lubrication Gap Height unaffected by wall effects */
   double srate;              /* Lubrication Characteristic Shear Rate */
   double mu_star;            /* Lubrication Characteristic Viscosity */
+  double op_curv;            /* Lubrication Out-of-plane Curvature */
+  double visc_diss;          /* Lubrication Integrated Viscous Dissipation */
 
   double dgradP_mag_dP;          /* Pressure gradient magnitude sensitivities w.r.t.
                                     pressure */
@@ -3289,6 +3292,10 @@ struct Lubrication_Auxiliaries {
                                      solid */
   double dH_dp;                   /* lubrication gap sensitivities w.r.t. pressure */
   double dH_ddh;                  /* lubrication gap sensitivities w.r.t. added height */
+  double dop_curv_dx[DIM][MDE];   /* Out-of-plane Curvature sensitivities w.r.t. mesh deformation */
+  double dop_curv_df[MDE];        /* Out-of-plane Curvature sensitivities w.r.t. level set */
+  double dvisc_diss_dT; /* Lubrication Integrated Viscous Dissipation Sensitivity to Temperature */
+  double dvisc_diss_dpgrad; /* Lubrication Integrated Viscous Dissipation Sensitivity to Pgrad */
 };
 
 typedef struct Lubrication_Auxiliaries LUBRICATION_AUXILIARIES_STRUCT;
