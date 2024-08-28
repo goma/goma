@@ -3553,7 +3553,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       if (EQN == R_LUBP_2) {
         dmu_df = d_mu->pf[0];
       }
-      if (gn->ConstitutiveEquation == THERMAL || gn->ConstitutiveEquation == TABLE) {
+      if (pd->v[pg->imtrx][SHELL_TEMPERATURE] &&
+          (gn->ConstitutiveEquation == THERMAL || gn->ConstitutiveEquation == TABLE)) {
         dmu_dT = mp->d_viscosity[SHELL_TEMPERATURE];
       }
     }
@@ -3823,6 +3824,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       memset(dHc_U_dX, 0.0, sizeof(double) * DIM);
       memset(dHc_L_dX, 0.0, sizeof(double) * DIM);
       memset(D_Hc_DX, 0.0, sizeof(double) * DIM * MDE);
+      GOMA_WH(GOMA_ERROR, "Lubrication Wall Effect assumes constant capillary height for now...");
     } else {
       H_cap = H;
       for (i = 0; i < dim; i++) {
@@ -3849,9 +3851,12 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
             this sign convention is opposite of generally accepted one for curvature
           i.e., 2H = grad-dot-normal_vector vs. 2H = -grad-dot-normal_vector       */
       CURV = -(cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / H_cap;
+      LubAux->op_curv = CURV;
 
       /* Curvature - numerical in planview direction */
-      if (pd->e[pg->imtrx][SHELL_LUB_CURV]) {
+      if (mp->Lub_Curv_Combine && pd->e[pg->imtrx][SHELL_LUB_CURV]) {
+        CURV = fv->sh_l_curv;
+      } else if (pd->e[pg->imtrx][SHELL_LUB_CURV]) {
         CURV += fv->sh_l_curv;
       }
       if (pd->e[pg->imtrx][SHELL_LUB_CURV_2]) {
@@ -3862,28 +3867,39 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       }
 
       /* Sensitivity to height */
-      if (!pd->e[pg->imtrx][SHELL_LUB_CURV]) {
-        D_CURV_DH = (cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / (H_cap * H_cap);
+      D_CURV_DH = (cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / (H_cap * H_cap);
 
-        /* Sensitivity to level set F */
-        for (i = 0; i < ei[pg->imtrx]->dof[VAR]; i++) {
-          for (j = 0; j < DIM; j++) {
-            D_CURV_DF[i] += sin(dcaU + atan(slopeU)) / (H_cap * (1 + slopeU * slopeU)) *
-                            dHc_U_dX[j] * lsi->d_normal_dF[j][i];
-            D_CURV_DF[i] += sin(dcaL + atan(-slopeL)) / (H_cap * (1 + slopeL * slopeL)) *
-                            dHc_L_dX[j] * lsi->d_normal_dF[j][i];
-          }
-          D_CURV_DF[i] += D_CURV_DH * dH_dF[i];
+      /* Sensitivity to level set F */
+      for (i = 0; i < ei[pg->imtrx]->dof[VAR]; i++) {
+        for (j = 0; j < DIM; j++) {
+          D_CURV_DF[i] += sin(dcaU + atan(slopeU)) / (H_cap * (1 + slopeU * slopeU)) * dHc_U_dX[j] *
+                          lsi->d_normal_dF[j][i];
+          D_CURV_DF[i] += sin(dcaL + atan(-slopeL)) / (H_cap * (1 + slopeL * slopeL)) *
+                          dHc_L_dX[j] * lsi->d_normal_dF[j][i];
         }
+        D_CURV_DF[i] += D_CURV_DH * dH_dF[i];
+      }
 
-        /* Sensitivity to mesh */
+      /* Sensitivity to mesh */
+      for (i = 0; i < dim; i++) {
+        for (j = 0; j < n_dof[MESH_DISPLACEMENT1]; j++) {
+          D_CURV_DX[i][j] += D_CURV_DH * D_Hc_DX[i][j];
+        }
+      }
+      if (mp->Lub_Curv_Combine) {
+        for (i = 0; i < ei[pg->imtrx]->dof[VAR]; i++) {
+          LubAux->dop_curv_df[i] = D_CURV_DF[i];
+        }
         for (i = 0; i < dim; i++) {
           for (j = 0; j < n_dof[MESH_DISPLACEMENT1]; j++) {
-            D_CURV_DX[i][j] += D_CURV_DH * D_Hc_DX[i][j];
+            LubAux->dop_curv_dx[i][j] = D_CURV_DX[i][j];
           }
         }
+      }
 
-        /* Sensitivity to shell normal */
+      /* Sensitivity to shell normal */
+      if ((pd->e[pg->imtrx][R_SHELL_NORMAL1]) && (pd->e[pg->imtrx][R_SHELL_NORMAL2]) &&
+          (pd->e[pg->imtrx][R_SHELL_NORMAL3])) {
         for (i = 0; i < dim; i++) {
           for (j = 0; j < ei[pg->imtrx]->dof[SHELL_NORMAL1]; j++) {
             D_CURV_DNORMAL[i][j] += D_CURV_DH * D_H_DNORMAL[i][j];
@@ -4008,7 +4024,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dbl dq_dH = 0., dv_dH = 0., H_inv = 1. / H;
     dbl dqmag_dF[MDE], factor, ratio = 0., q_mag2;
     dbl q[DIM], ev[DIM], pgrad, pg_cmp[DIM], dev_dpg[DIM][DIM];
-    dbl v_avg[DIM], dq_dT = 0.;
+    dbl v_avg[DIM], dq_dT = 0., mu_diss = 0., dmu_diss_dT = 0., dmu_diss_dpgrad = 0.;
     double DQ_DH[DIM];
     double D_Q_DF[DIM][MDE], D_V_DF[DIM][MDE], DGRADP_DF[DIM][MDE], DGRADP_DK = 0.;
     double DGRADP_DX[DIM][DIM][MDE], DGRADP_DNORMAL[DIM][DIM][MDE];
@@ -4182,8 +4198,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           dq_dT *= factor;
           pre_delP *= factor;
           vis_w /= factor;
-        } else if (nonmoving_model && (mp->mp2nd->ViscosityModel == CONSTANT ||
-                                       mp->mp2nd->ViscosityModel == TIME_RAMP)) {
+        } else if (mp->mp2nd->ViscosityModel == CONSTANT ||
+                   mp->mp2nd->ViscosityModel == TIME_RAMP) {
           if (mp->Lub_LS_Interpolation == LOGARITHMIC) {
             if (lsi->near || (fv->F > 0 && mp->mp2nd->viscositymask[1]) ||
                 (fv->F < 0 && mp->mp2nd->viscositymask[0])) {
@@ -4237,6 +4253,11 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           GOMA_WH(GOMA_ERROR, "mp2nd->ViscosityModel needs to be RATIO or CONSTANT...\n");
         }
       }
+      if (pd->v[pg->imtrx][SHELL_TEMPERATURE]) {
+        mu_diss = -q_mag * pgrad;
+        dmu_diss_dT = -dq_dT * pgrad;
+        dmu_diss_dpgrad = -q_mag - pgrad * dq_gradp;
+      }
       memset(q, 0.0, sizeof(double) * DIM);
       for (i = 0; i < dim; i++) {
         q[i] += q_mag * ev[i];
@@ -4282,7 +4303,11 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       } /*  End of Viscosity Models **/
 
       /* modulate q (moving wall part) if level-set interface present */
+      /* This part needs to be redone -- no q_mag for moving models */
       if (pd->v[pg->imtrx][VAR] && movwall_model) {
+        for (i = 0; i < dim; i++) {
+          q_mag += q[i] * ev[i];
+        } /** This isn't quite right   */
         if (mp->mp2nd->ViscosityModel == RATIO) {
           ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
           q_mag2 = q_mag * ratio;
@@ -4350,6 +4375,11 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         } else {
           GOMA_WH(GOMA_ERROR, "mp2nd->ViscosityModel needs to be RATIO or CONSTANT...\n");
         }
+      }
+      if (pd->v[pg->imtrx][SHELL_TEMPERATURE]) {
+        mu_diss = -q_mag * pgrad; /* Need to add the drag flow part yet */
+        dmu_diss_dT = -dq_dT * pgrad;
+        dmu_diss_dpgrad = -q_mag - pgrad * dq_gradp;
       }
       memset(q, 0.0, sizeof(double) * DIM);
       for (i = 0; i < dim; i++) {
@@ -4647,11 +4677,15 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     memset(LubAux->dq_dnormal, 0.0, sizeof(double) * DIM * DIM * MDE);
 
     LubAux->H = H;
+    LubAux->H_cap = H_cap;
     LubAux->dH_dp = D_H_DP;
     LubAux->dH_ddh = D_H_ddh;
     LubAux->gradP_mag = 0;
     LubAux->srate = srate;
     LubAux->mu_star = vis_w;
+    LubAux->visc_diss = mu_diss;
+    LubAux->dvisc_diss_dT = dmu_diss_dT;
+    LubAux->dvisc_diss_dpgrad = dmu_diss_dpgrad;
     for (i = 0; i < dim; i++) {
       LubAux->q[i] = q[i];
       LubAux->v_avg[i] = v_avg[i];
@@ -5511,7 +5545,9 @@ void calculate_lub_q_v_old(
     }
 
     /* Curvature - numerical in planview direction */
-    if (pd->e[pg->imtrx][SHELL_LUB_CURV]) {
+    if (mp->Lub_Curv_Combine) {
+      CURV = fv_old->sh_l_curv;
+    } else if (pd->e[pg->imtrx][SHELL_LUB_CURV]) {
       CURV += fv_old->sh_l_curv;
     }
     if (pd->e[pg->imtrx][SHELL_LUB_CURV_2]) {
