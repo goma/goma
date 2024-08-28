@@ -4234,7 +4234,7 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
       ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
 
       if (subgrid_integration_active) {
-        double width = params == NULL ? ls->Length_Scale : 2.0 * params[0];
+        double width = num_params == 0 ? ls->Length_Scale : 2.0 * params[0];
 
         if ((Use_Subgrid_Integration = current_elem_overlaps_interface(width))) {
           ip_total =

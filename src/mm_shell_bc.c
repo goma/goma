@@ -377,8 +377,8 @@ void shell_n_dot_curv_bc(double func[DIM],
 
     /* Derivative of normal vector */
     for (jj = 0; jj < DIM; jj++) {
-      d_LSnormal_dF[ii][jj] = grad_II_phi_i[jj] * LSnormal_maginv;
-      d_LSnormal_dF[ii][jj] -= gradII_F[jj] * d_LSnormal_mag_dF[ii] * pow(LSnormal_maginv, 2);
+      d_LSnormal_dF[jj][ii] = grad_II_phi_i[jj] * LSnormal_maginv;
+      d_LSnormal_dF[jj][ii] -= gradII_F[jj] * d_LSnormal_mag_dF[ii] * pow(LSnormal_maginv, 2);
     }
   }
 
