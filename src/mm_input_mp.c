@@ -10319,7 +10319,22 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           mat_ptr->Lub_gpts[1] = 0.5 * (1. - 0.538469310105683);
           mat_ptr->Lub_gpts[2] = 0.5;
           mat_ptr->Lub_gpts[3] = 0.5 * (1. + 0.538469310105683);
-          mat_ptr->Lub_gpts[0] = 0.5 * (1. + 0.906179845938664);
+          mat_ptr->Lub_gpts[4] = 0.5 * (1. + 0.906179845938664);
+        } else if (mat_ptr->LubInt_NGP == 6) {
+          mat_ptr->Lub_wts[0] = 0.5 * 0.171324492379170;
+          mat_ptr->Lub_wts[1] = 0.5 * 0.360761573048139;
+          mat_ptr->Lub_wts[2] = 0.5 * 0.467913934572691;
+          mat_ptr->Lub_wts[3] = mat_ptr->Lub_wts[2];
+          mat_ptr->Lub_wts[4] = mat_ptr->Lub_wts[1];
+          mat_ptr->Lub_wts[5] = mat_ptr->Lub_wts[0];
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. - 0.932469514203152);
+          mat_ptr->Lub_gpts[1] = 0.5 * (1. - 0.661209386466265);
+          mat_ptr->Lub_gpts[2] = 0.5 * (1. - 0.238619186083197);
+          mat_ptr->Lub_gpts[3] = 0.5 * (1. + 0.238619186083197);
+          mat_ptr->Lub_gpts[4] = 0.5 * (1. + 0.661209386466265);
+          mat_ptr->Lub_gpts[5] = 0.5 * (1. + 0.932469514203152);
+        } else if (mat_ptr->LubInt_NGP > MAX_LUB_NGP) {
+          GOMA_EH(GOMA_ERROR, "Too many Gauss points -- increase MAX_LUB_NGP!");
         } else {
           GOMA_EH(GOMA_ERROR, "Those integration points not defined yet!");
         }
@@ -10395,10 +10410,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                    SCALAR_INPUT, &NO_SPECIES, es);
     if (!strcasecmp(model_name, "GRADH") || !strcasecmp(model_name, "gradient")) {
       mat_ptr->Lub_Curv_NormalModel = TRUE;
-      SPF(es, "\t(%s = %s)", search_string, "GRADH");
+      SPF(es, "%s = %s", search_string, "GRADH");
     } else if (!strcasecmp(model_name, "DELTA") || !strcasecmp(model_name, "delta")) {
       mat_ptr->Lub_Curv_NormalModel = FALSE;
-      SPF(es, "\t(%s = %s)", search_string, "DELTA");
+      SPF(es, "%s = %s", search_string, "DELTA");
     } else {
       mat_ptr->Lub_Curv_NormalModel = TRUE;
       GOMA_WH(model_read, "Defaulting on Lubrication Curvature Normal");
@@ -10411,10 +10426,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                    SCALAR_INPUT, &NO_SPECIES, es);
     if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
       mat_ptr->Lub_LS_Interpolation = LINEAR;
-      SPF(es, "\t(%s = %s)", search_string, "LINEAR");
+      SPF(es, "%s = %s", search_string, "LINEAR");
     } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
       mat_ptr->Lub_LS_Interpolation = LOGARITHMIC;
-      SPF(es, "\t(%s = %s)", search_string, "LOGARITHMIC");
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
     } else {
       mat_ptr->Lub_LS_Interpolation = LINEAR;
       GOMA_WH(model_read, "Defaulting on Lubrication LS Interpolation");
@@ -10485,10 +10500,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
       mat_ptr->Lub_Curv_MassLump = TRUE;
-      SPF(es, "\t(%s = %s)", search_string, "on");
+      SPF(es, "%s = %s", search_string, "on");
     } else if (!strcasecmp(model_name, "no") || !strcasecmp(model_name, "false")) {
       mat_ptr->Lub_Curv_MassLump = FALSE;
-      SPF(es, "\t(%s = %s)", search_string, "off");
+      SPF(es, "%s = %s", search_string, "off");
     } else {
       mat_ptr->Lub_Curv_MassLump = TRUE;
       SPF(es, "\t(%s = %s)", search_string, "on");
@@ -10502,12 +10517,29 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
       mat_ptr->Lub_Curv_Modulation = TRUE;
-      SPF(es, "\t(%s = %s)", search_string, "on");
+      SPF(es, "%s = %s", search_string, "on");
     } else if (!strcasecmp(model_name, "no") || !strcasecmp(model_name, "false")) {
       mat_ptr->Lub_Curv_Modulation = FALSE;
-      SPF(es, "\t(%s = %s)", search_string, "off");
+      SPF(es, "%s = %s", search_string, "off");
     } else {
       mat_ptr->Lub_Curv_Modulation = FALSE;
+      SPF(es, "\t(%s = %s)", search_string, "off");
+    }
+    ECHO(es, echo_file);
+
+    /*  Shell Lubrication Curvature Combination */
+    strcpy(search_string, "Lubrication Curvature Combination");
+    model_read = look_for_mat_prop(imp, "Lubrication Curvature Combination", NULL, NULL, NO_USER,
+                                   NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
+      mat_ptr->Lub_Curv_Combine = TRUE;
+      SPF(es, "%s = %s", search_string, "on");
+    } else if (!strcasecmp(model_name, "no") || !strcasecmp(model_name, "false")) {
+      mat_ptr->Lub_Curv_Combine = FALSE;
+      SPF(es, "%s = %s", search_string, "off");
+    } else {
+      mat_ptr->Lub_Curv_Combine = FALSE;
       SPF(es, "\t(%s = %s)", search_string, "off");
     }
     ECHO(es, echo_file);

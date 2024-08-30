@@ -32,9 +32,9 @@ class Package(packages.CMakePackage):
 
     def configure_options(self, builder):
         if builder.build_shared:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
         CC = builder.env["CC"]
         CXX = builder.env["CXX"]
         FC = builder.env["FC"]
@@ -74,12 +74,18 @@ class Package(packages.CMakePackage):
         builder.add_option("-DMPI_BASE_DIR:PATH=" + builder.env["MPI_HOME"])
         builder.add_option("-DEpetraExt_BUILD_GRAPH_REORDERINGS:BOOL=ON")
         builder.add_option("-DTPL_ENABLE_LAPACK:BOOL=ON")
-        builder.add_option("-DLAPACK_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"])
-        builder.add_option("-DLAPACK_LIBRARY_NAMES=openblas")
         builder.add_option("-DTPL_ENABLE_BLAS:BOOL=ON ")
         builder.add_option("-DHAVE_EPETRA_LAPACK_GSSVD3:BOOL=ON ")
-        builder.add_option("-DBLAS_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"])
-        builder.add_option("-DBLAS_LIBRARY_NAMES=openblas")
+        if "OPENBLAS_DIR" in builder.env:
+            builder.add_option("-DLAPACK_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"])
+            builder.add_option("-DLAPACK_LIBRARY_NAMES=openblas")
+            builder.add_option("-DBLAS_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"])
+            builder.add_option("-DBLAS_LIBRARY_NAMES=openblas")
+        else:
+            builder.add_option("-DLAPACK_LIBRARY_DIRS=" + builder.env["LAPACK_DIR"] + "/lib")
+            builder.add_option("-DLAPACK_LIBRARY_NAMES=lapack;blas")
+            builder.add_option("-DBLAS_LIBRARY_DIRS=" + builder.env["LAPACK_DIR"] + "/lib")
+            builder.add_option("-DBLAS_LIBRARY_NAMES=blas")
         builder.add_option("-DTPL_ENABLE_UMFPACK:BOOL=ON ")
         builder.add_option(
             "-DUMFPACK_LIBRARY_NAMES:STRING=umfpack;amd;suitesparseconfig;cholmod;colamd;ccolamd;camd"

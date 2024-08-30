@@ -661,14 +661,37 @@ double height_function_model(double *H_U,
       }
       exp_term2 = pow(MAX(exp_term, DBL_SEMI_SMALL), 1. / (2. * powerlaw + 1.));
       if ((ls != NULL || pfd != NULL) && Fwall_model) {
-        H *= (1. - lsi->H) * exp_term2 + lsi->H;
-        dh_grad = (1. - lsi->H) * alpha / (2. * powerlaw + 1.) * pow(exp_term2, -2. * powerlaw);
-        for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
-          dH_dF[j] = H_orig * lsi->d_H_dF[j] * (1. - exp_term2);
+        double factor = (mp->mp2nd->viscositymask[1] ? (1.0 - lsi->H) : lsi->H);
+        if (mp->Lub_LS_Interpolation == LOGARITHMIC) {
+          if (lsi->near || (fv->F > 0 && mp->mp2nd->viscositymask[1]) ||
+              (fv->F < 0 && mp->mp2nd->viscositymask[0])) {
+            double H_log = (DOUBLE_NONZERO(exp_term2) ? log(1.0 / exp_term2) : 0.0);
+            if (fabs(fv->F) <= ls->Length_Scale) {
+              H = pow(H_orig * exp_term2, factor) * pow(H_orig, 1.0 - factor);
+              dh_grad = (H / (H_orig * exp_term2)) * factor * H_orig * alpha *
+                        exp(-alpha * rel_dist) / (2. * powerlaw + 1.) * pow(H, -2. * powerlaw);
+              for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
+                dH_dF[j] = H * H_log * lsi->d_H_dF[j];
+              }
+            }
+          } else {
+            H *= exp_term2;
+            dh_grad = H_orig * alpha * exp(-alpha * rel_dist) / (2. * powerlaw + 1.) *
+                      pow(H, -2. * powerlaw);
+          }
+        } else {
+          factor = (mp->mp2nd->viscositymask[1] ? (1.0 - lsi->H) : lsi->H);
+          H *= factor * exp_term2 + (1.0 - factor);
+          dh_grad = factor * H_orig * alpha * exp(-alpha * rel_dist) / (2. * powerlaw + 1.) *
+                    pow(H, -2. * powerlaw);
+          for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
+            dH_dF[j] = H_orig * lsi->d_H_dF[j] * (1. - exp_term2);
+          }
         }
       } else {
         H *= exp_term2;
-        dh_grad = alpha / (2. * powerlaw + 1.) * pow(exp_term2, -2. * powerlaw);
+        dh_grad =
+            H_orig * alpha * exp(-alpha * rel_dist) / (2. * powerlaw + 1.) * pow(H, -2. * powerlaw);
       }
       if (mp->HeightUFunctionModel == WALL_DISTMOD) {
         dH_U_dX[0] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][0];
@@ -694,7 +717,6 @@ double height_function_model(double *H_U,
       dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.;
     }
   }
-
   return (H);
 }
 

@@ -26,9 +26,9 @@ class Package(packages.CMakePackage):
     def configure_options(self, builder):
         CXX = builder.env["CXX"]
         if builder.build_shared:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
         builder.add_option("-DCMAKE_CXX_COMPILER=" + CXX)
 
     def register(self, builder):
