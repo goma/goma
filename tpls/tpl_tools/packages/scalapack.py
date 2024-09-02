@@ -22,10 +22,10 @@ class Package(packages.CMakePackage):
 
     def configure_options(self, builder):
         if builder.build_shared:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
-        builder.add_option("-D=SCALAPACK_BUILD_TESTS=OFF")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
+        builder.add_option("-DSCALAPACK_BUILD_TESTS=OFF")
 
     def register(self, builder):
         registry = builder._registry

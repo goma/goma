@@ -15,12 +15,12 @@ class Package(packages.CMakePackage):
 
     def configure_options(self, builder):
         if builder.build_shared:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=ON")
-            builder.add_option("-D=SHARED:BOOL=ON")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
+            builder.add_option("-DSHARED:BOOL=ON")
         else:
-            builder.add_option("-D=BUILD_SHARED_LIBS:BOOL=OFF")
-            builder.add_option("-D=SHARED:BOOL=OFF")
-        builder.add_option("-D=GKLIB_PATH=./GKlib")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
+            builder.add_option("-DSHARED:BOOL=OFF")
+        builder.add_option("-DGKLIB_PATH=./GKlib")
 
     def register(self, builder):
         registry = builder._registry

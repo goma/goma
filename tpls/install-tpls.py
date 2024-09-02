@@ -4,6 +4,7 @@ from tpl_tools.registry import Registry
 import importlib
 import tpl_tools.utils as utils
 import os
+import sys
 import argparse
 import pathlib
 
@@ -21,6 +22,7 @@ packages = [
     "bison",
     "flex",
     "openblas",
+    "lapack",
     "metis",
     "parmetis",
     "scotch",
@@ -81,6 +83,18 @@ if __name__ == "__main__":
         "-j", "--jobs", help="Number of parallel jobs", type=int, default=1
     )
     parser.add_argument(
+        "--netlib-blas",
+        help="Build using reference BLAS/LAPACK",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--openblas",
+    help="Build using OpenBLAS (Default)",
+    dest="netlib_blas",
+    action="store_true",
+    )
+    parser.set_defaults(netlib_blas=False)
+    parser.add_argument(
         "--enable-parmetis",
         help="Build ParMETIS library, (Default, check license requirements)",
         action="store_true",
@@ -104,6 +118,7 @@ if __name__ == "__main__":
             help="System location of package {}".format(pc.name),
             type=pathlib.Path,
         )
+
     args = parser.parse_args()
     if not args.enable_parmetis:
         print("ParMETIS has been disabled ")
@@ -111,6 +126,12 @@ if __name__ == "__main__":
         print("\tDisabling SuperLU_DIST as Trilinos requires it be built with ParMETIS")
         packages.remove("parmetis")
         packages.remove("superlu_dist")
+
+    if args.netlib_blas:
+        packages.remove("openblas")
+    else:
+        packages.remove("lapack")
+
 
     install_dir = os.path.abspath(os.path.expanduser(args.INSTALL_DIR))
     download_dir = os.path.join(install_dir, "downloads")
@@ -187,7 +208,8 @@ if __name__ == "__main__":
             if build.check(True):
                 build.logger.log("Package {} found at {}".format(pc.name, package_dir))
             else:
-                break
+                print("Package {} not found check directory or let script build".format(pc.name), file=sys.stderr)
+                exit(1)
             build.register()
         else:
             build = Builder(
@@ -212,7 +234,8 @@ if __name__ == "__main__":
             build.build()
             build.install()
             if not build.check():
-                break
+                print("Package {} not built, contact developers".format(pc.name), file=sys.stderr)
+                exit(1)
             build.register()
     tpl_registry.config.write_config(os.path.join(install_dir, "config.sh"))
     logger.log(

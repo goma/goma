@@ -4498,6 +4498,76 @@ double scalar_fv_fill_adjmatrl(double **base, int lvdesc, int num_dofs, int var_
 /*******************************************************************************/
 /*******************************************************************************/
 
+static void stress_index_from_var(int var_type, int *mode, int *i, int *j) {
+  int iind = -1, jind = -1;
+  if (var_type >= POLYMER_STRESS11 && var_type <= POLYMER_STRESS33) {
+    *mode = 0;
+    switch (var_type - POLYMER_STRESS11) {
+    case 0:
+      iind = 0;
+      jind = 0;
+      break;
+    case 1:
+      iind = 0;
+      jind = 1;
+      break;
+    case 2:
+      iind = 1;
+      jind = 1;
+      break;
+    case 3:
+      iind = 0;
+      jind = 2;
+      break;
+    case 4:
+      iind = 1;
+      jind = 2;
+      break;
+    case 5:
+      iind = 2;
+      jind = 2;
+      break;
+    }
+    *i = iind;
+    *j = jind;
+  } else if (var_type >= POLYMER_STRESS11_1 && var_type <= POLYMER_STRESS33_7) {
+    *mode = (var_type - POLYMER_STRESS11_1) / 6;
+    switch (var_type - (POLYMER_STRESS11_1 + 6 * *mode)) {
+    case 0:
+      iind = 0;
+      jind = 0;
+      break;
+    case 1:
+      iind = 0;
+      jind = 1;
+      break;
+    case 2:
+      iind = 1;
+      jind = 1;
+      break;
+    case 3:
+      iind = 0;
+      jind = 2;
+      break;
+    case 4:
+      iind = 1;
+      jind = 2;
+      break;
+    case 5:
+      iind = 2;
+      jind = 2;
+      break;
+    }
+    *i = iind;
+    *j = jind;
+  } else {
+    *mode = -1;
+    *i = -1;
+    *j = -1;
+    GOMA_EH(GOMA_ERROR, "Unknown stress variable type %d", var_type);
+  }
+}
+
 void load_matrl_statevector(MATRL_PROP_STRUCT *mp_local)
 
 /**************************************************************************
@@ -4565,6 +4635,12 @@ void load_matrl_statevector(MATRL_PROP_STRUCT *mp_local)
         sv[var_type] = scalar_fv_fill_altmatrl(esp->poynt[0], lvdesc, num_dofs, var_type);
       } else if (var_type == LIGHT_INTM) {
         sv[var_type] = scalar_fv_fill_altmatrl(esp->poynt[1], lvdesc, num_dofs, var_type);
+      } else if ((var_type >= POLYMER_STRESS11 && var_type <= POLYMER_STRESS33) ||
+                 (var_type >= POLYMER_STRESS11_1 && var_type <= POLYMER_STRESS33_7)) {
+        int mode = -1, iind = -1, jind = -1;
+        stress_index_from_var(var_type, &mode, &iind, &jind);
+        sv[var_type] =
+            scalar_fv_fill_altmatrl(esp->S[mode][iind][jind], lvdesc, num_dofs, var_type);
       } else {
         GOMA_EH(GOMA_ERROR, "Unimplemented");
       }
