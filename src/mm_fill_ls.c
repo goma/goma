@@ -3318,7 +3318,7 @@ static void find_intersections(struct LS_Surf_List *list, int isovar, double iso
 
     switch (pd->i[pg->imtrx][isovar]) {
 
-    case I_Q1: /* trilinear hex */
+    case I_Q1: /* Linear Tet */
     {
       int links[6][2] = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}};
 
@@ -3348,9 +3348,38 @@ static void find_intersections(struct LS_Surf_List *list, int isovar, double iso
         }
       }
     } break;
+    case I_Q2: { /* Quadratic Tet */
+      int links[27][2] = {{0, 4}, {4, 1}, {1, 5}, {5, 2}, {2, 6}, {6, 0}, {0, 7}, {7, 3}, {1, 8},
+                          {8, 3}, {2, 9}, {9, 3}, {4, 5}, {5, 6}, {6, 4}, {4, 8}, {8, 7}, {7, 4},
+                          {5, 8}, {8, 9}, {9, 5}, {6, 9}, {9, 7}, {7, 6}, {4, 9}, {5, 7}, {6, 8}};
+
+      for (link = 0; link < 27; link++) {
+        i = links[link][0];
+        j = links[link][1];
+        I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+        J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
+        find_nodal_stu(i, ei[pg->imtrx]->ielem_type, xi, xi + 1, xi + 2);
+        find_nodal_stu(j, ei[pg->imtrx]->ielem_type, yi, yi + 1, yi + 2);
+
+        if (find_link_intersection(xi, yi, isovar, isoval, NULL) == TRUE) {
+          /* check if crossing is on an edge with a ca condition */
+          inflection = FALSE; /* innocent till proven guilty */
+          if (ls->Contact_Inflection && point_on_ca_boundary(I, exo) &&
+              point_on_ca_boundary(J, exo))
+            inflection = TRUE;
+          map_local_coordinates(xi, x);
+          surf = create_surf_point(x, ei[pg->imtrx]->ielem, xi, inflection);
+          if (unique_surf(list, surf)) {
+            append_surf(list, surf);
+          } else {
+            safe_free(surf);
+          }
+        }
+      }
+    } break;
     default:
       GOMA_EH(GOMA_ERROR, "Huygens renormalization not implemented for this interpolation "
-                          "on TRIs");
+                          "on TETs");
       break;
     }
     break;
