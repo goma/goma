@@ -148,17 +148,18 @@ extern "C" goma_error find_current_distances(Exo_DB *exo,
     if (apply_displacements) {
       int index =
           Index_Solution(i, MESH_DISPLACEMENT1, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT1]);
-      GOMA_ASSERT_ALWAYS(index != -1);
-      coordinates[i][0] += solution_vector[index];
+      if (index != -1)
+        coordinates[i][0] += solution_vector[index];
       index =
           Index_Solution(i, MESH_DISPLACEMENT2, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT2]);
-      GOMA_ASSERT_ALWAYS(index != -1);
-      coordinates[i][1] += solution_vector[index];
+      if (index != -1)
+        coordinates[i][1] += solution_vector[index];
       if (dim == 3) {
         index =
             Index_Solution(i, MESH_DISPLACEMENT3, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT3]);
         GOMA_ASSERT_ALWAYS(index != -1);
-        coordinates[i][2] += solution_vector[index];
+        if (index != -1)
+          coordinates[i][2] += solution_vector[index];
       }
     }
   }
