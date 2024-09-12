@@ -1,3 +1,27 @@
+## Changes in version 7.7.0
+
+Major new features are Autodiff and stabilization improvements and a new build script in `tpls/` folder
+
+- Shell Energy Update by @rbsecor in https://github.com/goma/goma/pull/459
+- write P1 element variables in segregated solve by @wortiz in https://github.com/goma/goma/pull/460
+- Use Amesos2 Solver Package instead of just Mumps by @wortiz in https://github.com/goma/goma/pull/461
+- GCC 14 warning cleanup, fix for xdot in level set segregated by @wortiz in https://github.com/goma/goma/pull/462
+- Add Fluid Stress Post Processing, update Viscous Stress by @wortiz in https://github.com/goma/goma/pull/463
+- tiny doc update by @wortiz in https://github.com/goma/goma/pull/464
+- Shell Lubrication temperature and convection additions by @rbsecor in https://github.com/goma/goma/pull/465
+- Add under relaxation and tolerances to subcycling. Fix some warnings. by @wortiz in https://github.com/goma/goma/pull/466
+- Legacy build script changes for automation by @wortiz in https://github.com/goma/goma/pull/467
+- Lubrication Logarithm Interpolation by @rbsecor in https://github.com/goma/goma/pull/468
+- Add strumpack to legacy build script petsc, update flux docs by @wortiz in https://github.com/goma/goma/pull/471
+- Updates for cmake to find non-system TPLs by @wortiz in https://github.com/goma/goma/pull/469
+- Add a new TPL build script by @wortiz in https://github.com/goma/goma/pull/473
+- AutoDiff and Stabilization and Line Search by @wortiz in https://github.com/goma/goma/pull/472
+- Lub log ls2 by @rbsecor in https://github.com/goma/goma/pull/470
+- Discontinuous Variable Initial Guess fix and Discontinuous Stress by @wortiz in https://github.com/goma/goma/pull/474
+- Add current AC_VALUE to aprepro AC flag by @wortiz in https://github.com/goma/goma/pull/475
+- Fix level set renormalization for quadratic tets by Harald Ziegelwanger in https://github.com/goma/goma/pull/477
+
+
 ## Changes in version 7.6.1
 
 - bugfix for Trilinos 13 [goma#458](https://github.com/goma/goma/pull/458)
