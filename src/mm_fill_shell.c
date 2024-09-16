@@ -6678,7 +6678,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
       if (xfem != NULL) {
         int xfem_active, extended_dof, base_interp, base_dof;
         xfem_dof_state(i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape, &xfem_active,
-                           &extended_dof, &base_interp, &base_dof);
+                       &extended_dof, &base_interp, &base_dof);
         if (extended_dof && !xfem_active)
           continue;
       }

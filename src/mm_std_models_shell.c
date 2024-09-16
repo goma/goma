@@ -670,8 +670,9 @@ double height_function_model(double *H_U,
       exp_term2 = pow(MAX(exp_term, DBL_SEMI_SMALL), 1. / (2. * powerlaw + 1.));
       if ((ls != NULL || pfd != NULL) && Fwall_model) {
         // Modified, shifted LS distance & Heaviside variable
-        double F_prime = (DOUBLE_NONZERO(ls->Length_Scale) ? (fv->F / ls->Length_Scale - F_shift) : fv->F);
-        double H_prime, dH_prime = 0.0; 
+        double F_prime =
+            (DOUBLE_NONZERO(ls->Length_Scale) ? (fv->F / ls->Length_Scale - F_shift) : fv->F);
+        double H_prime, dH_prime = 0.0;
         if (F_prime <= 1.) {
           H_prime = 0.5 * (1. + F_prime + sin(PI * F_prime) / PI);
           dH_prime = 0.5 * (1. + cos(PI * F_prime)) / ls->Length_Scale;
@@ -682,7 +683,7 @@ double height_function_model(double *H_U,
         }
         double factor = (mp->mp2nd->viscositymask[1] ? (1.0 - H_prime) : H_prime);
         if (mp->Lub_LS_Interpolation == LOGARITHMIC) {
-          if ( (fabs(F_prime) <= 1.) || (F_prime > 0 && mp->mp2nd->viscositymask[1]) ||
+          if ((fabs(F_prime) <= 1.) || (F_prime > 0 && mp->mp2nd->viscositymask[1]) ||
               (F_prime < 0 && mp->mp2nd->viscositymask[0])) {
             double H_log = (DOUBLE_NONZERO(exp_term2) ? log(1.0 / exp_term2) : 0.0);
             if (fabs(F_prime) <= 1.) {
