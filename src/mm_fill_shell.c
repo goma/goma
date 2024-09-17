@@ -6674,15 +6674,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
     /*** Loop over DOFs (i) ***/
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
-      /* this is an optimization for xfem */
-      if (xfem != NULL) {
-        int xfem_active, extended_dof, base_interp, base_dof;
-        xfem_dof_state(i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape, &xfem_active,
-                       &extended_dof, &base_interp, &base_dof);
-        if (extended_dof && !xfem_active)
-          continue;
-      }
-
       /* Prepare basis funcitons */
       ShellBF(eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh,
               n_dof[MESH_DISPLACEMENT1], dof_map);
