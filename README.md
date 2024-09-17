@@ -84,5 +84,8 @@ For more information on using spack see the [spack documentation](https://spack.
 
 To get started with Goma, use the following:
 
-* [Tutorial instructions](https://docs.gomafem.com/files/goma-beginners-tutorial.pdf)
-* [Tutorial files tarball](https://docs.gomafem.com/files/goma_beginners_tutorial.tar.gz)
+* [Goma Documentation](https://www.gomafem.com/documentation.html)
+
+* [Tutorial instructions](https://www.gomafem.com/files/goma-beginners-tutorial.pdf)
+
+* [Tutorial files tarball](https://www.gomafem.com/files/goma_beginners_tutorial.tar.gz)
