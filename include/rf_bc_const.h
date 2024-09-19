@@ -821,6 +821,7 @@
 #define CAPILLARY_TABLE_BC         963000007
 #define ELEC_TRACTION_BC           963000001 /* Include Maxwell Stress in CAPILLARY_BC */
 #define ELEC_TRACTION_SOLID_BC     963000003 /* Include Maxwell Stress in solid */
+#define SHEAR_STRESS_APPLIED_BC    963000009
 #define CAP_REPULSE_BC             963100000
 #define CAP_RECOIL_PRESS_BC        963110000
 #define CAP_REPULSE_ROLL_BC        963120000

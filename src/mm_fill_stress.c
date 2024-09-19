@@ -7618,7 +7618,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
   SUPG_terms supg_terms;
   if (supg != 0.) {
-    supg_tau(&supg_terms, dim, 1e-14, pg_data, dt, TRUE, eqn);
+    supg_tau(&supg_terms, dim, 1e-8, pg_data, dt, TRUE, eqn);
   }
   /* end Petrov-Galerkin addition */
   dbl yzbeta_factor = 0.0;
