@@ -4877,21 +4877,22 @@ void shear_stress_applied(double func[DIM],
 
 {
   dbl shear_stress = 0;
-  dbl x = fv->x[0];
 
-  dbl min_shear_stress = user[0];
+  dbl max_shear_stress = user[0];
   dbl a = user[1];
   dbl b = user[2];
   dbl c = user[3];
   dbl d = user[4];
   dbl beta = user[5];
-  dbl max_distance = user[6];
+  dbl max_x = user[6];
+  dbl x_start = user[7];
   dbl invbeta = 1 / beta;
+  dbl x = fv->x[0] - x_start;
 
-  shear_stress = fmin(x * x * x * d + x * x * c + x * b + a, min_shear_stress);
+  shear_stress = fmin(x * x * x * d + x * x * c + x * b + a, max_shear_stress);
 
   // shear_stress = -1137 + 8080*x - 8294 * x* x;
-  if (fv->x[0] > max_distance) {
+  if (fv->x[0] > max_x) {
     shear_stress = 0;
   }
   int eqn = VELOCITY1;
