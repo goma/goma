@@ -4866,6 +4866,79 @@ void sheet_tension(double cfunc[MDE][DIM],
   return;
 }
 
+void shear_stress_applied(double func[DIM],
+                          double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                          const int id_side, /* ID of the side of the element             */
+                          double *user,
+                          struct elem_side_bc_struct *elem_side_bc,
+                          const int iconnect_ptr,
+                          dbl *xi, /* Natural coordinates of the integration point */
+                          const Exo_DB *exo)
+
+{
+  dbl shear_stress = 0;
+
+  dbl max_shear_stress = user[0];
+  dbl a = user[1];
+  dbl b = user[2];
+  dbl c = user[3];
+  dbl d = user[4];
+  dbl beta = user[5];
+  dbl max_x = user[6];
+  dbl x_start = user[7];
+  dbl invbeta = 1 / beta;
+  dbl x = fv->x[0] - x_start;
+
+  shear_stress = fmin(x * x * x * d + x * x * c + x * b + a, max_shear_stress);
+
+  // shear_stress = -1137 + 8080*x - 8294 * x* x;
+  if (fv->x[0] > max_x) {
+    shear_stress = 0;
+  }
+  int eqn = VELOCITY1;
+
+  // shear stress is applied in the tangential direction
+  func[0] = 0;
+  dbl vtan[DIM] = {0.};
+  dbl sign = 1.0;
+
+  for (int i = 0; i < pd->Num_Dim; i++) {
+    vtan[i] = (fv->v[i]) * fv->stangent[0][i];
+  }
+  for (int r = 0; r < VIM; r++) {
+    func[r] += invbeta * (vtan[r] - fv->stangent[0][r] * sign * sqrt(shear_stress));
+  }
+
+  if (af->Assemble_Jacobian) {
+    if (pd->v[pg->imtrx][VELOCITY1]) {
+      for (int r = 0; r < VIM; r++) {
+        for (int b = 0; b < VIM; b++) {
+          int var = VELOCITY1 + b;
+          for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            dbl dvtan = bf[eqn]->phi[j] * fv->stangent[0][b];
+            d_func[r][var][j] += dvtan * invbeta;
+          }
+        }
+      }
+    }
+
+    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+      for (int r = 0; r < VIM; r++) {
+        for (int b = 0; b < VIM; b++) {
+          int var = MESH_DISPLACEMENT1 + b;
+          for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            for (int q = 0; q < pd->Num_Dim; q++) {
+              d_func[r][var][j] += (fv->v[q] * fv->dstangent_dx[0][q][b][j] -
+                                    sign * fv->dstangent_dx[0][r][b][j] * sqrt(shear_stress)) *
+                                   invbeta;
+            }
+          }
+        }
+      }
+    }
+  } /*  end of if Assemble_Jacobian  */
+}
+
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/

@@ -1381,6 +1381,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
        * Fall through for all cases which require eight floating point (used to be 7)
        * values as data input and one optional integer (BC_Data_int[0]).
        */
+    case SHEAR_STRESS_APPLIED_BC:
     case CAP_REPULSE_BC:
 
       if (fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", &BC_Types[ibc].BC_Data_Float[0],

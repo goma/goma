@@ -985,4 +985,12 @@ void dvzdr_zero_deriv_bc(double[DIM], /* func                                   
 void ls_wall_angle_bc(double func[DIM],
                       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                       const double angle);
+void shear_stress_applied(double func[DIM],
+                          double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                          const int id_side, /* ID of the side of the element             */
+                          double *user,      /* surface tension                           */
+                          struct elem_side_bc_struct *elem_side_bc,
+                          const int iconnect_ptr,
+                          dbl *xi, /* Natural coordinates of the integration point */
+                          const Exo_DB *exo);
 #endif /* GOMA_MM_NS_BC_H */
