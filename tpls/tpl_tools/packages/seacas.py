@@ -6,8 +6,8 @@ import os
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "seacas"
-        self.version = "2024-07-10"
-        self.sha256 = "b2ba6ca80359fed8ed2a8a210052582c7a3b7b837253bd1e9be941047dcab3ff"
+        self.version = "2024-08-15"
+        self.sha256 = "c85130b0dac5ab9a08dcb53c8ccff478122d72b08bd41d99c0adfddc5eb18a52"
         self.filename = "seacas-" + self.version + ".tar.gz"
         self.url = (
             "https://github.com/sandialabs/seacas/archive/refs/tags/v"

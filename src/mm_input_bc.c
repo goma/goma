@@ -1354,6 +1354,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
        * Fall through for all cases which require seven floating point
        * values as data input
        */
+    case SHEAR_STRESS_APPLIED_BC:
     case CA_OR_FIX_BC:
     case MOVING_PLANE_BC:
     case WETTING_SPEED_LIN_BC:
@@ -2947,10 +2948,6 @@ void rd_bc_specs(FILE *ifp, char *input) {
       BC_Types[ibc].table_index = num_BC_Tables++;
 
       break;
-
-    case SHEAR_STRESS_APPLIED_BC:
-    // TODO Read Shear Stress Applied BC
-    break;
 
       /*
        *

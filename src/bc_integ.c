@@ -894,8 +894,8 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           memset(cfunc, 0, MDE * DIM * sizeof(double));
           memset(d_cfunc, 0, MDE * DIM * (MAX_VARIABLE_TYPES + MAX_CONC) * MDE * sizeof(double));
 
-          shear_stress_applied(func, d_func, elem_side_bc->id_side, bc->BC_Data_Float,
-                               elem_side_bc, iconnect_ptr, xi, exo);
+          shear_stress_applied(func, d_func, elem_side_bc->id_side, bc->BC_Data_Float, elem_side_bc,
+                               iconnect_ptr, xi, exo);
           break;
 
         case CAPILLARY_BC:
