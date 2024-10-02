@@ -95,9 +95,9 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
   dbl grad_d_old[DIM][DIM];
   dbl grad_d_dot[DIM][DIM];
   dbl d_grad_d_dot[DIM][DIM][DIM][MDE]; /* displacement gradient*/
-  dbl ddet2d_dx[DIM][MDE];     /* sensitivity */
-  dbl ddet2d_dot_dx[DIM][MDE]; /* sensitivity */
-  dbl cauchy_green[DIM][DIM];  /* strain tensor without division by determinant, etc. */
+  dbl ddet2d_dx[DIM][MDE];              /* sensitivity */
+  dbl ddet2d_dot_dx[DIM][MDE];          /* sensitivity */
+  dbl cauchy_green[DIM][DIM];           /* strain tensor without division by determinant, etc. */
   dbl d_cauchy_green_dx[DIM][DIM][DIM][MDE]; /* sensitivity */
   dbl cauchy_green_old[DIM][DIM];
   dbl cauchy_green_dot[DIM][DIM];
