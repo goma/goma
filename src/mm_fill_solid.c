@@ -95,10 +95,6 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
   dbl grad_d_old[DIM][DIM];
   dbl grad_d_dot[DIM][DIM];
   dbl d_grad_d_dot[DIM][DIM][DIM][MDE]; /* displacement gradient*/
-#if 0
-  dbl det2d;                            /* determinant of 2D deformation gradient tensor */
-  dbl det2d_old, det2d_dot = 0.;
-#endif
   dbl ddet2d_dx[DIM][MDE];     /* sensitivity */
   dbl ddet2d_dot_dx[DIM][MDE]; /* sensitivity */
   dbl cauchy_green[DIM][DIM];  /* strain tensor without division by determinant, etc. */
@@ -643,11 +639,7 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
       det_defgrad_2d_old = deform_grad_old[0][0] * deform_grad_old[1][1] -
                            deform_grad_old[0][1] * deform_grad_old[1][0];
       plstr_vol_change = 1. / det_defgrad_2d;
-#if 0
-      det2d = 1. / (deform_grad[0][0] * deform_grad[1][1] - deform_grad[0][1] * deform_grad[1][0]);
-      det2d_old = 1. / (deform_grad_old[0][0] * deform_grad_old[1][1] -
-                        deform_grad_old[0][1] * deform_grad_old[1][0]);
-#endif
+
       /* escape if element has inverted */
       if ((det_defgrad_2d <= 0.) && (Debug_Flag >= 0)) {
 #ifdef PARALLEL
@@ -702,7 +694,6 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
           cr->MeshFluxModel == ZENER_SLS) {
         fv->volume_change = plstr_vol_change;
         fv_old->volume_change = 1. / det_defgrad_2d_old;
-        /*fv->volume_strain = 3. * (pow(det2d, 1. / 3.) - 1.);  */
         fv->volume_strain = 3. * (pow(fv->volume_change, 1. / 3.) - 1.);
         if (transient_run) {
           double defgrad_2d_dot = deform_grad[0][0] * deform_grad_dot[1][1] -
