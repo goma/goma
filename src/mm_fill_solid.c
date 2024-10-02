@@ -633,7 +633,7 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
       /* find determinant of 2-d deformation gradient (note this is not the volume change, that
          is the determinant of the 3-d deformation gradient which is here approximated by plane
          strain or plane stress for 2-d) */
-      /*  Ok, this is NOT det(F), but rather 1/det(F) - RBS */
+      /*  Rewriting in terms that should be easier to read - RBS */
       det_defgrad_2d =
           deform_grad[0][0] * deform_grad[1][1] - deform_grad[0][1] * deform_grad[1][0];
       det_defgrad_2d_old = deform_grad_old[0][0] * deform_grad_old[1][1] -
