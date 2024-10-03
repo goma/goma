@@ -10758,8 +10758,14 @@ int look_for_mat_proptable(FILE *imp,              /* ptr to input stream (in)*/
       SPF(endofstring(echo_string), " %d", species_no);
     }
 
-    if (!strcmp(model_name, "CONSTANT")) {
-      DumModel = CONSTANT;
+    if (!strcmp(model_name, "CONSTANT") || !strcmp(model_name, "RATIO") ||
+        !strcmp(model_name, "TIME_RAMP")) {
+      if (!strcmp(model_name, "CONSTANT"))
+        DumModel = CONSTANT;
+      if (!strcmp(model_name, "RATIO"))
+        DumModel = RATIO;
+      if (!strcmp(model_name, "TIME_RAMP"))
+        DumModel = TIME_RAMP;
       if (num_values == SCALAR_INPUT) {
         if (fscanf(imp, "%lf ", &a0) != 1) {
           GOMA_EH(GOMA_ERROR, "Expected 1 flt for CONSTANT model %s, mat file \"%s\"",

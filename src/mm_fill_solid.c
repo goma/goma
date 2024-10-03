@@ -3157,7 +3157,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
   int simple_thermexp =
       (elc->thermal_expansion_model == CONSTANT || elc->thermal_expansion_model == CONSTANT_DV ||
        elc->thermal_expansion_model == THERMAL_HEAT || elc->thermal_expansion_model == USER ||
-       elc->thermal_expansion_model == IDEAL_GAS);
+       elc->thermal_expansion_model == IDEAL_GAS || elc->thermal_expansion_model == TIME_RAMP);
   dbl thermexp = 0, ortho_thermexp = 0;
   dbl speciesexp[MAX_CONC];
   dbl d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
@@ -5299,6 +5299,12 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   /*  solid viscosity	*/
   if (elc_ptr->solid_viscosity_model == CONSTANT) {
     *viscos = elc_ptr->solid_viscosity;
+  } else if (elc_ptr->solid_viscosity_model == TIME_RAMP) {
+    double ratio = 1.0;
+    if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
+      ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
+    }
+    *viscos = ratio * elc_ptr->solid_viscosity;
   } else if (elc_ptr->solid_viscosity_model == USER) {
     err = usr_solid_viscosity(elc_ptr->u_solid_viscosity, &value, d_viscos_dx,
                               elc_ptr->len_u_solid_viscosity);
@@ -5309,6 +5315,12 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
 
   if (elc_ptr->solid_dil_viscosity_model == CONSTANT) {
     *dil_viscos = elc_ptr->solid_dil_viscosity;
+  } else if (elc_ptr->solid_dil_viscosity_model == TIME_RAMP) {
+    double ratio = 1.0;
+    if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
+      ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
+    }
+    *dil_viscos = ratio * elc_ptr->solid_dil_viscosity;
   } else if (elc_ptr->solid_dil_viscosity_model == USER) {
     err = usr_solid_dil_viscosity(elc_ptr->u_solid_dil_viscosity, &value, d_dilviscos_dx,
                                   elc_ptr->len_u_solid_dil_viscosity);
