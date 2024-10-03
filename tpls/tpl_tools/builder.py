@@ -47,6 +47,7 @@ class Builder(object):
         self._jobs = jobs
         self._registry = registry
         self.prebuilt = prebuilt
+        self.skip_ssl_verify = skip_ssl_verify
         return
 
     def set_dependency(self, dep):
