@@ -33,6 +33,7 @@ class Builder(object):
         registry,
         build_shared,
         prebuilt=False,
+        skip_ssl_verify=False,
     ):
         self._dependencies = []
         self._configure_options = []
@@ -66,7 +67,8 @@ class Builder(object):
         sha256 = self._package.sha256
         filename = os.path.join(self._download_dir, self._package.filename)
         self.logger.log("Downloading file: {}".format(filename))
-        success = utils.download_file(url, filename, sha256)
+        verify = not self.skip_ssl_verify
+        success = utils.download_file(url, filename, sha256, verify)
         if success:
             self.logger.log("Successfully downloaded: {}".format(filename))
         return success
