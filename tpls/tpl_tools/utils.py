@@ -47,7 +47,7 @@ def find_file(name, path):
     return None
 
 
-def download_file(url, filename, sha256=None):
+def download_file(url, filename, sha256=None, verify=True):
     skip_download = False
     if os.path.exists(filename):
         print("")
@@ -56,8 +56,16 @@ def download_file(url, filename, sha256=None):
             skip_download = True
 
     if not skip_download:
-        with urllib.request.urlopen(url) as req, open(filename, "wb") as f:
-            shutil.copyfileobj(req, f)
+        if verify:
+            with urllib.request.urlopen(url) as req, open(filename, "wb") as f:
+                shutil.copyfileobj(req, f)
+        else:
+            import ssl
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            with urllib.request.urlopen(url, context=context) as req, open(filename, "wb") as f:
+                shutil.copyfileobj(req, f)
 
     if os.path.isfile(filename):
         if not sha256 is None:
