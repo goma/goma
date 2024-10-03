@@ -229,6 +229,7 @@ if __name__ == "__main__":
                 logger,
                 tpl_registry,
                 args.build_shared,
+                skip_ssl_verify=args.skip_ssl_verify
             )
 
             if build.check():
