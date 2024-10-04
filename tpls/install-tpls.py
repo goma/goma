@@ -109,6 +109,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "INSTALL_DIR", help="Install location of TPLs", type=pathlib.Path
     )
+    parser.add_argument(
+        "--skip-ssl-verify",
+        help="Disable SSL checks on download",
+        dest="skip_ssl_verify",
+        action="store_true",
+    )
+    parser.set_defaults(skip_ssl_verify=False)
 
     for p in packages:
         pm = importlib.import_module("tpl_tools." + ".".join(["packages", p]))
@@ -204,6 +211,7 @@ if __name__ == "__main__":
                 tpl_registry,
                 args.build_shared,
                 prebuilt=True,
+                skip_ssl_verify=args.skip_ssl_verify
             )
             if build.check(True):
                 build.logger.log("Package {} found at {}".format(pc.name, package_dir))
@@ -221,6 +229,7 @@ if __name__ == "__main__":
                 logger,
                 tpl_registry,
                 args.build_shared,
+                skip_ssl_verify=args.skip_ssl_verify
             )
 
             if build.check():
