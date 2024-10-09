@@ -7405,6 +7405,70 @@ int sqrt_conf_source(int mode,
       }
     }
   } break;
+  case GIESEKUS: {
+    double d_alpha_dF[MDE];
+    double alpha = 0;
+    /* get Geisekus mobility parameter */
+    if (ve[mode]->alphaModel == CONSTANT) {
+      alpha = ve[mode]->alpha;
+    } else if (ls != NULL && ve[mode]->alphaModel == VE_LEVEL_SET) {
+      double pos_alpha = ve[mode]->pos_ls.alpha;
+      double neg_alpha = ve[mode]->alpha;
+      double width = ls->Length_Scale;
+      goma_error err = level_set_property(neg_alpha, pos_alpha, width, &alpha, d_alpha_dF);
+      GOMA_EH(err, "level_set_property() failed for mobility parameter.");
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown mobility parameter model");
+    }
+
+    dbl bdotb[DIM][DIM];
+    tensor_dot(b, b, bdotb, VIM);
+    dbl bdotbdotb[DIM][DIM];
+    tensor_dot(b, bdotb, bdotbdotb, VIM);
+
+    for (int ii = 0; ii < VIM; ii++) {
+      for (int jj = 0; jj < VIM; jj++) {
+        source_term[ii][jj] =
+            // (I + alpha * (C - I)) * (C - I)
+            // ((C-I) + alpha * (C - I)^2)
+            // ((C-I) + alpha * (C . C - 2 C + I . I))
+            // ((C-I) + alpha * (C . C - 2 C + I))
+            // 0.5 b^-1 ((b . b-I) + alpha * (b . b . b . b - 2 b . b + I))
+            // 0.5 ((b - b^-1) + alpha * (b . b . b - 2 b + b^-1))
+            0.5 * (((b[ii][jj] - binv[ii][jj])) +
+                   (alpha * (bdotbdotb[ii][jj] - 2.0 * b[ii][jj] + binv[ii][jj])));
+      }
+    }
+    if (af->Assemble_Jacobian) {
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              dbl db[DIM][DIM] = {{0.}};
+              db[p][q] = 1.0;
+              db[q][p] = 1.0;
+
+              dbl dbdotb[DIM][DIM];
+              dbl bdotdb[DIM][DIM];
+
+              tensor_dot(b, db, bdotdb, VIM);
+              tensor_dot(db, b, dbdotb, VIM);
+              dbl dbdotbdotb[DIM][DIM];
+              dbl bdotdbdotb[DIM][DIM];
+              dbl bdotbdotdb[DIM][DIM];
+              tensor_dot(b, bdotdb, bdotbdotdb, VIM);
+              tensor_dot(b, dbdotb, bdotdbdotb, VIM);
+              tensor_dot(dbdotb, b, dbdotbdotb, VIM);
+              d_source_term_db[ii][jj][p][q] =
+                  0.5 * (((db[ii][jj] - d_binv_db[ii][jj][p][q])) +
+                         (alpha * (bdotbdotdb[ii][jj] + bdotdbdotb[ii][jj] + dbdotbdotb[ii][jj] -
+                                   2.0 * db[ii][jj] + d_binv_db[ii][jj][p][q])));
+            }
+          }
+        }
+      }
+    }
+  } break;
   default:
     GOMA_EH(GOMA_ERROR, "Unknown Constitutive equation form for SQRT_CONF");
     break;
