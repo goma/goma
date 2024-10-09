@@ -95,11 +95,9 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
   dbl grad_d_old[DIM][DIM];
   dbl grad_d_dot[DIM][DIM];
   dbl d_grad_d_dot[DIM][DIM][DIM][MDE]; /* displacement gradient*/
-  dbl det2d;                            /* determinant of 2D deformation gradient tensor */
-  dbl det2d_old, det2d_dot = 0.;
-  dbl ddet2d_dx[DIM][MDE];     /* sensitivity */
-  dbl ddet2d_dot_dx[DIM][MDE]; /* sensitivity */
-  dbl cauchy_green[DIM][DIM];  /* strain tensor without division by determinant, etc. */
+  dbl ddet2d_dx[DIM][MDE];              /* sensitivity */
+  dbl ddet2d_dot_dx[DIM][MDE];          /* sensitivity */
+  dbl cauchy_green[DIM][DIM];           /* strain tensor without division by determinant, etc. */
   dbl d_cauchy_green_dx[DIM][DIM][DIM][MDE]; /* sensitivity */
   dbl cauchy_green_old[DIM][DIM];
   dbl cauchy_green_dot[DIM][DIM];
@@ -630,30 +628,24 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
       }
       break;
 
-    case 2:
+    case 2: {
+      double det_defgrad_2d, det_defgrad_2d_old, plstr_vol_change;
       /* find determinant of 2-d deformation gradient (note this is not the volume change, that
          is the determinant of the 3-d deformation gradient which is here approximated by plane
          strain or plane stress for 2-d) */
-      /*  Ok, this is NOT det(F), but rather 1/det(F) - RBS */
-      det2d = 1. / (deform_grad[0][0] * deform_grad[1][1] - deform_grad[0][1] * deform_grad[1][0]);
-      det2d_old = 1. / (deform_grad_old[0][0] * deform_grad_old[1][1] -
-                        deform_grad_old[0][1] * deform_grad_old[1][0]);
-      if (transient_run) {
-        if (fabs(deform_grad_dot[0][0] * deform_grad_dot[1][1] -
-                 deform_grad_dot[0][1] * deform_grad_dot[1][0]) > 0) {
+      /*  Rewriting in terms that should be easier to read - RBS */
+      det_defgrad_2d =
+          deform_grad[0][0] * deform_grad[1][1] - deform_grad[0][1] * deform_grad[1][0];
+      det_defgrad_2d_old = deform_grad_old[0][0] * deform_grad_old[1][1] -
+                           deform_grad_old[0][1] * deform_grad_old[1][0];
+      plstr_vol_change = 1. / det_defgrad_2d;
 
-          det2d_dot = 1. / (deform_grad_dot[0][0] * deform_grad_dot[1][1] -
-                            deform_grad_dot[0][1] * deform_grad_dot[1][0]);
-        } else {
-          det2d_dot = 0;
-        }
-      }
       /* escape if element has inverted */
-      if ((det2d <= 0.) && (Debug_Flag >= 0)) {
+      if ((det_defgrad_2d <= 0.) && (Debug_Flag >= 0)) {
 #ifdef PARALLEL
-        fprintf(stderr, "\nP_%d: Volume change  %f\n", ProcID, det2d);
+        fprintf(stderr, "\nP_%d: Volume change  %f\n", ProcID, plstr_vol_change);
 #else
-        fprintf(stderr, "\nVolume change  %f\n", det2d);
+        fprintf(stderr, "\nVolume change  %f\n", plstr_vol_change);
 #endif
         for (i = 0; i < dim; i++) {
 #ifdef PARALLEL
@@ -667,7 +659,7 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
         neg_elem_volume = TRUE;
         return (2);
       }
-      if (det2d <= 0.) {
+      if (det_defgrad_2d <= 0.) {
         neg_elem_volume = TRUE;
         return (2);
       }
@@ -681,13 +673,17 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
                                deform_grad[0][1] * d_grad_d[1][0][i][k] +
                                d_grad_d[0][0][i][k] * deform_grad[1][1] -
                                d_grad_d[0][1][i][k] * deform_grad[1][0]) *
-                              det2d * det2d;
+                              plstr_vol_change * plstr_vol_change;
             if (transient_run)
-              ddet2d_dot_dx[i][k] = (deform_grad_dot[0][0] * d_grad_d_dot[1][1][i][k] -
-                                     deform_grad_dot[0][1] * d_grad_d_dot[1][0][i][k] +
-                                     d_grad_d_dot[0][0][i][k] * deform_grad_dot[1][1] -
-                                     d_grad_d_dot[0][1][i][k] * deform_grad_dot[1][0]) *
-                                    det2d_dot * det2d_dot;
+              ddet2d_dot_dx[i][k] = (deform_grad[0][0] * d_grad_d_dot[1][1][i][k] -
+                                     deform_grad[0][1] * d_grad_d_dot[1][0][i][k] +
+                                     d_grad_d[0][0][i][k] * deform_grad_dot[1][1] -
+                                     d_grad_d[0][1][i][k] * deform_grad[1][0] +
+                                     deform_grad_dot[0][0] * d_grad_d[1][1][i][k] -
+                                     deform_grad_dot[0][1] * d_grad_d[1][0][i][k] +
+                                     d_grad_d_dot[0][0][i][k] * deform_grad[1][1] -
+                                     d_grad_d_dot[0][1][i][k] * deform_grad[1][0]) *
+                                    plstr_vol_change * plstr_vol_change;
           }
         }
       }
@@ -696,24 +692,33 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
       if (cr->MeshFluxModel == NONLINEAR || cr->MeshFluxModel == INCOMP_PSTRAIN ||
           cr->MeshFluxModel == HOOKEAN_PSTRAIN || cr->MeshFluxModel == KELVIN_VOIGT ||
           cr->MeshFluxModel == ZENER_SLS) {
-        fv->volume_change = det2d;
-        fv_old->volume_change = det2d_old;
-        fv->volume_strain = 3. * (pow(det2d, 1. / 3.) - 1.);
+        fv->volume_change = plstr_vol_change;
+        fv_old->volume_change = 1. / det_defgrad_2d_old;
+        fv->volume_strain = 3. * (pow(fv->volume_change, 1. / 3.) - 1.);
         if (transient_run) {
-          fv_dot->volume_change = det2d_dot;
-          fv_dot->volume_strain = pow(det2d, -2. / 3.) * det2d_dot;
+          double defgrad_2d_dot = deform_grad[0][0] * deform_grad_dot[1][1] -
+                                  deform_grad[0][1] * deform_grad_dot[1][0] +
+                                  deform_grad_dot[0][0] * deform_grad[1][1] -
+                                  deform_grad_dot[0][1] * deform_grad[1][0];
+          fv_dot->volume_change = -defgrad_2d_dot * SQUARE(plstr_vol_change);
+          fv_dot->volume_strain = pow(fv->volume_change, -2. / 3.) * fv_dot->volume_change;
         }
 
         if (af->Assemble_Jacobian) {
           for (i = 0; i < dim; i++) {
             for (k = 0; k < mdof; k++) {
               fv->d_volume_change_dx[i][k] = ddet2d_dx[i][k];
-              fv->d_volume_strain_dx[i][k] = ddet2d_dx[i][k] * pow(det2d, -2. / 3.);
+              fv->d_volume_strain_dx[i][k] = ddet2d_dx[i][k] * pow(fv->volume_change, -2. / 3.);
               if (transient_run) {
                 fv_dot->d_volume_change_dx[i][k] = ddet2d_dot_dx[i][k];
-                fv_dot->d_volume_strain_dx[i][k] =
-                    ddet2d_dot_dx[i][k] * pow(det2d, -2. / 3.) +
-                    det2d_dot * (-2. / 3.) * pow(det2d, -5. / 3.) * ddet2d_dx[i][k];
+                if (DOUBLE_NONZERO(fv->volume_change)) {
+                  fv_dot->d_volume_change_dx[i][k] +=
+                      2 * fv->d_volume_change_dx[i][k] / fv->volume_change;
+                }
+                fv_dot->d_volume_strain_dx[i][k] = pow(fv->volume_change, -2. / 3.) *
+                                                   (fv->d_volume_change_dx[i][k] * (-2. / 3.) /
+                                                        fv->volume_change * fv_dot->volume_change +
+                                                    fv_dot->d_volume_change_dx[i][k]);
               }
             }
           }
@@ -750,14 +755,17 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
         /* 			} */
         /* 		} */
       }
-      break;
+    } break;
     case 3: {
-      fv->volume_change = 1. / (deform_grad[0][0] * (deform_grad[1][1] * deform_grad[2][2] -
-                                                     deform_grad[1][2] * deform_grad[2][1]) -
-                                deform_grad[0][1] * (deform_grad[1][0] * deform_grad[2][2] -
-                                                     deform_grad[2][0] * deform_grad[1][2]) +
-                                deform_grad[0][2] * (deform_grad[1][0] * deform_grad[2][1] -
-                                                     deform_grad[2][0] * deform_grad[1][1]));
+      double dg_minor0 =
+          deform_grad[1][1] * deform_grad[2][2] - deform_grad[1][2] * deform_grad[2][1];
+      double dg_minor1 =
+          deform_grad[1][2] * deform_grad[2][0] - deform_grad[1][0] * deform_grad[2][2];
+      double dg_minor2 =
+          deform_grad[1][0] * deform_grad[2][1] - deform_grad[1][1] * deform_grad[2][0];
+      double det_deform_grad = deform_grad[0][0] * dg_minor0 + deform_grad[0][1] * dg_minor1 +
+                               deform_grad[0][2] * dg_minor2;
+      fv->volume_change = 1. / det_deform_grad;
       fv_old->volume_change =
           1. / (deform_grad_old[0][0] * (deform_grad_old[1][1] * deform_grad_old[2][2] -
                                          deform_grad_old[1][2] * deform_grad_old[2][1]) -
@@ -766,16 +774,22 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
                 deform_grad_old[0][2] * (deform_grad_old[1][0] * deform_grad_old[2][1] -
                                          deform_grad_old[2][0] * deform_grad_old[1][1]));
       if (transient_run) {
-        dbl det_deform_grad_dot =
-            (deform_grad_dot[0][0] * (deform_grad_dot[1][1] * deform_grad_dot[2][2] -
-                                      deform_grad_dot[1][2] * deform_grad_dot[2][1]) -
-             deform_grad_dot[0][1] * (deform_grad_dot[1][0] * deform_grad_dot[2][2] -
-                                      deform_grad_dot[2][0] * deform_grad_dot[1][2]) +
-             deform_grad_dot[0][2] * (deform_grad_dot[1][0] * deform_grad_dot[2][1] -
-                                      deform_grad_dot[2][0] * deform_grad_dot[1][1]));
-        if (DOUBLE_NONZERO(det_deform_grad_dot)) {
-          fv_dot->volume_change = det_deform_grad_dot;
-        }
+        double dg_minor0_dot =
+            deform_grad[1][1] * deform_grad_dot[2][2] - deform_grad[1][2] * deform_grad_dot[2][1] +
+            deform_grad_dot[1][1] * deform_grad[2][2] - deform_grad_dot[1][2] * deform_grad[2][1];
+        double dg_minor1_dot =
+            deform_grad[1][2] * deform_grad_dot[2][0] - deform_grad[1][0] * deform_grad_dot[2][2] +
+            deform_grad_dot[1][2] * deform_grad[2][0] - deform_grad_dot[1][0] * deform_grad[2][2];
+        double dg_minor2_dot =
+            deform_grad[1][0] * deform_grad_dot[2][1] - deform_grad[1][1] * deform_grad_dot[2][0] +
+            deform_grad_dot[1][0] * deform_grad[2][1] - deform_grad_dot[1][1] * deform_grad[2][0];
+        /*  First, time derivative of det(deform_grad)  */
+        fv_dot->volume_change =
+            deform_grad[0][0] * dg_minor0_dot + deform_grad_dot[0][0] * dg_minor0 +
+            deform_grad[0][1] * dg_minor1_dot + deform_grad_dot[0][1] * dg_minor1 +
+            deform_grad[0][2] * dg_minor2_dot + deform_grad_dot[0][2] * dg_minor2;
+        /*  Now, divide by square of det(deform_grad)  */
+        fv_dot->volume_change *= -(fv->volume_change * fv->volume_change);
       }
       /* Check to make sure element hasn't inverted */
       if ((fv->volume_change <= 0.) && (Debug_Flag >= 0)) {
@@ -832,25 +846,66 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
             fv->d_volume_strain_dx[i][k] =
                 fv->d_volume_change_dx[i][k] * pow(fv->volume_change, -2. / 3.);
             if (transient_run) {
+              double dg_minor0_dot = deform_grad[1][1] * deform_grad_dot[2][2] -
+                                     deform_grad[1][2] * deform_grad_dot[2][1] +
+                                     deform_grad_dot[1][1] * deform_grad[2][2] -
+                                     deform_grad_dot[1][2] * deform_grad[2][1];
+              double dg_minor1_dot = deform_grad[1][2] * deform_grad_dot[2][0] -
+                                     deform_grad[1][0] * deform_grad_dot[2][2] +
+                                     deform_grad_dot[1][2] * deform_grad[2][0] -
+                                     deform_grad_dot[1][0] * deform_grad[2][2];
+              double dg_minor2_dot = deform_grad[1][0] * deform_grad_dot[2][1] -
+                                     deform_grad[1][1] * deform_grad_dot[2][0] +
+                                     deform_grad_dot[1][0] * deform_grad[2][1] -
+                                     deform_grad_dot[1][1] * deform_grad[2][0];
+              double dg_minor0_d = deform_grad[1][1] * d_grad_d[2][2][i][k] +
+                                   d_grad_d[1][1][i][k] * deform_grad[2][2] -
+                                   deform_grad[1][2] * d_grad_d[2][1][i][k] -
+                                   d_grad_d[1][2][i][k] * deform_grad[2][1];
+              double dg_minor1_d = deform_grad[1][2] * d_grad_d[2][0][i][k] +
+                                   d_grad_d[1][2][i][k] * deform_grad[2][0] -
+                                   deform_grad[1][0] * d_grad_d[2][2][i][k] -
+                                   d_grad_d[1][0][i][k] * deform_grad[2][2];
+              double dg_minor2_d = deform_grad[1][0] * d_grad_d[2][1][i][k] +
+                                   d_grad_d[1][0][i][k] * deform_grad[2][1] -
+                                   deform_grad[1][1] * d_grad_d[2][0][i][k] -
+                                   d_grad_d[1][1][i][k] * deform_grad[2][0];
+              double dg_minor0_dot_d = deform_grad[1][1] * d_grad_d_dot[2][2][i][k] +
+                                       d_grad_d[1][1][i][k] * deform_grad_dot[2][2] -
+                                       deform_grad[1][2] * d_grad_d_dot[2][1][i][k] -
+                                       d_grad_d[1][2][i][k] * deform_grad_dot[2][1] +
+                                       deform_grad_dot[1][1] * d_grad_d[2][2][i][k] +
+                                       d_grad_d_dot[1][1][i][k] * deform_grad[2][2] -
+                                       deform_grad_dot[1][2] * d_grad_d[2][1][i][k] -
+                                       d_grad_d_dot[1][2][i][k] * deform_grad[2][1];
+              double dg_minor1_dot_d = deform_grad[1][2] * d_grad_d_dot[2][0][i][k] +
+                                       d_grad_d[1][2][i][k] * deform_grad_dot[2][0] -
+                                       deform_grad[1][0] * d_grad_d_dot[2][2][i][k] -
+                                       d_grad_d[1][0][i][k] * deform_grad_dot[2][2] +
+                                       deform_grad_dot[1][2] * d_grad_d[2][0][i][k] +
+                                       d_grad_d_dot[1][2][i][k] * deform_grad[2][0] -
+                                       deform_grad_dot[1][0] * d_grad_d[2][2][i][k] -
+                                       d_grad_d_dot[1][0][i][k] * deform_grad[2][2];
+              double dg_minor2_dot_d = deform_grad[1][0] * d_grad_d_dot[2][1][i][k] +
+                                       d_grad_d[1][0][i][k] * deform_grad_dot[2][1] -
+                                       deform_grad[1][1] * d_grad_d_dot[2][0][i][k] -
+                                       d_grad_d[1][1][i][k] * deform_grad_dot[2][0] +
+                                       deform_grad_dot[1][0] * d_grad_d[2][1][i][k] +
+                                       d_grad_d_dot[1][0][i][k] * deform_grad[2][1] -
+                                       deform_grad_dot[1][1] * d_grad_d[2][0][i][k] -
+                                       d_grad_d_dot[1][1][i][k] * deform_grad[2][0];
               fv_dot->d_volume_change_dx[i][k] =
-                  -(d_grad_d_dot[0][0][i][k] * (deform_grad[1][1] * deform_grad[2][2] -
-                                                deform_grad[1][2] * deform_grad[2][1]) -
-                    d_grad_d_dot[0][1][i][k] * (deform_grad[1][0] * deform_grad[2][2] -
-                                                deform_grad[2][0] * deform_grad[1][2]) +
-                    d_grad_d_dot[0][2][i][k] * (deform_grad[1][0] * deform_grad[2][1] -
-                                                deform_grad[2][0] * deform_grad[1][1]) +
-                    deform_grad[0][0] * (d_grad_d_dot[1][1][i][k] * deform_grad[2][2] -
-                                         d_grad_d_dot[1][2][i][k] * deform_grad[2][1]) -
-                    deform_grad[0][1] * (d_grad_d_dot[1][0][i][k] * deform_grad[2][2] -
-                                         d_grad_d_dot[2][0][i][k] * deform_grad[1][2]) +
-                    deform_grad[0][2] * (d_grad_d_dot[1][0][i][k] * deform_grad[2][1] -
-                                         d_grad_d_dot[2][0][i][k] * deform_grad[1][1]) +
-                    deform_grad[0][0] * (deform_grad[1][1] * d_grad_d_dot[2][2][i][k] -
-                                         deform_grad[1][2] * d_grad_d_dot[2][1][i][k]) -
-                    deform_grad[0][1] * (deform_grad[1][0] * d_grad_d_dot[2][2][i][k] -
-                                         deform_grad[2][0] * d_grad_d_dot[1][2][i][k]) +
-                    deform_grad[0][2] * (deform_grad[1][0] * d_grad_d_dot[2][1][i][k] -
-                                         deform_grad[2][0] * d_grad_d_dot[1][1][i][k]));
+                  (fv->volume_change * fv->volume_change) *
+                  (d_grad_d[0][0][i][k] * dg_minor0_dot + deform_grad[0][0] * dg_minor0_dot_d +
+                   deform_grad_dot[0][0] * dg_minor0_d + d_grad_d_dot[0][0][i][k] * dg_minor0 +
+                   d_grad_d[0][1][i][k] * dg_minor1_dot + deform_grad[0][1] * dg_minor1_dot_d +
+                   deform_grad_dot[0][1] * dg_minor1_d + d_grad_d_dot[0][1][i][k] * dg_minor1 +
+                   d_grad_d[0][2][i][k] * dg_minor2_dot + deform_grad[0][2] * dg_minor2_dot_d +
+                   deform_grad_dot[0][2] * dg_minor2_d + d_grad_d_dot[0][2][i][k] * dg_minor2);
+              if (DOUBLE_NONZERO(fv->volume_change)) {
+                fv_dot->d_volume_change_dx[i][k] +=
+                    2 * fv->d_volume_change_dx[i][k] / fv->volume_change;
+              }
               fv_dot->d_volume_strain_dx[i][k] = pow(fv->volume_change, -2. / 3.) *
                                                  (fv->d_volume_change_dx[i][k] * (-2. / 3.) /
                                                       fv->volume_change * fv_dot->volume_change +
@@ -3099,6 +3154,10 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
   int SPECIES = MAX_VARIABLE_TYPES;
   dbl p_gas_star = 0.0;
 
+  int simple_thermexp =
+      (elc->thermal_expansion_model == CONSTANT || elc->thermal_expansion_model == CONSTANT_DV ||
+       elc->thermal_expansion_model == THERMAL_HEAT || elc->thermal_expansion_model == USER ||
+       elc->thermal_expansion_model == IDEAL_GAS || elc->thermal_expansion_model == TIME_RAMP);
   dbl thermexp = 0, ortho_thermexp = 0;
   dbl speciesexp[MAX_CONC];
   dbl d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
@@ -3179,9 +3238,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 
     /*  add thermo-elasticity  */
     if (pd->e[pg->imtrx][R_ENERGY]) {
-      if (elc->thermal_expansion_model == CONSTANT || elc->thermal_expansion_model == CONSTANT_DV ||
-          elc->thermal_expansion_model == THERMAL_HEAT || elc->thermal_expansion_model == USER ||
-          elc->thermal_expansion_model == IDEAL_GAS) {
+      if (simple_thermexp) {
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
             TT[p][q] -= (2. * mu + 3. * lambda) * thermexp * delta(p, q);
@@ -3239,10 +3296,12 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                       2. * d_viscos_dx[v] * bf[v]->phi[j] * fv_dot->strain[p][q];
                 }
                 if (pd->e[pg->imtrx][R_ENERGY]) {
-                  if (elc->thermal_expansion_model == CONSTANT ||
-                      elc->thermal_expansion_model == CONSTANT_DV ||
-                      elc->thermal_expansion_model == THERMAL_HEAT ||
-                      elc->thermal_expansion_model == IDEAL_GAS) {
+                  if (elc->thermal_expansion_model == USER) { // Some extra terms for USER...
+                    dTT_dx[p][q][b][j] -=
+                        ((2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) * thermexp +
+                         (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j]) *
+                        delta(p, q);
+                  } else if (simple_thermexp) {
                     dTT_dx[p][q][b][j] -=
                         (2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) * thermexp * delta(p, q);
                   } else if (elc->thermal_expansion_model == ORTHOTROPIC) {
@@ -3253,11 +3312,6 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                          (2. * mu + 3. * lambda) * bf[v]->phi[j] *
                              (d_thermexp_dx[v] * (delta(p, q) - orient[p] * orient[q]) +
                               d_ortho_thermexp_dx[v] * orient[p] * orient[q]));
-                  } else if (elc->thermal_expansion_model == USER) {
-                    dTT_dx[p][q][b][j] -=
-                        ((2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) * thermexp +
-                         (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j]) *
-                        delta(p, q);
                   }
                 }
                 if (pd->e[pg->imtrx][R_MASS]) {
@@ -3296,18 +3350,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
               }
             }
 
-            if (elc->thermal_expansion_model == CONSTANT ||
-                elc->thermal_expansion_model == CONSTANT_DV) {
-              for (j = 0; j < dofs; j++) {
-                dTT_dT[p][q][j] -=
-                    (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j] * delta(p, q);
-                dTT_dT[p][q][j] -=
-                    (2. * elc->d_lame_mu[TEMPERATURE] + 3. * elc->d_lame_lambda[TEMPERATURE]) *
-                    thermexp * bf[v]->phi[j] * delta(p, q);
-              }
-            } else if (elc->thermal_expansion_model == THERMAL_HEAT ||
-                       elc->thermal_expansion_model == USER ||
-                       elc->thermal_expansion_model == IDEAL_GAS) {
+            if (simple_thermexp) {
               for (j = 0; j < dofs; j++) {
                 dTT_dT[p][q][j] -=
                     (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j] * delta(p, q);
@@ -5140,6 +5183,13 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   if (elc_ptr->thermal_expansion_model == CONSTANT) {
     *thermexp = elc_ptr->thermal_expansion * (fv->T - Tref);
     d_thermexp_dx[TEMPERATURE] = elc_ptr->thermal_expansion;
+  } else if (elc_ptr->thermal_expansion_model == TIME_RAMP) {
+    double ratio = 1.0;
+    if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
+      ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
+    }
+    *thermexp = ratio * elc_ptr->thermal_expansion * (fv->T - Tref);
+    d_thermexp_dx[TEMPERATURE] = ratio * elc_ptr->thermal_expansion;
   } else {
     double exp_arg = 0., exp_therm = 1., d_arg_dT = 0.;
     if (elc_ptr->thermal_expansion_model == CONSTANT_DV) {
@@ -5249,6 +5299,12 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   /*  solid viscosity	*/
   if (elc_ptr->solid_viscosity_model == CONSTANT) {
     *viscos = elc_ptr->solid_viscosity;
+  } else if (elc_ptr->solid_viscosity_model == TIME_RAMP) {
+    double ratio = 1.0;
+    if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
+      ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
+    }
+    *viscos = ratio * elc_ptr->solid_viscosity;
   } else if (elc_ptr->solid_viscosity_model == USER) {
     err = usr_solid_viscosity(elc_ptr->u_solid_viscosity, &value, d_viscos_dx,
                               elc_ptr->len_u_solid_viscosity);
@@ -5259,6 +5315,12 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
 
   if (elc_ptr->solid_dil_viscosity_model == CONSTANT) {
     *dil_viscos = elc_ptr->solid_dil_viscosity;
+  } else if (elc_ptr->solid_dil_viscosity_model == TIME_RAMP) {
+    double ratio = 1.0;
+    if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
+      ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
+    }
+    *dil_viscos = ratio * elc_ptr->solid_dil_viscosity;
   } else if (elc_ptr->solid_dil_viscosity_model == USER) {
     err = usr_solid_dil_viscosity(elc_ptr->u_solid_dil_viscosity, &value, d_dilviscos_dx,
                                   elc_ptr->len_u_solid_dil_viscosity);
