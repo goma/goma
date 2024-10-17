@@ -547,6 +547,23 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
         propertyJac_addEnd(densityJac, TEMPERATURE, matID, 0, drhoDT, rho);
       }
     }
+  } else if (matrl->DensityModel == DENSITY_CURE_SHRINKAGE) {
+    dbl rho_l = mp->u_density[0];
+    dbl rho_s = mp->u_density[1];
+    dbl alpha_m = mp->u_density[2];
+    dbl alpha_g = mp->u_density[3];
+
+    rho = rho_l + ((rho_s - rho_l) / (alpha_m - alpha_g)) * (fv->c[0] - alpha_g);
+
+    /* Now do sensitivies */
+
+    int var = MASS_FRACTION;
+    if (doJac) {
+      if (pd->v[pg->imtrx][var]) {
+        double drhodC = ((rho_s - rho_l) / (alpha_m - alpha_g));
+        propertyJac_addEnd(densityJac, MASS_FRACTION, matID, 0, drhodC, rho);
+      }
+    }
 
   } else if (matrl->DensityModel == DENSITY_MOMENT_BASED) {
     int var;

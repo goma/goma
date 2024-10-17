@@ -799,6 +799,23 @@ double density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
         }
       }
     }
+  } else if (mp->DensityModel == DENSITY_CURE_SHRINKAGE) {
+    // parameters
+    dbl rho_l = mp->u_density[0];
+    dbl rho_s = mp->u_density[1];
+    dbl alpha_m = mp->u_density[2];
+    dbl alpha_g = mp->u_density[3];
+
+    rho = rho_l + ((rho_s - rho_l) / (alpha_m - alpha_g)) * (fv->c[0] - alpha_g);
+
+    if (d_rho != NULL) {
+      var = MASS_FRACTION;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_rho->C[0][j] = ((rho_s - rho_l) / (alpha_m - alpha_g)) * bf[var]->phi[j];
+        }
+      }
+    }
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognized density model");
   }

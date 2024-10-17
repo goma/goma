@@ -229,6 +229,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define DENSITY_FOAM_PBE_EQN    35
 #define DENSITY_FOAM_PMDI_10    20
 #define DENSITY_MOMENT_BASED    21
+#define DENSITY_CURE_SHRINKAGE  906
 /**********************************************************************************/
 
 /*

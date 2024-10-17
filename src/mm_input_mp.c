@@ -632,6 +632,16 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     mat_ptr->len_u_density = num_const;
     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_density);
+  } else if (model_read == -1 && !strcmp(model_name, "CURE_SHRINKAGE")) {
+    mat_ptr->DensityModel = DENSITY_CURE_SHRINKAGE;
+    num_const = read_constants(imp, &(mat_ptr->u_density), 0);
+    if (num_const != 4) {
+      sprintf(err_msg, "Material %s - expected 4 constants for %s %s model.\n",
+              pd_glob[mn]->MaterialName, "Density", "CURE_SHRINKAGE");
+      GOMA_EH(GOMA_ERROR, err_msg);
+    }
+    mat_ptr->len_u_density = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_density);
   } else {
     sprintf(err_msg, "Material %s - unrecognized model for %s \"%s\" ???\n",
             pd_glob[mn]->MaterialName, "Density", model_name);
