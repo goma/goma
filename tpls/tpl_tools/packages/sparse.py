@@ -28,10 +28,12 @@ class Package(packages.GenericPackage):
             ),
             "w",
         ) as f:
+
+            extra_flags = ""
             if builder.build_shared:
-                f.write("CFLAGS = -O2 -fPIC\n")
+                f.write("CFLAGS = -O2 -fPIC -std=c89\n")
             else:
-                f.write("CFLAGS = -O2\n")
+                f.write("CFLAGS = -O2 -std=c89\n")
             f.write("LINTFLAGS = -lc -lm\n")
             f.write("SHELL = /bin/sh\n")
             f.write("CC = " + builder.env["CC"] + "\n")
