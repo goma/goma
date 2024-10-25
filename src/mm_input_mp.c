@@ -635,8 +635,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   } else if (model_read == -1 && !strcmp(model_name, "CURE_SHRINKAGE")) {
     mat_ptr->DensityModel = DENSITY_CURE_SHRINKAGE;
     num_const = read_constants(imp, &(mat_ptr->u_density), 0);
-    if (num_const != 4) {
-      sprintf(err_msg, "Material %s - expected 4 constants for %s %s model.\n",
+    if (num_const != 5) {
+      sprintf(err_msg, "Material %s - expected 5 constants for %s %s model.\n",
               pd_glob[mn]->MaterialName, "Density", "CURE_SHRINKAGE");
       GOMA_EH(GOMA_ERROR, err_msg);
     }

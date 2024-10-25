@@ -805,16 +805,21 @@ double density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     dbl rho_s = mp->u_density[1];
     dbl alpha_m = mp->u_density[2];
     dbl alpha_g = mp->u_density[3];
+    dbl cure_enable = mp->u_density[4];
 
-    rho = rho_l + ((rho_s - rho_l) / (alpha_m - alpha_g)) * (fv->c[0] - alpha_g);
+    if (fv->c[0] >= cure_enable) {
+      rho = rho_l + ((rho_s - rho_l) / (alpha_m - alpha_g)) * (fv->c[0] - alpha_g);
 
-    if (d_rho != NULL) {
-      var = MASS_FRACTION;
-      if (pd->v[pg->imtrx][var]) {
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          d_rho->C[0][j] = ((rho_s - rho_l) / (alpha_m - alpha_g)) * bf[var]->phi[j];
+      if (d_rho != NULL) {
+        var = MASS_FRACTION;
+        if (pd->v[pg->imtrx][var]) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_rho->C[0][j] = ((rho_s - rho_l) / (alpha_m - alpha_g)) * bf[var]->phi[j];
+          }
         }
       }
+    } else {
+      rho = rho_l + ((rho_s - rho_l) / (alpha_m - alpha_g)) * (cure_enable - alpha_g);
     }
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognized density model");

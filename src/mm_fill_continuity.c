@@ -2159,6 +2159,8 @@ double FoamVolumeSource(double time,
       }
     }
   } else if (mp->DensityModel == DENSITY_CURE_SHRINKAGE) {
+    if (fv->c[0] >= mp->u_density[4]) {
+
     DENSITY_DEPENDENCE_STRUCT d_rho_struct;
     DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
@@ -2259,6 +2261,9 @@ double FoamVolumeSource(double time,
         dFVS_dF[j] = source_c;
       }
     }
+  } else {
+    source = 0;
+  }
   }
 
   if (ls != NULL && mp->mp2nd != NULL && (mp->DensityModel != LEVEL_SET) &&
