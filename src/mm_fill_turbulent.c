@@ -12,12 +12,13 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
-#include "mm_fill_stabilization.h"
 #include <stdio.h>
+#include <string.h>
 
 /* GOMA include files */
 #define GOMA_MM_FILL_TURBULENT_C
 #include "density.h"
+#include "mm_fill_stabilization.h"
 #include "el_elm.h"
 #include "mm_as.h"
 #include "mm_as_const.h"

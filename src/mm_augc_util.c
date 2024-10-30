@@ -15,9 +15,13 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ac_update_parameter.h"
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
+#include "dp_utils.h"
 #include "bc_contact.h"
 #include "dp_types.h"
 #include "dpi.h"
@@ -2062,7 +2066,7 @@ int alc_aug_cond(int iAC,
     alceq_s += sv[i] * sv[i] * dx[i] * (x[i] - x_old[i]);
   }
   if (Num_Proc > 1) {
-    alceq_s = AZ_gsum_double(alceq_s, mf_args->ams->proc_config);
+    alceq_s = goma_gsum_double(alceq_s);
   }
 
   /* Construct and load total residual */

@@ -16,12 +16,10 @@
  * FLUX AND/OR DATA PARAMETER AND/OR CONTINUATION PARAMETER
  */
 
-#include "bc_contact.h"
-#include "linalg/sparse_matrix.h"
-#include "mm_eh.h"
-#include "mm_mp_const.h"
-#include "sl_util_structs.h"
+
+#ifdef GOMA_ENABLE_AZTEC
 #include <az_aztec_defs.h>
+#endif
 
 #define GOMA_MM_SOL_NONLINEAR_C
 /* Needed to declare POSIX function drand48 */
@@ -34,6 +32,11 @@
 
 #include "ac_stability_util.h"
 #include "bc/rotate.h"
+#include "bc_contact.h"
+#include "linalg/sparse_matrix.h"
+#include "mm_eh.h"
+#include "mm_mp_const.h"
+#include "sl_util_structs.h"
 #include "bc/rotate_coordinates.h"
 #include "dp_comm.h"
 #include "dp_types.h"
@@ -112,7 +115,9 @@ static int first_linear_solver_call = TRUE;
 #endif
 #endif
 
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "sl_petsc_complex.h"
 
 static int soln_sens                /* mm_sol_nonlinear.c                        */
@@ -1337,6 +1342,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       strcpy(stringer, " 1 ");
       break;
 
+#ifdef GOMA_ENABLE_AZTEC
     case AZTEC:
       /*
        * Initialization is now performed up in
@@ -1417,7 +1423,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
        * 	  }
        */
       break;
+#endif
 
+#ifdef GOMA_ENABLE_AMESOS
     case AMESOS:
 
       if ((strcmp(Matrix_Format, "msr") != 0) && (strcmp(Matrix_Format, "epetra") != 0)) {
@@ -1428,6 +1436,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       amesos_solve(Amesos_Package, ams, delta_x, resid_vector, 1, pg->imtrx);
       strcpy(stringer, " 1 ");
       break;
+#endif
+
     case AMESOS2:
 
       if (ams->GomaMatrixData != NULL) {
@@ -1441,6 +1451,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       strcpy(stringer, " 1 ");
       break;
 
+#ifdef GOMA_ENABLE_AZTEC
     case AZTECOO:
       if (strcmp(Matrix_Format, "epetra") == 0) {
         aztecoo_solve_epetra(ams, delta_x, resid_vector);
@@ -1453,6 +1464,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                 "suite\n");
       }
       break;
+#endif
 
 #ifdef GOMA_ENABLE_PETSC
 #if PETSC_USE_COMPLEX
@@ -1489,7 +1501,11 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       break;
 #endif
 #endif
+#ifdef GOMA_ENABLE_STRATIMIKOS
     case STRATIMIKOS:
+    {
+      int solver_found = 0;
+#ifdef GOMA_ENABLE_EPETRA
       if (strcmp(Matrix_Format, "epetra") == 0) {
         int iterations;
         int err =
@@ -1499,7 +1515,11 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           check_parallel_error("Error in solve - stratimikos");
         }
         aztec_stringer(AZ_normal, iterations, &stringer[0]);
-      } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+        solver_found = 1;
+      } 
+#endif
+#ifdef GOMA_ENABLE_TPETRA
+    if (strcmp(Matrix_Format, "tpetra") == 0) {
         int iterations;
         int err = stratimikos_solve_tpetra(ams, delta_x, resid_vector, &iterations,
                                            Stratimikos_File, pg->imtrx);
@@ -1508,13 +1528,16 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           check_parallel_error("Error in solve - stratimikos");
         }
         aztec_stringer(AZ_normal, iterations, &stringer[0]);
-      } else {
+        solver_found = 1;
+    }
+#endif
+      if (!solver_found) {
         GOMA_EH(GOMA_ERROR,
                 "Sorry, only Epetra matrix formats are currently supported with the Stratimikos "
                 "interface\n");
       }
-      break;
-
+     } break;
+#endif /* GOMA_ENABLE_STRATIMIKOS */
     default:
       GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
       break;
@@ -1580,6 +1603,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           strcpy(stringer_AC, " 1 ");
           break;
 
+#ifdef GOMA_ENABLE_AMESOS
         case AMESOS:
           if ((strcmp(Matrix_Format, "msr") != 0) && (strcmp(Matrix_Format, "epetra") != 0)) {
             GOMA_EH(GOMA_ERROR,
@@ -1589,7 +1613,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           amesos_solve(Amesos_Package, ams, &wAC[iAC][0], &bAC[iAC][0], 0, pg->imtrx);
           strcpy(stringer_AC, " 1 ");
           break;
+#endif
 
+#ifdef GOMA_ENABLE_AZTEC
         case AZTEC:
           /*
            * Initialization is now performed up in
@@ -1649,6 +1675,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                     "solver suite\n");
           }
           break;
+#endif
 #ifdef GOMA_ENABLE_PETSC
 #if PETSC_USE_COMPLEX
         case PETSC_COMPLEX_SOLVER:
@@ -1687,6 +1714,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 #endif
 #endif
         case STRATIMIKOS:
+        {
+          int solver_found = 0;
+#ifdef GOMA_ENABLE_EPETRA
           if (strcmp(Matrix_Format, "epetra") == 0) {
             int iterations;
             int err = stratimikos_solve(ams, &wAC[iAC][0], &bAC[iAC][0], &iterations,
@@ -1697,7 +1727,11 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             } else {
               aztec_stringer(AZ_normal, iterations, &stringer[0]);
             }
-          } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+            solver_found = 1;
+          } 
+#endif
+#ifdef GOMA_ENABLE_TPETRA
+          if (strcmp(Matrix_Format, "tpetra") == 0) {
             int iterations;
             int err = stratimikos_solve_tpetra(ams, &wAC[iAC][0], &bAC[iAC][0], &iterations,
                                                Stratimikos_File, pg->imtrx);
@@ -1706,13 +1740,16 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
               check_parallel_error("Error in solve - stratimikos");
             }
             aztec_stringer(AZ_normal, iterations, &stringer[0]);
-          } else {
+            solver_found = 1;
+          }
+#endif
+          if (!solver_found) { 
             GOMA_EH(
                 GOMA_ERROR,
-                "Sorry, only Epetra matrix formats are currently supported with the Stratimikos "
+                "Sorry, only Epetra and Tpetra matrix formats are currently supported with the Stratimikos "
                 "interface\n");
           }
-          break;
+        } break;
         default:
           GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
           break;
@@ -2018,13 +2055,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         subelement_mesh_output(x, exo);
 #endif
 
-      /*
-       * HKM -> should add a few sync() statements here
-       */
-      sync_processors();
-      print_sync_start(FALSE);
-
-      print_sync_end(FALSE);
+      MPI_Barrier(MPI_COMM_WORLD);
     }
 
     fflush(NULL);
@@ -2122,6 +2153,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
      *
      *******************************************************************/
     if (Newton_Line_Search_Type == NLS_BACKTRACK) {
+#ifndef GOMA_ENABLE_AZTEC
+  GOMA_EH(GOMA_ERROR, "Newton Line Search with Backtracking requires Aztec");
+#else
       dbl damp = 1.0;
       dbl reduction_factor = 0.5;
       dbl min_damp = 0.1;
@@ -2170,6 +2204,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           slope += w[i] * R[i];
         }
         MPI_Allreduce(MPI_IN_PLACE, &slope, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      } else {
+        GOMA_EH(GOMA_ERROR, "Newton Line Search with Backtracking requires MSR matrix format");
       }
       if (slope > 0) {
         slope = -slope;
@@ -2253,6 +2289,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       free(x_save);
       free(xdot_save);
 
+#endif
     } else if (Newton_Line_Search_Type == NLS_FULL_STEP) {
       for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
         x[i] -= damp_factor * var_damp[idv[pg->imtrx][i][0]] * delta_x[i];
@@ -2837,8 +2874,10 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
   } /* if (Continuation > 0) */
 
+#ifdef GOMA_ENABLE_AZTEC
   if (Linear_Solver == AZTEC)
     ams->status[AZ_its] = total_ls_its;
+#endif
   LOCA_UMF_ID = UMF_system_id;
 
   /*
@@ -3596,6 +3635,7 @@ static int soln_sens(double lambda,  /*  parameter */
     strcpy(stringer, " 1 ");
     break;
 
+#ifdef GOMA_ENABLE_AMESOS
   case AMESOS:
     if ((strcmp(Matrix_Format, "msr") != 0) && (strcmp(Matrix_Format, "epetra") != 0)) {
       GOMA_EH(GOMA_ERROR, " Sorry, only MSR and Epetra matrix formats are currently supported with "
@@ -3604,6 +3644,7 @@ static int soln_sens(double lambda,  /*  parameter */
     amesos_solve(Amesos_Package, ams, x_sens, resid_vector_sens, 0, pg->imtrx);
     strcpy(stringer, " 1 ");
     break;
+#endif
   case AMESOS2:
 
     if (ams->GomaMatrixData != NULL) {
@@ -3617,6 +3658,7 @@ static int soln_sens(double lambda,  /*  parameter */
     strcpy(stringer, " 1 ");
     break;
 
+#ifdef GOMA_ENABLE_AZTEC
   case AZTEC:
     /*
      * Initialization is now performed up in
@@ -3665,8 +3707,12 @@ static int soln_sens(double lambda,  /*  parameter */
               "suite\n");
     }
     break;
+#endif
 
   case STRATIMIKOS:
+  {
+    int solver_found = 0;
+#ifdef GOMA_ENABLE_EPETRA 
     if (strcmp(Matrix_Format, "epetra") == 0) {
       int iterations;
       int err = stratimikos_solve(ams, x_sens, resid_vector_sens, &iterations, Stratimikos_File,
@@ -3677,7 +3723,11 @@ static int soln_sens(double lambda,  /*  parameter */
       } else {
         aztec_stringer(AZ_normal, iterations, &stringer[0]);
       }
-    } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+      solver_found = 1;
+    }
+#endif
+#ifdef GOMA_ENABLE_TPETRA 
+    if (strcmp(Matrix_Format, "tpetra") == 0) {
       int iterations;
       int err = stratimikos_solve_tpetra(ams, x_sens, resid_vector_sens, &iterations,
                                          Stratimikos_File, pg->imtrx);
@@ -3686,12 +3736,15 @@ static int soln_sens(double lambda,  /*  parameter */
         check_parallel_error("Error in solve - stratimikos");
       }
       aztec_stringer(AZ_normal, iterations, &stringer[0]);
-    } else {
+      solver_found = 1;
+    }
+#endif
+    if (!solver_found) {
       GOMA_EH(GOMA_ERROR,
-              "Sorry, only Epetra matrix formats are currently supported with the Stratimikos "
+              "Sorry, only Epetra/Tpetra matrix formats are currently supported with the Stratimikos "
               "interface\n");
     }
-    break;
+   } break;
   case MA28:
     /*
      * sl_ma28 keeps internal static variables to determine whether

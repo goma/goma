@@ -19,7 +19,10 @@
 #include <math.h>
 #include <stdio.h>
 
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
+#include "dp_utils.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
@@ -266,9 +269,9 @@ static double jacobian_metric(Exo_DB *exo, double *x, int *proc_config) {
   /* Return results */
   els = (double)(e_end - e_start);
   if (Num_Proc > 1) {
-    els = AZ_gsum_double(els, proc_config);
-    eqsum = AZ_gsum_double(eqsum, proc_config);
-    eqmin = AZ_gmin_double(eqmin, proc_config);
+    els = goma_gsum_double(els);
+    eqsum = goma_gsum_double(eqsum);
+    eqmin = goma_gmin_double(eqmin);
   }
   eqavg = eqsum / els;
   eqm->eq_jac = eqmin;
@@ -286,9 +289,9 @@ static double volume_metric(int *proc_config)
   double low = eqm->vol_low;
 
   if (Num_Proc > 1) {
-    points = (int)AZ_gsum_int(eqm->vol_count, proc_config);
-    sum = AZ_gsum_double(eqm->vol_sum, proc_config);
-    low = AZ_gmin_double(eqm->vol_low, proc_config);
+    points = (int)goma_gsum_int(eqm->vol_count);
+    sum = goma_gsum_double(eqm->vol_sum);
+    low = goma_gmin_double(eqm->vol_low);
   }
 
   eqm->eq_vol = low;
@@ -371,9 +374,9 @@ static double angle_metric(Exo_DB *exo, double *x, int *proc_config) {
   /* Return results */
   els = (double)(e_end - e_start);
   if (Num_Proc > 1) {
-    els = AZ_gsum_double(els, proc_config);
-    eqsum = AZ_gsum_double(eqsum, proc_config);
-    eqmin = AZ_gmin_double(eqmin, proc_config);
+    els = goma_gsum_double(els);
+    eqsum = goma_gsum_double(eqsum);
+    eqmin = goma_gmin_double(eqmin);
   }
   eqavg = eqsum / els;
   if (!bad_elem)
@@ -476,9 +479,9 @@ static double triangle_metric(Exo_DB *exo, double *x, int *proc_config) {
   /* Return results */
   els = (double)(e_end - e_start);
   if (Num_Proc > 1) {
-    els = AZ_gsum_double(els, proc_config);
-    eqsum = AZ_gsum_double(eqsum, proc_config);
-    eqmin = AZ_gmin_double(eqmin, proc_config);
+    els = goma_gsum_double(els);
+    eqsum = goma_gsum_double(eqsum);
+    eqmin = goma_gmin_double(eqmin);
   }
   eqavg = eqsum / els;
   if (!bad_elem)

@@ -4,7 +4,7 @@
 #include <metis.h>
 #include <netcdf.h>
 #include <stdlib.h>
-
+#include <string.h>
 #include "base_mesh.h"
 #include "el_elm.h"
 #include "el_geom.h"

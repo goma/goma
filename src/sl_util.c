@@ -71,7 +71,9 @@
 
 #include "sl_util.h" /* Variables of interest */
 
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "dp_types.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
@@ -136,10 +138,11 @@ void sl_init(unsigned int option_mask, /* option flag */
        * Manual version of AZ_processor_info(). Should work for both
        * serial and parallel...
        */
-
+#ifdef GOMA_ENABLE_AZTEC
       A->proc_config[AZ_node] = ProcID;
       A->proc_config[AZ_N_procs] = Num_Proc;
       A->proc_config[AZ_dim] = 0;
+#endif
 
       /*
        * Manual version of AZ_read_update().
@@ -152,8 +155,9 @@ void sl_init(unsigned int option_mask, /* option flag */
       A->N_update = num_internal_dofs[imtrx] + num_boundary_dofs[imtrx]; /* Whoa, mule! */
       A->update = NULL;
 
+#ifdef GOMA_ENABLE_AZTEC
       AZ_defaults(A->options, A->params);
-
+#endif
       /*
        * Any goma specific preferences for solver options.
        */
@@ -175,6 +179,7 @@ void sl_init(unsigned int option_mask, /* option flag */
         A->extern_index = NULL; /* A->external; */
 
         /* Need one for self, evidently. */
+#ifdef GOMA_ENABLE_AZTEC
         A->data_org = (int *)array_alloc(1, AZ_COMM_SIZE + 0, sizeof(int));
 
         if (strcmp(Matrix_Format, "vbr") == 0) {
@@ -201,9 +206,11 @@ void sl_init(unsigned int option_mask, /* option flag */
         A->data_org[AZ_rec_length] = 0;
         A->data_org[AZ_send_length] = 0;
         /*	  A->data_org[AZ_send_list]   = 0; */
+#endif
 
       } else /* parallel case... */
       {
+#ifdef GOMA_ENABLE_AZTEC
 
         /*
          * None of these are needed if advanced planning orders the
@@ -279,8 +286,10 @@ void sl_init(unsigned int option_mask, /* option flag */
         for (i = 0; i < ptr_dof_send[imtrx][dpi->num_neighbors]; i++) {
           A->data_org[AZ_send_list + i] = list_dof_send[imtrx][i];
         }
+#endif
       }
 
+#ifdef GOMA_ENABLE_AZTEC
       if (Debug_Flag > 0) {
         err = AZ_check_input(A->data_org, A->options, A->params, A->proc_config);
 
@@ -294,6 +303,7 @@ void sl_init(unsigned int option_mask, /* option flag */
           AZ_check_msr(A->bindx, A->N_update, A->N_external, AZ_GLOBAL, A->proc_config);
         }
       }
+#endif
 #ifdef MATRIX_DUMP
       A->Number_Jac_Dump = Number_Jac_Dump;
 #endif /* MATRIX_DUMP */
@@ -393,7 +403,11 @@ void set_aztec_options_params(int options[], double params[]) {
   /*
    * Solver
    */
+#ifndef GOMA_ENABLE_AZTEC
+  int AZ_solver = 0;
+#endif
 
+#ifdef GOMA_ENABLE_AZTEC
   if (strcmp(Matrix_Solver, "cg") == 0) {
     options[AZ_solver] = AZ_cg;
   } else if (strcmp(Matrix_Solver, "gmres") == 0) {
@@ -409,7 +423,9 @@ void set_aztec_options_params(int options[], double params[]) {
   } else if (strcmp(Matrix_Solver, "ma28") == 0) {
     Linear_Solver = MA28;
     options[AZ_solver] = -1;
-  } else if (strcmp(Matrix_Solver, "lu") == 0) {
+  } else 
+#endif 
+  if (strcmp(Matrix_Solver, "lu") == 0) {
     Linear_Solver = SPARSE13a;
     options[AZ_solver] = -1;
   }
@@ -440,6 +456,7 @@ void set_aztec_options_params(int options[], double params[]) {
   } else if (strcmp(Matrix_Solver, "petsc_complex") == 0) {
     Linear_Solver = PETSC_COMPLEX_SOLVER;
     options[AZ_solver] = -1;
+#ifdef GOMA_ENABLE_AZTEC
   } else if (strcmp(Matrix_Solver, "aztecoo") == 0) {
     Linear_Solver = AZTECOO;
     if (strcmp(AztecOO_Solver, "cg") == 0) {
@@ -455,11 +472,13 @@ void set_aztec_options_params(int options[], double params[]) {
     } else if (strcmp(AztecOO_Solver, "y12m") == 0) {
       options[AZ_solver] = AZ_lu;
     }
+#endif
   } else {
     fprintf(stderr, "Valid solvers: cg, gmres, cgs, tfqmr, bicgstab, y12m, lu, umf, umff\n");
     GOMA_EH(GOMA_ERROR, "Unknown linear solver specification.");
   }
 
+#ifdef GOMA_ENABLE_AZTEC
   /*
    * Matrix scaling
    */
@@ -480,7 +499,9 @@ void set_aztec_options_params(int options[], double params[]) {
     fprintf(stderr, "Valid scalings are: none, Jacobi, BJacobi, row_sum, sym_diag, sym_row_sum\n");
     GOMA_EH(GOMA_ERROR, "Unknown matrix scaling specification.");
   }
+#endif
 
+#ifdef GOMA_ENABLE_AZTEC
   /*
    * Preconditioner
    */
@@ -907,6 +928,7 @@ void set_aztec_options_params(int options[], double params[]) {
     }
 #endif
   }
+#endif // GOMA_ENABLE_AZTEC
 
   return;
 } /* END of routine set_aztec_options_params */
@@ -925,7 +947,7 @@ void set_aztec_options_params(int options[], double params[]) {
  *
  * Revised:
  */
-
+#ifdef GOMA_ENABLE_AZTEC
 void dump_aztec_status(double status[]) {
   fprintf(stdout, "\n");
   fprintf(stdout, "Az_solve() summary\n");
@@ -968,6 +990,7 @@ void dump_aztec_status(double status[]) {
 
   return;
 } /* END of routine dump_aztec_status */
+#endif
 
 /* hide_external() -- move external rows from MSR sparse matrix to hiding place
  *
@@ -1375,7 +1398,7 @@ void solve_NxN_system(dbl *A, dbl *b, dbl *x, const int rank, const int row_size
 #else
 /* Just give an Amesos error message and abort! */
 void amesos_solve_msr(
-    char *choice, struct Aztec_Linear_Solver_System *ams, double *x_, double *b_, int flag) {
+    char *choice, struct GomaLinearSolverData *ams, double *x_, double *b_, int flag) {
   fprintf(
       stderr,
       "Error: Need to compile with GOMA_ENABLE_AMESOS flag before using AMESOS solver packages.");

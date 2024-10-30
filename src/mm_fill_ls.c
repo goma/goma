@@ -65,7 +65,9 @@
 #endif
 #endif
 
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 
 /* goma include files (of course!) */
 
@@ -9027,7 +9029,7 @@ double Courant_Time_Step(double x[],
     /* If interface not on this processor, don't allow zero min_dt! */
     if (!got_interface)
       min_dt = 100.0 * tran->Delta_t_max;
-    min_dt = AZ_gmin_double(min_dt, proc_config);
+    min_dt = goma_gmin_double(min_dt);
   }
 
   /* restore */

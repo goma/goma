@@ -23,7 +23,9 @@ static char rcsid[] = "$Id: mm_fill_shell.c,v 5.62 2010-07-30 21:14:52 prschun E
 #endif
 
 /* Standard include files */
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "std.h"
 #include <math.h>
 #include <stdio.h>

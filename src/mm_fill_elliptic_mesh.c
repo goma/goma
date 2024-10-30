@@ -20,7 +20,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "el_elm.h"
 #include "el_geom.h"
 #include "mm_as.h"

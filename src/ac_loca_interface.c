@@ -89,7 +89,10 @@
  *     application code. Each has its own comments.
  */
 
+#include <time.h>
+#ifdef GOMA_ENABLE_AZTEC
 #include <az_aztec.h>
+#endif
 #include <limits.h>
 #include <math.h>
 #include <mpi.h>
@@ -100,7 +103,9 @@
 /* Put include statements for your code here. */
 
 #include "ac_stability_util.h"
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "dp_comm.h"
 #include "dp_types.h"
 #include "dp_utils.h"
@@ -144,7 +149,9 @@
 #include "rf_solver_const.h"
 #include "rf_util.h"
 #include "rf_vars_const.h"
+#ifdef GOMA_ENABLE_AMESOS
 #include "sl_amesos_interface.h"
+#endif
 #include "sl_auxutil.h"
 #include "sl_lu.h"
 #include "sl_matrix_util.h"
@@ -208,8 +215,10 @@ struct passdown_struct {
                                    * output to EXODUS II file */
   int tev_post;                   /* extra element post processing results */
   RESULTS_DESCRIPTION_STRUCT *rd; /* details about post proc vars */
+#ifdef GOMA_ENABLE_AZTEC
   AZ_MATRIX *amat;
   AZ_MATRIX *mmat;
+#endif
   int *gindex;
   int *gsize;
   double *gv;
@@ -443,12 +452,14 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
     ams[i] = alloc_struct_1(struct GomaLinearSolverData, 1);
   }
 
+#ifdef GOMA_ENABLE_AZTEC
   /* Set Aztec proc_config array (for many different cases) */
 #ifdef MPI
   AZ_set_proc_config(ams[0]->proc_config, MPI_COMM_WORLD);
 #else  /* MPI */
   AZ_set_proc_config(ams[0]->proc_config, 0);
 #endif /* MPI */
+#endif
 
   /* allocate space for and initialize solution arrays */
   asdv(&x, numProcUnknowns);
@@ -647,7 +658,9 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   check_parallel_error("Solver initialization problems");
 #endif
 
+#ifdef GOMA_ENABLE_AZTEC
   ams[JAC]->options[AZ_keep_info] = 1;
+#endif
 
   /* set boundary conditions on the initial conditions */
   nullify_dirichlet_bcs();
@@ -676,12 +689,14 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
     init_vec_value(passdown.mass_matrix, 0.0, NZeros + 5);
 
     /* Create AZ_MATRIX version for VBR matrix format */
+#ifdef GOMA_ENABLE_AZTEC
     if (strcmp(Matrix_Format, "vbr") == 0) {
       passdown.mmat = AZ_matrix_create(NumUnknowns[pg->imtrx]);
       AZ_set_VBR(passdown.mmat, ams[JAC]->rpntr, ams[JAC]->cpntr, ams[JAC]->bpntr, ams[JAC]->indx,
                  ams[JAC]->bindx, passdown.mass_matrix, ams[JAC]->data_org, 0, NULL, AZ_LOCAL);
     } else
       passdown.mmat = NULL;
+#endif
   } else
     passdown.mass_matrix = NULL;
 
@@ -730,6 +745,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   passdown.LSA_flag = FALSE;
   passdown.last_step = FALSE;
 
+#ifdef GOMA_ENABLE_AZTEC
   /* This is required for VBR matrix-vector multiply calls: */
   if (strcmp(Matrix_Format, "vbr") == 0) {
     passdown.amat = AZ_matrix_create(NumUnknowns[pg->imtrx]);
@@ -738,6 +754,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
                0, NULL, AZ_LOCAL);
   } else
     passdown.amat = NULL;
+#endif
 
   /* Open ASCII output file Soln_OutFile */
   if (strlen(Soln_OutFile)) {
@@ -938,6 +955,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
     if (err != 0)
       GOMA_EH(GOMA_ERROR, "do_loca: error reading imag. part of null vector");
 
+#ifdef GOMA_ENABLE_AZTEC
     /* If using MSR matrix format, instantiate amat (struct AZ_MATRIX).
        VBR case was already handled above. */
     if (strcmp(Matrix_Format, "msr") == 0) {
@@ -945,6 +963,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
       AZ_set_MSR(passdown.amat, passdown.ams->bindx, passdown.ams->val, passdown.ams->data_org, 0,
                  NULL, AZ_LOCAL);
     }
+#endif
     break;
 
     /*
@@ -1157,10 +1176,12 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   safer_free((void **)&passdown.sv_index);
   safer_free((void **)&passdown.sv_count);
   safer_free((void **)&passdown.mass_matrix);
+#ifdef GOMA_ENABLE_AZTEC
   if (passdown.amat != NULL)
     AZ_matrix_destroy(&passdown.amat);
   if (passdown.mmat != NULL)
     AZ_matrix_destroy(&passdown.mmat);
+#endif
 
   safer_free((void **)&con.turning_point_info.nv);
   safer_free((void **)&con.pitchfork_info.psi);
@@ -1415,8 +1436,10 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
 
   passdown.num_res_fills += nits + 1;
   passdown.num_mat_fills += nits;
+#ifdef GOMA_ENABLE_AZTEC
   if (Linear_Solver == AZTEC)
     passdown.num_linear_its += ams->status[AZ_its];
+#endif
 
   if (!converged)
     return (-nits);
@@ -1519,7 +1542,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
 
     strcpy(stringer, " 1 ");
     break;
-
+#ifdef GOMA_ENABLE_AZTEC
   case AZTEC:
 
     /* Set option of preconditioner reuse */
@@ -1600,7 +1623,9 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
     passdown.num_linear_its += linear_solver_itns;
 
     break;
+#endif
 
+#ifdef GOMA_ENABLE_AMESOS
   case AMESOS:
 
     if ((strcmp(Matrix_Format, "msr") != 0) && (strcmp(Matrix_Format, "epetra") != 0)) {
@@ -1610,6 +1635,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
     amesos_solve(Amesos_Package, ams, x, xr, 1, pg->imtrx);
     strcpy(stringer, " 1 ");
     break;
+#endif
 
   case MA28:
     /*
@@ -1633,13 +1659,16 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
   /* Report solve time and status */
   s_end = ut();
   if (ProcID == 0) {
+#ifdef GOMA_ENABLE_AZTEC
     if (Linear_Solver == AZTEC) {
       if (why == AZ_normal) {
         printf("\tResolve time = %7.1e   lits = %s\n", (s_end - s_start), stringer);
       } else {
         printf("WARNING:  Aztec status was %s !\n", stringer);
       }
-    } else {
+    } else
+#endif
+    {
       printf(" Resolve_time:%7.1e ", (s_end - s_start));
     }
   }
@@ -2131,7 +2160,7 @@ void matvec_mult_conwrap(double *x, double *y)
   /* Note: This routine borrowed from "az_matvec_mult.c"! - EDW */
   {
 
-    N = ams->data_org[AZ_N_internal] + ams->data_org[AZ_N_border];
+    N = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
 
     for (irow = 0; irow < N; irow++) {
 
@@ -2151,12 +2180,13 @@ void matvec_mult_conwrap(double *x, double *y)
       y++;
     }
   }
-
+#ifdef GOMA_ENABLE_AZTEC
   else if (strcmp(Matrix_Format, "vbr") == 0) {
 
     /* For VBR matrices, use Aztec matvec mult routine */
     AZ_VBR_matvec_mult(x, y, passdown.amat, passdown.proc_config);
   }
+#endif
 
   /* Error message if not MSR or VBR */
   else {
@@ -2197,7 +2227,7 @@ void mass_matvec_mult_conwrap(double *x, double *y)
   /* Note: This routine borrowed from "az_matvec_mult.c"! - EDW */
   {
 
-    N = ams->data_org[AZ_N_internal] + ams->data_org[AZ_N_border];
+    N = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
 
     for (irow = 0; irow < N; irow++) {
 
@@ -2217,12 +2247,13 @@ void mass_matvec_mult_conwrap(double *x, double *y)
       y++;
     }
   }
-
+#ifdef GOMA_ENABLE_AZTEC
   else if (strcmp(Matrix_Format, "vbr") == 0) {
 
     /* For VBR matrices, use Aztec matvec mult routine */
     AZ_VBR_matvec_mult(x, y, passdown.mmat, passdown.proc_config);
   }
+#endif
 
   /* Error message if not MSR or VBR */
   else {
@@ -2293,16 +2324,20 @@ void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double to
 
   /* Save some previous settings, point ams->val to the shifted matrix */
   tmp_a = ams->val;
+#ifdef GOMA_ENABLE_AZTEC
   tmp_scale = ams->options[AZ_scaling];
   tmp_conv = ams->options[AZ_conv];
   tmp_tol = ams->params[AZ_tol];
+#endif
 
   /* Reset these for the eigensolver */
   ams->val = passdown.shifted_matrix;
   a = ams->val;
+#ifdef GOMA_ENABLE_AZTEC
   ams->options[AZ_scaling] = AZ_none;
   ams->options[AZ_conv] = AZ_noscaled;
   ams->params[AZ_tol] = tol;
+#endif
 
   /* Proceed with the chosen linear solver */
   switch (Linear_Solver) {
@@ -2337,6 +2372,7 @@ void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double to
 
     strcpy(stringer, " 1 ");
     break;
+#ifdef GOMA_ENABLE_AMESOS
   case AMESOS:
     if ((strcmp(Matrix_Format, "msr") != 0) && (strcmp(Matrix_Format, "epetra") != 0)) {
       GOMA_EH(GOMA_ERROR, " Sorry, only MSR and Epetra matrix formats are currently supported with "
@@ -2346,7 +2382,9 @@ void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double to
     first_linear_solver_call = FALSE;
     strcpy(stringer, " 1 ");
     break;
+#endif
 
+#ifdef GOMA_ENABLE_AZTEC
   case AZTEC:
 
     /* Set option of preconditioner reuse */
@@ -2443,6 +2481,7 @@ void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double to
 
     passdown.num_eigen_its += linear_solver_itns;
     break;
+#endif
 
   case MA28:
     /*
@@ -2465,9 +2504,11 @@ void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double to
 
   /* Restore original settings for the next step */
   ams->val = tmp_a;
+#ifdef GOMA_ENABLE_AZTEC
   ams->options[AZ_scaling] = tmp_scale;
   ams->options[AZ_conv] = tmp_conv;
   ams->params[AZ_tol] = tmp_tol;
+#endif
 #endif
 
   /* Done */
@@ -2772,7 +2813,7 @@ double gsum_double_conwrap(double sum)
   struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
 
   if (Num_Proc > 1)
-    return AZ_gsum_double(sum, ams->proc_config);
+    return goma_gsum_double(sum);
   else
     return sum;
 }
@@ -2794,10 +2835,46 @@ int gmax_int_conwrap(int max)
  */
 {
   if (Num_Proc > 1)
-    return AZ_gmax_int(max, passdown.proc_config);
+    return goma_gmax_int(max);
   else
     return max;
 }
+
+// Random number generator from Park / Miller 1988
+// This seems to be the same one that Aztec uses
+int park_miller_rng(int *seed) {
+  int a = 16807;
+  int m = 2147483647;
+  int q = 127773; // m / a
+  int r = 2836;   // m % a
+
+  int hi = *seed / q;
+  int lo = *seed % q;
+
+  int test = a * lo - r * hi;
+  if (test > 0) {
+    *seed = test;
+  } else {
+    *seed = test + m;
+  }
+
+  return (int)((double)*seed / (double)m);
+}
+
+static void random_vector(double *x, int numOwnedUnks) {
+  static int seed = 0;
+  static int first = 1;
+
+  if (first) {
+    seed = time(NULL);
+    first = 0;
+  }
+
+  for (int i = 0; i < numOwnedUnks; i++) {
+    x[i] = park_miller_rng(&seed);
+  }
+}
+
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
@@ -2812,10 +2889,12 @@ void random_vector_conwrap(double *x, int numOwnedUnks)
  * Used by eigensolver only
  */
 {
-#ifdef GOMA_ENABLE_ARPACK
+#ifdef GOMA_ENABLE_AZTEC
   struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
 
   AZ_random_vector(x, ams->data_org, passdown.proc_config);
+#else
+  random_vector(x, numOwnedUnks);
 #endif
   return;
 }

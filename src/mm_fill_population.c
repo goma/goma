@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "density.h"
 #include "el_elm.h"
 #include "mm_as.h"
@@ -23,6 +25,10 @@
 
 /* GOMA include files */
 #define GOMA_MM_FILL_POPULATION_C
+
+#ifndef FSUB_TYPE
+#define FSUB_TYPE void
+#endif
 
 extern FSUB_TYPE dsyev_(char *JOBZ,
                         char *UPLO,

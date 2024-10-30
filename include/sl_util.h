@@ -76,6 +76,15 @@ struct GomaLinearSolverData;
 #define GRID_SEARCH    1 /* Search for points of zero level set via nested boxes */
 #define SEGMENT_SEARCH 0 /* Conventional search method on segments from connected nodes */
 
+#ifndef GOMA_ENABLE_AZTEC
+#define AZ_normal           0 /* normal termination                           */
+#define AZ_param            1 /* requested option not implemented             */
+#define AZ_breakdown        2 /* numerical breakdown during the computation   */
+#define AZ_maxits           3 /* maximum iterations exceeded                  */
+#define AZ_loss             4 /* loss of precision                            */
+#define AZ_ill_cond         5 /* GMRES hessenberg is ill-conditioned          */
+#endif
+
 /*
  * Function prototypes used in sl_util.c
  */
@@ -93,8 +102,9 @@ extern void free_ams(struct GomaLinearSolverData *); /* ptr to ONE such system *
 
 extern void set_aztec_options_params(int[],     /* options */
                                      double[]); /* params */
-
+#ifdef GOMA_ENABLE_AZTEC
 extern void dump_aztec_status(double[]); /* status - filled by AZ_solve() */
+#endif
 
 extern void hide_external(int,       /* n - order of the original system     (in) */
                           int,       /* m - order of the truncated system    (in) */
@@ -152,7 +162,7 @@ extern void solve_NxN_system(dbl *,      /* A */
 #if defined(GOMA_ENABLE_AMESOS) && defined(TRILINOS)
 /* Use prototype in sl_amesos_interface.h */
 #else
-extern void amesos_solve_msr(char *, struct Aztec_Linear_Solver_System *, double *, double *, int);
+extern void amesos_solve_msr(char *, struct GomaLinearSolverData *, double *, double *, int);
 #endif
 
 /*****************************************************************************/

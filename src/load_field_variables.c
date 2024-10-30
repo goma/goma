@@ -11,6 +11,7 @@
 * This software is distributed under the GNU General Public License.      *
 * See LICENSE file.                                                       *
 \************************************************************************/
+#include <string.h>
 
 #include "load_field_variables.h"
 #include "bc_colloc.h"
