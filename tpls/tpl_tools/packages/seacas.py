@@ -6,13 +6,16 @@ import os
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "seacas"
-        self.version = "2024-08-15"
-        self.sha256 = "c85130b0dac5ab9a08dcb53c8ccff478122d72b08bd41d99c0adfddc5eb18a52"
+        # Use a specific commit to avoid issues with NetCDF 4.9.3-rc1
+        self.version = "0c95ad2d56099154e912bc908334cf84b82da628"
+        self.sha256 = "3208f94fea97439d5e37ce62634ec1caf398783d1d38c4e4f7c2c0a61f4c187c"
         self.filename = "seacas-" + self.version + ".tar.gz"
         self.url = (
-            "https://github.com/sandialabs/seacas/archive/refs/tags/v"
-            + self.version
-            + ".tar.gz"
+            # "https://github.com/sandialabs/seacas/archive/refs/tags/v"
+            # + self.version
+            # + ".tar.gz"
+            # "https://github.com/sandialabs/seacas/archive/refs/heads/master.tar.gz"
+            "https://github.com/sandialabs/seacas/archive/0c95ad2d56099154e912bc908334cf84b82da628.tar.gz"
         )
         self.executables = ["algebra", "aprepro", "mapvar", "explore"]
         self.libraries = ["exodus", "aprepro_lib"]

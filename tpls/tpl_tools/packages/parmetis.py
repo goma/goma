@@ -27,9 +27,7 @@ class Package(packages.CMakePackage):
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
             builder.add_option("-DSHARED:BOOL=OFF")
         builder.add_option("-DGKLIB_PATH=./headers")
-        builder.add_option(
-            "-DMETIS_PATH=" + builder._registry.environment["METIS_DIR"]
-        )
+        builder.add_option("-DMETIS_PATH=" + builder._registry.environment["METIS_DIR"])
 
     def register(self, builder):
         registry = builder._registry

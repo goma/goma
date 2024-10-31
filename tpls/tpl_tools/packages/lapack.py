@@ -22,7 +22,6 @@ class Package(packages.CMakePackage):
         else:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
 
-
     def register(self, builder):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
