@@ -33,6 +33,11 @@
 #include "Thyra_LinearOpWithSolveFactoryHelpers.hpp"
 #include "Thyra_LinearOpWithSolveTester.hpp"
 
+#ifdef GOMA_ENABLE_TEKO
+// Teko-Package includes
+#include "Teko_StratimikosFactory.hpp"
+#endif
+
 #ifdef GOMA_ENABLE_TPETRA
 #include "Thyra_TpetraLinearOp.hpp"
 #include "Thyra_TpetraThyraWrappers.hpp"
@@ -41,6 +46,10 @@
 #endif
 
 #ifdef GOMA_ENABLE_EPETRA
+#ifdef HAVE_MPI
+#else
+#include "Epetra_SerialComm.h"
+#endif
 #include "EpetraExt_RowMatrixOut.h"
 #include "EpetraExt_VectorOut.h"
 #include "Epetra_DataAccess.h"
@@ -52,17 +61,6 @@
 #include "Thyra_EpetraThyraWrappers.hpp"
 #include "linalg/sparse_matrix_epetra.h"
 #endif
-
-#ifdef GOMA_ENABLE_TEKO
-// Teko-Package includes
-#include "Teko_StratimikosFactory.hpp"
-#endif
-
-#ifdef HAVE_MPI
-#else
-#include "Epetra_SerialComm.h"
-#endif
-
 #include "linalg/sparse_matrix.h"
 #include "sl_stratimikos_interface.h"
 #include "sl_util_structs.h"
