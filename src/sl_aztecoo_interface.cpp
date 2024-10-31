@@ -11,6 +11,7 @@
 * This software is distributed under the GNU General Public License.      *
 * See LICENSE file.                                                       *
 \************************************************************************/
+#ifdef GOMA_ENABLE_AZTEC
 #include "linalg/sparse_matrix.h"
 #include "linalg/sparse_matrix_epetra.h"
 #if defined(PARALLEL) && !defined(EPETRA_MPI)
@@ -24,7 +25,9 @@
 #include "AztecOO.h"
 #include "Epetra_DataAccess.h"
 #include "Epetra_RowMatrix.h"
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "mpi.h"
 
 #ifdef EPETRA_MPI
@@ -95,3 +98,4 @@ void aztecoo_solve_epetra(struct GomaLinearSolverData *ams, double *x_, double *
 }
 
 } /* extern "C" */
+#endif

@@ -19,6 +19,7 @@ class Package(packages.CMakePackage):
         builder.env["CC"] = builder._registry.get_executable("mpicc")
         builder.env["CXX"] = builder._registry.get_executable("mpicxx")
         builder.env["FC"] = builder._registry.get_executable("mpifort")
+        builder.env["CFLAGS"] = "-Wno-implicit-function-declaration"
 
     def configure_options(self, builder):
         if builder.build_shared:

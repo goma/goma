@@ -5,8 +5,8 @@ import os
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "netcdf"
-        self.version = "4.9.2"
-        self.sha256 = "cf11babbbdb9963f09f55079e0b019f6d0371f52f8e1264a5ba8e9fdab1a6c48"
+        self.version = "4.9.3-rc1"
+        self.sha256 = "8c4197d25031add6ebc0fcc2019a59ce768e0a7cfaa629bb0c581879de3d2902"
         self.filename = "netcdf-c-" + self.version + ".tar.gz"
         self.url = (
             "https://downloads.unidata.ucar.edu/netcdf-c/"

@@ -8,13 +8,11 @@
 #include <string>
 #include <utility>
 
-#include "Epetra_DataAccess.h"
 #include "Stratimikos_DefaultLinearSolverBuilder.hpp"
 #include "Teuchos_ENull.hpp"
 #include "Teuchos_FancyOStream.hpp"
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_ParameterListExceptions.hpp"
-#include "Teuchos_Ptr.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_RCPDecl.hpp"
 #include "Teuchos_StandardCatchMacros.hpp"
@@ -23,8 +21,6 @@
 #include "Teuchos_XMLParameterListCoreHelpers.hpp"
 #include "Teuchos_YamlParameterListCoreHelpers.hpp"
 #include "Teuchos_config.h"
-#include "Thyra_EpetraLinearOp.hpp"
-#include "Thyra_EpetraThyraWrappers.hpp"
 #include "Thyra_LinearOpBase_decl.hpp"
 #include "Thyra_LinearOpWithSolveBase_decl.hpp"
 #include "Thyra_LinearOpWithSolveFactoryBase_decl.hpp"
@@ -37,6 +33,11 @@
 #include "Thyra_LinearOpWithSolveFactoryHelpers.hpp"
 #include "Thyra_LinearOpWithSolveTester.hpp"
 
+#ifdef GOMA_ENABLE_TEKO
+// Teko-Package includes
+#include "Teko_StratimikosFactory.hpp"
+#endif
+
 #ifdef GOMA_ENABLE_TPETRA
 #include "Thyra_TpetraLinearOp.hpp"
 #include "Thyra_TpetraThyraWrappers.hpp"
@@ -44,24 +45,23 @@
 #include "linalg/sparse_matrix_tpetra.h"
 #endif
 
-#include "EpetraExt_RowMatrixOut.h"
-#include "EpetraExt_VectorOut.h"
-
-#ifdef GOMA_ENABLE_TEKO
-// Teko-Package includes
-#include "Teko_StratimikosFactory.hpp"
-#endif
-
+#ifdef GOMA_ENABLE_EPETRA
 #ifdef HAVE_MPI
 #else
 #include "Epetra_SerialComm.h"
 #endif
-
+#include "EpetraExt_RowMatrixOut.h"
+#include "EpetraExt_VectorOut.h"
+#include "Epetra_DataAccess.h"
 #include "Epetra_Map.h"
 #include "Epetra_RowMatrix.h"
 #include "Epetra_Vector.h"
-#include "linalg/sparse_matrix.h"
+#include "Teuchos_Ptr.hpp"
+#include "Thyra_EpetraLinearOp.hpp"
+#include "Thyra_EpetraThyraWrappers.hpp"
 #include "linalg/sparse_matrix_epetra.h"
+#endif
+#include "linalg/sparse_matrix.h"
 #include "sl_stratimikos_interface.h"
 #include "sl_util_structs.h"
 
@@ -261,6 +261,7 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
 }
 #endif /* GOMA_ENABLE_TPETRA */
 
+#ifdef GOMA_ENABLE_EPETRA
 int stratimikos_solve(struct GomaLinearSolverData *ams,
                       double *x_,
                       double *b_,
@@ -337,35 +338,8 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
     return -1;
   }
 }
+#endif
 
 } /* End extern "C" */
 
-#else /* GOMA_ENABLE_STRATIMIKOS */
-
-#include "mpi.h"
-
-#include "sl_stratimikos_interface.h"
-extern "C" {
-#include "mm_eh.h"
-#include "std.h"
-int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
-                             double *x_,
-                             double *b_,
-                             int *iterations,
-                             char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
-                             int imtrx) {
-  GOMA_EH(GOMA_ERROR, "Not built with stratimikos support!");
-  return -1;
-}
-
-int stratimikos_solve(struct GomaLinearSolverData *ams,
-                      double *x_,
-                      double *b_,
-                      int *iterations,
-                      char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
-                      int imtrx) {
-  GOMA_EH(GOMA_ERROR, "Not built with stratimikos support!");
-  return -1;
-}
-}
 #endif /* GOMA_ENABLE_STRATIMIKOS */

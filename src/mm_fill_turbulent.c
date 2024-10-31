@@ -12,8 +12,8 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
-#include "mm_fill_stabilization.h"
 #include <stdio.h>
+#include <string.h>
 
 /* GOMA include files */
 #define GOMA_MM_FILL_TURBULENT_C
@@ -22,6 +22,7 @@
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
+#include "mm_fill_stabilization.h"
 #include "mm_fill_terms.h"
 #include "mm_fill_turbulent.h"
 #include "mm_fill_util.h"

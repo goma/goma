@@ -34,9 +34,13 @@ packages = [
     "trilinos",
     "petsc",
     "petsc_complex",
-    "sparse",
     "catch2",
 ]
+
+# This will probably go away in the future, don't think
+# anyone is using sparse anymore.
+if sys.platform != "darwin":
+    packages.append("sparse")
 
 
 if __name__ == "__main__":
@@ -89,9 +93,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--openblas",
-    help="Build using OpenBLAS (Default)",
-    dest="netlib_blas",
-    action="store_true",
+        help="Build using OpenBLAS (Default)",
+        dest="netlib_blas",
+        action="store_true",
     )
     parser.set_defaults(netlib_blas=False)
     parser.add_argument(
@@ -138,7 +142,6 @@ if __name__ == "__main__":
         packages.remove("openblas")
     else:
         packages.remove("lapack")
-
 
     install_dir = os.path.abspath(os.path.expanduser(args.INSTALL_DIR))
     download_dir = os.path.join(install_dir, "downloads")
@@ -211,12 +214,17 @@ if __name__ == "__main__":
                 tpl_registry,
                 args.build_shared,
                 prebuilt=True,
-                skip_ssl_verify=args.skip_ssl_verify
+                skip_ssl_verify=args.skip_ssl_verify,
             )
             if build.check(True):
                 build.logger.log("Package {} found at {}".format(pc.name, package_dir))
             else:
-                print("Package {} not found check directory or let script build".format(pc.name), file=sys.stderr)
+                print(
+                    "Package {} not found check directory or let script build".format(
+                        pc.name
+                    ),
+                    file=sys.stderr,
+                )
                 exit(1)
             build.register()
         else:
@@ -229,7 +237,7 @@ if __name__ == "__main__":
                 logger,
                 tpl_registry,
                 args.build_shared,
-                skip_ssl_verify=args.skip_ssl_verify
+                skip_ssl_verify=args.skip_ssl_verify,
             )
 
             if build.check():
@@ -243,7 +251,10 @@ if __name__ == "__main__":
             build.build()
             build.install()
             if not build.check():
-                print("Package {} not built, contact developers".format(pc.name), file=sys.stderr)
+                print(
+                    "Package {} not built, contact developers".format(pc.name),
+                    file=sys.stderr,
+                )
                 exit(1)
             build.register()
     tpl_registry.config.write_config(os.path.join(install_dir, "config.sh"))

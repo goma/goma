@@ -1,13 +1,14 @@
 from tpl_tools.packages import packages
 import os
+import sys
 
 
 class Package(packages.AutotoolsPackage):
     def __init__(self):
         self.name = "petsc"
-        self.version = "3.21.4"
-        self.sha256 = "a9ae076d4617c7d84ce2bed37194022319c19f19b3930edf148b2bc8ecf2248d"
-        self.filename = "petsc-" + self.version + ".tar.gz"
+        self.version = "3.22.0"
+        self.sha256 = "2c03f7c0f7ad2649240d4989355cf7fb7f211b75156cd7d424e1d9dd7dfb290b"
+        self.filename = "petsc-lite-" + self.version + ".tar.gz"
         self.url = (
             "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-"
             + self.version
@@ -43,6 +44,7 @@ class Package(packages.AutotoolsPackage):
             configure_options.append("--with-shared-libraries=0")
         configure_options.append("--with-debugging=0")
         configure_options.append("--download-hypre")
+        configure_options.append("--download-hypre")
         configure_options.append("--download-strumpack")
         configure_options.append("--with-scalapack=1")
         configure_options.append("--with-scalapack-dir=" + builder.env["SCALAPACK_DIR"])
@@ -63,7 +65,11 @@ class Package(packages.AutotoolsPackage):
         configure_options.append("--with-lapack-lib=" + builder.env["LAPACK_LIBRARIES"])
         configure_options.append("--with-mumps=1")
         configure_options.append("--with-mumps-dir=" + builder.env["MUMPS_DIR"])
-        configure_options.append("COPTFLAGS=-O3")
+        if sys.platform == "darwin":
+            configure_options.append("--download-make")
+            configure_options.append("COPTFLAGS=-O3 -Wno-incompatible-pointer-types")
+        else:
+            configure_options.append("COPTFLAGS=-O3")
         configure_options.append("CXXOPTFLAGS=-O3")
         configure_options.append("FOPTFLAGS=-O3")
         builder.run_command(configure_options)

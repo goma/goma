@@ -1,4 +1,5 @@
 from tpl_tools.packages import packages
+from tpl_tools import utils
 import os
 
 
@@ -40,9 +41,7 @@ class Package(packages.GenericPackage):
     def register(self, builder):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
-        ext = ".a"
-        if builder.build_shared:
-            ext = ".so"
+        ext = utils.get_library_extension(builder.build_shared)
         registry.set_environment_variable("OPENBLAS_DIR", builder.install_dir())
         registry.set_environment_variable(
             "BLAS_LIBRARIES",

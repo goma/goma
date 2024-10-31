@@ -1,4 +1,5 @@
 from tpl_tools.packages import packages
+from tpl_tools import utils
 
 
 class Package(packages.CMakePackage):
@@ -27,6 +28,7 @@ class Package(packages.CMakePackage):
         builder.env["CC"] = builder._registry.get_executable("mpicc")
         builder.env["CXX"] = builder._registry.get_executable("mpicxx")
         builder.env["FC"] = builder._registry.get_executable("mpifort")
+        builder.env["CFLAGS"] = "-Wno-deprecated-non-prototype"
 
     def configure_options(self, builder):
         if builder.build_shared:
@@ -53,9 +55,7 @@ class Package(packages.CMakePackage):
         builder.add_option("-DSeacas_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON")
         builder.add_option("-DSeacas_ENABLE_SECONDARY_TESTED_CODE:BOOL=ON")
         builder.add_option("-DTPL_BLAS_LIBRARIES=" + builder.env["BLAS_LIBRARIES"])
-        ext = ".a"
-        if builder.build_shared:
-            ext = ".so"
+        ext = utils.get_library_extension(builder.build_shared)
         builder.add_option(
             "-DTPL_PARMETIS_LIBRARIES="
             + builder.env["PARMETIS_DIR"]

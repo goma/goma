@@ -28,7 +28,12 @@ class Package(packages.CMakePackage):
         else:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
         builder.add_option("-DBLAS_LIBRARIES=" + builder.env["BLAS_LIBRARIES"])
-        builder.add_option("-DLAPACK_LIBRARIES=" + builder.env["LAPACK_LIBRARIES"] + ";" + builder.env["BLAS_LIBRARIES"])
+        builder.add_option(
+            "-DLAPACK_LIBRARIES="
+            + builder.env["LAPACK_LIBRARIES"]
+            + ";"
+            + builder.env["BLAS_LIBRARIES"]
+        )
         builder.add_option(
             "-DSUITESPARSE_ENABLE_PROJECTS=suitesparse_config;amd;camd;ccolamd;colamd;cholmod;umfpack"
         )
