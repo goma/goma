@@ -8,12 +8,6 @@
 #include <string>
 #include <utility>
 
-#ifdef GOMA_ENABLE_EPETRA
-#include "Epetra_DataAccess.h"
-#include "Teuchos_Ptr.hpp"
-#include "Thyra_EpetraLinearOp.hpp"
-#include "Thyra_EpetraThyraWrappers.hpp"
-#endif
 #include "Stratimikos_DefaultLinearSolverBuilder.hpp"
 #include "Teuchos_ENull.hpp"
 #include "Teuchos_FancyOStream.hpp"
@@ -49,9 +43,13 @@
 #ifdef GOMA_ENABLE_EPETRA
 #include "EpetraExt_RowMatrixOut.h"
 #include "EpetraExt_VectorOut.h"
+#include "Epetra_DataAccess.h"
 #include "Epetra_Map.h"
 #include "Epetra_RowMatrix.h"
 #include "Epetra_Vector.h"
+#include "Teuchos_Ptr.hpp"
+#include "Thyra_EpetraLinearOp.hpp"
+#include "Thyra_EpetraThyraWrappers.hpp"
 #include "linalg/sparse_matrix_epetra.h"
 #endif
 
