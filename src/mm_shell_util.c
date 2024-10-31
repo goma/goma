@@ -4028,7 +4028,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dbl q[DIM], ev[DIM], pgrad, pg_cmp[DIM], dev_dpg[DIM][DIM];
     dbl v_avg[DIM], dq_dT = 0., mu_diss = 0., dmu_diss_dT = 0., dmu_diss_dpgrad = 0.;
     double DQ_DH[DIM];
-    double D_Q_DF[DIM][MDE], D_V_DF[DIM][MDE], DGRADP_DF[DIM][MDE], DGRADP_DK = 0.;
+    double D_Q_DF[DIM][MDE], D_V_DF[DIM][MDE], DGRADP_DF[DIM][MDE];
+    // This seems unused at the moment
+    // double DGRADP_DK = 0.;
     double DGRADP_DX[DIM][DIM][MDE], DGRADP_DNORMAL[DIM][DIM][MDE];
     double DGRADP_DV[DIM][DIM][MDE];
     double D_Q_DGRADP[DIM][DIM], D_V_DGRADP[DIM][DIM];
@@ -4066,7 +4068,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           if (do_convection)
             DGRADP_DF[i][j] += D_CONV_DF[i][j];
         }
-        DGRADP_DK += GRADH[i] * mp->surface_tension;
+        // DGRADP_DK += GRADH[i] * mp->surface_tension;
       }
       for (j = 0; j < dim; j++) {
         for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {

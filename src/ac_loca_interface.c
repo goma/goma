@@ -2810,8 +2810,6 @@ double gsum_double_conwrap(double sum)
  *    The global sum is returned on all processors.
  */
 {
-  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
-
   if (Num_Proc > 1)
     return goma_gsum_double(sum);
   else
@@ -2840,9 +2838,10 @@ int gmax_int_conwrap(int max)
     return max;
 }
 
+#ifndef GOMA_ENABLE_AZTEC
 // Random number generator from Park / Miller 1988
 // This seems to be the same one that Aztec uses
-int park_miller_rng(int *seed) {
+static int park_miller_rng(int *seed) {
   int a = 16807;
   int m = 2147483647;
   int q = 127773; // m / a
@@ -2874,6 +2873,7 @@ static void random_vector(double *x, int numOwnedUnks) {
     x[i] = park_miller_rng(&seed);
   }
 }
+#endif
 
 /*****************************************************************************/
 /*****************************************************************************/
