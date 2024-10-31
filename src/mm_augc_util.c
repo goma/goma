@@ -21,9 +21,9 @@
 #ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
 #endif
-#include "dp_utils.h"
 #include "bc_contact.h"
 #include "dp_types.h"
+#include "dp_utils.h"
 #include "dpi.h"
 #include "el_elm.h"
 #include "el_geom.h"

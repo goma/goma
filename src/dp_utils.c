@@ -499,9 +499,10 @@ void print_sync_start(int do_print)
 {
   if (Num_Proc > 1) {
     int tag = 155;
+    static int nullbuf = 0;
     static MPI_Request request;
-    if (ProcID +1 < Num_Proc) {
-      MPI_Isend(&do_print, 1, MPI_INT, ProcID + 1, tag, MPI_COMM_WORLD, &request);
+    if (ProcID + 1 < Num_Proc) {
+      MPI_Isend(&nullbuf, 1, MPI_INT, ProcID + 1, tag, MPI_COMM_WORLD, &request);
     }
 
     if (do_print) {
@@ -525,10 +526,8 @@ void print_sync_end(int do_print)
   if (Num_Proc > 1) {
     int nullbuf = 0;
     int tag = 155;
-    for (int proc = Num_Proc -1; proc >= 0; proc--) {
-      if (ProcID == proc) {
-        MPI_Recv(&nullbuf, 1, MPI_INT, proc - 1, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      }
+    if (ProcID > 0) {
+      MPI_Recv(&nullbuf, 1, MPI_INT, ProcID - 1, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
   }
   if (do_print) {

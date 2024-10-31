@@ -1,10 +1,5 @@
 #include "mm_shell_util.h"
 #ifdef GOMA_ENABLE_METIS
-#include <exodusII.h>
-#include <metis.h>
-#include <netcdf.h>
-#include <stdlib.h>
-#include <string.h>
 #include "base_mesh.h"
 #include "el_elm.h"
 #include "el_geom.h"
@@ -22,6 +17,11 @@
 #include "rf_fem.h"
 #include "rf_io.h"
 #include "std.h"
+#include <exodusII.h>
+#include <metis.h>
+#include <netcdf.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define CHECK_EX_ERROR(err, format, ...)                              \
   do {                                                                \

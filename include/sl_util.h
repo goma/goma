@@ -77,12 +77,12 @@ struct GomaLinearSolverData;
 #define SEGMENT_SEARCH 0 /* Conventional search method on segments from connected nodes */
 
 #ifndef GOMA_ENABLE_AZTEC
-#define AZ_normal           0 /* normal termination                           */
-#define AZ_param            1 /* requested option not implemented             */
-#define AZ_breakdown        2 /* numerical breakdown during the computation   */
-#define AZ_maxits           3 /* maximum iterations exceeded                  */
-#define AZ_loss             4 /* loss of precision                            */
-#define AZ_ill_cond         5 /* GMRES hessenberg is ill-conditioned          */
+#define AZ_normal    0 /* normal termination                           */
+#define AZ_param     1 /* requested option not implemented             */
+#define AZ_breakdown 2 /* numerical breakdown during the computation   */
+#define AZ_maxits    3 /* maximum iterations exceeded                  */
+#define AZ_loss      4 /* loss of precision                            */
+#define AZ_ill_cond  5 /* GMRES hessenberg is ill-conditioned          */
 #endif
 
 /*

@@ -155,7 +155,6 @@ extern double dsigma_dx[DIM][MDE];
 static double slip_coefficient(
     const double, const double, const double, const double, double *, const double, const double);
 
-
 #ifndef FSUB_TYPE
 #define FSUB_TYPE void
 #endif

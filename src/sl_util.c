@@ -423,9 +423,9 @@ void set_aztec_options_params(int options[], double params[]) {
   } else if (strcmp(Matrix_Solver, "ma28") == 0) {
     Linear_Solver = MA28;
     options[AZ_solver] = -1;
-  } else 
-#endif 
-  if (strcmp(Matrix_Solver, "lu") == 0) {
+  } else
+#endif
+      if (strcmp(Matrix_Solver, "lu") == 0) {
     Linear_Solver = SPARSE13a;
     options[AZ_solver] = -1;
   }

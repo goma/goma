@@ -9,11 +9,11 @@
 #include <utility>
 
 #ifdef GOMA_ENABLE_EPETRA
-#include "Teuchos_Ptr.hpp"
 #include "Epetra_DataAccess.h"
+#include "Teuchos_Ptr.hpp"
 #include "Thyra_EpetraLinearOp.hpp"
 #include "Thyra_EpetraThyraWrappers.hpp"
-#endif 
+#endif
 #include "Stratimikos_DefaultLinearSolverBuilder.hpp"
 #include "Teuchos_ENull.hpp"
 #include "Teuchos_FancyOStream.hpp"

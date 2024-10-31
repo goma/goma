@@ -26,7 +26,6 @@
 #define GOMA_SL_AMESOS_INTERFACE_CC
 #endif
 
-
 #if defined(PARALLEL) && !defined(EPETRA_MPI)
 #define EPETRA_MPI
 #endif

@@ -18,11 +18,11 @@
 /* GOMA include files */
 #define GOMA_MM_FILL_TURBULENT_C
 #include "density.h"
-#include "mm_fill_stabilization.h"
 #include "el_elm.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
+#include "mm_fill_stabilization.h"
 #include "mm_fill_terms.h"
 #include "mm_fill_turbulent.h"
 #include "mm_fill_util.h"
