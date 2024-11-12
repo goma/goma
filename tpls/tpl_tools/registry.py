@@ -58,7 +58,7 @@ class Config(object):
                     if k == dynamic_library_path():
                         continue
                     if k == "CMAKE_PREFIX_PATH":
-                        f.write("export {}=".format(dynamic_library_path()))
+                        f.write("set -x {} ".format(dynamic_library_path()))
                         for item in self.environment[k]:
                             for lib in ["lib", "lib64"]:
                                 if os.path.isdir(os.path.join(item, lib)):
@@ -77,7 +77,7 @@ class Config(object):
                         f.write("${}".format(k))
                         f.write("\n")
                     else:
-                        f.write("export {}=".format(k))
+                        f.write("set -x {} ".format(k))
                         f.write("{}".format(self.environment[k]))
                         f.write("\n")
 
