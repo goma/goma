@@ -24,13 +24,13 @@ class Config(object):
         else:
             self.environment[variable] = value
 
-    def write_config(self, file, shell="bash"):
+    def write_config(self, file, shell="bash", write_dynamic_library_path=True):
         with open(file, "w") as f:
             if shell == "bash":
                 for k in self.environment.keys():
                     if k == dynamic_library_path():
                         continue
-                    if k == "CMAKE_PREFIX_PATH":
+                    if k == "CMAKE_PREFIX_PATH" and write_dynamic_library_path:
                         f.write("export {}=".format(dynamic_library_path()))
                         for item in self.environment[k]:
                             for lib in ["lib", "lib64"]:
@@ -57,7 +57,7 @@ class Config(object):
                 for k in self.environment.keys():
                     if k == dynamic_library_path():
                         continue
-                    if k == "CMAKE_PREFIX_PATH":
+                    if k == "CMAKE_PREFIX_PATH" and write_dynamic_library_path:
                         f.write("set -x {} ".format(dynamic_library_path()))
                         for item in self.environment[k]:
                             for lib in ["lib", "lib64"]:

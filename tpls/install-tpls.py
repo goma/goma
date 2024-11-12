@@ -116,6 +116,13 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.set_defaults(skip_ssl_verify=False)
+    parser.add_argument(
+        "--write-dynamic-library-path",
+        help="Writes (DY)LD_LIBRARY_PATH to config, default is off",
+        dest="write_dynamic_library_path",
+        action="store_true",
+    )
+    parser.set_defaults(write_dynamic_library_path=False)
 
     for p in packages:
         pm = importlib.import_module("tpl_tools." + ".".join(["packages", p]))
@@ -249,12 +256,12 @@ if __name__ == "__main__":
     tpl_registry.config.write_config(os.path.join(install_dir, "config.sh"))
     logger.log(
         "Bash config written to {}, source with bash".format(
-            os.path.join(install_dir, "config.sh")
+            os.path.join(install_dir, "config.sh"), args.write_dynamic_library_path
         )
     )
 
     tpl_registry.config.write_config(
-        os.path.join(install_dir, "config.fish"), shell="fish"
+        os.path.join(install_dir, "config.fish"), shell="fish", args.write_dynamic_library_path
     )
     logger.log(
         "Fish config written to {}, source with fish".format(
