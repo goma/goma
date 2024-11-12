@@ -253,15 +253,15 @@ if __name__ == "__main__":
                 print("Package {} not built, contact developers".format(pc.name), file=sys.stderr)
                 exit(1)
             build.register()
-    tpl_registry.config.write_config(os.path.join(install_dir, "config.sh"))
+    tpl_registry.config.write_config(os.path.join(install_dir, "config.sh"), "bash", args.write_dynamic_library_path)
     logger.log(
         "Bash config written to {}, source with bash".format(
-            os.path.join(install_dir, "config.sh"), args.write_dynamic_library_path
+            os.path.join(install_dir, "config.sh")
         )
     )
 
     tpl_registry.config.write_config(
-        os.path.join(install_dir, "config.fish"), shell="fish", args.write_dynamic_library_path
+        os.path.join(install_dir, "config.fish"), "fish", args.write_dynamic_library_path
     )
     logger.log(
         "Fish config written to {}, source with fish".format(
