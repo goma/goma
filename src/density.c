@@ -807,14 +807,24 @@ double density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     dbl alpha_g = mp->u_density[3];
     dbl cure_enable = mp->u_density[4];
 
-    if (fv->c[0] >= cure_enable) {
+    int ConstitutiveEquation = gn_glob[ei[pg->imtrx]->mn]->ConstitutiveEquation;
+    int species_no = 0;
+
+    if (ConstitutiveEquation == CURE || ConstitutiveEquation == EPOXY ||
+        ConstitutiveEquation == FILLED_EPOXY || ConstitutiveEquation == FOAM_PMDI_10) {
+      species_no = gn_glob[ei[pg->imtrx]->mn]->cure_species_no;
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown constitutive equation for density model CURE_SHRINKAGE");
+    }
+
+    if (fv->c[species_no] >= cure_enable) {
       rho = rho_l + ((rho_s - rho_l) / (alpha_m - alpha_g)) * (fv->c[0] - alpha_g);
 
       if (d_rho != NULL) {
         var = MASS_FRACTION;
         if (pd->v[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            d_rho->C[0][j] = ((rho_s - rho_l) / (alpha_m - alpha_g)) * bf[var]->phi[j];
+            d_rho->C[species_no][j] = ((rho_s - rho_l) / (alpha_m - alpha_g)) * bf[var]->phi[j];
           }
         }
       }

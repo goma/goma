@@ -553,8 +553,17 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
     dbl alpha_m = mp->u_density[2];
     dbl alpha_g = mp->u_density[3];
     dbl cure_enable = mp->u_density[4];
+    int ConstitutiveEquation = gn_glob[ei[pg->imtrx]->mn]->ConstitutiveEquation;
+    int species_no = 0;
 
-    if (fv->c[0] >= cure_enable) {
+    if (ConstitutiveEquation == CURE || ConstitutiveEquation == EPOXY ||
+        ConstitutiveEquation == FILLED_EPOXY || ConstitutiveEquation == FOAM_PMDI_10) {
+      species_no = gn_glob[ei[pg->imtrx]->mn]->cure_species_no;
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown constitutive equation for density model CURE_SHRINKAGE");
+    }
+
+    if (fv->c[species_no] >= cure_enable) {
       rho = rho_l + ((rho_s - rho_l) / (alpha_m - alpha_g)) * (fv->c[0] - alpha_g);
 
       /* Now do sensitivies */
@@ -563,7 +572,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
       if (doJac) {
         if (pd->v[pg->imtrx][var]) {
           double drhodC = ((rho_s - rho_l) / (alpha_m - alpha_g));
-          propertyJac_addEnd(densityJac, MASS_FRACTION, matID, 0, drhodC, rho);
+          propertyJac_addEnd(densityJac, MASS_FRACTION, matID, species_no, drhodC, rho);
         }
       }
     } else {

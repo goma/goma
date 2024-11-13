@@ -9913,6 +9913,26 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
           }
         }
+      } else if (mp->SpeciesSourceModel[w] == EPOXY_LINEAR_EXP) {
+        err = epoxy_linear_exp_species_source(w, mp->u_species_source[w]);
+        st->MassSource[w] = mp->species_source[w];
+
+        if (af->Assemble_Jacobian) {
+          var = TEMPERATURE;
+          if (pd->v[pg->imtrx][var]) {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+            }
+          }
+
+          var = MASS_FRACTION;
+          if (pd->v[pg->imtrx][MASS_FRACTION]) {
+            var_offset = MAX_VARIABLE_TYPES + w;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              st->d_MassSource_dc[w][w][j] = mp->d_species_source[var_offset] * bf[var]->phi[j];
+            }
+          }
+        }
 
       } else if (mp->SpeciesSourceModel[w] == FOAM_EPOXY) {
         err = foam_epoxy_species_source(w, mp->u_species_source[w], tt, dt);
