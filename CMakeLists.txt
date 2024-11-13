@@ -1043,6 +1043,9 @@ set_source_files_properties(
   src/dp_ghost.cpp src/sl_epetra_util.cpp src/adapt/omega_h_interface.cpp
   PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 
+# Most people probably want this for use with Goma TPLs
+set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
+
 add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
 target_include_directories(goma_user SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
@@ -1158,6 +1161,9 @@ if(ENABLE_WARNINGS)
       -Wno-unused-parameter
       -Wimplicit-fallthrough>)
 endif()
+
+
+include(GNUInstallDirs)
 
 install(
   TARGETS goma_exe fix_exe

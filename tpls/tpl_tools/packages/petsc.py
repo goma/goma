@@ -5,8 +5,8 @@ import os
 class Package(packages.AutotoolsPackage):
     def __init__(self):
         self.name = "petsc"
-        self.version = "3.21.4"
-        self.sha256 = "a9ae076d4617c7d84ce2bed37194022319c19f19b3930edf148b2bc8ecf2248d"
+        self.version = "3.22.1"
+        self.sha256 = "7117d3ae6827f681ed9737939d4e86896b4751e27cca941bb07e5703f19a0a7b"
         self.filename = "petsc-" + self.version + ".tar.gz"
         self.url = (
             "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-"
@@ -72,3 +72,4 @@ class Package(packages.AutotoolsPackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("PETSC_DIR", builder.install_dir())
+        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())

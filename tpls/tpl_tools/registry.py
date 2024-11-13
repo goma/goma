@@ -1,4 +1,11 @@
 import os
+import sys
+
+def dynamic_library_path():
+    if sys.platform == "darwin":
+        return "DYLD_LIBRARY_PATH"
+    else:
+        return "LD_LIBRARY_PATH"
 
 
 class Config(object):
@@ -17,10 +24,24 @@ class Config(object):
         else:
             self.environment[variable] = value
 
-    def write_config(self, file, shell="bash"):
+    def write_config(self, file, shell="bash", write_dynamic_library_path=True):
         with open(file, "w") as f:
             if shell == "bash":
                 for k in self.environment.keys():
+                    if k == dynamic_library_path():
+                        continue
+                    if k == "CMAKE_PREFIX_PATH" and write_dynamic_library_path:
+                        f.write("export {}=".format(dynamic_library_path()))
+                        for item in self.environment[k]:
+                            for lib in ["lib", "lib64"]:
+                                if os.path.isdir(os.path.join(item, lib)):
+                                    f.write(item + "/" + lib)
+                                    f.write(":")
+                        if dynamic_library_path() in self.environment.keys():
+                            for item in self.environment[dynamic_library_path()]:
+                                f.write(item)
+                                f.write(":")
+                        f.write("${}\n".format(dynamic_library_path()))
                     if type(self.environment[k]) == list:
                         f.write("export {}=".format(k))
                         for item in self.environment[k]:
@@ -34,6 +55,20 @@ class Config(object):
                         f.write("\n")
             elif shell == "fish":
                 for k in self.environment.keys():
+                    if k == dynamic_library_path():
+                        continue
+                    if k == "CMAKE_PREFIX_PATH" and write_dynamic_library_path:
+                        f.write("set -x {} ".format(dynamic_library_path()))
+                        for item in self.environment[k]:
+                            for lib in ["lib", "lib64"]:
+                                if os.path.isdir(os.path.join(item, lib)):
+                                    f.write(item + "/" + lib)
+                                    f.write(" ")
+                        if dynamic_library_path() in self.environment.keys():
+                            for item in self.environment[dynamic_library_path()]:
+                                f.write(item)
+                                f.write(" ")
+                        f.write("${}\n".format(dynamic_library_path()))
                     if type(self.environment[k]) == list:
                         f.write("set -x {} ".format(k))
                         for item in self.environment[k]:
@@ -42,7 +77,7 @@ class Config(object):
                         f.write("${}".format(k))
                         f.write("\n")
                     else:
-                        f.write("export {}=".format(k))
+                        f.write("set -x {} ".format(k))
                         f.write("{}".format(self.environment[k]))
                         f.write("\n")
 
