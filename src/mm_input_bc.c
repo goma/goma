@@ -2404,6 +2404,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
        */
     case POROUS_GAS_BC:
     case YFLUX_DISC_RXN_BC:
+    case SHELL_CONC_LS_BC:
       if (fscanf(ifp, "%d %d %d %lf %lf", &BC_Types[ibc].BC_Data_Int[0],
                  &BC_Types[ibc].BC_Data_Int[1], &BC_Types[ibc].BC_Data_Int[2],
                  &BC_Types[ibc].BC_Data_Float[0], &BC_Types[ibc].BC_Data_Float[1]) != 5) {
