@@ -510,8 +510,6 @@ void shell_n_dot_curv_bc(double func[DIM],
 void shell_conc_ls_bc(double func[DIM],
                       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                       const int spec_id,     /* Species number */
-                      const int LS_block,    /* Level-set Block number */
-                      const int nonLS_block, /* Species Block number */
                       const double conc_liq,
                       const double conc_gas,
                       const int bc_id,   /* BC_Name */
@@ -567,40 +565,34 @@ void shell_conc_ls_bc(double func[DIM],
 
   /* Calculate the flow rate and its sensitivties */
 
-  if (Current_EB_ptr->Elem_Blk_Id == LS_block) {
-    /* do nothing */
-  } else if (Current_EB_ptr->Elem_Blk_Id == nonLS_block) {
-    /* Add contributions from level set side of boundary to flux */
+  /* Add contributions from level set side of boundary to flux */
 
-    load_lsi_adjmatr(ls->Length_Scale);
+  load_lsi_adjmatr(ls->Length_Scale);
 
-    /* Calculate the residual contribution        */
-    func[0] += fv->c[spec_id];
-    func[0] -= conc_liq * (1. - lsi->H) + conc_gas * lsi->H;
+  /* Calculate the residual contribution        */
+  func[0] += fv->c[spec_id];
+  func[0] -= conc_liq * (1. - lsi->H) + conc_gas * lsi->H;
 
-    if (af->Assemble_Jacobian) {
-      /*
-       * J_Conc_DF
-       */
-      var = FILL;
-      if (pd->v[pg->imtrx][var] && lsi->near) {
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          if (pd->e[pg->imtrx][var]) {
-            d_func[0][var][j] += (conc_liq - conc_gas) * lsi->d_H_dF[j];
-          }
-        } // End of loop over DOFs (j)
-      }   // End of FILL assembly
-      var = MASS_FRACTION;
-      if (pd->v[pg->imtrx][var]) {
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          if (pd->e[pg->imtrx][var]) {
-            d_func[0][MAX_VARIABLE_TYPES + spec_id][j] += bf[var]->phi[j];
-          }
+  if (af->Assemble_Jacobian) {
+    /*
+     * J_Conc_DF
+     */
+    var = FILL;
+    if (pd->v[pg->imtrx][var] && lsi->near) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->e[pg->imtrx][var]) {
+          d_func[0][var][j] += (conc_liq - conc_gas) * lsi->d_H_dF[j];
+        }
+      } // End of loop over DOFs (j)
+    }   // End of FILL assembly
+    var = MASS_FRACTION;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->e[pg->imtrx][var]) {
+          d_func[0][MAX_VARIABLE_TYPES + spec_id][j] += bf[var]->phi[j];
         }
       }
     }
-  } else {
-    GOMA_EH(GOMA_ERROR, "Cannot find matching block id in problem.");
   }
   /* clean-up */
   safe_free((void *)n_dof);
