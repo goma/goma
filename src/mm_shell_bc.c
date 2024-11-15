@@ -509,7 +509,7 @@ void shell_n_dot_curv_bc(double func[DIM],
 /*****************************************************************************/
 void shell_conc_ls_bc(double func[DIM],
                       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                      const int spec_id,     /* Species number */
+                      const int spec_id, /* Species number */
                       const double conc_liq,
                       const double conc_gas,
                       const int bc_id,   /* BC_Name */
