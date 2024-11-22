@@ -14197,7 +14197,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
           diff = 0.0;
           if (curv_near) {
             if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-              if (!lsi->near) {
+              if (!lsi->near && mp->Lub_Curv_Modulation) {
                 diff += (-SGN(fv->F) / lsi->alpha * phi_j) * diff1 * K_diff * det_J * wt * h3 *
                         pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
               }
@@ -14214,7 +14214,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
                 div += LubAux->dop_curv_df[j] * phi_i;
               }
               div *= curvX * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
-              if (!lsi->near) {
+              if (!lsi->near && mp->Lub_Curv_Modulation) {
                 div += (-SGN(fv->F) / lsi->alpha * phi_j) * div1 * det_J * wt * h3 *
                        pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
               }
