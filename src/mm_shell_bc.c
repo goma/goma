@@ -383,7 +383,7 @@ void shell_n_dot_curv_bc(double func[DIM],
   }
 
   /* Prepare weighting for artificial diffusion term */
-  const double K_diff = mp->Lub_Curv_Diff;
+  double K_diff = mp->Lub_Curv_Diff;
   if (mp->Lub_Curv_Modulation) {
     curvX = 0.;
     curv_near = 0;
@@ -395,6 +395,8 @@ void shell_n_dot_curv_bc(double func[DIM],
         curvX = 2. - SGN(fv->F) * fv->F / lsi->alpha;
       }
     }
+    if (!mp->Lub_Isotropic_Curv_Diffusion)
+      K_diff *= curvX;
   } else {
     curvX = 1.;
     curv_near = 1;
@@ -482,7 +484,7 @@ void shell_n_dot_curv_bc(double func[DIM],
   } /* end of if Assemble_Jacobian */
 
   /* Calculate the residual contribution        */
-  if (curv_near) {
+  if (curv_near || !mp->Lub_Curv_Modulation) {
     if (ibc_flag == -1) {
       func[0] -= curvX * cos(M_PIE * theta_deg / 180.);
     } else if (ibc_flag == -2) {
