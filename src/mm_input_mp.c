@@ -10557,7 +10557,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       SPF(es, "%s = %s", search_string, "off");
     } else {
       mat_ptr->Lub_Isotropic_Curv_Diffusion = TRUE;
-      SPF(es, "\t(%s = %s)", search_string, "off");
+      SPF(es, "\t(%s = %s)", search_string, "on");
     }
     ECHO(es, echo_file);
 
