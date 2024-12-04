@@ -9786,16 +9786,21 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         break;
       case R_SHELL_LUB_CURV:
       case R_SHELL_LUB_CURV_2:
-        if (fscanf(ifp, "%lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+        if (fscanf(ifp, "%lf %lf %lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
-                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)])) != 3) {
-          sr = sprintf(err_msg, "Provide 3 equation term multipliers (mas,dif,div) on %s in %s",
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)])) != 5) {
+          sr = sprintf(err_msg,
+                       "Provide 5 equation term multipliers (mas,adv,bnd,dif,div) on %s in %s",
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
           GOMA_EH(GOMA_ERROR, err_msg);
         }
 
-        SPF(endofstring(echo_string), "\t %.4g %.4g %.4g",
+        SPF(endofstring(echo_string), "\t %.4g %.4g %.4g %.4g %.4g",
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+            pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+            pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
             pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
             pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]);
         break;
