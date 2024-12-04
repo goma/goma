@@ -6675,6 +6675,26 @@ void rd_solver_specs(FILE *ifp, char *input) {
     Epsilon[0][2] = 1.0e+10;
   }
 
+  iread = look_for_optional(ifp, "Residual Relative Tolerance", input, '=');
+  if (iread == 1) {
+    if (fscanf(ifp, "%le", &upd->Residual_Relative_Tol) != 1) {
+      GOMA_EH(GOMA_ERROR, "error reading Residual Relative Tolerance");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Residual Relative Tolerance",
+             upd->Residual_Relative_Tol);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->Residual_Relative_Tol = 1e10;
+  }
+
+  for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    Epsilon[imtrx][0] = Epsilon[0][0];
+  }
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Normalized Residual Tolerance",
+           Epsilon[0][0]);
+  ECHO(echo_string, echo_file);
+
+
   for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
     Epsilon[imtrx][2] = Epsilon[0][2];
   }

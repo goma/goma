@@ -105,52 +105,55 @@ static void stratimikos_solve_setup(RCP<const Thyra::LinearOpBase<double>> A,
                                     std::string stratimikos_file,
                                     bool echo_params) {
 
-  if (solver_data->solver.is_null()) {
-    // Set up solver (only once per matrix)
+  // Set up solver (only once per matrix)
+  // if (solver_data->solver.is_null()) {
+  // Setting up only once per matrix seems to cause issues with Belos solves
+  // Maybe missing a bug or logic reasoning as to why.
+  // For now just resetup the solver every iteration.
 
-    RCP<Teuchos::ParameterList> solverParams = solver_data->solverParams;
+  RCP<Teuchos::ParameterList> solverParams = solver_data->solverParams;
 
-    // Set up base builder
-    Stratimikos::DefaultLinearSolverBuilder linearSolverBuilder;
+  // Set up base builder
+  Stratimikos::DefaultLinearSolverBuilder linearSolverBuilder;
 
 #ifdef GOMA_ENABLE_TEKO
-    Teko::addTekoToStratimikosBuilder(linearSolverBuilder);
+  Teko::addTekoToStratimikosBuilder(linearSolverBuilder);
 #endif
 
-    linearSolverBuilder.setParameterList(solverParams);
+  linearSolverBuilder.setParameterList(solverParams);
 
-    auto valid_params = linearSolverBuilder.getValidParameters();
-    Teuchos::writeParameterListToYamlFile(*valid_params, "valid_params.yaml");
+  // auto valid_params = linearSolverBuilder.getValidParameters();
+  // Teuchos::writeParameterListToYamlFile(*valid_params, "valid_params.yaml");
 
-    // set up solver factory using base/params
-    RCP<Thyra::LinearOpWithSolveFactoryBase<double>> solverFactory =
-        linearSolverBuilder.createLinearSolveStrategy("");
-    solver_data->solverFactory = solverFactory;
+  // set up solver factory using base/params
+  RCP<Thyra::LinearOpWithSolveFactoryBase<double>> solverFactory =
+      linearSolverBuilder.createLinearSolveStrategy("");
+  solver_data->solverFactory = solverFactory;
+  // set solver verbosity
+  // solverFactory->setDefaultVerbLevel(Teuchos::VERB_LOW);
+  // solverFactory->setParameterList(solverParams);
 
-    if (echo_params) {
-      std::string echo_file(stratimikos_file);
-      echo_file = "echo_" + echo_file;
-      linearSolverBuilder.writeParamsFile(*solverFactory, echo_file);
+  if (echo_params) {
+    std::string echo_file(stratimikos_file);
+    echo_file = "echo_" + echo_file;
+    linearSolverBuilder.writeParamsFile(*solverFactory, echo_file);
 #ifdef GOMA_STRATIMIKOS_WRITE_VALID_PARAMS
-      if (imtrx == 0) {
-        auto valid_params = linearSolverBuilder.getValidParameters();
-        Teuchos::writeParameterListToYamlFile(*valid_params, "stratimikos_valid_params.yaml");
-      }
-#endif
+    if (imtrx == 0) {
+      auto valid_params = linearSolverBuilder.getValidParameters();
+      Teuchos::writeParameterListToYamlFile(*valid_params, "stratimikos_valid_params.yaml");
     }
-
-    Teuchos::RCP<Teuchos::FancyOStream> outstream = Teuchos::VerboseObjectBase::getDefaultOStream();
-    // set output stream
-    solverFactory->setOStream(outstream);
-
-    // set solver verbosity
-    solverFactory->setDefaultVerbLevel(Teuchos::VERB_NONE);
-
-    solver_data->solver = solverFactory->createOp();
-    Thyra::initializeOp(*(solver_data->solverFactory), A, solver_data->solver.ptr());
-  } else {
-    Thyra::initializeAndReuseOp(*(solver_data->solverFactory), A, solver_data->solver.ptr());
+#endif
   }
+
+  Teuchos::RCP<Teuchos::FancyOStream> outstream = Teuchos::VerboseObjectBase::getDefaultOStream();
+  // set output stream
+  solverFactory->setOStream(outstream);
+
+  solver_data->solver = solverFactory->createOp();
+  Thyra::initializeOp(*(solver_data->solverFactory), A, solver_data->solver.ptr());
+  // } else {
+  //   Thyra::initializeAndReuseOp(*(solver_data->solverFactory), A, solver_data->solver.ptr());
+  // }
 }
 
 extern "C" {
@@ -166,7 +169,7 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
   auto *tpetra_data = static_cast<TpetraSparseMatrix *>(matrix->data);
   bool success = true;
   bool verbose = true;
-  static bool param_echo[MAX_NUM_MATRICES] = {false};
+  static bool param_echo[MAX_NUM_MATRICES] = {true};
 
   if (ams->SolverData == NULL) {
     ams->SolverData = new Stratimikos_Solver_Data();
@@ -208,7 +211,8 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
 
     // Get parameters from file
     if (solver_data->solverParams.is_null()) {
-      if (get_file_extension(stratimikos_file[imtrx]) == ".yaml") {
+      std::string substring = get_file_extension(stratimikos_file[imtrx]);
+      if (get_file_extension(stratimikos_file[imtrx]) == "yaml") {
         solver_data->solverParams = Teuchos::getParametersFromYamlFile(stratimikos_file[imtrx]);
       } else {
         solver_data->solverParams = Teuchos::getParametersFromXmlFile(stratimikos_file[imtrx]);
@@ -217,7 +221,7 @@ int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
 
     stratimikos_solve_setup(solver_data->A, solver_data, stratimikos_file[imtrx],
                             param_echo[imtrx]);
-    param_echo[imtrx] = true;
+    param_echo[imtrx] = false;
 
     Thyra::SolveStatus<double> status =
         Thyra::solve<double>(*(solver_data->solver), Thyra::NOTRANS, *b, x.ptr());
@@ -297,9 +301,12 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
 
     // Get parameters from file
     if (solver_data->solverParams.is_null()) {
+      std::string substring = get_file_extension(stratimikos_file[imtrx]);
       if (get_file_extension(stratimikos_file[imtrx]) == ".yaml") {
+        std::cout << stratimikos_file[imtrx] << " filename\n";
         solver_data->solverParams = Teuchos::getParametersFromYamlFile(stratimikos_file[imtrx]);
       } else {
+        std::cout << stratimikos_file[imtrx] << " filename\n";
         solver_data->solverParams = Teuchos::getParametersFromXmlFile(stratimikos_file[imtrx]);
       }
     }
