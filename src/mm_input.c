@@ -9801,7 +9801,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
                       "Using default equation term multipliers (mass,adv,bnd,diff,div) on %s in %s",
                       EQ_Name[ce].name1, pd_ptr->MaterialName);
           GOMA_WH(GOMA_ERROR, err_msg);
-          DPRINTF(stderr, "\t %s %.4g %.4g %.4g \n", EQ_Name[ce].name1,
+          DPRINTF(stderr, "\t %s %.4g %.4g %.4g %.4g %.4g\n", EQ_Name[ce].name1,
                   pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
                   pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
                   pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
