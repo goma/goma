@@ -2245,7 +2245,7 @@ int assemble_moments(double time, /* present time value */
     GOMA_EH(err, "Error in calculating effective convection velocity_rs");
   }
 
-  bool taylor_galerkin = false;
+  bool taylor_galerkin = true;
 
   supg = 0.0;
   if (mp->Momentwt_funcModel == SUPG) {
