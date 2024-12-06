@@ -359,6 +359,9 @@ struct Material_Properties {
   int Momentwt_funcModel;
   dbl Momentwt_func;
 
+  int MomentTime_funcModel;
+  dbl MomentTime_func;
+
   int MomentSSPG_funcModel;
   dbl MomentSSPG_func;
 
