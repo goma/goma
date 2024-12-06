@@ -2250,7 +2250,7 @@ int assemble_moments(double time, /* present time value */
   supg = 0.0;
   if (mp->Momentwt_funcModel == SUPG) {
     supg = mp->Momentwt_func;
-    if (taylor_galerkin) {
+    if (mp->MomentTime_funcModel == TAYLOR_GALERKIN) {
       GOMA_EH(GOMA_ERROR, "Taylor-Galerkin and SUPG can't both be enabled, assemble_moments");
     }
   }
@@ -2409,7 +2409,7 @@ int assemble_moments(double time, /* present time value */
 
         advection = 0.;
         if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-          if (taylor_galerkin) {
+          if (mp->MomentTime_funcModel == TAYLOR_GALERKIN) {
             dbl c_new = 0;
             dbl c_old = 0;
             if (tt == 0.0) {
@@ -2584,7 +2584,7 @@ int assemble_moments(double time, /* present time value */
               advection = 0.;
               if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
                 if (mom == b) {
-                  if (taylor_galerkin) {
+                  if (mp->MomentTime_funcModel == TAYLOR_GALERKIN) {
                     dbl c_new = 0;
                     dbl c_old = 0;
                     if (tt == 0.0) {
@@ -2689,7 +2689,7 @@ int assemble_moments(double time, /* present time value */
               advection = 0.;
               advection_a = 0.;
               if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-                if (taylor_galerkin) {
+                if (mp->MomentTime_funcModel == TAYLOR_GALERKIN) {
                   dbl c_new = 0;
                   if (tt == 0.0) {
                     c_new = 3. / 2.;
@@ -2853,7 +2853,7 @@ int assemble_moments(double time, /* present time value */
                  *
                  */
 
-                if (taylor_galerkin) {
+                if (mp->MomentTime_funcModel == TAYLOR_GALERKIN) {
                   dbl c_new = 0;
                   dbl c_old = 0;
                   if (tt == 0.0) {
