@@ -13870,7 +13870,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
   dbl phi_i, grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
   dbl phi_j, grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
   dbl mass, diff, div, advection;
-  double wt_func, supg = 1.0, h_elem, h_elem_inv;
+  double wt_func, supg = 0., h_elem = 0., h_elem_inv = 0.;
   // const double *vcent = pg_data->v_avg;
 
   /* Bail out fast if there's nothing to do */
@@ -13890,6 +13890,17 @@ int assemble_lubrication_curvature(double time,            /* present time value
   dbl wt = fv->wt;      // Gauss point weight
   dbl h3 = fv->h3;      // Differential volume element
   dbl det_J = fv->sdet; // Jacobian of transformation
+
+  /*
+   * upwinding stuff
+   */
+  if (mp->Lub_Kwt_funcModel == GALERKIN) {
+    supg = 0.;
+  } else if (mp->Lub_Kwt_funcModel == SUPG) {
+    if (!pd->e[pg->imtrx][R_LUBP])
+      GOMA_EH(GOMA_ERROR, " must have lubrication velocity field for shell_energy upwinding");
+    supg = mp->Lub_Kwt_func;
+  }
 
   /* --- Calculate problem parameters ---------------------------------------*/
 
@@ -14428,6 +14439,20 @@ int assemble_lubrication_curvature(double time,            /* present time value
           /* SUPG derivative  */
           wt_func_d = 0.;
           if (supg != 0.) {
+            double wt_func_b = 0.0;
+            double h_elem_deriv = 0.;
+            double h_elem_inv_deriv = 0.;
+            for (a = 0; a < VIM; a++) {
+              if (hsquared[a] != 0.) {
+                for (b = 0; b < VIM; b++) {
+                  h_elem_deriv +=
+                      LubAux->dv_dgradp[a][b] * grad_II_phi_j[b] * LubAux->v_avg[a] / hsquared[a];
+                }
+              }
+            }
+            h_elem_deriv *= 0.25 * h_elem_inv;
+            if (h_elem != 0.)
+              h_elem_inv_deriv = -h_elem_deriv / h_elem / h_elem;
             for (a = 0; a < VIM; a++) {
               wt_func_d += LubAux->dv_avg_dp2[a] * phi_j * grad_II_phi_i[a];
               for (b = 0; b < VIM; b++) {
@@ -14435,6 +14460,10 @@ int assemble_lubrication_curvature(double time,            /* present time value
               }
             }
             wt_func_d *= supg * h_elem_inv;
+            for (a = 0; a < VIM; a++) {
+              wt_func_b += LubAux->v_avg[a] * grad_II_phi_i[a];
+            }
+            wt_func_d += supg * h_elem_inv_deriv * wt_func_b;
           }
 
           mass = 0.0;
