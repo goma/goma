@@ -2146,6 +2146,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case YFLUX_NI_BC:
     case LS_YFLUX_BC:
     case CURRENT_NI_BC: /* RSL 3/9/01 */
+    case SHELL_CONC_LS_BC:
       if (fscanf(ifp, "%d %lf %lf", &BC_Types[ibc].BC_Data_Int[0], &BC_Types[ibc].BC_Data_Float[0],
                  &BC_Types[ibc].BC_Data_Float[1]) != 3) {
         sprintf(err_msg, "Expected 1 int, 2 flts for %s on %sID=%d\n", BC_Types[ibc].desc->name1,

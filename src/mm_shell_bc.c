@@ -76,6 +76,8 @@
  *
  *  shell_n_dot_curv_bc                  void
  *
+ *  shell_conc_ls_bc                  void
+ *
  *
  ******************************************************************************/
 
@@ -381,7 +383,7 @@ void shell_n_dot_curv_bc(double func[DIM],
   }
 
   /* Prepare weighting for artificial diffusion term */
-  const double K_diff = mp->Lub_Curv_Diff;
+  double K_diff = mp->Lub_Curv_Diff;
   if (mp->Lub_Curv_Modulation) {
     curvX = 0.;
     curv_near = 0;
@@ -393,6 +395,8 @@ void shell_n_dot_curv_bc(double func[DIM],
         curvX = 2. - SGN(fv->F) * fv->F / lsi->alpha;
       }
     }
+    if (!mp->Lub_Isotropic_Curv_Diffusion)
+      K_diff *= curvX;
   } else {
     curvX = 1.;
     curv_near = 1;
@@ -480,7 +484,7 @@ void shell_n_dot_curv_bc(double func[DIM],
   } /* end of if Assemble_Jacobian */
 
   /* Calculate the residual contribution        */
-  if (curv_near) {
+  if (curv_near || !mp->Lub_Curv_Modulation) {
     if (ibc_flag == -1) {
       func[0] -= curvX * cos(M_PIE * theta_deg / 180.);
     } else if (ibc_flag == -2) {
@@ -502,7 +506,100 @@ void shell_n_dot_curv_bc(double func[DIM],
   /* clean-up */
   safe_free((void *)n_dof);
 
-} /* END of routine shell_n_dot_flow_bc_confined  */
+} /* END of routine shell_n_dot_curv_bc  */
+/*****************************************************************************/
+/*****************************************************************************/
+void shell_conc_ls_bc(double func[DIM],
+                      double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                      const int spec_id, /* Species number */
+                      const double conc_liq,
+                      const double conc_gas,
+                      const int bc_id,   /* BC_Name */
+                      const double time, /* current time */
+                      const double dt,   /* current time step size */
+                      double xi[DIM],    /* Local stu coordinates */
+                      const Exo_DB *exo)
+/***********************************************************************
+ *
+ * shell_conc_ls_bc():
+ *
+ *  Function which forces concentration to follow level set interface
+ *  This is a STRONG_INT, CROSS_PHASE condition
+ *
+ *         func =   C[specied_id] - [H(F)*C_gas + (1-H(F))*C_liquid]
+ *
+ *  The boundary condition SHELL_CONC_LS employs this function.
+ *
+ * Input:
+ *
+ *  conc_liq      = specified on the bc card as the first float
+ *  conc_gas      = specified on the bc card as the second float
+ *
+ * Output:
+ *
+ *  func[0] = value of the function mentioned above
+ *  d_func[0][varType][lvardof] =
+ *              Derivate of func[0] wrt
+ *              the variable type, varType, and the local variable
+ *              degree of freedom, lvardof, corresponding to that
+ *              variable type.
+ *
+ *
+ *   Author: R. Secor    (11/11/2024)
+ *
+ ********************************************************************/
+{
+  int j, var;
+  int *n_dof = NULL;
+  int dof_map[MDE];
+
+  if (ei[pg->imtrx]->ielem_dim == 3)
+    return;
+
+  if (af->Assemble_LSA_Mass_Matrix) {
+    return;
+  }
+  /*
+   * Prepare geometry
+   */
+  n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+  /* Calculate the flow rate and its sensitivties */
+
+  /* Add contributions from level set side of boundary to flux */
+
+  load_lsi_adjmatr(ls->Length_Scale);
+
+  /* Calculate the residual contribution        */
+  func[0] += fv->c[spec_id];
+  func[0] -= conc_liq * (1. - lsi->H) + conc_gas * lsi->H;
+
+  if (af->Assemble_Jacobian) {
+    /*
+     * J_Conc_DF
+     */
+    var = FILL;
+    if (pd->v[pg->imtrx][var] && lsi->near) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->e[pg->imtrx][var]) {
+          d_func[0][var][j] += (conc_liq - conc_gas) * lsi->d_H_dF[j];
+        }
+      } // End of loop over DOFs (j)
+    }   // End of FILL assembly
+    var = MASS_FRACTION;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->e[pg->imtrx][var]) {
+          d_func[0][MAX_VARIABLE_TYPES + spec_id][j] += bf[var]->phi[j];
+        }
+      }
+    }
+  }
+  /* clean-up */
+  safe_free((void *)n_dof);
+
+} /* END of routine shell_n_dot_curv_bc  */
 /*****************************************************************************/
 /*****************************************************************************/
 

@@ -775,6 +775,7 @@ struct Material_Properties {
   int Lub_Curv_Modulation;
   int Lub_LS_Interpolation;
   int Lub_Curv_Combine;
+  int Lub_Isotropic_Curv_Diffusion;
 
   int Lub_Heat_XferModel;
   double Lub_Heat_Xfer;

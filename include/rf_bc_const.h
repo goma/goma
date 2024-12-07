@@ -708,6 +708,7 @@
 #define RAOULT                  24300000
 #define FLORY                   24700000
 #define FLORY_CC                24800000
+#define SHELL_CONC_LS_BC        24850000
 #define YREACT_BC               30000000
 
 /* Shear rate conditions */

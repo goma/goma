@@ -10544,6 +10544,23 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
+    /*  Shell Lubrication Curvature Field Modulation */
+    strcpy(search_string, "Lubrication Isotropic Curvature Diffusion");
+    model_read = look_for_mat_prop(imp, "Lubrication Isotropic Curvature Diffusion", NULL, NULL,
+                                   NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
+      mat_ptr->Lub_Isotropic_Curv_Diffusion = TRUE;
+      SPF(es, "%s = %s", search_string, "on");
+    } else if (!strcasecmp(model_name, "no") || !strcasecmp(model_name, "false")) {
+      mat_ptr->Lub_Isotropic_Curv_Diffusion = FALSE;
+      SPF(es, "%s = %s", search_string, "off");
+    } else {
+      mat_ptr->Lub_Isotropic_Curv_Diffusion = TRUE;
+      SPF(es, "\t(%s = %s)", search_string, "on");
+    }
+    ECHO(es, echo_file);
+
   } /* End of Lubrication Curvature Section  */
 
   /*

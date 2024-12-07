@@ -617,7 +617,7 @@ double height_function_model(double *H_U,
 
   if (mp->HeightUFunctionModel == WALL_DISTMOD || mp->HeightUFunctionModel == WALL_DISTURB ||
       mp->HeightLFunctionModel == WALL_DISTMOD || mp->HeightLFunctionModel == WALL_DISTURB) {
-    double wall_d, alpha = 0., powerlaw = 1., H_orig = H, F_shift = 0.;
+    double wall_d, alpha = 0., powerlaw = 1., H_orig = H, F_shift = 0., F_stretch = 1.;
     bool Fwall_model = false;
 
     if (mp->HeightUFunctionModel == WALL_DISTMOD) {
@@ -649,9 +649,15 @@ double height_function_model(double *H_U,
     }
 
     if (mp->len_u_heightU_function_constants > 5) {
-      powerlaw = mp->u_heightU_function_constants[5];
+      F_stretch = mp->u_heightU_function_constants[5];
     } else if (mp->len_u_heightL_function_constants > 5) {
-      powerlaw = mp->u_heightL_function_constants[5];
+      F_stretch = mp->u_heightL_function_constants[5];
+    }
+
+    if (mp->len_u_heightU_function_constants > 6) {
+      powerlaw = mp->u_heightU_function_constants[6];
+    } else if (mp->len_u_heightL_function_constants > 6) {
+      powerlaw = mp->u_heightL_function_constants[6];
     } else {
       powerlaw = gn->nexp;
     }
@@ -669,13 +675,16 @@ double height_function_model(double *H_U,
       }
       exp_term2 = pow(MAX(exp_term, DBL_SEMI_SMALL), 1. / (2. * powerlaw + 1.));
       if ((ls != NULL || pfd != NULL) && Fwall_model) {
+        double inv_F_str = 1. / F_stretch;
         // Modified, shifted LS distance & Heaviside variable
+        // Doesn´t look like we accomodate NEGATIVE sense yet ...
         double F_prime =
-            (DOUBLE_NONZERO(ls->Length_Scale) ? (fv->F / ls->Length_Scale - F_shift) : fv->F);
+            (DOUBLE_NONZERO(ls->Length_Scale) ? inv_F_str * (2 * fv->F / ls->Length_Scale - F_shift)
+                                              : fv->F);
         double H_prime, dH_prime = 0.0;
         if (F_prime <= 1.) {
           H_prime = 0.5 * (1. + F_prime + sin(PI * F_prime) / PI);
-          dH_prime = 0.5 * (1. + cos(PI * F_prime)) / ls->Length_Scale;
+          dH_prime = (1. + cos(PI * F_prime)) * inv_F_str / ls->Length_Scale;
         } else if (F_prime <= -1.) {
           H_prime = 0.0;
         } else {
