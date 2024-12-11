@@ -20,8 +20,7 @@ STANDARD
     * <float> - set but unused for Standard
 TAYLOR_GALERKIN
     Name of the method for time-stepping in using the Implicit Taylor-Galerkin formulation.
-    * <float> - a number between 0. and 1.; a value of 1. corresponds to a
-      **TAYLOR_GALERKIN**
+    * <float> - a number between 0. and 1.; a value of 1. corresponds to **TAYLOR_GALERKIN**
 
 ------------
 Examples
