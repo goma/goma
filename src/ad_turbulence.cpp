@@ -909,10 +909,10 @@ void ad_get_metric_tensor(ADType B[DIM][DIM], int dim, int element_type, ADType 
 
   switch (element_type) {
   case LINEAR_TRI:
-    adjustment[0][0] = (invroot3) * 2;
+    adjustment[0][0] = (invroot3)*2;
     adjustment[0][1] = (invroot3) * -1;
     adjustment[1][0] = (invroot3) * -1;
-    adjustment[1][1] = (invroot3) * 2;
+    adjustment[1][1] = (invroot3)*2;
     break;
   case LINEAR_TET:
     adjustment[0][0] = tetscale * 2;

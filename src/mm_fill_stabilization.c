@@ -66,10 +66,10 @@ void get_metric_tensor(dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DI
 
   switch (element_type) {
   case LINEAR_TRI:
-    adjustment[0][0] = (invroot3) * 2;
+    adjustment[0][0] = (invroot3)*2;
     adjustment[0][1] = (invroot3) * -1;
     adjustment[1][0] = (invroot3) * -1;
-    adjustment[1][1] = (invroot3) * 2;
+    adjustment[1][1] = (invroot3)*2;
     break;
   case LINEAR_TET:
     adjustment[0][0] = tetscale * 2;
@@ -115,10 +115,10 @@ void get_metric_tensor_deriv(dbl B[DIM][DIM],
 
   switch (element_type) {
   case LINEAR_TRI:
-    adjustment[0][0] = (invroot3) * 2;
+    adjustment[0][0] = (invroot3)*2;
     adjustment[0][1] = (invroot3) * -1;
     adjustment[1][0] = (invroot3) * -1;
-    adjustment[1][1] = (invroot3) * 2;
+    adjustment[1][1] = (invroot3)*2;
     break;
   case LINEAR_TET:
     adjustment[0][0] = tetscale * 2;

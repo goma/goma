@@ -1,5 +1,5 @@
 **************************
-Moment Time Integration Method Function
+Moment Time Integration
 **************************
 
 ::
