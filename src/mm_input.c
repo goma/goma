@@ -9786,16 +9786,33 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         break;
       case R_SHELL_LUB_CURV:
       case R_SHELL_LUB_CURV_2:
-        if (fscanf(ifp, "%lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+        if (fscanf(ifp, "%lf %lf %lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
-                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)])) != 3) {
-          sr = sprintf(err_msg, "Provide 3 equation term multipliers (mas,dif,div) on %s in %s",
-                       EQ_Name[ce].name1, pd_ptr->MaterialName);
-          GOMA_EH(GOMA_ERROR, err_msg);
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)])) != 5) {
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)] = 1.0;
+          sr =
+              sprintf(err_msg,
+                      "Using default equation term multipliers (mass,adv,bnd,diff,div) on %s in %s",
+                      EQ_Name[ce].name1, pd_ptr->MaterialName);
+          GOMA_WH(GOMA_ERROR, err_msg);
+          DPRINTF(stderr, "\t %s %.4g %.4g %.4g %.4g %.4g\n", EQ_Name[ce].name1,
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]);
         }
 
-        SPF(endofstring(echo_string), "\t %.4g %.4g %.4g",
+        SPF(endofstring(echo_string), "\t %.4g %.4g %.4g %.4g %.4g",
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+            pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+            pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
             pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
             pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]);
         break;
@@ -12698,7 +12715,7 @@ int count_datalines(FILE *ifp, char *input, const char *endlist) {
 #ifndef tflop
   fgetpos(ifp, &file_position); /* OK everybody, remember where we parked */
 #else
-  file_position = ftell(ifp);          /* OK everybody, remember where we parked */
+  file_position = ftell(ifp); /* OK everybody, remember where we parked */
 #endif
 
   if (endlist != NULL) /* Table data is in input deck */
