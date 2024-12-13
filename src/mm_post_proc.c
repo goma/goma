@@ -10748,7 +10748,6 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
         }
       }
     }
-
   }
 
   if (STRESS_NORM != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11]) {

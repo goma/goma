@@ -1994,7 +1994,7 @@ void edge_determinant_and_vectors(
       for (i = 0; i < num_nodes_on_edge; i++) {
         id = (int)edge_elem_node_id[i];
         inode = Proc_Elem_Connect[iconnect_ptr + id];
-      ldof = ei[upd->matrix_index[pd->ShapeVar]]->ln_to_dof[ShapeVar][id];
+        ldof = ei[upd->matrix_index[pd->ShapeVar]]->ln_to_dof[ShapeVar][id];
         if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0) {
           phi_i = bf[ShapeVar]->phi[ldof];
 
@@ -2205,7 +2205,7 @@ void calc_CL_normal(double snormal[DIM],
       id = edge_elem_node_id[i];
       Inode = exo->node_list[iconnect_ptr + id];
 
-        ldof = ei[pg->imtrx]->ln_to_dof[pd->ShapeVar][id];
+      ldof = ei[pg->imtrx]->ln_to_dof[pd->ShapeVar][id];
       for (p = 0; p < dim; p++) {
         if (Dolphin[pg->imtrx][Inode][MESH_DISPLACEMENT1 + p] > 0) {
           dclnormal_dx[0][p][ldof] =
