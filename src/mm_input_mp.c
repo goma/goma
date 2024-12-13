@@ -7824,6 +7824,20 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
+    model_read = look_for_mat_prop(imp, "Moment Time Integration", &(mat_ptr->MomentTime_funcModel),
+                                   &(a0), NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcmp(model_name, "TAYLOR_GALERKIN")) {
+      mat_ptr->MomentTime_funcModel = TAYLOR_GALERKIN;
+      mat_ptr->MomentTime_func = 1.;
+      SPF(es, "\t(%s = %s)", "Moment Time Function", "TAYLOR_GALERKIN");
+    } else {
+      mat_ptr->MomentTime_funcModel = STANDARD;
+      mat_ptr->MomentTime_func = 0.;
+      SPF(es, "\t(%s = %s)", "Moment Time Function", "STANDARD");
+    }
+    ECHO(es, echo_file);
+
     model_read = look_for_mat_prop(imp, "Moment SSPG Function", &(mat_ptr->MomentSSPG_funcModel),
                                    &(mat_ptr->MomentSSPG_func), NO_USER, NULL, model_name,
                                    SCALAR_INPUT, &NO_SPECIES, es);
