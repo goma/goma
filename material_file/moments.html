@@ -836,13 +836,47 @@ full <strong>SUPG</strong></p></li>
 <p>No References.</p>
 </section>
 </section>
+<section id="moment-time-integration">
+<h2>Moment Time Integration<a class="headerlink" href="#moment-time-integration" title="Permalink to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Moment</span> <span class="n">Time</span> <span class="n">Integration</span> <span class="o">=</span> <span class="p">{</span><span class="n">STANDARD</span> <span class="o">|</span> <span class="n">TAYLOR_GALERKIN</span> <span class="p">}</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Description / Usage<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
+<p>This card specifies the time integration method to be used for time-stepping of the
+Moment equations. Definitions of the input
+parameters are as follows:</p>
+<dl class="simple">
+<dt>STANDARD</dt><dd><p>Name of the method for time-stepping in the standard formulation. This is the default when this card is absent.</p>
+</dd>
+<dt>TAYLOR_GALERKIN</dt><dd><p>Name of the method for time-stepping in using the Implicit Taylor-Galerkin formulation.</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h3>Examples<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
+<p>The following is a sample input card:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Moment</span> <span class="n">Time</span> <span class="n">Integration</span> <span class="o">=</span> <span class="n">STANDARD</span>
+
+<span class="n">Moment</span> <span class="n">Time</span> <span class="n">Integration</span> <span class="o">=</span> <span class="n">TAYLOR_GALERKIN</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Technical Discussion<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
+</section>
+<section id="id4">
+<h3>References<a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
+<p>No References.</p>
+</section>
+</section>
 <section id="moment-shock-function">
 <h2>Moment Shock Function<a class="headerlink" href="#moment-shock-function" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Moment</span> <span class="n">Shock</span> <span class="n">Function</span> <span class="o">=</span> <span class="p">{</span><span class="n">NONE</span> <span class="o">|</span> <span class="n">YZBETA</span> <span class="p">}</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id1">
-<h3>Description / Usage<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
+<section id="id5">
+<h3>Description / Usage<a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h3>
 <p>This card specifies the shock capturing function to be used on the
 Moment equations. Definitions of the input
 parameters are as follows:</p>
@@ -858,8 +892,8 @@ full YZBETA shock capturing</p></li>
 </dd>
 </dl>
 </section>
-<section id="id2">
-<h3>Examples<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
+<section id="id6">
+<h3>Examples<a class="headerlink" href="#id6" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Moment</span> <span class="n">Weight</span> <span class="n">Function</span> <span class="o">=</span> <span class="n">NONE</span> <span class="p">(</span><span class="n">default</span><span class="p">)</span>
 
@@ -867,11 +901,11 @@ full YZBETA shock capturing</p></li>
 </pre></div>
 </div>
 </section>
-<section id="id3">
-<h3>Technical Discussion<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
+<section id="id7">
+<h3>Technical Discussion<a class="headerlink" href="#id7" title="Permalink to this heading">#</a></h3>
 </section>
-<section id="id4">
-<h3>References<a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
+<section id="id8">
+<h3>References<a class="headerlink" href="#id8" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -880,8 +914,8 @@ full YZBETA shock capturing</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Moment</span> <span class="n">Growth</span> <span class="n">Kernel</span> <span class="o">=</span> <span class="p">{</span><span class="n">CONSTANT</span> <span class="o">|</span> <span class="n">VISCOSITY_SCALED</span> <span class="o">|</span> <span class="n">VISCOSITY_PRESSURE_SCALED</span><span class="p">}</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="id5">
-<h3>Description / Usage<a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h3>
+<section id="id9">
+<h3>Description / Usage<a class="headerlink" href="#id9" title="Permalink to this heading">#</a></h3>
 <p>This card specifies the growth kernel to be used for the
 Moment equations. Currently only used for <cite>PMDI_10</cite> QMOM models.
 Definitions of the input parameters are as follows:</p>
@@ -900,8 +934,8 @@ Definitions of the input parameters are as follows:</p>
 </dd>
 </dl>
 </section>
-<section id="id6">
-<h3>Examples<a class="headerlink" href="#id6" title="Permalink to this heading">#</a></h3>
+<section id="id10">
+<h3>Examples<a class="headerlink" href="#id10" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Moment</span> <span class="n">Growth</span> <span class="n">Kernel</span> <span class="o">=</span> <span class="n">CONSTANT</span> <span class="mf">1e-6</span>
 
@@ -911,12 +945,12 @@ Definitions of the input parameters are as follows:</p>
 </pre></div>
 </div>
 </section>
-<section id="id7">
-<h3>Technical Discussion<a class="headerlink" href="#id7" title="Permalink to this heading">#</a></h3>
+<section id="id11">
+<h3>Technical Discussion<a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
 <p>Note this is multiplicative with the growth rate in the <cite>FOAM_PMDI_10</cite> moment source model</p>
 </section>
-<section id="id8">
-<h3>References<a class="headerlink" href="#id8" title="Permalink to this heading">#</a></h3>
+<section id="id12">
+<h3>References<a class="headerlink" href="#id12" title="Permalink to this heading">#</a></h3>
 <p>Ortiz, Weston, et al. “Population balance modeling of polyurethane foam formation with pressure‐dependent growth kernel.” AIChE Journal (2021): e17529.</p>
 </section>
 </section>
@@ -925,8 +959,8 @@ Definitions of the input parameters are as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Moment</span> <span class="n">Coalescence</span> <span class="n">Kernel</span> <span class="o">=</span> <span class="p">{</span><span class="n">ADDITION</span> <span class="o">|</span> <span class="n">VISCOSITY_SCALED_ADDITION</span> <span class="o">|</span> <span class="n">VISCOSITY_ADDITION_BUBBLE_RATIO</span><span class="p">}</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<section id="id9">
-<h3>Description / Usage<a class="headerlink" href="#id9" title="Permalink to this heading">#</a></h3>
+<section id="id13">
+<h3>Description / Usage<a class="headerlink" href="#id13" title="Permalink to this heading">#</a></h3>
 <p>This card specifies the coalescence kernel to be used for the
 Moment equations. Currently only used for <cite>PMDI_10</cite> QMOM models.
 Definitions of the input parameters are as follows:</p>
@@ -942,8 +976,8 @@ Definitions of the input parameters are as follows:</p>
 </dd>
 </dl>
 </section>
-<section id="id10">
-<h3>Examples<a class="headerlink" href="#id10" title="Permalink to this heading">#</a></h3>
+<section id="id14">
+<h3>Examples<a class="headerlink" href="#id14" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Moment</span> <span class="n">Coalescence</span> <span class="n">Kernel</span> <span class="o">=</span> <span class="n">ADDITION</span> <span class="mf">1e-12</span>
 
@@ -953,12 +987,12 @@ Definitions of the input parameters are as follows:</p>
 </pre></div>
 </div>
 </section>
-<section id="id11">
-<h3>Technical Discussion<a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
+<section id="id15">
+<h3>Technical Discussion<a class="headerlink" href="#id15" title="Permalink to this heading">#</a></h3>
 <p>Currently only for <cite>FOAM_PMDI_10</cite> moment source model</p>
 </section>
-<section id="id12">
-<h3>References<a class="headerlink" href="#id12" title="Permalink to this heading">#</a></h3>
+<section id="id16">
+<h3>References<a class="headerlink" href="#id16" title="Permalink to this heading">#</a></h3>
 <p>Ortiz, Weston, et al. “Population balance modeling of polyurethane foam formation with pressure‐dependent growth kernel.” AIChE Journal (2021): e17529.</p>
 </section>
 </section>
@@ -1030,8 +1064,8 @@ Definitions of the input parameters are as follows:</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#moment-shock-function">
-   Moment Shock Function
+  <a class="reference internal nav-link" href="#moment-time-integration">
+   Moment Time Integration
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
@@ -1057,8 +1091,8 @@ Definitions of the input parameters are as follows:</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#moment-growth-kernel">
-   Moment Growth Kernel
+  <a class="reference internal nav-link" href="#moment-shock-function">
+   Moment Shock Function
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
@@ -1084,8 +1118,8 @@ Definitions of the input parameters are as follows:</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#moment-coalescence-kernel">
-   Moment Coalescence Kernel
+  <a class="reference internal nav-link" href="#moment-growth-kernel">
+   Moment Growth Kernel
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
@@ -1105,6 +1139,33 @@ Definitions of the input parameters are as follows:</p>
    </li>
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#id12">
+     References
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#moment-coalescence-kernel">
+   Moment Coalescence Kernel
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id13">
+     Description / Usage
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id14">
+     Examples
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id15">
+     Technical Discussion
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id16">
      References
     </a>
    </li>
