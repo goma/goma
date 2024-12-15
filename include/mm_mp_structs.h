@@ -359,6 +359,9 @@ struct Material_Properties {
   int Momentwt_funcModel;
   dbl Momentwt_func;
 
+  int MomentTime_funcModel;
+  dbl MomentTime_func;
+
   int MomentSSPG_funcModel;
   dbl MomentSSPG_func;
 
@@ -775,6 +778,7 @@ struct Material_Properties {
   int Lub_Curv_Modulation;
   int Lub_LS_Interpolation;
   int Lub_Curv_Combine;
+  int Lub_Isotropic_Curv_Diffusion;
 
   int Lub_Heat_XferModel;
   double Lub_Heat_Xfer;

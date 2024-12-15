@@ -1460,6 +1460,9 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->Momentwt_funcModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->Momentwt_func, 1, MPI_DOUBLE);
 
+    ddd_add_member(n, &mp_glob[i]->MomentTime_funcModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->MomentTime_func, 1, MPI_DOUBLE);
+
     ddd_add_member(n, &mp_glob[i]->MomentSSPG_funcModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->MomentSSPG_func, 1, MPI_DOUBLE);
 
@@ -1591,6 +1594,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->Lub_Heat_TambModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->Lub_LS_Interpolation, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->Lub_Curv_Combine, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->Lub_Isotropic_Curv_Diffusion, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedPorosityModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedRadiusModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedHeightModel, 1, MPI_INT);

@@ -5,6 +5,8 @@ Properties related to Population Balance Methods using Quadrature Method of Mome
 
 .. include:: moment_properties/moment_weight_function.rst
 
+.. include:: moment_properties/moment_time_integration.rst
+
 .. include:: moment_properties/moment_shock_function.rst
 
 .. include:: moment_properties/moment_growth_kernel.rst
