@@ -6674,6 +6674,15 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
     /*** Loop over DOFs (i) ***/
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
+      /* this is an optimization for xfem */
+      if (xfem != NULL) {
+        int xfem_active, extended_dof, base_interp, base_dof;
+        xfem_dof_state(i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape, &xfem_active,
+                           &extended_dof, &base_interp, &base_dof);
+        if (extended_dof && !xfem_active)
+          continue;
+      }
+
       /* Prepare basis funcitons */
       ShellBF(eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh,
               n_dof[MESH_DISPLACEMENT1], dof_map);
@@ -6709,6 +6718,15 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
     /*** Loop over DOFs (i) ***/
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+      /* this is an optimization for xfem */
+      if (xfem != NULL) {
+        int xfem_active, extended_dof, base_interp, base_dof;
+        xfem_dof_state(i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape, &xfem_active,
+                       &extended_dof, &base_interp, &base_dof);
+        if (extended_dof && !xfem_active)
+          continue;
+      }
 
       /* Prepare basis functions (i) */
       ShellBF(eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh,
@@ -14400,6 +14418,15 @@ int assemble_lubrication_curvature(double time,            /* present time value
             }
           }
 
+          /* Assemble diffusion terms */
+          diff = 0.0;
+          if (curv_near) {
+            if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+              if (!lsi->near) {
+                diff += (-SGN(fv->F) / lsi->alpha * phi_j) * diff1 * K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+              }
+            }
+          }
           /* Assemble divergence terms */
           div = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
