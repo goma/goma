@@ -6655,6 +6655,9 @@ void rd_solver_specs(FILE *ifp, char *input) {
   if (fscanf(ifp, "%le", &Epsilon[0][0]) != 1) {
     GOMA_EH(GOMA_ERROR, "error reading Normalized (Newton) Residual Tolerance");
   }
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Normalized Residual Tolerance",
+           Epsilon[0][0]);
+  ECHO(echo_string, echo_file);
 
   for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
     Epsilon[imtrx][0] = Epsilon[0][0];
@@ -6677,22 +6680,22 @@ void rd_solver_specs(FILE *ifp, char *input) {
 
   iread = look_for_optional(ifp, "Residual Relative Tolerance", input, '=');
   if (iread == 1) {
-    if (fscanf(ifp, "%le", &upd->Residual_Relative_Tol) != 1) {
+    if (fscanf(ifp, "%le", &upd->Residual_Relative_Tol[0]) != 1) {
       GOMA_EH(GOMA_ERROR, "error reading Residual Relative Tolerance");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Residual Relative Tolerance",
-             upd->Residual_Relative_Tol);
+             upd->Residual_Relative_Tol[0]);
     ECHO(echo_string, echo_file);
   } else {
-    upd->Residual_Relative_Tol = 1e10;
+    upd->Residual_Relative_Tol[0] = 1e10;
+  }
+  for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    upd->Residual_Relative_Tol[imtrx] = upd->Residual_Relative_Tol[0];
   }
 
   for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
     Epsilon[imtrx][0] = Epsilon[0][0];
   }
-  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Normalized Residual Tolerance",
-           Epsilon[0][0]);
-  ECHO(echo_string, echo_file);
 
   for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
     Epsilon[imtrx][2] = Epsilon[0][2];
@@ -8385,6 +8388,15 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
                Epsilon[imtrx][1], mtrx_index1);
       ECHO(echo_string, echo_file);
     }
+    iread = look_forward_optional_until(ifp, "Residual Relative Tolerance", "MATRIX", input, '=');
+    if (iread == 1) {
+      if (fscanf(ifp, "%le", &upd->Residual_Relative_Tol[imtrx]) != 1) {
+        GOMA_EH(GOMA_ERROR, "error reading Residual Relative Tolerance");
+      }
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Residual Relative Tolerance",
+               upd->Residual_Relative_Tol[imtrx]);
+      ECHO(echo_string, echo_file);
+    } 
 
     pd_ptr->Matrix_Activity[mtrx_index0] = 1;
 
