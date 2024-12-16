@@ -65,11 +65,11 @@ class Package(packages.CMakePackage):
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("ACCESS", builder.install_dir())
         registry.set_environment_variable("SEACAS_DIR", builder.install_dir())
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
-        registry.append_environment_variable(
+        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
             "PATH", os.path.join(builder.install_dir(), "bin")
         )
         if builder.build_shared:
-            registry.append_environment_variable(
+            registry.prepend_environment_variable(
                 "PYTHONPATH", os.path.join(builder.install_dir(), "lib")
             )

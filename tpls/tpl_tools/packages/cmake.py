@@ -30,6 +30,6 @@ class Package(packages.AutotoolsPackage):
         registry.register_executable(
             os.path.join(builder.install_dir(), "bin", "cmake")
         )
-        registry.append_environment_variable(
+        registry.prepend_environment_variable(
             "PATH", os.path.join(builder.install_dir(), "bin")
         )
