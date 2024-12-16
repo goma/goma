@@ -8396,7 +8396,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Residual Relative Tolerance",
                upd->Residual_Relative_Tol[imtrx]);
       ECHO(echo_string, echo_file);
-    } 
+    }
 
     pd_ptr->Matrix_Activity[mtrx_index0] = 1;
 
