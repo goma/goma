@@ -22,8 +22,8 @@ class Package(packages.AutotoolsPackage):
 
     def register(self, builder):
         registry = builder._registry
-        registry.append_environment_variable("FLEX_DIR", builder.install_dir())
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
-        registry.append_environment_variable(
+        registry.prepend_environment_variable("FLEX_DIR", builder.install_dir())
+        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
             "PATH", os.path.join(builder.install_dir(), "bin")
         )

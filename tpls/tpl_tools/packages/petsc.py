@@ -73,4 +73,4 @@ class Package(packages.AutotoolsPackage):
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("PETSC_DIR", builder.install_dir())
         registry.set_environment_variable("PETSC_ARCH", "")
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
