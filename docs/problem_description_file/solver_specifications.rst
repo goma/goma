@@ -52,6 +52,7 @@ report by Schunk, et al. (2002) for an overview and further usage tips.
    solver_specifications/normalized_residual_tolerance
    solver_specifications/normalized_correction_tolerance
    solver_specifications/residual_ratio_tolerance
+   solver_specifications/residual_relative_tolerance
    solver_specifications/pressure_stabilization
    solver_specifications/pressure_stabilization_scaling
    solver_specifications/pressure_stabilization_disable_tau_sens

@@ -1022,6 +1022,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &upd->devss_traceless_gradient, 1, MPI_INT);
   ddd_add_member(n, &upd->strong_bc_replace, 1, MPI_INT);
   ddd_add_member(n, &upd->strong_penalty, 1, MPI_DOUBLE);
+  ddd_add_member(n, &upd->Residual_Relative_Tol, MAX_NUM_MATRICES, MPI_DOUBLE);
 
   ddd_add_member(n, pg->time_step_control_disabled, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, pg->matrix_subcycle_count, MAX_NUM_MATRICES, MPI_INT);

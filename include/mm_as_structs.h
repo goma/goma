@@ -918,6 +918,7 @@ struct Uniform_Problem_Description {
   int pspg_lagged_tau;
   int disable_supg_tau_sensitivities;
   int supg_lagged_tau;
+  dbl Residual_Relative_Tol[MAX_NUM_MATRICES];
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/
