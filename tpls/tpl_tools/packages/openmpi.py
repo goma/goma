@@ -45,7 +45,7 @@ class Package(packages.AutotoolsPackage):
             "MPI_Fortran_COMPILER",
             os.path.join(builder.install_dir(), "bin", "mpifort"),
         )
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
-        registry.append_environment_variable(
+        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
             "PATH", os.path.join(builder.install_dir(), "bin")
         )

@@ -38,4 +38,4 @@ class Package(packages.CMakePackage):
             "LAPACK_LIBRARIES",
             os.path.join(builder.install_dir(), "lib/liblapack" + ext),
         )
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
