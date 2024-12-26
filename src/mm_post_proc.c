@@ -10753,10 +10753,6 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
         }
       }
     }
-
-    if (Num_Dim > 2) {
-      GOMA_EH(GOMA_ERROR, "Log Conf Stress not implemented for 3D");
-    }
   }
 
   if (STRESS_NORM != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11]) {

@@ -15,12 +15,12 @@ class Config(object):
     def set_environment_variable(self, variable, value):
         self.environment[variable] = value
 
-    def append_environment_variable(self, variable, value):
+    def prepend_environment_variable(self, variable, value):
         if variable in self.environment.keys():
             if type(self.environment[variable]) != list:
                 oldval = self.environment[variable]
                 self.environment[variable] = [oldval]
-            self.environment[variable].append(value)
+            self.environment[variable].insert(0,value)
         else:
             self.environment[variable] = value
 
@@ -114,9 +114,9 @@ class Registry(object):
         self.environment[variable] = value
         self.config.set_environment_variable(variable, value)
 
-    def append_environment_variable(self, variable, value):
+    def prepend_environment_variable(self, variable, value):
         if variable in self.environment:
             self.environment[variable] += os.pathsep + value
         else:
             self.environment[variable] = value
-        self.config.append_environment_variable(variable, value)
+        self.config.prepend_environment_variable(variable, value)

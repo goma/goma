@@ -571,7 +571,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
       err = GomaSparseMatrix_SetProblemGraph(
           goma_matrix, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx],
           num_external_dofs[pg->imtrx], local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
-          dpi, cx[pg->imtrx], pg->imtrx, Debug_Flag, ams[JAC]);
+          dpi, cx[pg->imtrx], pg->imtrx, Debug_Flag, ams[pg->imtrx]);
       GOMA_EH(err, "GomaSparseMatrix_SetProblemGraph");
       ams[pg->imtrx]->GomaMatrixData = goma_matrix;
       ams[pg->imtrx]->npu = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
