@@ -8563,7 +8563,34 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->u_species_source[species_no][6] = a6; /* A_n */
       mat_ptr->u_species_source[species_no][7] = a7; /* B_n */
 
-      SPF_DBL_VEC(endofstring(es), 6, mat_ptr->u_species_source[species_no]);
+      SPF_DBL_VEC(endofstring(es), 8, mat_ptr->u_species_source[species_no]);
+    } else if (!strcmp(model_name, "EPOXY_ARRHENIUS_EXP")) {
+      SpeciesSourceModel = EPOXY_ARRHENIUS_EXP;
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      if (fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7) !=
+          8) {
+        sprintf(err_msg, "Matl %s needs 8 constants for %s %s model.\n", pd_glob[mn]->MaterialName,
+                "Species Source", "EPOXY_ARRHENIUS_EXP");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+
+      mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 8, sizeof(dbl));
+
+      mat_ptr->len_u_species_source[species_no] = 8;
+
+      mat_ptr->u_species_source[species_no][0] = a0; /* prefactor for k1 */
+      mat_ptr->u_species_source[species_no][1] = a1; /* exponent for k1 */
+      mat_ptr->u_species_source[species_no][2] = a2; /* prefactor for k2 */
+      mat_ptr->u_species_source[species_no][3] = a3; /* exponent for k2 */
+      // m = A_m * exp(B_m/T)
+      mat_ptr->u_species_source[species_no][4] = a4; /* A_m */
+      mat_ptr->u_species_source[species_no][5] = a5; /* B_m */
+      // m = A_n * exp(B_n/T)
+      mat_ptr->u_species_source[species_no][6] = a6; /* A_n */
+      mat_ptr->u_species_source[species_no][7] = a7; /* B_n */
+
+      SPF_DBL_VEC(endofstring(es), 8, mat_ptr->u_species_source[species_no]);
     } else if (!strcmp(model_name, "SSM_BOND")) {
       SpeciesSourceModel = SSM_BOND;
       model_read = 1;
