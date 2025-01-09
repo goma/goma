@@ -14107,7 +14107,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
             div += LSnormal[a] * grad_II_phi_i[a];
           }
           if (mp->Lub_Curv_Combine) {
-            div += LubAux->op_curv * phi_i;
+            div -= LubAux->op_curv * phi_i;
           }
           div *= curvX * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
         }
@@ -14329,7 +14329,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
                   div += LSnormal[a] * grad_II_phi_i[a] * fv->dsurfdet_dx[b][jj];
                 }
                 if (mp->Lub_Curv_Combine) {
-                  div += LubAux->dop_curv_dx[b][jj] * phi_i;
+                  div -= LubAux->dop_curv_dx[b][jj] * phi_i;
                 }
                 div *= curvX * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
               }
@@ -14352,7 +14352,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
             diff1 += hsquared[a] * gradII_kappa[a] * grad_II_phi_i[a];
           }
           if (mp->Lub_Curv_Combine) {
-            div1 += LubAux->op_curv * phi_i;
+            div1 -= LubAux->op_curv * phi_i;
           }
         }
 
@@ -14423,7 +14423,8 @@ int assemble_lubrication_curvature(double time,            /* present time value
           if (curv_near) {
             if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
               if (!lsi->near) {
-                diff += (-SGN(fv->F) / lsi->alpha * phi_j) * diff1 * K_diff * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                diff += (-SGN(fv->F) / lsi->alpha * phi_j) * diff1 * K_diff * det_J * wt * h3 *
+                        pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
               }
             }
           }
@@ -14435,7 +14436,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
                 div += d_LSnormal_dF[a][j] * grad_II_phi_i[a];
               }
               if (mp->Lub_Curv_Combine) {
-                div += LubAux->dop_curv_df[j] * phi_i;
+                div -= LubAux->dop_curv_df[j] * phi_i;
               }
               div *= curvX * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
               if (!lsi->near && mp->Lub_Curv_Modulation) {

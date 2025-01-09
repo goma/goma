@@ -229,6 +229,7 @@ void shell_n_dot_curv_bc(double func[DIM],
                          double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                          const double theta_deg,
                          const int ibc_flag,         /* NOBC flag from bc input  */
+                         const double penalty,       /* Penalty parameter */
                          const int bc_id,            /* BC_Name */
                          const double time,          /* current time */
                          const double dt,            /* current time step size */
@@ -277,7 +278,6 @@ void shell_n_dot_curv_bc(double func[DIM],
   double bound_normal[DIM], bound_dnormal_dx[DIM][DIM][MDE];
   int curv_near;
   double curvX, diffX = 1.0;
-  const double penalty = upd->strong_penalty;
   int extra_diff_term = TRUE;
 
   int eqn = R_SHELL_LUB_CURV;
@@ -439,6 +439,11 @@ void shell_n_dot_curv_bc(double func[DIM],
                 d_func[0][var][j] -= d_LSnormal_dmesh[ii][jj][jk] * bound_normal[ii];
                 d_func[0][var][j] -= LSnormal[ii] * bound_dnormal_dx[ii][jj][jk];
               }
+              if (ibc_flag == -2) {
+                d_func[0][var][j] *= curvX * penalty;
+              } else {
+                d_func[0][var][j] *= curvX;
+              }
             }
             if (extra_diff_term) {
               for (ii = 0; ii < pd->Num_Dim; ii++) {
@@ -457,13 +462,13 @@ void shell_n_dot_curv_bc(double func[DIM],
     var = FILL;
     if (pd->v[pg->imtrx][var]) {
       double div1 = 0.0, diff1 = 0.0;
-      if (curv_near) {
+      if (curv_near || !mp->Lub_Curv_Modulation) {
         for (ii = 0; ii < VIM; ii++) {
           div1 += LSnormal[ii] * grad_II_phi_i[ii];
           diff1 += hsquared[ii] * gradII_kappa[ii] * grad_II_phi_i[ii];
         }
         if (mp->Lub_Curv_Combine) {
-          div1 += LubAux->op_curv * phi_i;
+          div1 -= LubAux->op_curv * phi_i;
         }
       }
 
@@ -480,6 +485,9 @@ void shell_n_dot_curv_bc(double func[DIM],
             for (ii = 0; ii < pd->Num_Dim; ii++) {
               d_func[0][var][j] -= curvX * d_LSnormal_dF[ii][j] * bound_normal[ii];
             }
+            if (mp->Lub_Curv_Combine) {
+              d_func[0][var][j] += curvX * LubAux->dop_curv_df[j] * phi_i;
+            }
             if (curv_near && !mp->Lub_Isotropic_Curv_Diffusion) {
               if (!lsi->near && mp->Lub_Curv_Modulation) {
                 d_func[0][var][j] -= SGN(fv->F) / lsi->alpha * div1;
@@ -489,9 +497,13 @@ void shell_n_dot_curv_bc(double func[DIM],
             for (ii = 0; ii < pd->Num_Dim; ii++) {
               d_func[0][var][j] -= curvX * penalty * d_LSnormal_dF[ii][j] * bound_normal[ii];
             }
+            if (mp->Lub_Curv_Combine) {
+              d_func[0][var][j] += curvX * LubAux->dop_curv_df[j] * phi_i;
+            }
             if (curv_near && !mp->Lub_Isotropic_Curv_Diffusion) {
               if (!lsi->near && mp->Lub_Curv_Modulation) {
                 d_func[0][var][j] -= SGN(fv->F) / lsi->alpha * penalty * div1;
+                d_func[0][var][j] += SGN(fv->F) / lsi->alpha * penalty * cos(M_PIE * theta_deg / 180.);
               }
             }
           }
