@@ -2879,7 +2879,10 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[PRINCIPAL_REAL_STRESS + 2] = 1.;
   } /* end of PRINCIPAL_REAL_STRESS */
 
-  if (LUB_HEIGHT != -1 && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP] ||
+  if (LUB_HEIGHT != -1 && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_SAT_CLOSED] ||
+                           pd->e[pg->imtrx][R_SHELL_FILMP] || pd->e[pg->imtrx][R_SHELL_ENERGY] ||
+                           pd->e[pg->imtrx][R_SHELL_LUB_CURV] ||
+                           (pd->e[pg->imtrx][R_MASS] && pd->MassFluxModel == FICKIAN_SHELL) ||
                            pd->e[pg->imtrx][R_TFMP_MASS] || pd->e[pg->imtrx][R_TFMP_BOUND])) {
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
     double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
@@ -2891,7 +2894,9 @@ static int calc_standard_fields(double **post_proc_vect,
     n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
-    if (pd->e[pg->imtrx][R_LUBP]) {
+    if (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_SAT_CLOSED] ||
+        pd->e[pg->imtrx][R_SHELL_ENERGY] || pd->e[pg->imtrx][R_SHELL_LUB_CURV] ||
+        (pd->e[pg->imtrx][R_MASS] && pd->MassFluxModel == FICKIAN_SHELL)) {
       local_post[LUB_HEIGHT] =
           height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
                                 &dH_U_ddh, dH_dF, time, delta_t);
@@ -10747,10 +10752,6 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
           }
         }
       }
-    }
-
-    if (Num_Dim > 2) {
-      GOMA_EH(GOMA_ERROR, "Log Conf Stress not implemented for 3D");
     }
   }
 

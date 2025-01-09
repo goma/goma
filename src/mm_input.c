@@ -6655,6 +6655,9 @@ void rd_solver_specs(FILE *ifp, char *input) {
   if (fscanf(ifp, "%le", &Epsilon[0][0]) != 1) {
     GOMA_EH(GOMA_ERROR, "error reading Normalized (Newton) Residual Tolerance");
   }
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Normalized Residual Tolerance",
+           Epsilon[0][0]);
+  ECHO(echo_string, echo_file);
 
   for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
     Epsilon[imtrx][0] = Epsilon[0][0];
@@ -6673,6 +6676,25 @@ void rd_solver_specs(FILE *ifp, char *input) {
     ECHO(echo_string, echo_file);
   } else {
     Epsilon[0][2] = 1.0e+10;
+  }
+
+  iread = look_for_optional(ifp, "Residual Relative Tolerance", input, '=');
+  if (iread == 1) {
+    if (fscanf(ifp, "%le", &upd->Residual_Relative_Tol[0]) != 1) {
+      GOMA_EH(GOMA_ERROR, "error reading Residual Relative Tolerance");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Residual Relative Tolerance",
+             upd->Residual_Relative_Tol[0]);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->Residual_Relative_Tol[0] = 1e10;
+  }
+  for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    upd->Residual_Relative_Tol[imtrx] = upd->Residual_Relative_Tol[0];
+  }
+
+  for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    Epsilon[imtrx][0] = Epsilon[0][0];
   }
 
   for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
@@ -8366,6 +8388,15 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
                Epsilon[imtrx][1], mtrx_index1);
       ECHO(echo_string, echo_file);
     }
+    iread = look_forward_optional_until(ifp, "Residual Relative Tolerance", "MATRIX", input, '=');
+    if (iread == 1) {
+      if (fscanf(ifp, "%le", &upd->Residual_Relative_Tol[imtrx]) != 1) {
+        GOMA_EH(GOMA_ERROR, "error reading Residual Relative Tolerance");
+      }
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Residual Relative Tolerance",
+               upd->Residual_Relative_Tol[imtrx]);
+      ECHO(echo_string, echo_file);
+    }
 
     pd_ptr->Matrix_Activity[mtrx_index0] = 1;
 
@@ -9786,16 +9817,33 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         break;
       case R_SHELL_LUB_CURV:
       case R_SHELL_LUB_CURV_2:
-        if (fscanf(ifp, "%lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+        if (fscanf(ifp, "%lf %lf %lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
-                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)])) != 3) {
-          sr = sprintf(err_msg, "Provide 3 equation term multipliers (mas,dif,div) on %s in %s",
-                       EQ_Name[ce].name1, pd_ptr->MaterialName);
-          GOMA_EH(GOMA_ERROR, err_msg);
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)])) != 5) {
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)] = 1.0;
+          sr =
+              sprintf(err_msg,
+                      "Using default equation term multipliers (mass,adv,bnd,diff,div) on %s in %s",
+                      EQ_Name[ce].name1, pd_ptr->MaterialName);
+          GOMA_WH(GOMA_ERROR, err_msg);
+          DPRINTF(stderr, "\t %s %.4g %.4g %.4g %.4g %.4g\n", EQ_Name[ce].name1,
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]);
         }
 
-        SPF(endofstring(echo_string), "\t %.4g %.4g %.4g",
+        SPF(endofstring(echo_string), "\t %.4g %.4g %.4g %.4g %.4g",
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+            pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+            pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
             pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
             pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]);
         break;

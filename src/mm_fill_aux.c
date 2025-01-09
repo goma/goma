@@ -1649,7 +1649,7 @@ void edge_determinant_and_vectors(
                                  num_nodes_on_side, local_elem_node_id);
 
   dim = ielem_surf_dim + 1;
-  DeformingMesh = pd->e[pg->imtrx][R_MESH1];
+  DeformingMesh = pd->gv[R_MESH1];
   ShapeVar = pd->ShapeVar;
 
   /* initialize variables */
@@ -1683,7 +1683,7 @@ void edge_determinant_and_vectors(
           id = (int)edge_elem_node_id[i];
           inode = Proc_Elem_Connect[iconnect_ptr + id];
           ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
-          if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0) {
+          if (Dolphin[upd->matrix_index[R_MESH1]][inode][MESH_DISPLACEMENT1] > 0) {
             phi_i = bf[ShapeVar]->phi[ldof];
             fv->dedgedet_dx[0][ldof] = fv->hq[2][0] * phi_i;
             fv->dedgedet_dx[1][ldof] = fv->hq[2][1] * phi_i;
@@ -1784,9 +1784,9 @@ void edge_determinant_and_vectors(
     for (i = 0; i < num_nodes_on_edge; i++) {
       id = (int)edge_elem_node_id[i];
       inode = Proc_Elem_Connect[iconnect_ptr + id];
-      ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
+      ldof = ei[upd->matrix_index[pd->ShapeVar]]->ln_to_dof[ShapeVar][id];
       if (DeformingMesh) {
-        if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0) {
+        if (Dolphin[upd->matrix_index[R_MESH1]][inode][MESH_DISPLACEMENT1] > 0) {
           dxdalpha += bf[ShapeVar]->dphidxi[ldof][i_basis] * (Coor[0][inode] + *esp->d[0][ldof]);
           dydalpha += bf[ShapeVar]->dphidxi[ldof][i_basis] * (Coor[1][inode] + *esp->d[1][ldof]);
           dzdalpha += bf[ShapeVar]->dphidxi[ldof][i_basis] * (Coor[2][inode] + *esp->d[2][ldof]);
@@ -1994,7 +1994,7 @@ void edge_determinant_and_vectors(
       for (i = 0; i < num_nodes_on_edge; i++) {
         id = (int)edge_elem_node_id[i];
         inode = Proc_Elem_Connect[iconnect_ptr + id];
-        ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
+        ldof = ei[upd->matrix_index[pd->ShapeVar]]->ln_to_dof[ShapeVar][id];
         if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0) {
           phi_i = bf[ShapeVar]->phi[ldof];
 
@@ -2121,7 +2121,7 @@ void edge_determinant_and_vectors(
       for (i = 0; i < num_nodes_on_edge; i++) {
         id = (int)edge_elem_node_id[i];
         inode = Proc_Elem_Connect[iconnect_ptr + id];
-        ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
+        ldof = ei[pg->imtrx]->ln_to_dof[pd->ShapeVar][id];
         for (p = 0; p < dim; p++) {
           if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1 + p] > 0) {
             fv->dstangent_dx[0][0][p][ldof] = fv->dsnormal_dx[1][p][ldof] * fv->stangent[1][2] -
@@ -2204,8 +2204,8 @@ void calc_CL_normal(double snormal[DIM],
     for (i = 0; i < num_edge_nodes; i++) {
       id = edge_elem_node_id[i];
       Inode = exo->node_list[iconnect_ptr + id];
-      ldof = ei[pg->imtrx]->ln_to_dof[pd->ShapeVar][id];
 
+      ldof = ei[pg->imtrx]->ln_to_dof[pd->ShapeVar][id];
       for (p = 0; p < dim; p++) {
         if (Dolphin[pg->imtrx][Inode][MESH_DISPLACEMENT1 + p] > 0) {
           dclnormal_dx[0][p][ldof] =
