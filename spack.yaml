@@ -1,19 +1,18 @@
 spack:
   specs:
-  - cmake
-  - sparse
-  - catch2
-  - openmpi@4.1.6
-  - arpack-ng
-  - openblas threads=none
-  - metis~int64
-  - parmetis~int64
-  - hypre~int64
-  - mumps~openmp+metis+parmetis
-  - trilinos@15.1.1+amesos+amesos2+aztec+belos+boost~chaco+epetra+epetraext~exodus+explicit_template_instantiation+fortran+hdf5~hypre+ifpack+ml+mpi+muelu+mumps+shared+stratimikos+suite-sparse+superlu-dist+teko+tpetra+piro+nox+tempus+shards+intrepid2+zoltan2+sacado+intrepid+isorropia~strumpack   build_type=Release
-    gotype=int
+  - cmake %gcc@13
+  - sparse %gcc@13
+  - catch2 %gcc@13
+  - openmpi %gcc@13
+  - arpack-ng %gcc@13
+  - metis~int64 %gcc@13
+  - parmetis~int64 %gcc@13
+  - hypre~int64 %gcc@13
+  - mumps~openmp+metis+parmetis %gcc@13
+  - trilinos@15.1.1+amesos+amesos2+aztec+belos+boost~chaco+epetra+epetraext~exodus+explicit_template_instantiation+fortran+hdf5~hypre+ifpack+ml+mpi+muelu+mumps+shared+stratimikos+suite-sparse+superlu-dist+teko+tpetra+piro+nox+tempus+shards+intrepid2+zoltan2+sacado+intrepid+isorropia+strumpack   build_type=Release
+    gotype=long_long
   - omega-h build_type=Release
-  - petsc~X~batch~cgns~complex~cuda~debug+double~exodusii~fftw~giflib+hdf5~hwloc+hypre~int64~jpeg~knl~libpng~libyaml~memkind+metis~mkl-pardiso~moab~mpfr+mpi+mumps~openmp~p4est+ptscotch~random123~rocm~saws+shared~suite-sparse~superlu-dist~trilinos~strumpack
+  - petsc~X~batch~cgns~complex~cuda~debug+double~exodusii~fftw~giflib+hdf5~hwloc+hypre~int64~jpeg~knl~libpng~libyaml~memkind+metis~mkl-pardiso~moab~mpfr+mpi+mumps~openmp~p4est+ptscotch~random123~rocm~saws+shared~suite-sparse~superlu-dist~trilinos+strumpack
   - seacas
   concretizer:
     unify: true
@@ -21,3 +20,5 @@ spack:
     all:
       providers:
         mpi: [openmpi]
+        blas: [openblas]
+        lapack: [openblas]
