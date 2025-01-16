@@ -724,15 +724,8 @@ double height_function_model(double *H_U,
             dh_grad = factor * exp_termd / exp_term;
             dh_grad += (1.0 - factor) * exp_plusd / exp_plus;
             dh_grad *= H * pl_fact;
-            if (isnan(dh_grad)) {
-              fprintf(stderr, "dh_grad %g %g %g %g\n", exp_term, exp_termd, exp_plus, exp_plusd);
-            }
             for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
               dH_dF[j] = H * pl_fact * (H_log - Hplus_log) * dfact_dF * bf[FILL]->phi[j];
-              if (isnan(dH_dF[j])) {
-                fprintf(stderr, "%g %g %g %g\n", H, H_log, Hplus_log, dfact_dF);
-                fprintf(stderr, "%g %g %g %g\n", exp_term, log(exp_term), H_log, H);
-              }
             }
           } else if ((F_prime >= 1. && mp->mp2nd->viscositymask[1]) ||
                      (F_prime <= -1. && mp->mp2nd->viscositymask[0])) {
@@ -756,9 +749,6 @@ double height_function_model(double *H_U,
       } else {
         H *= exp_term2;
         dh_grad = H * exp_termd * pl_fact / exp_term;
-      }
-      if( isinf(dh_grad)) {
-         fprintf(stderr, "dh_grad %g %g %g %g\n", rel_dist, exp_term, exp_termd, H);
       }
       if (mp->HeightUFunctionModel == WALL_DISTMOD) {
         dH_U_dX[0] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][0];

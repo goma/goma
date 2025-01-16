@@ -6708,11 +6708,6 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
       source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
       lec->R[LEC_R_INDEX(peqn, i)] += diffusion + source;
-      if(isnan(lec->R[LEC_R_INDEX(peqn, i)])) {
-        fprintf(stderr, "nan %g %g %g %g\n",diffusion,source,det_J, H);
-        fprintf(stderr, "source %g %g %g %g\n",flux, dH_dtime, dH_U_dX[0], dH_U_dX[1]);
-        fprintf(stderr, "F %g %d \n",fv->F, lsi->near);
-      }
     } /* end of loop over i */
   }   /* end of Assemble_Residual */
 
