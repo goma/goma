@@ -669,7 +669,7 @@ double height_function_model(double *H_U,
     }
 
     // Keep wall distance positive
-    double rel_dist = MAX(wall_d, 0.) / H_orig;
+    double rel_dist = MAX(wall_d, 0.0) / H_orig;
     // 3 decimal point accuracy on end of boundary layer
     if (rel_dist <= 3. / alpha * log(10.)) {
       double dh_grad = 0., exp_term, exp_term2, exp_termd, tmp = alpha * rel_dist;
@@ -677,12 +677,13 @@ double height_function_model(double *H_U,
       int j;
       if (tmp < 0.1) {
         exp_term = tmp * (1. - 0.5 * tmp * (1. - tmp / 3. * (1. - 0.25 * tmp)));
+        exp_term = MAX(DBL_SEMI_SMALL, exp_term);
         exp_termd = alpha * (1. - exp_term);
       } else {
         exp_term = 1. - exp(-tmp);
         exp_termd = alpha * exp(-tmp);
       }
-      exp_term2 = pow(MAX(exp_term, DBL_SEMI_SMALL), pl_fact);
+      exp_term2 = pow(exp_term, pl_fact);
       if ((ls != NULL || pfd != NULL) && Fwall_model) {
         double inv_F_str = 1. / F_stretch;
         // Modified, shifted LS distance & Heaviside variable
@@ -703,7 +704,7 @@ double height_function_model(double *H_U,
           exp_plus = 1. + beta * exp(-tmp);
         }
         exp_plusd = -alpha * (1. - exp_plus);
-        exp_plus2 = pow(MAX(exp_plus, DBL_SEMI_SMALL), pl_fact);
+        exp_plus2 = pow(exp_plus, pl_fact);
         if (F_prime <= 1.) {
           H_prime = 0.5 * (1. + F_prime + sin(PI * F_prime) / PI);
           dH_prime = (1. + cos(PI * F_prime)) * inv_F_str / ls->Length_Scale;
@@ -717,11 +718,11 @@ double height_function_model(double *H_U,
         if (mp->Lub_LS_Interpolation == LOGARITHMIC) {
           if (F_prime > -1. && F_prime < 1.) {
             /*  LS interface zone */
-            double H_log = (DOUBLE_NONZERO(exp_term) ? (log(exp_term)) : 0.0);
-            double Hplus_log = (DOUBLE_NONZERO(exp_plus) ? (log(exp_plus)) : 0.0);
+            double H_log = log(exp_term);
+            double Hplus_log = log(exp_plus);
             H = H_orig * pow(exp_term2, factor) * pow(exp_plus2, 1.0 - factor);
-            dh_grad = (DOUBLE_NONZERO(exp_term) ? (factor * exp_termd / exp_term) : 0.0);
-            dh_grad += (DOUBLE_NONZERO(exp_plus) ? ((1.0 - factor) * exp_plusd / exp_plus) : 0.0);
+            dh_grad = factor * exp_termd / exp_term;
+            dh_grad += (1.0 - factor) * exp_plusd / exp_plus;
             dh_grad *= H * pl_fact;
             if (isnan(dh_grad)) {
               fprintf(stderr, "dh_grad %g %g %g %g\n", exp_term, exp_termd, exp_plus, exp_plusd);
@@ -755,6 +756,9 @@ double height_function_model(double *H_U,
       } else {
         H *= exp_term2;
         dh_grad = H * exp_termd * pl_fact / exp_term;
+      }
+      if( isinf(dh_grad)) {
+         fprintf(stderr, "dh_grad %g %g %g %g\n", rel_dist, exp_term, exp_termd, H);
       }
       if (mp->HeightUFunctionModel == WALL_DISTMOD) {
         dH_U_dX[0] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][0];
