@@ -4227,9 +4227,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
                 vis_w = pow(vis_w, factor) * pow(mp->mp2nd->viscosity, 1.0 - factor);
                 for (j = 0; j < ei[pg->imtrx]->dof[VAR]; j++) {
                   dqmag_dF[j] += q_mag * qmag_log * lsi->d_H_dF[j];
-                  if(isnan(dqmag_dF[j])) {
-                    fprintf(stderr,"nan lub_q_v %d %g %g %g %g\n",j,dqmag_dF[j],q_mag, qmag_log,lsi->d_H_dF[j]);
-                  }
                 }
               }
             }
