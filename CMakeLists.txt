@@ -571,6 +571,7 @@ set(GOMA_INCLUDES
     include/mm_std_models_shell.h
     include/mm_unknown_map.h
     include/mm_viscosity.h
+    include/models/fluidity.h
     include/polymer_time_const.h
     include/rd_dpi.h
     include/rd_exo.h
@@ -735,6 +736,7 @@ set(GOMA_SOURCES
     src/mm_std_models_shell.c
     src/mm_unknown_map.c
     src/mm_viscosity.c
+    src/models/fluidity.cpp
     src/polymer_time_const.c
     src/rd_dpi.c
     src/rd_exo.c

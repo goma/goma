@@ -4,6 +4,7 @@
 #ifdef GOMA_ENABLE_CPP_FILESYSTEM
 #include <filesystem>
 #endif
+#include "Stratimikos_MueLuHelpers.hpp"
 #include <iostream>
 #include <string>
 #include <utility>
@@ -115,6 +116,8 @@ static void stratimikos_solve_setup(RCP<const Thyra::LinearOpBase<double>> A,
 
   // Set up base builder
   Stratimikos::DefaultLinearSolverBuilder linearSolverBuilder;
+
+  Stratimikos::enableMueLu(linearSolverBuilder);
 
 #ifdef GOMA_ENABLE_TEKO
   Teko::addTekoToStratimikosBuilder(linearSolverBuilder);

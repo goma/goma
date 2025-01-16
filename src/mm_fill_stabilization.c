@@ -306,11 +306,11 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
     }
   }
 
-  if (pd->TimeIntegration != STEADY) {
-    tau_terms->tau = inv_rho / (sqrt(4 / (dt * dt) + v_d_gv + diff_g_g));
-  } else {
-    tau_terms->tau = inv_rho / (sqrt(v_d_gv + diff_g_g) + 1e-14);
-  }
+  // if (pd->TimeIntegration != STEADY) {
+  // tau_terms->tau = inv_rho / (sqrt(4 / (dt * dt) + v_d_gv + diff_g_g));
+  // } else {
+  tau_terms->tau = inv_rho / (sqrt(v_d_gv + diff_g_g) + 1e-14);
+  // }
 
   dbl d_diff_g_g_dmu = 2.0 * diff_g_g / mu;
   dbl supg_tau_cubed = tau_terms->tau * tau_terms->tau * tau_terms->tau;
@@ -1059,9 +1059,9 @@ int calc_pspg(dbl pspg[DIM],
 
     // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
     tau_pspg1 = rho_avg * rho_avg * vv_speed / hh_siz + (9.0 * mu_avg * mu_avg) / (hh_siz * hh_siz);
-    if (pd->TimeIntegration != STEADY) {
-      tau_pspg1 += 4.0 / (dt * dt);
-    }
+    // if (pd->TimeIntegration != STEADY) {
+    //   tau_pspg1 += 4.0 / (dt * dt);
+    // }
     tau_pspg = PS_scaling / sqrt(tau_pspg1);
 
     pspg_tau.tau = tau_pspg;

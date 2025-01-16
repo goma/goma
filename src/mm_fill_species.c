@@ -59,6 +59,7 @@
 #include "std.h"
 #include "user_bc.h"
 #include "user_mp.h"
+#include "models/fluidity.h"
 #ifdef USE_CHEMKIN
 #include "ck_chemkin_const.h"
 #endif
@@ -9974,6 +9975,8 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
           }
         }
+      } else if (mp->SpeciesSourceModel[w] == FLUIDITY_THIXOTROPIC) {
+        fluidity_source(w, st, mp->u_species_source[w]);
       } else if (mp->SpeciesSourceModel[w] == BUTLER_VOLMER) /* added by KSC: 05/15/06 */
       {
         dbl dh[3], p[10];
