@@ -78,6 +78,7 @@
 #include "std.h"
 #include "user_bc.h"
 #include "util/goma_normal.h"
+#include "models/fluidity.h"
 
 #define GOMA_BC_INTEG_C
 
@@ -1030,6 +1031,10 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           } else {
             stress_no_v_dot_gradS(func_stress, d_func_stress, delta_t, theta);
           }
+          break;
+        
+        case FLUIDITY_EQUILIBRIUM_BC:
+          fluidity_equilibrium_surf(func, d_func, bc->species_eq, theta, delta_t);
           break;
 
         case GRAD_LUB_PRESS_BC:

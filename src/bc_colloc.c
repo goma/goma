@@ -56,6 +56,7 @@
 #include "mm_shell_bc.h"
 #include "mm_shell_util.h"
 #include "mm_viscosity.h"
+#include "models/fluidity.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
 #include "rf_fem.h"
@@ -829,38 +830,55 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
                       for (w = 0; w < pd->Num_Species_Eqn; w++) {
                         pvar = MAX_PROB_VAR + w;
                         if (Dolphin[pg->imtrx][I][var] > 0) {
-                          ldof_var = ei[pg->imtrx]->ln_to_first_dof[var][id];
-                          if (ldof_var != -1) {
-                            lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, ldof_var)] +=
-                                penalty * d_func[MAX_VARIABLE_TYPES + w];
-                            lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, ldof_var)] *= f_time;
+                          if (!doFullJac) {
+                            ldof_var = ei[pg->imtrx]->ln_to_first_dof[var][id];
+                            if (ldof_var != -1) {
+                              lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, ldof_var)] +=
+                                  penalty * d_func[MAX_VARIABLE_TYPES + w];
+                              lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, ldof_var)] *= f_time;
+                            }
+                          } else {
+                            ldof_var = ei[pg->imtrx]->ln_to_first_dof[var][id];
+                            if (ldof_var != -1) {
+                              lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, ldof_var)] +=
+                                  penalty * d_kfunc[0][MAX_VARIABLE_TYPES + w][ldof_var];
+                              lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, ldof_var)] *= f_time;
+                            }
                           }
                         }
                         /* if variable is not defined at this node,
                          * loop over all dof in this element */
                         else {
-                          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-                            phi_j = bf[var]->phi[j];
-                            lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] +=
-                                penalty * d_func[MAX_VARIABLE_TYPES + w] * phi_j;
-                            lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] *= f_time;
+                          if (!doFullJac) {
+                            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                              phi_j = bf[var]->phi[j];
+                              lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] +=
+                                  penalty * d_func[MAX_VARIABLE_TYPES + w] * phi_j;
+                              lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] *= f_time;
+                            }
+                          } else {
+                            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                              lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] +=
+                                  penalty * d_kfunc[0][MAX_VARIABLE_TYPES + w][j];
+                              lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] *= f_time;
+                            }
                           }
                         }
                       } /* end of loop over species */
-                    }   /* end of if MASS_FRACTION */
-                  }     /* end of variable exists and condition is sensitive to it */
-                }       /* end of loop over variable types */
-              }         /* end of NEWTON */
-            }           /* if (ldof_eqn != -1) */
-          }             /* END of if (Res_BC != NULL), i.e. (index_eqn != -1) */
-        }               /* END of if COLLOCATED BC */
+                    } /* end of if MASS_FRACTION */
+                  } /* end of variable exists and condition is sensitive to it */
+                } /* end of loop over variable types */
+              } /* end of NEWTON */
+            } /* if (ldof_eqn != -1) */
+          } /* END of if (Res_BC != NULL), i.e. (index_eqn != -1) */
+        } /* END of if COLLOCATED BC */
         /*****************************************************************************/
       } /* END for (ibc = 0; (int) elem_side_bc->BC_input_id[ibc] != ...*/
-        /*****************************************************************************/
-    }   /* END if (I < num_owned_nodes) 				      */
-        /*****************************************************************************/
-  }     /* END for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) */
-        /*****************************************************************************/
+      /*****************************************************************************/
+    } /* END if (I < num_owned_nodes) 				      */
+    /*****************************************************************************/
+  } /* END for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) */
+  /*****************************************************************************/
   return (status);
 } /* end of routine apply_point_colloc_bc() */
 /*****************************************************************************/

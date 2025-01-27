@@ -2124,7 +2124,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     if (Newton_Line_Search_Type == NLS_BACKTRACK) {
       dbl damp = 1.0;
       dbl reduction_factor = 0.5;
-      dbl min_damp = 0.1;
+      dbl min_damp = 0.01;
       dbl *w = alloc_dbl_1(numProcUnknowns, 0.0);
       dbl *R = alloc_dbl_1(numProcUnknowns, 0.0);
       dbl *x_save = alloc_dbl_1(numProcUnknowns, 0.0);
