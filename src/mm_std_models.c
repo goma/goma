@@ -930,7 +930,7 @@ int epoxy_linear_exp_species_source(int species_no, /* Current species number */
 }
 
 int epoxy_arrhenius_exp_species_source(int species_no, /* Current species number */
-                                    double *param)  /* pointer to user-defined parameter list */
+                                       double *param)  /* pointer to user-defined parameter list */
 
 {
   /* Local Variables */
@@ -972,10 +972,10 @@ int epoxy_arrhenius_exp_species_source(int species_no, /* Current species number
   k1 = A1 * exp(-E1 / T);
   k2 = A2 * exp(-E2 / T);
 
-  dbl m = A_m * exp(-B_m/T);
+  dbl m = A_m * exp(-B_m / T);
   dbl mt = B_m * m / (T * T);
-  dbl n = A_n * exp(-B_n/T);
-  dbl nt = B_n * n / (T*T);
+  dbl n = A_n * exp(-B_n / T);
+  dbl nt = B_n * n / (T * T);
 
   if (alpha > 0.0) {
     alpha_m = pow(alpha, m);
@@ -1010,7 +1010,7 @@ int epoxy_arrhenius_exp_species_source(int species_no, /* Current species number
         // k2 * alpha_m portion
         if (alpha > 0) {
           mp->d_species_source[var] += k2 * mt * log(alpha) * alpha_m * alpha_n;
-        } 
+        }
         //  alpha_n portion
         mp->d_species_source[var] += nt * log(1.0 - alpha) * alpha_n * (k1 + k2 * alpha_m);
       }

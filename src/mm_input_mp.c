@@ -2112,7 +2112,6 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
   }
 
-
   model_read = look_for_mat_prop(imp, "Dilational Viscosity Multiplier", &(i0), &(a0), NO_USER,
                                  NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
 

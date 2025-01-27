@@ -69,7 +69,7 @@ int epoxy_linear_exp_species_source(int species_no, /* Current species number */
                                     double *param); /* pointer to user-defined parameter list */
 
 int epoxy_arrhenius_exp_species_source(int species_no, /* Current species number */
-                                    double *param); /* pointer to user-defined parameter list */
+                                       double *param); /* pointer to user-defined parameter list */
 
 EXTERN int bond_species_source /* mm_std_models.c                           */
     (int,                      /* species_no - Current species number       */

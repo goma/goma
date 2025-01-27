@@ -3479,7 +3479,7 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
     if (Dolphin[pg->imtrx][I][VELOCITY1] > 0) {
       for (a = 0; a < VIM; a++) {
         for (q = 0; q < VIM; q++) {
-          cfunc[ldof][a] -= sgn5 * (surf_shear_visc) * 2.000 *
+          cfunc[ldof][a] -= sgn5 * (surf_shear_visc)*2.000 *
                             (fv->surfCurvatureDyadic[a][q] - 2.00 * fv->curv * Is[a][q]) *
                             fv->grad_v_dot_n[q];
         }
@@ -3734,19 +3734,19 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
                 dotdotTmp +=
                     (fv->surfCurvatureDyadic[p][q] - 2 * fv->curv * Is[p][q]) * grad_s_v[q][p];
                 d_cfunc[ldof][a][var][j] +=
-                    sgn4 * (surf_shear_visc) * 2.0 *
+                    sgn4 * (surf_shear_visc)*2.0 *
                     (d_surfCurvatureDyadic_dn[p][q][b][j] * grad_s_v[q][p]) * fv->n[a];
                 d_cfunc[ldof][a][var][j] +=
-                    sgn4 * (surf_shear_visc) * 2.0 *
+                    sgn4 * (surf_shear_visc)*2.0 *
                     (-2 * fv->curv * (-fv->n[p] * phi_j * delta(q, b)) * grad_s_v[q][p]) * fv->n[a];
                 d_cfunc[ldof][a][var][j] +=
-                    sgn4 * (surf_shear_visc) * 2.0 *
+                    sgn4 * (surf_shear_visc)*2.0 *
                     (-2 * fv->curv * (-fv->n[q] * phi_j * delta(p, b)) * grad_s_v[q][p]) * fv->n[a];
               }
             }
 
             d_cfunc[ldof][a][var][j] +=
-                sgn4 * (surf_shear_visc) * 2.0 * dotdotTmp * phi_j * delta(a, b);
+                sgn4 * (surf_shear_visc)*2.0 * dotdotTmp * phi_j * delta(a, b);
           }
         }
       }
@@ -3758,7 +3758,7 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
           for (p = 0; p < VIM; p++) {
             for (q = 0; q < VIM; q++) {
               // curvature dependence to first term
-              d_cfunc[ldof][a][var][j] += sgn4 * (surf_shear_visc) * 2.0 * fv->n[a] *
+              d_cfunc[ldof][a][var][j] += sgn4 * (surf_shear_visc)*2.0 * fv->n[a] *
                                           (-2.0 * phi_j * Is[p][q] * grad_s_v[q][p]);
             }
           }
@@ -3803,7 +3803,7 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
               // cfunc[ldof][a] -= sgn5 * (surf_shear_visc) * 2.000 * (fv->surfCurvatureDyadic[a][q]
               // - 2.00 * fv->curv * Is[a][q]) * fv->grad_v_dot_n[q];
               d_cfunc[ldof][a][var][j] -=
-                  sgn5 * (surf_shear_visc) * 2.000 *
+                  sgn5 * (surf_shear_visc)*2.000 *
                   (fv->surfCurvatureDyadic[a][q] - 2.00 * fv->curv * Is[a][q]) * delta(q, b) *
                   phi_j;
             }
@@ -3818,7 +3818,7 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
           for (q = 0; q < VIM; q++) {
             // cfunc[ldof][a] -= sgn5 * (surf_shear_visc) * 2.000 * (fv->surfCurvatureDyadic[a][q]
             // - 2.00 * fv->curv * Is[a][q]) * fv->grad_v_dot_n[q];
-            d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc) * 2.000 *
+            d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc)*2.000 *
                                         (fv->surfCurvatureDyadic[a][q] - 2.00 * phi_j * Is[a][q]) *
                                         fv->grad_v_dot_n[q];
           }
@@ -3831,13 +3831,13 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
           phi_j = bf[var]->phi[j];
           for (a = 0; a < VIM; a++) {
             for (q = 0; q < VIM; q++) {
-              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc) * 2.000 *
+              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc)*2.000 *
                                           (d_surfCurvatureDyadic_dn[a][q][b][j]) *
                                           fv->grad_v_dot_n[q];
-              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc) * 2.000 *
+              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc)*2.000 *
                                           (-2 * fv->curv * (-fv->n[a] * phi_j * delta(q, b))) *
                                           fv->grad_v_dot_n[q];
-              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc) * 2.000 *
+              d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc)*2.000 *
                                           (-2 * fv->curv * (-fv->n[q] * phi_j * delta(a, b))) *
                                           fv->grad_v_dot_n[q];
             }
@@ -3852,7 +3852,7 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
             phi_j = bf[var]->phi[j];
             for (a = 0; a < VIM; a++) {
               for (q = 0; q < VIM; q++) {
-                d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc) * 2.000 *
+                d_cfunc[ldof][a][var][j] -= sgn5 * (surf_shear_visc)*2.000 *
                                             (d_surfCurvatureDyadic_dmesh[a][q][b][j]) *
                                             fv->grad_v_dot_n[q];
               }
