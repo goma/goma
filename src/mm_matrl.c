@@ -486,11 +486,11 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
       }
     } else if (matrl->DensityModel == DENSITY_FOAM_TIME_TEMP) {
       double T;
-      double rho_init = mp->u_density[0];   /* Initial density (units of gm cm-3 */
-      double rho_final = mp->u_density[1];  /* Final density (units of gm cm-3 */
-      double cexp = mp->u_density[2];       /* cexp in units of Kelvin sec */
-      double coffset = mp->u_density[3];    /* offset in units of seconds */
-      double time_delay = mp->u_density[4]; /* time delay in units of seconds */
+      double rho_init = matrl->u_density[0];   /* Initial density (units of gm cm-3 */
+      double rho_final = matrl->u_density[1];  /* Final density (units of gm cm-3 */
+      double cexp = matrl->u_density[2];       /* cexp in units of Kelvin sec */
+      double coffset = matrl->u_density[3];    /* offset in units of seconds */
+      double time_delay = matrl->u_density[4]; /* time delay in units of seconds */
       double drhoDT;
       T = stateVector[TEMPERATURE];
       if (time > time_delay) {
@@ -531,8 +531,8 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
     if (volF > 0. && doJac) {
       if (pd->v[pg->imtrx][var]) {
         for (w = 0; w < pd->Num_Species; w++) {
-          double drhodC = (rho_gas * mp->d_volumeFractionGas[MAX_VARIABLE_TYPES + w] -
-                           rho_liq * mp->d_volumeFractionGas[MAX_VARIABLE_TYPES + w]);
+          double drhodC = (rho_gas * matrl->d_volumeFractionGas[MAX_VARIABLE_TYPES + w] -
+                           rho_liq * matrl->d_volumeFractionGas[MAX_VARIABLE_TYPES + w]);
           propertyJac_addEnd(densityJac, MASS_FRACTION, matID, w, drhodC, rho);
         }
       }
@@ -542,18 +542,18 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
     if (volF > 0. && doJac) {
       if (pd->v[pg->imtrx][var]) {
         double drhoDT;
-        drhoDT = (rho_gas / fv->T * volF + rho_gas * mp->d_volumeFractionGas[var] -
-                  rho_liq * mp->d_volumeFractionGas[var]);
+        drhoDT = (rho_gas / fv->T * volF + rho_gas * matrl->d_volumeFractionGas[var] -
+                  rho_liq * matrl->d_volumeFractionGas[var]);
         propertyJac_addEnd(densityJac, TEMPERATURE, matID, 0, drhoDT, rho);
       }
     }
   } else if (matrl->DensityModel == DENSITY_CURE_SHRINKAGE) {
-    dbl rho_l = mp->u_density[0];
-    dbl rho_s = mp->u_density[1];
-    dbl alpha_m = mp->u_density[2];
-    dbl alpha_g = mp->u_density[3];
-    dbl cure_enable = mp->u_density[4];
-    int ConstitutiveEquation = gn_glob[ei[pg->imtrx]->mn]->ConstitutiveEquation;
+    dbl rho_l = matrl->u_density[0];
+    dbl rho_s = matrl->u_density[1];
+    dbl alpha_m = matrl->u_density[2];
+    dbl alpha_g = matrl->u_density[3];
+    dbl cure_enable = matrl->u_density[4];
+    int ConstitutiveEquation = gn_glob[matID]->ConstitutiveEquation;
     int species_no = 0;
 
     if (ConstitutiveEquation == CURE || ConstitutiveEquation == EPOXY ||
@@ -669,7 +669,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
 
   } else if (matrl->DensityModel == DENSITY_IDEAL_GAS) {
     double mw_last, c_total;
-    mw_last = mp->molecular_weight[pd->Num_Species_Eqn];
+    mw_last = matrl->molecular_weight[pd->Num_Species_Eqn];
     /*
      * Specify the thermodynamic pressure here
      *   -> For the moment we ignore any coupling between
@@ -808,8 +808,8 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
     if (err)
       return 0;
 
-    double M_BA = mp->u_species_source[species_BA_l][0];
-    double M_CO2 = mp->u_species_source[species_CO2_l][0];
+    double M_BA = matrl->u_species_source[species_BA_l][0];
+    double M_CO2 = matrl->u_species_source[species_CO2_l][0];
     double rho_bubble = 0;
     double rho_foam = matrl->u_density[0];
     double ref_press = matrl->u_density[1];
