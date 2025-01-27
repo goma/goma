@@ -2063,6 +2063,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   // Set the default
   mp_glob[mn]->DilationalViscosityModel = DILVISCM_KAPPAWIPESMU;
+  SPF(es, "Dilational Viscosity = ");
   model_read = look_for_mat_proptable(
       imp, "Dilational Viscosity", &(mp_glob[mn]->DilationalViscosityModel),
       &(mp_glob[mn]->dilationalViscosity), &(mp_glob[mn]->u_dilationalViscosity),
@@ -2106,6 +2107,11 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     // We're here if we found the card, but couldn't read it
     GOMA_EH(model_read, "Dilational Viscosity");
   }
+
+  if (mp_glob[mn]->DilationalViscosityModel != DILVISCM_KAPPAWIPESMU) {
+    ECHO(es, echo_file);
+  }
+
 
   model_read = look_for_mat_prop(imp, "Dilational Viscosity Multiplier", &(i0), &(a0), NO_USER,
                                  NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
