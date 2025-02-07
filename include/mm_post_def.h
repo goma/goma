@@ -697,6 +697,7 @@ extern int WALL_DISTANCE;
 extern int CONTACT_DISTANCE;
 extern int PP_FLUID_STRESS;
 extern int LUB_CONVECTION; /* Convection forces in Lubrication */
+extern int FLUIDITY_SOURCE;
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

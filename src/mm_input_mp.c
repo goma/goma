@@ -8557,8 +8557,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       SpeciesSourceModel = FLUIDITY_THIXOTROPIC;
       model_read = 1;
       mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
-      if (fscanf(imp, "%lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4) != 5) {
-        sr = sprintf(err_msg, "Matl %s needs  5 constants for %s %s model.\n",
+      if (fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7) != 8) {
+        sr = sprintf(err_msg, "Matl %s needs  8 constants for %s %s model.\n",
                      pd_glob[mn]->MaterialName, "Species Source", "FLUIDITY");
         GOMA_EH(GOMA_ERROR, err_msg);
       }
@@ -8572,6 +8572,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->u_species_source[species_no][2] = a2; /* K */
       mat_ptr->u_species_source[species_no][3] = a3; /* n */
       mat_ptr->u_species_source[species_no][4] = a4; /* tc */
+      mat_ptr->u_species_source[species_no][4] = a5; /* sigma_y */
+      mat_ptr->u_species_source[species_no][4] = a6; /* m */
+      mat_ptr->u_species_source[species_no][4] = a7; /* m_y */
 
       SPF_DBL_VEC(endofstring(es), 5, mat_ptr->u_species_source[species_no]);
     } else if (!strcmp(model_name, "FOAM_EPOXY")) {
