@@ -107,7 +107,7 @@ sfad sfad_fluidity_source(int species_no, dbl *params) {
   sfad ta = tc;
   sfad s = 8.0 / max(exp(phi_eq / 0.09) - 1.0, 1e-16) + 1.2;
 
-  sfad H = smoothed_heaviside(phi_star - phi_eq, m);
+  sfad H = smoothed_heaviside(std::max(0, phi_star) - phi_eq, m);
 
   // Breakdown dynamics
   sfad F_breakdown = (s / (ta * phi_eq)) * pow(max(0, phi_eq - phi_star), (s + 1) / s) *
@@ -116,8 +116,16 @@ sfad sfad_fluidity_source(int species_no, dbl *params) {
   // Buildup dynamics
   sfad F_buildup = -(phi_star - phi_eq) / tc;
 
+  if (phi_star < 0) {
+    F_buildup = -(-exp(-phi_star*100) - phi_eq) / tc;
+  }
+
   // Calculate F
   sfad F = H * F_buildup + (1.0 - H) * F_breakdown;
+
+  if (phi_star.val() < -1e-4) {
+    printf("phi_star: %g, F: %g, phi_eq: %g\n", phi_star.val(), F.val(), phi_eq.val());
+  }
 
   return F;
 }
