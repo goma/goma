@@ -4210,7 +4210,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
               dq_dH2 = -3. * SQUARE(H) / (k_turb * mp->mp2nd->viscosity) * pgrad;
               srate2 = tau_w / mp->mp2nd->viscosity;
               qmag_log = (DOUBLE_NONZERO(q_mag) ? log(q_mag2 / q_mag) : 0.0);
-              if (fabs(fv->F) > ls->Length_Scale) {
+              if (!lsi->near) {
                 q_mag = q_mag2;
                 dq_gradp = dq_gradp2;
                 pre_delP = pre_delP2;
@@ -4333,7 +4333,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
               dq_dH2 = -3. * SQUARE(H) / (k_turb * mp->mp2nd->viscosity) * pgrad;
               srate2 = tau_w / mp->mp2nd->viscosity;
               qmag_log = (DOUBLE_NONZERO(q_mag) ? log(q_mag2 / q_mag) : 0.0);
-              if (fabs(fv->F) > ls->Length_Scale) {
+              if (fabs(fv->F) > 0.5 * ls->Length_Scale) {
                 q_mag = q_mag2;
                 dq_gradp = dq_gradp2;
                 pre_delP = pre_delP2;
@@ -4687,9 +4687,10 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     LubAux->dvisc_diss_dT = dmu_diss_dT;
     LubAux->dvisc_diss_dpgrad = dmu_diss_dpgrad;
     for (i = 0; i < dim; i++) {
+      LubAux->gradP[i] = pg_cmp[i];
       LubAux->q[i] = q[i];
       LubAux->v_avg[i] = v_avg[i];
-      LubAux->gradP_mag += SQUARE(GRADP[i] - GRAV[i] - Bouss[i]);
+      LubAux->gradP_mag += SQUARE(pg_cmp[i]);
 
       LubAux->dq_dp2[i] = D_Q_DP2[i];
       LubAux->dv_avg_dp2[i] = D_V_DP2[i];
@@ -5670,7 +5671,7 @@ void calculate_lub_q_v_old(
             pre_delP2 = -CUBE(H_old) / (k_turb * mp->mp2nd->viscosity);
             q_mag2 = pre_delP2 * pgrad;
             qmag_log = (DOUBLE_NONZERO(q_mag) ? log(q_mag2 / q_mag) : 0.0);
-            if (fabs(fv->F) > ls->Length_Scale) {
+            if (fabs(fv->F) > 0.5 * ls->Length_Scale) {
               q_mag = q_mag2;
             } else {
               factor = (mp->mp2nd->viscositymask[1] ? (1.0 - lsi->H) : lsi->H);

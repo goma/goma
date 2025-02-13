@@ -6674,6 +6674,15 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
     /*** Loop over DOFs (i) ***/
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
+      /* this is an optimization for xfem */
+      if (xfem != NULL) {
+        int xfem_active, extended_dof, base_interp, base_dof;
+        xfem_dof_state(i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape, &xfem_active,
+                       &extended_dof, &base_interp, &base_dof);
+        if (extended_dof && !xfem_active)
+          continue;
+      }
+
       /* Prepare basis funcitons */
       ShellBF(eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh,
               n_dof[MESH_DISPLACEMENT1], dof_map);
@@ -6709,6 +6718,15 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
     /*** Loop over DOFs (i) ***/
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+      /* this is an optimization for xfem */
+      if (xfem != NULL) {
+        int xfem_active, extended_dof, base_interp, base_dof;
+        xfem_dof_state(i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape, &xfem_active,
+                       &extended_dof, &base_interp, &base_dof);
+        if (extended_dof && !xfem_active)
+          continue;
+      }
 
       /* Prepare basis functions (i) */
       ShellBF(eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh,
@@ -14089,7 +14107,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
             div += LSnormal[a] * grad_II_phi_i[a];
           }
           if (mp->Lub_Curv_Combine) {
-            div += LubAux->op_curv * phi_i;
+            div -= LubAux->op_curv * phi_i;
           }
           div *= curvX * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
         }
@@ -14311,7 +14329,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
                   div += LSnormal[a] * grad_II_phi_i[a] * fv->dsurfdet_dx[b][jj];
                 }
                 if (mp->Lub_Curv_Combine) {
-                  div += LubAux->dop_curv_dx[b][jj] * phi_i;
+                  div -= LubAux->dop_curv_dx[b][jj] * phi_i;
                 }
                 div *= curvX * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
               }
@@ -14334,7 +14352,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
             diff1 += hsquared[a] * gradII_kappa[a] * grad_II_phi_i[a];
           }
           if (mp->Lub_Curv_Combine) {
-            div1 += LubAux->op_curv * phi_i;
+            div1 -= LubAux->op_curv * phi_i;
           }
         }
 
@@ -14400,6 +14418,16 @@ int assemble_lubrication_curvature(double time,            /* present time value
             }
           }
 
+          /* Assemble diffusion terms */
+          diff = 0.0;
+          if (curv_near) {
+            if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+              if (!lsi->near) {
+                diff += (-SGN(fv->F) / lsi->alpha * phi_j) * diff1 * K_diff * det_J * wt * h3 *
+                        pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+              }
+            }
+          }
           /* Assemble divergence terms */
           div = 0.0;
           if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
@@ -14408,7 +14436,7 @@ int assemble_lubrication_curvature(double time,            /* present time value
                 div += d_LSnormal_dF[a][j] * grad_II_phi_i[a];
               }
               if (mp->Lub_Curv_Combine) {
-                div += LubAux->dop_curv_df[j] * phi_i;
+                div -= LubAux->dop_curv_df[j] * phi_i;
               }
               div *= curvX * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
               if (!lsi->near && mp->Lub_Curv_Modulation) {

@@ -545,6 +545,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
         SPF(endofstring(echo_string), " %.4g %.4g %.4g", BC_Types[ibc].BC_Data_Float[1],
             BC_Types[ibc].BC_Data_Float[2], BC_Types[ibc].BC_Data_Float[3]);
       }
+
       break;
 
       /*
