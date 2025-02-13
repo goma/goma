@@ -1,4 +1,12 @@
 ## Changes in version 7.9.0
+* Add Giesekus model to SQRT_CONF by @wortiz in https://github.com/goma/goma/pull/486
+* Add skip ssl check to Goma tpl build script by @wortiz in https://github.com/goma/goma/pull/487
+* Kelvin-Voigt solid model fix by @rbsecor in https://github.com/goma/goma/pull/485
+* set LD_LIBRARY_PATH in configs when building TPLs with build script by @wortiz in https://github.com/goma/goma/pull/489
+* SHELL_CONC_LS_BC by @rbsecor in https://github.com/goma/goma/pull/490
+* Addition of Taylor Galerkin method to the moment population balance equations by @trkenne in https://github.com/goma/goma/pull/491
+* Stratimikos bugfix by @wortiz in https://github.com/goma/goma/pull/492
+* Update tpl packages for BLAS/LAPACK issues by @wortiz in https://github.com/goma/goma/pull/493
 
 ## Changes in version 7.8.1
 - Goma v7.8.1 bugfix for viscoelastic flows by @wortiz in #483

@@ -6578,7 +6578,6 @@ void rd_solver_specs(FILE *ifp, char *input) {
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
   ECHO(echo_string, echo_file);
 
-
   look_for(ifp, "Newton correction factor", input, '=');
   if (fscanf(ifp, "%le", &damp_factor1) != 1) {
     GOMA_EH(GOMA_ERROR, "error reading Newton correction factor, expected at least one float");
