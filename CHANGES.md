@@ -1,3 +1,8 @@
+## Changes in version 7.9.0
+
+## Changes in version 7.8.1
+- Goma v7.8.1 bugfix for viscoelastic flows by @wortiz in #483
+
 ## Changes in version 7.8.0
 - fix readme links by @wortiz in #480
 - Lubrication LS Heaviside Shift by @rbsecor in #481
