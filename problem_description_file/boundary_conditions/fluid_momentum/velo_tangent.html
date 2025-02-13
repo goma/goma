@@ -365,10 +365,10 @@ effect of,</p>
 <p>VELO_NORMAL, surface tension is very small. The desired set of conditions that
 should be applied at the dynamic contact line are as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="n">At</span> <span class="n">node</span> <span class="mi">1</span><span class="p">:</span>
-<span class="n">R_MOMENTUM1</span>   <span class="n">gets</span> <span class="n">VELO_NORMAL</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span> <span class="n">CAPILLARY</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
-<span class="n">R_MOMENTUM2</span>   <span class="n">gets</span> <span class="n">VELO_TANGENT</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span> <span class="n">CAPILLARY</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
-<span class="n">R_MESH1</span>   <span class="n">gets</span> <span class="n">KINEMATIC</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
-<span class="n">R_MESH2</span>   <span class="n">gets</span> <span class="n">GD_PARAB</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span> <span class="n">GD_PARAB</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span>
+<span class="n">R_MOMENTUM1</span>   <span class="n">gets</span> <span class="n">VELO_NORMAL</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span> <span class="n">CAPILLARY</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
+<span class="n">R_MOMENTUM2</span>   <span class="n">gets</span> <span class="n">VELO_TANGENT</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span> <span class="n">CAPILLARY</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
+<span class="n">R_MESH1</span>   <span class="n">gets</span> <span class="n">KINEMATIC</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
+<span class="n">R_MESH2</span>   <span class="n">gets</span> <span class="n">GD_PARAB</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span> <span class="n">GD_PARAB</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span>
 </pre></div>
 </div>
 <p>This clearly shows that at the contact line, which happens to be node number 1 as
@@ -391,10 +391,10 @@ is not needed so we added this special control. If the following card is issued:
 </div>
 <p>then the following combination results:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="n">At</span> <span class="n">node</span> <span class="mi">1</span><span class="p">:</span>
-<span class="n">R_MOMENTUM1</span> <span class="n">gets</span>   <span class="n">VELO_NORMAL</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span> <span class="n">CAPILLARY</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
-<span class="n">R_MOMENTUM2</span> <span class="n">gets</span>   <span class="n">CAPILLARY</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
-<span class="n">R_MESH1</span> <span class="n">gets</span>   <span class="n">KINEMATIC</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
-<span class="n">R_MESH2</span> <span class="n">gets</span>   <span class="n">GD_PARAB</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span> <span class="n">GD_PARAB</span>   <span class="kn">from</span> <span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span>
+<span class="n">R_MOMENTUM1</span> <span class="n">gets</span>   <span class="n">VELO_NORMAL</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span> <span class="n">CAPILLARY</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
+<span class="n">R_MOMENTUM2</span> <span class="n">gets</span>   <span class="n">CAPILLARY</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
+<span class="n">R_MESH1</span> <span class="n">gets</span>   <span class="n">KINEMATIC</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">4</span><span class="p">,</span>
+<span class="n">R_MESH2</span> <span class="n">gets</span>   <span class="n">GD_PARAB</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span> <span class="n">GD_PARAB</span>   <span class="kn">from</span><span class="w"> </span><span class="nn">SS</span> <span class="mi">5</span><span class="p">,</span>
 </pre></div>
 </div>
 <p>which is desired in the case for which a contact angle and liquid slip is applied.</p>
