@@ -1,3 +1,8 @@
+## Changes in version 7.8.0
+- fix readme links by @wortiz in #480
+- Lubrication LS Heaviside Shift by @rbsecor in #481
+- Goma 7.8.0: Add SHEAR_STRESS_APPLIED by @wortiz in #482
+
 ## Changes in version 7.7.0
 
 Major new features are Autodiff and stabilization improvements and a new build script in `tpls/` folder
