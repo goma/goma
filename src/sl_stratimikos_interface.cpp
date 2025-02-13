@@ -57,12 +57,12 @@
 #include <Epetra_SerialComm.h>
 #endif
 
+#include "sl_stratimikos_interface.h"
 #include <Epetra_Map.h>
 #include <Epetra_RowMatrix.h>
 #include <Epetra_Vector.h>
 #include <linalg/sparse_matrix.h>
 #include <linalg/sparse_matrix_epetra.h>
-#include "sl_stratimikos_interface.h"
 extern "C" {
 #include <sl_util_structs.h>
 }

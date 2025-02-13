@@ -668,7 +668,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
         } /* if active_dofs */
 
       } /* end of loop over equations */
-    } /* end of assemble residuals */
+    }   /* end of assemble residuals */
 
     /*
      * Jacobian terms...
@@ -1408,7 +1408,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
               lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] +=
                   mass + advection + diffusion + source;
             } /* for(j) .... */
-          } /* if ( e[eqn], v[var]) .... */
+          }   /* if ( e[eqn], v[var]) .... */
           var = LIGHT_INTP;
           if (pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];
@@ -1423,7 +1423,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
               lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += source;
             } /* for(j) .... */
-          } /* if ( e[eqn], v[var]) .... */
+          }   /* if ( e[eqn], v[var]) .... */
           var = LIGHT_INTM;
           if (pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];
@@ -1438,7 +1438,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
               lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += source;
             } /* for(j) .... */
-          } /* if ( e[eqn], v[var]) .... */
+          }   /* if ( e[eqn], v[var]) .... */
           var = LIGHT_INTD;
           if (pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];
@@ -1453,7 +1453,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
               lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += source;
             } /* for(j) .... */
-          } /* if ( e[eqn], v[var]) .... */
+          }   /* if ( e[eqn], v[var]) .... */
 
           /*
            * J_s_V  sensitivity of species equation w.r.t. voltage -- RSL 4/4/00
@@ -1507,7 +1507,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                 lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] +=
                     mass + advection + diffusion + source;
               } /* end of loop over j */
-            } /* end of var = VOLTAGE */
+            }   /* end of var = VOLTAGE */
           }
 
           /*  KSC: 9/9/00
@@ -1530,8 +1530,8 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
                 lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += diffusion;
               } /* for(j) .... */
-            } /* if ( e[eqn], v[var]) .... */
-          } /* if cr->MassFluxModel == FICKIAN_CHARGED ...  */
+            }   /* if ( e[eqn], v[var]) .... */
+          }     /* if cr->MassFluxModel == FICKIAN_CHARGED ...  */
 
           /*
            * Jacobian with respect to pressure
@@ -1577,7 +1577,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
               lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += advection + diffusion + mass;
             } /* for(j) .... */
-          } /* if ( e[eqn], v[var]) .... */
+          }   /* if ( e[eqn], v[var]) .... */
 
           /*
            * J_s_SH:
@@ -1604,8 +1604,8 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                 lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += diffusion;
 
               } /* for (j) .. J_s_SH */
-            } /* if (pd) */
-          } /* if( cr) */
+            }   /* if (pd) */
+          }     /* if( cr) */
 
           if (mp->SpeciesSourceModel[w] ==
               SSM_BOND) /* These terms only appear for the Bond src term model */
@@ -1624,9 +1624,9 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                   lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += source;
 
                 } /* for (j) .. J_s_SH */
-              } /* if pd -eqn)*/
-            } /* if (pd -var) */
-          } /* if( mp->SpeciesSource) */
+              }   /* if pd -eqn)*/
+            }     /* if (pd -var) */
+          }       /* if( mp->SpeciesSource) */
 
           /*
            * J_s_G:
@@ -1667,9 +1667,9 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
           } /*if ( cr->MassFluxModel == DM_SUSPENSION_BALANCE ) */
 
         } /* if active_dofs */
-      } /* for (i) .... */
-    } /* if ( assemble Jacobian ) */
-  } /* for (w) ... */
+      }   /* for (i) .... */
+    }     /* if ( assemble Jacobian ) */
+  }       /* for (w) ... */
 
   return (status);
 
@@ -2080,8 +2080,8 @@ int assemble_mass_transport_path_dependence(
         } /* if active_dofs */
 
       } /* end of loop over equations */
-    } /* end of loop over species */
-  } /* end of assemble residuals */
+    }   /* end of loop over species */
+  }     /* end of assemble residuals */
   return 0;
 }
 /*****************************************************************************/
@@ -7426,7 +7426,7 @@ void compute_leak_velocity(double *vnorm,
          *mass loss, you need to shore up mass_flux_alloy_surf
          *with func level, ala YFLUX and YFLUX_USER */
       }
-    } /*else on the if(YFLUX_ALLLOY***) */
+    }    /*else on the if(YFLUX_ALLLOY***) */
     else /* This is the YFLUX default in case you weren't paying attention */
     {
 
@@ -7561,7 +7561,7 @@ void compute_leak_velocity(double *vnorm,
           }
         }
       } /* end of loop over vconv directions */
-    } /* end of if Assemble Jacobian */
+    }   /* end of if Assemble Jacobian */
   }
   *vnorm = vnormal;
 }
@@ -7834,7 +7834,7 @@ void compute_leak_energy(double *enorm,
         }
       }
 
-    } /*else on the if(YFLUX_USER***) */
+    }    /*else on the if(YFLUX_USER***) */
     else /* This is the YFLUX default in case you weren't paying attention */
     {
 
@@ -8990,8 +8990,8 @@ int get_convection_velocity(
             }
           }
         } /* end of loop over vconv directions */
-      } /* end of if Assemble Jacobian */
-    } /* end of if MASS_FRACTION */
+      }   /* end of if Assemble Jacobian */
+    }     /* end of if MASS_FRACTION */
 
     /*
      * Add in convection due to motion of Stress Free State - Pseudo Lagrangian Convection
@@ -12238,7 +12238,7 @@ int assemble_invariant(double tt, /* parameter to vary time integration from
         }
       }
     } /* end of for(i.. loop */
-  } /* end of if(af,, */
+  }   /* end of if(af,, */
 
   return (status);
 
@@ -12466,8 +12466,8 @@ int get_particle_convection_velocity(double pvconv[DIM],
             }
           }
         } /* end of loop over pvconv directions */
-      } /* end of if Assemble Jacobian */
-    } /* end of if MASS_FRACTION */
+      }   /* end of if Assemble Jacobian */
+    }     /* end of if MASS_FRACTION */
 
     /*    d_node_position/dt */
     if (pd->TimeIntegration != STEADY &&

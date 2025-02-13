@@ -67,6 +67,7 @@
 #include "mm_ns_bc.h"
 #include "mm_qtensor_model.h"
 #include "mm_shell_bc.h"
+#include "models/fluidity.h"
 #include "rd_mesh.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
@@ -78,7 +79,6 @@
 #include "std.h"
 #include "user_bc.h"
 #include "util/goma_normal.h"
-#include "models/fluidity.h"
 
 #define GOMA_BC_INTEG_C
 
@@ -1032,7 +1032,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
             stress_no_v_dot_gradS(func_stress, d_func_stress, delta_t, theta);
           }
           break;
-        
+
         case FLUIDITY_EQUILIBRIUM_BC:
           fluidity_equilibrium_surf(func, d_func, bc->species_eq, theta, delta_t);
           break;

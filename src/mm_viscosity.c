@@ -37,6 +37,7 @@
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
 #include "mm_viscosity.h"
+#include "models/fluidity.h"
 #include "rf_allo.h"
 #include "rf_bc_const.h"
 #include "rf_fem.h"
@@ -45,7 +46,6 @@
 #include "std.h"
 #include "user_mp.h"
 #include "user_mp_gen.h"
-#include "models/fluidity.h"
 
 #define GOMA_MM_VISCOSITY_C
 

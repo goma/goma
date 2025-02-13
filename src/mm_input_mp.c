@@ -8552,12 +8552,12 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->u_species_source[species_no][4] = a4; /* exponent for aggregation eqn */
 
       SPF_DBL_VEC(endofstring(es), 5, mat_ptr->u_species_source[species_no]);
-    }
-    else if (!strcmp(model_name, "FLUIDITY")) {
+    } else if (!strcmp(model_name, "FLUIDITY")) {
       SpeciesSourceModel = FLUIDITY_THIXOTROPIC;
       model_read = 1;
       mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
-      if (fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7) != 8) {
+      if (fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7) !=
+          8) {
         sr = sprintf(err_msg, "Matl %s needs  8 constants for %s %s model.\n",
                      pd_glob[mn]->MaterialName, "Species Source", "FLUIDITY");
         GOMA_EH(GOMA_ERROR, err_msg);

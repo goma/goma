@@ -74,6 +74,7 @@
 #include "mm_std_models_shell.h"
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
+#include "models/fluidity.h"
 #include "polymer_time_const.h"
 #include "rd_mesh.h"
 #include "rf_allo.h"
@@ -98,7 +99,6 @@
 #include "user_mp.h"
 #include "user_post.h"
 #include "wr_exo.h"
-#include "models/fluidity.h"
 
 /*
  * Global variable definitions.
@@ -3155,8 +3155,8 @@ static int calc_standard_fields(double **post_proc_vect,
   } /* end of LUB_CONVECTION */
 
   if ((FLUIDITY_SOURCE != -1) && pd->e[pg->imtrx][R_MASS]) {
-     struct Species_Conservation_Terms st;
-     dbl *params = mp->u_species_source[0];
+    struct Species_Conservation_Terms st;
+    dbl *params = mp->u_species_source[0];
     fluidity_source(0, &st, params);
 
     /* Post velocities */
@@ -3164,7 +3164,6 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[FLUIDITY_SOURCE] = 1.0;
 
   } /* end of FLUIDITY_SOURCE */
-
 
   if ((PP_LAME_MU != -1) && (pd->e[pg->imtrx][R_MESH1])) {
 

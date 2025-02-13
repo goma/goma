@@ -98,8 +98,9 @@ sfad sfad_fluidity_source(int species_no, dbl *params) {
   sigma = sqrt(0.5 * sigma);
 
   // Calculate phi_eq
-  sfad term = pow((sigma-sigma_y) / K, 1.0 / n) * (1.0 / sigma);
-  sfad phi_eq = max(1e-32, smoothed_heaviside(sigma-sigma_y, m_y) * term / ((phi_inf - phi_0) + term));
+  sfad term = pow((sigma - sigma_y) / K, 1.0 / n) * (1.0 / sigma);
+  sfad phi_eq =
+      max(1e-32, smoothed_heaviside(sigma - sigma_y, m_y) * term / ((phi_inf - phi_0) + term));
 
   // Calculate t_a and s
   // avalanche time
@@ -117,7 +118,7 @@ sfad sfad_fluidity_source(int species_no, dbl *params) {
   sfad F_buildup = -(phi_star - phi_eq) / tc;
 
   if (phi_star < 0) {
-    F_buildup = -(-exp(-phi_star*100) - phi_eq) / tc;
+    F_buildup = -(-exp(-phi_star * 100) - phi_eq) / tc;
   }
 
   // Calculate F
@@ -263,7 +264,8 @@ fluidity_source_s(int species_no, struct Species_Conservation_Terms *st, dbl *pa
     if (pd->v[pg->imtrx][var]) {
       for (int j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
         st->d_MassSource_dc[species_no][species_no][j] =
-            bf[MASS_FRACTION]->phi[j] * (d_F_d_phi_v * d_phi_v_d_phi + d_F_d_phi_eq * d_phi_eq_d_sigma * d_sigma_d_phi_v);
+            bf[MASS_FRACTION]->phi[j] *
+            (d_F_d_phi_v * d_phi_v_d_phi + d_F_d_phi_eq * d_phi_eq_d_sigma * d_sigma_d_phi_v);
       }
     }
 
