@@ -4,67 +4,68 @@
 #ifdef GOMA_ENABLE_CPP_FILESYSTEM
 #include <filesystem>
 #endif
-#include "Stratimikos_MueLuHelpers.hpp"
+#include <Stratimikos_MueLuHelpers.hpp>
 #include <iostream>
 #include <string>
-#include <utility>
 
-#include "Epetra_DataAccess.h"
-#include "Stratimikos_DefaultLinearSolverBuilder.hpp"
-#include "Teuchos_ENull.hpp"
-#include "Teuchos_FancyOStream.hpp"
-#include "Teuchos_ParameterList.hpp"
-#include "Teuchos_ParameterListExceptions.hpp"
-#include "Teuchos_Ptr.hpp"
-#include "Teuchos_RCP.hpp"
-#include "Teuchos_RCPDecl.hpp"
-#include "Teuchos_StandardCatchMacros.hpp"
-#include "Teuchos_VerboseObject.hpp"
-#include "Teuchos_VerbosityLevel.hpp"
-#include "Teuchos_XMLParameterListCoreHelpers.hpp"
-#include "Teuchos_YamlParameterListCoreHelpers.hpp"
-#include "Teuchos_config.h"
-#include "Thyra_EpetraLinearOp.hpp"
-#include "Thyra_EpetraThyraWrappers.hpp"
-#include "Thyra_LinearOpBase_decl.hpp"
-#include "Thyra_LinearOpWithSolveBase_decl.hpp"
-#include "Thyra_LinearOpWithSolveFactoryBase_decl.hpp"
-#include "Thyra_LinearOpWithSolveFactoryHelpers.hpp"
-#include "Thyra_OperatorVectorTypes.hpp"
-#include "Thyra_SolveSupportTypes.hpp"
-#include "Thyra_VectorBase.hpp"
+#include <Epetra_DataAccess.h>
+#include <Stratimikos_DefaultLinearSolverBuilder.hpp>
+#include <Teuchos_ENull.hpp>
+#include <Teuchos_FancyOStream.hpp>
+#include <Teuchos_ParameterList.hpp>
+#include <Teuchos_ParameterListExceptions.hpp>
+#include <Teuchos_Ptr.hpp>
+#include <Teuchos_RCP.hpp>
+#include <Teuchos_RCPDecl.hpp>
+#include <Teuchos_StandardCatchMacros.hpp>
+#include <Teuchos_VerboseObject.hpp>
+#include <Teuchos_VerbosityLevel.hpp>
+#include <Teuchos_XMLParameterListCoreHelpers.hpp>
+#include <Teuchos_YamlParameterListCoreHelpers.hpp>
+#include <Teuchos_config.h>
+#include <Thyra_EpetraLinearOp.hpp>
+#include <Thyra_EpetraThyraWrappers.hpp>
+#include <Thyra_LinearOpBase_decl.hpp>
+#include <Thyra_LinearOpWithSolveBase_decl.hpp>
+#include <Thyra_LinearOpWithSolveFactoryBase_decl.hpp>
+#include <Thyra_LinearOpWithSolveFactoryHelpers.hpp>
+#include <Thyra_OperatorVectorTypes.hpp>
+#include <Thyra_SolveSupportTypes.hpp>
+#include <Thyra_VectorBase.hpp>
 
-#include "Thyra_LinearOpTester.hpp"
-#include "Thyra_LinearOpWithSolveFactoryHelpers.hpp"
-#include "Thyra_LinearOpWithSolveTester.hpp"
+#include <Thyra_LinearOpTester.hpp>
+#include <Thyra_LinearOpWithSolveFactoryHelpers.hpp>
+#include <Thyra_LinearOpWithSolveTester.hpp>
 
 #ifdef GOMA_ENABLE_TPETRA
-#include "Thyra_TpetraLinearOp.hpp"
-#include "Thyra_TpetraThyraWrappers.hpp"
-#include "Thyra_TpetraVector.hpp"
-#include "linalg/sparse_matrix_tpetra.h"
+#include <Thyra_TpetraLinearOp.hpp>
+#include <Thyra_TpetraThyraWrappers.hpp>
+#include <Thyra_TpetraVector.hpp>
+#include <linalg/sparse_matrix_tpetra.h>
 #endif
 
-#include "EpetraExt_RowMatrixOut.h"
-#include "EpetraExt_VectorOut.h"
+#include <EpetraExt_RowMatrixOut.h>
+#include <EpetraExt_VectorOut.h>
 
 #ifdef GOMA_ENABLE_TEKO
 // Teko-Package includes
-#include "Teko_StratimikosFactory.hpp"
+#include <Teko_StratimikosFactory.hpp>
 #endif
 
 #ifdef HAVE_MPI
 #else
-#include "Epetra_SerialComm.h"
+#include <Epetra_SerialComm.h>
 #endif
 
-#include "Epetra_Map.h"
-#include "Epetra_RowMatrix.h"
-#include "Epetra_Vector.h"
-#include "linalg/sparse_matrix.h"
-#include "linalg/sparse_matrix_epetra.h"
+#include <Epetra_Map.h>
+#include <Epetra_RowMatrix.h>
+#include <Epetra_Vector.h>
+#include <linalg/sparse_matrix.h>
+#include <linalg/sparse_matrix_epetra.h>
 #include "sl_stratimikos_interface.h"
-#include "sl_util_structs.h"
+extern "C" {
+#include <sl_util_structs.h>
+}
 
 struct Stratimikos_Solver_Data {
   Teuchos::RCP<Thyra::LinearOpWithSolveBase<double>> solver;

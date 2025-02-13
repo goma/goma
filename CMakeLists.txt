@@ -187,7 +187,7 @@ if(ENABLE_PETSC)
   # PETSC search set root of location to find PETSc configuration
   set(PETSC_PATH $ENV{PETSC_DIR}/$ENV{PETSC_ARCH})
   set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig)
-
+message( "PETSc path for pkgconfig ${PETSC_PATH}/lib/pkgconfig")
   find_package(PkgConfig)
 
   if(PkgConfig_FOUND)
