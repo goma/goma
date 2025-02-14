@@ -2124,7 +2124,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     if (Newton_Line_Search_Type == NLS_BACKTRACK) {
       dbl damp = 1.0;
       dbl reduction_factor = 0.5;
-      dbl min_damp = 0.01;
+      dbl min_damp = 0.005;
       dbl *w = alloc_dbl_1(numProcUnknowns, 0.0);
       dbl *R = alloc_dbl_1(numProcUnknowns, 0.0);
       dbl *x_save = alloc_dbl_1(numProcUnknowns, 0.0);
@@ -2266,6 +2266,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         exchange_dof(cx, dpi, xdot, pg->imtrx);
       }
     }
+
 
     if (pd->TimeIntegration != STEADY) {
       /* Now go back and correct all those dofs in solid regions undergoing newmark-beta
@@ -2609,7 +2610,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     inewton++;
     af->Sat_hyst_reevaluate = FALSE; /*only want this true
                                        for first iteration*/
-  }                                  /* End of loop over newton iterations */
+  } /* End of loop over newton iterations */
 
   /**********************************************************************/
   /**********************************************************************
@@ -3558,10 +3559,10 @@ static int soln_sens(double lambda,  /*  parameter */
     if (first_linear_solver_call)
       GOMA_EH(GOMA_ERROR, "Solving for AC's BEFORE a regular solve");
 
-      /* MMH: I believe that this system will always be the same
-       * structure/system as the one used for the regular solve.  This
-       * was the behavior before I consolidated the UMFPACK and
-       * UMFPACK2F. */
+    /* MMH: I believe that this system will always be the same
+     * structure/system as the one used for the regular solve.  This
+     * was the behavior before I consolidated the UMFPACK and
+     * UMFPACK2F. */
 
 #ifdef DEBUG_SL_UMF
     printf("%s: entering SL_UMF for soln_sens solve\n", y0);

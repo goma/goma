@@ -8563,18 +8563,18 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         GOMA_EH(GOMA_ERROR, err_msg);
       }
 
-      mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 5, sizeof(dbl));
+      mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 8, sizeof(dbl));
 
-      mat_ptr->len_u_species_source[species_no] = 5;
+      mat_ptr->len_u_species_source[species_no] = 8;
 
       mat_ptr->u_species_source[species_no][0] = a0; /* phi_0 */
       mat_ptr->u_species_source[species_no][1] = a1; /* phi_inf */
       mat_ptr->u_species_source[species_no][2] = a2; /* K */
       mat_ptr->u_species_source[species_no][3] = a3; /* n */
       mat_ptr->u_species_source[species_no][4] = a4; /* tc */
-      mat_ptr->u_species_source[species_no][4] = a5; /* sigma_y */
-      mat_ptr->u_species_source[species_no][4] = a6; /* m */
-      mat_ptr->u_species_source[species_no][4] = a7; /* m_y */
+      mat_ptr->u_species_source[species_no][5] = a5; /* sigma_y */
+      mat_ptr->u_species_source[species_no][6] = a6; /* m */
+      mat_ptr->u_species_source[species_no][7] = a7; /* m_y */
 
       SPF_DBL_VEC(endofstring(es), 5, mat_ptr->u_species_source[species_no]);
     } else if (!strcmp(model_name, "FOAM_EPOXY")) {

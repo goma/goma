@@ -117,16 +117,8 @@ sfad sfad_fluidity_source(int species_no, dbl *params) {
   // Buildup dynamics
   sfad F_buildup = -(phi_star - phi_eq) / tc;
 
-  if (phi_star < 0) {
-    F_buildup = -(-exp(-phi_star * 100) - phi_eq) / tc;
-  }
-
   // Calculate F
   sfad F = H * F_buildup + (1.0 - H) * F_breakdown;
-
-  if (phi_star.val() < -1e-4) {
-    printf("phi_star: %g, F: %g, phi_eq: %g\n", phi_star.val(), F.val(), phi_eq.val());
-  }
 
   return F;
 }
@@ -154,6 +146,19 @@ extern "C" int fluidity_source(int species_no, struct Species_Conservation_Terms
             for (int j = 0; j < ei[pg->imtrx]->dof[VELOCITY1 + a]; j++) {
               st->d_MassSource_dv[species_no][a][j] +=
                   F.dx(1 + p * VIM + q) * bf[VELOCITY1 + a]->grad_phi_e[j][a][p][q];
+            }
+          }
+        }
+      }
+    }
+    var = MESH_DISPLACEMENT1;
+    if (pd->v[pg->imtrx][var]) {
+      for (int a = 0; a < pd->Num_Dim; a++) {
+        for (int p = 0; p < pd->Num_Dim; p++) {
+          for (int q = 0; q < pd->Num_Dim; q++) {
+            for (int j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; j++) {
+              st->d_MassSource_dmesh[species_no][a][j] +=
+                  F.dx(1 + p * VIM + q) * fv->d_grad_v_dmesh[p][q][a][j];
             }
           }
         }

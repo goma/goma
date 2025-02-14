@@ -404,7 +404,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
     }
 
     dbl yzbeta = 0;
-    int shock_capture = true;
+    int shock_capture = false;
 
     if (shock_capture) {
       dbl strong_residual = 0;
