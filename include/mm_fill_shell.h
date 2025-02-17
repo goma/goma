@@ -297,7 +297,7 @@ EXTERN void dPdz_function(dbl,
 
 EXTERN void dPdz_calc(dbl, dbl, dbl *, dbl *, dbl *, dbl *, dbl *, dbl *);
 
-EXTERN int assemble_lubrication_power_law(double,          /* Time */
+EXTERN int assemble_lubrication_thinning(double,          /* Time */
                                           double,          /* theta or tt*/
                                           double,          /* dt */
                                           double[DIM],     /* Local stu coords */

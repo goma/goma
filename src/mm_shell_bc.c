@@ -170,8 +170,6 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
                 n_dof[MESH_DISPLACEMENT1], dof_map);
 
-        Inn(grad_phi_j, grad_II_phi_j);
-
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           d_func[0][var][j] += LubAux->dq_dp2[ii] * phi_j * bound_normal[ii];
           for (jj = 0; jj < pd->Num_Dim; jj++) {
@@ -180,6 +178,20 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         }
       }
     }
+
+    var = SHELL_SHEAR_TOP;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        /* Load basis functions (j) */
+        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                n_dof[MESH_DISPLACEMENT1], dof_map);
+
+        for (ii = 0; ii < pd->Num_Dim; ii++) {
+          d_func[0][var][j] += LubAux->dq_dshrw[ii] * phi_j * bound_normal[ii];
+        }
+      }
+    }
+
     /*
      * J_lubp_DMX
      */
@@ -503,7 +515,8 @@ void shell_n_dot_curv_bc(double func[DIM],
             if (curv_near && !mp->Lub_Isotropic_Curv_Diffusion) {
               if (!lsi->near && mp->Lub_Curv_Modulation) {
                 d_func[0][var][j] -= SGN(fv->F) / lsi->alpha * penalty * div1;
-                d_func[0][var][j] += SGN(fv->F) / lsi->alpha * penalty * cos(M_PIE * theta_deg / 180.);
+                d_func[0][var][j] +=
+                    SGN(fv->F) / lsi->alpha * penalty * cos(M_PIE * theta_deg / 180.);
               }
             }
           }
