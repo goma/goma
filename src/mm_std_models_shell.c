@@ -726,53 +726,53 @@ double height_function_model(double *H_U,
               dh_grad = (DOUBLE_NONZERO(exp_term) ? (factor * exp_termd / exp_term) : 0.0);
               dh_grad += (DOUBLE_NONZERO(exp_plus) ? ((1.0 - factor) * exp_plusd / exp_plus) : 0.0);
               dh_grad *= H * pl_fact;
-              }
-              for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
-                dH_dF[j] = H * pl_fact * (H_log - Hplus_log) * dfact_dF * bf[FILL]->phi[j];
-              }
             }
-          } else {
-            H *= exp_term2;
-            dh_grad = H * exp_termd * pl_fact / exp_term;
+            for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
+              dH_dF[j] = H * pl_fact * (H_log - Hplus_log) * dfact_dF * bf[FILL]->phi[j];
+            }
           }
         } else {
-          H *= factor * exp_term2 + (1.0 - factor) * exp_plus2;
-          dh_grad = factor * exp_termd * exp_term2 / exp_term;
-          dh_grad += (1.0 - factor) * exp_plusd * exp_plus2 / exp_plus;
-          dh_grad *= H_orig * pl_fact;
-          for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
-            dH_dF[j] = H_orig * (exp_plus2 - exp_term2) * dfact_dF * bf[FILL]->phi[j];
-          }
+          H *= exp_term2;
+          dh_grad = H * exp_termd * pl_fact / exp_term;
         }
       } else {
-        H *= exp_term2;
-        dh_grad = H * exp_termd * pl_fact / exp_term;
+        H *= factor * exp_term2 + (1.0 - factor) * exp_plus2;
+        dh_grad = factor * exp_termd * exp_term2 / exp_term;
+        dh_grad += (1.0 - factor) * exp_plusd * exp_plus2 / exp_plus;
+        dh_grad *= H_orig * pl_fact;
+        for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
+          dH_dF[j] = H_orig * (exp_plus2 - exp_term2) * dfact_dF * bf[FILL]->phi[j];
+        }
       }
-      if (mp->HeightUFunctionModel == WALL_DISTMOD) {
-        dH_U_dX[0] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][0];
-        dH_U_dX[1] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][1];
-        dH_U_dX[2] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][2];
-      } else if (mp->HeightLFunctionModel == WALL_DISTMOD) {
-        dH_L_dX[0] = -dh_grad * fv->grad_ext_field[mp->heightL_ext_field_index][0];
-        dH_L_dX[1] = -dh_grad * fv->grad_ext_field[mp->heightL_ext_field_index][1];
-        dH_L_dX[2] = -dh_grad * fv->grad_ext_field[mp->heightL_ext_field_index][2];
-      } else if (mp->HeightUFunctionModel == WALL_DISTURB) {
-        dH_U_dX[0] = dh_grad * fv->grad_wall_distance[0];
-        dH_U_dX[1] = dh_grad * fv->grad_wall_distance[1];
-        dH_U_dX[2] = dh_grad * fv->grad_wall_distance[2];
-      } else if (mp->HeightLFunctionModel == WALL_DISTURB) {
-        dH_L_dX[0] = -dh_grad * fv->grad_wall_distance[0];
-        dH_L_dX[1] = -dh_grad * fv->grad_wall_distance[1];
-        dH_L_dX[2] = -dh_grad * fv->grad_wall_distance[2];
-      }
+    } else {
+      H *= exp_term2;
+      dh_grad = H * exp_termd * pl_fact / exp_term;
     }
-    if (H < DBL_SEMI_SMALL) {
-      H = DBL_SEMI_SMALL;
-      dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.;
-      dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.;
+    if (mp->HeightUFunctionModel == WALL_DISTMOD) {
+      dH_U_dX[0] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][0];
+      dH_U_dX[1] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][1];
+      dH_U_dX[2] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][2];
+    } else if (mp->HeightLFunctionModel == WALL_DISTMOD) {
+      dH_L_dX[0] = -dh_grad * fv->grad_ext_field[mp->heightL_ext_field_index][0];
+      dH_L_dX[1] = -dh_grad * fv->grad_ext_field[mp->heightL_ext_field_index][1];
+      dH_L_dX[2] = -dh_grad * fv->grad_ext_field[mp->heightL_ext_field_index][2];
+    } else if (mp->HeightUFunctionModel == WALL_DISTURB) {
+      dH_U_dX[0] = dh_grad * fv->grad_wall_distance[0];
+      dH_U_dX[1] = dh_grad * fv->grad_wall_distance[1];
+      dH_U_dX[2] = dh_grad * fv->grad_wall_distance[2];
+    } else if (mp->HeightLFunctionModel == WALL_DISTURB) {
+      dH_L_dX[0] = -dh_grad * fv->grad_wall_distance[0];
+      dH_L_dX[1] = -dh_grad * fv->grad_wall_distance[1];
+      dH_L_dX[2] = -dh_grad * fv->grad_wall_distance[2];
     }
   }
-  return (H);
+  if (H < DBL_SEMI_SMALL) {
+    H = DBL_SEMI_SMALL;
+    dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.;
+    dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.;
+  }
+}
+return (H);
 }
 
 /*****************************************************************************/
