@@ -4212,7 +4212,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
               dq_dH2 = -3. * SQUARE(H) / (k_turb * mp->mp2nd->viscosity) * pgrad;
               srate2 = tau_w / mp->mp2nd->viscosity;
               qmag_log = (DOUBLE_NONZERO(q_mag) ? log(q_mag2 / q_mag) : 0.0);
-              if (fabs(fv->F) > ls->Length_Scale) {
+              if (!lsi->near) {
                 q_mag = q_mag2;
                 dq_gradp = dq_gradp2;
                 pre_delP = pre_delP2;
