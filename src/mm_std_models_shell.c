@@ -692,9 +692,10 @@ double height_function_model(double *H_U,
                                               : fv->F);
         double H_prime, dH_prime = 0.0;
         double exp_plus = 1., exp_plus2 = 1., exp_plusd = 0.;
-        if(beta > 0.0) {
+        if (beta > 0.0) {
           if (tmp < 0.1) {
-            exp_plus = 1. + beta * (1. - tmp * (1. - 0.5 * tmp * (1. - tmp / 3. * (1. - 0.25 * tmp))));
+            exp_plus =
+                1. + beta * (1. - tmp * (1. - 0.5 * tmp * (1. - tmp / 3. * (1. - 0.25 * tmp))));
             exp_plusd = beta * alpha * (-1. + tmp * (1. + 0.5 * tmp * (-1. + tmp / 3.)));
             exp_plusd = -alpha * (1. - exp_plus);
           } else {
@@ -720,20 +721,14 @@ double height_function_model(double *H_U,
             double Hplus_log = (DOUBLE_NONZERO(exp_plus) ? (log(exp_plus)) : 0.0);
             if (fabs(F_prime) <= 1.) {
               H = H_orig * pow(exp_term2, factor) * pow(exp_plus2, 1.0 - factor);
-/*              dh_grad = (H / (H_orig * exp_term2)) * factor * H_orig * exp_termd
-                          * pl_fact * pow(H, -2. * powerlaw);  */
+              /*              dh_grad = (H / (H_orig * exp_term2)) * factor * H_orig * exp_termd
+               * pl_fact * pow(H, -2. * powerlaw);  */
               dh_grad = (DOUBLE_NONZERO(exp_term) ? (factor * exp_termd / exp_term) : 0.0);
               dh_grad += (DOUBLE_NONZERO(exp_plus) ? ((1.0 - factor) * exp_plusd / exp_plus) : 0.0);
               dh_grad *= H * pl_fact;
-              if(isnan(dh_grad)) {
-                fprintf(stderr,"dh_grad %g %g %g %g\n",exp_term, exp_termd, exp_plus, exp_plusd);
               }
               for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
                 dH_dF[j] = H * pl_fact * (H_log - Hplus_log) * dfact_dF * bf[FILL]->phi[j];
-                if(isnan(dH_dF[j])) {
-                  fprintf(stderr,"%g %g %g %g\n",H, H_log, Hplus_log, dfact_dF);
-                  fprintf(stderr,"%g %g %g %g\n",exp_term, log(exp_term), H_log,H);
-                }
               }
             }
           } else {
