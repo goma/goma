@@ -2162,7 +2162,7 @@ double FoamVolumeSource(double time,
     double factor;
 
     source = ls_modulate_property(source, 0.0, ls->Length_Scale, (double)mp->mp2nd->densitymask[0],
-                                  (double)mp->mp2nd->densitymask[1], dFVS_dF, &factor);
+                                  (double)mp->mp2nd->densitymask[1], dFVS_dF, &factor, mp->mp2nd->density_lsi_interp_method);
 
     var = TEMPERATURE;
 

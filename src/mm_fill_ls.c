@@ -4683,6 +4683,75 @@ void load_xfem_for_elem(double x[], const Exo_DB *exo) {
   }
 }
 
+/******************************************************************************
+ *
+ * level_set_property_log() : Calculate a general, scalar material property using
+ *                            the level set function. Instead of linearly interpolate
+ *                            material property (pp), it linearly interpolates log of pp
+ *
+ * Input
+ * -----
+ *   p0    = Material property for FILL < 0 ("minus" side)
+ *   p1    = Material property for FILL > 0 ("plus" side)
+ *
+ * Output
+ * ------
+ *   pp           = Material property at the current coordinate.
+ *   d_pp_dF[MDE] = Derivative of the material property w.r.t. the FILL
+ *                  variable. N.B. If d_pp_dF == NULL, this derivative
+ *                  is not calculated.
+ *
+ * Returns
+ * -------
+ *   0 = Success.
+ *  -1 = Failure.
+ *
+ ******************************************************************************/
+int level_set_property_log(
+    const double p0, const double p1, const double width, double *pp, double d_pp_dF[MDE]) {
+  int var, j;
+  int do_deriv;
+
+  /* See if we need to bother with derivatives. */
+  do_deriv = d_pp_dF != NULL;
+
+  /* Fetch the level set interfacial functions. */
+  load_lsi(width);
+
+  /* Calculate the material property. */
+  if (ls->Elem_Sign == -1)
+    *pp = p0;
+  else if (ls->Elem_Sign == 1)
+    *pp = p1;
+  else
+    *pp = pow(p0, 1.0 - lsi->H) * pow(p1, lsi->H);
+
+  if (ls->Elem_Sign != 0 && do_deriv) {
+    var = ls->var;
+    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+      d_pp_dF[j] = 0.;
+    }
+  }
+
+  /* Bail out if we don't need derivatives or if we're not in the mushy zone. */
+  if (!do_deriv || !lsi->near || ls->Elem_Sign != 0)
+    return (0);
+
+  load_lsi_derivs();
+
+  /* Calculate the deriviatives of the material property w.r.t. FILL. */
+  var = ls->var;
+  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+    /* Calculate the Jacobian terms. */
+    d_pp_dF[j] = pow(p0, 1.0 - lsi->H) * log(p0) * (-lsi->d_H_dF[j]) * pow(p1, lsi->H) +
+                 pow(p0, 1.0 - lsi->H) * pow(p1, lsi->H ) * log(p1) * lsi->d_H_dF[j];
+  }
+
+  return (0);
+}
+/***********************************************************************/
+
+
 void load_xfem_for_stu(const double xi[]) {
   int i, F_elem_type = -1;
   int dof_ls;
@@ -6077,20 +6146,35 @@ double ls_modulate_property(double p1,
                             double pm_minus,
                             double pm_plus,
                             double dpdF[MDE],
-                            double *factor) {
+                            double *factor,
+                            const int interp_method) {
   double p_plus, p_minus, p;
 
   p_minus = p1 * pm_plus + p2 * pm_minus;
   p_plus = p1 * pm_minus + p2 * pm_plus;
 
-  level_set_property(p_minus, p_plus, width, &p, dpdF);
 
-  if (ls->Elem_Sign == -1)
-    *factor = pm_plus;
-  else if (ls->Elem_Sign == 1)
-    *factor = pm_minus;
+  if (interp_method == LSI_INTERP_LINEAR)
+    level_set_property(p_minus, p_plus, width, &p, dpdF);
+  else if (interp_method == LSI_INTERP_LOG)
+    level_set_property_log(p_minus, p_plus, width, &p, dpdF);
   else
-    *factor = pm_plus * (1.0 - lsi->H) + pm_minus * lsi->H;
+    GOMA_EH(-1, "Unknown level set interface interpolation method");
+
+  if (ls->Elem_Sign == -1) {
+    *factor = pm_plus;
+  } else if (ls->Elem_Sign == 1) {
+    *factor = pm_minus;
+  } else {
+    if (interp_method == LSI_INTERP_LINEAR) {
+      *factor = pm_plus * (1.0 - lsi->H) + pm_minus * lsi->H;
+    } else if (interp_method == LSI_INTERP_LOG) {
+      *factor = pm_minus * pow(p2, 1.0 - lsi->H) * lsi->H * pow(p1, lsi->H - 1.0) +
+                pm_plus * (1.0 - lsi->H) * pow(p1, -lsi->H) * pow(p2, lsi->H);
+    } else {
+      GOMA_EH(-1, "Unknown level set interface interpolation method");
+    }
+  }
 
   return (p);
 }

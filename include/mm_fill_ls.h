@@ -158,6 +158,12 @@ EXTERN int level_set_property(const double, /*  p0           */
                               double *,     /* *pp           */
                               double[MDE]); /*  d_pp_dF[MDE] */
 
+EXTERN int level_set_property_log(const double, /*  p0           */
+                                  const double, /*  p1           */
+                                  const double, /*  width        */
+                                  double *,     /* *pp           */
+                                  double[MDE]); /*  d_pp_dF[MDE] */
+
 EXTERN int level_set_property_offset(const double, /*  p0           */
                                      const double, /*  p1           */
                                      const double, /*  width        */
@@ -170,7 +176,7 @@ EXTERN int ls_transport_property(const double, /*  p0           */
                                  double *,     /* *pp           */
                                  double *);    /*  d_pp_dF */
 
-EXTERN double ls_modulate_property(double, double, double, double, double, double[MDE], double *);
+EXTERN double ls_modulate_property(double, double, double, double, double, double[MDE], double *, const int);
 
 double ls_modulate_property_offset(double p1,
                                    double p2,

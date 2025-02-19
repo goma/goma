@@ -4011,12 +4011,12 @@ int momentum_source_term(dbl f[DIM], /* Body force. */
       ls = pfd->ls[0];
       ls_modulate_momentumsource(f, mp->mp2nd->momentumsource_phase[0], ls->Length_Scale,
                                  (double)mp->mp2nd->momentumsourcemask[0],
-                                 (double)mp->mp2nd->momentumsourcemask[1], df);
+                                 (double)mp->mp2nd->momentumsourcemask[1], df, mp->mp2nd->momentumsource_lsi_interp_method);
       ls = ls_old;
     }
     ls_modulate_momentumsource(f, mp->mp2nd->momentumsource, ls->Length_Scale,
                                (double)mp->mp2nd->momentumsourcemask[0],
-                               (double)mp->mp2nd->momentumsourcemask[1], df);
+                               (double)mp->mp2nd->momentumsourcemask[1], df, mp->mp2nd->momentumsource_lsi_interp_method);
   }
 
   return (status);
