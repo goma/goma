@@ -6643,7 +6643,7 @@ int lub_viscosity_integrate(const double strs,
     xintold = 0.;
     switch (gn->ConstitutiveEquation) {
     case CARREAU_WLF:
-      dlnvis_w_dT = dlnat_dT * (vis_w + aexp * pow(lam * shrw, aexp)); 
+      dlnvis_w_dT = dlnat_dT * (vis_w + aexp * pow(lam * shrw, aexp));
       break;
     case BINGHAM:
     case BINGHAM_WLF:
