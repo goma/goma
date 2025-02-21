@@ -4276,9 +4276,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           D_V_DSHRW[i] = H_inv * dq_dshrw * ev[i];
           D_Q_DH[i] = dq_dH * ev[i];
           D_V_DH[i] = dq_dH * ev[i] * H_inv - q[i] * SQUARE(H_inv);
-          /*          for (j = 0; j < dim; j++) {
-                      D_Q_DGRADP[i][j] = pre_delP * dev_dpg[i][j];
-                    }  */
         }
       } else {
         for (i = 0; i < dim; i++) {
@@ -6646,7 +6643,7 @@ int lub_viscosity_integrate(const double strs,
     xintold = 0.;
     switch (gn->ConstitutiveEquation) {
     case CARREAU_WLF:
-      dlnvis_w_dT = dlnat_dT * (vis_w + aexp * pow(lam * shrw, aexp));
+      dlnvis_w_dT = dlnat_dT * (vis_w + aexp * pow(lam * shrw, aexp)); 
       break;
     case BINGHAM:
     case BINGHAM_WLF:
@@ -6793,8 +6790,6 @@ lub_viscos_fcn(const struct Generalized_Newtonian *gn_local, const double gammad
   default:
     GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
   }
-  if (0 && visd != NULL)
-    fprintf(stderr, "viscos_fcn %g %g %g %g %g\n", gammadot, visw, *visd, mu0, muinf);
   return (visw);
 }
 /**************************

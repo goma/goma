@@ -166,6 +166,7 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
     var = LUBP;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        phi_j = bf[var]->phi[j];
         /* Load basis functions (j) */
         ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
                 n_dof[MESH_DISPLACEMENT1], dof_map);
@@ -182,12 +183,27 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
     var = SHELL_SHEAR_TOP;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        phi_j = bf[var]->phi[j];
         /* Load basis functions (j) */
         ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
                 n_dof[MESH_DISPLACEMENT1], dof_map);
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           d_func[0][var][j] += LubAux->dq_dshrw[ii] * phi_j * bound_normal[ii];
+        }
+      }
+    }
+
+    var = SHELL_TEMPERATURE;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        phi_j = bf[var]->phi[j];
+        /* Load basis functions (j) */
+        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                n_dof[MESH_DISPLACEMENT1], dof_map);
+
+        for (ii = 0; ii < pd->Num_Dim; ii++) {
+          d_func[0][var][j] += LubAux->dq_dT[ii] * phi_j * bound_normal[ii];
         }
       }
     }
@@ -207,6 +223,7 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
           jk = dof_map[j];
 
           /* Load basis functions (j) */

@@ -2939,6 +2939,8 @@ void surface_electric_field_bc(
       }
     }
   }
+  /* Clean up */
+  safe_free((void *)n_dof);
 
   return;
 } /* End of surface_electric_field_bc() */
@@ -3861,6 +3863,8 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
       }
     }
   }
+  /* Clean up */
+  safe_free((void *)n_dof);
 
 } /* END of routine apply_surface_viscosity */
 /*****************************************************************************/
@@ -15570,6 +15574,8 @@ int assemble_lubrication_thinning(double time,    /* present time value */
     }
 
   } /* end of Assemble_Jacobian */
+  /* Clean up */
+  safe_free((void *)n_dof);
 
   return (status);
 } /* end of assemble_lubrication_thinning */
