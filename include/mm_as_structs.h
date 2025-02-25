@@ -3219,6 +3219,7 @@ typedef struct Petrov_Galerkin_Data PG_DATA;
 struct Lubrication_Auxiliaries {
   double q[DIM];             /* Volumetric flow rate per unit width */
   double v_avg[DIM];         /* Average velocity, i.e. q divided by height */
+  double gradP[DIM];         /* Composite pressure gradient vector */
   double gradP_mag;          /* Magnitude of pressure gradient */
   double gradP_tangent[DIM]; /* Tangent vector of the pressure gradient */
   double gradP_normal[DIM];  /* Unit vector perpendicular to the pressure */
