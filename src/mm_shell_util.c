@@ -4359,16 +4359,11 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           if (mp->Lub_LS_Interpolation == LOGARITHMIC) {
             if (lsi->near || (fv->F > 0 && mp->mp2nd->viscositymask[1]) ||
                 (fv->F < 0 && mp->mp2nd->viscositymask[0])) {
-              double dq_gradp2, pre_delP2, dq_dH2, srate2, qmag_log;
+              double dq_gradp2, pre_delP2, srate2, qmag_log;
               k_turb = 12.;
               dq_gradp2 = pre_delP2 = -CUBE(H) / (k_turb * mp->mp2nd->viscosity);
               srate2 = tau_w / mp->mp2nd->viscosity;
-              qmag_log = (DOUBLE_NONZERO(q_mag) ? log(q_mag2 / q_mag) : 0.0);
               if (fabs(fv->F) > 0.5 * ls->Length_Scale) {
-                q_mag = q_mag2;
-                dq_gradp = dq_gradp2;
-                pre_delP = pre_delP2;
-                dq_dH = dq_dH2;
                 srate = srate2;
                 vis_w = mp->mp2nd->viscosity;
                 for (i = 0; i < dim; i++) {
@@ -5669,6 +5664,7 @@ void calculate_lub_q_v_old(
       ev[0] = 1.;
     }
     movingwall = DOUBLE_NONZERO(vsqr);
+    memset(q_old, 0.0, sizeof(double) * DIM);
 
     if (!movingwall) {
       /*  First non-Newtonian models with analytical viscosity integration */
@@ -5719,7 +5715,6 @@ void calculate_lub_q_v_old(
       } else { /*  moving wall part of Newtonian type models */
         k_turb = 12.;
         q_mag = -CUBE(H_old) / (k_turb * mu_old) * pgrad;
-        memset(q_old, 0.0, sizeof(double) * DIM);
         for (i = 0; i < dim; i++) {
           q_old[i] += q_mag * ev[i];
           q_old[i] += 0.5 * H_old * (veloL_old[i] + veloU_old[i]);
@@ -5796,7 +5791,6 @@ void calculate_lub_q_v_old(
           GOMA_WH(GOMA_ERROR, "mp2nd->ViscosityModel needs to be RATIO or CONSTANT...\n");
         }
       }
-      memset(q_old, 0.0, sizeof(double) * DIM);
       for (i = 0; i < dim; i++) {
         q_old[i] += q_mag * ev[i];
       }
