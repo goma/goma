@@ -12513,7 +12513,7 @@ int ls_modulate_speciessource(int w, struct Species_Conservation_Terms *st) {
     if (f2 == 0.0)
       f2 = DBL_SMALL;
     st->MassSource[w] = ls_modulate_property(f1, f2, width, pm_minus, pm_plus,
-                                             st->d_MassSource_dF[w], &factor, LSI_INTERP_LINEAR);
+                                             st->d_MassSource_dF[w], &factor, mp->mp2nd->speciessource_lsi_interp_method[w]);
     ls = ls_old;
   }
   width = ls->Length_Scale;
@@ -12527,7 +12527,7 @@ int ls_modulate_speciessource(int w, struct Species_Conservation_Terms *st) {
     f2 = DBL_SMALL;
 
   st->MassSource[w] = ls_modulate_property(f1, f2, width, pm_minus, pm_plus, st->d_MassSource_dF[w],
-                                           &factor, LSI_INTERP_LINEAR);
+                                           &factor, mp->mp2nd->speciessource_lsi_interp_method[w]);
 
   if (pd->v[pg->imtrx][var = TEMPERATURE]) {
     for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {

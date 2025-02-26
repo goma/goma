@@ -9257,7 +9257,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ECHO(es, echo_file);
 
       if (ls != NULL) {
-        strcpy(search_string, "Level Set Interface Viscosity Interpolation Method");
+        strcpy(search_string, "Level Set Interface Species Source Interpolation Method");
         model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
                                        SCALAR_INPUT, &species_no, es);
 
