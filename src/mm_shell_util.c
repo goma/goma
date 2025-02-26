@@ -6272,7 +6272,8 @@ int lub_viscosity_integrate(const double strs,
   double eps, res, TOL_CEIL = 1.e-6, res_tol, soln_tol;
   int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0, a_visc_type;
   double xint = 0., xint_a = 0., visc_a = 0., xintold = 0., temp, at = 1.;
-  double xintdT = 0.;
+  double xintdT = 0., wlf_denom = 0.;
+  int low_stress = FALSE, high_stress = FALSE;
 
   res_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][0]);
   soln_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][2]);
@@ -6293,8 +6294,10 @@ int lub_viscosity_integrate(const double strs,
     if (gn->ConstitutiveEquation == BINGHAM) {
       at = exp(gn->atexp * (1. / temp - 1. / mp->reference[TEMPERATURE]));
     } else if (gn->ConstitutiveEquation == CARREAU_WLF || gn->ConstitutiveEquation == BINGHAM_WLF) {
-      at = exp(gn->atexp * (mp->reference[TEMPERATURE] - temp) /
-               (gn->wlfc2 + temp - mp->reference[TEMPERATURE]));
+      /* add protection from WLF singularity in temperature  */
+      temp = fmax(temp, 1.1 * mp->reference[TEMPERATURE] - gn->wlfc2);
+      wlf_denom = gn->wlfc2 + temp - mp->reference[TEMPERATURE];
+      at = exp(gn->atexp * (mp->reference[TEMPERATURE] - temp) / wlf_denom);
     }
   }
   mu0 = at * gn->mu0;
@@ -6302,12 +6305,33 @@ int lub_viscosity_integrate(const double strs,
   lam = at * gn->lam;
   F = at * gn->fexp;
 
+  switch (gn->ConstitutiveEquation) {
+  case CARREAU:
+  case CARREAU_WLF:
+    shr = strs / mu0;
+    if (lam * shr < pow(soln_tol, aexp))
+      low_stress = TRUE;
+    shr = pow(strs * pow(lam, 1. - nexp) / (mu0 - muinf), 1. / nexp);
+    if (DOUBLE_NONZERO(muinf) && shr > strs / muinf / sqrt(soln_tol))
+      high_stress = TRUE;
+    break;
+  case BINGHAM:
+  case BINGHAM_WLF:
+    vis_w = mu0 + yield * F;
+    break;
+  default:
+    GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
+  }
   /**  Take care of de-generate case first **/
-  if (DOUBLE_ZERO(strs) || (pd->v[pg->imtrx][SHELL_SHEAR_TOP] && DOUBLE_ZERO(fv->sh_shear_top))) {
+  if (low_stress || high_stress ||
+      (pd->v[pg->imtrx][SHELL_SHEAR_TOP] && DOUBLE_ZERO(fv->sh_shear_top))) {
     switch (gn->ConstitutiveEquation) {
     case CARREAU:
     case CARREAU_WLF:
-      vis_w = mu0;
+      if (low_stress)
+        vis_w = mu0;
+      if (high_stress)
+        vis_w = muinf;
       break;
     case BINGHAM:
     case BINGHAM_WLF:
@@ -6362,9 +6386,10 @@ int lub_viscosity_integrate(const double strs,
     }
   } else {
     /** First iterate to find shearrate that corresponds to stress */
-    shr = strs / mu0;
+    shr = strs / sqrt(mu0 * muinf);
     for (iter = 0; iter < ITERMAX; iter++) {
       double xfact, tmp, tp1, tp2, tpe, tpe_d, xj, delta, P_sig;
+      int log_iteration = TRUE;
       shrw = fabs(shr);
       tp1 = lam * shrw;
       xfact = 1. + pow(tp1, aexp);
@@ -6389,23 +6414,42 @@ int lub_viscosity_integrate(const double strs,
         GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
       }
 
-      res = vis_w * shr - strs;
-      xj = vis_w + visd;
+      if (log_iteration) {
+        res = log(vis_w * shr) - log(strs);
+        xj = 1. + visd / vis_w;
+      } else {
+        res = vis_w * shr - strs;
+        xj = vis_w + visd;
+      }
       if ((1. + visd / vis_w) < 0.01) {
         GOMA_WH(GOMA_ERROR, "Trouble... Viscosity function nearly singular!");
       }
       delta = -res / xj;
-      if (iter < ITERMAX / 4) {
-        shr += delta;
-      } else if (iter < ITERMAX / 2) {
-        shr += 0.2 * delta;
-      } else if (iter < 3 * ITERMAX / 4) {
-        shr += 0.5 * delta;
+      if (log_iteration) {
+        if (iter < ITERMAX / 4) {
+          shr *= exp(delta);
+        } else if (iter < ITERMAX / 2) {
+          shr *= exp(0.2 * delta);
+        } else if (iter < 3 * ITERMAX / 4) {
+          shr *= exp(0.5 * delta);
+        } else {
+          shr *= exp(delta);
+        }
       } else {
-        shr += delta;
+        if (iter < ITERMAX / 4) {
+          shr += delta;
+        } else if (iter < ITERMAX / 2) {
+          shr += 0.2 * delta;
+        } else if (iter < 3 * ITERMAX / 4) {
+          shr += 0.5 * delta;
+        } else {
+          shr += delta;
+        }
       }
-      eps = fabs(delta) / (1. + fabs(shr));
-      if (fabs(res) < res_tol && eps < soln_tol)
+      if (isnan(shr))
+        shr = strs / muinf / soln_tol;
+      eps = fabs(delta) / (1. + log(shr));
+      if (fabs(res / (1. + log(strs))) < res_tol && eps < soln_tol)
         break;
     }
     if (eps > soln_tol) {
@@ -6490,7 +6534,7 @@ int lub_viscosity_integrate(const double strs,
           if (ifin == 1)
             break;
         } /*  End of continuation Loop */
-        if (!ifin || th < 1.) {
+        if (isnan(shr) || !ifin || th < 1.) {
           ierr = -1;
           GOMA_EH(GOMA_ERROR, "Viscosity iteration not converged!");
         }
@@ -6637,13 +6681,19 @@ int lub_viscosity_integrate(const double strs,
         dlnat_dT = -gn->atexp / SQUARE(temp);
       } else if (gn->ConstitutiveEquation == CARREAU_WLF ||
                  gn->ConstitutiveEquation == BINGHAM_WLF) {
-        dlnat_dT = -gn->atexp * gn->wlfc2 / SQUARE(gn->wlfc2 + temp - mp->reference[TEMPERATURE]);
+        wlf_denom = gn->wlfc2 + temp - mp->reference[TEMPERATURE];
+        if (wlf_denom >= 0.) {
+          dlnat_dT = -gn->atexp * gn->wlfc2 / SQUARE(wlf_denom);
+        } else {
+          dlnat_dT = -gn->atexp / gn->wlfc2;
+        }
       }
     }
     xintold = 0.;
     switch (gn->ConstitutiveEquation) {
     case CARREAU_WLF:
-      dlnvis_w_dT = dlnat_dT * (vis_w + aexp * pow(lam * shrw, aexp));
+      xfact = pow(lam * shrw, aexp);
+      dlnvis_w_dT = dlnat_dT * (1. + (1. - muinf / vis_w) * (nexp - 1.) * xfact / (1. + xfact));
       break;
     case BINGHAM:
     case BINGHAM_WLF:
@@ -6670,7 +6720,8 @@ int lub_viscosity_integrate(const double strs,
           switch (gn->ConstitutiveEquation) {
           case CARREAU_WLF:
             vis = muinf + (mu0 - muinf) * tmp;
-            dvis_dT = dlnat_dT * vis * (1. + nexp * pow(lam * cee * shrw, aexp)) / xfact;
+            dvis_dT = dlnat_dT *
+                      (vis + (vis - muinf) * (nexp - 1.) * pow(lam * cee * shrw, aexp) / xfact);
             dlnvis = (mu0 - muinf) * (nexp - 1.) * tmp / xfact * pow(lam * cee * shrw, aexp);
             break;
           case BINGHAM:
@@ -7251,10 +7302,6 @@ double lub2D_crsrate(const struct Generalized_Newtonian *gn_local,
     if (fabs(res) < tolerance && eps < tolerance) {
       break;
     }
-    if (iter > ITERMAX / 5) {
-      fprintf(stderr, "crsrate %d %g %g %g %g\n", iter, shr, delta, eps, tolerance);
-      fprintf(stderr, "viscosity %g %g %g %g %g\n", shr, shrw, strs, vis_w, visd);
-    }
   }
   if (eps > tolerance) {
     fprintf(stderr, "crsrate diverged %d %g %g %g\n", iter, shr, eps, tolerance);
@@ -7567,9 +7614,6 @@ double lub2D_flowint_2D(const struct Generalized_Newtonian *gn_loc,
       if (eps < tolerance)
         break;
       xintold = xint3;
-      if (jdi >= JDIPOWER_MAX / 2) {
-        fprintf(stderr, "flowint %d %g %g %g %g\n", jdi, xint3, res, eps, tolerance);
-      }
     }
     if (eps > tolerance) {
       if (Debug_Flag) {
