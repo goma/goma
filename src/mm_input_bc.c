@@ -546,15 +546,6 @@ void rd_bc_specs(FILE *ifp, char *input) {
             BC_Types[ibc].BC_Data_Float[2], BC_Types[ibc].BC_Data_Float[3]);
       }
 
-      if (BC_Types[ibc].BC_Name == LUB_CURV_NOBC_BC) {
-        BC_Types[ibc].BC_Data_Float[1] = 1.;
-        if (fscanf(ifp, " %lf", &BC_Types[ibc].BC_Data_Float[1]) != 1) {
-          sr = sprintf(err_msg, "%s: Expected 1 flts for %s.", yo, BC_Types[ibc].desc->name1);
-          GOMA_WH(GOMA_ERROR, err_msg);
-        }
-        BC_Types[ibc].max_DFlt = 2;
-        SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_Data_Float[1]);
-      }
       break;
 
       /*
