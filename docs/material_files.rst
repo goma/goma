@@ -130,6 +130,7 @@ case when the Default Database is set to GOMA_MAT.
    material_file/mechanical_and_constitutive
    material_file/thermal_properties
    material_file/electrical
+   material_file/acoustic_properties
    material_file/microstructure
    material_file/species
    material_file/source_terms
