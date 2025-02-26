@@ -76,8 +76,8 @@ double heat_capacity /* mm_fill_terms.c                  */
     (HEAT_CAPACITY_DEPENDENCE_STRUCT *, dbl);
 double ls_modulate_thermalconductivity(
     double, double, double, double, double, CONDUCTIVITY_DEPENDENCE_STRUCT *, const int);
-double
-ls_modulate_heatcapacity(double, double, double, double, double, HEAT_CAPACITY_DEPENDENCE_STRUCT *, const int);
+double ls_modulate_heatcapacity(
+    double, double, double, double, double, HEAT_CAPACITY_DEPENDENCE_STRUCT *, const int);
 void heat_flux(double[DIM],                   /* q[DIM] */
                HEAT_FLUX_DEPENDENCE_STRUCT *, /* dq     */
                double);

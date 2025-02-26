@@ -176,7 +176,8 @@ EXTERN int ls_transport_property(const double, /*  p0           */
                                  double *,     /* *pp           */
                                  double *);    /*  d_pp_dF */
 
-EXTERN double ls_modulate_property(double, double, double, double, double, double[MDE], double *, const int);
+EXTERN double
+ls_modulate_property(double, double, double, double, double, double[MDE], double *, const int);
 
 double ls_modulate_property_offset(double p1,
                                    double p2,

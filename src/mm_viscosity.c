@@ -670,12 +670,14 @@ double viscosity(struct Generalized_Newtonian *gn_local,
       ls = pfd->ls[0];
       err = ls_modulate_viscosity(
           &mu, mp->mp2nd->viscosity_phase[0], ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-          (double)mp->mp2nd->viscositymask[1], d_mu, mp->mp2nd->ViscosityModel, mp->mp2nd->viscosity_lsi_interp_method);
+          (double)mp->mp2nd->viscositymask[1], d_mu, mp->mp2nd->ViscosityModel,
+          mp->mp2nd->viscosity_lsi_interp_method);
       ls = ls_old;
     }
-    err = ls_modulate_viscosity(
-        &mu, mp->mp2nd->viscosity, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-        (double)mp->mp2nd->viscositymask[1], d_mu, mp->mp2nd->ViscosityModel, mp->mp2nd->viscosity_lsi_interp_method);
+    err = ls_modulate_viscosity(&mu, mp->mp2nd->viscosity, ls->Length_Scale,
+                                (double)mp->mp2nd->viscositymask[0],
+                                (double)mp->mp2nd->viscositymask[1], d_mu,
+                                mp->mp2nd->ViscosityModel, mp->mp2nd->viscosity_lsi_interp_method);
     GOMA_EH(err, "ls_modulate_viscosity");
   }
   if (DOUBLE_NONZERO(gn_local->thixo_factor)) {
@@ -3436,7 +3438,8 @@ double flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis) {
     err = ls_modulate_viscosity(&flow_vis, mp->mp2nd->FlowingLiquid_viscosity, ls->Length_Scale,
                                 (double)mp->mp2nd->FlowingLiquid_viscositymask[0],
                                 (double)mp->mp2nd->FlowingLiquid_viscositymask[1], d_flow_vis,
-                                mp->mp2nd->FlowingLiquidViscosityModel, mp->mp2nd->viscosity_lsi_interp_method);
+                                mp->mp2nd->FlowingLiquidViscosityModel,
+                                mp->mp2nd->viscosity_lsi_interp_method);
     GOMA_EH(err, "ls_modulate_viscosity");
   }
 

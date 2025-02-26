@@ -626,7 +626,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 
 /* Level set interface interpolation */
 #define LSI_INTERP_LINEAR 20001
-#define LSI_INTERP_LOG 20002
+#define LSI_INTERP_LOG    20002
 /*
 
    CONSTANTS FOR MATERIAL PROPERTY TAGS

@@ -154,8 +154,13 @@ EXTERN double light_absorption               /* mm_fill_terms.c             */
 EXTERN double extinction_index               /* mm_fill_terms.c             */
     (CONDUCTIVITY_DEPENDENCE_STRUCT *, dbl); /* time */
 
-EXTERN int ls_modulate_momentumsource(
-    double[DIM], double[DIM], double, double, double, MOMENTUM_SOURCE_DEPENDENCE_STRUCT *, const int);
+EXTERN int ls_modulate_momentumsource(double[DIM],
+                                      double[DIM],
+                                      double,
+                                      double,
+                                      double,
+                                      MOMENTUM_SOURCE_DEPENDENCE_STRUCT *,
+                                      const int);
 
 EXTERN void apply_table_mp(double *func, struct Data_Table *table);
 

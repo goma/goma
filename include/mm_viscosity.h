@@ -165,7 +165,7 @@ EXTERN int ls_modulate_viscosity(double *,                      /* Primary phase
                                  double pm_minus,               /* Negative phase viscosity mask */
                                  double pm_plus,                /* Positive phase viscosity mask */
                                  VISCOSITY_DEPENDENCE_STRUCT *, /* d_mu - viscosity dependence */
-                                 const int model, /* Viscosity Model - CONSTANT or RATIO*/
+                                 const int model,          /* Viscosity Model - CONSTANT or RATIO*/
                                  const int interp_method); /* Level set interpolation method */
 EXTERN void copy_pF_to_F(int);
 

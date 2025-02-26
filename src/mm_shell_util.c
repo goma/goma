@@ -4188,9 +4188,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         if (mp->mp2nd->ViscosityModel == RATIO) {
           ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
           q_mag2 = q_mag * ratio;
-          q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                       (double)mp->mp2nd->viscositymask[0],
-                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
+          q_mag = ls_modulate_property(
+              q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+              (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
           factor *= (1. - ratio);
           factor += ratio;
           dq_gradp *= factor;
@@ -4237,9 +4237,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
             q_mag2 = pre_delP2 * pgrad;
             dq_dH2 = -3. * SQUARE(H) / (k_turb * mp->mp2nd->viscosity) * pgrad;
             srate2 = tau_w / mp->mp2nd->viscosity;
-            q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                         (double)mp->mp2nd->viscositymask[0],
-                                         (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
+            q_mag = ls_modulate_property(
+                q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
             dq_gradp = dq_gradp * factor + dq_gradp2 * (1. - factor);
             pre_delP = pre_delP * factor + pre_delP2 * (1. - factor);
             dq_dH = dq_dH * factor + (1. - factor) * dq_dH2;
@@ -4311,9 +4311,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         if (mp->mp2nd->ViscosityModel == RATIO) {
           ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
           q_mag2 = q_mag * ratio;
-          q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                       (double)mp->mp2nd->viscositymask[0],
-                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
+          q_mag = ls_modulate_property(
+              q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+              (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
           factor *= (1. - ratio);
           factor += ratio;
           /* Possibly lots different here since dq_gradp not really used for moving wall */
@@ -4360,9 +4360,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
             q_mag2 = pre_delP2 * pgrad;
             dq_dH2 = -3. * SQUARE(H) / (k_turb * mp->mp2nd->viscosity) * pgrad;
             srate2 = tau_w / mp->mp2nd->viscosity;
-            q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                         (double)mp->mp2nd->viscositymask[0],
-                                         (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
+            q_mag = ls_modulate_property(
+                q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
             dq_gradp = dq_gradp * factor + dq_gradp2 * (1. - factor);
             pre_delP = pre_delP * factor + pre_delP2 * (1. - factor);
             dq_dH = dq_dH * factor + (1. - factor) * dq_dH2;
@@ -5659,9 +5659,9 @@ void calculate_lub_q_v_old(
       if (mp->mp2nd->ViscosityModel == RATIO) {
         ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
         q_mag2 = q_mag * ratio;
-        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
+        q_mag = ls_modulate_property(
+            q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+            (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
       } else if (mp->mp2nd->ViscosityModel == CONSTANT || mp->mp2nd->ViscosityModel == TIME_RAMP) {
         if (mp->Lub_LS_Interpolation == LOGARITHMIC) {
           if (lsi->near || (fv->F > 0 && mp->mp2nd->viscositymask[1]) ||
@@ -5686,9 +5686,9 @@ void calculate_lub_q_v_old(
           k_turb = 12.;
           pre_delP2 = -CUBE(H_old) / (k_turb * mp->mp2nd->viscosity);
           q_mag2 = pre_delP2 * pgrad;
-          q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                       (double)mp->mp2nd->viscositymask[0],
-                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
+          q_mag = ls_modulate_property(
+              q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+              (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
         } else {
           GOMA_WH(GOMA_ERROR, "mp->Lub_LS_Interpolation needs to be LOG or LINEAR...\n");
         }

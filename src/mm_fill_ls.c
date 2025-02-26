@@ -4744,13 +4744,12 @@ int level_set_property_log(
   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
     /* Calculate the Jacobian terms. */
     d_pp_dF[j] = pow(p0, 1.0 - lsi->H) * log(p0) * (-lsi->d_H_dF[j]) * pow(p1, lsi->H) +
-                 pow(p0, 1.0 - lsi->H) * pow(p1, lsi->H ) * log(p1) * lsi->d_H_dF[j];
+                 pow(p0, 1.0 - lsi->H) * pow(p1, lsi->H) * log(p1) * lsi->d_H_dF[j];
   }
 
   return (0);
 }
 /***********************************************************************/
-
 
 void load_xfem_for_stu(const double xi[]) {
   int i, F_elem_type = -1;
@@ -6152,7 +6151,6 @@ double ls_modulate_property(double p1,
 
   p_minus = p1 * pm_plus + p2 * pm_minus;
   p_plus = p1 * pm_minus + p2 * pm_plus;
-
 
   if (interp_method == LSI_INTERP_LINEAR)
     level_set_property(p_minus, p_plus, width, &p, dpdF);

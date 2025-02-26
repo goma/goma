@@ -2539,11 +2539,10 @@ double acoustic_impedance(CONDUCTIVITY_DEPENDENCE_STRUCT *d_R, dbl time)
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      R = ls_modulate_thermalconductivity(R, mp->mp2nd->acousticimpedance_phase[0],
-                                          ls->Length_Scale,
-                                          (double)mp->mp2nd->acousticimpedancemask[0],
-                                          (double)mp->mp2nd->acousticimpedancemask[1], d_R,
-                                          mp->mp2nd->acousticimpedance_lsi_interp_method);
+      R = ls_modulate_thermalconductivity(
+          R, mp->mp2nd->acousticimpedance_phase[0], ls->Length_Scale,
+          (double)mp->mp2nd->acousticimpedancemask[0], (double)mp->mp2nd->acousticimpedancemask[1],
+          d_R, mp->mp2nd->acousticimpedance_lsi_interp_method);
       ls = ls_old;
     }
     R = ls_modulate_thermalconductivity(R, mp->mp2nd->acousticimpedance, ls->Length_Scale,
@@ -2619,16 +2618,14 @@ double wave_number(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time) {
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      k = ls_modulate_thermalconductivity(k, mp->mp2nd->wavenumber_phase[0], ls->Length_Scale,
-                                          (double)mp->mp2nd->wavenumbermask[0],
-                                          (double)mp->mp2nd->wavenumbermask[1], d_k,
-                                          mp->mp2nd->wavenumber_lsi_interp_method);
+      k = ls_modulate_thermalconductivity(
+          k, mp->mp2nd->wavenumber_phase[0], ls->Length_Scale, (double)mp->mp2nd->wavenumbermask[0],
+          (double)mp->mp2nd->wavenumbermask[1], d_k, mp->mp2nd->wavenumber_lsi_interp_method);
       ls = ls_old;
     }
-    k = ls_modulate_thermalconductivity(k, mp->mp2nd->wavenumber, ls->Length_Scale,
-                                        (double)mp->mp2nd->wavenumbermask[0],
-                                        (double)mp->mp2nd->wavenumbermask[1], d_k,
-                                        mp->mp2nd->wavenumber_lsi_interp_method);
+    k = ls_modulate_thermalconductivity(
+        k, mp->mp2nd->wavenumber, ls->Length_Scale, (double)mp->mp2nd->wavenumbermask[0],
+        (double)mp->mp2nd->wavenumbermask[1], d_k, mp->mp2nd->wavenumber_lsi_interp_method);
   }
   return (k);
 }
@@ -2763,11 +2760,11 @@ double acoustic_absorption(CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha, dbl time)
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      alpha = ls_modulate_thermalconductivity(
-          alpha, mp->mp2nd->acousticabsorption_phase[0], ls->Length_Scale,
-          (double)mp->mp2nd->acousticabsorptionmask[0],
-          (double)mp->mp2nd->acousticabsorptionmask[1], d_alpha,
-          mp->mp2nd->acousticabsorption_lsi_interp_method);
+      alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->acousticabsorption_phase[0],
+                                              ls->Length_Scale,
+                                              (double)mp->mp2nd->acousticabsorptionmask[0],
+                                              (double)mp->mp2nd->acousticabsorptionmask[1], d_alpha,
+                                              mp->mp2nd->acousticabsorption_lsi_interp_method);
       ls = ls_old;
     }
     alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->acousticabsorption, ls->Length_Scale,
@@ -2909,11 +2906,10 @@ double light_absorption(CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha, dbl time)
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->lightabsorption_phase[0],
-                                              ls->Length_Scale,
-                                              (double)mp->mp2nd->lightabsorptionmask[0],
-                                              (double)mp->mp2nd->lightabsorptionmask[1], d_alpha,
-                                              mp->mp2nd->lightabsorption_lsi_interp_method);
+      alpha = ls_modulate_thermalconductivity(
+          alpha, mp->mp2nd->lightabsorption_phase[0], ls->Length_Scale,
+          (double)mp->mp2nd->lightabsorptionmask[0], (double)mp->mp2nd->lightabsorptionmask[1],
+          d_alpha, mp->mp2nd->lightabsorption_lsi_interp_method);
       ls = ls_old;
     }
     alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->lightabsorption, ls->Length_Scale,
@@ -3232,11 +3228,13 @@ int ls_modulate_momentumsource(double f1[DIM],
   for (a = 0; a < dim; a++) {
 
     if (df == NULL) {
-      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, NULL, &factor, interp_method);
+      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, NULL, &factor,
+                                   interp_method);
 
       return (0);
     } else {
-      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, df->F[a], &factor, interp_method);
+      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, df->F[a], &factor,
+                                   interp_method);
 
       if (pd->v[pg->imtrx][var = TEMPERATURE]) {
         for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {

@@ -1508,10 +1508,9 @@ double heat_capacity(HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, dbl time)
                                     mp->mp2nd->heatcapacity_lsi_interp_method);
       ls = ls_old;
     }
-    Cp = ls_modulate_heatcapacity(Cp, mp->mp2nd->heatcapacity, ls->Length_Scale,
-                                  (double)mp->mp2nd->heatcapacitymask[0],
-                                  (double)mp->mp2nd->heatcapacitymask[1], d_Cp,
-                                  mp->mp2nd->heatcapacity_lsi_interp_method);
+    Cp = ls_modulate_heatcapacity(
+        Cp, mp->mp2nd->heatcapacity, ls->Length_Scale, (double)mp->mp2nd->heatcapacitymask[0],
+        (double)mp->mp2nd->heatcapacitymask[1], d_Cp, mp->mp2nd->heatcapacity_lsi_interp_method);
   }
 
   return (Cp);
@@ -2120,10 +2119,9 @@ double heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                              mp->mp2nd->heatsource_lsi_interp_method);
       ls = ls_old;
     }
-    ls_modulate_heatsource(&h, mp->mp2nd->heatsource, ls->Length_Scale,
-                           (double)mp->mp2nd->heatsourcemask[0],
-                           (double)mp->mp2nd->heatsourcemask[1], d_h,
-                           mp->mp2nd->heatsource_lsi_interp_method);
+    ls_modulate_heatsource(
+        &h, mp->mp2nd->heatsource, ls->Length_Scale, (double)mp->mp2nd->heatsourcemask[0],
+        (double)mp->mp2nd->heatsourcemask[1], d_h, mp->mp2nd->heatsource_lsi_interp_method);
   }
 
   return (h);
@@ -2539,17 +2537,18 @@ double visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     }
   }
   if (ls != NULL) {
-    err = ls_modulate_viscosity(
-        &visc_cmb, visc_second, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-        (double)mp->mp2nd->viscositymask[1], d_visc_cmb, mp->mp2nd->ViscosityModel, mp->mp2nd->viscosity_lsi_interp_method);
+    err = ls_modulate_viscosity(&visc_cmb, visc_second, ls->Length_Scale,
+                                (double)mp->mp2nd->viscositymask[0],
+                                (double)mp->mp2nd->viscositymask[1], d_visc_cmb,
+                                mp->mp2nd->ViscosityModel, mp->mp2nd->viscosity_lsi_interp_method);
     GOMA_EH(err, "ls_modulate_viscosity");
     /*  optionally set impedance to true value input on card	*/
     if (num_const == 4) {
       R_gas = param[3];
       R = ls_modulate_thermalconductivity(mp->acoustic_impedance, R_gas, ls->Length_Scale,
                                           (double)mp->mp2nd->acousticimpedancemask[0],
-                                          (double)mp->mp2nd->acousticimpedancemask[1],
-                                          d_R, mp->mp2nd->acousticimpedance_lsi_interp_method);
+                                          (double)mp->mp2nd->acousticimpedancemask[1], d_R,
+                                          mp->mp2nd->acousticimpedance_lsi_interp_method);
     }
   }
 
