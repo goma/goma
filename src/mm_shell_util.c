@@ -4359,7 +4359,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
           if (mp->Lub_LS_Interpolation == LOGARITHMIC) {
             if (lsi->near || (fv->F > 0 && mp->mp2nd->viscositymask[1]) ||
                 (fv->F < 0 && mp->mp2nd->viscositymask[0])) {
-              double dq_gradp2, pre_delP2, srate2, qmag_log;
+              double dq_gradp2, pre_delP2, dq_dH2, srate2, qmag_log;
               k_turb = 12.;
               dq_gradp2 = pre_delP2 = -CUBE(H) / (k_turb * mp->mp2nd->viscosity);
               srate2 = tau_w / mp->mp2nd->viscosity;
