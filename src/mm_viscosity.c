@@ -3260,6 +3260,7 @@ int ls_modulate_viscosity(double *mu1,
     mu2 = *mu1 * ratio;
   } else if (model == TIME_RAMP) {
     ratio = 1.0;
+    // Making specific to starting at time = 0
     if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
       ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
     }
