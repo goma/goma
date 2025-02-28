@@ -75,9 +75,9 @@ double conductivity /* mm_fill_terms.c             */
 double heat_capacity /* mm_fill_terms.c                  */
     (HEAT_CAPACITY_DEPENDENCE_STRUCT *, dbl);
 double ls_modulate_thermalconductivity(
-    double, double, double, double, double, CONDUCTIVITY_DEPENDENCE_STRUCT *);
-double
-ls_modulate_heatcapacity(double, double, double, double, double, HEAT_CAPACITY_DEPENDENCE_STRUCT *);
+    double, double, double, double, double, CONDUCTIVITY_DEPENDENCE_STRUCT *, const int);
+double ls_modulate_heatcapacity(
+    double, double, double, double, double, HEAT_CAPACITY_DEPENDENCE_STRUCT *, const int);
 void heat_flux(double[DIM],                   /* q[DIM] */
                HEAT_FLUX_DEPENDENCE_STRUCT *, /* dq     */
                double);
@@ -89,7 +89,7 @@ double heat_source /* mm_fill_terms.c                  */
               * implicit (tt = 0)                         */
      double);
 int ls_modulate_heatsource(
-    double *, double, double, double, double, HEAT_SOURCE_DEPENDENCE_STRUCT *);
+    double *, double, double, double, double, HEAT_SOURCE_DEPENDENCE_STRUCT *, const int);
 int assemble_ls_latent_heat_source(
     double, double, double, double, double, int, struct Boundary_Condition *);
 double visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *,
