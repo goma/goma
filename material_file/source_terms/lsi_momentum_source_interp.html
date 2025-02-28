@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Second Level Set Momentum Source &#8212; Goma User Manual 7.0.0 documentation</title>
+    <title>Level Set Interface Momentum Source Interpolation Method &#8212; Goma User Manual 7.0.0 documentation</title>
   <script>
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
@@ -37,11 +37,12 @@
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/sphinx_highlight.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'material_file/mechanical_and_constitutive/second_level_set_momentum_source';</script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'material_file/source_terms/lsi_momentum_source_interp';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Second Level Set Viscosity" href="second_level_set_viscosity.html" />
-    <link rel="prev" title="Second Level Set Heat Capacity" href="second_level_set_heat_capacity.html" />
+    <link rel="next" title="Solid Body Source" href="solid_body_source.html" />
+    <link rel="prev" title="Second Level Set Momentum Source" href="second_level_set_momentum_source.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
   </head>
@@ -581,61 +582,64 @@
 <li class="toctree-l3"><a class="reference internal" href="../physical_properties/density.html"><strong>Density</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l2 current active has-children"><a class="reference internal" href="../mechanical_and_constitutive.html">Mechanical Properties and Constitutive Equations</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-20"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="solid_constitutive_equation.html">Solid Constitutive Equation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plasticity_equation.html">Plasticity Equation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="convective_lagrangian_velocity.html">Convective Lagrangian Velocity</a></li>
-<li class="toctree-l3"><a class="reference internal" href="lame_mu.html">Lame MU</a></li>
-<li class="toctree-l3"><a class="reference internal" href="lame_lambda.html">Lame LAMBDA</a></li>
-<li class="toctree-l3"><a class="reference internal" href="stress_free_solvent_vol_frac.html">Stress Free Solvent Vol Frac</a></li>
-<li class="toctree-l3"><a class="reference internal" href="solid_thermal_expansion.html">Solid Thermal Expansion</a></li>
-<li class="toctree-l3"><a class="reference internal" href="solid_reference_temperature.html">Solid Reference Temperature</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plastic_viscosity.html">Plastic Viscosity</a></li>
-<li class="toctree-l3"><a class="reference internal" href="evp_yield_stress.html">EVP Yield Stress</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pseudo_solid_constitutive_equation.html">Polymer Viscosity</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pseudo_solid_lame_mu.html">Pseudo-Solid Lame MU</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pseudo_solid_lame_lambda.html">Pseudo-Solid Lame LAMBDA</a></li>
-<li class="toctree-l3"><a class="reference internal" href="liquid_constitutive_equation.html">Liquid Constitutive Equation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="viscosity.html">Viscosity</a></li>
-<li class="toctree-l3"><a class="reference internal" href="low_rate_viscosity.html">Low Rate Viscosity</a></li>
-<li class="toctree-l3"><a class="reference internal" href="power_law_exponent.html">Power Law Exponent</a></li>
-<li class="toctree-l3"><a class="reference internal" href="high_rate_viscosity.html">High Rate Viscosity</a></li>
-<li class="toctree-l3"><a class="reference internal" href="time_constant.html">Time Constant</a></li>
-<li class="toctree-l3"><a class="reference internal" href="aexp.html">Aexp</a></li>
-<li class="toctree-l3"><a class="reference internal" href="thermal_exponent.html">Thermal Exponent</a></li>
-<li class="toctree-l3"><a class="reference internal" href="thermal_wlf_constant2.html">Thermal WLF Constant2</a></li>
-<li class="toctree-l3"><a class="reference internal" href="yield_stress.html">Yield Stress</a></li>
-<li class="toctree-l3"><a class="reference internal" href="yield_exponent.html">Yield Exponent</a></li>
-<li class="toctree-l3"><a class="reference internal" href="suspension_maximum_packing.html">Suspension Maximum Packing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="suspension_species_number.html">Suspension Species Number</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cure_gel_point.html">Cure Gel Point</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cure_a_exponent.html">Cure A Exponent</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cure_b_exponent.html">Cure B Exponent</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cure_species_number.html">Cure Species Number</a></li>
-<li class="toctree-l3"><a class="reference internal" href="unreacted_gel_temperature.html">Unreacted Gel Temperature</a></li>
-<li class="toctree-l3"><a class="reference internal" href="polymer_constitutive_equation.html">Polymer Constitutive Equation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ptt_form.html">PTT Form</a></li>
-<li class="toctree-l3"><a class="reference internal" href="polymer_stress_formulation.html">Polymer Stress Formulation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="polymer_weight_function.html">Polymer Weight Function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="polymer_shift_function.html">Polymer Shift Function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="polymer_weighting.html"><strong>Polymer Weighting</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="polymer_shock_capturing.html">Polymer Shock Capturing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="discontinuous_jacobian_formulation.html"><strong>Discontinuous Jacobian Formulation</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="adaptive_viscosity_scaling.html"><strong>Adaptive Viscosity Scaling</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="polymer_viscosity.html"><strong>Polymer Viscosity</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="polymer_time_constant.html"><strong>Polymer Time Constant</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="polymer_yield_stress.html">Polymer Yield Stress</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mobility_parameter.html"><strong>Mobility Parameter</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="ptt_xi_parameter.html"><strong>PTT Xi parameter</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="ptt_epsilon_parameter.html"><strong>PTT Epsilon parameter</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="surface_tension.html"><strong>Surface Tension</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="sa_weight_function.html">Spalart Allmaras Weight Function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="second_level_set_conductivity.html"><strong>Second Level Set Conductivity</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="second_level_set_density.html"><strong>Second Level Set Density</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="second_level_set_heat_capacity.html"><strong>Second Level Set Heat Capacity</strong></a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#"><strong>Second Level Set Momentum Source</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="second_level_set_viscosity.html"><strong>Second Level Set Viscosity</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="shell_bending_stiffness.html"><strong>Shell Bending Stiffness</strong></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../mechanical_and_constitutive.html">Mechanical Properties and Constitutive Equations</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-20"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/solid_constitutive_equation.html">Solid Constitutive Equation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/plasticity_equation.html">Plasticity Equation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/convective_lagrangian_velocity.html">Convective Lagrangian Velocity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/lame_mu.html">Lame MU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/lame_lambda.html">Lame LAMBDA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/stress_free_solvent_vol_frac.html">Stress Free Solvent Vol Frac</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/solid_thermal_expansion.html">Solid Thermal Expansion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/solid_reference_temperature.html">Solid Reference Temperature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/plastic_viscosity.html">Plastic Viscosity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/evp_yield_stress.html">EVP Yield Stress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/pseudo_solid_constitutive_equation.html">Polymer Viscosity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/pseudo_solid_lame_mu.html">Pseudo-Solid Lame MU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/pseudo_solid_lame_lambda.html">Pseudo-Solid Lame LAMBDA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/liquid_constitutive_equation.html">Liquid Constitutive Equation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/viscosity.html">Viscosity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/low_rate_viscosity.html">Low Rate Viscosity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/power_law_exponent.html">Power Law Exponent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/high_rate_viscosity.html">High Rate Viscosity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/time_constant.html">Time Constant</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/aexp.html">Aexp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/thermal_exponent.html">Thermal Exponent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/thermal_wlf_constant2.html">Thermal WLF Constant2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/yield_stress.html">Yield Stress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/yield_exponent.html">Yield Exponent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/suspension_maximum_packing.html">Suspension Maximum Packing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/suspension_species_number.html">Suspension Species Number</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/cure_gel_point.html">Cure Gel Point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/cure_a_exponent.html">Cure A Exponent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/cure_b_exponent.html">Cure B Exponent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/cure_species_number.html">Cure Species Number</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/unreacted_gel_temperature.html">Unreacted Gel Temperature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/polymer_constitutive_equation.html">Polymer Constitutive Equation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/ptt_form.html">PTT Form</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/polymer_stress_formulation.html">Polymer Stress Formulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/polymer_weight_function.html">Polymer Weight Function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/polymer_shift_function.html">Polymer Shift Function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/polymer_weighting.html"><strong>Polymer Weighting</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/polymer_shock_capturing.html">Polymer Shock Capturing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/discontinuous_jacobian_formulation.html"><strong>Discontinuous Jacobian Formulation</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/adaptive_viscosity_scaling.html"><strong>Adaptive Viscosity Scaling</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/polymer_viscosity.html"><strong>Polymer Viscosity</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/polymer_time_constant.html"><strong>Polymer Time Constant</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/polymer_yield_stress.html">Polymer Yield Stress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/mobility_parameter.html"><strong>Mobility Parameter</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/ptt_xi_parameter.html"><strong>PTT Xi parameter</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/ptt_epsilon_parameter.html"><strong>PTT Epsilon parameter</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/surface_tension.html"><strong>Surface Tension</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/sa_weight_function.html">Spalart Allmaras Weight Function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/second_level_set_conductivity.html"><strong>Second Level Set Conductivity</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/ls_conductivity_interp.html">Level Set Interface Conductivity Interpolation Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/second_level_set_density.html"><strong>Second Level Set Density</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/ls_density_interp.html">Level Set Interface Density Interpolation Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/second_level_set_heat_capacity.html"><strong>Second Level Set Heat Capacity</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/ls_heat_capacity_interp.html">Level Set Interface Heat Capacity Interpolation Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/second_level_set_viscosity.html"><strong>Second Level Set Viscosity</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/ls_viscosity_interp.html">Level Set Interface Viscosity Interpolation Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mechanical_and_constitutive/shell_bending_stiffness.html"><strong>Shell Bending Stiffness</strong></a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../thermal_properties.html">Thermal Properties</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-21"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -655,10 +659,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../electrical_properties/magnetic_permeability.html">Magnetic Permeability</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../electrical_properties/electromagnetic_incident_wave.html">Electromagnetic Incident Wave</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../electrical_properties/extinction_index.html">Extinction Index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../electrical_properties/lsi_extinction_index_interp.html">Level Set Interface Extinction Index Interpolation Method</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../electrical_properties/refractive_index.html">Refractive Index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../electrical_properties/lsi_refractive_index_interp.html">Level Set Interface Refractive Index Interpolation Method</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../microstructure.html">Microstructure Properties</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-23"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../acoustic_properties.html">Acoustic Properties</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-23"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../acoustic_properties/lsi_acoustic_absorption_interp.html">Level Set Interface Acoustic Absorption Interpolation Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../acoustic_properties/lsi_acoustic_impedance_interp.html">Level Set Interface Acoustic Impedance Interpolation Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../acoustic_properties/lsi_wave_number_interp.html">Level Set Interface Wave Number Interpolation Method</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../microstructure.html">Microstructure Properties</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-24"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../microstructure/media_type.html"><strong>Media Type</strong></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../microstructure/porosity.html"><strong>Porosity</strong></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../microstructure/permeability.html"><strong>Permeability</strong></a></li>
@@ -681,7 +693,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../microstructure/porous_gas_constants.html"><strong>Porous Gas Constants</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../species.html">Species Properties</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-24"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../species.html">Species Properties</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-25"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../species_properties/number_of_species.html"><strong>Number of Species</strong></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../species_properties/diffusion_constitutive_equation.html"><strong>Diffusion Constitutive Equation</strong></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../species_properties/species_weight_function.html"><strong>Species Weight Function</strong></a></li>
@@ -720,18 +732,22 @@
 <li class="toctree-l3"><a class="reference internal" href="../species_properties/flory_huggins_parameters.html"><strong>Flory-Huggins parameters</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../source_terms.html">Source Terms</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-25"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../source_terms/navier_stokes_source.html"><strong>Navier-Stokes Source</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../source_terms/solid_body_source.html"><strong>Solid Body Source</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../source_terms/mass_source.html"><strong>Mass Source</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../source_terms/heat_source.html"><strong>Heat Source</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../source_terms/species_source.html"><strong>Species Source</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../source_terms/current_source.html"><strong>Current Source</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../source_terms/moment_source.html">Moment Source</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../source_terms/initialize.html"><strong>Initialize</strong></a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../source_terms.html">Source Terms</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-26"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="navier_stokes_source.html"><strong>Navier-Stokes Source</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="second_level_set_momentum_source.html"><strong>Second Level Set Momentum Source</strong></a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Level Set Interface Momentum Source Interpolation Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solid_body_source.html"><strong>Solid Body Source</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mass_source.html"><strong>Mass Source</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="heat_source.html"><strong>Heat Source</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="lsi_heat_source_interp.html">Level Set Interface Heat Source Interpolation Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="species_source.html"><strong>Species Source</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="lsi_species_source_interp.html">Level Set Interface Species Source Interpolation Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="current_source.html"><strong>Current Source</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="moment_source.html">Moment Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="initialize.html"><strong>Initialize</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../shell_equation.html">Shell Equation Properties and Models</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-26"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../shell_equation.html">Shell Equation Properties and Models</a><input class="toctree-checkbox" id="toctree-checkbox-27" name="toctree-checkbox-27" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-27"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../shell_equation/upper_height_function_constants.html"><strong>Upper Height Function Constants</strong></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../shell_equation/lower_height_function_constants.html"><strong>Lower Height Function Constants</strong></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../shell_equation/upper_velocity_function_constants.html"><strong>Upper Velocity Function Constants</strong></a></li>
@@ -794,61 +810,33 @@
             
             <article class="bd-article" role="main">
               
-  <section id="second-level-set-momentum-source">
-<h1><strong>Second Level Set Momentum Source</strong><a class="headerlink" href="#second-level-set-momentum-source" title="Permalink to this heading">#</a></h1>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Second</span> <span class="n">Level</span> <span class="n">Set</span> <span class="n">Momentum</span> <span class="n">Source</span> <span class="o">=</span> <span class="p">{</span><span class="n">model_name</span><span class="p">}</span> <span class="p">{</span><span class="n">float_list</span><span class="p">}</span> <span class="p">{</span><span class="n">char_string</span><span class="p">}</span> <span class="p">[</span><span class="n">M</span><span class="o">/</span><span class="n">Lt</span><span class="p">]</span>
+  <section id="level-set-interface-momentum-source-interpolation-method">
+<h1>Level Set Interface Momentum Source Interpolation Method<a class="headerlink" href="#level-set-interface-momentum-source-interpolation-method" title="Permalink to this heading">#</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Level</span> <span class="n">Set</span> <span class="n">Interface</span> <span class="n">Momentum</span> <span class="n">Source</span> <span class="n">Interpolation</span> <span class="n">Method</span> <span class="o">=</span> <span class="p">{</span><span class="n">char_string</span><span class="p">}</span>
 </pre></div>
 </div>
 <section id="description-usage">
 <h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this heading">#</a></h2>
-<p>This card allows to the user to specify a second thermal Navier-Stokes volumetric
-momentum source model that will be applied to one side of a level set interfacial curve:</p>
-<table class="table">
-<tbody>
-<tr class="row-odd"><td><p>{model_name}</p></td>
-<td><p>The name of the momentum source model can only be <strong>CONSTANT</strong> at the current time.</p></td>
-</tr>
-<tr class="row-even"><td><p>{float1}</p></td>
-<td><p>This is a single float parameter which is the value of volumetric momentum source term applied to the
-second level set phase fluid.[F/L3]</p></td>
-</tr>
-<tr class="row-odd"><td><p>{char_string}</p></td>
-<td><p>This string may take the values POSITIVE or NEGATIVE. It identifies which side of the interface the
-preceding momentum source model is applied to.</p></td>
-</tr>
-</tbody>
-</table>
-<p>This card allows the user to apply one of the several momentum source models
-implement in Goma to one side of the interface while the other side recieves the
-constant momentum source value listed on this card. The side of the interface that
-corresponds to char_string appearing on this card receives the constant momentum
-source value. The opposite side’s momentum source is determined from the other,
-(possibly) more complex model. Transition between them is accomplished using
-smooth Heaviside functions whose width is given on the Level Set Length Scale card.
-Note that it is the prescence of the this card in the material file that actually activates
-this selection process.</p>
+<p>This specifies the interpolation method of the level set properties for Momentum Source</p>
+<p>Possible choiches for char_string:</p>
+<dl class="simple">
+<dt>LINEAR</dt><dd><p>Default linear interpolation <span class="math notranslate nohighlight">\(p = (1-H({\phi})) p_- + H({\phi}) p_+\)</span></p>
+</dd>
+<dt>LOG</dt><dd><p>Log interpolation <span class="math notranslate nohighlight">\(p = p_-^{(1-H({\phi}))} p_+^{H({\phi})}\)</span></p>
+</dd>
+</dl>
 </section>
 <section id="examples">
 <h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
 <p>The following is a usage example for this card:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Navier</span><span class="o">-</span><span class="n">Stokes</span> <span class="n">Source</span> <span class="o">=</span> <span class="n">SUSPEND</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="o">-</span><span class="mf">980.0</span> <span class="mf">1.34e3</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Level</span> <span class="n">Set</span> <span class="n">Interface</span> <span class="n">Momentum</span> <span class="n">Source</span> <span class="n">Interpolation</span> <span class="n">Method</span> <span class="o">=</span> <span class="n">LOG</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Second</span> <span class="n">Level</span> <span class="n">Set</span> <span class="n">Momentum</span> <span class="n">Source</span> <span class="o">=</span> <span class="n">CONSTANT</span><span class="o">.</span> <span class="mf">1.0e-4</span> <span class="n">POSITIVE</span>
-</pre></div>
-</div>
-<p>This setup will cause the negattive side of the interface to receive momentum source
-values obtained from the USER model with the parameters listed above . The positive
-side of the interface will show a constant momentum source of 1.0e-4.</p>
 </section>
 <section id="technical-discussion">
 <h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this heading">#</a></h2>
-<p>An important thing to note is that the units of the quantity specified on this card are
-units of force per volume in exact correspondence to the units used with the preceding
-momentum source model. Note also that this card should not be used when using the
-LEVEL_SET momentum source model. For one thing, it makes no sense and for
-another thing the values specified on the latter model are simply the gravitational
-acceleration and therefore are inconsistent with this card.</p>
+<p>The log interpolation has been found to behave better in some cases where
+material property differences are large.</p>
 </section>
 </section>
 
@@ -860,17 +848,17 @@ acceleration and therefore are inconsistent with this card.</p>
             <footer class="bd-footer-article">
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-  <a class='left-prev' id="prev-link" href="second_level_set_heat_capacity.html" title="previous page">
+  <a class='left-prev' id="prev-link" href="second_level_set_momentum_source.html" title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title"><strong>Second Level Set Heat Capacity</strong></p>
+          <p class="prev-next-title"><strong>Second Level Set Momentum Source</strong></p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="second_level_set_viscosity.html" title="next page">
+  <a class='right-next' id="next-link" href="solid_body_source.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title"><strong>Second Level Set Viscosity</strong></p>
+      <p class="prev-next-title"><strong>Solid Body Source</strong></p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>
@@ -928,7 +916,7 @@ acceleration and therefore are inconsistent with this card.</p>
 <div class="toc-item">
   
 <div class="tocsection sourcelink">
-    <a href="../../_sources/material_file/mechanical_and_constitutive/second_level_set_momentum_source.rst.txt">
+    <a href="../../_sources/material_file/source_terms/lsi_momentum_source_interp.rst.txt">
         <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
 </div>
