@@ -4403,9 +4403,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
             dq_gradp2 = pre_delP2 = -CUBE(H) / (k_turb * mp->mp2nd->viscosity);
             q_mag2 = pre_delP2 * pgrad;
             srate2 = tau_w / mp->mp2nd->viscosity;
-            q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                         (double)mp->mp2nd->viscositymask[0],
-                                         (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+            q_mag = ls_modulate_property(
+                q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
             for (i = 0; i < dim; i++) {
               double q_gas, q_gas_dH, q_liq;
               q_gas = 0.5 * H * (veloU[i] + veloL[i]) + dq_gradp2 * pg_cmp[i];
@@ -5753,9 +5753,9 @@ void calculate_lub_q_v_old(
           k_turb = 12.;
           pre_delP2 = -CUBE(H_old) / (k_turb * mp->mp2nd->viscosity);
           q_mag2 = pre_delP2 * pgrad;
-          q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                       (double)mp->mp2nd->viscositymask[0],
-                                       (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+          q_mag = ls_modulate_property(
+              q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+              (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
         } else if (mp->mp2nd->ViscosityModel == CONSTANT ||
                    mp->mp2nd->ViscosityModel == TIME_RAMP) {
           if (mp->Lub_LS_Interpolation == LOGARITHMIC) {
@@ -5781,9 +5781,9 @@ void calculate_lub_q_v_old(
             k_turb = 12.;
             pre_delP2 = -CUBE(H_old) / (k_turb * mp->mp2nd->viscosity);
             q_mag2 = pre_delP2 * pgrad;
-            q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                         (double)mp->mp2nd->viscositymask[0],
-                                         (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+            q_mag = ls_modulate_property(
+                q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
           } else {
             GOMA_WH(GOMA_ERROR, "mp->Lub_LS_Interpolation needs to be LOG or LINEAR...\n");
           }
@@ -5804,9 +5804,9 @@ void calculate_lub_q_v_old(
           if (mp->mp2nd->ViscosityModel == RATIO) {
             ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
             q_mag2 = q_mag * ratio;
-            q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                         (double)mp->mp2nd->viscositymask[0],
-                                         (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+            q_mag = ls_modulate_property(
+                q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
             factor *= (1. - ratio);
             factor += ratio;
             /* Possibly lots different here since dq_gradp not really used for moving wall */
@@ -5841,9 +5841,9 @@ void calculate_lub_q_v_old(
               k_turb = 12.;
               dq_gradp2 = pre_delP2 = -CUBE(H_old) / (k_turb * mp->mp2nd->viscosity);
               q_mag2 = pre_delP2 * pgrad;
-              q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                           (double)mp->mp2nd->viscositymask[0],
-                                           (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+              q_mag = ls_modulate_property(
+                  q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                  (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor, LSI_INTERP_LINEAR);
               for (i = 0; i < dim; i++) {
                 double q_gas, q_liq;
                 q_gas = 0.5 * H_old * (veloU_old[i] + veloL_old[i]) + dq_gradp2 * pg_cmp[i];
