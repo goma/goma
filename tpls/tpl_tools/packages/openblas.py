@@ -17,6 +17,7 @@ class Package(packages.GenericPackage):
             + ".tar.gz"
         )
         self.libraries = ["openblas"]
+        self.dependencies = []
 
     def build(self, builder):
         self.build_command = ["make"]
@@ -52,4 +53,6 @@ class Package(packages.GenericPackage):
             "LAPACK_LIBRARIES",
             os.path.join(builder.install_dir(), "lib/libopenblas" + ext),
         )
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )
