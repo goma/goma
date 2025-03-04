@@ -6414,7 +6414,7 @@ int lub_viscosity_integrate(const double strs,
     shr = strs / sqrt(mu0 * muinf);
     for (iter = 0; iter < ITERMAX; iter++) {
       double xfact, tmp, tp1, tp2, tpe, tpe_d, xj, delta, P_sig;
-      int log_iteration = FALSE;
+      int log_iteration = TRUE;
       shrw = fabs(shr);
       tp1 = lam * shrw;
       xfact = 1. + pow(tp1, aexp);
@@ -6719,7 +6719,7 @@ int lub_viscosity_integrate(const double strs,
     case CARREAU_WLF:
       xfact = pow(lam * shrw, aexp);
       dlnvis_w_dT = dlnat_dT * (1. + (1. - muinf / vis_w) * (nexp - 1.) * xfact / (1. + xfact));
-      //dlnvis_w_dT = dlnat_dT * (vis_w + aexp * xfact);
+      // dlnvis_w_dT = dlnat_dT * (vis_w + aexp * xfact);
       break;
     case BINGHAM:
     case BINGHAM_WLF:
@@ -6748,7 +6748,7 @@ int lub_viscosity_integrate(const double strs,
             vis = muinf + (mu0 - muinf) * tmp;
             dvis_dT = dlnat_dT *
                       (vis + (vis - muinf) * (nexp - 1.) * pow(lam * cee * shrw, aexp) / xfact);
-            //dvis_dT = dlnat_dT * vis * (1. +  nexp * pow(lam * cee * shrw, aexp) / xfact);
+            // dvis_dT = dlnat_dT * vis * (1. +  nexp * pow(lam * cee * shrw, aexp) / xfact);
             dlnvis = (mu0 - muinf) * (nexp - 1.) * tmp / xfact * pow(lam * cee * shrw, aexp);
             break;
           case BINGHAM:
