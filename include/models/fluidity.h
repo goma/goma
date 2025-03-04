@@ -19,6 +19,7 @@ void fluidity_equilibrium_surf(double func[DIM],
                                const double theta,
                                const double dt);
 
+int fluidity_post_process_terms(dbl output[7]);
 #ifdef __cplusplus
 } // extern "C"
 #endif

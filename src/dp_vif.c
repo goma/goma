@@ -2679,6 +2679,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &PP_FLUID_STRESS, 1, MPI_INT);
   ddd_add_member(n, &LUB_CONVECTION, 1, MPI_INT);
   ddd_add_member(n, &FLUIDITY_SOURCE, 1, MPI_INT);
+  ddd_add_member(n, &FLUIDITY_TERMS, 1, MPI_INT);
   ddd_add_member(n, &USER_POST, 1, MPI_INT);
   if (len_u_post_proc > 0) {
     ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);

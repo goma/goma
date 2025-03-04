@@ -77,8 +77,10 @@ sfad sfad_fluidity_source(int species_no, dbl *params) {
       grad_v[i][j].fastAccessDx(idx) = 1.0;
     }
   }
+  
+  sfad phi_star_c = std::min(1, std::max(0, phi_star));
 
-  sfad phi = phi_0 + (phi_inf - phi_0) * phi_star;
+  sfad phi = phi_0 + (phi_inf - phi_0) * phi_star_c;
   sfad mu = 1 / phi;
 
   sfad tau[DIM][DIM] = {{0.}};
@@ -104,18 +106,20 @@ sfad sfad_fluidity_source(int species_no, dbl *params) {
 
   // Calculate t_a and s
   // avalanche time
-  // sfad ta = 59.2 * pow(1 - phi_eq, 1.1) / (pow(phi_eq, 0.4));
-  sfad ta = tc;
-  sfad s = 8.0 / max(exp(phi_eq / 0.09) - 1.0, 1e-16) + 1.2;
+  sfad phi_eq_floor = std::max(phi_eq, 1e-5);
+  sfad phi_eq_floor2 = std::max(phi_eq, 1e-10);
+  sfad ta = 59.2 * pow(1 - phi_eq_floor2, 1.1) / (pow(phi_eq_floor2, 0.4));
+  // sfad ta = ta;
+  sfad s = 8.0 / (exp(phi_eq_floor / 0.09) - 1.0) + 1.2;
 
-  sfad H = smoothed_heaviside(std::max(0, phi_star) - phi_eq, m);
+  sfad H = smoothed_heaviside(phi_star - phi_eq_floor2, m);
 
   // Breakdown dynamics
-  sfad F_breakdown = (s / (ta * phi_eq)) * pow(max(0, phi_eq - phi_star), (s + 1) / s) *
-                     pow(max(0, phi_star), (s - 1.0) / s);
+  sfad F_breakdown = (s / (ta * phi_eq_floor)) * pow(std::max(0,phi_eq_floor2 - phi_star_c), (s + 1) / s) *
+                     pow(max(0, phi_star_c), (s - 1.0) / s);
 
   // Buildup dynamics
-  sfad F_buildup = -(phi_star - phi_eq) / tc;
+  sfad F_buildup = -(phi_star - phi_eq_floor2) / tc;
 
   // Calculate F
   sfad F = H * F_buildup + (1.0 - H) * F_breakdown;
@@ -123,8 +127,87 @@ sfad sfad_fluidity_source(int species_no, dbl *params) {
   return F;
 }
 
+extern "C" int fluidity_post_process_terms(dbl output[7]) {
+  int species_no = 0;
+  dbl *params = mp->u_species_source[species_no];
+  dbl phi_0 = params[0];
+  dbl phi_inf = params[1];
+  dbl K = params[2];
+  dbl n = params[3];
+  dbl tc = params[4];
+  dbl sigma_y = params[5];
+  dbl m = params[6];
+  dbl m_y = params[7];
+
+  sfad phi_star(10, 0, fv->c[species_no]);
+  sfad grad_v[DIM][DIM];
+  for (int i = 0; i < VIM; i++) {
+    for (int j = 0; j < VIM; j++) {
+      grad_v[i][j] = fv->grad_v[i][j];
+      int idx = 1 + i * VIM + j;
+      grad_v[i][j].fastAccessDx(idx) = 1.0;
+    }
+  }
+  
+  sfad phi_star_c = std::min(1, std::max(0, phi_star));
+
+  sfad phi = phi_0 + (phi_inf - phi_0) * phi_star_c;
+  sfad mu = 1 / phi;
+
+  sfad tau[DIM][DIM] = {{0.}};
+  for (int i = 0; i < pd->Num_Dim; i++) {
+    for (int j = 0; j < pd->Num_Dim; j++) {
+      tau[i][j] = mu * (grad_v[i][j] + grad_v[j][i]);
+    }
+  }
+
+  sfad sigma = 0.0;
+  for (int i = 0; i < DIM; i++) {
+    for (int j = 0; j < DIM; j++) {
+      sigma += tau[i][j] * tau[i][j];
+    }
+  }
+  sigma = max(sigma, 1e-32);
+  sigma = sqrt(0.5 * sigma);
+
+  // Calculate phi_eq
+  sfad term = pow((sigma - sigma_y) / K, 1.0 / n) * (1.0 / sigma);
+  sfad phi_eq =
+      max(1e-32, smoothed_heaviside(sigma - sigma_y, m_y) * term / ((phi_inf - phi_0) + term));
+
+  // Calculate t_a and s
+  // avalanche time
+  sfad phi_eq_floor = std::max(phi_eq, 1e-5);
+  sfad ta = 59.2 * pow(1 - phi_eq_floor, 1.1) / (pow(phi_eq_floor, 0.4));
+  // sfad ta = tc;
+  sfad s = 8.0 / (exp(phi_eq_floor / 0.09) - 1.0) + 1.2;
+
+  sfad H = smoothed_heaviside(phi_star - phi_eq, m);
+  
+  // Breakdown dynamics
+  sfad F_breakdown = (s / (ta * phi_eq)) * pow(max(0, phi_eq - phi_star_c), (s + 1) / s) *
+                     pow(max(0, phi_star_c), (s - 1.0) / s);
+
+  // Buildup dynamics
+  sfad F_buildup = -(phi_star - phi_eq) / tc;
+
+  // Calculate F
+  sfad F = H * F_buildup + (1.0 - H) * F_breakdown;
+
+  output[0] = phi_eq.val();
+  output[1] = s.val();
+  output[2] = ta.val();
+  output[3] = H.val();
+  output[4] = sigma.val();
+  output[5] = F_breakdown.val();
+  output[6] = F_buildup.val();
+  
+  return 0;
+}
+
 // Main function to test the implementation
-extern "C" int fluidity_source(int species_no, struct Species_Conservation_Terms *st, dbl *params) {
+extern "C" int
+fluidity_source(int species_no, struct Species_Conservation_Terms *st, dbl *params) {
   sfad F = sfad_fluidity_source(species_no, params);
   int eqn = MASS_FRACTION;
   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
@@ -168,8 +251,7 @@ extern "C" int fluidity_source(int species_no, struct Species_Conservation_Terms
   return 0;
 }
 
-extern "C" int
-fluidity_source_s(int species_no, struct Species_Conservation_Terms *st, dbl *params) {
+extern "C" int s_fluidity_source(int species_no, struct Species_Conservation_Terms *st, dbl *params) {
 
   dbl phi_0 = params[0];
   dbl phi_inf = params[1];
@@ -177,10 +259,10 @@ fluidity_source_s(int species_no, struct Species_Conservation_Terms *st, dbl *pa
   dbl n = params[3];
   dbl tc = params[4];
 
-  dbl phi_v = fv->c[species_no];
+  dbl phi_v = fmin(1, fmax(0,fv->c[species_no]));
   dbl d_phi_v_d_phi = 1.0;
 
-  dbl phi = phi_0 + (phi_inf - phi_0) * phi_v;
+  dbl phi = phi_0 + (phi_inf - phi_0) * fmax(0,phi_v);
   dbl d_phi_d_phi_v = phi_inf - phi_0;
 
   dbl mu = 1.0 / phi;
@@ -202,19 +284,27 @@ fluidity_source_s(int species_no, struct Species_Conservation_Terms *st, dbl *pa
   dbl d_sigma_d_phi_v = d_mu_d_phi_v * gammadot;
 
   dbl phi_eq =
-      pow(sigma / K, 1.0 / n) / (sigma * (-phi_0 + phi_inf + pow(sigma / K, 1.0 / n) / sigma));
-  dbl d_phi_eq_d_sigma = pow(sigma / K, 1.0 / n) * (n - 1) * (phi_0 - phi_inf) /
-                         (n * pow(-phi_0 * sigma + phi_inf * sigma + pow(sigma / K, 1.0 / n), 2));
+      pow(sigma / K, 1.0 / n) /
+      fmax(1e-32, (sigma * (-phi_0 + phi_inf + pow(sigma / K, 1.0 / n) / fmax(1e-32, sigma))));
+  dbl d_phi_eq_d_sigma =
+      pow(sigma / K, 1.0 / n) * (n - 1) * (phi_0 - phi_inf) /
+      fmax(1e-32, (n * pow(-phi_0 * sigma + phi_inf * sigma + pow(sigma / K, 1.0 / n), 2)));
 
   dbl c1 = 59.2;
   dbl c2 = 1.1;
   dbl c3 = 0.4;
 
-  dbl ta = c1 * pow(phi_eq, -c3) * pow(1 - phi_eq, c2);
-  dbl d_ta_d_phi_eq = c1 * pow(phi_eq, -2 * c3 - 1) *
-                      (c2 * pow(phi_eq, c3 + 1) * pow(1 - phi_eq, c2) +
-                       c3 * pow(phi_eq, c3) * pow(1 - phi_eq, c2 + 1)) /
-                      (phi_eq - 1);
+  dbl ta = 0;
+  dbl d_ta_d_phi_eq = 0;
+  if (phi_eq > 0) {
+    ta = c1 * pow(phi_eq, -c3) * pow(1 - phi_eq, c2);
+    d_ta_d_phi_eq = c1 * pow(phi_eq, -2 * c3 - 1) *
+                    (c2 * pow(phi_eq, c3 + 1) * pow(1 - phi_eq, c2) +
+                     c3 * pow(phi_eq, c3) * pow(1 - phi_eq, c2 + 1)) /
+                    (phi_eq - 1);
+  }
+
+  phi_eq = fmax(1e-16, phi_eq);
 
   dbl d1 = 8;
   dbl d2 = 0.09;
@@ -227,38 +317,41 @@ fluidity_source_s(int species_no, struct Species_Conservation_Terms *st, dbl *pa
   dbl d_H_d_phi_eq = -0.5 * m * (1 - pow(tanh(m * (phi_v - phi_eq)), 2));
   dbl d_H_d_phi_v = 0.5 * m * (1 - pow(tanh(m * (phi_v - phi_eq)), 2));
 
-  dbl F_breakdown = (s / (ta * phi_eq)) * pow(fmax(0, phi_eq - phi_v), (s + 1) / s) *
-                    pow(fmax(0, phi_v), (s - 1) / s);
+  dbl F_breakdown = 0;
+  dbl d_F_breakdown_d_phi_eq = 0;
+  dbl d_F_breakdown_d_phi_v = 0;
+  if (H < 1.0 && (phi_eq - phi_v) > 1e-14) {
+    F_breakdown = (s / (ta * phi_eq)) * pow(fmax(0, phi_eq - phi_v), (s + 1) / s) *
+                  pow(fmax(0, phi_v), (s - 1) / s);
+    d_F_breakdown_d_phi_v = -pow(phi_v, (s - 1) / s) * pow(fmax(phi_eq - phi_v, 0), (s + 1) / s) * (s + 1) /
+                                (phi_eq * (phi_eq - phi_v) * ta) +
+                            pow(phi_v, (s - 1) / s) * pow(fmax(phi_eq - phi_v, 0), (s + 1) / s) * (s - 1) /
+                                (phi_eq * phi_v * ta);
+    d_F_breakdown_d_phi_eq =
+        pow(phi_v, (s - 1) / s) * pow(fmax(phi_eq - phi_v,0), (s + 1) / s) *
+            ((-(s + 1) * d_s_d_phi_eq / pow(s, 2) + d_s_d_phi_eq / s) * log(fmax(1e-16,phi_eq - phi_v)) +
+             (s + 1) / ((phi_eq - phi_v) * s)) *
+            s / (phi_eq * ta) +
+        pow(phi_v, (s - 1) / s) * pow(fmax(phi_eq - phi_v,0), (s + 1) / s) *
+            (-(s - 1) * d_s_d_phi_eq / pow(s, 2) + d_s_d_phi_eq / s) * s * log(fmax(1e-16,phi_v)) /
+            (phi_eq * ta) -
+        pow(phi_v, (s - 0) / s) * pow(fmax(0,phi_eq - phi_v), (s + 1) / s) * s * d_ta_d_phi_eq /
+            (phi_eq * pow(ta, 2)) +
+        pow(phi_v, (s - 1) / s) * pow(fmax(0,phi_eq - phi_v), (s + 1) / s) * d_s_d_phi_eq / (phi_eq * ta) -
+        pow(phi_v, (s - 1) / s) * pow(fmax(0,phi_eq - phi_v), (s + 1) / s) * s / (pow(phi_eq, 2) * ta);
+  }
 
   dbl F_buildup = -(phi_v - phi_eq) / tc;
+  dbl d_F_buildup_d_phi_v = -1.0 / tc;
+  dbl d_F_buildup_d_phi_eq = 1.0 / tc;
 
   dbl F = H * F_buildup + (1 - H) * F_breakdown;
 
-  dbl d_F_d_phi_eq =
-      (phi_eq - phi_v) * d_H_d_phi_eq / tc + H / tc +
-      pow(phi_v, (s - 1) / s) * (1 - H) * pow(phi_eq - phi_v, (s + 1) / s) *
-          ((-(s + 1) * d_s_d_phi_eq / pow(s, 2) + d_s_d_phi_eq / s) * log(phi_eq - phi_v) +
-           (s + 1) / ((phi_eq - phi_v) * s)) *
-          s / (phi_eq * ta) +
-      pow(phi_v, (s - 1) / s) * (1 - H) * pow(phi_eq - phi_v, (s + 1) / s) *
-          (-(s - 1) * d_s_d_phi_eq / pow(s, 2) + d_s_d_phi_eq / s) * s * log(phi_v) /
-          (phi_eq * ta) -
-      pow(phi_v, (s - 1) / s) * (1 - H) * pow(phi_eq - phi_v, (s + 1) / s) * s * d_ta_d_phi_eq /
-          (phi_eq * pow(ta, 2)) +
-      pow(phi_v, (s - 1) / s) * (1 - H) * pow(phi_eq - phi_v, (s + 1) / s) * d_s_d_phi_eq /
-          (phi_eq * ta) -
-      pow(phi_v, (s - 1) / s) * pow(phi_eq - phi_v, (s + 1) / s) * s * d_H_d_phi_eq /
-          (phi_eq * ta) -
-      pow(phi_v, (s - 1) / s) * (1 - H) * pow(phi_eq - phi_v, (s + 1) / s) * s /
-          (pow(phi_eq, 2) * ta);
+  dbl d_F_d_phi_eq = H * d_F_buildup_d_phi_eq + (1 - H) * d_F_breakdown_d_phi_eq +
+                     d_H_d_phi_eq * F_buildup - d_H_d_phi_eq * F_breakdown;
 
-  dbl d_F_d_phi_v =
-      (phi_eq - phi_v) * d_H_d_phi_v / tc - H / tc -
-      pow(phi_v, (s - 1) / s) * (1 - H) * pow(phi_eq - phi_v, (s + 1) / s) * (s + 1) /
-          (phi_eq * (phi_eq - phi_v) * ta) -
-      pow(phi_v, (s - 1) / s) * pow(phi_eq - phi_v, (s + 1) / s) * s * d_H_d_phi_v / (phi_eq * ta) +
-      pow(phi_v, (s - 1) / s) * (1 - H) * pow(phi_eq - phi_v, (s + 1) / s) * (s - 1) /
-          (phi_eq * phi_v * ta);
+  dbl d_F_d_phi_v = H * d_F_buildup_d_phi_v + (1 - H) * d_F_breakdown_d_phi_v +
+                    d_H_d_phi_v * F_buildup - d_H_d_phi_v * F_breakdown;
 
   int eqn = MASS_FRACTION;
   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
@@ -278,7 +371,7 @@ fluidity_source_s(int species_no, struct Species_Conservation_Terms *st, dbl *pa
     if (pd->v[pg->imtrx][var]) {
       for (int a = 0; a < VIM; a++) {
         for (int j = 0; j < ei[pg->imtrx]->dof[VELOCITY1 + a]; j++) {
-          st->d_MassSource_dv[species_no][a][j] +=
+          st->d_MassSource_dv[species_no][a][j] =
               d_F_d_phi_eq * d_phi_eq_d_sigma * d_sigma_dgd * d_gd_dv[a][j];
         }
       }
@@ -288,7 +381,7 @@ fluidity_source_s(int species_no, struct Species_Conservation_Terms *st, dbl *pa
     if (pd->v[pg->imtrx][var]) {
       for (int a = 0; a < VIM; a++) {
         for (int j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; j++) {
-          st->d_MassSource_dv[species_no][a][j] +=
+          st->d_MassSource_dmesh[species_no][a][j] =
               d_F_d_phi_eq * d_phi_eq_d_sigma * d_sigma_dgd * d_gd_dX[a][j];
         }
       }
