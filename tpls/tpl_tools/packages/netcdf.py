@@ -36,7 +36,6 @@ class Package(packages.CMakePackage):
         builder.add_option("-DENABLE_PNETCDF:BOOL=ON")
         builder.add_option("-DENABLE_CDF5=ON")
         builder.add_option("-DENABLE_MMAP:BOOL=ON")
-        builder.add_option("-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE")
 
     def register(self, builder):
         registry = builder._registry

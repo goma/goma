@@ -50,7 +50,6 @@ class Package(packages.CMakePackage):
         builder.add_option("-DSeacas_ENABLE_ALL_PACKAGES:BOOL=ON")
         builder.add_option("-DSeacas_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON")
         builder.add_option("-DSeacas_ENABLE_SECONDARY_TESTED_CODE:BOOL=ON")
-        builder.add_option("-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE")
 
     def register(self, builder):
         registry = builder._registry
