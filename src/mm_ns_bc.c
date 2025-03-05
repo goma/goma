@@ -4352,8 +4352,9 @@ void load_surface_tension(double dsigma_dx[][MDE]) /* dimensions [DIM][MDE] */
         dsigma_dx[p][j] = 0.;
       }
     }
-    if (tran->time_value < (tran->init_time + mp->u_surface_tension[1])) {
-      factor = (tran->time_value - tran->init_time) / mp->u_surface_tension[1];
+    // Making specific to starting at time = 0
+    if (tran->time_value < mp->u_surface_tension[1]) {
+      factor = tran->time_value / mp->u_surface_tension[1];
       mp->surface_tension = factor * mp->u_surface_tension[0];
     } else {
       mp->surface_tension = mp->u_surface_tension[0];

@@ -5,9 +5,9 @@ import os
 class Package(packages.AutotoolsPackage):
     def __init__(self):
         self.name = "hdf5"
-        self.version = "1.14.4.3"
-        version_tag = "1.14.4-3"
-        self.sha256 = "019ac451d9e1cf89c0482ba2a06f07a46166caf23f60fea5ef3c37724a318e03"
+        self.version = "1.14.6"
+        version_tag = "1.14.6"
+        self.sha256 = "e4defbac30f50d64e1556374aa49e574417c9e72c6b1de7a4ff88c4b1bea6e9b"
         self.filename = "hdf5-" + self.version + ".tar.bz2"
         self.url = (
             "https://github.com/HDFGroup/hdf5/releases/download/hdf5_"
@@ -17,9 +17,7 @@ class Package(packages.AutotoolsPackage):
             + ".tar.gz"
         )
         self.libraries = ["hdf5"]
-
-    def setDependencies(self, builder):
-        builder.set_dependency("packages.openmpi")
+        self.dependencies = ["openmpi"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -37,7 +35,9 @@ class Package(packages.AutotoolsPackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("HDF5_DIR", builder.install_dir())
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )
         registry.prepend_environment_variable(
             "PATH", os.path.join(builder.install_dir(), "bin")
         )

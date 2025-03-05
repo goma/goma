@@ -617,7 +617,7 @@ double height_function_model(double *H_U,
 
   if (mp->HeightUFunctionModel == WALL_DISTMOD || mp->HeightUFunctionModel == WALL_DISTURB ||
       mp->HeightLFunctionModel == WALL_DISTMOD || mp->HeightLFunctionModel == WALL_DISTURB) {
-    double wall_d, alpha = 0., powerlaw = 1., H_orig = H, F_shift = 0., F_stretch = 1.;
+    double wall_d, alpha = 0., powerlaw = 1., H_orig = H, F_shift = 0., F_stretch = 1., beta = 0.;
     bool Fwall_model = false;
 
     if (mp->HeightUFunctionModel == WALL_DISTMOD) {
@@ -662,18 +662,28 @@ double height_function_model(double *H_U,
       powerlaw = gn->nexp;
     }
 
+    if (mp->len_u_heightU_function_constants > 7) {
+      beta = mp->u_heightU_function_constants[7];
+    } else if (mp->len_u_heightL_function_constants > 7) {
+      beta = mp->u_heightL_function_constants[7];
+    }
+
     // Keep wall distance positive
-    double rel_dist = MAX(wall_d, 0.) / H_orig;
+    double rel_dist = MAX(wall_d, 0.0) / H_orig;
     // 3 decimal point accuracy on end of boundary layer
     if (rel_dist <= 3. / alpha * log(10.)) {
-      double dh_grad = 0., exp_term, exp_term2, tmp = alpha * rel_dist;
+      double dh_grad = 0., exp_term, exp_term2, exp_termd, tmp = alpha * rel_dist;
+      double pl_fact = 1. / (2. * powerlaw + 1.);
       int j;
       if (tmp < 0.1) {
         exp_term = tmp * (1. - 0.5 * tmp * (1. - tmp / 3. * (1. - 0.25 * tmp)));
+        exp_term = MAX(DBL_SEMI_SMALL, exp_term);
+        exp_termd = alpha * (1. - exp_term);
       } else {
-        exp_term = 1. - exp(-alpha * rel_dist);
+        exp_term = 1. - exp(-tmp);
+        exp_termd = alpha * exp(-tmp);
       }
-      exp_term2 = pow(MAX(exp_term, DBL_SEMI_SMALL), 1. / (2. * powerlaw + 1.));
+      exp_term2 = pow(exp_term, pl_fact);
       if ((ls != NULL || pfd != NULL) && Fwall_model) {
         double inv_F_str = 1. / F_stretch;
         // Modified, shifted LS distance & Heaviside variable
@@ -682,6 +692,19 @@ double height_function_model(double *H_U,
             (DOUBLE_NONZERO(ls->Length_Scale) ? inv_F_str * (2 * fv->F / ls->Length_Scale - F_shift)
                                               : fv->F);
         double H_prime, dH_prime = 0.0;
+        double exp_plus = 1., exp_plus2 = 1., exp_plusd = 0.;
+        // Modulate beta at the beginning of time
+        if (tran->time_value < 10. * tran->Delta_t0) {
+          beta *= tran->time_value / (10. * tran->Delta_t0);
+        }
+        if (tmp < 0.1) {
+          exp_plus =
+              1. + beta * (1. - tmp * (1. - 0.5 * tmp * (1. - tmp / 3. * (1. - 0.25 * tmp))));
+        } else {
+          exp_plus = 1. + beta * exp(-tmp);
+        }
+        exp_plusd = -alpha * (1. - exp_plus);
+        exp_plus2 = pow(exp_plus, pl_fact);
         if (F_prime <= 1.) {
           H_prime = 0.5 * (1. + F_prime + sin(PI * F_prime) / PI);
           dH_prime = (1. + cos(PI * F_prime)) * inv_F_str / ls->Length_Scale;
@@ -691,35 +714,41 @@ double height_function_model(double *H_U,
           H_prime = 1.0;
         }
         double factor = (mp->mp2nd->viscositymask[1] ? (1.0 - H_prime) : H_prime);
+        double dfact_dF = (mp->mp2nd->viscositymask[1] ? (-dH_prime) : dH_prime);
         if (mp->Lub_LS_Interpolation == LOGARITHMIC) {
-          if ((fabs(F_prime) <= 1.) || (F_prime > 0 && mp->mp2nd->viscositymask[1]) ||
-              (F_prime < 0 && mp->mp2nd->viscositymask[0])) {
-            double H_log = (DOUBLE_NONZERO(exp_term2) ? log(1.0 / exp_term2) : 0.0);
-            if (fabs(F_prime) <= 1.) {
-              H = pow(H_orig * exp_term2, factor) * pow(H_orig, 1.0 - factor);
-              dh_grad = (H / (H_orig * exp_term2)) * factor * H_orig * alpha *
-                        exp(-alpha * rel_dist) / (2. * powerlaw + 1.) * pow(H, -2. * powerlaw);
-              for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
-                dH_dF[j] = H * H_log * dH_prime * bf[FILL]->phi[j];
-              }
+          if (F_prime > -1. && F_prime < 1.) {
+            /*  LS interface zone */
+            double H_log = log(exp_term);
+            double Hplus_log = log(exp_plus);
+            H = H_orig * pow(exp_term2, factor) * pow(exp_plus2, 1.0 - factor);
+            dh_grad = factor * exp_termd / exp_term;
+            dh_grad += (1.0 - factor) * exp_plusd / exp_plus;
+            dh_grad *= H * pl_fact;
+            for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
+              dH_dF[j] = H * pl_fact * (H_log - Hplus_log) * dfact_dF * bf[FILL]->phi[j];
             }
+          } else if ((F_prime >= 1. && mp->mp2nd->viscositymask[1]) ||
+                     (F_prime <= -1. && mp->mp2nd->viscositymask[0])) {
+            /*  In the gas phase  */
+            H *= exp_plus2;
+            dh_grad = H * pl_fact * exp_plusd / exp_plus;
           } else {
+            /*  In the liquid phase  */
             H *= exp_term2;
-            dh_grad = H_orig * alpha * exp(-alpha * rel_dist) / (2. * powerlaw + 1.) *
-                      pow(H, -2. * powerlaw);
+            dh_grad = H * exp_termd * pl_fact / exp_term;
           }
         } else {
-          H *= factor * exp_term2 + (1.0 - factor);
-          dh_grad = factor * H_orig * alpha * exp(-alpha * rel_dist) / (2. * powerlaw + 1.) *
-                    pow(H, -2. * powerlaw);
+          H *= factor * exp_term2 + (1.0 - factor) * exp_plus2;
+          dh_grad = factor * exp_termd * exp_term2 / exp_term;
+          dh_grad += (1.0 - factor) * exp_plusd * exp_plus2 / exp_plus;
+          dh_grad *= H_orig * pl_fact;
           for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++) {
-            dH_dF[j] = H_orig * (1. - exp_term2) * dH_prime * bf[FILL]->phi[j];
+            dH_dF[j] = H_orig * (exp_plus2 - exp_term2) * dfact_dF * bf[FILL]->phi[j];
           }
         }
       } else {
         H *= exp_term2;
-        dh_grad =
-            H_orig * alpha * exp(-alpha * rel_dist) / (2. * powerlaw + 1.) * pow(H, -2. * powerlaw);
+        dh_grad = H * exp_termd * pl_fact / exp_term;
       }
       if (mp->HeightUFunctionModel == WALL_DISTMOD) {
         dH_U_dX[0] = dh_grad * fv->grad_ext_field[mp->heightU_ext_field_index][0];

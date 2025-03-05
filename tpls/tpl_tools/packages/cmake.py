@@ -17,6 +17,7 @@ class Package(packages.AutotoolsPackage):
             + ".tar.gz"
         )
         self.executables = ["cmake"]
+        self.dependencies = []
 
     def configure(self, builder):
         configure_options = ["./bootstrap"]

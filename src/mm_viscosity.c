@@ -673,12 +673,14 @@ double viscosity(struct Generalized_Newtonian *gn_local,
       ls = pfd->ls[0];
       err = ls_modulate_viscosity(
           &mu, mp->mp2nd->viscosity_phase[0], ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-          (double)mp->mp2nd->viscositymask[1], d_mu, mp->mp2nd->ViscosityModel);
+          (double)mp->mp2nd->viscositymask[1], d_mu, mp->mp2nd->ViscosityModel,
+          mp->mp2nd->viscosity_lsi_interp_method);
       ls = ls_old;
     }
-    err = ls_modulate_viscosity(
-        &mu, mp->mp2nd->viscosity, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-        (double)mp->mp2nd->viscositymask[1], d_mu, mp->mp2nd->ViscosityModel);
+    err = ls_modulate_viscosity(&mu, mp->mp2nd->viscosity, ls->Length_Scale,
+                                (double)mp->mp2nd->viscositymask[0],
+                                (double)mp->mp2nd->viscositymask[1], d_mu,
+                                mp->mp2nd->ViscosityModel, mp->mp2nd->viscosity_lsi_interp_method);
     GOMA_EH(err, "ls_modulate_viscosity");
   }
   if (DOUBLE_NONZERO(gn_local->thixo_factor)) {
@@ -3253,7 +3255,8 @@ int ls_modulate_viscosity(double *mu1,
                           double pm_minus,
                           double pm_plus,
                           VISCOSITY_DEPENDENCE_STRUCT *d_mu,
-                          const int model) {
+                          const int model,
+                          const int interp_method) {
   double factor, ratio = 0.0;
   int i, a, w, var;
 
@@ -3262,6 +3265,7 @@ int ls_modulate_viscosity(double *mu1,
     mu2 = *mu1 * ratio;
   } else if (model == TIME_RAMP) {
     ratio = 1.0;
+    // Making specific to starting at time = 0
     if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
       ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
     }
@@ -3269,11 +3273,11 @@ int ls_modulate_viscosity(double *mu1,
   }
 
   if (d_mu == NULL) {
-    *mu1 = ls_modulate_property(*mu1, mu2, width, pm_minus, pm_plus, NULL, &factor);
+    *mu1 = ls_modulate_property(*mu1, mu2, width, pm_minus, pm_plus, NULL, &factor, interp_method);
     return (1);
   }
 
-  *mu1 = ls_modulate_property(*mu1, mu2, width, pm_minus, pm_plus, d_mu->F, &factor);
+  *mu1 = ls_modulate_property(*mu1, mu2, width, pm_minus, pm_plus, d_mu->F, &factor, interp_method);
 
   if (model == RATIO) {
     factor *= (1. - ratio);
@@ -3437,7 +3441,8 @@ double flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis) {
     err = ls_modulate_viscosity(&flow_vis, mp->mp2nd->FlowingLiquid_viscosity, ls->Length_Scale,
                                 (double)mp->mp2nd->FlowingLiquid_viscositymask[0],
                                 (double)mp->mp2nd->FlowingLiquid_viscositymask[1], d_flow_vis,
-                                mp->mp2nd->FlowingLiquidViscosityModel);
+                                mp->mp2nd->FlowingLiquidViscosityModel,
+                                mp->mp2nd->viscosity_lsi_interp_method);
     GOMA_EH(err, "ls_modulate_viscosity");
   }
 

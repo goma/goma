@@ -6,25 +6,16 @@ import os
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "seacas"
-        self.version = "2024-08-15"
-        self.sha256 = "c85130b0dac5ab9a08dcb53c8ccff478122d72b08bd41d99c0adfddc5eb18a52"
+        self.version = "v2025-02-27"
+        self.sha256 = "224468d6215b4f4b15511ee7a29f755cdd9e7be18c08dfece9d9991e68185cfc"
         self.filename = "seacas-" + self.version + ".tar.gz"
         self.url = (
-            "https://github.com/sandialabs/seacas/archive/refs/tags/v"
-            + self.version
-            + ".tar.gz"
+            "https://github.com/sandialabs/seacas/archive/" + self.version + ".tar.gz"
         )
         self.executables = ["algebra", "aprepro", "mapvar", "explore"]
         self.libraries = ["exodus", "aprepro_lib"]
         self.includes = ["exodusII.h", "aprepro.h"]
-
-    def setDependencies(self, builder):
-        builder.set_dependency("packages.openmpi")
-        builder.set_dependency("packages.hdf5")
-        builder.set_dependency("packages.pnetcdf")
-        builder.set_dependency("packages.netcdf")
-        builder.set_dependency("packages.fmt")
-        return
+        self.dependencies = ["openmpi", "cmake", "fmt", "hdf5", "netcdf", "pnetcdf"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -65,7 +56,9 @@ class Package(packages.CMakePackage):
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("ACCESS", builder.install_dir())
         registry.set_environment_variable("SEACAS_DIR", builder.install_dir())
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )
         registry.prepend_environment_variable(
             "PATH", os.path.join(builder.install_dir(), "bin")
         )
