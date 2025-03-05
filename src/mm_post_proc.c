@@ -74,7 +74,6 @@
 #include "mm_std_models_shell.h"
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
-#include "models/fluidity.h"
 #include "polymer_time_const.h"
 #include "rd_mesh.h"
 #include "rf_allo.h"
@@ -344,8 +343,6 @@ int WALL_DISTANCE = -1;
 int CONTACT_DISTANCE = -1;
 int PP_FLUID_STRESS = -1; /* Fluid Stress without Pressure contribution */
 int LUB_CONVECTION = -1;
-int FLUIDITY_SOURCE = -1;
-int FLUIDITY_TERMS = -1;
 
 int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
                           * actually is */
@@ -3154,26 +3151,6 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[LUB_CONVECTION + 2] = 1.0;
 
   } /* end of LUB_CONVECTION */
-
-  if ((FLUIDITY_SOURCE != -1) && pd->e[pg->imtrx][R_MASS]) {
-    struct Species_Conservation_Terms st;
-    dbl *params = mp->u_species_source[0];
-    fluidity_source(0, &st, params);
-
-    /* Post velocities */
-    local_post[FLUIDITY_SOURCE] = st.MassSource[0];
-    local_lumped[FLUIDITY_SOURCE] = 1.0;
-
-  } /* end of FLUIDITY_SOURCE */
-
-  if ((FLUIDITY_TERMS != -1) && pd->e[pg->imtrx][R_MASS]) {
-    dbl output[7];
-    fluidity_post_process_terms(output);
-    for (int i = 0; i < 7; i++) {
-      local_post[FLUIDITY_TERMS+i] = output[i];
-      local_lumped[FLUIDITY_TERMS+i] = 1.0;
-    }
-  }
 
   if ((PP_LAME_MU != -1) && (pd->e[pg->imtrx][R_MESH1])) {
 
@@ -7983,8 +7960,6 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "TFMP_inverse_Peclet", &TFMP_INV_PECLET);
   iread = look_for_post_proc(ifp, "TFMP_Krg", &TFMP_KRG);
   iread = look_for_post_proc(ifp, "Lubrication Convection", &LUB_CONVECTION);
-  iread = look_for_post_proc(ifp, "Fluidity Source", &FLUIDITY_SOURCE);
-  iread = look_for_post_proc(ifp, "Fluidity Terms", &FLUIDITY_TERMS);
 
   /* Report count of post-proc vars to be exported */
   /*
@@ -11748,58 +11723,6 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     index_post++;
     sprintf(nm, "LUB_CONV_Z");
     sprintf(ds, "Lubrication Convection z-component");
-    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
-    index++;
-    index_post++;
-  }
-  if (FLUIDITY_SOURCE != -1 && Num_Var_In_Type[pg->imtrx][R_MASS]) {
-    if (FLUIDITY_SOURCE == 2) {
-      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
-    }
-    FLUIDITY_SOURCE = index_post;
-    sprintf(nm, "FLUIDITY_F");
-    sprintf(ds, "Fluidity Source");
-    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
-    index++;
-    index_post++;
-  }
-  if (FLUIDITY_TERMS != -1 && Num_Var_In_Type[pg->imtrx][R_MASS]) {
-    if (FLUIDITY_TERMS == 2) {
-      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
-    }
-    FLUIDITY_TERMS = index_post;
-    sprintf(nm, "PHI_EQ");
-    sprintf(ds, "Fluidity Source");
-    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
-    index++;
-    index_post++;
-    sprintf(nm, "FLUIDITY_S");
-    sprintf(ds, "Fluidity Source");
-    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
-    index++;
-    index_post++;
-    sprintf(nm, "FLUIDITY_TA");
-    sprintf(ds, "Fluidity Source");
-    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
-    index++;
-    index_post++;
-    sprintf(nm, "FLUIDITY_H");
-    sprintf(ds, "Fluidity Source");
-    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
-    index++;
-    index_post++;
-    sprintf(nm, "FLUIDITY_SIGMA");
-    sprintf(ds, "Fluidity Source");
-    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
-    index++;
-    index_post++;
-    sprintf(nm, "FLUIDITY_BREAK");
-    sprintf(ds, "Fluidity Source");
-    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
-    index++;
-    index_post++;
-    sprintf(nm, "FLUIDITY_BUILD");
-    sprintf(ds, "Fluidity Source");
     set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
     index++;
     index_post++;
