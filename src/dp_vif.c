@@ -712,6 +712,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &Newt_Jacobian_Reformation_stride, 1, MPI_INT);
   ddd_add_member(n, &Time_Jacobian_Reformation_stride, 1, MPI_INT);
   ddd_add_member(n, &Newton_Line_Search_Type, 1, MPI_INT);
+  ddd_add_member(n, &Line_Search_Minimum_Damping, 1, MPI_DOUBLE);
   ddd_add_member(n, &modified_newton, 1, MPI_INT);
   ddd_add_member(n, &convergence_rate_tolerance, 1, MPI_DOUBLE);
   ddd_add_member(n, &modified_newt_norm_tol, 1, MPI_DOUBLE);
@@ -2693,8 +2694,6 @@ void noahs_ark(void) {
   ddd_add_member(n, &CONTACT_DISTANCE, 1, MPI_INT);
   ddd_add_member(n, &PP_FLUID_STRESS, 1, MPI_INT);
   ddd_add_member(n, &LUB_CONVECTION, 1, MPI_INT);
-  ddd_add_member(n, &FLUIDITY_SOURCE, 1, MPI_INT);
-  ddd_add_member(n, &FLUIDITY_TERMS, 1, MPI_INT);
   ddd_add_member(n, &USER_POST, 1, MPI_INT);
   if (len_u_post_proc > 0) {
     ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);
