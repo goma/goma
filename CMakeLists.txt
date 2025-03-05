@@ -122,7 +122,6 @@ if(${sacado_package_index} GREATER_EQUAL 0)
   endif()
 endif()
 
-
 if(${Trilinos_VERSION} VERSION_LESS 14.0.0)
   message(WARNING "Trilinos version less than 14.0.0, Tpetra not supported")
 else()
@@ -187,7 +186,7 @@ if(ENABLE_PETSC)
   # PETSC search set root of location to find PETSc configuration
   set(PETSC_PATH $ENV{PETSC_DIR}/$ENV{PETSC_ARCH})
   set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig)
-message( "PETSc path for pkgconfig ${PETSC_PATH}/lib/pkgconfig")
+  message("PETSc path for pkgconfig ${PETSC_PATH}/lib/pkgconfig")
   find_package(PkgConfig)
 
   if(PkgConfig_FOUND)
@@ -1046,7 +1045,7 @@ set_source_files_properties(
   PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 
 # Most people probably want this for use with Goma TPLs
-set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
@@ -1163,7 +1162,6 @@ if(ENABLE_WARNINGS)
       -Wno-unused-parameter
       -Wimplicit-fallthrough>)
 endif()
-
 
 include(GNUInstallDirs)
 
