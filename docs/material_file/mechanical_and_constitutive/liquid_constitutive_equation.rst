@@ -288,6 +288,22 @@ TURBULENT_SA
 TURBULENT_SA_DYNAMIC
     Same as TURBULENT_SA but multiplies kinematic viscosity by density in
     the momentum equation to get a dynamic viscosity.
+    
+FLUIDITY
+    This is a Fluidity model describing Laponite suspensions.
+    Expects a suspensions species number as well as a species enabled with FLUIDITY source equation.
+    
+    The form of the equation is
+
+      .. math::
+
+         \phi = \phi_0 + (\phi_inf - \phi_0) \phi_*
+         \mu = 1 / \phi
+         
+    Where :math:`\phi_*` is the normalized fluidty between 0 and 1 which is the species equation.
+    The required parameters are read in from the species source using
+    Suspension Species Number card.
+   
 
 
 --------
