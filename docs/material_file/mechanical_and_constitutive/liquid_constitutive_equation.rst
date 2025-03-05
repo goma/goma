@@ -297,7 +297,8 @@ FLUIDITY
 
       .. math::
 
-         \phi = \phi_0 + (\phi_inf - \phi_0) \phi_*
+         \phi = \phi_0 + (\phi_\infty - \phi_0) \phi_*
+
          \mu = 1 / \phi
          
     Where :math:`\phi_*` is the normalized fluidty between 0 and 1 which is the species equation.

@@ -41,75 +41,82 @@ not be repeated.
 
 **BUTLER_VOLMER** <species> <float1> <float2> <float3> <float4> <float5> <float6> <float7> <float8> <float9>
 	This is the homogeneous species source or sink term (in units of moles per unit volume, e.g. moles/cm3-s) as described by the Butler-Volmer kinetic model (see the Theory section below). One integer and 9 floats are required:
-	- <species> - Index of the species involved in the electrochemical reaction (here, we assume that only a single species is involved).
-	- <float1> - Stoichiometric coefficient, s.
-	- <float2> - Product of interfacial area per unit volume by exchange current density, ai0, in units of A/cm3.
-	- <float3> - Reaction order, β.
-	- <float4> - Reference species concentration, cref, in units of moles/cm3.
-	- <float5> - Anodic transfer coefficient, αa.
-	- <float6> - Cathodic transfer coefficient, αc.
-	- <float7> - Temperature, T, in unit of K.
-	- <float8> - Open-circuit potential, U0, in unit of V.
-	- <float9> - Number of electrons involved in the reaction, n.
+	* <species> - Index of the species involved in the electrochemical reaction (here, we assume that only a single species is involved).
+	* <float1> - Stoichiometric coefficient, s.
+	* <float2> - Product of interfacial area per unit volume by exchange current density, ai0, in units of A/cm3.
+	* <float3> - Reaction order, β.
+	* <float4> - Reference species concentration, cref, in units of moles/cm3.
+	* <float5> - Anodic transfer coefficient, αa.
+	* <float6> - Cathodic transfer coefficient, αc.
+	* <float7> - Temperature, T, in unit of K.
+	* <float8> - Open-circuit potential, U0, in unit of V.
+	* <float9> - Number of electrons involved in the reaction, n.
 
 **ELECTRODE_KINETICS**
 	The **ELECTRODE_KINETICS** model is used to specify the species generation or consumption in electrochemical processes involving concentrated electrolyte solutions and multiple species such as thermal batteries. The {model_name} **ELECTRODE_KINETICS** toggles on the option in the equation assembly; no parameters are required.
 
 **ELECTROOSMOTIC** <int1> <int2> <float1> <float2> <float3> <float4> <float5> <float6> <float7> <float8> <float9> <float10>
 	This is the source or sink term (in units of moles per unit volume, e.g. moles/cm3-s) for the water species due to electro-osmotic drag by the protons (H+). Two integers and 10 floats are required:
-	- <int1> - Water species index.
-	- <int2> - Index of the species involved in the electrochemical reaction that generates the electrical current (here, we assume that only a single species is involved).
-	- <float1> - Stoichiometric coefficient, s.
-	- <float2> - Product of interfacial area per unit volume by exchange current density, ai0, in units of A/cm3.
-	- <float3> - Reaction order, β.
-	- <float4> - Reference species concentration, cref, in units of moles/cm3.
-	- <float5> - Anodic transfer coefficient, αa.
-	- <float6> - Cathodic transfer coefficient, αc.
-	- <float7> - Temperature, T, in unit of K.
-	- <float8> - Open-circuit potential, U0, in unit of V.
-	- <float9> - Number of electrons involved in the reaction, n.
-	- <float10> - Electro-osmotic drag coefficient, nd.
+
+	* <int1> - Water species index.
+	* <int2> - Index of the species involved in the electrochemical reaction that generates the electrical current (here, we assume that only a single species is involved).
+	* <float1> - Stoichiometric coefficient, s.
+	* <float2> - Product of interfacial area per unit volume by exchange current density, ai0, in units of A/cm3.
+	* <float3> - Reaction order, β.
+	* <float4> - Reference species concentration, cref, in units of moles/cm3.
+	* <float5> - Anodic transfer coefficient, αa.
+	* <float6> - Cathodic transfer coefficient, αc.
+	* <float7> - Temperature, T, in unit of K.
+	* <float8> - Open-circuit potential, U0, in unit of V.
+	* <float9> - Number of electrons involved in the reaction, n.
+	* <float10> - Electro-osmotic drag coefficient, nd.
 
 **EPOXY** <species> <floatlist>
 	The **EPOXY** model adds a reaction source term for a condensation polymerization reaction based on an extent of reaction variable. Six model parameters make up the <float_list> for the **EPOXY** species source model, as follows:
-	- <float1> - A1 (prefactor)
-	- <float2> - E1/R (activation energy/gas constant)
-	- <float3> - A2 (prefactor)
-	- <float4> - E2/R (activation energy/gas constant)
-	- <float5> - m (exponent)
-	- <float6> - n (exponent)
+
+	* <float1> - A1 (prefactor)
+	* <float2> - E1/R (activation energy/gas constant)
+	* <float3> - A2 (prefactor)
+	* <float4> - E2/R (activation energy/gas constant)
+	* <float5> - m (exponent)
+	* <float6> - n (exponent)
+
 	This model will be used with the **EPOXY** Heat Source model to compute the reaction rate.
 
 **EPOXY_DEA** <species> <floatlist>
 	The **EPOXY_DEA** model was created specifically for a diethanolamine-epoxy curing reaction, a different model of the reaction kinetics from the EPOXY source model. The <float_list> for **EPOXY_DEA** species source model has five values, where:
-	- <float1> - A1
-	- <float2> - E1/R
-	- <float3> - A2 for the low-temperature regime
-	- <float4> - E2/R for the low-temperature regime
-	- <float5> - A2 for the mid-temperature regime
+
+	* <float1> - A1
+	* <float2> - E1/R
+	* <float3> - A2 for the low-temperature regime
+	* <float4> - E2/R for the low-temperature regime
+	* <float5> - A2 for the mid-temperature regime
 
 **FOAM** <floatlist>
 	The **FOAM** model was created specifically for the removable epoxy foam decomposition kinetics. However, the basis for evolving the density change can be applied to other reactive material models. There are eight float inputs in <float_list> which are used to specify two Arrhenius-type reaction rates r1 and r2 and two reference temperatures T1 and T2:
-	- <float1> - A1
-	- <float2> - E1
-	- <float3> - sig_1 (not currently used).
-	- <float4> - A2
-	- <float5> - E2
-	- <float6> - A2 sig_2 (not currently used)
-	- <float7> - T1
-	- <float8> - T2
+
+	* <float1> - A1
+	* <float2> - E1
+	* <float3> - sig_1 (not currently used).
+	* <float4> - A2
+	* <float5> - E2
+	* <float6> - A2 sig_2 (not currently used)
+	* <float7> - T1
+	* <float8> - T2
+
 	where Aj and Ej are the Arrhenius pre-exponential factor and activation energy, respectively, for reaction rate rj, and T1 and T2 are used to define a dimensionless problem temperature T∗ = (T – T1) ⁄ (T2 – T ).
 	
 **FLUIDITY** <species> <floatlist>
 	The **FLUIDITY** model is for Laponite suspension 
-	- <float1> :math:`\phi_0`
-	- <float2> :math:`\phi_\infty`
-	- <float3> :math:`K` 
-	- <float4> :math:`n` exponent
-	- <float5> :math:`t_c` construciton time
-	- <float6> :math:`\sigma_y` Yield stress
-	- <float7> :math:`m` Heaviside transition for Breakdown and Buildup
-	- <float8> :math:`m_y` Transition for yield stress
+
+	* <float1> :math:`\phi_0`
+	* <float2> :math:`\phi_\infty`
+	* <float3> :math:`K` 
+	* <float4> :math:`n` exponent
+	* <float5> :math:`t_c` construciton time
+	* <float6> :math:`\sigma_y` Yield stress
+	* <float7> :math:`m` Heaviside transition for Breakdown and Buildup
+	* <float8> :math:`m_y` Transition for yield stress
 
 **USER** <species> <floatlist>
 	The **USER** option indicates that a user-defined model has been introduced into the usr_species_source routine in the user_mp.c file. The <float_list> is of arbitrary length subject to the user’s requirements to parameterize the model.
