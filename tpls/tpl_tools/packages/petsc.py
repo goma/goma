@@ -5,8 +5,8 @@ import os
 class Package(packages.AutotoolsPackage):
     def __init__(self):
         self.name = "petsc"
-        self.version = "3.22.1"
-        self.sha256 = "7117d3ae6827f681ed9737939d4e86896b4751e27cca941bb07e5703f19a0a7b"
+        self.version = "3.22.3"
+        self.sha256 = "88c0d465a3bd688cb17ebf06a17c06d6e9cc457fa6b9643d217389424e6bd795"
         self.filename = "petsc-" + self.version + ".tar.gz"
         self.url = (
             "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-"
@@ -15,6 +15,14 @@ class Package(packages.AutotoolsPackage):
         )
         self.includes = ["petsc"]
         self.libraries = ["petsc", "HYPRE", "strumpack"]
+        self.dependencies = [
+            "openmpi",
+            "scalapack",
+            "metis",
+            "mumps",
+            "scotch",
+            "parmetis",
+        ]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -73,4 +81,6 @@ class Package(packages.AutotoolsPackage):
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("PETSC_DIR", builder.install_dir())
         registry.set_environment_variable("PETSC_ARCH", "")
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

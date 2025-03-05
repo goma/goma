@@ -13,10 +13,7 @@ class Package(packages.AutotoolsPackage):
             + ".tar.gz"
         )
         self.libraries = ["pnetcdf"]
-
-    def setDependencies(self, builder):
-        builder.set_dependency("packages.openmpi")
-        return
+        self.dependencies = ["openmpi"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -32,4 +29,6 @@ class Package(packages.AutotoolsPackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("PNETCDF_DIR", builder.install_dir())
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

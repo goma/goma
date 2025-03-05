@@ -20,6 +20,14 @@ class Package(packages.CMakePackage):
             "AztecOO.h",
             "Amesos.h",
         ]
+        self.dependencies = [
+            "cmake",
+            "openmpi",
+            "lapack",
+            "suitesparse",
+            "superlu_dist",
+            "mumps",
+        ]
 
     def setDependencies(self, builder):
         return
@@ -82,9 +90,13 @@ class Package(packages.CMakePackage):
             builder.add_option("-DBLAS_LIBRARY_DIRS=" + builder.env["OPENBLAS_DIR"])
             builder.add_option("-DBLAS_LIBRARY_NAMES=openblas")
         else:
-            builder.add_option("-DLAPACK_LIBRARY_DIRS=" + builder.env["LAPACK_DIR"] + "/lib")
+            builder.add_option(
+                "-DLAPACK_LIBRARY_DIRS=" + builder.env["LAPACK_DIR"] + "/lib"
+            )
             builder.add_option("-DLAPACK_LIBRARY_NAMES=lapack;blas")
-            builder.add_option("-DBLAS_LIBRARY_DIRS=" + builder.env["LAPACK_DIR"] + "/lib")
+            builder.add_option(
+                "-DBLAS_LIBRARY_DIRS=" + builder.env["LAPACK_DIR"] + "/lib"
+            )
             builder.add_option("-DBLAS_LIBRARY_NAMES=blas")
         builder.add_option("-DTPL_ENABLE_UMFPACK:BOOL=ON ")
         builder.add_option(
@@ -186,4 +198,6 @@ class Package(packages.CMakePackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("TRILINOS_DIR", builder.install_dir())
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

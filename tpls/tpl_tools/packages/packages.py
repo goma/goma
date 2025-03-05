@@ -1,7 +1,7 @@
 class GenericPackage(object):
 
-    def setDependencies(self, builder):
-        return
+    def getDependencies(self):
+        return self.dependencies
 
     def configure_options(self, builder):
         return

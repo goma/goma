@@ -1,6 +1,7 @@
 import os
 import sys
 
+
 def dynamic_library_path():
     if sys.platform == "darwin":
         return "DYLD_LIBRARY_PATH"
@@ -20,7 +21,7 @@ class Config(object):
             if type(self.environment[variable]) != list:
                 oldval = self.environment[variable]
                 self.environment[variable] = [oldval]
-            self.environment[variable].insert(0,value)
+            self.environment[variable].insert(0, value)
         else:
             self.environment[variable] = value
 

@@ -11,6 +11,14 @@ class Package(packages.GenericPackage):
         self.filename = "mumps-" + self.version + ".tar.gz"
         self.url = "https://mumps-solver.org/MUMPS_" + self.version + ".tar.gz"
         self.libraries = ["dmumps", "zmumps"]
+        self.dependencies = [
+            "lapack",
+            "scalapack",
+            "scotch",
+            "metis",
+            "parmetis",
+            "openmpi",
+        ]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -78,13 +86,20 @@ class Package(packages.GenericPackage):
             f.write("FL      = " + builder.env["FC"] + "\n")
             f.write("AR      = ar vr \n")
             f.write("RANLIB  = ranlib \n")
-            f.write("LAPACK = " + builder.env["LAPACK_LIBRARIES"] + " " + builder.env["BLAS_LIBRARIES"] + "\n")
+            f.write(
+                "LAPACK = "
+                + builder.env["LAPACK_LIBRARIES"]
+                + " "
+                + builder.env["BLAS_LIBRARIES"]
+                + "\n"
+            )
             f.write(
                 "SCALAP  = -L"
                 + builder.env["SCALAPACK_DIR"]
                 + "/lib -lscalapack "
                 + builder.env["LAPACK_LIBRARIES"]
-                + " " + builder.env["BLAS_LIBRARIES"]
+                + " "
+                + builder.env["BLAS_LIBRARIES"]
                 + "\n"
             )
             f.write("BLAS = " + builder.env["BLAS_LIBRARIES"] + "\n")
@@ -122,4 +137,6 @@ class Package(packages.GenericPackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("MUMPS_DIR", builder.install_dir())
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )
