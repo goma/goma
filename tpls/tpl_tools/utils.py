@@ -5,6 +5,7 @@ import os
 import hashlib
 import sys
 import subprocess
+import re
 
 
 # https://stackoverflow.com/questions/22058048/hashing-a-file-in-python
@@ -19,7 +20,42 @@ def sha256sum(filename, buffer_size=65536):
     return sha256.hexdigest()
 
 
+def check_gcc_clang_version(cc):
+    version = subprocess.check_output([cc, "--version"]).decode("utf-8")
+    vn = re.search(r"(\d+\.\d+\.\d+)", version).group(1)
+    if "gcc" in version:
+        return "gcc", tuple(map(int, vn.split(".")))
+    if "clang" in version:
+        return "clang", tuple(map(int, vn.split(".")))
+    return None, vn
+
+
 VERBOSE = True
+
+
+def topological_sort(dep_graph):
+    # Create a copy of dependencies and initialize in-degrees
+    in_degree = {pkg: 0 for pkg in dep_graph}
+    for deps in dep_graph.values():
+        for dep in deps:
+            in_degree[dep] += 1
+
+    # Start with packages that have no dependencies
+    order = []
+    queue = [pkg for pkg, deg in in_degree.items() if deg == 0]
+
+    while queue:
+        pkg = queue.pop(0)
+        order.append(pkg)
+        for neighbor in dep_graph.get(pkg, []):
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    if len(order) != len(dep_graph):
+        raise Exception("Cyclic dependency detected!")
+
+    return order
 
 
 def set_verbosity(verbosity):
@@ -61,10 +97,13 @@ def download_file(url, filename, sha256=None, verify=True):
                 shutil.copyfileobj(req, f)
         else:
             import ssl
+
             context = ssl.create_default_context()
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
-            with urllib.request.urlopen(url, context=context) as req, open(filename, "wb") as f:
+            with urllib.request.urlopen(url, context=context) as req, open(
+                filename, "wb"
+            ) as f:
                 shutil.copyfileobj(req, f)
 
     if os.path.isfile(filename):
