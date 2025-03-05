@@ -1,4 +1,31 @@
+#ifndef GOMA_ENABLE_SACADO
+extern "C" {
+#include "mm_eh.h"
+#include "std.h"
+}
+
+extern "C" dbl
+fluidity_viscosity(int fluidity_species, /* integer associated with conc eqn for bond */
+                   VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
+  GOMA_EH(GOMA_ERROR, "Fluidity viscosity requires Sacado\n");
+  return 0.;
+}
+
+extern "C" int fluidity_source(int species_no, struct Species_Conservation_Terms *st, dbl *params) {
+  GOMA_EH(GOMA_ERROR, "Fluidity source requires Sacado\n");
+  return -1;
+}
+extern "C" void fluidity_equilibrium_surf(double func[DIM],
+                                          double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                                          int fluidity_species,
+                                          const double theta,
+                                          const double dt) {
+  GOMA_EH(GOMA_ERROR, "Fluidity equilibrium surface requires Sacado\n");
+}
+#else // GOMA_ENABLE_SACADO
+
 #include "Sacado.hpp"
+#include "models/fluidity.h"
 
 extern "C" {
 #include "mm_as.h"
@@ -236,3 +263,5 @@ extern "C" void fluidity_equilibrium_surf(double func[DIM],
     }
   }
 }
+
+#endif // GOMA_ENABLE_SACADO
