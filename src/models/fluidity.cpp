@@ -22,8 +22,13 @@ sfad calculate_phi_eq(sfad sigma, dbl phi_inf, dbl phi_0, dbl K, dbl n) {
 }
 
 // Smoothed Heaviside function using tanh
+// m controls the width of the transition
 sfad smoothed_heaviside(sfad x, double m) { return 0.5 * (1.0 + tanh(m * x)); }
 
+/**
+ * Calculate the fluidity viscosity from a fluidity species. The species is expected to be
+ * a normalized fluidity between 0 and 1
+ */
 extern "C" dbl
 fluidity_viscosity(int fluidity_species, /* integer associated with conc eqn for bond */
                    VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
@@ -77,7 +82,7 @@ sfad sfad_fluidity_source(int species_no, dbl *params) {
       grad_v[i][j].fastAccessDx(idx) = 1.0;
     }
   }
-  
+
   sfad phi_star_c = std::min(1, std::max(0, phi_star));
 
   sfad phi = phi_0 + (phi_inf - phi_0) * phi_star_c;
@@ -115,7 +120,8 @@ sfad sfad_fluidity_source(int species_no, dbl *params) {
   sfad H = smoothed_heaviside(phi_star - phi_eq_floor2, m);
 
   // Breakdown dynamics
-  sfad F_breakdown = (s / (ta * phi_eq_floor)) * pow(std::max(0,phi_eq_floor2 - phi_star_c), (s + 1) / s) *
+  sfad F_breakdown = (s / (ta * phi_eq_floor)) *
+                     pow(std::max(0, phi_eq_floor2 - phi_star_c), (s + 1) / s) *
                      pow(max(0, phi_star_c), (s - 1.0) / s);
 
   // Buildup dynamics
@@ -127,87 +133,11 @@ sfad sfad_fluidity_source(int species_no, dbl *params) {
   return F;
 }
 
-extern "C" int fluidity_post_process_terms(dbl output[7]) {
-  int species_no = 0;
-  dbl *params = mp->u_species_source[species_no];
-  dbl phi_0 = params[0];
-  dbl phi_inf = params[1];
-  dbl K = params[2];
-  dbl n = params[3];
-  dbl tc = params[4];
-  dbl sigma_y = params[5];
-  dbl m = params[6];
-  dbl m_y = params[7];
-
-  sfad phi_star(10, 0, fv->c[species_no]);
-  sfad grad_v[DIM][DIM];
-  for (int i = 0; i < VIM; i++) {
-    for (int j = 0; j < VIM; j++) {
-      grad_v[i][j] = fv->grad_v[i][j];
-      int idx = 1 + i * VIM + j;
-      grad_v[i][j].fastAccessDx(idx) = 1.0;
-    }
-  }
-  
-  sfad phi_star_c = std::min(1, std::max(0, phi_star));
-
-  sfad phi = phi_0 + (phi_inf - phi_0) * phi_star_c;
-  sfad mu = 1 / phi;
-
-  sfad tau[DIM][DIM] = {{0.}};
-  for (int i = 0; i < pd->Num_Dim; i++) {
-    for (int j = 0; j < pd->Num_Dim; j++) {
-      tau[i][j] = mu * (grad_v[i][j] + grad_v[j][i]);
-    }
-  }
-
-  sfad sigma = 0.0;
-  for (int i = 0; i < DIM; i++) {
-    for (int j = 0; j < DIM; j++) {
-      sigma += tau[i][j] * tau[i][j];
-    }
-  }
-  sigma = max(sigma, 1e-32);
-  sigma = sqrt(0.5 * sigma);
-
-  // Calculate phi_eq
-  sfad term = pow((sigma - sigma_y) / K, 1.0 / n) * (1.0 / sigma);
-  sfad phi_eq =
-      max(1e-32, smoothed_heaviside(sigma - sigma_y, m_y) * term / ((phi_inf - phi_0) + term));
-
-  // Calculate t_a and s
-  // avalanche time
-  sfad phi_eq_floor = std::max(phi_eq, 1e-5);
-  sfad ta = 59.2 * pow(1 - phi_eq_floor, 1.1) / (pow(phi_eq_floor, 0.4));
-  // sfad ta = tc;
-  sfad s = 8.0 / (exp(phi_eq_floor / 0.09) - 1.0) + 1.2;
-
-  sfad H = smoothed_heaviside(phi_star - phi_eq, m);
-  
-  // Breakdown dynamics
-  sfad F_breakdown = (s / (ta * phi_eq)) * pow(max(0, phi_eq - phi_star_c), (s + 1) / s) *
-                     pow(max(0, phi_star_c), (s - 1.0) / s);
-
-  // Buildup dynamics
-  sfad F_buildup = -(phi_star - phi_eq) / tc;
-
-  // Calculate F
-  sfad F = H * F_buildup + (1.0 - H) * F_breakdown;
-
-  output[0] = phi_eq.val();
-  output[1] = s.val();
-  output[2] = ta.val();
-  output[3] = H.val();
-  output[4] = sigma.val();
-  output[5] = F_breakdown.val();
-  output[6] = F_buildup.val();
-  
-  return 0;
-}
-
-// Main function to test the implementation
-extern "C" int
-fluidity_source(int species_no, struct Species_Conservation_Terms *st, dbl *params) {
+/*
+ * Calculate the fluidity source term in a Goma 7 compatible way
+ * Wraps sfad_fluidity_source to use AD for Jacobian calculations
+ */
+extern "C" int fluidity_source(int species_no, struct Species_Conservation_Terms *st, dbl *params) {
   sfad F = sfad_fluidity_source(species_no, params);
   int eqn = MASS_FRACTION;
   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
@@ -251,196 +181,22 @@ fluidity_source(int species_no, struct Species_Conservation_Terms *st, dbl *para
   return 0;
 }
 
-extern "C" int s_fluidity_source(int species_no, struct Species_Conservation_Terms *st, dbl *params) {
-
-  dbl phi_0 = params[0];
-  dbl phi_inf = params[1];
-  dbl K = params[2];
-  dbl n = params[3];
-  dbl tc = params[4];
-
-  dbl phi_v = fmin(1, fmax(0,fv->c[species_no]));
-  dbl d_phi_v_d_phi = 1.0;
-
-  dbl phi = phi_0 + (phi_inf - phi_0) * fmax(0,phi_v);
-  dbl d_phi_d_phi_v = phi_inf - phi_0;
-
-  dbl mu = 1.0 / phi;
-  dbl d_mu_d_phi_v = -d_phi_d_phi_v / (phi * phi);
-
-  dbl gamma[DIM][DIM];
-  for (int i = 0; i < DIM; i++) {
-    for (int j = 0; j < DIM; j++) {
-      gamma[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
-    }
-  }
-  dbl gammadot = 0;
-  dbl d_gd_dv[DIM][MDE];
-  dbl d_gd_dX[DIM][MDE];
-  calc_shearrate(&gammadot, gamma, d_gd_dv, d_gd_dX);
-
-  dbl sigma = mu * gammadot;
-  dbl d_sigma_dgd = mu;
-  dbl d_sigma_d_phi_v = d_mu_d_phi_v * gammadot;
-
-  dbl phi_eq =
-      pow(sigma / K, 1.0 / n) /
-      fmax(1e-32, (sigma * (-phi_0 + phi_inf + pow(sigma / K, 1.0 / n) / fmax(1e-32, sigma))));
-  dbl d_phi_eq_d_sigma =
-      pow(sigma / K, 1.0 / n) * (n - 1) * (phi_0 - phi_inf) /
-      fmax(1e-32, (n * pow(-phi_0 * sigma + phi_inf * sigma + pow(sigma / K, 1.0 / n), 2)));
-
-  dbl c1 = 59.2;
-  dbl c2 = 1.1;
-  dbl c3 = 0.4;
-
-  dbl ta = 0;
-  dbl d_ta_d_phi_eq = 0;
-  if (phi_eq > 0) {
-    ta = c1 * pow(phi_eq, -c3) * pow(1 - phi_eq, c2);
-    d_ta_d_phi_eq = c1 * pow(phi_eq, -2 * c3 - 1) *
-                    (c2 * pow(phi_eq, c3 + 1) * pow(1 - phi_eq, c2) +
-                     c3 * pow(phi_eq, c3) * pow(1 - phi_eq, c2 + 1)) /
-                    (phi_eq - 1);
-  }
-
-  phi_eq = fmax(1e-16, phi_eq);
-
-  dbl d1 = 8;
-  dbl d2 = 0.09;
-  dbl d3 = 1.2;
-  dbl s = d1 / (exp(phi_eq / d2) - 1) + d3;
-  dbl d_s_d_phi_eq = -d1 * exp(phi_eq / d2) / (d2 * pow(exp(phi_eq / d2) - 1, 2));
-
-  dbl m = 500;
-  dbl H = 0.5 * (1 + tanh(m * (phi_v - phi_eq)));
-  dbl d_H_d_phi_eq = -0.5 * m * (1 - pow(tanh(m * (phi_v - phi_eq)), 2));
-  dbl d_H_d_phi_v = 0.5 * m * (1 - pow(tanh(m * (phi_v - phi_eq)), 2));
-
-  dbl F_breakdown = 0;
-  dbl d_F_breakdown_d_phi_eq = 0;
-  dbl d_F_breakdown_d_phi_v = 0;
-  if (H < 1.0 && (phi_eq - phi_v) > 1e-14) {
-    F_breakdown = (s / (ta * phi_eq)) * pow(fmax(0, phi_eq - phi_v), (s + 1) / s) *
-                  pow(fmax(0, phi_v), (s - 1) / s);
-    d_F_breakdown_d_phi_v = -pow(phi_v, (s - 1) / s) * pow(fmax(phi_eq - phi_v, 0), (s + 1) / s) * (s + 1) /
-                                (phi_eq * (phi_eq - phi_v) * ta) +
-                            pow(phi_v, (s - 1) / s) * pow(fmax(phi_eq - phi_v, 0), (s + 1) / s) * (s - 1) /
-                                (phi_eq * phi_v * ta);
-    d_F_breakdown_d_phi_eq =
-        pow(phi_v, (s - 1) / s) * pow(fmax(phi_eq - phi_v,0), (s + 1) / s) *
-            ((-(s + 1) * d_s_d_phi_eq / pow(s, 2) + d_s_d_phi_eq / s) * log(fmax(1e-16,phi_eq - phi_v)) +
-             (s + 1) / ((phi_eq - phi_v) * s)) *
-            s / (phi_eq * ta) +
-        pow(phi_v, (s - 1) / s) * pow(fmax(phi_eq - phi_v,0), (s + 1) / s) *
-            (-(s - 1) * d_s_d_phi_eq / pow(s, 2) + d_s_d_phi_eq / s) * s * log(fmax(1e-16,phi_v)) /
-            (phi_eq * ta) -
-        pow(phi_v, (s - 0) / s) * pow(fmax(0,phi_eq - phi_v), (s + 1) / s) * s * d_ta_d_phi_eq /
-            (phi_eq * pow(ta, 2)) +
-        pow(phi_v, (s - 1) / s) * pow(fmax(0,phi_eq - phi_v), (s + 1) / s) * d_s_d_phi_eq / (phi_eq * ta) -
-        pow(phi_v, (s - 1) / s) * pow(fmax(0,phi_eq - phi_v), (s + 1) / s) * s / (pow(phi_eq, 2) * ta);
-  }
-
-  dbl F_buildup = -(phi_v - phi_eq) / tc;
-  dbl d_F_buildup_d_phi_v = -1.0 / tc;
-  dbl d_F_buildup_d_phi_eq = 1.0 / tc;
-
-  dbl F = H * F_buildup + (1 - H) * F_breakdown;
-
-  dbl d_F_d_phi_eq = H * d_F_buildup_d_phi_eq + (1 - H) * d_F_breakdown_d_phi_eq +
-                     d_H_d_phi_eq * F_buildup - d_H_d_phi_eq * F_breakdown;
-
-  dbl d_F_d_phi_v = H * d_F_buildup_d_phi_v + (1 - H) * d_F_breakdown_d_phi_v +
-                    d_H_d_phi_v * F_buildup - d_H_d_phi_v * F_breakdown;
-
-  int eqn = MASS_FRACTION;
-  if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-    st->MassSource[species_no] = F;
-
-    /* Jacobian entries for source term */
-    int var = MASS_FRACTION;
-    if (pd->v[pg->imtrx][var]) {
-      for (int j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-        st->d_MassSource_dc[species_no][species_no][j] =
-            bf[MASS_FRACTION]->phi[j] *
-            (d_F_d_phi_v * d_phi_v_d_phi + d_F_d_phi_eq * d_phi_eq_d_sigma * d_sigma_d_phi_v);
-      }
-    }
-
-    var = VELOCITY1;
-    if (pd->v[pg->imtrx][var]) {
-      for (int a = 0; a < VIM; a++) {
-        for (int j = 0; j < ei[pg->imtrx]->dof[VELOCITY1 + a]; j++) {
-          st->d_MassSource_dv[species_no][a][j] =
-              d_F_d_phi_eq * d_phi_eq_d_sigma * d_sigma_dgd * d_gd_dv[a][j];
-        }
-      }
-    }
-
-    var = MESH_DISPLACEMENT1;
-    if (pd->v[pg->imtrx][var]) {
-      for (int a = 0; a < VIM; a++) {
-        for (int j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; j++) {
-          st->d_MassSource_dmesh[species_no][a][j] =
-              d_F_d_phi_eq * d_phi_eq_d_sigma * d_sigma_dgd * d_gd_dX[a][j];
-        }
-      }
-    }
-  }
-  return 0;
-}
-
+/*
+ * fluidity_equilibrium_surf
+ *
+ * This function applies the equilibrium fluidity to a boundary
+ * The functional form is dc/dt = F
+ * where F is the fluidity source term
+ *
+ * Jacobian entries are calculated using AD from Sacado
+ *
+ */
 extern "C" void fluidity_equilibrium_surf(double func[DIM],
                                           double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                                           int fluidity_species,
                                           const double theta,
                                           const double dt) {
 
-#if 0
-  dbl *params = mp->u_species_source[fluidity_species];
-  dbl phi_0 = params[0];
-  dbl phi_inf = params[1];
-  dbl K = params[2];
-  dbl n = params[3];
-  dbl tc = params[4];
-
-  sfad phi_star(10, 0, fv->c[fluidity_species]);
-  phi_star.fastAccessDx(0) = 0;
-  sfad grad_v[DIM][DIM];
-  for (int i = 0; i < VIM; i++) {
-    for (int j = 0; j < VIM; j++) {
-      grad_v[i][j] = fv->grad_v[i][j];
-      int idx = 1 + i * VIM + j;
-      grad_v[i][j].fastAccessDx(idx) = 0.0;
-    }
-  }
-
-  sfad phi = phi_0 + (phi_inf - phi_0) * phi_star;
-  sfad mu = 1 / phi;
-
-  sfad tau[DIM][DIM] = {{0.}};
-  for (int i = 0; i < pd->Num_Dim; i++) {
-    for (int j = 0; j < pd->Num_Dim; j++) {
-      tau[i][j] = mu * (grad_v[i][j] + grad_v[j][i]);
-    }
-  }
-
-  sfad sigma = 0.0;
-  for (int i = 0; i < DIM; i++) {
-    for (int j = 0; j < DIM; j++) {
-      sigma += tau[i][j] * tau[i][j];
-    }
-  }
-  sigma = max(sigma, 1e-32);
-  sigma = sqrt(0.5 * sigma);
-
-  // Calculate phi_eq
-  sfad term = pow(sigma / K, 1.0 / n) * (1.0 / sigma);
-  sfad phi_eq = max(1e-32, term / ((phi_inf - phi_0) + term));
-  // sfad phi_star_curr(10, 0, fv->c[fluidity_species]);
-
-  sfad func_fad = phi_eq - phi_star;
-#else
   int eqn = R_MASS;
   sfad F = sfad_fluidity_source(fluidity_species, mp->u_species_source[fluidity_species]);
   sfad c_dot = fv_dot->c[fluidity_species];
@@ -455,7 +211,6 @@ extern "C" void fluidity_equilibrium_surf(double func[DIM],
   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
     func_fad += F;
   }
-#endif
 
   func[0] = func_fad.val();
   /* Jacobian entries for source term */
@@ -481,74 +236,3 @@ extern "C" void fluidity_equilibrium_surf(double func[DIM],
     }
   }
 }
-#if 0
-extern "C" void fluidity_equilibrium_surf(double func[DIM],
-                               double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                               int fluidity_species,
-                               const double u_bc[] MAYBE_UNUSED,
-                               const double time MAYBE_UNUSED) {
-  dbl *params = mp->u_species_source[fluidity_species];
-  dbl phi_0 = params[0];
-  dbl phi_inf = params[1];
-  dbl K = params[2];
-  dbl n = params[3];
-
-  sfad phi_star(10, 0, fv->c[fluidity_species]);
-  sfad grad_v[DIM][DIM] = {0.};
-  for (int i = 0; i < VIM; i++) {
-    for (int j = 0; j < VIM; j++) {
-      grad_v[i][j] = fv->grad_v[i][j];
-      int idx = 1 + i * VIM + j;
-      grad_v[i][j].fastAccessDx(idx) = 1.0;
-    }
-  }
-
-  sfad phi = phi_0 + (phi_inf - phi_0) * fv_old->c[fluidity_species];
-  sfad mu = 1 / phi;
-
-  sfad tau[DIM][DIM];
-  for (int i = 0; i < VIM; i++) {
-    for (int j = 0; j < VIM; j++) {
-      tau[i][j] = mu * (grad_v[i][j] + grad_v[j][i]);
-    }
-  }
-
-  sfad sigma = 0.0;
-  for (int i = 0; i < VIM; i++) {
-    for (int j = 0; j < VIM; j++) {
-      sigma += tau[i][j] * tau[i][j];
-    }
-  }
-  sigma = max(sigma, 1e-32);
-  sigma = sqrt(0.5 * sigma);
-  // Calculate phi_eq
-  sfad term = pow(sigma / K, 1.0 / n) * (1.0 / sigma);
-  sfad phi_eq = max(1e-32, term / ((phi_inf - phi_0) + term));
-
-  printf("%g %g %g %g %g\n", fv->x[1], phi_star.val(), phi_eq.val(), term.val(), sigma.val());
-
-  sfad func_fad = phi_star - phi_eq;//pow(phi_star - phi_eq, 2.0);
-  func[0] = func_fad.val();
-  int var = MASS_FRACTION;
-  if (pd->v[pg->imtrx][var]) {
-    for (int j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-      d_func[0][MAX_VARIABLE_TYPES + fluidity_species][j] =
-          func_fad.dx(0) * bf[MASS_FRACTION]->phi[j];
-    }
-  }
-
-  var = VELOCITY1;
-  if (pd->v[pg->imtrx][var]) {
-    for (int a = 0; a < VIM; a++) {
-      for (int p = 0; p < VIM; p++) {
-        for (int q = 0; q < VIM; q++) {
-          for (int j = 0; j < ei[pg->imtrx]->dof[VELOCITY1 + a]; j++) {
-            d_func[0][VELOCITY1 + a][j] =
-                func_fad.dx(1 + p * VIM + q) * bf[VELOCITY1 + a]->grad_phi_e[j][a][p][q];
-          }
-        }
-      }
-    }
-  }
-}
-#endif

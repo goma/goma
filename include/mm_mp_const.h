@@ -336,6 +336,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define TURBULENT_SA                   52 /* Spallart Allmaras */
 #define TURBULENT_SA_DYNAMIC           53 /* Spallart Allmaras */
 #define TURBULENT_K_OMEGA              54
+
 #define FLUIDITY_THIXOTROPIC_VISCOSITY 55
 
 /*
