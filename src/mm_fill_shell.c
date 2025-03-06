@@ -2939,6 +2939,8 @@ void surface_electric_field_bc(
       }
     }
   }
+  /* Clean up */
+  safe_free((void *)n_dof);
 
   return;
 } /* End of surface_electric_field_bc() */
@@ -3861,6 +3863,8 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
       }
     }
   }
+  /* Clean up */
+  safe_free((void *)n_dof);
 
 } /* END of routine apply_surface_viscosity */
 /*****************************************************************************/
@@ -7107,6 +7111,54 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           } // End of loop over j
         }   // loop over species
       }     // End of J_lubp_d_C
+
+      /*
+       * J_lubp_shear_top
+       */
+      var = SHELL_SHEAR_TOP;
+      if (pd->v[pg->imtrx][var]) {
+        pvar = upd->vp[pg->imtrx][var];
+
+        /*** Loop over DOFs (j) ***/
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
+
+          /* Add diffusion term */
+          diffusion = 0.0;
+          if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+            for (b = 0; b < dim; b++) {
+              diffusion += LubAux->dq_dshrw[b] * grad_II_phi_i[b] * phi_j;
+            }
+          }
+          diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
+        } // End of loop over j
+      }   // End of J_lubp_shear_top
+
+      /*
+       * J_lubp_Temperature
+       */
+      var = SHELL_TEMPERATURE;
+      if (pd->v[pg->imtrx][var]) {
+        pvar = upd->vp[pg->imtrx][var];
+
+        /*** Loop over DOFs (j) ***/
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
+
+          /* Add diffusion term */
+          diffusion = 0.0;
+          if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+            for (b = 0; b < dim; b++) {
+              diffusion += LubAux->dq_dT[b] * grad_II_phi_i[b] * phi_j;
+            }
+          }
+          diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
+        } // End of loop over j
+      }   // End of J_lubp_T
 
     } /* end of loop over i */
   }   /* end of Assemble_Jacobian */
@@ -14982,12 +15034,12 @@ int assemble_lubrication_curvature_2(double time, /* present time value */
   return (status);
 } // End of assemble_lubrication_curvature
 
-int assemble_lubrication_power_law(double time,    /* present time value */
-                                   double tt,      /* parameter to vary time integration from
-                                                      explicit (tt = 1) to implicit (tt = 0)    */
-                                   double dt,      /* current time step size */
-                                   double xi[DIM], /* Local stu coordinates */
-                                   const Exo_DB *exo)
+int assemble_lubrication_thinning(double time,    /* present time value */
+                                  double tt,      /* parameter to vary time integration from
+                                                     explicit (tt = 1) to implicit (tt = 0)    */
+                                  double dt,      /* current time step size */
+                                  double xi[DIM], /* Local stu coordinates */
+                                  const Exo_DB *exo)
 
 {
   int eqn;
@@ -14995,81 +15047,72 @@ int assemble_lubrication_power_law(double time,    /* present time value */
   int i, ii;
   int j, jj, status;
 
+  int *n_dof = NULL;
+  int dof_map[MDE];
+
   dbl wt;
 
-  dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_dtime, dH_U_ddh;
-  dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_dF[MDE];
-  dbl shear_top, shear_bot, cross_shear, gradP_mag;
-  dbl *grad_P, *grad_II_P;
-  grad_P = (double *)malloc(DIM * sizeof(double));
-  grad_II_P = (double *)malloc(DIM * sizeof(double));
-  dbl mu, mu0, nexp;
+  double H;
+  double shear_top = 0., shear_bot = 0., cross_shear = 0.;
+  double shear, vis_top, dvis_top, dvis_top_dK, vis_bot, dvis_bot, dvis_bot_dK;
+  double ev[DIM], dev_dpg[DIM][DIM], evf[DIM], dfv_dpg[DIM][DIM];
+  double viscint[2], dviscint_dK[2];
+  double crsrate_bot, crsrate_top;
+  double epsxint = 0.001, epsvisc = 1.e-6;
+  int ierr;
+
   dbl veloU[DIM], veloL[DIM];
 
-  dbl advection, diffusion, source;
+  dbl advection, source;
 
   /*
    * Galerkin weighting functions for i-th shell residuals
    * and some of their derivatives...
    */
-  dbl phi_i;
-  dbl grad_phi_i[DIM];
-  dbl *grad_II_phi_i;
-  grad_II_phi_i = (double *)malloc(DIM * sizeof(double));
-
   /*
-   * Interpolation functions for variables and some of their derivatives.
+   * Basis functions and derivatives
    */
-  dbl phi_j;
-  dbl grad_phi_j[DIM];
-  dbl *grad_II_phi_j;
-  grad_II_phi_j = (double *)malloc(DIM * sizeof(double));
+  dbl phi_i;
+  dbl phi_j, grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
 
   dbl h3; /* Volume element (scale factors). */
   dbl det_J;
-
-  dbl shear_top_plus, shear_top_minus, shear_bot_plus, shear_bot_minus;
-  dbl source_plus, source_minus;
-  dbl eps_top, eps_bot;
-  int iii;
 
   /*   static char yo[] = "assemble_lubrication_power_law";*/
 
   status = 0;
 
+  /*
+   * Prepare geometry
+   */
+  n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
   /* Unpack variables from structures for local convenience... */
   dim = pd->Num_Dim;
-  shear_top = fv->sh_shear_top;     /* Top wall shear rate */
-  shear_bot = fv->sh_shear_bot;     /* Bottom wall shear rate */
-  cross_shear = fv->sh_cross_shear; /* Cross stream shear stress */
-  grad_P = fv->grad_lubp;           /* Pressure gradient */
+  if (pd->v[pg->imtrx][SHELL_SHEAR_TOP]) {
+    shear_top = fv->sh_shear_top; /* Top wall shear rate */
+  }
 
-  eps_top = 2.0e-6 * fabs(shear_top);
-  eps_bot = 2.0e-6 * fabs(shear_bot);
+  if (pd->v[pg->imtrx][SHELL_SHEAR_BOT]) {
+    shear_bot = fv->sh_shear_bot; /* Bottom wall shear rate */
+  } else {
+    shear_bot = -fv->sh_shear_top; /* Bottom wall shear rate */
+  }
+
+  if (pd->v[pg->imtrx][SHELL_CROSS_SHEAR]) {
+    cross_shear = fv->sh_cross_shear; /* Cross stream shear stress */
+  }
 
   wt = fv->wt; /* Gauss weight */
   h3 = fv->h3; /* Differential volume element, = 1 when CARTESIAN. */
-
-  /* Tangent vectors to the lubrication plane */
-  dbl tangent1_init[DIM], tangent2_init[DIM];
-  dbl *tangent1, *tangent2;
-  tangent1 = (double *)malloc(DIM * sizeof(double));
-  tangent2 = (double *)malloc(DIM * sizeof(double));
-  dbl tangent1_mag, tangent2_mag;
 
   shell_determinant_and_normal(ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr,
                                ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim, 1);
   det_J = fv->sdet;
 
-  Inn(grad_P, grad_II_P);
-
-  gradP_mag = 0.0;
-
-  for (ii = 0; ii < DIM; ii++) {
-    gradP_mag += grad_II_P[ii] * grad_II_P[ii];
-  }
-
-  gradP_mag = sqrt(gradP_mag);
+  /*** CALCULATE FLOW RATE FROM FUNCTION **************************************/
+  calculate_lub_q_v(R_LUBP, time, dt, xi, exo); // PRS: NEED TO DO SOMETHING HERE
 
   /*
    * Material property constants, etc. Any variations at this Gauss point
@@ -15077,46 +15120,50 @@ int assemble_lubrication_power_law(double time,    /* present time value */
    *
    */
 
-  H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
-                            &dH_U_ddh, dH_dF, time, dt);
-  dH_dtime = dH_U_dtime - dH_L_dtime;
-
-  mu0 = gn->mu0;
-  mu = mu0;
-  nexp = gn->nexp;
+  H = LubAux->H;
 
   velocity_function_model(veloU, veloL, time, dt);
 
-  /* Calculate flow rate */
-
-  calculate_lub_q_v_nonnewtonian(time, dt);
-
-  /*Evaluate tangent vectors of the lubrication planes */
-
-  tangent1_init[0] = 1. / sqrt(3.);
-  tangent1_init[1] = 1. / sqrt(3.);
-  tangent1_init[2] = 1. / sqrt(3.);
-
-  tangent2_init[0] = -1. / sqrt(3.);
-  tangent2_init[1] = 1. / sqrt(3.);
-
-  Inn(tangent1_init, tangent1);
-  Inn(tangent2_init, tangent2);
-
-  tangent1_mag = 0.0;
-  tangent2_mag = 0.0;
-  for (i = 0; i < DIM; i++) {
-    tangent1_mag += tangent1[i] * tangent1[i];
-    tangent2_mag += tangent2[i] * tangent2[i];
+  memset(ev, 0.0, sizeof(double) * DIM);
+  if (LubAux->gradP_mag > DBL_SEMI_SMALL) {
+    for (i = 0; i < dim; i++) {
+      ev[i] = LubAux->gradP[i] / LubAux->gradP_mag;
+    }
+  } else {
+    ev[0] = 1.;
   }
+  dev_dpg[0][0] = ev[1] * ev[1] + ev[2] * ev[2];
+  dev_dpg[1][1] = ev[0] * ev[0] + ev[2] * ev[2];
+  dev_dpg[2][2] = ev[1] * ev[1] + ev[0] * ev[0];
+  dev_dpg[0][1] = dev_dpg[1][0] = -ev[0] * ev[1];
+  dev_dpg[0][2] = dev_dpg[2][0] = -ev[0] * ev[2];
+  dev_dpg[1][2] = dev_dpg[2][1] = -ev[1] * ev[2];
+  evf[0] = -ev[1];
+  evf[1] = ev[0];
+  evf[2] = -ev[2];
+  dfv_dpg[0][0] = -dev_dpg[1][0];
+  dfv_dpg[0][1] = -dev_dpg[1][1];
+  dfv_dpg[0][2] = -dev_dpg[1][2];
+  dfv_dpg[1][0] = dev_dpg[0][0];
+  dfv_dpg[1][1] = dev_dpg[0][1];
+  dfv_dpg[1][2] = dev_dpg[0][2];
+  dfv_dpg[2][0] = -dev_dpg[2][0];
+  dfv_dpg[2][1] = -dev_dpg[2][1];
+  dfv_dpg[2][2] = -dev_dpg[2][2];
 
-  tangent1_mag = sqrt(tangent1_mag);
-  tangent2_mag = sqrt(tangent2_mag);
+  /* Compute viscosity integrals */
+  crsrate_bot = lub2D_crsrate(gn, shear_bot, cross_shear, epsvisc);
+  shear = sqrt(SQUARE(shear_bot) + SQUARE(crsrate_bot));
+  vis_bot = lub_viscos_fcn(gn, shear, &dvis_bot);
+  dvis_bot_dK = cross_shear * vis_bot * dvis_bot / (CUBE(vis_bot) + SQUARE(cross_shear) * dvis_bot);
+  crsrate_top = lub2D_crsrate(gn, shear_top, cross_shear, epsvisc);
+  shear = sqrt(SQUARE(shear_top) + SQUARE(crsrate_top));
+  vis_top = lub_viscos_fcn(gn, shear, &dvis_top);
+  dvis_top_dK = cross_shear * vis_top * dvis_top / (CUBE(vis_top) + SQUARE(cross_shear) * dvis_top);
 
-  for (i = 0; i < DIM; i++) {
-    tangent1[i] *= 1.0 / tangent1_mag;
-    tangent2[i] *= 1.0 / tangent2_mag;
-  }
+  ierr = lub2D_viscint_2D(gn, shear_bot, shear_top, cross_shear, viscint, dviscint_dK, epsxint);
+  if (!ierr)
+    GOMA_EH(GOMA_ERROR, "2D viscosity integral failed.");
 
   /*
    * Residuals_________________________________________________________________
@@ -15129,162 +15176,92 @@ int assemble_lubrication_power_law(double time,    /* present time value */
     eqn = R_SHELL_SHEAR_TOP;
     peqn = upd->ep[pg->imtrx][eqn];
 
-    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-      phi_i = bf[eqn]->phi[i];
+    if (pd->e[pg->imtrx][eqn]) {
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+        phi_i = bf[eqn]->phi[i];
 
-      /* Assemble advection term */
+        /* Assemble advection term */
 
-      advection = 0.0;
-      if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-        for (ii = 0; ii < DIM; ii++) {
-          advection += phi_i * tangent1[ii] * (veloU[ii] - veloL[ii]) * (gradP_mag);
+        advection = 0.0;
+
+        /* Assemble source term */
+
+        source = 0.0;
+        if (T_SOURCE) {
+          source = H * LubAux->gradP_mag - vis_top * shear_top + vis_bot * shear_bot;
+          source *= phi_i * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
         }
-        advection *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-      }
+        lec->R[LEC_R_INDEX(peqn, i)] += advection + source;
 
-      /* Assemble source term */
-
-      source = 0.0;
-      if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-
-        for (ii = 0; ii < DIM; ii++) {
-
-          source += -mu0 * tangent1[ii] * LubAux->gradP_tangent[ii] * nexp / (nexp + 1.) *
-                    (pow(fabs(shear_top), nexp - 1.) * shear_top * shear_top -
-                     pow(fabs(shear_bot), nexp - 1.) * shear_bot * shear_bot);
-          source += -cross_shear * tangent1[ii] * LubAux->gradP_normal[ii] * nexp *
-                    (shear_top - shear_bot);
-        }
-
-        source *= phi_i;
-        source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-      }
-
-      /* Combine them all */
-
-      lec->R[LEC_R_INDEX(peqn, i)] += advection + source;
-
-    } /* end of loop over i */
+      } /* end of loop over i */
+    }
 
     /* ************** ASSEMBLE RESIDUAL OF BOTTOM WALL SHEAR RATE ********* */
 
     eqn = R_SHELL_SHEAR_BOT;
     peqn = upd->ep[pg->imtrx][eqn];
 
-    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-      phi_i = bf[eqn]->phi[i];
+    if (pd->e[pg->imtrx][eqn]) {
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+        phi_i = bf[eqn]->phi[i];
 
-      /* Assemble advection term */
+        /* Assemble advection term */
 
-      advection = 0.0;
-      if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-        for (ii = 0; ii < DIM; ii++) {
-          advection += phi_i * tangent2[ii] * (veloU[ii] - veloL[ii]) * (gradP_mag);
-        }
-        advection *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-      }
-
-      /* Assemble source term */
-
-      source = 0.0;
-      if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-
-        for (ii = 0; ii < DIM; ii++) {
-
-          source += -mu0 * tangent2[ii] * LubAux->gradP_tangent[ii] * nexp / (nexp + 1.) *
-                    (pow(fabs(shear_top), nexp - 1.) * shear_top * shear_top -
-                     pow(fabs(shear_bot), nexp - 1.) * shear_bot * shear_bot);
-          source += -cross_shear * tangent2[ii] * LubAux->gradP_normal[ii] * nexp *
-                    (shear_top - shear_bot);
+        advection = 0.0;
+        if (T_ADVECTION) {
+          for (ii = 0; ii < DIM; ii++) {
+            advection += ev[ii] * (veloU[ii] - veloL[ii]);
+          }
+          advection *= phi_i * LubAux->gradP_mag * det_J * wt * h3 *
+                       pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
         }
 
-        source *= phi_i;
-        source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-      }
+        /* Assemble source term */
 
-      /* Combine them all */
+        source = 0.0;
+        if (T_SOURCE) {
+          source = -vis_top * SQUARE(shear_top) + vis_bot * SQUARE(shear_bot) + viscint[0];
+          source *= phi_i * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+        }
 
-      lec->R[LEC_R_INDEX(peqn, i)] += advection + source;
+        lec->R[LEC_R_INDEX(peqn, i)] += advection + source;
 
-    } /* end of loop over i */
+      } /* end of loop over i */
+    }
 
     /* ************** ASSEMBLE RESIDUAL OF CROSS STREAM SHEAR STRESS ********* */
 
     eqn = R_SHELL_CROSS_SHEAR;
     peqn = upd->ep[pg->imtrx][eqn];
 
-    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-      phi_i = bf[eqn]->phi[i];
+    if (pd->e[pg->imtrx][eqn]) {
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+        phi_i = bf[eqn]->phi[i];
 
-      /* Assemble advection term */
+        /* Assemble advection term */
 
-      advection = 0.0;
-      if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-
-        advection += phi_i * H * (gradP_mag);
-        advection *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-      }
-
-      /* Assemble source term */
-
-      source = 0.0;
-      if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-
-        source += -phi_i * mu0 *
-                  (pow(fabs(shear_top), nexp - 1.) * shear_top -
-                   pow(fabs(shear_bot), nexp - 1.) * shear_bot);
-        source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-      }
-
-      /* Combine them all */
-
-      lec->R[LEC_R_INDEX(peqn, i)] += advection + source;
-
-    } /* end of loop over i */
-
-    /* ************** ASSEMBLE RESIDUAL OF PRESSURE ********* */
-
-    eqn = R_LUBP;
-    peqn = upd->ep[pg->imtrx][eqn];
-
-    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-      phi_i = bf[eqn]->phi[i];
-
-      for (ii = 0; ii < dim; ii++) {
-        grad_phi_i[ii] = bf[eqn]->grad_phi[i][ii];
-        grad_II_phi_i[ii] = 0.0;
-      }
-
-      /* Perform I-nn grad operation */
-      Inn(grad_phi_i, grad_II_phi_i);
-
-      /* Assemble diffusion term */
-
-      diffusion = 0.0;
-      if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-        for (ii = 0; ii < dim; ii++) {
-          diffusion += -LubAux->q[ii] * grad_II_phi_i[ii];
+        advection = 0.0;
+        if (T_ADVECTION) {
+          for (ii = 0; ii < DIM; ii++) {
+            advection += evf[ii] * (veloU[ii] - veloL[ii]);
+          }
+          advection *= phi_i * LubAux->gradP_mag * det_J * wt * h3 *
+                       pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
         }
 
-        diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
-      }
+        /* Assemble source term */
 
-      /* Assemble source term */
+        source = 0.0;
+        if (T_SOURCE) {
+          source = -cross_shear *
+                   (shear_top * (1. + log(vis_top)) - shear_bot * (1. + log(vis_bot)) - viscint[1]);
+          source *= phi_i * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+        }
 
-      source = 0.0;
-      if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+        lec->R[LEC_R_INDEX(peqn, i)] += advection + source;
 
-        source += dH_dtime;
-
-        source *= phi_i;
-        source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-      }
-
-      /* Combine them all */
-
-      lec->R[LEC_R_INDEX(peqn, i)] += diffusion + source;
-
-    } /* end of loop over i */
+      } /* end of loop over i */
+    }
 
   } /* end of assemble_residual */
 
@@ -15295,239 +15272,90 @@ int assemble_lubrication_power_law(double time,    /* present time value */
     eqn = R_SHELL_SHEAR_TOP;
     peqn = upd->ep[pg->imtrx][eqn];
 
-    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+    if (pd->e[pg->imtrx][eqn]) {
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+        phi_i = bf[eqn]->phi[i];
 
-      phi_i = bf[eqn]->phi[i];
+        /* SENSITIVITY W.R.T. TOP WALL SHEAR RATE */
 
-      /* SENSITIVITY W.R.T. TOP WALL SHEAR RATE */
+        var = SHELL_SHEAR_TOP;
 
-      var = SHELL_SHEAR_TOP;
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
 
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          phi_j = bf[var]->phi[j];
-
-          shear_top_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_plus += (*(esp->sh_shear_top[iii]) + 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_plus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
+            source = 0.0;
+            if (T_SOURCE) {
+              source = 2 * phi_i * (-vis_top - SQUARE(shear_top) * dvis_top) * phi_j;
+              source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += source;
           }
+        }
 
-          shear_top_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_minus += (*(esp->sh_shear_top[iii]) - 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_minus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
+        /* SENSITIVITY W.R.T. BOTTOM WALL SHEAR RATE */
+
+        var = SHELL_SHEAR_BOT;
+
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
+
+            source = 0.0;
+            if (T_SOURCE) {
+              source = phi_i * (vis_bot + SQUARE(shear_bot) * dvis_bot) * phi_j;
+              source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += source;
           }
+        }
 
-          source_plus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            for (ii = 0; ii < DIM; ii++) {
+        /* SENSITIVITY W.R.T. CROSS STREAM SHEAR STRESS */
 
-              source_plus +=
-                  -mu0 * tangent1[ii] * LubAux->gradP_tangent[ii] * nexp / (nexp + 1.) *
-                  (pow(fabs(shear_top_plus), nexp - 1.) * shear_top_plus * shear_top_plus -
-                   pow(fabs(shear_bot), nexp - 1.) * shear_bot * shear_bot);
-              source_plus += -cross_shear * tangent1[ii] * LubAux->gradP_normal[ii] * nexp *
-                             (shear_top_plus - shear_bot);
+        var = SHELL_CROSS_SHEAR;
+
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
+
+            source = 0.;
+            if (T_SOURCE) {
+              source = phi_i * (-dvis_top_dK * shear_top + dvis_bot_dK * shear_bot) * phi_j;
+              source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
-            source_plus *= phi_i * det_J * h3 * wt;
-            source_plus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += source;
           }
+        }
 
-          source_minus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            for (ii = 0; ii < DIM; ii++) {
+        /* SENSITIVITY W.R.T. PRESSURE */
 
-              source_minus +=
-                  -mu0 * tangent1[ii] * LubAux->gradP_tangent[ii] * nexp / (nexp + 1.) *
-                  (pow(fabs(shear_top_minus), nexp - 1.) * shear_top_minus * shear_top_minus -
-                   pow(fabs(shear_bot), nexp - 1.) * shear_bot * shear_bot);
-              source_minus += -cross_shear * tangent1[ii] * LubAux->gradP_normal[ii] * nexp *
-                              (shear_top_minus - shear_bot);
+        var = LUBP;
+
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
+
+            /* Load basis functions (j) */
+            ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                    n_dof[MESH_DISPLACEMENT1], dof_map);
+
+            source = 0.;
+            if (T_SOURCE) {
+              for (jj = 0; jj < dim; jj++) {
+                source += ev[jj] * grad_II_phi_j[jj];
+              }
+              source *= phi_i * H;
+              source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
-            source_minus *= phi_i * det_J * h3 * wt;
-            source_minus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += source;
           }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += (source_plus - source_minus) / (eps_top);
         }
       }
-
-      /* SENSITIVITY W.R.T. BOTTOM WALL SHEAR RATE */
-
-      var = SHELL_SHEAR_BOT;
-
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          phi_j = bf[var]->phi[j];
-
-          shear_bot_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_plus += (*(esp->sh_shear_bot[iii]) + 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_plus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_minus += (*(esp->sh_shear_bot[iii]) - 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_minus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          source_plus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            for (ii = 0; ii < DIM; ii++) {
-
-              source_plus +=
-                  -mu0 * tangent1[ii] * LubAux->gradP_tangent[ii] * nexp / (nexp + 1.) *
-                  (pow(fabs(shear_top), nexp - 1.) * shear_top * shear_top -
-                   pow(fabs(shear_bot_plus), nexp - 1.) * shear_bot_plus * shear_bot_plus);
-              source_plus += -cross_shear * tangent1[ii] * LubAux->gradP_normal[ii] * nexp *
-                             (shear_top - shear_bot_plus);
-            }
-            source_plus *= phi_i * det_J * h3 * wt;
-            source_plus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-
-          source_minus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            for (ii = 0; ii < DIM; ii++) {
-
-              source_minus +=
-                  -mu0 * tangent1[ii] * LubAux->gradP_tangent[ii] * nexp / (nexp + 1.) *
-                  (pow(fabs(shear_top), nexp - 1.) * shear_top * shear_top -
-                   pow(fabs(shear_bot_minus), nexp - 1.) * shear_bot_minus * shear_bot_minus);
-              source_minus += -cross_shear * tangent1[ii] * LubAux->gradP_normal[ii] * nexp *
-                              (shear_top - shear_bot_minus);
-            }
-            source_minus *= phi_i * det_J * h3 * wt;
-            source_minus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += (source_plus - source_minus) / (eps_bot);
-        }
-      }
-
-      /* SENSITIVITY W.R.T. CROSS STREAM SHEAR STRESS */
-
-      var = SHELL_CROSS_SHEAR;
-
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          phi_j = bf[var]->phi[j];
-
-          source = 0.;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-
-            for (ii = 0; ii < DIM; ii++) {
-              source +=
-                  -phi_j * tangent1[ii] * LubAux->gradP_normal[ii] * nexp * (shear_top - shear_bot);
-            }
-
-            source *= phi_i * det_J * h3 * wt;
-            source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += source;
-        }
-      }
-
-      /* SENSITIVITY W.R.T. PRESSURE */
-
-      var = LUBP;
-
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          phi_j = bf[var]->phi[j];
-
-          for (jj = 0; jj < dim; jj++) {
-            grad_phi_j[jj] = bf[var]->grad_phi[j][jj];
-            grad_II_phi_j[jj] = 0.0;
-          }
-
-          /* Perform I-nn grad operation */
-          Inn(grad_phi_j, grad_II_phi_j);
-
-          shear_top_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_plus += (*(esp->sh_shear_top[iii]) + 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_plus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_top_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_minus += (*(esp->sh_shear_top[iii]) - 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_minus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-          shear_bot_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_plus += (*(esp->sh_shear_bot[iii]) + 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_plus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_minus += (*(esp->sh_shear_bot[iii]) - 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_minus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-          calculate_lub_q_v_nonnewtonian_sens(mu, H, veloU, veloL, grad_II_P, phi_j, grad_II_phi_j,
-                                              shear_top_plus, shear_top_minus, shear_bot_plus,
-                                              shear_bot_minus, eps_top, eps_bot);
-
-          advection = 0.;
-          if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-            for (ii = 0; ii < DIM; ii++) {
-              advection += tangent1[ii] * (veloU[ii] - veloL[ii]) * LubAux->dgradP_mag_dP;
-            }
-            advection *= phi_i * det_J * h3 * wt;
-            advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-          }
-
-          source = 0.;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            for (ii = 0; ii < DIM; ii++) {
-
-              source += -mu0 * tangent1[ii] * LubAux->dgradP_tangent_dP[ii] * nexp / (nexp + 1.) *
-                        (pow(fabs(shear_top), nexp - 1.) * shear_top * shear_top -
-                         pow(fabs(shear_bot), nexp - 1.) * shear_bot * shear_bot);
-              source += -cross_shear * tangent1[ii] * LubAux->dgradP_normal_dP[ii] * nexp *
-                        (shear_top - shear_bot);
-            }
-
-            source *= phi_i * det_J * h3 * wt;
-            source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection + source;
-        }
-      }
+      /* Also Sensitivities for DMX, Curvature, F, etc.  */
     }
 
     /* ************* ASSEMBLE JACOBIAN OF BOTTOM WALL SHEAR RATE ************ */
@@ -15535,241 +15363,104 @@ int assemble_lubrication_power_law(double time,    /* present time value */
     eqn = R_SHELL_SHEAR_BOT;
     peqn = upd->ep[pg->imtrx][eqn];
 
-    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+    if (pd->e[pg->imtrx][eqn]) {
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
-      phi_i = bf[eqn]->phi[i];
+        phi_i = bf[eqn]->phi[i];
 
-      /* SENSITIVITY W.R.T. TOP WALL SHEAR RATE */
+        /* SENSITIVITY W.R.T. TOP WALL SHEAR RATE */
 
-      var = SHELL_SHEAR_TOP;
+        var = SHELL_SHEAR_TOP;
 
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          phi_j = bf[var]->phi[j];
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
 
-          shear_top_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_plus += (*(esp->sh_shear_top[iii]) + 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_plus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
+            advection = 0.0;
+
+            source = 0.0;
+            if (T_SOURCE) {
+              source = phi_i * (-shear_top * (vis_top + SQUARE(shear_top) * dvis_top)) * phi_j;
+              source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
+
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection + source;
           }
-
-          shear_top_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_minus += (*(esp->sh_shear_top[iii]) - 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_minus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          source_plus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            for (ii = 0; ii < DIM; ii++) {
-
-              source_plus +=
-                  -mu0 * tangent2[ii] * LubAux->gradP_tangent[ii] * nexp / (nexp + 1.) *
-                  (pow(fabs(shear_top_plus), nexp - 1.) * shear_top_plus * shear_top_plus -
-                   pow(fabs(shear_bot), nexp - 1.) * shear_bot * shear_bot);
-              source_plus += -cross_shear * tangent2[ii] * LubAux->gradP_normal[ii] * nexp *
-                             (shear_top_plus - shear_bot);
-            }
-            source_plus *= phi_i * det_J * h3 * wt;
-            source_plus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-
-          source_minus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            for (ii = 0; ii < DIM; ii++) {
-
-              source_minus +=
-                  -mu0 * tangent2[ii] * LubAux->gradP_tangent[ii] * nexp / (nexp + 1.) *
-                  (pow(fabs(shear_top_minus), nexp - 1.) * shear_top_minus * shear_top_minus -
-                   pow(fabs(shear_bot), nexp - 1.) * shear_bot * shear_bot);
-              source_minus += -cross_shear * tangent2[ii] * LubAux->gradP_normal[ii] * nexp *
-                              (shear_top_minus - shear_bot);
-            }
-            source_minus *= phi_i * det_J * h3 * wt;
-            source_minus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += (source_plus - source_minus) / (eps_top);
         }
-      }
 
-      /* SENSITIVITY W.R.T. BOTTOM WALL SHEAR RATE */
+        /* SENSITIVITY W.R.T. BOTTOM WALL SHEAR RATE */
 
-      var = SHELL_SHEAR_BOT;
+        var = SHELL_SHEAR_BOT;
 
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
 
-          phi_j = bf[var]->phi[j];
+            advection = 0.0;
 
-          shear_bot_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_plus += (*(esp->sh_shear_bot[iii]) + 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_plus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
+            source = 0.0;
+            if (T_SOURCE) {
+              source = phi_i * (shear_bot * (vis_bot + SQUARE(shear_bot) * dvis_bot)) * phi_j;
+              source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
+
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection + source;
           }
-
-          shear_bot_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_minus += (*(esp->sh_shear_bot[iii]) - 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_minus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          source_plus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            for (ii = 0; ii < DIM; ii++) {
-
-              source_plus +=
-                  -mu0 * tangent2[ii] * LubAux->gradP_tangent[ii] * nexp / (nexp + 1.) *
-                  (pow(fabs(shear_top), nexp - 1.) * shear_top * shear_top -
-                   pow(fabs(shear_bot_plus), nexp - 1.) * shear_bot_plus * shear_bot_plus);
-              source_plus += -cross_shear * tangent2[ii] * LubAux->gradP_normal[ii] * nexp *
-                             (shear_top - shear_bot_plus);
-            }
-            source_plus *= phi_i * det_J * h3 * wt;
-            source_plus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-
-          source_minus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            for (ii = 0; ii < DIM; ii++) {
-
-              source_minus +=
-                  -mu0 * tangent2[ii] * LubAux->gradP_tangent[ii] * nexp / (nexp + 1.) *
-                  (pow(fabs(shear_top), nexp - 1.) * shear_top * shear_top -
-                   pow(fabs(shear_bot_minus), nexp - 1.) * shear_bot_minus * shear_bot_minus);
-              source_minus += -cross_shear * tangent2[ii] * LubAux->gradP_normal[ii] * nexp *
-                              (shear_top - shear_bot_minus);
-            }
-            source_minus *= phi_i * det_J * h3 * wt;
-            source_minus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += (source_plus - source_minus) / (eps_bot);
         }
-      }
 
-      /* SENSITIVITY W.R.T. CROSS STREAM SHEAR STRESS */
+        /* SENSITIVITY W.R.T. CROSS STREAM SHEAR STRESS */
 
-      var = SHELL_CROSS_SHEAR;
+        var = SHELL_CROSS_SHEAR;
 
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
 
-          phi_j = bf[var]->phi[j];
-
-          source = 0.;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-
-            for (ii = 0; ii < DIM; ii++) {
-              source +=
-                  -phi_j * tangent2[ii] * LubAux->gradP_normal[ii] * nexp * (shear_top - shear_bot);
+            source = 0.;
+            if (T_SOURCE) {
+              source = phi_i *
+                       (-SQUARE(shear_top) * dvis_top_dK + SQUARE(shear_bot) * dvis_bot_dK -
+                        dviscint_dK[0]) *
+                       phi_j;
+              source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
-            source *= phi_i * det_J * h3 * wt;
-            source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += source;
           }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += source;
         }
-      }
 
-      /* SENSITIVITY W.R.T. PRESSURE */
+        /* SENSITIVITY W.R.T. PRESSURE */
 
-      var = LUBP;
+        var = LUBP;
 
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
 
-          phi_j = bf[var]->phi[j];
+            /* Load basis functions (j) */
+            ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                    n_dof[MESH_DISPLACEMENT1], dof_map);
 
-          for (jj = 0; jj < dim; jj++) {
-            grad_phi_j[jj] = bf[var]->grad_phi[j][jj];
-            grad_II_phi_j[jj] = 0.0;
-          }
-
-          /* Perform I-nn grad operation */
-          Inn(grad_phi_j, grad_II_phi_j);
-
-          shear_top_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_plus += (*(esp->sh_shear_top[iii]) + 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_plus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
+            advection = 0.0;
+            if (T_ADVECTION) {
+              double advection1 = 0., advection2 = 0.;
+              for (ii = 0; ii < dim; ii++) {
+                advection1 += ev[ii] * (veloU[ii] - veloL[ii]);
+                advection2 += ev[ii] * grad_II_phi_j[ii];
+                for (jj = 0; jj < dim; jj++) {
+                  advection += dev_dpg[ii][jj] * grad_II_phi_j[jj] * (veloU[ii] - veloL[ii]);
+                }
+              }
+              advection *= phi_i * LubAux->gradP_mag;
+              advection1 *= phi_i * advection2;
+              advection += advection1;
+              advection *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
             }
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection;
           }
-
-          shear_top_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_minus += (*(esp->sh_shear_top[iii]) - 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_minus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_plus += (*(esp->sh_shear_bot[iii]) + 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_plus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_minus += (*(esp->sh_shear_bot[iii]) - 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_minus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          calculate_lub_q_v_nonnewtonian_sens(mu, H, veloU, veloL, grad_II_P, phi_j, grad_II_phi_j,
-                                              shear_top_plus, shear_top_minus, shear_bot_plus,
-                                              shear_bot_minus, eps_top, eps_bot);
-
-          advection = 0.;
-          if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-            for (ii = 0; ii < DIM; ii++) {
-              advection += tangent2[ii] * (veloU[ii] - veloL[ii]) * LubAux->dgradP_mag_dP;
-            }
-            advection *= phi_i * det_J * h3 * wt;
-            advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-          }
-
-          source = 0.;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            for (ii = 0; ii < DIM; ii++) {
-
-              source += -mu0 * tangent2[ii] * LubAux->dgradP_tangent_dP[ii] * nexp / (nexp + 1.) *
-                        (pow(fabs(shear_top), nexp - 1.) * shear_top * shear_top -
-                         pow(fabs(shear_bot), nexp - 1.) * shear_bot * shear_bot);
-              source += -cross_shear * tangent2[ii] * LubAux->dgradP_normal_dP[ii] * nexp *
-                        (shear_top - shear_bot);
-            }
-
-            source *= phi_i * det_J * h3 * wt;
-            source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection + source;
         }
       }
     }
@@ -15779,500 +15470,115 @@ int assemble_lubrication_power_law(double time,    /* present time value */
     eqn = R_SHELL_CROSS_SHEAR;
     peqn = upd->ep[pg->imtrx][eqn];
 
-    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+    if (pd->e[pg->imtrx][eqn]) {
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+        phi_i = bf[eqn]->phi[i];
 
-      phi_i = bf[eqn]->phi[i];
+        /* SENSITIVITY W.R.T. TOP WALL SHEAR RATE */
 
-      /* SENSITIVITY W.R.T. TOP WALL SHEAR RATE */
+        var = SHELL_SHEAR_TOP;
 
-      var = SHELL_SHEAR_TOP;
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
 
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          phi_j = bf[var]->phi[j];
+            advection = 0.0;
 
-          shear_top_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_plus += (*(esp->sh_shear_top[iii]) + 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_plus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
+            source = 0.0;
+            if (T_SOURCE) {
+              source =
+                  phi_i * (-cross_shear * (1. + SQUARE(shear_top) * dvis_top / vis_top)) * phi_j;
+              source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection + source;
           }
-
-          shear_top_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_minus += (*(esp->sh_shear_top[iii]) - 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_minus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          source_plus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            source_plus += -phi_i * mu0 *
-                           (pow(fabs(shear_top_plus), nexp - 1.) * shear_top_plus -
-                            pow(fabs(shear_bot), nexp - 1.) * shear_bot);
-
-            source_plus *= det_J * h3 * wt;
-            source_plus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-
-          source_minus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            source_minus += -phi_i * mu0 *
-                            (pow(fabs(shear_top_minus), nexp - 1.) * shear_top_minus -
-                             pow(fabs(shear_bot), nexp - 1.) * shear_bot);
-
-            source_minus *= det_J * h3 * wt;
-            source_minus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += (source_plus - source_minus) / eps_top;
         }
-      }
 
-      /* SENSITIVITY W.R.T. BOTTOM WALL SHEAR RATE */
+        /* SENSITIVITY W.R.T. BOTTOM WALL SHEAR RATE */
 
-      var = SHELL_SHEAR_BOT;
+        var = SHELL_SHEAR_BOT;
 
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
 
-          phi_j = bf[var]->phi[j];
+            advection = 0.0;
 
-          shear_bot_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_plus += (*(esp->sh_shear_bot[iii]) + 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_plus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
+            source = 0.0;
+            if (T_SOURCE) {
+              source =
+                  phi_i * (cross_shear * (1. + SQUARE(shear_bot) * dvis_bot / vis_bot)) * phi_j;
+              source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection + source;
           }
-
-          shear_bot_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_minus += (*(esp->sh_shear_bot[iii]) - 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_minus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          source_plus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            source_plus += -phi_i * mu0 *
-                           (pow(fabs(shear_top), nexp - 1.) * shear_top -
-                            pow(fabs(shear_bot_plus), nexp - 1.) * shear_bot_plus);
-
-            source_plus *= det_J * h3 * wt;
-            source_plus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-
-          source_minus = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-            source_minus += -phi_i * mu0 *
-                            (pow(fabs(shear_top), nexp - 1.) * shear_top -
-                             pow(fabs(shear_bot_minus), nexp - 1.) * shear_bot_minus);
-
-            source_minus *= det_J * h3 * wt;
-            source_minus *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-          }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += (source_plus - source_minus) / eps_bot;
         }
-      }
 
-      /* SENSITIVITY W.R.T. PRESSURE */
+        /* SENSITIVITY W.R.T. CROSS STREAM SHEAR STRESS */
 
-      var = LUBP;
+        var = SHELL_CROSS_SHEAR;
 
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
 
-          phi_j = bf[var]->phi[j];
-
-          for (jj = 0; jj < dim; jj++) {
-            grad_phi_j[jj] = bf[var]->grad_phi[j][jj];
-            grad_II_phi_j[jj] = 0.0;
-          }
-
-          /* Perform I-nn grad operation */
-          Inn(grad_phi_j, grad_II_phi_j);
-
-          shear_top_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_plus += (*(esp->sh_shear_top[iii]) + 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_plus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
+            source = 0.;
+            if (T_SOURCE) {
+              source = phi_i *
+                       (-(shear_top * (1. + log(vis_top)) - shear_bot * (1. + log(vis_bot)) -
+                          viscint[1]) -
+                        cross_shear * (shear_top * dvis_top_dK / vis_top -
+                                       shear_bot * dvis_bot_dK / vis_bot - dviscint_dK[1])) *
+                       phi_j;
+              source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += source;
           }
-
-          shear_top_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_minus += (*(esp->sh_shear_top[iii]) - 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_minus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_plus += (*(esp->sh_shear_bot[iii]) + 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_plus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_minus += (*(esp->sh_shear_bot[iii]) - 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_minus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          calculate_lub_q_v_nonnewtonian_sens(mu, H, veloU, veloL, grad_II_P, phi_j, grad_II_phi_j,
-                                              shear_top_plus, shear_top_minus, shear_bot_plus,
-                                              shear_bot_minus, eps_top, eps_bot);
-
-          advection = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-            advection += phi_i * H * LubAux->dgradP_mag_dP;
-
-            advection *= det_J * h3 * wt;
-            advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-          }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection;
         }
-      }
-    }
 
-    /* ************* ASSEMBLE JACOBIAN OF PRESSURE ************ */
-
-    eqn = R_LUBP;
-    peqn = upd->ep[pg->imtrx][eqn];
-
-    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-
-      phi_i = bf[eqn]->phi[i];
-
-      for (ii = 0; ii < dim; ii++) {
-        grad_phi_i[ii] = bf[eqn]->grad_phi[i][ii];
-        grad_II_phi_i[ii] = 0.0;
-      }
-
-      /* Perform I-nn grad operation */
-      Inn(grad_phi_i, grad_II_phi_i);
-
-      /* SENSITIVITY W.R.T. TOP WALL SHEAR RATE */
-
-      var = SHELL_SHEAR_TOP;
-
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          phi_j = bf[var]->phi[j];
-
-          for (jj = 0; jj < dim; jj++) {
-            grad_phi_j[jj] = bf[var]->grad_phi[j][jj];
-            grad_II_phi_j[jj] = 0.0;
-          }
-
-          /* Perform I-nn grad operation */
-          Inn(grad_phi_j, grad_II_phi_j);
-
-          shear_top_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_plus += (*(esp->sh_shear_top[iii]) + 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_plus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_top_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_minus += (*(esp->sh_shear_top[iii]) - 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_minus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_plus += (*(esp->sh_shear_bot[iii]) + 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_plus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_minus += (*(esp->sh_shear_bot[iii]) - 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_minus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          calculate_lub_q_v_nonnewtonian_sens(mu, H, veloU, veloL, grad_II_P, phi_j, grad_II_phi_j,
-                                              shear_top_plus, shear_top_minus, shear_bot_plus,
-                                              shear_bot_minus, eps_top, eps_bot);
-
-          diffusion = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-
-            for (ii = 0; ii < dim; ii++) {
-              diffusion += -grad_II_phi_i[ii] * LubAux->dq_dshear_top[ii][j];
-            }
-
-            diffusion *= det_J * h3 * wt;
-            diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
-          }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
-        }
-      }
-
-      /* SENSITIVITY W.R.T. BOTTOM WALL SHEAR RATE */
-
-      var = SHELL_SHEAR_BOT;
-
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          phi_j = bf[var]->phi[j];
-
-          for (jj = 0; jj < dim; jj++) {
-            grad_phi_j[jj] = bf[var]->grad_phi[j][jj];
-            grad_II_phi_j[jj] = 0.0;
-          }
-
-          /* Perform I-nn grad operation */
-          Inn(grad_phi_j, grad_II_phi_j);
-
-          shear_top_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_plus += (*(esp->sh_shear_top[iii]) + 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_plus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_top_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_minus += (*(esp->sh_shear_top[iii]) - 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_minus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_plus += (*(esp->sh_shear_bot[iii]) + 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_plus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_minus += (*(esp->sh_shear_bot[iii]) - 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_minus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          calculate_lub_q_v_nonnewtonian_sens(mu, H, veloU, veloL, grad_II_P, phi_j, grad_II_phi_j,
-                                              shear_top_plus, shear_top_minus, shear_bot_plus,
-                                              shear_bot_minus, eps_top, eps_bot);
-
-          diffusion = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-
-            for (ii = 0; ii < dim; ii++) {
-              diffusion += -grad_II_phi_i[ii] * LubAux->dq_dshear_bot[ii][j];
-            }
-
-            diffusion *= det_J * h3 * wt;
-            diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
-          }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
-        }
-      }
-
-      /* SENSITIVITY W.R.T. CROSS STREAM SHEAR STRESS */
-
-      var = SHELL_CROSS_SHEAR;
-
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          phi_j = bf[var]->phi[j];
-
-          for (jj = 0; jj < dim; jj++) {
-            grad_phi_j[jj] = bf[var]->grad_phi[j][jj];
-            grad_II_phi_j[jj] = 0.0;
-          }
-
-          /* Perform I-nn grad operation */
-          Inn(grad_phi_j, grad_II_phi_j);
-
-          shear_top_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_plus += (*(esp->sh_shear_top[iii]) + 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_plus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_top_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_minus += (*(esp->sh_shear_top[iii]) - 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_minus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_plus += (*(esp->sh_shear_bot[iii]) + 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_plus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_minus += (*(esp->sh_shear_bot[iii]) - 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_minus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          calculate_lub_q_v_nonnewtonian_sens(mu, H, veloU, veloL, grad_II_P, phi_j, grad_II_phi_j,
-                                              shear_top_plus, shear_top_minus, shear_bot_plus,
-                                              shear_bot_minus, eps_top, eps_bot);
-
-          diffusion = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-
-            for (ii = 0; ii < dim; ii++) {
-              diffusion += -grad_II_phi_i[ii] * LubAux->dq_dcross_shear[ii][j];
-            }
-
-            diffusion *= det_J * h3 * wt;
-            diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
-          }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
-        }
-      }
-
-      /* SENSITIVITY W.R.T. PRESSURE */
-
-      var = LUBP;
-
-      if (pd->v[pg->imtrx][var]) {
-        pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-
-          phi_j = bf[var]->phi[j];
-
-          for (jj = 0; jj < dim; jj++) {
-            grad_phi_j[jj] = bf[var]->grad_phi[j][jj];
-            grad_II_phi_j[jj] = 0.0;
-          }
-
-          /* Perform I-nn grad operation */
-          Inn(grad_phi_j, grad_II_phi_j);
-
-          shear_top_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_plus += (*(esp->sh_shear_top[iii]) + 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_plus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_top_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_top_minus += (*(esp->sh_shear_top[iii]) - 0.5 * eps_top) * bf[var]->phi[iii];
-            } else {
-              shear_top_minus += *(esp->sh_shear_top[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_plus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_plus += (*(esp->sh_shear_bot[iii]) + 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_plus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          shear_bot_minus = 0.0;
-          for (iii = 0; iii < ei[pg->imtrx]->dof[var]; iii++) {
-            if (iii == j) {
-              shear_bot_minus += (*(esp->sh_shear_bot[iii]) - 0.5 * eps_bot) * bf[var]->phi[iii];
-            } else {
-              shear_bot_minus += *(esp->sh_shear_bot[iii]) * bf[var]->phi[iii];
-            }
-          }
-
-          calculate_lub_q_v_nonnewtonian_sens(mu, H, veloU, veloL, grad_II_P, phi_j, grad_II_phi_j,
-                                              shear_top_plus, shear_top_minus, shear_bot_plus,
-                                              shear_bot_minus, eps_top, eps_bot);
-
-          diffusion = 0.0;
-          if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-
-            for (ii = 0; ii < dim; ii++) {
-              for (jj = 0; jj < dim; jj++) {
-                diffusion += -grad_II_phi_i[ii] * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj];
+        /* SENSITIVITY W.R.T. PRESSURE */
+
+        var = LUBP;
+
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
+
+            /* Load basis functions (j) */
+            ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                    n_dof[MESH_DISPLACEMENT1], dof_map);
+
+            advection = 0.0;
+            if (T_ADVECTION) {
+              double advection1 = 0., advection2 = 0.;
+              for (ii = 0; ii < dim; ii++) {
+                advection1 += evf[ii] * (veloU[ii] - veloL[ii]);
+                advection2 += evf[ii] * grad_II_phi_j[ii];
+                for (jj = 0; jj < dim; jj++) {
+                  advection += dfv_dpg[ii][jj] * grad_II_phi_j[jj] * (veloU[ii] - veloL[ii]);
+                }
               }
+              advection *= phi_i * LubAux->gradP_mag;
+              advection1 *= phi_i * advection2;
+              advection += advection1;
+              advection *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
             }
-
-            diffusion *= det_J * h3 * wt;
-            diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection;
           }
-
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
         }
       }
     }
 
   } /* end of Assemble_Jacobian */
+  /* Clean up */
+  safe_free((void *)n_dof);
 
   return (status);
-} /* end of assemble_lubrication_power_law */
+} /* end of assemble_lubrication_thinning */
 
 /***assemble_shell_normal******************************************************/
 /*  _______________________________________________________________________  */

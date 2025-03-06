@@ -3261,6 +3261,7 @@ struct Lubrication_Auxiliaries {
                                        stream shear stress */
   double dq_dgradp[DIM][DIM];       /* Flow rate sensitivities w.r.t. pressure gradient */
   double dq_dT[DIM];                /* Flow rate sensitivities w.r.t. Temperature */
+  double dq_dshrw[DIM];             /* Flow rate sensitivities w.r.t. Wall shear rate */
   double dq_dv[DIM][DIM][MDE];      /* Flow rate sensitivities w.r.t. velocities */
 
   double dv_avg_dh[DIM][MDE];           /* Average velocity sensitivities w.r.t. height */
@@ -3289,6 +3290,7 @@ struct Lubrication_Auxiliaries {
                                            cross stream shear stress */
   double dv_dgradp[DIM][DIM];     /* Average velocity sensitivities w.r.t. pressure gradient */
   double dv_avg_dT[DIM];          /* Average velosity sensitivities w.r.t. Temperature */
+  double dv_avg_dshrw[DIM];       /* Average velosity sensitivities w.r.t. Wall shear rate */
   double dH_dmesh[DIM][MDE];      /* lubrication gap sensitivities w.r.t. mesh */
   double dH_drealsolid[DIM][MDE]; /* lubrication gap sensitivities w.r.t. real
                                      solid */
