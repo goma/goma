@@ -6699,9 +6699,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                  &NO_SPECIES, es);
   ECHO(es, echo_file);
 
-  model_read = look_for_mat_prop(imp, "Species Shock Capturing",
-                                 &(mat_ptr->SpYZbeta_funcModel), &(mat_ptr->SpYZbeta_func), NO_USER,
-                                 NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+  model_read = look_for_mat_prop(imp, "Species Shock Capturing", &(mat_ptr->SpYZbeta_funcModel),
+                                 &(mat_ptr->SpYZbeta_func), NO_USER, NULL, model_name, SCALAR_INPUT,
+                                 &NO_SPECIES, es);
   if (!strcmp(model_name, "MIXED")) {
     mat_ptr->SpYZbeta_funcModel = YZBETA_MIXED;
     if (fscanf(imp, "%lg", &(mat_ptr->SpYZbeta_func)) != 1) {
