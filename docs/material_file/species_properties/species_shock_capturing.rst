@@ -1,14 +1,14 @@
-***************************
-**Species Weight Function**
-***************************
+***********************
+Species Shock Capturing
+***********************
 
 ::
 
    Species Shock Capturing = {model_name} <float>
 
------------------------
-**Description / Usage**
------------------------
+-------------------
+Description / Usage
+-------------------
 
 This optional card is used to specify the weight functions to be used on the weighted
 residual of the species convective diffusion equations. For high Peclet number cases,
@@ -25,9 +25,9 @@ you may want to use a Petrov-Galerkin formulation rather than a Galerkin formula
 
 When this card is absent, the default {model_name} is **NONE**.
 
-------------
-**Examples**
-------------
+--------
+Examples
+--------
 
 The following is a sample input card:
 
@@ -35,16 +35,16 @@ The following is a sample input card:
 
    Species Shock Capturing = MIXED 0.5
 
--------------------------
-**Technical Discussion**
--------------------------
+--------------------
+Technical Discussion
+--------------------
 
 No Discussion.
 
 
 
---------------
-**References**
---------------
+----------
+References
+----------
 
 No References.
