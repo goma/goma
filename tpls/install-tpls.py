@@ -220,6 +220,12 @@ if __name__ == "__main__":
                 dependency_graph[p].remove("lapack")
                 dependency_graph[p].append("openblas")
 
+    if not args.enable_parmetis:
+        for p in dependency_graph.keys():
+            for n in ["parmetis", "superlu_dist"]:
+                if n in dependency_graph[p]:
+                    dependency_graph[p].remove(n)
+
     logger.log("Dependency graph: {}".format(dependency_graph))
 
     install_order = utils.topological_sort(dependency_graph)[::-1]
