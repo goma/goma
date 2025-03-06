@@ -6699,34 +6699,18 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                  &NO_SPECIES, es);
   ECHO(es, echo_file);
 
-  model_read = look_for_mat_prop(imp, "Species YZbeta Function", &(mat_ptr->SpYZbeta_funcModel),
-                                 &(mat_ptr->SpYZbeta_func), NO_USER, NULL, model_name, SCALAR_INPUT,
-                                 &NO_SPECIES, es);
-  if (!strcmp(model_name, "ONE")) {
-    mat_ptr->SpYZbeta_funcModel = YZBETA_ONE;
-    if (fscanf(imp, "%lg", &(mat_ptr->SpYZbeta_func)) != 1) {
-      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_ONE");
-    }
-  } else if (!strcmp(model_name, "TWO")) {
-    mat_ptr->SpYZbeta_funcModel = YZBETA_TWO;
-    if (fscanf(imp, "%lg", &(mat_ptr->SpYZbeta_func)) != 1) {
-      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_TWO");
-    }
-  } else if (!strcmp(model_name, "MIXED")) {
+  model_read = look_for_mat_prop(imp, "Species Shock Capturing",
+                                 &(mat_ptr->SpYZbeta_funcModel), &(mat_ptr->SpYZbeta_func), NO_USER,
+                                 NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+  if (!strcmp(model_name, "MIXED")) {
     mat_ptr->SpYZbeta_funcModel = YZBETA_MIXED;
     if (fscanf(imp, "%lg", &(mat_ptr->SpYZbeta_func)) != 1) {
-      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_MIXED");
-    }
-  } else if (!strcmp(model_name, "CUSTOM")) {
-    mat_ptr->SpYZbeta_funcModel = YZBETA_CUSTOM;
-    if (fscanf(imp, "%lg %lg", &(mat_ptr->SpYZbeta_func), &(mat_ptr->SpYZbeta_value)) != 2) {
-      GOMA_EH(GOMA_ERROR,
-              "Could not read Scale and beta value for Species YZbeta Function YZBETA_CUSTOM");
+      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species Species Shock Capturing YZBETA_MIXED");
     }
   } else {
     mat_ptr->SpYZbeta_funcModel = SC_NONE;
     mat_ptr->SpYZbeta_func = 0.;
-    SPF(es, "\t(%s = %s)", "Species YZbeta Function", "NONE");
+    SPF(es, "\t(%s = %s)", "Species Species Shock Capturing", "NONE");
   }
   ECHO(es, echo_file);
 

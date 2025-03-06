@@ -404,9 +404,13 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
     }
 
     dbl yzbeta = 0;
-    int shock_capture = false;
+    int shock_capture = mp->SpYZbeta_funcModel == YZBETA_MIXED;
 
     if (shock_capture) {
+      if (pd->TimeIntegration == STEADY) {
+        GOMA_EH(GOMA_ERROR, "Species Shock capture only implemented for transient models");
+      }
+
       dbl strong_residual = 0;
       strong_residual = fv_dot_old->c[w];
       for (int p = 0; p < VIM; p++) {
@@ -435,7 +439,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
       dc1 = fabs(Yinv * strong_residual) * inv_sqrt_inner * h_elem * 0.5;
       // dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
       // yzbeta = fmin(supg_tau, 0.5*(dc1+dc2));//0.5*(dc1 + dc2);
-      yzbeta = 0.5 * (dc1 + dc2);
+      yzbeta = 0.5 * (dc1 + dc2) * mp->SpYZbeta_func;
     }
 
     /*
