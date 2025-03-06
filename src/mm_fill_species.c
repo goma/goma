@@ -414,7 +414,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
       dbl strong_residual = 0;
       strong_residual = fv_dot_old->c[w];
       for (int p = 0; p < VIM; p++) {
-        strong_residual += fv->v[p] * fv_old->grad_c[w][p];
+        strong_residual += fv_old->v[p] * fv_old->grad_c[w][p];
       }
       dbl h_elem = 0;
       for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
