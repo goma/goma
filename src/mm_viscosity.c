@@ -37,6 +37,7 @@
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
 #include "mm_viscosity.h"
+#include "models/fluidity.h"
 #include "rf_allo.h"
 #include "rf_bc_const.h"
 #include "rf_fem.h"
@@ -512,6 +513,8 @@ double viscosity(struct Generalized_Newtonian *gn_local,
         d_mu->nn[j] = mp->d_viscosity[var] * bf[var]->phi[j];
       }
     }
+  } else if (gn_local->ConstitutiveEquation == FLUIDITY_THIXOTROPIC_VISCOSITY) {
+    mu = fluidity_viscosity(gn_local->sus_species_no, d_mu);
   } else if (gn_local->ConstitutiveEquation == EPOXY) {
     err = epoxy_viscosity(gn_local->cure_species_no, gn_local->mu0, gn_local->gelpoint,
                           gn_local->cureaexp, gn_local->curebexp, gn_local->atexp);

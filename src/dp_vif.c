@@ -712,6 +712,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &Newt_Jacobian_Reformation_stride, 1, MPI_INT);
   ddd_add_member(n, &Time_Jacobian_Reformation_stride, 1, MPI_INT);
   ddd_add_member(n, &Newton_Line_Search_Type, 1, MPI_INT);
+  ddd_add_member(n, &Line_Search_Minimum_Damping, 1, MPI_DOUBLE);
   ddd_add_member(n, &modified_newton, 1, MPI_INT);
   ddd_add_member(n, &convergence_rate_tolerance, 1, MPI_DOUBLE);
   ddd_add_member(n, &modified_newt_norm_tol, 1, MPI_DOUBLE);

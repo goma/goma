@@ -800,6 +800,15 @@ void rd_bc_specs(FILE *ifp, char *input) {
 
       break;
 
+    case FLUIDITY_EQUILIBRIUM_BC:
+      if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1) {
+        sr = sprintf(err_msg, "%s: Expected 1 int for %s.", yo, BC_Types[ibc].desc->name1);
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_Data_Int[0]);
+      BC_Types[ibc].species_eq = BC_Types[ibc].BC_Data_Int[0];
+      break;
+
       /* Fall through for all cases which requires two integer values
        * as data input
        */
