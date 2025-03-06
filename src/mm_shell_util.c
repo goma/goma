@@ -6699,7 +6699,7 @@ int lub_viscosity_integrate(const double strs,
 
   /**  Compute temperature sensitivity integral **/
   if (dq_dT != NULL && pd->gv[SHELL_TEMPERATURE]) {
-    double dlnat_dT = 0., dvis_dT = 0., dlnvis_w_dT = 0., dlnvis = 0.;
+    double dlnat_dT = 0., dvis_dT = 0.;
     double xfact, tmp, tp2, tpe, P_sig;
     if (DOUBLE_NONZERO(temp) && DOUBLE_NONZERO(mp->reference[TEMPERATURE])) {
       if (gn->ConstitutiveEquation == BINGHAM) {
@@ -6715,22 +6715,6 @@ int lub_viscosity_integrate(const double strs,
       }
     }
     xintold = 0.;
-    switch (gn->ConstitutiveEquation) {
-    case CARREAU_WLF:
-      xfact = pow(lam * shrw, aexp);
-      dlnvis_w_dT = dlnat_dT * (1. + (1. - muinf / vis_w) * (nexp - 1.) * xfact / (1. + xfact));
-      // dlnvis_w_dT = dlnat_dT * (vis_w + aexp * xfact);
-      break;
-    case BINGHAM:
-    case BINGHAM_WLF:
-      tp2 = F * shrw;
-      P_sig = pow(1. + tp2, P_eps);
-      tpe = (1. - exp(-tp2)) / shrw * P_sig;
-      dlnvis_w_dT = dlnat_dT * (vis_w + (mu0 - muinf + yield * tpe) * aexp * pow(lam * shrw, aexp));
-      break;
-    default:
-      GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
-    }
     for (jdi = 0; jdi < JDI_MAX; jdi++) {
       double cee, x0, delx, vis = 1., jdiv;
       int idiv, l;
@@ -6748,8 +6732,6 @@ int lub_viscosity_integrate(const double strs,
             vis = muinf + (mu0 - muinf) * tmp;
             dvis_dT = dlnat_dT *
                       (vis + (vis - muinf) * (nexp - 1.) * pow(lam * cee * shrw, aexp) / xfact);
-            // dvis_dT = dlnat_dT * vis * (1. +  nexp * pow(lam * cee * shrw, aexp) / xfact);
-            dlnvis = (mu0 - muinf) * (nexp - 1.) * tmp / xfact * pow(lam * cee * shrw, aexp);
             break;
           case BINGHAM:
           case BINGHAM_WLF:
@@ -6761,7 +6743,7 @@ int lub_viscosity_integrate(const double strs,
           default:
             GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
           }
-          xintdT += 2 * dvis_dT * (vis - dlnvis) * SQUARE(cee) * delx * mp->Lub_wts[l];
+          xintdT += 2 * vis * dvis_dT * SQUARE(cee) * delx * mp->Lub_wts[l];
         }
         x0 += delx;
       }
@@ -6775,8 +6757,7 @@ int lub_viscosity_integrate(const double strs,
       ierr = -1;
       GOMA_EH(GOMA_ERROR, "Temperature Sensitivity Integral not converged!");
     }
-    xintdT += -2. / SQUARE(vis_w) * dlnvis_w_dT * xint;
-    *dq_dT = 0.25 * SQUARE(H) * shrw * (xintdT * dlnvis_w_dT * (1. - xint));
+    *dq_dT = 0.25 * SQUARE(H) * shrw * xintdT;
   }
 
   /**  Compute flow magnitude  **/
