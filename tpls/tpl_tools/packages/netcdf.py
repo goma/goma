@@ -5,8 +5,8 @@ import os
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "netcdf"
-        self.version = "4.9.3-rc1"
-        self.sha256 = "8c4197d25031add6ebc0fcc2019a59ce768e0a7cfaa629bb0c581879de3d2902"
+        self.version = "4.9.3"
+        self.sha256 = "a474149844e6144566673facf097fea253dc843c37bc0a7d3de047dc8adda5dd"
         self.filename = "netcdf-c-" + self.version + ".tar.gz"
         self.url = (
             "https://downloads.unidata.ucar.edu/netcdf-c/"
@@ -18,12 +18,7 @@ class Package(packages.CMakePackage):
         self.executables = ["ncdump"]
         self.libraries = ["netcdf"]
         self.includes = ["netcdf.h"]
-
-    def setDependencies(self, builder):
-        builder.set_dependency("packages.openmpi")
-        builder.set_dependency("packages.hdf5")
-        builder.set_dependency("packages.pnetcdf")
-        return
+        self.dependencies = ["openmpi", "hdf5", "pnetcdf"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -46,7 +41,9 @@ class Package(packages.CMakePackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("NETCDF_DIR", builder.install_dir())
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
-        registry.append_environment_variable(
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )
+        registry.prepend_environment_variable(
             "PATH", os.path.join(builder.install_dir(), "bin")
         )

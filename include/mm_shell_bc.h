@@ -46,7 +46,7 @@ EXTERN void shell_n_dot_flow_bc_confined(double func[DIM],
 
 EXTERN void shell_n_dot_curv_bc(double func[DIM],
                                 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                                const double param1,
+                                const double theta_deg,     /* contact angle (deg.) */
                                 const int ibc_flag,         /* NOBC flag from bc input  */
                                 const int bc_id,            /* BC_Name */
                                 const double time,          /* current time */
@@ -54,6 +54,17 @@ EXTERN void shell_n_dot_curv_bc(double func[DIM],
                                 const double hsquared[DIM], /* Element scales */
                                 double xi[DIM],             /* Local stu coordinates */
                                 const Exo_DB *exo);
+
+EXTERN void shell_conc_ls_bc(double func[DIM],
+                             double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                             const int spec_id, /* Species number */
+                             const double conc_liq,
+                             const double conc_gas,
+                             const int bc_id,   /* BC_Name */
+                             const double time, /* current time */
+                             const double dt,   /* current time step size */
+                             double xi[DIM],    /* Local stu coordinates */
+                             const Exo_DB *exo);
 
 EXTERN void lub_static_pressure(double func[DIM],
                                 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],

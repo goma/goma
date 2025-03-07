@@ -213,7 +213,7 @@ if(ENABLE_PETSC)
   # PETSC search set root of location to find PETSc configuration
   set(PETSC_PATH $ENV{PETSC_DIR}/$ENV{PETSC_ARCH})
   set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig)
-
+  message("PETSc path for pkgconfig ${PETSC_PATH}/lib/pkgconfig")
   find_package(PkgConfig)
 
   if(PkgConfig_FOUND)
@@ -596,6 +596,7 @@ set(GOMA_INCLUDES
     include/mm_std_models_shell.h
     include/mm_unknown_map.h
     include/mm_viscosity.h
+    include/models/fluidity.h
     include/polymer_time_const.h
     include/rd_dpi.h
     include/rd_exo.h
@@ -760,6 +761,7 @@ set(GOMA_SOURCES
     src/mm_std_models_shell.c
     src/mm_unknown_map.c
     src/mm_viscosity.c
+    src/models/fluidity.cpp
     src/polymer_time_const.c
     src/rd_dpi.c
     src/rd_exo.c
@@ -1068,6 +1070,9 @@ set_source_files_properties(
   src/dp_ghost.cpp src/sl_epetra_util.cpp src/adapt/omega_h_interface.cpp
   PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 
+# Most people probably want this for use with Goma TPLs
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
 target_include_directories(goma_user SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
@@ -1183,6 +1188,8 @@ if(ENABLE_WARNINGS)
       -Wno-unused-parameter
       -Wimplicit-fallthrough>)
 endif()
+
+include(GNUInstallDirs)
 
 install(
   TARGETS goma_exe fix_exe

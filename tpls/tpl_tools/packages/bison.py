@@ -10,14 +10,14 @@ class Package(packages.AutotoolsPackage):
         self.filename = "bison-" + self.version + "tar.bz2"
         self.url = "http://ftp.gnu.org/gnu/bison/bison-" + self.version + ".tar.gz"
         self.executables = ["bison"]
-
-    def setDependencies(self, builder):
-        return
+        self.dependencies = []
 
     def register(self, builder):
         registry = builder._registry
-        registry.append_environment_variable("BISON_DIR", builder.install_dir())
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
-        registry.append_environment_variable(
+        registry.prepend_environment_variable("BISON_DIR", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )
+        registry.prepend_environment_variable(
             "PATH", os.path.join(builder.install_dir(), "bin")
         )

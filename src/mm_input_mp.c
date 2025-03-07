@@ -685,6 +685,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Density Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->density_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->density_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->density_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
+
   /*
    * Solid Constitutive Equation
    */
@@ -1480,6 +1498,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ConstitutiveEquation = BOND;
   } else if (!strcmp(model_name, "BOND_SH")) {
     ConstitutiveEquation = BOND_SH;
+  } else if (!strcmp(model_name, "FLUIDITY")) {
+    ConstitutiveEquation = FLUIDITY_THIXOTROPIC_VISCOSITY;
   } else if (!strcmp(model_name, "CARREAU_WLF_CONC_PL")) {
     ConstitutiveEquation = CARREAU_WLF_CONC_PL;
   } else if (!strcmp(model_name, "CARREAU_WLF_CONC_EXP")) {
@@ -1979,7 +1999,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
   }
 
-  if (ConstitutiveEquation == BOND_SH) {
+  if (ConstitutiveEquation == BOND_SH || ConstitutiveEquation == FLUIDITY_THIXOTROPIC_VISCOSITY) {
 
     iread = look_for_optional(imp, "Suspension Species Number", input, '=');
     if (fscanf(imp, "%d", &species_no) != 1) {
@@ -2160,6 +2180,25 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
   }
+
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Viscosity Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->viscosity_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->viscosity_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->viscosity_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
+
   /** Momentum Equation weight Function	**/
 
   strcpy(search_string, "Momentum Weight Function");
@@ -3562,6 +3601,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Conductivity Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->thermalconductivity_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->thermalconductivity_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->thermalconductivity_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
+
   strcpy(search_string, "Heat Capacity");
 
   model_read = look_for_mat_proptable(
@@ -3675,6 +3732,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
 
   ECHO(es, echo_file);
+
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Heat Capacity Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->heatcapacity_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->heatcapacity_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->heatcapacity_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
 
   strcpy(search_string, "Volume Expansion");
   model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->VolumeExpansionModel),
@@ -4149,6 +4224,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Wave Number Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->wavenumber_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->wavenumber_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->wavenumber_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
+
   strcpy(search_string, "Acoustic Impedance");
 
   model_read = look_for_mat_proptable(
@@ -4232,6 +4325,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Acoustic Impedance Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->acousticimpedance_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->acousticimpedance_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->acousticimpedance_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
+
   strcpy(search_string, "Acoustic Absorption");
 
   model_read = look_for_mat_proptable(
@@ -4314,6 +4425,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
 
   ECHO(es, echo_file);
+
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Acoustic Absorption Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->acousticabsorption_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->acousticabsorption_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->acousticabsorption_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
 
   strcpy(search_string, "Acoustic Ksquared Sign");
 
@@ -4412,6 +4541,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Refractive Index Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->refractiveindex_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->refractiveindex_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->refractiveindex_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
+
   strcpy(search_string, "Light Absorption");
 
   model_read = look_for_mat_proptable(
@@ -4494,6 +4641,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Light Absorption Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->lightabsorption_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->lightabsorption_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->lightabsorption_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
+
   strcpy(search_string, "Extinction Index");
 
   model_read = look_for_mat_proptable(
@@ -4575,6 +4740,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
 
   ECHO(es, echo_file);
+
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Extinction Index Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->extinctionindex_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->extinctionindex_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->extinctionindex_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
 
   /* New porous section */
   /*To avoid the ordering
@@ -5126,6 +5309,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
 
     ECHO(es, echo_file);
+
+    if (ls != NULL) {
+      strcpy(search_string, "Level Set Interface FlowingLiquid Viscosity Interpolation Method");
+      model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &NO_SPECIES, es);
+
+      if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+        mat_ptr->mp2nd->FlowingLiquid_viscosity_lsi_interp_method = LSI_INTERP_LINEAR;
+        SPF(es, "%s = %s", search_string, "LINEAR");
+      } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+        mat_ptr->mp2nd->FlowingLiquid_viscosity_lsi_interp_method = LSI_INTERP_LOG;
+        SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+      } else {
+        mat_ptr->mp2nd->FlowingLiquid_viscosity_lsi_interp_method = LSI_INTERP_LINEAR;
+        SPF(es, "%s = %s", search_string, "LINEAR");
+      }
+      ECHO(es, echo_file);
+    }
 
     strcpy(search_string, "Inertia Coefficient");
     model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->InertiaCoefficientModel),
@@ -6498,34 +6699,18 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                  &NO_SPECIES, es);
   ECHO(es, echo_file);
 
-  model_read = look_for_mat_prop(imp, "Species YZbeta Function", &(mat_ptr->SpYZbeta_funcModel),
+  model_read = look_for_mat_prop(imp, "Species Shock Capturing", &(mat_ptr->SpYZbeta_funcModel),
                                  &(mat_ptr->SpYZbeta_func), NO_USER, NULL, model_name, SCALAR_INPUT,
                                  &NO_SPECIES, es);
-  if (!strcmp(model_name, "ONE")) {
-    mat_ptr->SpYZbeta_funcModel = YZBETA_ONE;
-    if (fscanf(imp, "%lg", &(mat_ptr->SpYZbeta_func)) != 1) {
-      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_ONE");
-    }
-  } else if (!strcmp(model_name, "TWO")) {
-    mat_ptr->SpYZbeta_funcModel = YZBETA_TWO;
-    if (fscanf(imp, "%lg", &(mat_ptr->SpYZbeta_func)) != 1) {
-      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_TWO");
-    }
-  } else if (!strcmp(model_name, "MIXED")) {
+  if (!strcmp(model_name, "MIXED")) {
     mat_ptr->SpYZbeta_funcModel = YZBETA_MIXED;
     if (fscanf(imp, "%lg", &(mat_ptr->SpYZbeta_func)) != 1) {
-      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_MIXED");
-    }
-  } else if (!strcmp(model_name, "CUSTOM")) {
-    mat_ptr->SpYZbeta_funcModel = YZBETA_CUSTOM;
-    if (fscanf(imp, "%lg %lg", &(mat_ptr->SpYZbeta_func), &(mat_ptr->SpYZbeta_value)) != 2) {
-      GOMA_EH(GOMA_ERROR,
-              "Could not read Scale and beta value for Species YZbeta Function YZBETA_CUSTOM");
+      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species Species Shock Capturing YZBETA_MIXED");
     }
   } else {
     mat_ptr->SpYZbeta_funcModel = SC_NONE;
     mat_ptr->SpYZbeta_func = 0.;
-    SPF(es, "\t(%s = %s)", "Species YZbeta Function", "NONE");
+    SPF(es, "\t(%s = %s)", "Species Species Shock Capturing", "NONE");
   }
   ECHO(es, echo_file);
 
@@ -7824,6 +8009,20 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
+    model_read = look_for_mat_prop(imp, "Moment Time Integration", &(mat_ptr->MomentTime_funcModel),
+                                   &(a0), NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcmp(model_name, "TAYLOR_GALERKIN")) {
+      mat_ptr->MomentTime_funcModel = TAYLOR_GALERKIN;
+      mat_ptr->MomentTime_func = 1.;
+      SPF(es, "\t(%s = %s)", "Moment Time Function", "TAYLOR_GALERKIN");
+    } else {
+      mat_ptr->MomentTime_funcModel = STANDARD;
+      mat_ptr->MomentTime_func = 0.;
+      SPF(es, "\t(%s = %s)", "Moment Time Function", "STANDARD");
+    }
+    ECHO(es, echo_file);
+
     model_read = look_for_mat_prop(imp, "Moment SSPG Function", &(mat_ptr->MomentSSPG_funcModel),
                                    &(mat_ptr->MomentSSPG_func), NO_USER, NULL, model_name,
                                    SCALAR_INPUT, &NO_SPECIES, es);
@@ -8276,6 +8475,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Momentum Source Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->momentumsource_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->momentumsource_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->momentumsource_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
+
   model_read =
       look_for_mat_prop(imp, "Solid Body Source", &(mat_ptr->MeshSourceModel), mat_ptr->mesh_source,
                         NO_USER, NULL, model_name, VECTOR_INPUT, &NO_SPECIES, es);
@@ -8451,6 +8668,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
+  if (ls != NULL) {
+    strcpy(search_string, "Level Set Interface Heat Source Interpolation Method");
+    model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+      mat_ptr->mp2nd->heatsource_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+      mat_ptr->mp2nd->heatsource_lsi_interp_method = LSI_INTERP_LOG;
+      SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+    } else {
+      mat_ptr->mp2nd->heatsource_lsi_interp_method = LSI_INTERP_LINEAR;
+      SPF(es, "%s = %s", search_string, "LINEAR");
+    }
+    ECHO(es, echo_file);
+  }
+
   /* Initialize for good behavior */
   efv->ev_etch_area = -1;
   efv->ev_etch_depth = -1;
@@ -8534,6 +8769,31 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->u_species_source[species_no][2] = a2; /* n0 for breakup eqn */
       mat_ptr->u_species_source[species_no][3] = a3; /* exponent for breakup eqn */
       mat_ptr->u_species_source[species_no][4] = a4; /* exponent for aggregation eqn */
+
+      SPF_DBL_VEC(endofstring(es), 5, mat_ptr->u_species_source[species_no]);
+    } else if (!strcmp(model_name, "FLUIDITY")) {
+      SpeciesSourceModel = FLUIDITY_THIXOTROPIC;
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      if (fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7) !=
+          8) {
+        sr = sprintf(err_msg, "Matl %s needs  8 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Species Source", "FLUIDITY");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+
+      mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 8, sizeof(dbl));
+
+      mat_ptr->len_u_species_source[species_no] = 8;
+
+      mat_ptr->u_species_source[species_no][0] = a0; /* phi_0 */
+      mat_ptr->u_species_source[species_no][1] = a1; /* phi_inf */
+      mat_ptr->u_species_source[species_no][2] = a2; /* K */
+      mat_ptr->u_species_source[species_no][3] = a3; /* n */
+      mat_ptr->u_species_source[species_no][4] = a4; /* tc */
+      mat_ptr->u_species_source[species_no][5] = a5; /* sigma_y */
+      mat_ptr->u_species_source[species_no][6] = a6; /* m */
+      mat_ptr->u_species_source[species_no][7] = a7; /* m_y */
 
       SPF_DBL_VEC(endofstring(es), 5, mat_ptr->u_species_source[species_no]);
     } else if (!strcmp(model_name, "FOAM_EPOXY")) {
@@ -9006,6 +9266,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       }
 
       ECHO(es, echo_file);
+
+      if (ls != NULL) {
+        strcpy(search_string, "Level Set Interface Species Source Interpolation Method");
+        model_read = look_for_mat_prop(imp, search_string, NULL, NULL, NO_USER, NULL, model_name,
+                                       SCALAR_INPUT, &species_no, es);
+
+        if (!strcasecmp(model_name, "LINEAR") || !strcasecmp(model_name, "linear")) {
+          mat_ptr->mp2nd->speciessource_lsi_interp_method[species_no] = LSI_INTERP_LINEAR;
+          SPF(es, "%s = %s", search_string, "LINEAR");
+        } else if (!strcasecmp(model_name, "LOGARITHMIC") || !strcasecmp(model_name, "LOG")) {
+          mat_ptr->mp2nd->speciessource_lsi_interp_method[species_no] = LSI_INTERP_LOG;
+          SPF(es, "%s = %s", search_string, "LOGARITHMIC");
+        } else {
+          mat_ptr->mp2nd->speciessource_lsi_interp_method[species_no] = LSI_INTERP_LINEAR;
+          SPF(es, "%s = %s", search_string, "LINEAR");
+        }
+        ECHO(es, echo_file);
+      }
 
       species_no = pd_glob[mn]->Num_Species;
       model_read = look_for_mat_prop(imp, "Level Set Species Width",
@@ -10541,6 +10819,23 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     } else {
       mat_ptr->Lub_Curv_Combine = FALSE;
       SPF(es, "\t(%s = %s)", search_string, "off");
+    }
+    ECHO(es, echo_file);
+
+    /*  Shell Lubrication Curvature Field Modulation */
+    strcpy(search_string, "Lubrication Isotropic Curvature Diffusion");
+    model_read = look_for_mat_prop(imp, "Lubrication Isotropic Curvature Diffusion", NULL, NULL,
+                                   NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
+      mat_ptr->Lub_Isotropic_Curv_Diffusion = TRUE;
+      SPF(es, "%s = %s", search_string, "on");
+    } else if (!strcasecmp(model_name, "no") || !strcasecmp(model_name, "false")) {
+      mat_ptr->Lub_Isotropic_Curv_Diffusion = FALSE;
+      SPF(es, "%s = %s", search_string, "off");
+    } else {
+      mat_ptr->Lub_Isotropic_Curv_Diffusion = TRUE;
+      SPF(es, "\t(%s = %s)", search_string, "on");
     }
     ECHO(es, echo_file);
 

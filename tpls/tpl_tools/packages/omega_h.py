@@ -16,10 +16,7 @@ class Package(packages.CMakePackage):
         self.executables = []
         self.libraries = ["omega_h"]
         self.includes = ["Omega_h_adapt.hpp", "Omega_h_mesh.hpp"]
-
-    def setDependencies(self, builder):
-        builder.set_dependency("packages.openmpi")
-        return
+        self.dependencies = ["openmpi", "cmake"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -44,4 +41,6 @@ class Package(packages.CMakePackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("OMEGA_H_DIR", builder.install_dir())
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

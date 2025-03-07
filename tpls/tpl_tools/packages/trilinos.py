@@ -1,5 +1,4 @@
 from tpl_tools.packages import packages
-from tpl_tools import utils
 
 
 class Package(packages.CMakePackage):
@@ -20,6 +19,14 @@ class Package(packages.CMakePackage):
             "Sacado.hpp",
             "AztecOO.h",
             "Amesos.h",
+        ]
+        self.dependencies = [
+            "cmake",
+            "openmpi",
+            "lapack",
+            "suitesparse",
+            "superlu_dist",
+            "mumps",
         ]
 
     def setDependencies(self, builder):
@@ -127,7 +134,9 @@ class Package(packages.CMakePackage):
                 + builder.env["SUPERLU_DIST_DIR"]
                 + "/include"
             )
-        ext = utils.get_library_extension(builder.build_shared)
+        ext = ".a"
+        if builder.build_shared:
+            ext = ".so"
         if "PARMETIS_DIR" in builder.env:
             builder.add_option("-DTPL_ENABLE_ParMETIS:BOOL=ON ")
             builder.add_option("-D Amesos_ENABLE_ParMETIS:BOOL=ON ")
@@ -189,4 +198,6 @@ class Package(packages.CMakePackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("TRILINOS_DIR", builder.install_dir())
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

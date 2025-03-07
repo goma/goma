@@ -708,6 +708,7 @@
 #define RAOULT                  24300000
 #define FLORY                   24700000
 #define FLORY_CC                24800000
+#define SHELL_CONC_LS_BC        24850000
 #define YREACT_BC               30000000
 
 /* Shear rate conditions */
@@ -802,6 +803,7 @@
 #define ROLL_FLUID_BC              961124500
 #define SA_WALL_FUNC_BC            961124501
 #define OMEGA_WALL_FUNC_BC         961124502
+#define FLUIDITY_EQUILIBRIUM_BC    961124503
 #define TENSION_SHEET_BC           96210200
 #define MOVING_PLANE_BC            96110000
 #define MOVING_PLANE_ETCH_BC       96115000

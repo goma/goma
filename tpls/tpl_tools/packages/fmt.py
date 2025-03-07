@@ -14,14 +14,7 @@ class Package(packages.CMakePackage):
         )
         self.includes = ["fmt/core.h", "fmt/format.h"]
         self.libraries = ["fmt"]
-
-    def setDependencies(self, builder):
-        builder.set_dependency("packages.openmpi")
-        builder.set_dependency("packages.hdf5")
-        builder.set_dependency("packages.pnetcdf")
-        builder.set_dependency("packages.netcdf")
-        builder.set_dependency("packages.fmt")
-        return
+        self.dependencies = ["cmake"]
 
     def configure_options(self, builder):
         CXX = builder.env["CXX"]
@@ -35,4 +28,6 @@ class Package(packages.CMakePackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("FMT_DIR", builder.install_dir())
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

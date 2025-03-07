@@ -1206,7 +1206,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     s_end = s_start;
 
     if (inewton > 0) {
-      dbl RelTol = 1e-6;
+      dbl RelTol = upd->Residual_Relative_Tol[pg->imtrx];
       *converged = (*converged && ((Norm[0][2] / Initial_Norm) < RelTol));
     } else if (inewton == 0) {
       Initial_Norm = Norm[0][2];
@@ -2154,7 +2154,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 #else
       dbl damp = 1.0;
       dbl reduction_factor = 0.5;
-      dbl min_damp = 0.1;
+      dbl min_damp = Line_Search_Minimum_Damping;
       dbl *w = alloc_dbl_1(numProcUnknowns, 0.0);
       dbl *R = alloc_dbl_1(numProcUnknowns, 0.0);
       dbl *x_save = alloc_dbl_1(numProcUnknowns, 0.0);

@@ -741,6 +741,10 @@ static goma_error set_petsc_pressure_matrix(PetscMatrixData *matrix_data,
           }
         }
         double mu = viscosity(gn, gamma, NULL);
+        for (int mode = 0; mode < vn->modes; mode++) {
+          dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
+          mu += mup;
+        }
         double invmu = (1.0 / mu);
         int eqn = PRESSURE;
         for (int i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
@@ -1301,18 +1305,18 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
 
   PetscInt pcd_ns_remove_n = 0;
   PetscBool pcd_ns_remove_n_set;
-  PetscOptionsGetInt(NULL, NULL, "-pcd_ns_remove_n", &pcd_ns_remove_n, &pcd_ns_remove_n_set);
+  PetscOptionsGetInt(NULL, NULL, "-user_pcd_ns_remove_n", &pcd_ns_remove_n, &pcd_ns_remove_n_set);
 
   PetscInt pcd_ss_remove_n = 0;
   PetscBool pcd_ss_remove_n_set;
-  PetscOptionsGetInt(NULL, NULL, "-pcd_ss_remove_n", &pcd_ss_remove_n, &pcd_ss_remove_n_set);
+  PetscOptionsGetInt(NULL, NULL, "-user_pcd_ss_remove_n", &pcd_ss_remove_n, &pcd_ss_remove_n_set);
 
   PetscBool pcd_ns_remove_set;
   PetscInt *pcd_ns_remove = NULL;
   PetscInt pcd_ns_found = pcd_ns_remove_n;
   if (pcd_ns_remove_n_set) {
     PetscMalloc1(pcd_ns_remove_n, &pcd_ns_remove);
-    PetscOptionsGetIntArray(NULL, NULL, "-pcd_ns_remove", pcd_ns_remove, &pcd_ns_found,
+    PetscOptionsGetIntArray(NULL, NULL, "-user_pcd_ns_remove", pcd_ns_remove, &pcd_ns_found,
                             &pcd_ns_remove_set);
   }
 
@@ -1321,7 +1325,7 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
   PetscInt pcd_ss_found = pcd_ss_remove_n;
   if (pcd_ss_remove_n_set) {
     PetscMalloc1(pcd_ss_remove_n, &pcd_ss_remove);
-    PetscOptionsGetIntArray(NULL, NULL, "-pcd_ss_remove", pcd_ss_remove, &pcd_ss_found,
+    PetscOptionsGetIntArray(NULL, NULL, "-user_pcd_ss_remove", pcd_ss_remove, &pcd_ss_found,
                             &pcd_ss_remove_set);
   }
 
@@ -1420,21 +1424,21 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
     PCFieldSplitSetIS(pc, "u", ufields);
     PCFieldSplitSetIS(pc, "p", pfields);
 
-    // if (pd_glob[0]->Num_Dim == 3) {
-    //   PC pc;
-    //   const PetscInt ufields[] = {0, 1, 2}, pfields[] = {3};
-    //   KSPGetPC(matrix_data->ksp, &pc);
-    //   PCFieldSplitSetBlockSize(pc, 4);
-    //   PCFieldSplitSetFields(pc, "u", 3, ufields, ufields);
-    //   PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
-    // } else if (pd_glob[0]->Num_Dim == 2) {
-    //   PC pc;
-    //   const PetscInt ufields[] = {0, 1}, pfields[] = {3};
-    //   KSPGetPC(matrix_data->ksp, &pc);
-    //   PCFieldSplitSetBlockSize(pc, 3);
-    //   PCFieldSplitSetFields(pc, "u", 2, ufields, ufields);
-    //   PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
-    // }
+    //  if (pd_glob[0]->Num_Dim == 3) {
+    //    PC pc;
+    //    const PetscInt ufields[] = {0, 1, 2}, pfields[] = {3};
+    //    KSPGetPC(matrix_data->ksp, &pc);
+    //    PCFieldSplitSetBlockSize(pc, 4);
+    //    PCFieldSplitSetFields(pc, "u", 3, ufields, ufields);
+    //    PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
+    //  } else if (pd_glob[0]->Num_Dim == 2) {
+    //    PC pc;
+    //    const PetscInt ufields[] = {0, 1}, pfields[] = {3};
+    //    KSPGetPC(matrix_data->ksp, &pc);
+    //    PCFieldSplitSetBlockSize(pc, 3);
+    //    PCFieldSplitSetFields(pc, "u", 2, ufields, ufields);
+    //    PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
+    //  }
 
     PetscInt local_pressure_nodes = 0, global_pressure_nodes = 0;
     if ((user_schur_set && user_schur) || (user_pcd_set && user_pcd)) {

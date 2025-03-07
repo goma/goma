@@ -1,5 +1,4 @@
 from tpl_tools.packages import packages
-from tpl_tools import utils
 import os
 
 
@@ -18,6 +17,7 @@ class Package(packages.GenericPackage):
             + ".tar.gz"
         )
         self.libraries = ["openblas"]
+        self.dependencies = []
 
     def build(self, builder):
         self.build_command = ["make"]
@@ -41,7 +41,9 @@ class Package(packages.GenericPackage):
     def register(self, builder):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
-        ext = utils.get_library_extension(builder.build_shared)
+        ext = ".a"
+        if builder.build_shared:
+            ext = ".so"
         registry.set_environment_variable("OPENBLAS_DIR", builder.install_dir())
         registry.set_environment_variable(
             "BLAS_LIBRARIES",
@@ -51,4 +53,6 @@ class Package(packages.GenericPackage):
             "LAPACK_LIBRARIES",
             os.path.join(builder.install_dir(), "lib/libopenblas" + ext),
         )
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

@@ -1,14 +1,13 @@
 from tpl_tools.packages import packages
 import os
-import sys
 
 
 class Package(packages.AutotoolsPackage):
     def __init__(self):
         self.name = "petsc"
-        self.version = "3.22.0"
-        self.sha256 = "2c03f7c0f7ad2649240d4989355cf7fb7f211b75156cd7d424e1d9dd7dfb290b"
-        self.filename = "petsc-lite-" + self.version + ".tar.gz"
+        self.version = "3.22.3"
+        self.sha256 = "88c0d465a3bd688cb17ebf06a17c06d6e9cc457fa6b9643d217389424e6bd795"
+        self.filename = "petsc-" + self.version + ".tar.gz"
         self.url = (
             "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-"
             + self.version
@@ -16,6 +15,14 @@ class Package(packages.AutotoolsPackage):
         )
         self.includes = ["petsc"]
         self.libraries = ["petsc", "HYPRE", "strumpack"]
+        self.dependencies = [
+            "openmpi",
+            "scalapack",
+            "metis",
+            "mumps",
+            "scotch",
+            "parmetis",
+        ]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -44,7 +51,6 @@ class Package(packages.AutotoolsPackage):
             configure_options.append("--with-shared-libraries=0")
         configure_options.append("--with-debugging=0")
         configure_options.append("--download-hypre")
-        configure_options.append("--download-hypre")
         configure_options.append("--download-strumpack")
         configure_options.append("--with-scalapack=1")
         configure_options.append("--with-scalapack-dir=" + builder.env["SCALAPACK_DIR"])
@@ -65,11 +71,7 @@ class Package(packages.AutotoolsPackage):
         configure_options.append("--with-lapack-lib=" + builder.env["LAPACK_LIBRARIES"])
         configure_options.append("--with-mumps=1")
         configure_options.append("--with-mumps-dir=" + builder.env["MUMPS_DIR"])
-        if sys.platform == "darwin":
-            configure_options.append("--download-make")
-            configure_options.append("COPTFLAGS=-O3 -Wno-incompatible-pointer-types")
-        else:
-            configure_options.append("COPTFLAGS=-O3")
+        configure_options.append("COPTFLAGS=-O3")
         configure_options.append("CXXOPTFLAGS=-O3")
         configure_options.append("FOPTFLAGS=-O3")
         builder.run_command(configure_options)
@@ -78,3 +80,7 @@ class Package(packages.AutotoolsPackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("PETSC_DIR", builder.install_dir())
+        registry.set_environment_variable("PETSC_ARCH", "")
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

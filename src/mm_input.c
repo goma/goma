@@ -6564,9 +6564,10 @@ void rd_solver_specs(FILE *ifp, char *input) {
   char ls_type[MAX_CHAR_IN_INPUT] = "FULL_STEP";
   ;
   Newton_Line_Search_Type = NLS_FULL_STEP;
-  int lsread = look_for_optional_string(ifp, "Newton line search type", ls_type, MAX_CHAR_IN_INPUT);
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
+  int lsread = look_for_optional_string(ifp, "Newton line search type", ls_type, MAX_CHAR_IN_INPUT);
   if (lsread >= 1) {
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
     if (strcmp("FULL_STEP", ls_type) == 0) {
       Newton_Line_Search_Type = NLS_FULL_STEP;
     } else if (strcmp("BACKTRACK", ls_type) == 0) {
@@ -6575,22 +6576,20 @@ void rd_solver_specs(FILE *ifp, char *input) {
       GOMA_EH(GOMA_ERROR, "Unknown Newton line search type: %s", ls_type);
     }
   }
-  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
   ECHO(echo_string, echo_file);
 
-  if (fscanf(ifp, "%le %le %le %le %le", &custom_tol1, &damp_factor2, &custom_tol2, &damp_factor3,
-             &custom_tol3) != 5) {
-    damp_factor2 = damp_factor3 = -1.;
-    custom_tol1 = custom_tol2 = custom_tol3 = -1;
-    rewind(ifp); /* Added to make ibm happy when single relaxation value input. dal/1-6-99 */
-  } else {
-    if ((damp_factor1 <= 1. && damp_factor1 >= 0.) && (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
-        (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
-      SPF(endofstring(echo_string), " %.4g %.4g %.4g %.4g %.4g", custom_tol1, damp_factor2,
-          custom_tol2, damp_factor3, custom_tol3);
-    } else {
-      GOMA_EH(GOMA_ERROR, "All damping factors must be in the range 0 <= fact <=1");
+  Line_Search_Minimum_Damping = 0.005;
+  lsread = look_for_optional_string(ifp, "Line search minimum damping", ls_type, MAX_CHAR_IN_INPUT);
+  if (lsread >= 1) {
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Line search minimum damping", ls_type);
+    if (sscanf(ls_type, "%lf", &Line_Search_Minimum_Damping) != 1) {
+      GOMA_EH(GOMA_ERROR, "Unknown Line search minimum damping: %s", ls_type);
     }
+    ECHO(echo_string, echo_file);
+  } else {
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %lf", "Line search minimum damping",
+             Line_Search_Minimum_Damping);
+    ECHO(echo_string, echo_file);
   }
 
   look_for(ifp, "Newton correction factor", input, '=');
@@ -6655,6 +6654,9 @@ void rd_solver_specs(FILE *ifp, char *input) {
   if (fscanf(ifp, "%le", &Epsilon[0][0]) != 1) {
     GOMA_EH(GOMA_ERROR, "error reading Normalized (Newton) Residual Tolerance");
   }
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Normalized Residual Tolerance",
+           Epsilon[0][0]);
+  ECHO(echo_string, echo_file);
 
   for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
     Epsilon[imtrx][0] = Epsilon[0][0];
@@ -6673,6 +6675,25 @@ void rd_solver_specs(FILE *ifp, char *input) {
     ECHO(echo_string, echo_file);
   } else {
     Epsilon[0][2] = 1.0e+10;
+  }
+
+  iread = look_for_optional(ifp, "Residual Relative Tolerance", input, '=');
+  if (iread == 1) {
+    if (fscanf(ifp, "%le", &upd->Residual_Relative_Tol[0]) != 1) {
+      GOMA_EH(GOMA_ERROR, "error reading Residual Relative Tolerance");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Residual Relative Tolerance",
+             upd->Residual_Relative_Tol[0]);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->Residual_Relative_Tol[0] = 1e10;
+  }
+  for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    upd->Residual_Relative_Tol[imtrx] = upd->Residual_Relative_Tol[0];
+  }
+
+  for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    Epsilon[imtrx][0] = Epsilon[0][0];
   }
 
   for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
@@ -8366,6 +8387,15 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
                Epsilon[imtrx][1], mtrx_index1);
       ECHO(echo_string, echo_file);
     }
+    iread = look_forward_optional_until(ifp, "Residual Relative Tolerance", "MATRIX", input, '=');
+    if (iread == 1) {
+      if (fscanf(ifp, "%le", &upd->Residual_Relative_Tol[imtrx]) != 1) {
+        GOMA_EH(GOMA_ERROR, "error reading Residual Relative Tolerance");
+      }
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Residual Relative Tolerance",
+               upd->Residual_Relative_Tol[imtrx]);
+      ECHO(echo_string, echo_file);
+    }
 
     pd_ptr->Matrix_Activity[mtrx_index0] = 1;
 
@@ -9786,16 +9816,33 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         break;
       case R_SHELL_LUB_CURV:
       case R_SHELL_LUB_CURV_2:
-        if (fscanf(ifp, "%lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+        if (fscanf(ifp, "%lf %lf %lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
-                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)])) != 3) {
-          sr = sprintf(err_msg, "Provide 3 equation term multipliers (mas,dif,div) on %s in %s",
-                       EQ_Name[ce].name1, pd_ptr->MaterialName);
-          GOMA_EH(GOMA_ERROR, err_msg);
+                   &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)])) != 5) {
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)] = 1.0;
+          sr =
+              sprintf(err_msg,
+                      "Using default equation term multipliers (mass,adv,bnd,diff,div) on %s in %s",
+                      EQ_Name[ce].name1, pd_ptr->MaterialName);
+          GOMA_WH(GOMA_ERROR, err_msg);
+          DPRINTF(stderr, "\t %s %.4g %.4g %.4g %.4g %.4g\n", EQ_Name[ce].name1,
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]);
         }
 
-        SPF(endofstring(echo_string), "\t %.4g %.4g %.4g",
+        SPF(endofstring(echo_string), "\t %.4g %.4g %.4g %.4g %.4g",
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+            pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+            pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
             pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
             pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]);
         break;

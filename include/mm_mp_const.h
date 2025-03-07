@@ -337,6 +337,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define TURBULENT_SA_DYNAMIC 53 /* Spallart Allmaras */
 #define TURBULENT_K_OMEGA    54
 
+#define FLUIDITY_THIXOTROPIC_VISCOSITY 55
+
 /*
  *  Heat source modeling
  *
@@ -585,6 +587,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define ETCHING_KOH     935
 #define ETCHING_KOH_EXT 936
 
+#define FLUIDITY_THIXOTROPIC 937
+
 /* Special material-related height function models */
 #define CONSTANT_SPEED        1011
 #define ROLL_ON               1012
@@ -624,6 +628,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 /* Special function models for structured porous shells */
 #define MULTI_MODE 1014
 
+/* Level set interface interpolation */
+#define LSI_INTERP_LINEAR 20001
+#define LSI_INTERP_LOG    20002
 /*
 
    CONSTANTS FOR MATERIAL PROPERTY TAGS

@@ -14,13 +14,7 @@ class Package(packages.CMakePackage):
         )
         self.libraries = ["umfpack", "suitesparseconfig"]
         self.includes = ["suitesparse/umfpack.h"]
-
-    def setDependencies(self, builder):
-        builder.set_dependency("packages.openmpi")
-        builder.set_dependency("packages.openblas")
-        builder.set_dependency("packages.metis")
-        builder.set_dependency("packages.parmetis")
-        return
+        self.dependencies = ["cmake", "lapack"]
 
     def configure_options(self, builder):
         if builder.build_shared:
@@ -42,4 +36,6 @@ class Package(packages.CMakePackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("SUITESPARSE_DIR", builder.install_dir())
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

@@ -67,6 +67,7 @@
 #include "mm_ns_bc.h"
 #include "mm_qtensor_model.h"
 #include "mm_shell_bc.h"
+#include "models/fluidity.h"
 #include "rd_mesh.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
@@ -1032,6 +1033,10 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           }
           break;
 
+        case FLUIDITY_EQUILIBRIUM_BC:
+          fluidity_equilibrium_surf(func, d_func, bc->species_eq, theta, delta_t);
+          break;
+
         case GRAD_LUB_PRESS_BC:
         case GRAD_LUBP_NOBC_BC:
           shell_n_dot_flow_bc_confined(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Float[1],
@@ -1048,6 +1053,16 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           surface_determinant_and_normal(
               ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
               (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
+          break;
+
+        case SHELL_CONC_LS_BC:
+          if (ls != NULL && SS_Internal_Boundary[ss_index] == -1) {
+            shell_conc_ls_bc(func, d_func, bc->BC_Data_Int[0], bc->BC_Data_Float[0],
+                             bc->BC_Data_Float[1], (int)bc->BC_Name, time_value, delta_t, xi, exo);
+            surface_determinant_and_normal(
+                ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
+                (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
+          }
           break;
 
         case LUB_STATIC_BC:

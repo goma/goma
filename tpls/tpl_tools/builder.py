@@ -68,8 +68,6 @@ class Builder(object):
         sha256 = self._package.sha256
         filename = os.path.join(self._download_dir, self._package.filename)
         self.logger.log("Downloading file: {}".format(filename))
-        self.logger.log("Download url: {}".format(url))
-
         verify = not self.skip_ssl_verify
         success = utils.download_file(url, filename, sha256, verify)
         if success:

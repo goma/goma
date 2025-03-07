@@ -1335,12 +1335,14 @@ double conductivity(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time)
       k = ls_modulate_thermalconductivity(k, mp->mp2nd->thermalconductivity_phase[0],
                                           ls->Length_Scale,
                                           (double)mp->mp2nd->thermalconductivitymask[0],
-                                          (double)mp->mp2nd->thermalconductivitymask[1], d_k);
+                                          (double)mp->mp2nd->thermalconductivitymask[1], d_k,
+                                          mp->mp2nd->thermalconductivity_lsi_interp_method);
       ls = ls_old;
     }
     k = ls_modulate_thermalconductivity(k, mp->mp2nd->thermalconductivity, ls->Length_Scale,
                                         (double)mp->mp2nd->thermalconductivitymask[0],
-                                        (double)mp->mp2nd->thermalconductivitymask[1], d_k);
+                                        (double)mp->mp2nd->thermalconductivitymask[1], d_k,
+                                        mp->mp2nd->thermalconductivity_lsi_interp_method);
   }
 
   return (k);
@@ -1504,12 +1506,13 @@ double heat_capacity(HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, dbl time)
       ls = pfd->ls[0];
       Cp = ls_modulate_heatcapacity(Cp, mp->mp2nd->heatcapacity_phase[0], ls->Length_Scale,
                                     (double)mp->mp2nd->heatcapacitymask[0],
-                                    (double)mp->mp2nd->heatcapacitymask[1], d_Cp);
+                                    (double)mp->mp2nd->heatcapacitymask[1], d_Cp,
+                                    mp->mp2nd->heatcapacity_lsi_interp_method);
       ls = ls_old;
     }
-    Cp = ls_modulate_heatcapacity(Cp, mp->mp2nd->heatcapacity, ls->Length_Scale,
-                                  (double)mp->mp2nd->heatcapacitymask[0],
-                                  (double)mp->mp2nd->heatcapacitymask[1], d_Cp);
+    Cp = ls_modulate_heatcapacity(
+        Cp, mp->mp2nd->heatcapacity, ls->Length_Scale, (double)mp->mp2nd->heatcapacitymask[0],
+        (double)mp->mp2nd->heatcapacitymask[1], d_Cp, mp->mp2nd->heatcapacity_lsi_interp_method);
   }
 
   return (Cp);
@@ -1519,16 +1522,17 @@ double ls_modulate_thermalconductivity(double k1,
                                        double width,
                                        double pm_minus,
                                        double pm_plus,
-                                       CONDUCTIVITY_DEPENDENCE_STRUCT *d_k) {
+                                       CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
+                                       const int interp_method) {
   double factor;
   int i, a, w, var;
 
   if (d_k == NULL) {
-    k1 = ls_modulate_property(k1, k2, width, pm_minus, pm_plus, NULL, &factor);
+    k1 = ls_modulate_property(k1, k2, width, pm_minus, pm_plus, NULL, &factor, interp_method);
     return (k1);
   }
 
-  k1 = ls_modulate_property(k1, k2, width, pm_minus, pm_plus, d_k->F, &factor);
+  k1 = ls_modulate_property(k1, k2, width, pm_minus, pm_plus, d_k->F, &factor, interp_method);
 
   if (pd->v[pg->imtrx][var = TEMPERATURE]) {
     for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
@@ -1558,16 +1562,17 @@ double ls_modulate_heatcapacity(double Cp1,
                                 double width,
                                 double pm_minus,
                                 double pm_plus,
-                                HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp) {
+                                HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
+                                const int interp_method) {
   double factor;
   int i, a, w, var;
 
   if (d_Cp == NULL) {
-    Cp1 = ls_modulate_property(Cp1, Cp2, width, pm_minus, pm_plus, NULL, &factor);
+    Cp1 = ls_modulate_property(Cp1, Cp2, width, pm_minus, pm_plus, NULL, &factor, interp_method);
     return (Cp1);
   }
 
-  Cp1 = ls_modulate_property(Cp1, Cp2, width, pm_minus, pm_plus, d_Cp->F, &factor);
+  Cp1 = ls_modulate_property(Cp1, Cp2, width, pm_minus, pm_plus, d_Cp->F, &factor, interp_method);
 
   if (pd->v[pg->imtrx][var = TEMPERATURE]) {
     for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
@@ -2112,12 +2117,13 @@ double heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       ls = pfd->ls[0];
       ls_modulate_heatsource(&h, mp->mp2nd->heatsource_phase[0], ls->Length_Scale,
                              (double)mp->mp2nd->heatsourcemask[0],
-                             (double)mp->mp2nd->heatsourcemask[1], d_h);
+                             (double)mp->mp2nd->heatsourcemask[1], d_h,
+                             mp->mp2nd->heatsource_lsi_interp_method);
       ls = ls_old;
     }
-    ls_modulate_heatsource(&h, mp->mp2nd->heatsource, ls->Length_Scale,
-                           (double)mp->mp2nd->heatsourcemask[0],
-                           (double)mp->mp2nd->heatsourcemask[1], d_h);
+    ls_modulate_heatsource(
+        &h, mp->mp2nd->heatsource, ls->Length_Scale, (double)mp->mp2nd->heatsourcemask[0],
+        (double)mp->mp2nd->heatsourcemask[1], d_h, mp->mp2nd->heatsource_lsi_interp_method);
   }
 
   return (h);
@@ -2127,18 +2133,19 @@ int ls_modulate_heatsource(double *f,
                            double width,
                            double pm_minus,
                            double pm_plus,
-                           HEAT_SOURCE_DEPENDENCE_STRUCT *df) {
+                           HEAT_SOURCE_DEPENDENCE_STRUCT *df,
+                           const int interp_method) {
   int i, b, var;
   int dim = pd->Num_Dim;
   double factor;
   double f1 = *f;
 
   if (df == NULL) {
-    *f = ls_modulate_property(f1, f2, width, pm_minus, pm_plus, NULL, &factor);
+    *f = ls_modulate_property(f1, f2, width, pm_minus, pm_plus, NULL, &factor, interp_method);
 
     return (0);
   } else {
-    *f = ls_modulate_property(f1, f2, width, pm_minus, pm_plus, df->F, &factor);
+    *f = ls_modulate_property(f1, f2, width, pm_minus, pm_plus, df->F, &factor, interp_method);
 
     if (pd->v[pg->imtrx][var = TEMPERATURE]) {
       for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
@@ -2532,16 +2539,18 @@ double visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     }
   }
   if (ls != NULL) {
-    err = ls_modulate_viscosity(
-        &visc_cmb, visc_second, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-        (double)mp->mp2nd->viscositymask[1], d_visc_cmb, mp->mp2nd->ViscosityModel);
+    err = ls_modulate_viscosity(&visc_cmb, visc_second, ls->Length_Scale,
+                                (double)mp->mp2nd->viscositymask[0],
+                                (double)mp->mp2nd->viscositymask[1], d_visc_cmb,
+                                mp->mp2nd->ViscosityModel, mp->mp2nd->viscosity_lsi_interp_method);
     GOMA_EH(err, "ls_modulate_viscosity");
     /*  optionally set impedance to true value input on card	*/
     if (num_const == 4) {
       R_gas = param[3];
       R = ls_modulate_thermalconductivity(mp->acoustic_impedance, R_gas, ls->Length_Scale,
                                           (double)mp->mp2nd->acousticimpedancemask[0],
-                                          (double)mp->mp2nd->acousticimpedancemask[1], d_R);
+                                          (double)mp->mp2nd->acousticimpedancemask[1], d_R,
+                                          mp->mp2nd->acousticimpedance_lsi_interp_method);
     }
   }
 

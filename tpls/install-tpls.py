@@ -9,8 +9,7 @@ import argparse
 import pathlib
 
 
-# Currently we don't check dependencies so this needs to be in a specific order
-packages = [
+default_packages = [
     "cmake",
     "openmpi",
     "hdf5",
@@ -34,16 +33,13 @@ packages = [
     "trilinos",
     "petsc",
     "petsc_complex",
+    "sparse",
     "catch2",
 ]
 
-# This will probably go away in the future, don't think
-# anyone is using sparse anymore.
-if sys.platform != "darwin":
-    packages.append("sparse")
-
 
 if __name__ == "__main__":
+    packages = default_packages.copy()
     CC = os.environ.get("CC")
     CXX = os.environ.get("CXX")
     FC = os.environ.get("FC")
@@ -120,6 +116,13 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.set_defaults(skip_ssl_verify=False)
+    parser.add_argument(
+        "--write-dynamic-library-path",
+        help="Writes (DY)LD_LIBRARY_PATH to config, default is off",
+        dest="write_dynamic_library_path",
+        action="store_true",
+    )
+    parser.set_defaults(write_dynamic_library_path=False)
 
     for p in packages:
         pm = importlib.import_module("tpl_tools." + ".".join(["packages", p]))
@@ -198,7 +201,38 @@ if __name__ == "__main__":
         tpl_registry.set_environment_variable("FC", "gfortran")
         tpl_registry.set_environment_variable("F77", "gfortran")
 
-    for p in packages:
+    dependency_graph = {
+        p: pkg.dependencies
+        for p, pkg in [
+            (
+                p,
+                importlib.import_module(
+                    "tpl_tools." + ".".join(["packages", p])
+                ).Package(),
+            )
+            for p in packages
+        ]
+    }
+
+    if "openblas" in packages:
+        for p in dependency_graph.keys():
+            if "lapack" in dependency_graph[p]:
+                dependency_graph[p].remove("lapack")
+                dependency_graph[p].append("openblas")
+
+    if not args.enable_parmetis:
+        for p in dependency_graph.keys():
+            for n in ["parmetis", "superlu_dist"]:
+                if n in dependency_graph[p]:
+                    dependency_graph[p].remove(n)
+
+    logger.log("Dependency graph: {}".format(dependency_graph))
+
+    install_order = utils.topological_sort(dependency_graph)[::-1]
+
+    logger.log("Install order: {}".format(install_order))
+
+    for p in install_order:
         pm = importlib.import_module("tpl_tools." + ".".join(["packages", p]))
         pc = pm.Package()
         if getattr(args, pc.name.replace("-", "_") + "_dir"):
@@ -257,7 +291,9 @@ if __name__ == "__main__":
                 )
                 exit(1)
             build.register()
-    tpl_registry.config.write_config(os.path.join(install_dir, "config.sh"))
+    tpl_registry.config.write_config(
+        os.path.join(install_dir, "config.sh"), "bash", args.write_dynamic_library_path
+    )
     logger.log(
         "Bash config written to {}, source with bash".format(
             os.path.join(install_dir, "config.sh")
@@ -265,7 +301,9 @@ if __name__ == "__main__":
     )
 
     tpl_registry.config.write_config(
-        os.path.join(install_dir, "config.fish"), shell="fish"
+        os.path.join(install_dir, "config.fish"),
+        "fish",
+        args.write_dynamic_library_path,
     )
     logger.log(
         "Fish config written to {}, source with fish".format(

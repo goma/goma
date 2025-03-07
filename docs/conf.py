@@ -83,7 +83,7 @@ language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ['_build', '.venv']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -231,7 +231,7 @@ latex_elements = {
 # Additional stuff for the LaTeX preamble.
 "babel": "",
 'preamble': """
-\setcounter{tocdepth}{3}
+\\setcounter{tocdepth}{3}
 """,
 
 # Latex figure (float) alignment

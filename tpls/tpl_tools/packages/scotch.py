@@ -19,14 +19,7 @@ class Package(packages.CMakePackage):
         self.executables = []
         self.libraries = ["scotch", "ptscotch"]
         self.includes = []
-
-    def setDependencies(self, builder):
-        builder.set_dependency("packages.openmpi")
-        builder.set_dependency("packages.hdf5")
-        builder.set_dependency("packages.pnetcdf")
-        builder.set_dependency("packages.netcdf")
-        builder.set_dependency("packages.fmt")
-        return
+        self.dependencies = ["openmpi", "cmake", "flex", "bison"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -60,4 +53,6 @@ class Package(packages.CMakePackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("SCOTCH_DIR", builder.install_dir())
-        registry.append_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

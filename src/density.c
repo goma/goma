@@ -817,13 +817,14 @@ double density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
           ls = pfd->ls[0];
           rho = ls_modulate_property(rho, mp->mp2nd->density_phase[0], ls->Length_Scale,
                                      (double)mp->mp2nd->densitymask[0],
-                                     (double)mp->mp2nd->densitymask[1], NULL, &factor);
+                                     (double)mp->mp2nd->densitymask[1], NULL, &factor,
+                                     mp->mp2nd->density_lsi_interp_method);
           ls = ls_old;
         }
       }
-      rho = ls_modulate_property(rho, mp->mp2nd->density, ls->Length_Scale,
-                                 (double)mp->mp2nd->densitymask[0],
-                                 (double)mp->mp2nd->densitymask[1], NULL, &factor);
+      rho = ls_modulate_property(
+          rho, mp->mp2nd->density, ls->Length_Scale, (double)mp->mp2nd->densitymask[0],
+          (double)mp->mp2nd->densitymask[1], NULL, &factor, mp->mp2nd->density_lsi_interp_method);
     } else {
       /* kludge for solidification tracking with phase function 0 */
       if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
@@ -831,12 +832,14 @@ double density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
         ls = pfd->ls[0];
         rho = ls_modulate_property(rho, mp->mp2nd->density_phase[0], ls->Length_Scale,
                                    (double)mp->mp2nd->densitymask[0],
-                                   (double)mp->mp2nd->densitymask[1], d_rho->F, &factor);
+                                   (double)mp->mp2nd->densitymask[1], d_rho->F, &factor,
+                                   mp->mp2nd->density_lsi_interp_method);
         ls = ls_old;
       }
-      rho = ls_modulate_property(rho, mp->mp2nd->density, ls->Length_Scale,
-                                 (double)mp->mp2nd->densitymask[0],
-                                 (double)mp->mp2nd->densitymask[1], d_rho->F, &factor);
+      rho =
+          ls_modulate_property(rho, mp->mp2nd->density, ls->Length_Scale,
+                               (double)mp->mp2nd->densitymask[0], (double)mp->mp2nd->densitymask[1],
+                               d_rho->F, &factor, mp->mp2nd->density_lsi_interp_method);
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         for (w = 0; w < pd->Num_Species_Eqn; w++) {
           for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
