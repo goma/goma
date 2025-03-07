@@ -388,7 +388,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
   double *delta_x; /* update */
 
-  int error, why;
+  int error;
   int num_unk_r, num_unk_x;
 
   char dofname_r[80];
@@ -490,11 +490,13 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
   double param_val;
   int sens_vec_ct;
   char sens_caller[40]; /* string containing caller of soln_sens */
-
-  int linear_solver_blk;               /* count calls to AZ_solve() */
-  int total_ls_its = 0;                /* linear solver iteration counter */
-  int num_linear_solve_blks;           /* one pass for now */
-  int matrix_solved;                   /* boolean */
+#ifdef GOMA_ENABLE_AZTEC
+  int total_ls_its = 0; /* linear solver iteration counter */
+  , int why;
+  int linear_solver_blk;     /* count calls to AZ_solve() */
+  int num_linear_solve_blks; /* one pass for now */
+  int matrix_solved;         /* boolean */
+#endif
   dbl gamma, beta;                     /* copies of Newmark-beta time integration
                                           parameters */
   int alc_with_acs = FALSE;            /* Flag to handle arc length eqn as an AC   */
@@ -1488,7 +1490,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         int its;
         petsc_solve(ams, delta_x, resid_vector, &its);
         exchange_dof(cx, dpi, delta_x, pg->imtrx);
-        matrix_solved = 1;
         char itsstring[10];
         itsstring[9] = '\0';
         snprintf(itsstring, 9, "%d", its);
@@ -1681,7 +1682,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             int its;
             petsc_solve_complex(ams, delta_x, resid_vector, &its);
             exchange_dof(cx, dpi, delta_x, pg->imtrx);
-            matrix_solved = 1;
             char itsstring[10];
             itsstring[9] = '\0';
             snprintf(itsstring, 9, "%d", its);
@@ -1698,7 +1698,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             int its;
             petsc_solve(ams, &wAC[iAC][0], &bAC[iAC][0], &its);
             exchange_dof(cx, dpi, &wAC[iAC][0], pg->imtrx);
-            matrix_solved = 1;
             char itsstring[10];
             itsstring[9] = '\0';
             snprintf(itsstring, 9, "%d", its);
@@ -2865,8 +2864,10 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       break;
     }
 
+#ifdef GOMA_ENABLE_AZTEC
     if (Linear_Solver == AZTEC)
       total_ls_its += err;
+#endif
 
   } /* if (Continuation > 0) */
 
@@ -3395,10 +3396,12 @@ static int soln_sens(double lambda,  /*  parameter */
   dbl a_end;   /* mark end of assembly */
   int err;
 
+#ifdef GOMA_ENABLE_AZTEC
   int linear_solver_blk;     /* count calls to AZ_solve() */
   int num_linear_solve_blks; /* one pass for now */
   int matrix_solved;         /* boolean */
-  char stringer[80];         /* holding format of num linear solve itns */
+#endif
+  char stringer[80]; /* holding format of num linear solve itns */
 
   double h_elem_avg = *ptr_h_elem_avg;
   double U_norm = *ptr_U_norm;

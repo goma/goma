@@ -1484,15 +1484,17 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
   static int Factor_Flag; /* For UMFPACK */
   int matr_form;          /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */
   int error = 0;
-  int why = 0;
   char stringer[80]; /* holding format of num linear solve itns */
   dbl s_start;       /* mark start of solve */
   dbl s_end;         /* mark end of solve */
 
+#ifdef GOMA_ENABLE_AZTEC
+  int why = 0;
   int linear_solver_blk;     /* count calls to AZ_solve() */
   int linear_solver_itns;    /* count cumulative linearsolver iterations */
   int num_linear_solve_blks; /* one pass for now */
   int matrix_solved;         /* boolean */
+#endif
 
   /* Additional values for frontal solver */
 
@@ -2302,18 +2304,20 @@ void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double to
   struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   static int first_linear_solver_call = TRUE;
   static int stab_umf_id = -1;
-  double *a;                 /* nonzero values of a CMSR matrix */
-  int *ija = ams->bindx;     /* column pointer array into matrix "a" */
-  static int Factor_Flag;    /* For UMFPACK */
-  int matr_form;             /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */
+  double *a;              /* nonzero values of a CMSR matrix */
+  int *ija = ams->bindx;  /* column pointer array into matrix "a" */
+  static int Factor_Flag; /* For UMFPACK */
+  int matr_form;          /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */
+  char stringer[80];      /* holding format of num linear solve itns */
+#ifdef GOMA_ENABLE_AZTEC
   dbl lits;                  /* number of linear solver iterations taken */
-  char stringer[80];         /* holding format of num linear solve itns */
   int linear_solver_blk;     /* count calls to AZ_solve() */
   int linear_solver_itns;    /* count cumulative linearsolver iterations */
   int num_linear_solve_blks; /* one pass for now */
   int matrix_solved = 0;     /* boolean */
   int tmp_scale, tmp_conv;
   dbl tmp_tol;
+#endif
   dbl *tmp_a;
 
   /* Allocate a separate system for stability if using UMFPACK */

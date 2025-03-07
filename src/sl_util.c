@@ -116,10 +116,12 @@ void sl_init(unsigned int option_mask, /* option flag */
              Dpi *dpi,
              Comm_Ex cx[]) {
   /* LOCAL VARIABLES */
+#ifdef GOMA_ENABLE_AZTEC
   int i;
   int err;
   int length;
   int p; /* processor index */
+#endif
   int Do_Jacobian;
   struct GomaLinearSolverData *A;
   int imtrx = pg->imtrx;
@@ -389,9 +391,11 @@ void free_ams(struct GomaLinearSolverData *a) {
 
 void set_aztec_options_params(int options[], double params[]) {
   /* LOCAL VARIABLES */
+#ifdef GOMA_ENABLE_AZTEC
   int i;
   int iread;
   double f;
+#endif
   /*
    * Set options & parameters for AZTEC linear solver package based upon
    * directions given in input deck and saved in various variables.

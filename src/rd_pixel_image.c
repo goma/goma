@@ -342,9 +342,9 @@ int rd_image_to_mesh(int N_ext, Exo_DB *exo) {
 
   /*** Step 2, 3: transport bf_mat, i_map, and j_map to trilinos and  Solve the least squares system
    * ************/
+#ifdef GOMA_ENABLE_AMESOS
   int num_blk_nodes = exo->eb_num_nodes_per_elem[ipix_blkid] * exo->eb_num_elems[ipix_blkid];
 
-#ifdef GOMA_ENABLE_AMESOS
   trilinos_solve_ls(bf_mat, j_map, f_rhs, x_fit, Atranspose_f_rhs, txt_num_pts,
                     exo->eb_num_nodes_per_elem[ipix_blkid], num_blk_nodes, 1);
 #else
