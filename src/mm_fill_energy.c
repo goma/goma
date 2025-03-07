@@ -14,7 +14,9 @@
 
 #include "mm_fill_energy.h"
 #include "ac_particles.h"
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "bc_colloc.h"
 #include "bc_contact.h"
 #include "density.h"
