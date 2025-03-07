@@ -492,7 +492,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
   char sens_caller[40]; /* string containing caller of soln_sens */
 #ifdef GOMA_ENABLE_AZTEC
   int total_ls_its = 0; /* linear solver iteration counter */
-  , int why;
+  int why;
   int linear_solver_blk;     /* count calls to AZ_solve() */
   int num_linear_solve_blks; /* one pass for now */
   int matrix_solved;         /* boolean */
