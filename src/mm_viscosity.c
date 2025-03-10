@@ -860,7 +860,7 @@ double herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
   mu0 = gn_local->mu0;
   nexp = gn_local->nexp;
   tau_y = gn_local->tau_y;
-  offset = 0.00001;
+  offset = gn_local->epsilon;
 
   val = pow(gammadot + offset, nexp - 1.);
   mu = mu0 * val;
@@ -954,15 +954,16 @@ double herschel_buckley_papanastasiou_viscosity(struct Generalized_Newtonian *gn
 
   val = pow(gammadot, nexp - 1.);
   mu = mu0 * val;
-  mu += (1 - exp(-fexp * gammadot)) * tau_y / (fmax(1e-16,gammadot));
+  mu += (1 - exp(-fexp * gammadot)) * tau_y / (fmax(1e-16, gammadot));
 
   /*
    * d( mu )/dmesh
    */
 
   if (d_mu != NULL) {
-      d_mu->gd = mu0 * (nexp - 1.0) * pow(gammadot, nexp - 2.0);
-      d_mu->gd += tau_y * ( fexp * exp(-fexp * gammadot) / gammadot - (1 - exp(-fexp * gammadot)) / pow(gammadot, 2.0)); 
+    d_mu->gd = mu0 * (nexp - 1.0) * pow(gammadot, nexp - 2.0);
+    d_mu->gd += tau_y * (fexp * exp(-fexp * gammadot) / gammadot -
+                         (1 - exp(-fexp * gammadot)) / pow(gammadot, 2.0));
   }
 
   /*   *d_mu_dgd -= tau_y/pow(gammadot+offset, 2.0); Disabling the sensitivities on this term

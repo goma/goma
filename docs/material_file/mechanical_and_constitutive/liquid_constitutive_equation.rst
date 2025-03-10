@@ -260,6 +260,9 @@ HERSCHEL_BULKLEY
     .. figure:: /figures/390_goma_physics.png                                                      
        :align: center                                                                              
        :width: 90%                                                                                 
+    .. math::
+
+       \mu_0 \dot{\gamma + \epsilon} + \frac{tau_y}{\dot{\gamma + \epsilon}}
                                                                                                    
     The nature of this relation is best seen by multiplying the entire relation by the shear rate  
     to produce a relation between shear stress and shear rate. In this manner it can be seen that  
@@ -277,6 +280,9 @@ HERSCHEL_BULKLEY
     the iteration scheme no longer uses an exact Jacobian. The difference is seen in that this     
     model will take relatively more iterations to converge to an answer. The user should expect    
     this and not be too troubled (it’s alright to be troubled a little).                           
+    
+    The parameter :math:`\epsilon` is a small number to avoid division by zero and acts as a 
+    regularization. It is set to 1e-5 by default.
 
 HERSCHEL_BULKLEY_PAPANASTASIOU
     This is a variant on the power law model that includes a yield stress. It
@@ -287,7 +293,7 @@ HERSCHEL_BULKLEY_PAPANASTASIOU
                                                                                                    
     .. math::
       
-      \mu_0 \dot{\gamma} + (1-exp(-f \dot{\gamma})) \frac{tau_y}{\dot{\gamma}}
+       \mu_0 \dot{\gamma} + (1-exp(-f \dot{\gamma})) \frac{tau_y}{\dot{\gamma}}
                                                                                                    
     The nature of this relation is best seen by multiplying the entire relation by the shear rate  
     to produce a relation between shear stress and shear rate. In this manner it can be seen that  
@@ -686,18 +692,11 @@ The following card gives an example of the **HERSCHEL_BULKLEY** model
 ::
 
    Liquid Constitutive Equation = HERSCHEL_BULKLEY
-
-::
-
    Low Rate Viscosity = CONSTANT 0.337
-
-::
-
    Power Law Exponent = CONSTANT 0.817
-
-::
-
    Yield Stress = CONSTANT 1.39
+   # Epsilon Regularization is optional and 1e-5 by default
+   Epsilon Regularization = CONSTANT 1e-6
 
 The following card gives an example of the **HERSCHEL_BULKLEY_PAPANASTASIOU** model
 
