@@ -55,7 +55,7 @@
  *     viscosity()
  *      (then submodels for viscosity called by viscosity:)
  *        power_law_viscosity()
- *        herschel_buckley_viscosity()
+ *        herschel_bulkley_viscosity()
  *        carreau_viscosity()
  *        bingham_viscosity()
  *        bingham_wlf_viscosity()
@@ -644,9 +644,9 @@ double viscosity(struct Generalized_Newtonian *gn_local,
   } else if (gn_local->ConstitutiveEquation == POWERLAW_SUSPENSION) {
     mu = powerlaw_suspension_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == HERSCHEL_BULKLEY) {
-    mu = herschel_buckley_viscosity(gn_local, gamma_dot, d_mu);
+    mu = herschel_bulkley_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU) {
-    mu = herschel_buckley_papanastasiou_viscosity(gn_local, gamma_dot, d_mu);
+    mu = herschel_bulkley_papanastasiou_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
              gn_local->ConstitutiveEquation == CARREAU_WLF_CONC_EXP) {
     mu = carreau_wlf_conc_viscosity(gn_local, gamma_dot, d_mu, gn_local->ConstitutiveEquation);
@@ -824,7 +824,7 @@ double power_law_viscosity(struct Generalized_Newtonian *gn_local,
   return (mu);
 }
 
-double herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
+double herschel_bulkley_viscosity(struct Generalized_Newtonian *gn_local,
                                   dbl gamma_dot[DIM][DIM], /* strain rate tensor */
                                   VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
   int a, b;
@@ -914,7 +914,7 @@ double herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
   return (mu);
 }
 
-double herschel_buckley_papanastasiou_viscosity(struct Generalized_Newtonian *gn_local,
+double herschel_bulkley_papanastasiou_viscosity(struct Generalized_Newtonian *gn_local,
                                                 dbl gamma_dot[DIM][DIM], /* strain rate tensor */
                                                 VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
   int a, b;

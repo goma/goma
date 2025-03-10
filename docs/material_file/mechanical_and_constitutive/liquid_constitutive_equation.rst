@@ -257,12 +257,9 @@ HERSCHEL_BULKLEY
     values to operate: a reference viscosity value, μ0, a power-law exponent, n. and a yield shear 
     stress value, :math:`τ_y`. The model for this constitutive relations is as follows:            
                                                                                                    
-    .. figure:: /figures/390_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 90%                                                                                 
     .. math::
 
-       \mu_0 \dot{\gamma + \epsilon} + \frac{tau_y}{\dot{\gamma + \epsilon}}
+       \mu = \mu_0 (\dot{\gamma} + \epsilon)^{n-1} + \frac{\tau_y}{(\dot{\gamma} + \epsilon)}
                                                                                                    
     The nature of this relation is best seen by multiplying the entire relation by the shear rate  
     to produce a relation between shear stress and shear rate. In this manner it can be seen that  
@@ -293,7 +290,7 @@ HERSCHEL_BULKLEY_PAPANASTASIOU
                                                                                                    
     .. math::
       
-       \mu_0 \dot{\gamma} + (1-exp(-f \dot{\gamma})) \frac{tau_y}{\dot{\gamma}}
+       \mu = \mu_0 \dot{\gamma}^{n-1} + (1-exp(-f \dot{\gamma})) \frac{\tau_y}{\dot{\gamma}}
                                                                                                    
     The nature of this relation is best seen by multiplying the entire relation by the shear rate  
     to produce a relation between shear stress and shear rate. In this manner it can be seen that  
