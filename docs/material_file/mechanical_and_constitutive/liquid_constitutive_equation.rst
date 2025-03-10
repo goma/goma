@@ -278,6 +278,37 @@ HERSCHEL_BULKLEY
     model will take relatively more iterations to converge to an answer. The user should expect    
     this and not be too troubled (it’s alright to be troubled a little).                           
 
+HERSCHEL_BULKLEY_PAPANASTASIOU
+    This is a variant on the power law model that includes a yield stress. It
+    requires three input values to operate: a reference viscosity value, μ0, a
+    power-law exponent, n., a yield regularization exponent :math:`f` and a
+    yield shear stress value, :math:`τ_y`. The model for this constitutive
+    relations is as follows:            
+                                                                                                   
+    .. math::
+      
+      \mu_0 \dot{\gamma} + (1-exp(-f \dot{\gamma})) \frac{tau_y}{\dot{\gamma}}
+                                                                                                   
+    The nature of this relation is best seen by multiplying the entire relation by the shear rate  
+    to produce a relation between shear stress and shear rate. In this manner it can be seen that  
+    the shear stress does not go to zero for zero shear rate. Instead it approaches the yield shear
+    stress value. Put another way, only for imposed shear stresses greater than the yield stress   
+    will the fluid exhibit a nonzero shear rate. This is effective yielding behavior.              
+                                                                                                   
+    A caveat needs stating at this point. This model is essentially a superposition of two         
+    power-law models. One with the supplied exponent and the other with an implicit exponent of    
+    n = 0. It has long been observed that power-law models with exponents approaching zero         
+    exhibit very poor convergence properties. The Herschel_Bulkley model is no exception. To       
+    alleviate these convergence problems somewhat, the sensitivities of the yield stress term with 
+    respect to shear rate has not been included in the Jacobian entries for this viscosity model.  
+    This helps in that it allows for convergence at most yield stress values, but also means that  
+    the iteration scheme no longer uses an exact Jacobian. The difference is seen in that this     
+    model will take relatively more iterations to converge to an answer. The user should expect    
+    this and not be too troubled (it’s alright to be troubled a little).                           
+   
+    The Papanastasiou regularization alleviates some of the difficulties when :math:`\dot{\gamma}`
+    becomes small.
+
 TURBULENT_SA     
     Spalart Allmaras turbulence model. This model is a one-equation model.
     The viscosity term is the kinematic viscosity, thus density should be 1.
@@ -667,6 +698,17 @@ The following card gives an example of the **HERSCHEL_BULKLEY** model
 ::
 
    Yield Stress = CONSTANT 1.39
+
+The following card gives an example of the **HERSCHEL_BULKLEY_PAPANASTASIOU** model
+
+::
+
+   Liquid Constitutive Equation = HERSCHEL_BULKLEY_PAPANASTASIOU
+   Low Rate Viscosity           = CONSTANT 0.337
+   Power Law Exponent           = CONSTANT 0.817
+   Yield Stress                 = CONSTANT 1.39
+   Yield Exponent               = CONSTANT 100
+
 
 --------------------
 Technical Discussion
