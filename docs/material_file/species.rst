@@ -16,6 +16,7 @@ parameter analyses, and properties for charged species.
    species_properties/number_of_species
    species_properties/diffusion_constitutive_equation
    species_properties/species_weight_function
+   species_properties/species_shock_capturing
    species_properties/number_of_chemical_reactions
    species_properties/reaction_rate
    species_properties/thermodynamic_potential

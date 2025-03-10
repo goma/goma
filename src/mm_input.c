@@ -6564,9 +6564,10 @@ void rd_solver_specs(FILE *ifp, char *input) {
   char ls_type[MAX_CHAR_IN_INPUT] = "FULL_STEP";
   ;
   Newton_Line_Search_Type = NLS_FULL_STEP;
-  int lsread = look_for_optional_string(ifp, "Newton line search type", ls_type, MAX_CHAR_IN_INPUT);
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
+  int lsread = look_for_optional_string(ifp, "Newton line search type", ls_type, MAX_CHAR_IN_INPUT);
   if (lsread >= 1) {
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
     if (strcmp("FULL_STEP", ls_type) == 0) {
       Newton_Line_Search_Type = NLS_FULL_STEP;
     } else if (strcmp("BACKTRACK", ls_type) == 0) {
@@ -6575,8 +6576,21 @@ void rd_solver_specs(FILE *ifp, char *input) {
       GOMA_EH(GOMA_ERROR, "Unknown Newton line search type: %s", ls_type);
     }
   }
-  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
   ECHO(echo_string, echo_file);
+
+  Line_Search_Minimum_Damping = 0.005;
+  lsread = look_for_optional_string(ifp, "Line search minimum damping", ls_type, MAX_CHAR_IN_INPUT);
+  if (lsread >= 1) {
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Line search minimum damping", ls_type);
+    if (sscanf(ls_type, "%lf", &Line_Search_Minimum_Damping) != 1) {
+      GOMA_EH(GOMA_ERROR, "Unknown Line search minimum damping: %s", ls_type);
+    }
+    ECHO(echo_string, echo_file);
+  } else {
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %lf", "Line search minimum damping",
+             Line_Search_Minimum_Damping);
+    ECHO(echo_string, echo_file);
+  }
 
   look_for(ifp, "Newton correction factor", input, '=');
   if (fscanf(ifp, "%le", &damp_factor1) != 1) {

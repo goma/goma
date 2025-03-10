@@ -50,6 +50,7 @@
 #include "mm_mp_structs.h"
 #include "mm_qtensor_model.h"
 #include "mm_species.h"
+#include "models/fluidity.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
@@ -402,6 +403,45 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
       calc_pspg(pspg, &d_pspg, time, tt, dt, pg_data);
     }
 
+    dbl yzbeta = 0;
+    int shock_capture = mp->SpYZbeta_funcModel == YZBETA_MIXED;
+
+    if (shock_capture) {
+      if (pd->TimeIntegration == STEADY) {
+        GOMA_EH(GOMA_ERROR, "Species Shock capture only implemented for transient models");
+      }
+
+      dbl strong_residual = 0;
+      strong_residual = fv_dot_old->c[w];
+      for (int p = 0; p < VIM; p++) {
+        strong_residual += fv_old->v[p] * fv_old->grad_c[w][p];
+      }
+      dbl h_elem = 0;
+      for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+        h_elem += pg_data->hsquared[a];
+      }
+      /* This is the size of the element */
+      h_elem = sqrt(h_elem / ((double)ei[pg->imtrx]->ielem_dim));
+
+      dbl inner = 0;
+      dbl Yinv = 1.0 / 0.1;
+      for (int i = 0; i < dim; i++) {
+        inner += Yinv * fv_old->grad_c[w][i] * fv_old->grad_c[w][i];
+      }
+
+      dbl dc2 = fabs(Yinv * strong_residual) * h_elem * h_elem * 0.25;
+      dbl dc1 = dc2;
+      if (0 && ls != NULL && fabs(fv->F) < (ls->Length_Scale * 0.5)) {
+        dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+        dc1 = fabs(Yinv * strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+      }
+      dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+      dc1 = fabs(Yinv * strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+      // dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
+      // yzbeta = fmin(supg_tau, 0.5*(dc1+dc2));//0.5*(dc1 + dc2);
+      yzbeta = 0.5 * (dc1 + dc2) * mp->SpYZbeta_func;
+    }
+
     /*
      * Residuals_________________________________________________________________
      */
@@ -589,6 +629,15 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
             diffusion *= h3 * det_J * wt;
             diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
           }
+          dbl sc_val = 0;
+          if (shock_capture) {
+            for (p = 0; p < VIM; p++) {
+              sc_val += yzbeta * bf[eqn]->grad_phi[i][p] * fv->grad_c[w][i];
+            }
+
+            sc_val *= h3 * det_J * wt;
+            sc_val *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+          }
           /*
            * HKM -> Note the addition of a species molecular weight
            *        term is currently done in the source term
@@ -620,7 +669,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
            *  in the local element residual vector.
            */
           lec->R[LEC_R_INDEX((MAX_PROB_VAR + w), ii)] +=
-              Heaviside * (mass + advection) + diffusion + source;
+              Heaviside * (mass + advection) + diffusion + sc_val + source;
 
         } /* if active_dofs */
 
@@ -846,6 +895,16 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                   diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                 }
 
+                dbl sc_val = 0;
+                if (shock_capture) {
+                  for (p = 0; p < VIM; p++) {
+                    sc_val += yzbeta * bf[eqn]->grad_phi[i][p] * bf[var]->grad_phi[j][p];
+                  }
+
+                  sc_val *= h3 * det_J * wt;
+                  sc_val *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                }
+
                 source = 0.;
                 if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                   source += s_terms.d_MassSource_dc[w][w1][j];
@@ -872,7 +931,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                 }
 
                 lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), (MAX_PROB_VAR + w1), ii, j)] +=
-                    Heaviside * (mass + advection) + diffusion + source;
+                    Heaviside * (mass + advection) + diffusion + sc_val + source;
               }
             }
           }
@@ -1233,6 +1292,16 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
                   diffusion *= pd->etm[pg->imtrx][eqn][LOG2_DIFFUSION];
                 }
+                dbl sc_val = 0;
+                if (shock_capture) {
+                  for (p = 0; p < VIM; p++) {
+                    sc_val += yzbeta * bf[eqn]->grad_phi[i][p] * fv->d_grad_c_dmesh[w][i][b][j];
+                    sc_val += yzbeta * bf[eqn]->d_grad_phi_dmesh[i][p][b][j] * fv->grad_c[w][i];
+                  }
+
+                  sc_val *= h3 * det_J * wt;
+                  sc_val *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                }
 
                 source = 0.;
                 if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
@@ -1268,7 +1337,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                 }
 
                 lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] +=
-                    Heaviside * (mass + advection) + diffusion + source;
+                    Heaviside * (mass + advection) + diffusion + sc_val + source;
               }
             }
           }
@@ -9974,6 +10043,8 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
           }
         }
+      } else if (mp->SpeciesSourceModel[w] == FLUIDITY_THIXOTROPIC) {
+        fluidity_source(w, st, mp->u_species_source[w]);
       } else if (mp->SpeciesSourceModel[w] == BUTLER_VOLMER) /* added by KSC: 05/15/06 */
       {
         dbl dh[3], p[10];

@@ -1498,6 +1498,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ConstitutiveEquation = BOND;
   } else if (!strcmp(model_name, "BOND_SH")) {
     ConstitutiveEquation = BOND_SH;
+  } else if (!strcmp(model_name, "FLUIDITY")) {
+    ConstitutiveEquation = FLUIDITY_THIXOTROPIC_VISCOSITY;
   } else if (!strcmp(model_name, "CARREAU_WLF_CONC_PL")) {
     ConstitutiveEquation = CARREAU_WLF_CONC_PL;
   } else if (!strcmp(model_name, "CARREAU_WLF_CONC_EXP")) {
@@ -1997,7 +1999,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
   }
 
-  if (ConstitutiveEquation == BOND_SH) {
+  if (ConstitutiveEquation == BOND_SH || ConstitutiveEquation == FLUIDITY_THIXOTROPIC_VISCOSITY) {
 
     iread = look_for_optional(imp, "Suspension Species Number", input, '=');
     if (fscanf(imp, "%d", &species_no) != 1) {
@@ -6697,34 +6699,18 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                  &NO_SPECIES, es);
   ECHO(es, echo_file);
 
-  model_read = look_for_mat_prop(imp, "Species YZbeta Function", &(mat_ptr->SpYZbeta_funcModel),
+  model_read = look_for_mat_prop(imp, "Species Shock Capturing", &(mat_ptr->SpYZbeta_funcModel),
                                  &(mat_ptr->SpYZbeta_func), NO_USER, NULL, model_name, SCALAR_INPUT,
                                  &NO_SPECIES, es);
-  if (!strcmp(model_name, "ONE")) {
-    mat_ptr->SpYZbeta_funcModel = YZBETA_ONE;
-    if (fscanf(imp, "%lg", &(mat_ptr->SpYZbeta_func)) != 1) {
-      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_ONE");
-    }
-  } else if (!strcmp(model_name, "TWO")) {
-    mat_ptr->SpYZbeta_funcModel = YZBETA_TWO;
-    if (fscanf(imp, "%lg", &(mat_ptr->SpYZbeta_func)) != 1) {
-      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_TWO");
-    }
-  } else if (!strcmp(model_name, "MIXED")) {
+  if (!strcmp(model_name, "MIXED")) {
     mat_ptr->SpYZbeta_funcModel = YZBETA_MIXED;
     if (fscanf(imp, "%lg", &(mat_ptr->SpYZbeta_func)) != 1) {
-      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_MIXED");
-    }
-  } else if (!strcmp(model_name, "CUSTOM")) {
-    mat_ptr->SpYZbeta_funcModel = YZBETA_CUSTOM;
-    if (fscanf(imp, "%lg %lg", &(mat_ptr->SpYZbeta_func), &(mat_ptr->SpYZbeta_value)) != 2) {
-      GOMA_EH(GOMA_ERROR,
-              "Could not read Scale and beta value for Species YZbeta Function YZBETA_CUSTOM");
+      GOMA_EH(GOMA_ERROR, "Could not read Scale for Species Species Shock Capturing YZBETA_MIXED");
     }
   } else {
     mat_ptr->SpYZbeta_funcModel = SC_NONE;
     mat_ptr->SpYZbeta_func = 0.;
-    SPF(es, "\t(%s = %s)", "Species YZbeta Function", "NONE");
+    SPF(es, "\t(%s = %s)", "Species Species Shock Capturing", "NONE");
   }
   ECHO(es, echo_file);
 
@@ -8783,6 +8769,31 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->u_species_source[species_no][2] = a2; /* n0 for breakup eqn */
       mat_ptr->u_species_source[species_no][3] = a3; /* exponent for breakup eqn */
       mat_ptr->u_species_source[species_no][4] = a4; /* exponent for aggregation eqn */
+
+      SPF_DBL_VEC(endofstring(es), 5, mat_ptr->u_species_source[species_no]);
+    } else if (!strcmp(model_name, "FLUIDITY")) {
+      SpeciesSourceModel = FLUIDITY_THIXOTROPIC;
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      if (fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7) !=
+          8) {
+        sr = sprintf(err_msg, "Matl %s needs  8 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Species Source", "FLUIDITY");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+
+      mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 8, sizeof(dbl));
+
+      mat_ptr->len_u_species_source[species_no] = 8;
+
+      mat_ptr->u_species_source[species_no][0] = a0; /* phi_0 */
+      mat_ptr->u_species_source[species_no][1] = a1; /* phi_inf */
+      mat_ptr->u_species_source[species_no][2] = a2; /* K */
+      mat_ptr->u_species_source[species_no][3] = a3; /* n */
+      mat_ptr->u_species_source[species_no][4] = a4; /* tc */
+      mat_ptr->u_species_source[species_no][5] = a5; /* sigma_y */
+      mat_ptr->u_species_source[species_no][6] = a6; /* m */
+      mat_ptr->u_species_source[species_no][7] = a7; /* m_y */
 
       SPF_DBL_VEC(endofstring(es), 5, mat_ptr->u_species_source[species_no]);
     } else if (!strcmp(model_name, "FOAM_EPOXY")) {
