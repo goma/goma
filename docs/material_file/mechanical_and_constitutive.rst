@@ -36,6 +36,8 @@ momentum conservation equations.
    mechanical_and_constitutive/thermal_wlf_constant2
    mechanical_and_constitutive/yield_stress
    mechanical_and_constitutive/yield_exponent
+   mechanical_and_constitutive/regularization_model
+   mechanical_and_constitutive/epsilon_regularization
    mechanical_and_constitutive/suspension_maximum_packing
    mechanical_and_constitutive/suspension_species_number
    mechanical_and_constitutive/cure_gel_point
