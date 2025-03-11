@@ -3059,7 +3059,7 @@ double bond_viscosity(struct Generalized_Newtonian *gn_local,
  *                      mu0       = reference  viscosity when x is zero
  *                      Aexp      = exponent for bond dependence of viscosity
  *                      c(bond_species_no) = concentration tracking structure-factor with a source
- ** term using shear-rate invariant variable
+ *                                           term using shear-rate invariant variable
  *
  *     Function sets the viscosity members of mp.
  *

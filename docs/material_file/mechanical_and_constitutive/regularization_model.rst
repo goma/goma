@@ -43,7 +43,7 @@ PAPANASTASIOU_EPSILON
 
     .. math::
       
-       \mu = \mu_0 \dot{\gamma + \epsilon}^{n-1} + (1-exp(-f \dot{\gamma})) \frac{\tau_y}{\dot{\gamma}}
+       \mu = \mu_0 (\dot{\gamma}+ \epsilon)^{n-1} + (1-exp(-f \dot{\gamma})) \frac{\tau_y}{\dot{\gamma}}
 
 
 
@@ -59,8 +59,18 @@ with an epsilon on the power law term
 
    Liquid Constitutive Equation = HERSCHEL_BULKLEY
    ...
+   Yield Exponent               = CONSTANT 200
    Regularization Model         = PAPANASTASIOU_EPSILON
    Epsilon Regularization       = CONSTANT 1e-12
+
+Without the epsilon term
+
+::
+
+   Liquid Constitutive Equation = HERSCHEL_BULKLEY
+   ...
+   Yield Exponent               = CONSTANT 200
+   Regularization Model         = PAPANASTASIOU
 
 Similarly applying only to the Yield term for epsilon regularization
 
@@ -69,6 +79,16 @@ Similarly applying only to the Yield term for epsilon regularization
    Liquid Constitutive Equation = HERSCHEL_BULKLEY
    ...
    Regularization Model         = EPSILON_YIELD_ONLY
+   Epsilon Regularization       = CONSTANT 1e-5
+
+Or to both terms
+
+::
+
+   Liquid Constitutive Equation = HERSCHEL_BULKLEY
+   ...
+   # optional this is the default
+   Regularization Model         = EPSILON
    Epsilon Regularization       = CONSTANT 1e-5
 
 --------------------
