@@ -284,6 +284,9 @@ HERSCHEL_BULKLEY
     regularization. It is set to 1e-5 by default.
 
 HERSCHEL_BULKLEY_PAPANASTASIOU
+    
+    See Regularization Model card for more options
+
     This is a variant on the power law model that includes a yield stress. It
     requires three input values to operate: a reference viscosity value, μ0, a
     power-law exponent, n., a yield regularization exponent :math:`f` and a
