@@ -1494,6 +1494,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ConstitutiveEquation = CARREAU_WLF;
   } else if (!strcmp(model_name, "HERSCHEL_BULKLEY")) {
     ConstitutiveEquation = HERSCHEL_BULKLEY;
+  } else if (!strcmp(model_name, "HERSCHEL_BULKLEY_PAPANASTASIOU")) {
+    ConstitutiveEquation = HERSCHEL_BULKLEY_PAPANASTASIOU;
   } else if (!strcmp(model_name, "BOND")) {
     ConstitutiveEquation = BOND;
   } else if (!strcmp(model_name, "BOND_SH")) {
@@ -1633,6 +1635,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == EPOXY || ConstitutiveEquation == SYLGARD ||
       ConstitutiveEquation == FILLED_EPOXY || ConstitutiveEquation == THERMAL ||
       ConstitutiveEquation == CURE || ConstitutiveEquation == HERSCHEL_BULKLEY ||
+      ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU ||
       ConstitutiveEquation == CARREAU_WLF_CONC_PL || ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
       ConstitutiveEquation == BOND || ConstitutiveEquation == BOND_SH ||
       ConstitutiveEquation == FOAM_EPOXY || ConstitutiveEquation == FOAM_PMDI_10) {
@@ -1669,6 +1672,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == BINGHAM || ConstitutiveEquation == BINGHAM_WLF ||
       ConstitutiveEquation == CARREAU_WLF || ConstitutiveEquation == SUSPENSION ||
       ConstitutiveEquation == FILLED_EPOXY || ConstitutiveEquation == HERSCHEL_BULKLEY ||
+      ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU ||
       ConstitutiveEquation == CARREAU_WLF_CONC_PL || ConstitutiveEquation == CARREAU_WLF_CONC_EXP) {
     model_read = look_for_mat_prop(imp, "Power Law Exponent", &(gn_glob[mn]->nexpModel),
                                    &(gn_glob[mn]->nexp), NO_USER, NULL, model_name, SCALAR_INPUT,
@@ -1856,6 +1860,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   if (ConstitutiveEquation == BINGHAM || ConstitutiveEquation == BINGHAM_WLF ||
       ConstitutiveEquation == BOND || ConstitutiveEquation == HERSCHEL_BULKLEY ||
+      ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU ||
       ConstitutiveEquation == BINGHAM_MIXED) {
     model_read =
         look_for_mat_prop(imp, "Yield Stress", &(gn_glob[mn]->tau_yModel), &(gn_glob[mn]->tau_y),
@@ -1865,7 +1870,48 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
   }
 
+  gn_glob[mn]->regularizationModel = REGULARIZATION_EPSILON;
+  if (ConstitutiveEquation == HERSCHEL_BULKLEY ||
+      ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU) {
+    dbl a = 0.0;
+    model_read = look_for_mat_prop(imp, "Regularization Model", &(gn_glob[mn]->regularizationModel),
+                                   &(a), NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+    if (model_read == -1 && ConstitutiveEquation == HERSCHEL_BULKLEY) {
+      gn_glob[mn]->regularizationModel = REGULARIZATION_EPSILON;
+    } else if (model_read == -1 && ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU) {
+      gn_glob[mn]->regularizationModel = REGULARIZATION_PAPANASTASIOU;
+    } else if (model_read == 1 && !strcmp(model_name, "EPSILON")) {
+      gn_glob[mn]->regularizationModel = REGULARIZATION_EPSILON;
+      if (ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU) {
+        GOMA_EH(GOMA_ERROR,
+                "Regularization Model EPSILON is not valid for HERSCHEL_BULKLEY_PAPANASTASIOU");
+      }
+    } else if (model_read == 1 && !strcmp(model_name, "PAPANASTASIOU")) {
+      gn_glob[mn]->regularizationModel = REGULARIZATION_PAPANASTASIOU;
+    } else if (model_read == 1 && !strcmp(model_name, "PAPANASTASIOU_EPSILON")) {
+      gn_glob[mn]->regularizationModel = REGULARIZATION_PAPANASTASIOU_EPSILON;
+    } else if (model_read == 1 && !strcmp(model_name, "EPSILON_YIELD_ONLY")) {
+      gn_glob[mn]->regularizationModel = REGULARIZATION_YIELD_ONLY_EPSILON;
+      if (ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU) {
+        GOMA_EH(GOMA_ERROR, "Regularization Model EPSILON_YIELD_ONLY is not valid for "
+                            "HERSCHEL_BULKLEY_PAPANASTASIOU");
+      }
+    } else {
+      GOMA_EH(model_read, "Regularization Model");
+    }
+    ECHO(es, echo_file);
+
+    if (ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU) {
+      // reset here because we use Regularization Model for the Constitutive Equation now
+      ConstitutiveEquation = HERSCHEL_BULKLEY;
+      gn_glob[mn]->ConstitutiveEquation = ConstitutiveEquation;
+    }
+  }
+
   if (ConstitutiveEquation == BINGHAM || ConstitutiveEquation == BOND ||
+      (ConstitutiveEquation == HERSCHEL_BULKLEY &&
+       (gn_glob[mn]->regularizationModel == REGULARIZATION_PAPANASTASIOU ||
+        gn_glob[mn]->regularizationModel == REGULARIZATION_PAPANASTASIOU_EPSILON)) ||
       ConstitutiveEquation == BINGHAM_WLF) {
     model_read =
         look_for_mat_prop(imp, "Yield Exponent", &(gn_glob[mn]->fexpModel), &(gn_glob[mn]->fexp),
@@ -1875,7 +1921,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
 
   if (ConstitutiveEquation == BINGHAM_MIXED || ConstitutiveEquation == BINGHAM ||
-      ConstitutiveEquation == BINGHAM_WLF) {
+      ConstitutiveEquation == BINGHAM_WLF || ConstitutiveEquation == HERSCHEL_BULKLEY) {
     model_read = look_for_mat_prop(imp, "Epsilon Regularization", &(gn_glob[mn]->epsilonModel),
                                    &(gn_glob[mn]->epsilon), NO_USER, NULL, model_name, SCALAR_INPUT,
                                    &NO_SPECIES, es);
@@ -1883,11 +1929,21 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         model_read == -1) {
       gn_glob[mn]->epsilon = 0.0;
       gn_glob[mn]->epsilonModel = CONSTANT;
+    } else if (model_read == -1 && ConstitutiveEquation == HERSCHEL_BULKLEY) {
+      if (gn_glob[mn]->regularizationModel == REGULARIZATION_PAPANASTASIOU_EPSILON) {
+        // set a smaller default here for avoiding division by zero
+        gn_glob[mn]->epsilon = 1e-16;
+        gn_glob[mn]->epsilonModel = CONSTANT;
+      } else {
+        gn_glob[mn]->epsilon = 0.00001;
+        gn_glob[mn]->epsilonModel = CONSTANT;
+      }
     } else {
       GOMA_EH(model_read, "Epsilon Regularization");
     }
     ECHO(es, echo_file);
   }
+
   /*
    * For now, apply thixotrophy to just the shear-thinning models although
    * it should be general for all
@@ -1900,6 +1956,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == EPOXY || ConstitutiveEquation == SYLGARD ||
       ConstitutiveEquation == FILLED_EPOXY || ConstitutiveEquation == THERMAL ||
       ConstitutiveEquation == CURE || ConstitutiveEquation == HERSCHEL_BULKLEY ||
+      ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU ||
       ConstitutiveEquation == CARREAU_WLF_CONC_PL || ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
       ConstitutiveEquation == BOND || ConstitutiveEquation == BOND_SH ||
       ConstitutiveEquation == FOAM_EPOXY) {
