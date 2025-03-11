@@ -59,8 +59,8 @@ with an epsilon on the power law term
 
    Liquid Constitutive Equation = HERSCHEL_BULKLEY
    ...
-   Yield Exponent               = CONSTANT 200
    Regularization Model         = PAPANASTASIOU_EPSILON
+   Yield Exponent               = CONSTANT 200
    Epsilon Regularization       = CONSTANT 1e-12
 
 Without the epsilon term
@@ -69,8 +69,8 @@ Without the epsilon term
 
    Liquid Constitutive Equation = HERSCHEL_BULKLEY
    ...
-   Yield Exponent               = CONSTANT 200
    Regularization Model         = PAPANASTASIOU
+   Yield Exponent               = CONSTANT 200
 
 Similarly applying only to the Yield term for epsilon regularization
 
