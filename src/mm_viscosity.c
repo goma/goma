@@ -645,8 +645,6 @@ double viscosity(struct Generalized_Newtonian *gn_local,
     mu = powerlaw_suspension_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == HERSCHEL_BULKLEY) {
     mu = herschel_bulkley_viscosity(gn_local, gamma_dot, d_mu);
-  } else if (gn_local->ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU) {
-    mu = herschel_bulkley_papanastasiou_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
              gn_local->ConstitutiveEquation == CARREAU_WLF_CONC_EXP) {
     mu = carreau_wlf_conc_viscosity(gn_local, gamma_dot, d_mu, gn_local->ConstitutiveEquation);
@@ -844,7 +842,6 @@ double herschel_bulkley_viscosity(struct Generalized_Newtonian *gn_local,
   dbl mu0;
   dbl nexp;
   dbl tau_y;
-  dbl offset;
 
   vdofs = ei[pg->imtrx]->dof[VELOCITY1];
 
@@ -860,110 +857,83 @@ double herschel_bulkley_viscosity(struct Generalized_Newtonian *gn_local,
   mu0 = gn_local->mu0;
   nexp = gn_local->nexp;
   tau_y = gn_local->tau_y;
-  offset = gn_local->epsilon;
 
-  val = pow(gammadot + offset, nexp - 1.);
-  mu = mu0 * val;
-  mu += tau_y / (gammadot + offset);
+  switch (gn_local->regularizationModel) {
+  case REGULARIZATION_EPSILON: {
+    dbl epsilon = gn_local->epsilon;
+    val = pow(gammadot + epsilon, nexp - 1.);
+    mu = mu0 * val;
+    mu += tau_y / (gammadot + epsilon);
 
-  /*
-   * d( mu )/dmesh
-   */
+    /*
+     * d( mu )/dmesh
+     */
 
-  val = pow(gammadot + offset, nexp - 2.);
+    val = pow(gammadot + epsilon, nexp - 2.);
 
-  if (d_mu != NULL)
-    d_mu->gd = mu0 * (nexp - 1.0) * val - tau_y / pow(gammadot + offset, 2.0);
-  /*   *d_mu_dgd -= tau_y/pow(gammadot+offset, 2.0); Disabling the sensitivities on this term
-   *  otherwise converges not
-   */
-
-  if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
-    for (b = 0; b < VIM; b++) {
-      for (j = 0; j < mdofs; j++) {
-        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
-
-          d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
-
-        } else {
-          /* printf("\ngammadot is zero in viscosity function");*/
-          d_mu->X[b][j] = 0.0;
-        }
-      }
+    if (d_mu != NULL) {
+      d_mu->gd = mu0 * (nexp - 1.0) * val - tau_y / pow(gammadot + epsilon, 2.0);
     }
-  }
+  } break;
+  case REGULARIZATION_PAPANASTASIOU: {
+    dbl fexp = gn_local->fexp;
 
-  /*
-   * d( mu )/dv
-   */
-  /*
-   * d( mu )/dv
-   */
-  if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
-    for (a = 0; a < VIM; a++) {
-      for (i = 0; i < vdofs; i++) {
-        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
-          d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
-        } else {
-          d_mu->v[a][i] = 0.0;
-        }
-      }
+    val = pow(gammadot, nexp - 1.);
+    mu = mu0 * val;
+    mu += (1 - exp(-fexp * gammadot)) * tau_y / (fmax(1e-16, gammadot));
+
+    /*
+     * d( mu )/dmesh
+     */
+
+    if (d_mu != NULL) {
+      d_mu->gd = mu0 * (nexp - 1.0) * pow(gammadot, nexp - 2.0);
+      d_mu->gd += tau_y * (fexp * exp(-fexp * gammadot) / gammadot -
+                           (1 - exp(-fexp * gammadot)) / pow(gammadot, 2.0));
     }
-  }
+  } break;
+  case REGULARIZATION_PAPANASTASIOU_EPSILON: {
+    dbl fexp = gn_local->fexp;
+    dbl epsilon = gn_local->epsilon;
 
-  return (mu);
-}
+    val = pow(gammadot + epsilon, nexp - 1.);
+    mu = mu0 * val;
+    mu += (1 - exp(-fexp * gammadot)) * tau_y / (fmax(DBL_SEMI_SMALL, gammadot));
 
-double herschel_bulkley_papanastasiou_viscosity(struct Generalized_Newtonian *gn_local,
-                                                dbl gamma_dot[DIM][DIM], /* strain rate tensor */
-                                                VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
-  int a, b;
-  int mdofs = 0, vdofs;
+    /*
+     * d( mu )/dmesh
+     */
 
-  int i, j;
+    if (d_mu != NULL) {
+      d_mu->gd = mu0 * (nexp - 1.0) * pow(gammadot + epsilon, nexp - 2.0);
+      d_mu->gd += tau_y * (fexp * exp(-fexp * gammadot) / gammadot -
+                           (1 - exp(-fexp * gammadot)) / pow(gammadot, 2.0));
+    }
+  } break;
+  case REGULARIZATION_YIELD_ONLY_EPSILON: {
+    dbl epsilon = gn_local->epsilon;
+    dbl minval = 0;
+    if (nexp < 1.0) {
+      minval = DBL_SEMI_SMALL; // avoid division by zero
+    }
+    val = pow(fmax(gammadot, minval), nexp - 1.);
+    mu = mu0 * val;
+    mu += tau_y / (gammadot + epsilon);
 
-  dbl gammadot; /* strain rate invariant */
+    /*
+     * d( mu )/dmesh
+     */
 
-  dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
-                               wrt velocity */
-  dbl d_gd_dmesh[DIM][MDE]; /* derivative of strain rate invariant
-                               wrt mesh */
+    val = pow(fmax(gammadot, minval), nexp - 2.);
 
-  dbl val;
-  dbl mu = 0.;
-  dbl mu0;
-  dbl nexp;
-  dbl fexp;
-  dbl tau_y;
-
-  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
-
-  if (pd->e[pg->imtrx][R_MESH1]) {
-    mdofs = ei[pg->imtrx]->dof[R_MESH1];
-  }
-
-  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
-
-  /* calculate power law viscosity
-     power law constants - make this migrate to input deck asap
-     mu = mu0 * (offset + gammadot)**(nexp-1))                 */
-  mu0 = gn_local->mu0;
-  nexp = gn_local->nexp;
-  tau_y = gn_local->tau_y;
-  fexp = gn_local->fexp;
-
-  val = pow(gammadot, nexp - 1.);
-  mu = mu0 * val;
-  mu += (1 - exp(-fexp * gammadot)) * tau_y / (fmax(1e-16, gammadot));
-
-  /*
-   * d( mu )/dmesh
-   */
-
-  if (d_mu != NULL) {
-    d_mu->gd = mu0 * (nexp - 1.0) * pow(gammadot, nexp - 2.0);
-    d_mu->gd += tau_y * (fexp * exp(-fexp * gammadot) / gammadot -
-                         (1 - exp(-fexp * gammadot)) / pow(gammadot, 2.0));
+    if (d_mu != NULL) {
+      d_mu->gd = mu0 * (nexp - 1.0) * val - tau_y / pow(gammadot + epsilon, 2.0);
+    }
+  } break;
+    break;
+  default:
+    GOMA_EH(GOMA_ERROR, "Unknown Regularization Model for Herschel Bulkley Viscosity");
+    break;
   }
 
   /*   *d_mu_dgd -= tau_y/pow(gammadot+offset, 2.0); Disabling the sensitivities on this term
@@ -3088,8 +3058,8 @@ double bond_viscosity(struct Generalized_Newtonian *gn_local,
  *                      mu_inf    = plateau viscosity at high shear
  *                      mu0       = reference  viscosity when x is zero
  *                      Aexp      = exponent for bond dependence of viscosity
- *                      c(bond_species_no) = concentration tracking structure-factor with a source *
- *term using shear-rate invariant variable
+ *                      c(bond_species_no) = concentration tracking structure-factor with a source
+ ** term using shear-rate invariant variable
  *
  *     Function sets the viscosity members of mp.
  *
