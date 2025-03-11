@@ -20,14 +20,31 @@ Choices for <MODEL> in *HERSCHEL_BULKLEY* fluids:
 EPSILON
    Epsilon regularization applied to both the power law term and the yield term (default for HERSCHEL_BULKLEY)
 
+    .. math::
+
+       \mu = \mu_0 (\dot{\gamma} + \epsilon)^{n-1} + \frac{\tau_y}{(\dot{\gamma} + \epsilon)}
+                                                                                                   
 PAPANASTASIOU
    Papanastasiou regularization applied to the yield parameter (default for HERSCHEL_BULKLEY_PAPANASTASIOU)
+
+    .. math::
+      
+       \mu = \mu_0 \dot{\gamma}^{n-1} + (1-exp(-f \dot{\gamma})) \frac{\tau_y}{\dot{\gamma}}
 
 EPSILON_YIELD_ONLY
    Epsilon regularization applied only to the yield term
 
+    .. math::
+
+       \mu = \mu_0 (\dot{\gamma})^{n-1} + \frac{\tau_y}{(\dot{\gamma} + \epsilon)}
+
 PAPANASTASIOU_EPSILON
    Papanastasiou regularization applied to the yield term and an epsilon on the power law term
+
+    .. math::
+      
+       \mu = \mu_0 \dot{\gamma + \epsilon}^{n-1} + (1-exp(-f \dot{\gamma})) \frac{\tau_y}{\dot{\gamma}}
+
 
 
 
