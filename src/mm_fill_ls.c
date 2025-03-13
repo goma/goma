@@ -2576,8 +2576,8 @@ static int Hrenorm_constrain(Exo_DB *exo,
 #ifdef PARALLEL
       if (Num_Proc > 1)
         external = ext_dof[k];
-      /* when accumulating the dot products it is important not to add the
-       * external dofs */
+        /* when accumulating the dot products it is important not to add the
+         * external dofs */
 #endif
 
       if (!external) {
