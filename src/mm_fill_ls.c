@@ -2576,8 +2576,8 @@ static int Hrenorm_constrain(Exo_DB *exo,
 #ifdef PARALLEL
       if (Num_Proc > 1)
         external = ext_dof[k];
-        /* when accumulating the dot products it is important not to add the
-         * external dofs */
+      /* when accumulating the dot products it is important not to add the
+       * external dofs */
 #endif
 
       if (!external) {
@@ -2926,10 +2926,18 @@ int print_ls_interface(
     case LS_SURF_POINT: {
       struct LS_Surf_Point_Data *s = (struct LS_Surf_Point_Data *)surf->data;
       double *p = s->x;
-      if (print_all_times) {
-        fprintf(outfile, "%g\t%g\t%g\t%d\n", time, p[0], p[1], 0);
+      if (exo->num_dim == 3) {
+        if (print_all_times) {
+          fprintf(outfile, "%g\t%g\t%g\t%g\t%d\n", time, p[0], p[1], p[2], 0);
+        } else {
+          fprintf(outfile, "%g\t%g\t%g\t%d\n", p[0], p[1], p[2], 0);
+        }
       } else {
-        fprintf(outfile, "%g\t%g\t%d\n", p[0], p[1], 0);
+        if (print_all_times) {
+          fprintf(outfile, "%g\t%g\t%g\t%d\n", time, p[0], p[1], 0);
+        } else {
+          fprintf(outfile, "%g\t%g\t%d\n", p[0], p[1], 0);
+        }
       }
     } break;
     case LS_SURF_FACET: {
