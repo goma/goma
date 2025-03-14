@@ -6298,7 +6298,6 @@ int lub_viscosity_integrate(const double strs,
   int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0, a_visc_type;
   double xint = 0., xint_a = 0., visc_a = 0., xintold = 0., temp, at = 1.;
   double xintdT = 0., wlf_denom = 0.;
-  int low_stress = FALSE, high_stress = FALSE;
 
   res_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][0]);
   soln_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][2]);
@@ -6330,33 +6329,12 @@ int lub_viscosity_integrate(const double strs,
   lam = at * gn->lam;
   F = at * gn->fexp;
 
-  switch (gn->ConstitutiveEquation) {
-  case CARREAU:
-  case CARREAU_WLF:
-    shr = strs / mu0;
-    if (lam * shr < pow(soln_tol, aexp))
-      low_stress = TRUE;
-    shr = pow(strs * pow(lam, 1. - nexp) / (mu0 - muinf), 1. / nexp);
-    if (DOUBLE_NONZERO(muinf) && shr > strs / muinf)
-      high_stress = TRUE;
-    break;
-  case BINGHAM:
-  case BINGHAM_WLF:
-    vis_w = mu0 + yield * F;
-    break;
-  default:
-    GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
-  }
   /**  Take care of de-generate case first **/
-  if (low_stress || high_stress ||
-      (pd->v[pg->imtrx][SHELL_SHEAR_TOP] && DOUBLE_ZERO(fv->sh_shear_top))) {
+  if (pd->v[pg->imtrx][SHELL_SHEAR_TOP] && DOUBLE_ZERO(fv->sh_shear_top)) {
     switch (gn->ConstitutiveEquation) {
     case CARREAU:
     case CARREAU_WLF:
-      if (low_stress)
-        vis_w = mu0;
-      if (high_stress)
-        vis_w = muinf;
+      vis_w = mu0;
       break;
     case BINGHAM:
     case BINGHAM_WLF:
@@ -6384,13 +6362,17 @@ int lub_viscosity_integrate(const double strs,
   }
 
   if (pd->v[pg->imtrx][SHELL_SHEAR_TOP]) {
-    double xfact, tmp, tmpd, tp1, tp2, tpe, tpe_d, P_sig;
+    double xfact, tmp, tmpd = 1., tp1, tp2, tpe, tpe_d, P_sig = 1.;
     shr = fv->sh_shear_top;
     shrw = fabs(shr);
     tp1 = lam * shrw;
-    xfact = 1. + pow(tp1, aexp);
-    tmp = pow(xfact, (nexp - 1.) / aexp);
-    tmpd = pow(xfact, (nexp - 1. - aexp) / aexp);
+    if (tp1 > pow(10., 8. / aexp)) {
+      tmp = pow(tp1, nexp - 1.);
+    } else {
+      xfact = 1. + pow(tp1, aexp);
+      tmp = pow(xfact, (nexp - 1.) / aexp);
+      tmpd = pow(xfact, (nexp - 1. - aexp) / aexp);
+    }
     switch (gn->ConstitutiveEquation) {
     case CARREAU:
     case CARREAU_WLF:
@@ -6400,7 +6382,8 @@ int lub_viscosity_integrate(const double strs,
     case BINGHAM:
     case BINGHAM_WLF:
       tp2 = F * shrw;
-      P_sig = pow(1. + tp2, P_eps);
+      if (DOUBLE_NONZERO(P_eps))
+        P_sig = pow(1. + tp2, P_eps);
       tpe = (1. - exp(-tp2)) / (at * shrw) * P_sig;
       tpe_d = (exp(-tp2) * (1. + tp2) - 1.) * P_sig / at + tpe * P_eps * tp2 / (1. + tp2);
       vis_w = muinf + (mu0 - muinf + yield * tpe) * tmp;
@@ -6414,7 +6397,7 @@ int lub_viscosity_integrate(const double strs,
     /** First iterate to find shearrate that corresponds to stress */
     shr = strs / sqrt(mu0 * muinf);
     for (iter = 0; iter < ITERMAX; iter++) {
-      double xfact, tmp, tmpd = 1., tp1, tp2, tpe, tpe_d, xj, delta, P_sig;
+      double xfact, tmp, tmpd = 1., tp1, tp2, tpe, tpe_d, xj, delta, P_sig = 1., relax;
       int log_iteration = TRUE;
       shrw = fabs(shr);
       tp1 = lam * shrw;
@@ -6438,7 +6421,8 @@ int lub_viscosity_integrate(const double strs,
       case BINGHAM:
       case BINGHAM_WLF:
         tp2 = F * shrw;
-        P_sig = pow(1. + tp2, P_eps);
+        if (DOUBLE_NONZERO(P_eps))
+          P_sig = pow(1. + tp2, P_eps);
         tpe = (1. - exp(-tp2)) / (at * shrw) * P_sig;
         tpe_d = (exp(-tp2) * (1. + tp2) - 1.) * P_sig / at + tpe * P_eps * tp2 / (1. + tp2);
         vis_w = muinf + (mu0 - muinf + yield * tpe) * tmp;
@@ -6464,26 +6448,19 @@ int lub_viscosity_integrate(const double strs,
         GOMA_WH(GOMA_ERROR, "Trouble... Viscosity function nearly singular!");
       }
       delta = -res / xj;
-      if (log_iteration) {
-        if (iter < ITERMAX / 4) {
-          shr *= exp(delta);
-        } else if (iter < ITERMAX / 2) {
-          shr *= exp(0.2 * delta);
-        } else if (iter < 3 * ITERMAX / 4) {
-          shr *= exp(0.5 * delta);
-        } else {
-          shr *= exp(delta);
-        }
+      if (iter < ITERMAX / 4) {
+        relax = 1.;
+      } else if (iter < ITERMAX / 2) {
+        relax = 0.2;
+      } else if (iter < 3 * ITERMAX / 4) {
+        relax = 0.5;
       } else {
-        if (iter < ITERMAX / 4) {
-          shr += delta;
-        } else if (iter < ITERMAX / 2) {
-          shr += 0.2 * delta;
-        } else if (iter < 3 * ITERMAX / 4) {
-          shr += 0.5 * delta;
-        } else {
-          shr += delta;
-        }
+        relax = 1.;
+      }
+      if (log_iteration) {
+        shr *= exp(relax * delta);
+      } else {
+        shr += relax * delta;
       }
       if (isnan(shr))
         shr = strs / muinf / soln_tol;
@@ -6510,7 +6487,7 @@ int lub_viscosity_integrate(const double strs,
           Yc = th * yield;
           shr = shr0 + step * shrd;
           for (iter = 0; iter < ITERMAX; iter++) {
-            double xfact, tmp, tmpd = 1., tp1, tp2, tpe, tpe_d, xj, delta, P_sig;
+            double xfact, tmp, tmpd = 1., tp1, tp2, tpe, tpe_d, xj, delta, P_sig = 1.;
             shrw = fabs(shr);
             tp1 = lam * shrw;
             if (tp1 > pow(10., 8. / aexp)) {
@@ -6533,7 +6510,8 @@ int lub_viscosity_integrate(const double strs,
             case BINGHAM:
             case BINGHAM_WLF:
               tp2 = Fc * shrw;
-              P_sig = pow(1. + tp2, P_eps);
+              if (DOUBLE_NONZERO(P_eps))
+                P_sig = pow(1. + tp2, P_eps);
               tpe = (1. - exp(-tp2)) / (at * shrw) * P_sig;
               tpe_d = (exp(-tp2) * (1. + tp2) - 1.) * P_sig / at + tpe * P_eps * tp2 / (1. + tp2);
               vis_w = muinf + (mu0 - muinf + Yc * tpe) * tmp;
@@ -6632,7 +6610,7 @@ int lub_viscosity_integrate(const double strs,
     }
     eps = 0.0;
     for (jdi = 0; jdi < JDI_MAX; jdi++) {
-      double cee, x0, delx, vis = 1., jdiv, xfact, tmp, tpe, tp2, P_sig;
+      double cee, x0, delx, vis = 1., jdiv, xfact, tmp, tpe, tp2, P_sig = 1.;
       int idiv, l;
       jdiv = pow(2., jdi);
       delx = 1. / jdiv;
@@ -6654,7 +6632,8 @@ int lub_viscosity_integrate(const double strs,
             double shrF = 1. / F;
             double shrY = pow((yield + mu0 * shrF) * pow(lam, 1. - nexp) / mu0, 1. / nexp);
             tp2 = F * cee * shrw;
-            P_sig = pow(1. + tp2, P_eps);
+            if (DOUBLE_NONZERO(P_eps))
+              P_sig = pow(1. + tp2, P_eps);
             tpe = (1. - exp(-tp2)) / (at * cee * shrw) * P_sig;
             vis = muinf + (mu0 - muinf + yield * tpe) * tmp;
             if (cee * shrw < shrF) {
@@ -6682,7 +6661,7 @@ int lub_viscosity_integrate(const double strs,
 
   } else {
     for (jdi = 0; jdi < JDI_MAX; jdi++) {
-      double cee, x0, delx, vis = 1., jdiv, xfact, tmp, tpe, tp1, tp2, P_sig;
+      double cee, x0, delx, vis = 1., jdiv, xfact, tmp, tpe, tp1, tp2, P_sig = 1.;
       int idiv, l;
       jdiv = pow(2., jdi);
       delx = 1. / jdiv;
@@ -6706,7 +6685,8 @@ int lub_viscosity_integrate(const double strs,
           case BINGHAM:
           case BINGHAM_WLF:
             tp2 = F * cee * shrw;
-            P_sig = pow(1. + tp2, P_eps);
+            if (DOUBLE_NONZERO(P_eps))
+              P_sig = pow(1. + tp2, P_eps);
             tpe = (1. - exp(-tp2)) / (at * cee * shrw) * P_sig;
             vis = muinf + (mu0 - muinf + yield * tpe) * tmp;
             break;
@@ -6732,7 +6712,7 @@ int lub_viscosity_integrate(const double strs,
   /**  Compute temperature sensitivity integral **/
   if (dq_dT != NULL && pd->gv[SHELL_TEMPERATURE]) {
     double dlnat_dT = 0., dvis_dT = 0.;
-    double xfact = 1., tmp, tp1, tp2, tpe, P_sig;
+    double xfact = 1., tmp, tp1, tp2, tpe, P_sig = 1.;
     if (DOUBLE_NONZERO(temp) && DOUBLE_NONZERO(mp->reference[TEMPERATURE])) {
       if (gn->ConstitutiveEquation == BINGHAM) {
         dlnat_dT = -gn->atexp / SQUARE(temp);
@@ -6776,7 +6756,8 @@ int lub_viscosity_integrate(const double strs,
           case BINGHAM:
           case BINGHAM_WLF:
             tp2 = F * cee * shrw;
-            P_sig = pow(1. + tp2, P_eps);
+            if (DOUBLE_NONZERO(P_eps))
+              P_sig = pow(1. + tp2, P_eps);
             tpe = (1. - exp(-tp2)) / (at * cee * shrw) * P_sig;
             vis = muinf + (mu0 - muinf + yield * tpe) * tmp;
             if (tp1 > pow(10., 8. / aexp)) {
