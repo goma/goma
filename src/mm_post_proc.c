@@ -1076,6 +1076,8 @@ static int calc_standard_fields(double **post_proc_vect,
         calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
       }
       local_post[PP_Viscosity] = LubAux->mu_star;
+      /* Cleanup */
+      safe_free((void *)n_dof);
     } else {
       local_post[PP_Viscosity] = viscosity(gn, NULL, NULL);
     }
@@ -1289,6 +1291,8 @@ static int calc_standard_fields(double **post_proc_vect,
       }
       local_post[MEAN_SHEAR] = LubAux->srate;
       local_lumped[MEAN_SHEAR] = 1.;
+      /* Cleanup */
+      safe_free((void *)n_dof);
     }
   }
 

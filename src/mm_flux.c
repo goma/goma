@@ -1475,6 +1475,8 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
               }
               local_flux += weight * det * local_q;
               local_flux_conv += weight * det * local_qconv;
+              /* clean-up */
+              safe_free((void *)n_dof);
               break;
 
             case FORCE_X:
