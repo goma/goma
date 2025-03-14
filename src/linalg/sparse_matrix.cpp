@@ -254,7 +254,7 @@ extern "C" goma_error GomaSparseMatrix_SetProblemGraph(
   ams->npu_plus = num_internal_dofs + num_boundary_dofs + num_external_dofs;
 
   int64_t num_unknowns;
-  int64_t my_unknowns = ams->npu_plus;
+  int64_t my_unknowns = ams->npu;
 
   int64_t num_nzz_global;
   int64_t my_nnz = nnz;
