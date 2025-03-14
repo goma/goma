@@ -712,6 +712,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &Newt_Jacobian_Reformation_stride, 1, MPI_INT);
   ddd_add_member(n, &Time_Jacobian_Reformation_stride, 1, MPI_INT);
   ddd_add_member(n, &Newton_Line_Search_Type, 1, MPI_INT);
+  ddd_add_member(n, &Line_Search_Minimum_Damping, 1, MPI_DOUBLE);
   ddd_add_member(n, &modified_newton, 1, MPI_INT);
   ddd_add_member(n, &convergence_rate_tolerance, 1, MPI_DOUBLE);
   ddd_add_member(n, &modified_newt_norm_tol, 1, MPI_DOUBLE);
@@ -2391,6 +2392,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &gn_glob[i]->tau_yModel, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->epsilon, 1, MPI_DOUBLE);
     ddd_add_member(n, &gn_glob[i]->epsilonModel, 1, MPI_INT);
+    ddd_add_member(n, &gn_glob[i]->regularizationModel, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->fexp, 1, MPI_DOUBLE);
     ddd_add_member(n, &gn_glob[i]->fexpModel, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->maxpack, 1, MPI_DOUBLE);

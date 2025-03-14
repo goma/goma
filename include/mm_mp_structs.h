@@ -1120,6 +1120,7 @@ struct Generalized_Newtonian {
   int fexpModel;
   dbl epsilon;
   int epsilonModel;
+  int regularizationModel;
   /* these are for SUSPENSION/FILLED_EPOXY models */
   dbl maxpack;
   int maxpackModel;

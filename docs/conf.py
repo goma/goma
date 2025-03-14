@@ -231,7 +231,7 @@ latex_elements = {
 # Additional stuff for the LaTeX preamble.
 "babel": "",
 'preamble': """
-\setcounter{tocdepth}{3}
+\\setcounter{tocdepth}{3}
 """,
 
 # Latex figure (float) alignment
