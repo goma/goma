@@ -2064,6 +2064,19 @@ Revised:         Summer 1998, SY Tam (UNM)
         return -1;
     }
 
+    if (pde[R_LUBP] &&
+        (pde[R_SHELL_SHEAR_TOP] || pde[R_SHELL_SHEAR_BOT] || pde[R_SHELL_CROSS_SHEAR])) {
+      err = assemble_lubrication_thinning(time_value, theta, delta_t, xi, exo);
+      GOMA_EH(err, "assemble_lubrication_thinning");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_lubrication_thinning");
+      if (err)
+        return -1;
+#endif
+      if (neg_lub_height)
+        return -1;
+    }
+
     if (pde[R_MAX_STRAIN]) {
       err = assemble_max_strain();
       GOMA_EH(err, "assemble_max_strain");
