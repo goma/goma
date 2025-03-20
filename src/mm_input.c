@@ -2595,7 +2595,17 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       ECHO(echo_string, echo_file);
     }
 
-    ls->Contact_Tolerance = 0.5;
+    ls->Contact_Tolerance = 0.0;
+    iread = look_for_optional(ifp, "Level Set Contact Tolerance", input, '=');
+    if (iread == 1) {
+      if (fscanf(ifp, "%lf", &(ls->Contact_Tolerance)) != 1) {
+        GOMA_EH(GOMA_ERROR, "Error reading Level Set Contact Tolerance.");
+      }
+
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %lf", "Level Set Contact Tolerance",
+               ls->Contact_Tolerance);
+      ECHO(echo_string, echo_file);
+    }
 
     /* Check if this is a fluid/solid interaction problem. */
     ls->Fluid_Solid = FALSE;

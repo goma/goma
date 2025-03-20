@@ -2183,7 +2183,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                   ieqn = upd->ep[pg->imtrx][eqn];
                   if (goma_automatic_rotations.automatic_rotations &&
                       (bc->desc->rotate != NO_ROT)) {
-                    ieqn = equation_index_auto_rotate(elem_side_bc, I, eqn, p, ldof_eqn, bc);
+                    ieqn = equation_index_auto_rotate(elem_side_bc, I, eqn, p, bc);
                   }
                 }
 
@@ -2304,6 +2304,9 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                         pvar = upd->vp[pg->imtrx][var];
                         if (pvar != -1 && (BC_Types[bc_input_id].desc->sens[var] || 1)) {
                           if (var != MASS_FRACTION) {
+                            if (goma_automatic_rotations.automatic_rotations &&
+                                (bc->desc->rotate != NO_ROT)) {
+                            }
                             for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                               lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] +=
                                   weight * fv->sdet * d_func[p][var][j];
@@ -2876,7 +2879,6 @@ int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
                                int I,
                                int eqn,
                                int p,
-                               int ldof_eqn,
                                const BOUNDARY_CONDITION_STRUCT *bc) {
   int ieqn;
   if (!goma_automatic_rotations.automatic_rotations) {

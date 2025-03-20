@@ -7,7 +7,9 @@ TabWidth: 8
 UseTab: Never
 AlignConsecutiveMacros: true
 AlignEscapedNewlines: true
-AlignTrailingComments: true
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 1
 BinPackParameters: false
 ...
 
