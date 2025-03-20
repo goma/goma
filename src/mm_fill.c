@@ -3291,31 +3291,34 @@ Revised:         Summer 1998, SY Tam (UNM)
     // to zero the previous contributions so we can apply the strong BC's
     // We do this in a loop before because some BC's like GD conditions
     // take multiple BC's to affect the residual
-    elem_side_bc = first_elem_side_BC_array[ielem];
-    do { /* begining of do while construct */
-      /* which loops over the sides of this element that have boundary
-         conditions */
+    if (upd->strong_bc_replace) {
+      elem_side_bc = first_elem_side_BC_array[ielem];
+      do { /* begining of do while construct */
+        /* which loops over the sides of this element that have boundary
+           conditions */
 
-      /*
-       *  Set flags for subroutines to call for each boundary condition
-       *  on this side
-       */
-      int call_int = 0;
-      int call_col = 0;
-      int call_nedelec = 0.;
-      for (int ibc = 0; (bc_input_id = (int)elem_side_bc->BC_input_id[ibc]) != -1; ibc++) {
-        int bct = BC_Types[bc_input_id].desc->method;
-        if (bct == STRONG_INT_SURF)
-          call_int = 1;
-        if (bct == STRONG_INT_NEDELEC)
-          call_nedelec = 1;
-        if (bct == COLLOCATE_SURF)
-          call_col = 1;
-      }
-      if (upd->strong_bc_replace && (call_int || call_col || call_nedelec)) {
-        err = zero_strong_resid_side(lec, elem_side_bc);
-      }
-    } while ((elem_side_bc = elem_side_bc->next_side_bc) != NULL);
+        /*
+         *  Set flags for subroutines to call for each boundary condition
+         *  on this side
+         */
+        int call_int = 0;
+        int call_col = 0;
+        int call_nedelec = 0.;
+        for (int ibc = 0; (bc_input_id = (int)elem_side_bc->BC_input_id[ibc]) != -1; ibc++) {
+          int bct = BC_Types[bc_input_id].desc->method;
+          if (bct == STRONG_INT_SURF)
+            call_int = 1;
+          if (bct == STRONG_INT_NEDELEC)
+            call_nedelec = 1;
+          if (bct == COLLOCATE_SURF)
+            call_col = 1;
+        }
+
+        if (call_int || call_col || call_nedelec) {
+          err = zero_strong_resid_side(lec, elem_side_bc);
+        }
+      } while ((elem_side_bc = elem_side_bc->next_side_bc) != NULL);
+    }
 
     elem_side_bc = first_elem_side_BC_array[ielem];
 
