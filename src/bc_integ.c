@@ -2304,9 +2304,6 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                         pvar = upd->vp[pg->imtrx][var];
                         if (pvar != -1 && (BC_Types[bc_input_id].desc->sens[var] || 1)) {
                           if (var != MASS_FRACTION) {
-                            if (goma_automatic_rotations.automatic_rotations &&
-                                (bc->desc->rotate != NO_ROT)) {
-                            }
                             for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                               lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] +=
                                   weight * fv->sdet * d_func[p][var][j];
