@@ -10,6 +10,6 @@ jobs:
       run: sudo apt-get install clang-format-18
     - name: Run clang-format style check for C/C++
       run: |
-          clang-format-18 --version
-          CLANG_FORMAT=clang-format-18 scripts/run-clang-format.sh
+          clang-format-17 --version
+          CLANG_FORMAT=clang-format-17 scripts/run-clang-format.sh
           git diff --exit-code
