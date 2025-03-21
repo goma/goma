@@ -109,10 +109,10 @@ static int mpp_open = FALSE;
 
 static int mpp_written = FALSE;
 
-static void plot_a(int,         /* n  */
-                   int,         /* nnz  */
-                   double[],    /* a[]  */
-                   int[]);      /* ija[] */
+static void plot_a(int,      /* n  */
+                   int,      /* nnz  */
+                   double[], /* a[]  */
+                   int[]);   /* ija[] */
 
 static void histogram(int,      /* n  */
                       int,      /* nnz  */

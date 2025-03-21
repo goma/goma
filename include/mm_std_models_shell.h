@@ -32,45 +32,45 @@
 #define EXTERN extern
 #endif
 
-EXTERN double height_function_model              /* mm_std_models_shell.c                */
+EXTERN double height_function_model /* mm_std_models_shell.c                */
     (dbl *, dbl *, dbl *, dbl *, dbl[DIM], dbl[DIM], dbl *, dbl *, dbl[MDE], dbl, dbl);
 
-EXTERN double velocity_function_model            /* mm_std_models_shell.c                */
+EXTERN double velocity_function_model /* mm_std_models_shell.c                */
     (dbl[DIM], dbl[DIM], dbl, dbl);
-EXTERN double film_evaporation_model             /* mm_std_models_shell.c                */
+EXTERN double film_evaporation_model /* mm_std_models_shell.c                */
     (dbl, dbl *, dbl, dbl *);
 
-EXTERN double disjoining_pressure_model          /* mm_std_models_shell.c                */
+EXTERN double disjoining_pressure_model /* mm_std_models_shell.c                */
     (dbl, dbl[DIM], int *, int *, dbl[DIM], dbl[DIM][MDE], dbl[DIM][MDE], dbl[DIM][MDE]);
 
-EXTERN double diffusion_coefficient_model        /* mm_std_models_shell.c                */
+EXTERN double diffusion_coefficient_model /* mm_std_models_shell.c                */
     (dbl, dbl *);
 
-EXTERN int load_lubrication_momentum_source      /* mm_std_models_shell.c          */
+EXTERN int load_lubrication_momentum_source /* mm_std_models_shell.c          */
     (dbl, dbl);
 
 EXTERN double porous_shell_closed_porosity_model /* mm_std_models_shell.c          */
     (void);
 
-EXTERN double porous_shell_porosity_model        /* mm_std_models_shell.c          */
+EXTERN double porous_shell_porosity_model /* mm_std_models_shell.c          */
     (int);
 
-EXTERN double porous_shell_closed_radius_model   /* mm_std_models_shell.c          */
+EXTERN double porous_shell_closed_radius_model /* mm_std_models_shell.c          */
     (void);
 
-EXTERN double porous_shell_closed_height_model   /* mm_std_models_shell.c          */
+EXTERN double porous_shell_closed_height_model /* mm_std_models_shell.c          */
     (void);
 
-EXTERN double porous_shell_height_model          /* mm_std_models_shell.c          */
+EXTERN double porous_shell_height_model /* mm_std_models_shell.c          */
     (int);
 
-EXTERN double porous_shell_cross_perm_model      /* mm_std_models_shell.c          */
+EXTERN double porous_shell_cross_perm_model /* mm_std_models_shell.c          */
     (int);
 
-EXTERN double porous_shell_rel_perm_model        /* mm_std_models_shell.c          */
+EXTERN double porous_shell_rel_perm_model /* mm_std_models_shell.c          */
     (int, double);
 
-EXTERN void porous_shell_permeability_model      /* mm_std_models_shell.c          */
+EXTERN void porous_shell_permeability_model /* mm_std_models_shell.c          */
     (int);
 
 EXTERN void dynamic_contact_angle_model(double *, double *, double, double *, double *);
@@ -86,4 +86,4 @@ EXTERN int lubrication_fluid_source(double *,                        /* Flux */
                                     double[MAX_VARIABLE_TYPES][MDE], /* Flux sensitivities */
                                     int * /* Array containing numbers of DOF*/
 );
-#endif                                    /* GOMA_MM_STD_MODELS_H */
+#endif /* GOMA_MM_STD_MODELS_H */

@@ -33,48 +33,48 @@
         for example.
 ------------------------------------------------------------------------------*/
 
-extern double **Coor;         /* 2d dynamically allocated array containing
-                                 the physical space coordinates for each node.
-                                 The dimensions are Num_Dim by Num_Nodes */
+extern double **Coor; /* 2d dynamically allocated array containing
+                         the physical space coordinates for each node.
+                         The dimensions are Num_Dim by Num_Nodes */
 
 extern int *Proc_Connect_Ptr; /* global connectivity ptrs for element nums */
 
-extern int Num_Dim;           /* number of physical dimensions */
-extern int Num_Node;          /* total number of nodes in the mesh  */
-extern int Num_Elem;          /* total number of elements in the mesh */
+extern int Num_Dim;  /* number of physical dimensions */
+extern int Num_Node; /* total number of nodes in the mesh  */
+extern int Num_Elem; /* total number of elements in the mesh */
 
-extern int Max_NP_Elem;       /* maximum number of nodes in any element   */
+extern int Max_NP_Elem; /* maximum number of nodes in any element   */
 
 extern int Num_Internal_Elems;
 /* Number of Elements on the local processor.
  This is equal to the number of "internal"
  plus the number of "border" elements.	      */
 
-extern int *GNodes;                  /* data structure which contains the internal,
-                                        border and external nodes on each processor  */
+extern int *GNodes; /* data structure which contains the internal,
+                       border and external nodes on each processor  */
 
-extern int *GElems;                  /* Data structure which contains the internal
-                                        elements on each processor.  It is a map
-                                        from the local element number to the global
-                                        element number.
-                                        type: int vector of length Num_Internal_Elems*/
+extern int *GElems; /* Data structure which contains the internal
+                       elements on each processor.  It is a map
+                       from the local element number to the global
+                       element number.
+                       type: int vector of length Num_Internal_Elems*/
 
-extern int Proc_Num_Elem_Blk;        /* number of element blocks in this processor   */
-extern int *Proc_Num_Elem_In_Blk;    /* number of elements in the processor's
-                                      * element blocks */
-extern int *Proc_Elem_Blk_Ids;       /* element block id's for the processor's element
-                                       blocks                                       */
-extern int *Proc_Elem_Blk_Types;     /* element block types for the processor's
-                                        element blocks (integers, not charstrings)*/
+extern int Proc_Num_Elem_Blk;     /* number of element blocks in this processor   */
+extern int *Proc_Num_Elem_In_Blk; /* number of elements in the processor's
+                                   * element blocks */
+extern int *Proc_Elem_Blk_Ids;    /* element block id's for the processor's element
+                                    blocks                                       */
+extern int *Proc_Elem_Blk_Types;  /* element block types for the processor's
+                                     element blocks (integers, not charstrings)*/
 
-extern int *Proc_Nodes_Per_Elem;     /* # of nodes per element for each block on the
-                                     current processor                            */
+extern int *Proc_Nodes_Per_Elem; /* # of nodes per element for each block on the
+                                 current processor                            */
 
-extern int *Proc_Num_Attr;           /* # of attributes for each block on the current
-                                       processor                                    */
+extern int *Proc_Num_Attr; /* # of attributes for each block on the current
+                             processor                                    */
 
-extern int *Proc_Elem_Connect;       /* connectivity lists for the elements required
-                                       by the current processor                     */
+extern int *Proc_Elem_Connect; /* connectivity lists for the elements required
+                                 by the current processor                     */
 
 extern int Proc_Num_Node_Sets;       /* number node sets on current processor */
 extern int Proc_NS_List_Length;      /* total length of all the node set lists*/
@@ -94,9 +94,9 @@ extern int *Proc_SS_Node_Count;      /* side sets count record for nodes */
 extern int *Proc_SS_Elem_Pointers;   /* side sets pointer record for elements */
 extern int *Proc_SS_Elem_List;       /* side sets element list record */
 
-extern double *Proc_SS_Dist_Fact;    /* side sets distribution factors */
-extern int Num_Internal_Nodes;       /* that are owned exclusively by this proc */
-extern int Num_Border_Nodes;         /* owned here but communicated elsewhere */
-extern int Num_External_Nodes;       /* owned elsewhere, but needed here. */
+extern double *Proc_SS_Dist_Fact; /* side sets distribution factors */
+extern int Num_Internal_Nodes;    /* that are owned exclusively by this proc */
+extern int Num_Border_Nodes;      /* owned here but communicated elsewhere */
+extern int Num_External_Nodes;    /* owned elsewhere, but needed here. */
 
 #endif

@@ -36,4 +36,4 @@
 EXTERN int setup_pd /* mm_prob_def.c */
     (void);         /* nada. */
 
-#endif              /* GOMA_MM_PROB_DEF_H */
+#endif /* GOMA_MM_PROB_DEF_H */

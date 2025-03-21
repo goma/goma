@@ -111,14 +111,14 @@ int assemble_energy(
     const PG_DATA *pg_data) {
   int eqn, var, peqn, pvar, dim, p, a, b, qq, w, i, j, status;
 
-  dbl T_dot;                              /* Temperature derivative wrt time. */
+  dbl T_dot; /* Temperature derivative wrt time. */
 
   dbl q[DIM];                             /* Heat flux vector. */
   HEAT_FLUX_DEPENDENCE_STRUCT d_q_struct; /* Heat flux dependence. */
   HEAT_FLUX_DEPENDENCE_STRUCT *d_q = &d_q_struct;
 
-  dbl rho;                                /* Density (no variations allowed
-                                             here, for now) */
+  dbl rho; /* Density (no variations allowed
+              here, for now) */
   // CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; /* Thermal conductivity dependence. */
   // CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
 
@@ -126,14 +126,14 @@ int assemble_energy(
   HEAT_CAPACITY_DEPENDENCE_STRUCT d_Cp_struct; /* Heat capacity dependence. */
   HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp = &d_Cp_struct;
 
-  dbl h;                                       /* Heat source. */
-  HEAT_SOURCE_DEPENDENCE_STRUCT d_h_struct;    /* Heat source dependence. */
+  dbl h;                                    /* Heat source. */
+  HEAT_SOURCE_DEPENDENCE_STRUCT d_h_struct; /* Heat source dependence. */
   HEAT_SOURCE_DEPENDENCE_STRUCT *d_h = &d_h_struct;
 
   int v_s[MAX_MODES][DIM][DIM];
   int mode;
 
-  dbl mass;      /* For terms and their derivatives */
+  dbl mass; /* For terms and their derivatives */
 
   dbl advection; /* For terms and their derivatives */
   dbl advection_a;
@@ -226,9 +226,9 @@ int assemble_energy(
     return (status);
   }
 
-  wt = fv->wt;           /* Gauss point weight. */
+  wt = fv->wt; /* Gauss point weight. */
 
-  h3 = fv->h3;           /* Differential volume element. */
+  h3 = fv->h3; /* Differential volume element. */
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
@@ -2045,13 +2045,13 @@ double heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     ai0_cathode = mp->u_reaction_rate[2];
     mn = ei[pg->imtrx]->mn;
 
-    if (mn == 0)         /* KSC: 2/17/99 */
+    if (mn == 0) /* KSC: 2/17/99 */
     {
-      ai0 = ai0_anode;   /* exchange current density for the anode (one rxn only) */
+      ai0 = ai0_anode; /* exchange current density for the anode (one rxn only) */
     } else if (mn == 2) {
       ai0 = ai0_cathode; /* exchange current density for the cathode (one rxn only) */
     } else {
-      ai0 = 0.0;         /* no electrochemical rxn for the separator */
+      ai0 = 0.0; /* no electrochemical rxn for the separator */
     }
 
     var = TEMPERATURE;
@@ -2220,7 +2220,7 @@ int assemble_ls_latent_heat_source(double iso_therm,
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else                 /* diffuse interface */
+  } else /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }

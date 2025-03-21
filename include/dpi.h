@@ -31,7 +31,7 @@ struct Distributed_Processing_Information {
   int *eb_id_global;                 /* [neb_global] */
   int *eb_num_nodes_per_elem_global; /* New! - [neb_global] */
 
-  int *elem_index_global;            /* New! [num_elems_proc] */
+  int *elem_index_global; /* New! [num_elems_proc] */
 
   /*
    * Some new stuff to help in the assembly of element based methods, such
@@ -44,13 +44,13 @@ struct Distributed_Processing_Information {
 
   int *elem_elem_list_global; /* Face-ordered names of elems facing this. */
 
-  int *neighbor;              /* Array of neighboring processor id's to this
-                                 proc. Values range from 0 to Nproc - 1
-                                 length = [num_neighbors] */
-  int *node_index_global;     /* Array of Global node numbers.
-                                 The index is the processor node number
-                                 length - [num_nodes_proc] */
-  int *ns_id_global;          /* [num_node_sets_global] */
+  int *neighbor;          /* Array of neighboring processor id's to this
+                             proc. Values range from 0 to Nproc - 1
+                             length = [num_neighbors] */
+  int *node_index_global; /* Array of Global node numbers.
+                             The index is the processor node number
+                             length - [num_nodes_proc] */
+  int *ns_id_global;      /* [num_node_sets_global] */
 
   int *ss_internal_global;
 
@@ -88,7 +88,7 @@ struct Distributed_Processing_Information {
                            *   (scalar) */
   int *ss_id_global;      /* [num_side_sets_global] */
 
-  int *ss_index_global;   /* [num_side_sets] */
+  int *ss_index_global; /* [num_side_sets] */
 
   // New Nemesis
   int *num_ns_global_node_counts;

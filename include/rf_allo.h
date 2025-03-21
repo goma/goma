@@ -39,8 +39,8 @@
  *  of real ints and dbls to indicate that initialization shouldn't take
  *  place.
  */
-#define INT_NOINIT                      -68361
-#define DBL_NOINIT                      -34.39383E11
+#define INT_NOINIT -68361
+#define DBL_NOINIT -34.39383E11
 
 /*
  * Wrapper helps identify where allocations take place and for how much.
@@ -78,14 +78,14 @@
 /*
  * Prototypes for functions in rf_allo.c
  */
-EXTERN double *array_alloc(int,        /* numdim - number of dimensions */
-                           ...);       /* all remaing varargs, last 2 are file:line */
+EXTERN double *array_alloc(int,  /* numdim - number of dimensions */
+                           ...); /* all remaing varargs, last 2 are file:line */
 
 EXTERN void *safe_malloc(const int,    /* numbytes */
                          const char *, /* filename */
                          const int);   /* line */
 
-EXTERN void safe_free(void *);         /* ptr to block being freed */
+EXTERN void safe_free(void *); /* ptr to block being freed */
 
 extern void safer_free(void **);
 extern int *alloc_int_1_FL(const int, const int, const char *, const int);

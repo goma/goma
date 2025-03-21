@@ -187,7 +187,7 @@ struct passdown_struct {
 
   /* Include arguments to GOMA solver routine */
 
-  struct Action_Flags *af;          /* GOMA action flags */
+  struct Action_Flags *af; /* GOMA action flags */
   struct elem_side_bc_struct **First_Elem_Side_BC_Array;
   struct GomaLinearSolverData *ams; /* ptrs to Aztec linear systems */
   double *x;                        /* soln vector on this proc */
@@ -201,13 +201,13 @@ struct passdown_struct {
   double *xdot_old;                 /* dxdt for previous time */
   double *resid_vector;
   double *x_update;
-  double *scale;                    /*Scale factor held for modified newton resolves */
-  int *converged;                   /* whether the Newton iteration has converged (out) */
-  int *nprint;                      /* counter for time step number */
-  int tev;                          /* total number elem variables to
-                                     * output to EXODUS II file */
-  int tev_post;                     /* extra element post processing results */
-  RESULTS_DESCRIPTION_STRUCT *rd;   /* details about post proc vars */
+  double *scale;                  /*Scale factor held for modified newton resolves */
+  int *converged;                 /* whether the Newton iteration has converged (out) */
+  int *nprint;                    /* counter for time step number */
+  int tev;                        /* total number elem variables to
+                                   * output to EXODUS II file */
+  int tev_post;                   /* extra element post processing results */
+  RESULTS_DESCRIPTION_STRUCT *rd; /* details about post proc vars */
   AZ_MATRIX *amat;
   AZ_MATRIX *mmat;
   int *gindex;
@@ -269,20 +269,20 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
 {
 
   /* Define continuation problem arrays */
-  int *ija = NULL;                  /* column pointer array			*/
-  int *ija_attic = NULL;            /* column pointer array storage		*/
+  int *ija = NULL;       /* column pointer array			*/
+  int *ija_attic = NULL; /* column pointer array storage		*/
   int *node_to_fill = NULL;
-  double *a = NULL;                 /* nonzero array			*/
-  double *a_old = NULL;             /* nonzero array			*/
-  double *x = NULL;                 /* solution vector			*/
-  double *x_old = NULL;             /* old solution vector			*/
-  double *x_older = NULL;           /* older solution vector		*/
-  double *x_oldest = NULL;          /* oldest solution vector saved		*/
-  double *xdot = NULL;              /* current path derivative of soln	*/
-  double *xdot_old = NULL;          /* previous solution derivative		*/
-  double *x_update = NULL;          /* Newton update to solution		*/
-  double *x_AC = NULL;              /* AC extra unknown array		*/
-  double *x_AC_old = NULL;          /* AC old extra unknown array		*/
+  double *a = NULL;        /* nonzero array			*/
+  double *a_old = NULL;    /* nonzero array			*/
+  double *x = NULL;        /* solution vector			*/
+  double *x_old = NULL;    /* old solution vector			*/
+  double *x_older = NULL;  /* older solution vector		*/
+  double *x_oldest = NULL; /* oldest solution vector saved		*/
+  double *xdot = NULL;     /* current path derivative of soln	*/
+  double *xdot_old = NULL; /* previous solution derivative		*/
+  double *x_update = NULL; /* Newton update to solution		*/
+  double *x_AC = NULL;     /* AC extra unknown array		*/
+  double *x_AC_old = NULL; /* AC old extra unknown array		*/
   double *x_AC_dot = NULL;
   double *x_sens = NULL;            /* solution sensitivity			*/
   double *x_sens_temp = NULL;       /* temp. solution sensitivity		*/
@@ -291,7 +291,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   double *resid_vector_sens = NULL; /* Newton residual sensitivity	*/
   double *scale = NULL;             /* Scale vector for solution		*/
   double *gvec = NULL;
-  double *gv;                       /* Global variable values */
+  double *gv; /* Global variable values */
   double ***gvec_elem = NULL;
   double timeValueRead = 0.0;
 
@@ -1456,15 +1456,15 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
 {
   struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   static int first_linear_solver_call = FALSE;
-  double *a = ams->val;      /* nonzero values of a CMSR matrix */
-  int *ija = ams->bindx;     /* column pointer array into matrix "a" */
-  static int Factor_Flag;    /* For UMFPACK */
-  int matr_form;             /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */
+  double *a = ams->val;   /* nonzero values of a CMSR matrix */
+  int *ija = ams->bindx;  /* column pointer array into matrix "a" */
+  static int Factor_Flag; /* For UMFPACK */
+  int matr_form;          /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */
   int error = 0;
   int why = 0;
-  char stringer[80];         /* holding format of num linear solve itns */
-  dbl s_start;               /* mark start of solve */
-  dbl s_end;                 /* mark end of solve */
+  char stringer[80]; /* holding format of num linear solve itns */
+  dbl s_start;       /* mark start of solve */
+  dbl s_end;         /* mark end of solve */
 
   int linear_solver_blk;     /* count calls to AZ_solve() */
   int linear_solver_itns;    /* count cumulative linearsolver iterations */
@@ -2635,7 +2635,7 @@ void calc_scale_vec_conwrap(double *x, double *scale_vec, int numUnks)
  * Return Value:
  */
 {
-  static int sv_init = TRUE;        /* Initialize arrays on first call */
+  static int sv_init = TRUE; /* Initialize arrays on first call */
   int p = 9, ip1 = 8;
   int i, iunk, idof, index, ivd;
   double *sv_sum = NULL;            /* Running sum of each var type    */

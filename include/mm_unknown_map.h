@@ -28,8 +28,8 @@
 #include "exo_struct.h"
 #include "rf_vars_const.h"
 
-extern void setup_local_nodal_vars(Exo_DB *,    /* exo - ptr to FE EXODUS II database        */
-                                   Dpi *);      /* dpi - ptr to parallel info                */
+extern void setup_local_nodal_vars(Exo_DB *, /* exo - ptr to FE EXODUS II database        */
+                                   Dpi *);   /* dpi - ptr to parallel info                */
 
 extern void setup_external_nodal_vars(Exo_DB *, /* exo - ptr to FE EXODUS II database        */
                                       Dpi *,    /* dpi - ptr to parallel info                */
@@ -39,8 +39,8 @@ extern int find_MaxUnknownNode(void);
 
 extern void print_vars_at_nodes(void);
 
-extern void set_unknown_map(Exo_DB *,            /* exo - ptr to FE EXODUS II database        */
-                            Dpi *);              /* dpi - ptr to parallel info                */
+extern void set_unknown_map(Exo_DB *, /* exo - ptr to FE EXODUS II database        */
+                            Dpi *);   /* dpi - ptr to parallel info                */
 
 extern int Index_Solution(const int nodeNum,     /* Global Node Number                        */
                           const int varType,     /* Variable Type                             */

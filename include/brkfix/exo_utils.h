@@ -30,20 +30,20 @@
 #define EXTERN extern
 #endif
 
-EXTERN int find_element_friends               // Outputs number of friends found
-    (Exo_DB *,                                // Exodus database
-     int,                                     // Element of which I want to find friends
-     int *);                                  // (out) List of elements who are friends
+EXTERN int find_element_friends // Outputs number of friends found
+    (Exo_DB *,                  // Exodus database
+     int,                       // Element of which I want to find friends
+     int *);                    // (out) List of elements who are friends
 
-EXTERN int find_local_node_number(Exo_DB *,   // Exodus database
-                                  int,        // Element to inspect
-                                  int);       // Global node number
+EXTERN int find_local_node_number(Exo_DB *, // Exodus database
+                                  int,      // Element to inspect
+                                  int);     // Global node number
 
 EXTERN void find_edge_connected_nodes(int,    // Local node number
                                       int *); // Three edge-connected nodes
 
-EXTERN int is_node_in_element(Exo_DB *,       // Exodus database
-                              int,            // Node number
-                              int);           // Element number
+EXTERN int is_node_in_element(Exo_DB *, // Exodus database
+                              int,      // Node number
+                              int);     // Element number
 
-#endif                                        /* GOMA_EXO_UTILS_H */
+#endif /* GOMA_EXO_UTILS_H */

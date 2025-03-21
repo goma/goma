@@ -671,7 +671,7 @@ int match_nsid(int id)
 int psid2nn(int psid)
 
 {
-  int nsp;                /* node set pointer for this pointset */
+  int nsp; /* node set pointer for this pointset */
 
   nsp = match_nsid(psid); /* node set pointer this node set */
 
@@ -694,7 +694,7 @@ int psid2nn(int psid)
 int nsid2nn(int psid)
 
 {
-  int nsp;                /* node set pointer for this pointset */
+  int nsp; /* node set pointer for this pointset */
 
   nsp = match_nsid(psid); /* node set pointer this node set */
 

@@ -29,7 +29,7 @@
 
 #include "rf_io_structs.h" /* To know about Results_Description */
 
-#include "rf_bc_const.h"   /* To know about elem_side_bc_struct */
+#include "rf_bc_const.h" /* To know about elem_side_bc_struct */
 
 #include "sl_util_structs.h"
 
@@ -43,17 +43,17 @@
  * Kinds of solvers available...
  */
 
-#define SPARSE13a     0 /* Kundert's direct factorization package */
-#define AZTEC         1 /* Shadid's "distributed krysolve 2.0" */
-#define MA28                                                          \
-  2                     /* old Harwell solver; MA32 is better costs $ \
-                                               MA42 even better */
-#define PIM20 3         /* Brazilian's iterative package */
-#define PSP3  4         /* Saad's Minnesota package */
+#define SPARSE13a 0 /* Kundert's direct factorization package */
+#define AZTEC     1 /* Shadid's "distributed krysolve 2.0" */
+#define MA28                                                  \
+  2             /* old Harwell solver; MA32 is better costs $ \
+                                       MA42 even better */
+#define PIM20 3 /* Brazilian's iterative package */
+#define PSP3  4 /* Saad's Minnesota package */
 /*IGBRK*/
-#define UMFPACK2                                                            \
-  5                            /* Davis' multifrontal factorization package \
-                                  Nearly the same as MA42 */
+#define UMFPACK2                                 \
+  5 /* Davis' multifrontal factorization package \
+       Nearly the same as MA42 */
 #define UMFPACK2F                                                           \
   6                            /* Davis' multifrontal factorization package \
                                   Force full analysis/factorization every time */
@@ -69,7 +69,7 @@
  * make it look like the FORTRAN name for this routine.
  */
 
-#define APPEND_UNDERSCORE    /* Default behavior... */
+#define APPEND_UNDERSCORE /* Default behavior... */
 
 #if defined(_AIX) || defined(hpux)
 #ifdef APPEND_UNDERSCORE

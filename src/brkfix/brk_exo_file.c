@@ -118,13 +118,13 @@
 #include "brkfix/utils.h"
 #include "brkfix/wr_coords.h"
 #include "brkfix/wr_graph_file.h"
-#include "dpi.h"        /* distributed processing information */
+#include "dpi.h" /* distributed processing information */
 #include "exo_conn.h"
 #include "exo_struct.h" /* some definitions for EXODUS II */
 #include "mm_eh.h"      /* error handling */
 #include "rd_dpi.h"
 #include "rd_exo.h"
-#include "rf_allo.h"    /* multi-dim array allocation */
+#include "rf_allo.h" /* multi-dim array allocation */
 
 /*
  * The general dependency matrix exists for each element block.
@@ -224,11 +224,11 @@ static char *chaco_user_params_file[] = {
 
 Bevm ***mult;
 
-static int *ep;  /* element pointers into node list */
-static int *np;  /* node pointers into element list */
+static int *ep; /* element pointers into node list */
+static int *np; /* node pointers into element list */
 
-static int *nl;  /* node list */
-static int *el;  /* element list */
+static int *nl; /* node list */
+static int *el; /* element list */
 
 static int *ebl; /* element block list */
 
@@ -270,22 +270,22 @@ extern int interface(int,    /* nvtxs - number of vertices in full graph */
                      long);  /* seed - for random graph mutations */
 #endif
 
-extern int wr_mesh_exo       /* wr_exo.c */
-    (Exo_DB *,               /* exo - ptr to full ripe EXODUS II fe db */
-     char *,                 /* filename - where to write */
-     int);                   /* verbosity - talk while writing */
+extern int wr_mesh_exo /* wr_exo.c */
+    (Exo_DB *,         /* exo - ptr to full ripe EXODUS II fe db */
+     char *,           /* filename - where to write */
+     int);             /* verbosity - talk while writing */
 
-extern void wr_resetup_exo   /* wr_exo.c */
-    (Exo_DB *,               /* exo - ptr to full ripe EXODUS II fe db */
-     char *,                 /* filename - where to write */
-     int);                   /* verbosity - 0 for quiet, more to talk */
+extern void wr_resetup_exo /* wr_exo.c */
+    (Exo_DB *,             /* exo - ptr to full ripe EXODUS II fe db */
+     char *,               /* filename - where to write */
+     int);                 /* verbosity - 0 for quiet, more to talk */
 
-extern int wr_dpi            /* wr_dpi.c */
-    (Dpi *,                  /* fantastic structure defd in "dpi.h" */
-     char *,                 /* filename */
-     int);                   /* verbosity - how much to talk */
+extern int wr_dpi /* wr_dpi.c */
+    (Dpi *,       /* fantastic structure defd in "dpi.h" */
+     char *,      /* filename */
+     int);        /* verbosity - how much to talk */
 
-static int integer_compare   /* used internally by qsort() brk.c */
+static int integer_compare /* used internally by qsort() brk.c */
     (const void *, const void *);
 
 int brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File) {
@@ -385,7 +385,7 @@ int brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File) {
   int min_vweight; /* of graph verteces; rescale with this! */
   int my_set;
 
-  int n;           /* node counter */
+  int n; /* node counter */
   /*   int nargs;		 number of nonoption arguments leftover */
   int *nat_contribute; /* number of assembled terms for nn interact. */
   int ne;              /* number of elements */
@@ -398,15 +398,15 @@ int brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File) {
   int *new_truth_table; /* element variables get expanded for plotting
                          * of distribution */
   int new_weight;
-  int nn;               /* number of nodes */
-  int nns;              /* number of node sets */
-  int nnv;              /* number of nodal variables */
-  int *nnz_contribute;  /* to nonsparsity for a node-node interact. */
+  int nn;              /* number of nodes */
+  int nns;             /* number of node sets */
+  int nnv;             /* number of nodal variables */
+  int *nnz_contribute; /* to nonsparsity for a node-node interact. */
   int node;
   int *node_kind;
   int *node_dof0;
   int ns_touch;
-  int nss;                /* number of side sets */
+  int nss; /* number of side sets */
   int nsets;
   int *num_basic_eqnvars; /* how many basic equation/variable pairs
                            * for each element block, indexed using the
@@ -415,9 +415,9 @@ int brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File) {
                            * integers.
                            */
 
-  int num_edges;          /* of the graph */
+  int num_edges; /* of the graph */
   int num_boundary_nodes;
-  int num_element_procs;  /* count procs assembling an element */
+  int num_element_procs; /* count procs assembling an element */
   int num_external_nodes;
   int num_internal_nodes;
   int num_universe_nodes;
@@ -428,10 +428,10 @@ int brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File) {
   int num_verteces; /* of the graph */
 
   int old_start;
-  int owner;        /* proc/set id of an element */
+  int owner; /* proc/set id of an element */
 
   int p;
-  int *pnn;         /* pointer into node-node connectivity list */
+  int *pnn; /* pointer into node-node connectivity list */
   int private_elem;
   int *private_elem_count;
   int *proc_eb_id;
@@ -473,7 +473,7 @@ int brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File) {
   int *proc_ss_side_list;
   int *node_set_membership; /* ptrs to set memberships */
 
-  int *recv_proc_names;     /* from the standpoint of a proc */
+  int *recv_proc_names; /* from the standpoint of a proc */
 
   int s;
   int scale_eweight;
@@ -515,23 +515,23 @@ int brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File) {
   dbl *proc_ns_distfact_list;
   dbl *proc_ss_distfact_list;
 
-  Dpi *D;       /* distributed processing information */
+  Dpi *D; /* distributed processing information */
 
   Exo_DB *mono; /* monolithic EXODUS IIv2 database */
 
-  Exo_DB *E;    /* for each polylithic piece */
+  Exo_DB *E; /* for each polylithic piece */
 
   char **ptmp;
 
   struct stat stat_buf_struct;
 
-  char in_file_name[FILENAME_MAX_ACK];          /* to read in specifications */
+  char in_file_name[FILENAME_MAX_ACK]; /* to read in specifications */
 
-  char in_exodus_file_name[FILENAME_MAX_ACK];   /* input monolith EXODUS II file */
+  char in_exodus_file_name[FILENAME_MAX_ACK]; /* input monolith EXODUS II file */
 
-  char out_coord_file_name[FILENAME_MAX_ACK];   /* coordinate file name */
+  char out_coord_file_name[FILENAME_MAX_ACK]; /* coordinate file name */
 
-  char out_graph_file_name[FILENAME_MAX_ACK];   /* graph file name */
+  char out_graph_file_name[FILENAME_MAX_ACK]; /* graph file name */
 
   char out_augplot_file_name[FILENAME_MAX_ACK]; /* decomposition plot file name */
 
@@ -781,7 +781,7 @@ int brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File) {
   make_goma_dofmap(mono, mult, evd, Lucky, num_basic_eqnvars,    /* (in) */
                    node_kind, node_dof0, pnd, &num_kinds_nodes); /* (out) */
 
-  total_dofs = node_dof0[nn];                                    /* right after the last node */
+  total_dofs = node_dof0[nn]; /* right after the last node */
 
   length_node_node = mono->node_node_pntr[mono->num_nodes];
 
@@ -1069,7 +1069,7 @@ int brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File) {
 
   global_method = 3; /* tmp hardwire -- inertial */
 
-  local_method = 1;  /* tmp hardwire -- Kernighan-Lin */
+  local_method = 1; /* tmp hardwire -- Kernighan-Lin */
 
   rqi_flag = 1;
 
@@ -4190,8 +4190,8 @@ int brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File) {
         mono->ev_time_indeces[i] = i + 1; /* Streetgang: "Fortran Rulz!" */
       }
 
-      mono->state |= EXODB_STATE_ELIA;    /* Keep accurate state info... */
-      mono->state |= EXODB_STATE_ELVA;    /* Keep accurate state info... */
+      mono->state |= EXODB_STATE_ELIA; /* Keep accurate state info... */
+      mono->state |= EXODB_STATE_ELVA; /* Keep accurate state info... */
     }
 
     new_truth_table = (int *)smalloc(len * neb * sizeof(int));

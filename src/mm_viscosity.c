@@ -750,7 +750,7 @@ double power_law_viscosity(struct Generalized_Newtonian *gn_local,
 
   int i, j;
 
-  dbl gammadot;             /* strain rate invariant */
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
@@ -830,7 +830,7 @@ double herschel_bulkley_viscosity(struct Generalized_Newtonian *gn_local,
 
   int i, j;
 
-  dbl gammadot;             /* strain rate invariant */
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
@@ -985,7 +985,7 @@ double carreau_viscosity(struct Generalized_Newtonian *gn_local,
 
   int i, j;
 
-  dbl gammadot;             /* strain rate invariant */
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
@@ -1126,7 +1126,7 @@ double bingham_viscosity(struct Generalized_Newtonian *gn_local,
   int mdofs = 0, vdofs;
   int i, j;
 
-  dbl gammadot;             /* strain rate invariant */
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
@@ -1338,7 +1338,7 @@ double bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   int mdofs = 0, vdofs;
   int i, j;
 
-  dbl gammadot;             /* strain rate invariant */
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
@@ -1504,7 +1504,7 @@ double carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
 
   int i, j;
 
-  dbl gammadot;             /* strain rate invariant */
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
@@ -1718,8 +1718,8 @@ double carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
 
 int fill_viscosity(dbl *param) /* ptr to the user-defined parameter list    */
 {
-  dbl mu;                      /* Newtonian viscosity*/
-  dbl F;                       /* Convenient local variables */
+  dbl mu; /* Newtonian viscosity*/
+  dbl F;  /* Convenient local variables */
 
   /***********Load up convenient local variables*************/
   F = fv->F;
@@ -1883,7 +1883,7 @@ double carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   dbl lambda;
   dbl nexp;
 
-  dbl gammadot;             /* strain rate invariant */
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
@@ -1895,7 +1895,7 @@ double carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   dbl nexp_species; /* exponent for constitutive equation */
   dbl mu0;          /* zero shear-rate viscosity */
 
-  int species;      /* species number for solid volume fraction tracking */
+  int species; /* species number for solid volume fraction tracking */
 
   int i, j;
 
@@ -2051,7 +2051,7 @@ double powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   dbl offset;
   dbl nexp;
 
-  dbl gammadot;             /* strain rate invariant */
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
@@ -2063,7 +2063,7 @@ double powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   dbl nexp_species; /* exponent for constitutive equation */
   dbl mu0;          /* zero shear-rate viscosity */
 
-  int species;      /* species number for solid volume fraction tracking */
+  int species; /* species number for solid volume fraction tracking */
 
   int i, j;
 
@@ -2218,7 +2218,7 @@ int epoxy_viscosity(int species, /* species number for cure equation */
   dbl ratio;
   dbl deriv; /* stuff for the first derivative */
   dbl d_deriv;
-  dbl T;     /* Convenient local variables */
+  dbl T; /* Convenient local variables */
   int var;
   int status = 1;
 
@@ -2300,7 +2300,7 @@ int foam_pmdi10_viscosity(int species, /* species number for cure equation */
                           dbl norm_E)  /* Normalized activation energy */
 {
   /* Local Variables */
-  dbl mu;    /* viscosity */
+  dbl mu; /* viscosity */
   double muL;
   dbl alpha; /* extent of reaction */
   dbl ratio;
@@ -2401,7 +2401,7 @@ int sylgard_viscosity(int species, /* species number for cure equation */
   dbl ratio;
   dbl deriv; /* stuff for the first derivative */
   dbl d_deriv;
-  dbl T;     /* Convenient local variables */
+  dbl T; /* Convenient local variables */
   int var;
   int status = 1;
 
@@ -2505,8 +2505,8 @@ int filled_epoxy_viscosity(int species_sus, /* species num, solid volume fractio
   /* Local Variables */
   dbl mu = 0; /* viscosity */
   dbl mu0_local;
-  dbl T;      /* temperature */
-  dbl vf;     /* volume fraction solid */
+  dbl T;  /* temperature */
+  dbl vf; /* volume fraction solid */
   dbl ratio;
   dbl exponent, exponent_t;
   dbl alpha, alpha2, alpha_g2;
@@ -2527,7 +2527,7 @@ int filled_epoxy_viscosity(int species_sus, /* species num, solid volume fractio
   mp->d_viscosity[MAX_VARIABLE_TYPES + species_cur] = 0.0;
   mp->d2_viscosity[MAX_VARIABLE_TYPES + species_cur] = 0.0;
 
-  vf = fv->c[species_sus];    /* volume fraction solid */
+  vf = fv->c[species_sus]; /* volume fraction solid */
 
   alpha = fv->c[species_cur]; /* extent of reaction */
   alpha2 = alpha * alpha;     /* extent of reaction squared */
@@ -2560,7 +2560,7 @@ int filled_epoxy_viscosity(int species_sus, /* species num, solid volume fractio
   ln_10 = log(10.0);
 
   if (T <= 0.) {
-    mu0_local = mu0 * pow(ratio, exponent);        /*  mu0 should be mu(0,Tg) here*/
+    mu0_local = mu0 * pow(ratio, exponent); /*  mu0 should be mu(0,Tg) here*/
   } else {
     exponent_t = -c1 * (T - T_g) / (c2 + T - T_g); /*CAR*/
     if (exponent_t > 20.)
@@ -2775,7 +2775,7 @@ int thermal_viscosity(dbl mu0,  /* reference temperature fluid viscosity */
   /* Local Variables */
   dbl mu; /* viscosity */
 
-  dbl T;  /* Convenient local variables */
+  dbl T; /* Convenient local variables */
   int status = 1;
   int var = TEMPERATURE;
 
@@ -2836,11 +2836,11 @@ int cure_viscosity(int species, /* species num, solid volume fraction        */
                    dbl A,       /* exponent for constitutive equation        */
                    dbl B)       /* exponent for constitutive equation        */
 {
-  dbl mu;                       /* viscosity */
-  dbl alpha;                    /* extent of reaction */
+  dbl mu;    /* viscosity */
+  dbl alpha; /* extent of reaction */
   dbl exponent;
   dbl ratio;
-  dbl deriv;                    /* stuff for the first derivative */
+  dbl deriv; /* stuff for the first derivative */
   int status = 1;
 
   if (!pd->v[pg->imtrx][MASS_FRACTION]) {
@@ -2895,9 +2895,9 @@ double bond_viscosity(struct Generalized_Newtonian *gn_local,
                       dbl gamma_dot[DIM][DIM], /* strain rate tensor */
                       VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
   /* Local Variables */
-  dbl mu;                   /* viscosity */
-  dbl temp;                 /*  Temperature*/
-  dbl gammadot;             /* strain rate invariant */
+  dbl mu;       /* viscosity */
+  dbl temp;     /*  Temperature*/
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
@@ -3110,7 +3110,7 @@ double carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
 
   int i, j, w;
 
-  dbl gammadot;             /* strain rate invariant */
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */

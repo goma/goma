@@ -105,17 +105,17 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
                       Exo_DB *exo, /* ptr to the finite element mesh database */
                       Dpi *dpi)    /* distributed processing information */
 {
-  int *ija = NULL;                 /* column pointer array                         */
-  double *a = NULL;                /* nonzero array                                */
-  double *a_old = NULL;            /* nonzero array                                */
-  double *x = NULL;                /* solution vector                              */
+  int *ija = NULL;      /* column pointer array                         */
+  double *a = NULL;     /* nonzero array                                */
+  double *a_old = NULL; /* nonzero array                                */
+  double *x = NULL;     /* solution vector                              */
 
-  int iAC;                         /* COUNTER                                      */
-  double *x_AC = NULL;             /* SOLUTION VECTOR OF EXTRA UNKNOWNS            */
-  double *x_AC_old = NULL;         /* old SOLUTION VECTOR OF EXTRA UNKNOWNS        */
+  int iAC;                 /* COUNTER                                      */
+  double *x_AC = NULL;     /* SOLUTION VECTOR OF EXTRA UNKNOWNS            */
+  double *x_AC_old = NULL; /* old SOLUTION VECTOR OF EXTRA UNKNOWNS        */
   double *x_AC_dot = NULL;
 
-  int *ija_attic = NULL;           /* storage for external dofs                    */
+  int *ija_attic = NULL; /* storage for external dofs                    */
 
   int eb_indx, ev_indx;
 
@@ -147,7 +147,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
   double *resid_vector = NULL;      /* residual */
   double *resid_vector_sens = NULL; /* residual sensitivity */
 
-  double *scale = NULL;             /* scale vector for modified newton */
+  double *scale = NULL; /* scale vector for modified newton */
 
   int *node_to_fill = NULL;
 
@@ -194,15 +194,15 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
 
   struct Results_Description *rd = NULL;
 
-  int tnv;                      /* total number of nodal variables and kinds */
-  int tev;                      /* total number of elem variables and kinds */
-  int tnv_post;                 /* total number of nodal variables and kinds
-                                   for post processing */
-  int tev_post;                 /* total number of elem variables and kinds
-                                   for post processing */
+  int tnv;      /* total number of nodal variables and kinds */
+  int tev;      /* total number of elem variables and kinds */
+  int tnv_post; /* total number of nodal variables and kinds
+                   for post processing */
+  int tev_post; /* total number of elem variables and kinds
+                   for post processing */
 
   double *gv;
-  int iUC;                      /* User-defined continuation condition index */
+  int iUC; /* User-defined continuation condition index */
 
 #ifdef HAVE_FRONT
   int max_unk_elem, one, three; /* variables used as mf_setup arguments*/
@@ -814,7 +814,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
         break;
 
         /* This case requires an inner switch block */
-      case 5:     /* UF */
+      case 5: /* UF */
         for (iUC = 0; iUC < nUC; iUC++) {
           switch (cpuc[iUC].Type) {
           case 1: /* BC */

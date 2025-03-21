@@ -239,13 +239,13 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
   DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
-  dbl M[MAX_CONC];                        /* species molecular weight */
-  dbl x[MAX_CONC];                        /* mole fraction */
+  dbl M[MAX_CONC]; /* species molecular weight */
+  dbl x[MAX_CONC]; /* mole fraction */
 
   struct Species_Conservation_Terms s_terms;
   memset(&s_terms, 0, sizeof(struct Species_Conservation_Terms));
 
-  dbl mass;      /* For terms and their derivatives */
+  dbl mass; /* For terms and their derivatives */
 
   dbl advection; /* For terms and their derivatives */
   dbl advection_a, advection_b, advection_c, advection_d, advection_e, advection_f;
@@ -312,11 +312,11 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
     taylor_galerkin[w] = mp->SpeciesTimeIntegration[w];
   }
 
-  wt = fv->wt;           /* Gauss point weight. */
+  wt = fv->wt; /* Gauss point weight. */
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3;           /* Differential volume element. */
+  h3 = fv->h3; /* Differential volume element. */
 
   num_species = pd->Num_Species;
 
@@ -490,7 +490,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
         /*  rho = density(d_rho); /\*  RSL 6/22/02  *\/ */ /* not sure why we are calling density
                                                               again, so I commented this out -RRR*/
         small_c = rho / sumxm;
-        coeff_rho = small_c;                               /*  RSL 9/27/01  */
+        coeff_rho = small_c; /*  RSL 9/27/01  */
       }
 
       /*
@@ -1694,11 +1694,11 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 /*****************************************************************************/
 /*****************************************************************************/
 int assemble_mass_transport_path_dependence(
-    double time,          /* present time valuel; KSC             */
-    double tt,            /* parameter to vary time integration from
-                           * explicit (tt = 1) to implicit (tt = 0) */
-    double dt,            /* current time step size */
-    const dbl h[DIM],     /* element sizes, not scale factors.     */
+    double time,      /* present time valuel; KSC             */
+    double tt,        /* parameter to vary time integration from
+                       * explicit (tt = 1) to implicit (tt = 0) */
+    double dt,        /* current time step size */
+    const dbl h[DIM], /* element sizes, not scale factors.     */
     const dbl hh[DIM][DIM],
     const dbl dh_dxnode[DIM][MDE],
     const dbl vcent[DIM], /* average element velocity, which is
@@ -1747,12 +1747,12 @@ int assemble_mass_transport_path_dependence(
   DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
-  dbl M[MAX_CONC];                        /* species molecular weight */
-  dbl x[MAX_CONC];                        /* mole fraction */
+  dbl M[MAX_CONC]; /* species molecular weight */
+  dbl x[MAX_CONC]; /* mole fraction */
 
   struct Species_Conservation_Terms s_terms;
 
-  dbl mass;      /* For terms and their derivatives */
+  dbl mass; /* For terms and their derivatives */
 
   dbl advection; /* For terms and their derivatives */
   dbl advection_a, advection_b;
@@ -1804,8 +1804,8 @@ int assemble_mass_transport_path_dependence(
     return (status);
   }
 
-  wt = fv->wt;           /* Gauss point weight. */
-  h3 = fv->h3;           /* Differential volume element. */
+  wt = fv->wt; /* Gauss point weight. */
+  h3 = fv->h3; /* Differential volume element. */
 
   if (ls->on_sharp_surf) /* sharp interface */
   {
@@ -2167,10 +2167,10 @@ void mass_flux_surf_BV(dbl mass_flux[MAX_CONC],
 {
   int w;
 
-  const double R = 8.314;        /* Universal gas constant in units of J/mole K */
-  const double F = 96487.0;      /* Faraday's constant in units of C/equiv. */
-  double FRT;                    /* product of F/R/T */
-  double PHI;                    /* electrical potential in electrolyte phase */
+  const double R = 8.314;   /* Universal gas constant in units of J/mole K */
+  const double F = 96487.0; /* Faraday's constant in units of C/equiv. */
+  double FRT;               /* product of F/R/T */
+  double PHI;               /* electrical potential in electrolyte phase */
   double conc, conc1, grpa, grpc;
 
   if (nAC) {                     /* if augmenting condition card is active, then  */
@@ -2516,11 +2516,11 @@ void mass_flux_surf_SULFIDATION(dbl mass_flux[MAX_CONC],
   double c_h;             /* concentration of electron holes */
 
   if (mode == SOLID_DIFFUSION_SIMPLIFIED) {
-    c_Cu = fv->c[0];      /* Cu is the diffusing species */
+    c_Cu = fv->c[0]; /* Cu is the diffusing species */
     mass_flux[wspec] = nu * k1 * exp(-E1 / R / T) * c_H2S * c_Cu;
   } else if (mode == SOLID_DIFFUSION_ELECTRONEUTRALITY) {
-    c_V = fv->c[wspec];   /* Cu vacancies and electron holes are diffusing species */
-                          /* c_h = c_V due to electroneutrality approximation */
+    c_V = fv->c[wspec]; /* Cu vacancies and electron holes are diffusing species */
+                        /* c_h = c_V due to electroneutrality approximation */
     mass_flux[wspec] = k1 * exp(-E1 / R / T) * c_H2S * sqrt(c_O2) -
                        kn1 * exp(-En1 / R / T) * c_V * c_V * c_V * c_V;
     mass_flux[wspec] *= nu;
@@ -2628,7 +2628,7 @@ void mass_flux_surf_SULFIDATION(dbl mass_flux[MAX_CONC],
 } /* END of routine mass_flux_surf_SULFIDATION                           */
 /****************************************************************************/
 
-void mass_flux_surf_BV2(dbl time,      /* current time value                    */
+void mass_flux_surf_BV2(dbl time, /* current time value                    */
                         dbl mass_flux[MAX_CONC],
                         dbl d_mass_flux[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC],
                         int wspec,     /* species number                        */
@@ -2666,10 +2666,10 @@ void mass_flux_surf_BV2(dbl time,      /* current time value                    
 {
   int w, j, store;
 
-  const double R = 8.314;                 /* universal gas constant in units of J/mole K */
-  const double F = 96487.;                /* Faraday's constant in units of C/equiv      */
-  double FRT;                             /* F/(R*T)                                     */
-  double PHI_S;                           /* electrical potential in solution phase      */
+  const double R = 8.314;  /* universal gas constant in units of J/mole K */
+  const double F = 96487.; /* Faraday's constant in units of C/equiv      */
+  double FRT;              /* F/(R*T)                                     */
+  double PHI_S;            /* electrical potential in solution phase      */
   double conc, grpa, grpc, diff_phi, kgc, derivative;
   dbl c, rho, M_mix;
   DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
@@ -2740,10 +2740,10 @@ void mass_flux_surf_NI(dbl mass_flux[MAX_CONC],
   int w, j, store, n;
   int four;
 
-  const double R = 8.314;                 /* universal gas constant in units of J/mole K */
-  const double F = 96487.;                /* Faraday's constant in units of C/equiv      */
-  double FRT;                             /* F/(R*T)                                     */
-  double PHI_S;                           /* electrical potential in solution phase      */
+  const double R = 8.314;  /* universal gas constant in units of J/mole K */
+  const double F = 96487.; /* Faraday's constant in units of C/equiv      */
+  double FRT;              /* F/(R*T)                                     */
+  double PHI_S;            /* electrical potential in solution phase      */
   double conc, grpa, grpc, diff_phi, i00, alphaa, alphac, U00, Q, dQdV, dQdx, dQdy;
   dbl c, rho, M_mix;
   DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
@@ -3767,7 +3767,7 @@ void mass_flux_surf_bc(double func[],
 {
   int j, j_id, w1, dim, kdir, var, jvar;
   double phi_j;
-  double Y_w;                 /* local concentration of current species */
+  double Y_w; /* local concentration of current species */
 
   double vconv[MAX_PDIM];     /*Calculated convection velocity */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
@@ -3935,7 +3935,7 @@ void yflux_disc_rxn_bc(double func[],
 {
   int j, j_id, w1, dim, kdir, var, jvar, wspec_b, wspec;
   double phi_j;
-  double Y_w;                 /* local concentration of current species */
+  double Y_w; /* local concentration of current species */
 
   double vconv[MAX_PDIM];     /*Calculated convection velocity */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
@@ -5905,7 +5905,7 @@ void mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
                          int wspec,               /* species no.                               */
                          double mass_tran_coeff,  /* MASS transfer coeff           */
                          double d_mtc[MAX_VARIABLE_TYPES + MAX_CONC],
-                         double Y_c)              /* bulk concentration 	                     */
+                         double Y_c) /* bulk concentration 	                     */
 /*****************************************************************************/
 {
   /* Local variables */
@@ -6596,11 +6596,11 @@ void act_coeff(dbl lngamma[MAX_CONC],
 
 void get_equil_surf_bc(double func[],
                        double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                       int mode,           /* model on which the VLE is based           */
-                       int wspec,          /* species number of this boundary condition */
+                       int mode,  /* model on which the VLE is based           */
+                       int wspec, /* species number of this boundary condition */
                        double amb_pres,
                        double mass_tran_coeff,
-                       double Y_c,         /* bath concentration 	                     */
+                       double Y_c, /* bath concentration 	                     */
                        double T_gas,
                        double diff_gas_25, /* Chilton-Coburn parameters	     */
                        dbl dt,             /* current value of the time step            */
@@ -6614,9 +6614,9 @@ void get_equil_surf_bc(double func[],
 {
   int j, j_id, w1, dim, kdir, var, jvar;
   double phi_j;
-  double Y_w;                 /* local concentration of current species */
+  double Y_w; /* local concentration of current species */
 
-  double activity[MAX_CONC];  /* nonideal activity of species */
+  double activity[MAX_CONC]; /* nonideal activity of species */
   double dact_dC[MAX_CONC][MAX_CONC];
   double vconv[MAX_PDIM];     /*Calculated convection velocity */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
@@ -8170,7 +8170,7 @@ void kin_bc_electrodeposition(double func[],
 
   if (!strcmp(BC_Types[ibc].desc->name1, "YFLUX_NI")) {
     if (pd->v[pg->imtrx][MASS_FRACTION]) {
-      Vmolar = 6.596;                           /*  molar volume of solid nickel  */
+      Vmolar = 6.596; /*  molar volume of solid nickel  */
       while (ibc != -1) {
         wspec = BC_Types[ibc].BC_Data_Int[0];   /*  species number           */
         flag = 0;                               /*  need species flux        */
@@ -9107,16 +9107,16 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
    * So we only have to set one ptr to take care of the separate species.
    * These replace the vconv[] stuff from before in the code below.
    */
-  double *conv;                 /*Calculated convection velocity */
-  double *conv_old;             /*Calculated convection velocity at previous time*/
+  double *conv;     /*Calculated convection velocity */
+  double *conv_old; /*Calculated convection velocity at previous time*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_conv;
 
   dbl c_new = 0.0, c_old = 0.0; /* velocity averages */
   int w, w1, i, j, a, b, err, var, eqn, var_offset;
   int taylor_galerkin[MAX_CONC];
-  int explicit[MAX_CONC];       /* move to input deck asap */
+  int explicit[MAX_CONC]; /* move to input deck asap */
 
-  int species;                  /* Species number for the particle phase. */
+  int species; /* Species number for the particle phase. */
 
   if (mp->DensityModel == SUSPENSION_PM)
     species = (int)mp->u_density[0];
@@ -10516,17 +10516,17 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
   dbl dAJ[MAX_CONC * DIM];                /* dA/dx vector multiplied by the J vector */
   dbl scratch[MAX_CONC * DIM][MAX_CONC * DIM];
 
-  const double R = 8.314;                 /* Universal gas constant ( J/mole K ) */
-  const double F = 96487.0;               /* Faraday's constant  ( C/equiv ) */
-  dbl T = 298.0;                          /* Temperature; set default value to room temperature */
-  dbl rho;                                /* density */
-  dbl c;                                  /* total molar concentration */
-  dbl e = 1.0;                            /* porosity; set default value to unity */
-  dbl x[MAX_CONC];                        /* Mole Fraction */
-  dbl M[MAX_CONC], M_mix;                 /* molecular weight of individual species */
-                                          /* and of mixture, respectively */
-  dbl z[MAX_CONC];                        /* charge number */
-  dbl J[MAX_CONC * DIM];                  /* Stefan_Maxwell flux vector */
+  const double R = 8.314;   /* Universal gas constant ( J/mole K ) */
+  const double F = 96487.0; /* Faraday's constant  ( C/equiv ) */
+  dbl T = 298.0;            /* Temperature; set default value to room temperature */
+  dbl rho;                  /* density */
+  dbl c;                    /* total molar concentration */
+  dbl e = 1.0;              /* porosity; set default value to unity */
+  dbl x[MAX_CONC];          /* Mole Fraction */
+  dbl M[MAX_CONC], M_mix;   /* molecular weight of individual species */
+                            /* and of mixture, respectively */
+  dbl z[MAX_CONC];          /* charge number */
+  dbl J[MAX_CONC * DIM];    /* Stefan_Maxwell flux vector */
   dbl dJ[MAX_CONC * DIM];
   dbl temp_var;
   int volume_flag;
@@ -10541,11 +10541,11 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
   static double *bbb;                      /*    reused for repeated                   */
   static int *indx;                        /*  scaling array used in lu decomposition  */
 
-  dbl D[MAX_CONC][MAX_CONC];               /* Stefan_Maxwell diffusivities       */
-  dbl grad_mu[MAX_CONC][DIM];              /* electrochemical potential gradient */
-  dbl grad_phi2[DIM];                      /* gradient of electrical potential   */
-                                           /*       in electrolyte               */
-  dbl grad_x[MAX_CONC][DIM];               /* mole fraction gradient */
+  dbl D[MAX_CONC][MAX_CONC];  /* Stefan_Maxwell diffusivities       */
+  dbl grad_mu[MAX_CONC][DIM]; /* electrochemical potential gradient */
+  dbl grad_phi2[DIM];         /* gradient of electrical potential   */
+                              /*       in electrolyte               */
+  dbl grad_x[MAX_CONC][DIM];  /* mole fraction gradient */
 
   /*  double cc[MAX_CONC*DIM][MAX_CONC*DIM];  cc is a dummy matrix */
   int n_species, n;
@@ -10555,7 +10555,7 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
   DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
-  dbl T0, EE, alpha;                      /* KSC on 9/24/04 */
+  dbl T0, EE, alpha; /* KSC on 9/24/04 */
 
   if (MAX_CONC < 3) {
     GOMA_EH(GOMA_ERROR, "Stefan_Maxwell_Diff_flux expects MAX_CONC >= 3");
@@ -10623,7 +10623,7 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
     if (T == 0.0)
       T = 298.0; /* set the solution temperature to the 298 K if it is zero - safety feature */
 
-  } else         /* when the energy-transport equation is NOT being solved */
+  } else /* when the energy-transport equation is NOT being solved */
   {
     if (pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL) {
       if (mp->SolutionTemperatureModel == CONSTANT) {
@@ -10652,10 +10652,10 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
       T = 298.0; /* set the solution temperature to the 298 K if it is zero - safety feature */
   }
 
-  if (mp->PorosityModel == CONSTANT)          /* constant porosity */
+  if (mp->PorosityModel == CONSTANT) /* constant porosity */
   {
     e = mp->porosity;
-  } else                                      /* non-CONSTANT porosity model */
+  } else /* non-CONSTANT porosity model */
   {
     if (mp->PorosityModel == THERMAL_BATTERY) /* thermal battery porosity model */
     {
@@ -10992,7 +10992,7 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
         correction = d_rho->C[w1][j] / rho -
                      bf[var]->phi[j] * (M[w1] - M[n_species - 1]) / M_mix; /* RSL 8/24/00 */
         switch (VIM) {
-        case 1:                                                            /* 1-D approximation */
+        case 1:                      /* 1-D approximation */
           for (wi = 0; wi < n; wi++) /* first zero the dA matrix and dB vector */
           {
             dB[wi] = 0.0;
@@ -11034,7 +11034,7 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
           dB[n - 1] -= z[n - 1] * F * grad_phi2[0] * bf[var]->phi[j] / (R * T); /* RSL 3/23/00 */
           for (wj = 0; wj < n_species - 1; wj++) {
             dA[n - 1][wj] = -bf[var]->phi[j] / (c * e * D[n_species - 1][wj]);
-            if (!volume_flag)                                                   /* RSL 8/24/00 */
+            if (!volume_flag) /* RSL 8/24/00 */
             {
               dA[n - 1][wj] -= correction * A[n - 1][wj];
             }
@@ -11065,7 +11065,7 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
               temp_var = z[k] * F * bf[var]->phi[j] / (R * T); /* RSL 8/23/00 */
               dB[i1] += temp_var * grad_phi2[0];               /* RSL 3/23/00 */
               dB[i2] = bf[var]->grad_phi[j][1];
-              dB[i2] += temp_var * grad_phi2[1];               /* RSL 3/23/00 */
+              dB[i2] += temp_var * grad_phi2[1]; /* RSL 3/23/00 */
             }
             for (l = 0; l < n_species; l++) {
               j1 = l * VIM;
@@ -11101,7 +11101,7 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
           temp_var = z[n_species - 1] * F * bf[var]->phi[j] / (R * T); /* RSL 8/23/00 */
           dB[n - 2] -= temp_var * grad_phi2[0];                        /* RSL 3/23/00 */
           dB[n - 1] = -bf[var]->grad_phi[j][1];
-          dB[n - 1] -= temp_var * grad_phi2[1];                        /* RSL 3/23/00 */
+          dB[n - 1] -= temp_var * grad_phi2[1]; /* RSL 3/23/00 */
           for (l = 0; l < n_species - 1; l++) {
             j1 = l * VIM;
             j2 = l * VIM + 1;
@@ -11138,9 +11138,9 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
               temp_var = z[k] * F * bf[var]->phi[j] / (R * T); /* RSL 8/23/00 */
               dB[i1] += temp_var * grad_phi2[0];               /* RSL 3/23/00 */
               dB[i2] = bf[var]->grad_phi[j][1];
-              dB[i2] += temp_var * grad_phi2[1];               /* RSL 3/23/00 */
+              dB[i2] += temp_var * grad_phi2[1]; /* RSL 3/23/00 */
               dB[i3] = bf[var]->grad_phi[j][2];
-              dB[i3] += temp_var * grad_phi2[2];               /* RSL 3/23/00 */
+              dB[i3] += temp_var * grad_phi2[2]; /* RSL 3/23/00 */
             }
             for (l = 0; l < n_species; l++) {
               j1 = l * VIM;
@@ -11180,9 +11180,9 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
           temp_var = z[n_species - 1] * F * bf[var]->phi[j] / (R * T); /* RSL 8/23/00 */
           dB[n - 3] -= temp_var * grad_phi2[0];                        /* RSL 3/23/00 */
           dB[n - 2] = -bf[var]->grad_phi[j][1];
-          dB[n - 2] -= temp_var * grad_phi2[1];                        /* RSL 3/23/00 */
+          dB[n - 2] -= temp_var * grad_phi2[1]; /* RSL 3/23/00 */
           dB[n - 1] = -bf[var]->grad_phi[j][2];
-          dB[n - 1] -= temp_var * grad_phi2[2];                        /* RSL 3/23/00 */
+          dB[n - 1] -= temp_var * grad_phi2[2]; /* RSL 3/23/00 */
           for (l = 0; l < n_species - 1; l++) {
             j1 = l * VIM;
             j2 = l * VIM + 1;
@@ -11564,7 +11564,7 @@ int fickian_charged_flux_x(struct Species_Conservation_Terms *st, double time, d
   if (pd_glob[mn]->gv[R_ENERGY]) /* if the energy equation is being solved */
   {
     T = fv->T;
-  } else                         /* if the energy equation is NOT being solved */
+  } else /* if the energy equation is NOT being solved */
   {
     if (mp->SolutionTemperatureModel == CONSTANT) {
       T = mp->solution_temperature;
@@ -11953,10 +11953,10 @@ int assemble_invariant(double tt, /* parameter to vary time integration from
   dbl d_I2_dv[DIM][MDE];
   dbl d_I2_dmesh[DIM][MDE];
 
-  dbl h3;               /* Volume element (scale factors). */
-  dbl dh3dmesh_pj;      /* Sensitivity to (p,j) mesh dof. */
+  dbl h3;          /* Volume element (scale factors). */
+  dbl dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
 
-  dbl det_J;            /* determinant of element Jacobian */
+  dbl det_J; /* determinant of element Jacobian */
 
   dbl d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
 
@@ -12000,11 +12000,11 @@ int assemble_invariant(double tt, /* parameter to vary time integration from
 
   peqn = upd->ep[pg->imtrx][eqn];
 
-  wt = fv->wt;           /* Numerical integration weight */
+  wt = fv->wt; /* Numerical integration weight */
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3;           /* Differential volume element (scales). */
+  h3 = fv->h3; /* Differential volume element (scales). */
 
   I2 = 0.0;
 

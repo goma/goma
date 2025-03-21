@@ -478,7 +478,7 @@ int evp_tensor_alloc(Exo_DB *exo) {
   for (mn = 0; mn < upd->Num_Mat; mn++) {
     /*Don't bother with allocation if we are not solving an EVP model */
     if (evpl_glob[mn]->ConstitutiveEquation == EVP_HYPER) {
-      pd_glob[mn]->Num_Dim = Num_Dim;          /* from "el_geom.h" */
+      pd_glob[mn]->Num_Dim = Num_Dim; /* from "el_geom.h" */
       ielem0 = exo->eb_ptr[mn];
       ielem_type = Elem_Type(exo, ielem0);     /* element type */
       ip_total = elem_info(NQUAD, ielem_type); /* number of */
@@ -805,10 +805,10 @@ int assembly_alloc(Exo_DB *exo)
  ********************************************************************/
 {
   int vi, sz;
-  int type;            /* index for unique basis functions */
+  int type; /* index for unique basis functions */
   int status = 0;
-  int interp;          /* index for interpolation order */
-  int si;              /* index for element shape */
+  int interp; /* index for interpolation order */
+  int si;     /* index for element shape */
   int mn;
   int ipore;
   int num_species_eqn; /* active number of species eqn */

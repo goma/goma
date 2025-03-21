@@ -138,18 +138,18 @@ int assemble_stress(dbl tt, /* parameter to vary time integration from
 
   int i, j, status, imtrx;
 
-  dbl v[DIM];           /* Velocity field. */
-  dbl x_dot[DIM];       /* current position field derivative wrt time. */
-  dbl h3;               /* Volume element (scale factors). */
-  dbl dh3dmesh_pj;      /* Sensitivity to (p,j) mesh dof. */
+  dbl v[DIM];      /* Velocity field. */
+  dbl x_dot[DIM];  /* current position field derivative wrt time. */
+  dbl h3;          /* Volume element (scale factors). */
+  dbl dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
 
   dbl grad_v[DIM][DIM];
-  dbl gamma[DIM][DIM];  /* Shear-rate tensor based on velocity */
-  dbl det_J;            /* determinant of element Jacobian */
+  dbl gamma[DIM][DIM]; /* Shear-rate tensor based on velocity */
+  dbl det_J;           /* determinant of element Jacobian */
 
   dbl d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
 
-  dbl mass;             /* For terms and their derivatives */
+  dbl mass; /* For terms and their derivatives */
   dbl mass_a, mass_b, mass_c;
   dbl advection;
   dbl advection_a, advection_b, advection_c, advection_d;
@@ -192,16 +192,16 @@ int assemble_stress(dbl tt, /* parameter to vary time integration from
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
 
-  dbl s[DIM][DIM];         /* stress tensor */
-  dbl s_dot[DIM][DIM];     /* stress tensor from last time step */
+  dbl s[DIM][DIM];     /* stress tensor */
+  dbl s_dot[DIM][DIM]; /* stress tensor from last time step */
   dbl grad_s[DIM][DIM][DIM];
   dbl d_grad_s_dmesh[DIM][DIM][DIM][DIM]
                     [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
 
-  dbl g[DIM][DIM];         /* velocity gradient tensor */
-  dbl gt[DIM][DIM];        /* transpose of velocity gradient tensor */
-  dbl g_dot[DIM][DIM];     /* velocity gradient tensor time derivative */
-  dbl gt_dot[DIM][DIM];    /* transpose of velocity gradient tensor time derivative */
+  dbl g[DIM][DIM];      /* velocity gradient tensor */
+  dbl gt[DIM][DIM];     /* transpose of velocity gradient tensor */
+  dbl g_dot[DIM][DIM];  /* velocity gradient tensor time derivative */
+  dbl gt_dot[DIM][DIM]; /* transpose of velocity gradient tensor time derivative */
 
   /* dot product tensors */
 
@@ -269,7 +269,7 @@ int assemble_stress(dbl tt, /* parameter to vary time integration from
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3;           /* Differential volume element (scales). */
+  h3 = fv->h3; /* Differential volume element (scales). */
 
   v_g[0][0] = VELOCITY_GRADIENT11;
   v_g[0][1] = VELOCITY_GRADIENT12;
@@ -1218,18 +1218,18 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
   int evss_gradv = 0;
 
   int i, j, status, mode;
-  dbl v[DIM];           /* Velocity field. */
-  dbl x_dot[DIM];       /* current position field derivative wrt time. */
-  dbl h3;               /* Volume element (scale factors). */
-  dbl dh3dmesh_pj;      /* Sensitivity to (p,j) mesh dof. */
+  dbl v[DIM];      /* Velocity field. */
+  dbl x_dot[DIM];  /* current position field derivative wrt time. */
+  dbl h3;          /* Volume element (scale factors). */
+  dbl dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
 
   dbl grad_v[DIM][DIM];
-  dbl gamma[DIM][DIM];  /* Shear-rate tensor based on velocity */
-  dbl det_J;            /* determinant of element Jacobian */
+  dbl gamma[DIM][DIM]; /* Shear-rate tensor based on velocity */
+  dbl det_J;           /* determinant of element Jacobian */
 
   dbl d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
 
-  dbl mass;             /* For terms and their derivatives */
+  dbl mass; /* For terms and their derivatives */
   dbl mass_a, mass_b;
   dbl advection;
   dbl advection_a, advection_b, advection_c, advection_d;
@@ -1283,16 +1283,16 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
 
-  dbl s[DIM][DIM];         /* stress tensor */
-  dbl s_dot[DIM][DIM];     /* stress tensor from last time step */
+  dbl s[DIM][DIM];     /* stress tensor */
+  dbl s_dot[DIM][DIM]; /* stress tensor from last time step */
   dbl grad_s[DIM][DIM][DIM];
   dbl d_grad_s_dmesh[DIM][DIM][DIM][DIM]
                     [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
 
-  dbl g[DIM][DIM];         /* velocity gradient tensor */
-  dbl gt[DIM][DIM];        /* transpose of velocity gradient tensor */
-  dbl g_dot[DIM][DIM];     /* velocity gradient tensor time derivative */
-  dbl gt_dot[DIM][DIM];    /* transpose of velocity gradient tensor time derivative */
+  dbl g[DIM][DIM];      /* velocity gradient tensor */
+  dbl gt[DIM][DIM];     /* transpose of velocity gradient tensor */
+  dbl g_dot[DIM][DIM];  /* velocity gradient tensor time derivative */
+  dbl gt_dot[DIM][DIM]; /* transpose of velocity gradient tensor time derivative */
 
   /* dot product tensors */
 
@@ -1386,7 +1386,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3;           /* Differential volume element (scales). */
+  h3 = fv->h3; /* Differential volume element (scales). */
 
   /* load eqn and variable number in tensor form */
   (void)stress_eqn_pointer(v_s);
@@ -3492,11 +3492,11 @@ int assemble_stress_level_set(dbl tt,           /* parameter to vary time integr
                               dbl h[DIM],       /* coordinate scale factors */
                               dbl hh[DIM][DIM], /* coordinate scale factors */
                               dbl dh_dxnode[DIM][MDE],
-                              dbl vcent[DIM],   /* Average element velocity, which is
-                                                 * the centroid velocity for Q2 and the
-                                                 * average of the vertices for Q1. It
-                                                 * comes from the routine
-                                                 * "element_velocity." */
+                              dbl vcent[DIM], /* Average element velocity, which is
+                                               * the centroid velocity for Q2 and the
+                                               * average of the vertices for Q1. It
+                                               * comes from the routine
+                                               * "element_velocity." */
                               dbl dvc_dnode[DIM][MDE]) {
   int dim, p, q, r, a, b, w;
 
@@ -3504,18 +3504,18 @@ int assemble_stress_level_set(dbl tt,           /* parameter to vary time integr
   int peqn, pvar;
 
   int i, j, mode;
-  dbl v[DIM];           /* Velocity field. */
-  dbl x_dot[DIM];       /* current position field derivative wrt time. */
-  dbl h3;               /* Volume element (scale factors). */
-  dbl dh3dmesh_pj;      /* Sensitivity to (p,j) mesh dof. */
+  dbl v[DIM];      /* Velocity field. */
+  dbl x_dot[DIM];  /* current position field derivative wrt time. */
+  dbl h3;          /* Volume element (scale factors). */
+  dbl dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
 
   dbl grad_v[DIM][DIM];
-  dbl gamma[DIM][DIM];  /* Shear-rate tensor based on velocity */
-  dbl det_J;            /* determinant of element Jacobian */
+  dbl gamma[DIM][DIM]; /* Shear-rate tensor based on velocity */
+  dbl det_J;           /* determinant of element Jacobian */
 
   dbl d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
 
-  dbl mass;             /* For terms and their derivatives */
+  dbl mass; /* For terms and their derivatives */
   dbl mass_a, mass_b;
   dbl advection;
   dbl advection_a, advection_b, advection_c, advection_d;
@@ -3556,14 +3556,14 @@ int assemble_stress_level_set(dbl tt,           /* parameter to vary time integr
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
 
-  dbl s[DIM][DIM];         /* stress tensor */
-  dbl s_dot[DIM][DIM];     /* stress tensor from last time step */
+  dbl s[DIM][DIM];     /* stress tensor */
+  dbl s_dot[DIM][DIM]; /* stress tensor from last time step */
   dbl grad_s[DIM][DIM][DIM];
   dbl d_grad_s_dmesh[DIM][DIM][DIM][DIM]
                     [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
 
-  dbl g[DIM][DIM];         /* velocity gradient tensor */
-  dbl gt[DIM][DIM];        /* transpose of velocity gradient tensor */
+  dbl g[DIM][DIM];  /* velocity gradient tensor */
+  dbl gt[DIM][DIM]; /* transpose of velocity gradient tensor */
 
   /* dot product tensors */
 
@@ -3616,7 +3616,7 @@ int assemble_stress_level_set(dbl tt,           /* parameter to vary time integr
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3;           /* Differential volume element (scales). */
+  h3 = fv->h3; /* Differential volume element (scales). */
 
   /* load eqn and variable number in tensor form */
   (void)stress_eqn_pointer(v_s);
@@ -4259,10 +4259,10 @@ int assemble_rate_of_strain(dbl tt, /* parameter to vary time integration from
   int i, j;
   int status;
 
-  dbl h3;               /* Volume element (scale factors). */
-  dbl dh3dmesh_pj;      /* Sensitivity to (p,j) mesh dof. */
+  dbl h3;          /* Volume element (scale factors). */
+  dbl dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
 
-  dbl det_J;            /* determinant of element Jacobian */
+  dbl det_J; /* determinant of element Jacobian */
 
   dbl d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
 
@@ -4331,7 +4331,7 @@ int assemble_rate_of_strain(dbl tt, /* parameter to vary time integration from
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3;           /* Differential volume element (scales). */
+  h3 = fv->h3; /* Differential volume element (scales). */
 
   /* load eqn and variable number in tensor form */
 
@@ -4606,13 +4606,13 @@ int assemble_gradient(dbl tt, /* parameter to vary time integration from
   int i, j;
   int status;
 
-  dbl h3;               /* Volume element (scale factors). */
-  dbl dh3dmesh_pj;      /* Sensitivity to (p,j) mesh dof. */
+  dbl h3;          /* Volume element (scale factors). */
+  dbl dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
 
   dbl grad_v[DIM][DIM];
-  dbl g[DIM][DIM];      /* velocity gradient tensor */
+  dbl g[DIM][DIM]; /* velocity gradient tensor */
 
-  dbl det_J;            /* determinant of element Jacobian */
+  dbl det_J; /* determinant of element Jacobian */
 
   dbl d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
 
@@ -4681,7 +4681,7 @@ int assemble_gradient(dbl tt, /* parameter to vary time integration from
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3;           /* Differential volume element (scales). */
+  h3 = fv->h3; /* Differential volume element (scales). */
 
   /* load eqn and variable number in tensor form */
 
@@ -4958,7 +4958,7 @@ dbl vec_dot(const int n1, dbl *v1, dbl *v2) {
   return (rc);
 }
 
-void load_modal_pointers(int ve_mode,         /* mode number */
+void load_modal_pointers(int ve_mode, /* mode number */
                          dbl tt,
                          dbl dt,
                          dbl s[DIM][DIM],     /* stress tensor for mode ve_mode */
@@ -4968,8 +4968,8 @@ void load_modal_pointers(int ve_mode,         /* mode number */
                                                                       tensor for mode ve_mode */
 
 {
-  int a, b, p, q;                                                  /* indeces for dimensions */
-  int j;                                                           /* indeces for dofs */
+  int a, b, p, q; /* indeces for dimensions */
+  int j;          /* indeces for dofs */
   int var;
   /* load up things we need in the assembly routine for each mode in turn*/
 
@@ -5014,7 +5014,7 @@ void load_modal_pointers(int ve_mode,         /* mode number */
 /* END of routine modal_esp_alloc */
 /******************************************************************************/
 
-int assemble_surface_stress(Exo_DB *exo,         /* ptr to basic exodus ii mesh information */
+int assemble_surface_stress(Exo_DB *exo, /* ptr to basic exodus ii mesh information */
                             double x[],
                             struct GomaLinearSolverData *ams,
                             dbl x_update[],      /* last update for x vector */
@@ -5047,7 +5047,7 @@ int assemble_surface_stress(Exo_DB *exo,         /* ptr to basic exodus ii mesh 
   /* Variables for stress */
   int R_s[MAX_MODES][DIM][DIM];
   int v_s[MAX_MODES][DIM][DIM];
-  int S_map[MAX_MODES][DIM][DIM];     /* map var index to stress mode component */
+  int S_map[MAX_MODES][DIM][DIM]; /* map var index to stress mode component */
 
   int ibc, ins, side_index;
   int table_ibc[MAX_MODES][DIM][DIM]; /* maps table boundary condition index for each stress mode */
@@ -5075,7 +5075,7 @@ int assemble_surface_stress(Exo_DB *exo,         /* ptr to basic exodus ii mesh 
   double xi[DIM];    /* Local element coordinates of Gauss point. */
   dbl vdotn, vdotn_avg = 0;
   dbl vdotn_norm = 0;
-  double wt;         /* Quadrature weights units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
+  double wt; /* Quadrature weights units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
 
   dbl *phi_v = NULL;
 
@@ -7488,18 +7488,18 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   int evss_gradv = 0;
 
   int i, j, status, mode;
-  dbl v[DIM];           /* Velocity field. */
-  dbl x_dot[DIM];       /* current position field derivative wrt time. */
-  dbl h3;               /* Volume element (scale factors). */
-  dbl dh3dmesh_pj;      /* Sensitivity to (p,j) mesh dof. */
+  dbl v[DIM];      /* Velocity field. */
+  dbl x_dot[DIM];  /* current position field derivative wrt time. */
+  dbl h3;          /* Volume element (scale factors). */
+  dbl dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
 
   dbl grad_v[DIM][DIM];
-  dbl gamma[DIM][DIM];  /* Shear-rate tensor based on velocity */
-  dbl det_J;            /* determinant of element Jacobian */
+  dbl gamma[DIM][DIM]; /* Shear-rate tensor based on velocity */
+  dbl det_J;           /* determinant of element Jacobian */
 
   dbl d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
 
-  dbl mass;             /* For terms and their derivatives */
+  dbl mass; /* For terms and their derivatives */
   dbl mass_a, mass_b;
   dbl advection;
   dbl advection_a, advection_b, advection_c, advection_d;
@@ -7511,7 +7511,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   dbl lambda = 0; /* polymer relaxation constant */
   double xi;
   double d_xi_dF[MDE];
-  dbl eps = 0;    /* This is the PTT elongation parameter */
+  dbl eps = 0; /* This is the PTT elongation parameter */
   double d_eps_dF[MDE];
   /*
    *
@@ -7547,13 +7547,13 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
 
-  dbl b[DIM][DIM];         /* stress tensor */
-  dbl b_dot[DIM][DIM];     /* stress tensor from last time step */
+  dbl b[DIM][DIM];     /* stress tensor */
+  dbl b_dot[DIM][DIM]; /* stress tensor from last time step */
   dbl grad_b[DIM][DIM][DIM];
   dbl d_grad_b_dmesh[DIM][DIM][DIM][DIM]
                     [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
 
-  dbl g[DIM][DIM];         /* velocity gradient tensor */
+  dbl g[DIM][DIM]; /* velocity gradient tensor */
 
   /* dot product tensors */
 
@@ -7613,7 +7613,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3;           /* Differential volume element (scales). */
+  h3 = fv->h3; /* Differential volume element (scales). */
 
   /* load eqn and variable number in tensor form */
   (void)stress_eqn_pointer(v_s);
@@ -8910,18 +8910,18 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
   int evss_gradv = 0;
 
   int i, j, status, mode;
-  dbl v[DIM];           /* Velocity field. */
-  dbl x_dot[DIM];       /* current position field derivative wrt time. */
-  dbl h3;               /* Volume element (scale factors). */
-  dbl dh3dmesh_pj;      /* Sensitivity to (p,j) mesh dof. */
+  dbl v[DIM];      /* Velocity field. */
+  dbl x_dot[DIM];  /* current position field derivative wrt time. */
+  dbl h3;          /* Volume element (scale factors). */
+  dbl dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
 
   dbl grad_v[DIM][DIM];
-  dbl gamma[DIM][DIM];  /* Shear-rate tensor based on velocity */
-  dbl det_J;            /* determinant of element Jacobian */
+  dbl gamma[DIM][DIM]; /* Shear-rate tensor based on velocity */
+  dbl det_J;           /* determinant of element Jacobian */
 
   dbl d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
 
-  dbl mass;             /* For terms and their derivatives */
+  dbl mass; /* For terms and their derivatives */
   dbl mass_a, mass_b;
   dbl advection;
   dbl advection_a, advection_b, advection_c, advection_d;
@@ -8971,14 +8971,14 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
 
-  dbl s[DIM][DIM];         /* stress tensor */
-  dbl s_dot[DIM][DIM];     /* stress tensor from last time step */
+  dbl s[DIM][DIM];     /* stress tensor */
+  dbl s_dot[DIM][DIM]; /* stress tensor from last time step */
   dbl grad_s[DIM][DIM][DIM];
   dbl d_grad_s_dmesh[DIM][DIM][DIM][DIM]
                     [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
 
-  dbl g[DIM][DIM];         /* velocity gradient tensor */
-  dbl gt[DIM][DIM];        /* transpose of velocity gradient tensor */
+  dbl g[DIM][DIM];  /* velocity gradient tensor */
+  dbl gt[DIM][DIM]; /* transpose of velocity gradient tensor */
 
   /* dot product tensors */
 
@@ -9054,7 +9054,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3;           /* Differential volume element (scales). */
+  h3 = fv->h3; /* Differential volume element (scales). */
 
   /* load eqn and variable number in tensor form */
   (void)stress_eqn_pointer(v_s);
@@ -10030,15 +10030,15 @@ int assemble_stress_vesolid(const double tt,    /* parameter to vary time integr
   double v_dot_del_s[DIM][DIM];
   double x_dot_del_s[DIM][DIM];
 
-  double x_dot[DIM];       /* current position field derivative wrt time. */
-  double h3;               /* Volume element (scale factors). */
-  double dh3dmesh_pj;      /* Sensitivity to (p,j) mesh dof. */
+  double x_dot[DIM];  /* current position field derivative wrt time. */
+  double h3;          /* Volume element (scale factors). */
+  double dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
 
-  double det_J;            /* determinant of element Jacobian */
+  double det_J; /* determinant of element Jacobian */
 
   double d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
 
-  double mass;             /* For terms and their derivatives */
+  double mass; /* For terms and their derivatives */
   double advection;
   double diffusion;
   double source;
@@ -10063,11 +10063,11 @@ int assemble_stress_vesolid(const double tt,    /* parameter to vary time integr
   int R_s[MAX_MODES][DIM][DIM];
   int v_s[MAX_MODES][DIM][DIM];
 
-  double s[DIM][DIM];                     /* stress tensor */
-  double s_dot[DIM][DIM];                 /* stress tensor from last time step */
+  double s[DIM][DIM];     /* stress tensor */
+  double s_dot[DIM][DIM]; /* stress tensor from last time step */
   double grad_s[DIM][DIM][DIM];
   double d_grad_s_dmesh[DIM][DIM][DIM][DIM]
-                       [MDE];             /* derivative of grad of stress tensor for mode ve_mode */
+                       [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
 
   double TT[DIM][DIM];                    /* Mesh stress tensor... */
   double dTT_dx[DIM][DIM][DIM][MDE];      /* Sensitivity of stress tensor...
@@ -10119,7 +10119,7 @@ int assemble_stress_vesolid(const double tt,    /* parameter to vary time integr
   } else {
     det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
   }
-  h3 = fv->h3;             /* Differential volume element (scales). */
+  h3 = fv->h3; /* Differential volume element (scales). */
   d_area = det_J * wt * h3;
   mass_on = pd->e[pg->imtrx][eqn] & T_MASS;
   advection_on = pd->e[pg->imtrx][eqn] & T_ADVECTION;

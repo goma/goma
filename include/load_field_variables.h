@@ -22,14 +22,14 @@ int load_fv_all(void);
 
 int load_fv_vector(void);
 
-int load_fv_grads       /* mm_fill_terms.c                           */
+int load_fv_grads /* mm_fill_terms.c                           */
     (void);
 
-int load_fv_grads_all   /* mm_fill_terms.c                           */
+int load_fv_grads_all /* mm_fill_terms.c                           */
     (void);
 
 int load_fv_mesh_derivs /* mm_fill_terms.c                           */
     (int);              /* okToZero - Turns on zeroing in the function
                                   This is usually turned on except when accumulating */
 
-#endif                  /* GOMA_LOAD_FIELD_VARIABLES_H */
+#endif /* GOMA_LOAD_FIELD_VARIABLES_H */

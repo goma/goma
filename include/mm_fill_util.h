@@ -51,10 +51,10 @@ EXTERN void calc_surf_tangent(const int,    /* ielem - current element number   
                                              * element node numbers on this side of the
                                              * element                                   */
 
-EXTERN void calc_tangent_from_seed(struct Rotation_Vectors *,   /* tangent */
-                                   struct Rotation_Vectors *,   /* normal */
-                                   const double[DIM],           /* seed         */
-                                   const int);                  /* dim                */
+EXTERN void calc_tangent_from_seed(struct Rotation_Vectors *, /* tangent */
+                                   struct Rotation_Vectors *, /* normal */
+                                   const double[DIM],         /* seed         */
+                                   const int);                /* dim                */
 
 EXTERN void calc_tangent_along_basis(struct Rotation_Vectors *, /* tangent */
                                      struct Rotation_Vectors *, /* normal */
@@ -63,12 +63,12 @@ EXTERN void calc_tangent_along_basis(struct Rotation_Vectors *, /* tangent */
                                      const int, /* num_nodes_on_side                         */
                                      const int[MAX_NODES_PER_SIDE]); /* local_elem_node_id */
 
-EXTERN void cross_vectors(struct Rotation_Vectors *,                 /* tangent2 */
-                          struct Rotation_Vectors *,                 /* tangent1 */
-                          struct Rotation_Vectors *,                 /* normal */
-                          const int);                                /* dim                */
+EXTERN void cross_vectors(struct Rotation_Vectors *, /* tangent2 */
+                          struct Rotation_Vectors *, /* tangent1 */
+                          struct Rotation_Vectors *, /* normal */
+                          const int);                /* dim                */
 
-EXTERN void calc_unseeded_edge_tangents(struct Rotation_Vectors *,   /* tangent */
+EXTERN void calc_unseeded_edge_tangents(struct Rotation_Vectors *, /* tangent */
                                         const int,   /* iconnect_ptr - Ptr to beginning of the
                                                       * elem-node connectivity list for the current
                                                       * element                                   */
@@ -108,89 +108,89 @@ EXTERN int load_bf_mesh_derivs(void);
 EXTERN int load_basis_functions(const double[], /*  xi - local element coordinates [DIM]     */
                                 struct Basis_Functions **); /* bfa - pointer to basis function */
 
-EXTERN void asdv(double **,                                 /* v - vector to be allocated */
-                 const int);                                /* n - number of elements in vector */
+EXTERN void asdv(double **,  /* v - vector to be allocated */
+                 const int); /* n - number of elements in vector */
 
-EXTERN void dmemset(double *,                               /* v - vector to be allocated */
-                    const double,                           /* value to inserted into memory */
-                    int);                                   /* n - number of elements in vector */
+EXTERN void dmemset(double *,     /* v - vector to be allocated */
+                    const double, /* value to inserted into memory */
+                    int);         /* n - number of elements in vector */
 
-EXTERN void alloc_extern_ija_buffer(const int,       /* n - Order full system                (in) */
-                                    const int,       /* m - Order trim system                (in) */
-                                    const int *,     /* ija - Orig column pointers           (in) */
-                                    int **);         /* ptr_ija_attic - where to hide       (out) */
+EXTERN void alloc_extern_ija_buffer(const int,   /* n - Order full system                (in) */
+                                    const int,   /* m - Order trim system                (in) */
+                                    const int *, /* ija - Orig column pointers           (in) */
+                                    int **);     /* ptr_ija_attic - where to hide       (out) */
 
-EXTERN void alloc_sparse_arrays(int **,              /* ptr_ija - column pointer array            */
-                                double **,           /* ptr_a - values of nonzero matrix entries  */
-                                double **,           /* ptr_a_old - backup array, matrix nonzeros */
-                                const int,           /* Fill - flag to allocate spaces for either
-                                                      * the totally coupled problem or just
-                                                      * explicit nodal fill eqn                   */
-                                int[],               /* node_to_fill - node index gives fill dof  */
-                                Exo_DB *,            /* exo - ptr to the whole mesh               */
-                                Dpi *);              /* dpi - distributed processing info         */
+EXTERN void alloc_sparse_arrays(int **,    /* ptr_ija - column pointer array            */
+                                double **, /* ptr_a - values of nonzero matrix entries  */
+                                double **, /* ptr_a_old - backup array, matrix nonzeros */
+                                const int, /* Fill - flag to allocate spaces for either
+                                            * the totally coupled problem or just
+                                            * explicit nodal fill eqn                   */
+                                int[],     /* node_to_fill - node index gives fill dof  */
+                                Exo_DB *,  /* exo - ptr to the whole mesh               */
+                                Dpi *);    /* dpi - distributed processing info         */
 
-EXTERN void alloc_MSR_sparse_arrays                  /* mm_fill_util.c */
-    (int **,                                         /* ija - column pointer array */
-     double **,                                      /* a - values nonzero matrix entries */
-     double **,                                      /* a_old - backup for modified newton */
-     int,                                            /* Fill - flag to allocate space for
-                                                      * either the totally coupled problem
-                                                      * or just  explicit nodal fill eqn */
-     int[],                                          /* node_to_fill - node index gives
-                                                      * fill dof */
-     Exo_DB *,                                       /* exo - ptr to the whole mesh */
-     Dpi *);                                         /* dpi - distributed processing info */
+EXTERN void alloc_MSR_sparse_arrays /* mm_fill_util.c */
+    (int **,                        /* ija - column pointer array */
+     double **,                     /* a - values nonzero matrix entries */
+     double **,                     /* a_old - backup for modified newton */
+     int,                           /* Fill - flag to allocate space for
+                                     * either the totally coupled problem
+                                     * or just  explicit nodal fill eqn */
+     int[],                         /* node_to_fill - node index gives
+                                     * fill dof */
+     Exo_DB *,                      /* exo - ptr to the whole mesh */
+     Dpi *);                        /* dpi - distributed processing info */
 
 EXTERN void alloc_VBR_sparse_arrays(struct GomaLinearSolverData *,
-                                    Exo_DB *,        /* ptr to the whole mesh */
-                                    Dpi *);          /* distributed processing info */
+                                    Exo_DB *, /* ptr to the whole mesh */
+                                    Dpi *);   /* distributed processing info */
 
-EXTERN void zero_lec_row                             /* mm_fill_util.c                            */
-    (double *,                                       /* local_J             */
-     int,                                            /* eqn_type - Eqn Type of row to be zeroed   */
-     int);                                           /* ldof - Local dof of that equation type    */
+EXTERN void zero_lec_row /* mm_fill_util.c                            */
+    (double *,           /* local_J             */
+     int,                /* eqn_type - Eqn Type of row to be zeroed   */
+     int);               /* ldof - Local dof of that equation type    */
 
-EXTERN void zero_lec_column                          /* mm_fill_util.c */
-    (double *,                                       /* local_J */
-     int,                                            /* var_type - Variable type to be zeroed */
-     int);                                           /* ldof - Local dof of that variable */
+EXTERN void zero_lec_column /* mm_fill_util.c */
+    (double *,              /* local_J */
+     int,                   /* var_type - Variable type to be zeroed */
+     int);                  /* ldof - Local dof of that variable */
 
-EXTERN int find_VBR_index(const int,                 /* Block row index */
-                          const int,                 /* Block column index */
+EXTERN int find_VBR_index(const int, /* Block row index */
+                          const int, /* Block column index */
                           struct GomaLinearSolverData *);
 
-EXTERN double newshape(const double[],               /* xi - local element coordinates */
-                       const int,                    /* Ielem_type - element type      */
-                       const int,                    /* Iquant - desired quantity (phi, phi_s,
-                                                      * etc.      */
-                       const int,                    /* Inode - current element node      */
-                       const int,                    /* eshape - element shape      */
-                       const int,                    /* interpolation - interpolation      */
-                       const int);                   /* ledof - Typically, this is just the local
-                                                      * node number, but for pressure basis
-                                                      * functions, this can be a particular dof at
-                                                      * the centroid node */
-EXTERN double extended_shape(const double[],         /* xi - local element coordinates            */
-                             const int,              /* Ielem_type - element type                 */
-                             const int,              /* Iquant - desired quantity (phi, phi_s,
-                                                      * etc.                                      */
-                             const int,              /* Inode - current element node              */
-                             const int,              /* eshape - element shape                    */
-                             const int,              /* interpolation - interpolation             */
-                             const int);             /* ledof - Typically, this is just the local
-                                                      * node number, but for pressure basis
-                                                      * functions, this can be a particular dof at
-                                                      * the centroid node                         */
+EXTERN double newshape(const double[],       /* xi - local element coordinates */
+                       const int,            /* Ielem_type - element type      */
+                       const int,            /* Iquant - desired quantity (phi, phi_s,
+                                              * etc.      */
+                       const int,            /* Inode - current element node      */
+                       const int,            /* eshape - element shape      */
+                       const int,            /* interpolation - interpolation      */
+                       const int);           /* ledof - Typically, this is just the local
+                                              * node number, but for pressure basis
+                                              * functions, this can be a particular dof at
+                                              * the centroid node */
+EXTERN double extended_shape(const double[], /* xi - local element coordinates            */
+                             const int,      /* Ielem_type - element type                 */
+                             const int,      /* Iquant - desired quantity (phi, phi_s,
+                                              * etc.                                      */
+                             const int,      /* Inode - current element node              */
+                             const int,      /* eshape - element shape                    */
+                             const int,      /* interpolation - interpolation             */
+                             const int);     /* ledof - Typically, this is just the local
+                                              * node number, but for pressure basis
+                                              * functions, this can be a particular dof at
+                                              * the centroid node                         */
 
-EXTERN int calc_shearrate(dbl *,                     /* gammadot - strain rate scalar invariant   */
-                          dbl[DIM][DIM],             /* gamma_dot - strain rate tensor            */
-                          dbl[DIM][MDE],             /* d_gd_dv - deriv of gammadot wrt velocity  */
-                          dbl[DIM][MDE]);            /* d_gd_dmesh - deriv of gammadot wrt meshd  */
+EXTERN int calc_shearrate(dbl *,          /* gammadot - strain rate scalar invariant   */
+                          dbl[DIM][DIM],  /* gamma_dot - strain rate tensor            */
+                          dbl[DIM][MDE],  /* d_gd_dv - deriv of gammadot wrt velocity  */
+                          dbl[DIM][MDE]); /* d_gd_dmesh - deriv of gammadot wrt meshd  */
 
-EXTERN void element_neighbor_list(const int,         /* num_sides - of the elements (homogeneous) */
-                                  const int,         /* num_total_nodes                           */
-                                  int **);           /* neighbors                                 */
+EXTERN void element_neighbor_list(const int, /* num_sides - of the elements (homogeneous) */
+                                  const int, /* num_total_nodes                           */
+                                  int **);   /* neighbors                                 */
 
 EXTERN void shell_determinant_and_normal(const int,  /* ielem - current element number            */
                                          const int,  /* iconnect_ptr - Pointer to beginning of
@@ -200,9 +200,9 @@ EXTERN void shell_determinant_and_normal(const int,  /* ielem - current element 
                                                       * element surface (0, 1, 2)                 */
                                          const int); /* id_side - ID of element side              */
 
-EXTERN double calc_tensor_invariant(dbl[DIM][DIM],   // Original tensor
-                                    dbl[DIM][DIM],   // Sensitivities
-                                    int);            // Which invariant to calculate
+EXTERN double calc_tensor_invariant(dbl[DIM][DIM], // Original tensor
+                                    dbl[DIM][DIM], // Sensitivities
+                                    int);          // Which invariant to calculate
 
 extern void determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *);
 extern void determine_ProjectionVar(PROBLEM_DESCRIPTION_STRUCT *);

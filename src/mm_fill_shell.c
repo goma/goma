@@ -6442,7 +6442,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
                          double xi[DIM], /* Local stu coordinates */
                          const Exo_DB *exo) {
   int eqn, var, peqn, pvar, p, q, a, b, k, jk, w;
-  int i = -1, j, status;                 //, err;
+  int i = -1, j, status; //, err;
   int *n_dof = NULL;
   int dof_map[MDE];
 
@@ -7219,12 +7219,12 @@ int assemble_shell_energy(double time,            /* present time value */
 
   dbl q_tot = 0.;
 
-  dbl grad_T[DIM];                             /* Shell temperature gradient. */
+  dbl grad_T[DIM]; /* Shell temperature gradient. */
 
   dbl rho, t_cond, Cp;
-  dbl k_eff, d_k_eff_dh;                       /* sundry factors*/
+  dbl k_eff, d_k_eff_dh; /* sundry factors*/
 
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct;   /* Thermal conductivity dependence. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; /* Thermal conductivity dependence. */
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
 
   HEAT_CAPACITY_DEPENDENCE_STRUCT d_Cp_struct; /* Heat capacity dependence. */
@@ -10442,8 +10442,8 @@ int assemble_film_particles(double time,            /* present time value */
 
   C = fv->sh_pc; /* Particles concentration */
 
-  wt = fv->wt;   /* Gauss weight */
-  h3 = fv->h3;   /* Differential volume element, = 1 when CARTESIAN. */
+  wt = fv->wt; /* Gauss weight */
+  h3 = fv->h3; /* Differential volume element, = 1 when CARTESIAN. */
 
   shell_determinant_and_normal(ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr,
                                ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim, 1);
@@ -12109,7 +12109,7 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
   dbl d_gradII_phi_i_dmesh[DIM][DIM][MDE];
   dbl phi_j, grad_phi_j[DIM], gradII_phi_j[DIM]; // Basis funcitons (j)
   dbl d_gradII_phi_j_dmesh[DIM][DIM][MDE];
-  dbl mass, diff, sour;                          // Residual terms
+  dbl mass, diff, sour; // Residual terms
 
   // Initialize output status function
   int status = 0;
@@ -12874,7 +12874,7 @@ int assemble_porous_shell_open_2(dbl tt,           // Time integration form
   dbl d_gradII_phi_i_dmesh[DIM][DIM][MDE];
   dbl phi_j, grad_phi_j[DIM], gradII_phi_j[DIM]; // Basis funcitons (j)
   dbl d_gradII_phi_j_dmesh[DIM][DIM][MDE];
-  dbl mass, diff, sour;                          // Residual terms
+  dbl mass, diff, sour; // Residual terms
 
   // Initialize output status function
   int status = 0;
@@ -13369,7 +13369,7 @@ int assemble_porous_shell_saturation(dbl tt,           // Time integration form
   dbl d_gradII_phi_i_dmesh[DIM][DIM][MDE];
   dbl phi_j, grad_phi_j[DIM], gradII_phi_j[DIM]; // Basis functions (j)
   dbl d_gradII_phi_j_dmesh[DIM][DIM][MDE];
-  dbl mass, diff, sour;                          // Residual terms
+  dbl mass, diff, sour; // Residual terms
 
   // Bookkeeping arrays
   int porous_shell_eqn[MAX_POR_SHELL];
@@ -13589,9 +13589,9 @@ int assemble_porous_shell_saturation(dbl tt,           // Time integration form
     dbl j_2_3[MDE] = {0.0}; // Flux between porous layers 2 and 3
 
     dbl dj_1_2[MAX_POR_SHELL][MDE] = {
-        {0.0}};             // Sensitivity of the flux between porous layers 1 and 2
+        {0.0}}; // Sensitivity of the flux between porous layers 1 and 2
     dbl dj_2_3[MAX_POR_SHELL][MDE] = {
-        {0.0}};             // Sensitivity of the flux between porous layers 2 and 3
+        {0.0}}; // Sensitivity of the flux between porous layers 2 and 3
 
     /* Calculate the fluxes and their sensitivities */
     porous_shell_open_source_model(j_1_2, j_2_3, dj_1_2, dj_2_3);
@@ -15095,7 +15095,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
   }
 
   if (pd->v[pg->imtrx][SHELL_SHEAR_BOT]) {
-    shear_bot = fv->sh_shear_bot;  /* Bottom wall shear rate */
+    shear_bot = fv->sh_shear_bot; /* Bottom wall shear rate */
   } else {
     shear_bot = -fv->sh_shear_top; /* Bottom wall shear rate */
   }
@@ -15104,8 +15104,8 @@ int assemble_lubrication_thinning(double time,    /* present time value */
     cross_shear = fv->sh_cross_shear; /* Cross stream shear stress */
   }
 
-  wt = fv->wt;                        /* Gauss weight */
-  h3 = fv->h3;                        /* Differential volume element, = 1 when CARTESIAN. */
+  wt = fv->wt; /* Gauss weight */
+  h3 = fv->h3; /* Differential volume element, = 1 when CARTESIAN. */
 
   shell_determinant_and_normal(ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr,
                                ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim, 1);
@@ -17077,18 +17077,18 @@ int assemble_shell_mesh(double time,    /* Time */
  *               in shell_tfmp_util.c, couple to inextensible shells
  ******************************************************************************/
 
-int assemble_shell_tfmp(double time,             /* Time */
-                        double tt,               /* Time stepping parameter */
-                        double delta_t,          /* Time step size */
-                        double xi[DIM],          /* Local stu coordinates */
-                        PG_DATA *pg_data,        /* Upwinding data struct */
+int assemble_shell_tfmp(double time,      /* Time */
+                        double tt,        /* Time stepping parameter */
+                        double delta_t,   /* Time step size */
+                        double xi[DIM],   /* Local stu coordinates */
+                        PG_DATA *pg_data, /* Upwinding data struct */
                         const Exo_DB *exo) {
   int i, j, k, l, peqn, var, pvar;
   dbl phi_i, grad_phi_i[DIM], gradII_phi_i[DIM]; // Basis funcitons (i)
   dbl d_gradII_phi_i_dmesh[DIM][DIM][MDE];
   dbl phi_j, grad_phi_j[DIM], gradII_phi_j[DIM]; // Basis funcitons (j)
   dbl d_gradII_phi_j_dmesh[DIM][DIM][MDE];
-  dbl mass, adv, diff, source;                   // Residual terms
+  dbl mass, adv, diff, source; // Residual terms
   dbl etm_mass_eqn, etm_adv_eqn, etm_diff_eqn, etm_source_eqn;
   int eqn;
 
@@ -18562,7 +18562,7 @@ int assemble_shell_lubrication(double time,    /* Time */
   double d_gradII_phi_i_dmesh[DIM][DIM][MDE];
   double phi_j, grad_phi_j[DIM], gradII_phi_j[DIM]; // Basis funcitons (j)
   double d_gradII_phi_j_dmesh[DIM][DIM][MDE];
-  double mass, adv, source;                         // Residual terms
+  double mass, adv, source; // Residual terms
   double etm_mass_eqn, etm_adv_eqn, etm_source_eqn;
   double gradP_dot_gradphi_i;
   double gradphi_i_dot_gradphi_j;

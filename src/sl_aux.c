@@ -144,7 +144,7 @@ int lu_decomp(double **a, const int n, int *indx, double *d) {
       printf("Singular matrix in routine lu_decomp - aborting\n");
       return (-1);
     }
-    vv[i] = 1.0 / big;        /* save the implicit scaling info */
+    vv[i] = 1.0 / big; /* save the implicit scaling info */
   }
 
   for (j = 0; j < n; j++) {   /* Looping over columns (Crout's method) */

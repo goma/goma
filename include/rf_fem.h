@@ -67,7 +67,7 @@ extern int WIM;
 
 /* Boundary Condition information */
 
-extern int Num_BC;             /* number of boundary conditions which are defined  */
+extern int Num_BC; /* number of boundary conditions which are defined  */
 
 extern int Num_Interface_Srcs; /* number *_D interfaces*/
 extern int IntSrc_BCID[MAX_INTERFACE];
@@ -132,10 +132,10 @@ extern int TimeIntegration; /* Select time integration method                   
 extern int Use_Level_Set;   /* Global switch to turn on level set computations   */
 extern int Use_Phase_Field; /* Global switch to turn on phase-field computations   */
 
-/* double  theta;  */       /* Time step parameter: theta = 0. => Backward Euler
-                                                    theta = 1. => Forward  Euler */
+/* double  theta;  */ /* Time step parameter: theta = 0. => Backward Euler
+                                              theta = 1. => Forward  Euler */
 
-extern double eps;          /* Time step error                                   */
+extern double eps; /* Time step error                                   */
 extern int print_freq;
 extern double print_delt;
 extern double print_delt2_time, print_delt2;

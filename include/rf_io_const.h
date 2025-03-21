@@ -55,7 +55,7 @@
 #endif                           /* 3*MAX_CHAR_IN_INPUT + 4 to account for "%s = %s %s" format */
 
 #ifndef MAX_INFO
-#define MAX_INFO 101             /* maximum number of "info" records */
+#define MAX_INFO 101 /* maximum number of "info" records */
 #endif
 
 #ifndef MAX_QA
@@ -92,29 +92,29 @@
 /* a system command for aprepro */
 #endif
 
-#define INPUT_FILE         1   /* command for reading from alternate input file */
-#define NO_DISPLAY         2   /* command for eliminating output to screen */
-#define APREPRO            3   /* command to system call aprepro */
-#define INEXOII_FILE       4   /* redirect in.exoII file */
-#define OUTEXOII_FILE      5   /* redirect out.exoII file */
-#define CONTIN_FILE        6   /* redirect contin.dat file */
-#define SOLN_FILE          7   /* redirect soln.dat file */
-#define DEBUG_OPTION       8   /* change debug flag */
-#define FASTQ              9   /* command to system call fastq */
-#define FASTQ_APREPRO      10  /* command to system call aprepro on fastq file and call fastq */
-#define EX1EX2V2           11  /* command to system call ex1ex2v2 */
-#define BLOT               12  /* command to system call blot after run is finished */
-#define STDOUT_OUT         13  /* command to redirect stdout to file */
-#define STDERR_OUT         13  /* command to redirect stderr to file */
-#define RELAXATION         14  /* change overrelaxation parameter */
-#define HELP_USAGE         15  /* print helpful usage of options, args */
-#define NEWTON_NUM         16  /* change debug flag */
-#define PRINT_CODE_VERSION 17  /* do exactly that */
-#define WORKING_DIRECTORY  18  /* working directory to run in */
-#define PARSER_OPTION      19  /* command to use new flex/bison parser */
-#define NOECHO             20  /* Disable echoing of input/material files */
-#define TIME_START         21  /* Initial simulation time */
-#define TIME_END           22  /* Maximum simulation time */
+#define INPUT_FILE         1  /* command for reading from alternate input file */
+#define NO_DISPLAY         2  /* command for eliminating output to screen */
+#define APREPRO            3  /* command to system call aprepro */
+#define INEXOII_FILE       4  /* redirect in.exoII file */
+#define OUTEXOII_FILE      5  /* redirect out.exoII file */
+#define CONTIN_FILE        6  /* redirect contin.dat file */
+#define SOLN_FILE          7  /* redirect soln.dat file */
+#define DEBUG_OPTION       8  /* change debug flag */
+#define FASTQ              9  /* command to system call fastq */
+#define FASTQ_APREPRO      10 /* command to system call aprepro on fastq file and call fastq */
+#define EX1EX2V2           11 /* command to system call ex1ex2v2 */
+#define BLOT               12 /* command to system call blot after run is finished */
+#define STDOUT_OUT         13 /* command to redirect stdout to file */
+#define STDERR_OUT         13 /* command to redirect stderr to file */
+#define RELAXATION         14 /* change overrelaxation parameter */
+#define HELP_USAGE         15 /* print helpful usage of options, args */
+#define NEWTON_NUM         16 /* change debug flag */
+#define PRINT_CODE_VERSION 17 /* do exactly that */
+#define WORKING_DIRECTORY  18 /* working directory to run in */
+#define PARSER_OPTION      19 /* command to use new flex/bison parser */
+#define NOECHO             20 /* Disable echoing of input/material files */
+#define TIME_START         21 /* Initial simulation time */
+#define TIME_END           22 /* Maximum simulation time */
 
 #define CONT_BEG_PVALUE    101 /* BEGIN VALUE */
 #define CONT_END_PVALUE    102 /* END VALUE */

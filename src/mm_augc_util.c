@@ -2786,8 +2786,8 @@ int std_lgr_cond(int iAC,
           isDBC = Nodes[inode]->DBC[pg->imtrx][i_offset];
 
         if ((var >= VELOCITY1 &&
-             var <= VELOCITY3) &&                  /* this stuff only gets added to velocity dofs */
-            isDBC == -1)                           /* if a Dirichlet condition exists skip  */
+             var <= VELOCITY3) && /* this stuff only gets added to velocity dofs */
+            isDBC == -1)          /* if a Dirichlet condition exists skip  */
         {
           bAC[iAC][i] = cAC[iAC][i] / theta_scale; /* this is true for LM type of constraints... */
         }

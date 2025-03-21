@@ -87,18 +87,18 @@
 ******************************************************************************/
 
 /******************** PROTOTYPES FOR STATIC FUNCTIONS ************************/
-static void read_initial_guess                 /* rf_util.c                                 */
-    (double[],                                 /* u                                         */
-     const int,                                /* np                                        */
-     double[],                                 /* uAC                                       */
-     const int);                               /* nAC                                       */
+static void read_initial_guess /* rf_util.c                                 */
+    (double[],                 /* u                                         */
+     const int,                /* np                                        */
+     double[],                 /* uAC                                       */
+     const int);               /* nAC                                       */
 
-static void inject_nodal_vec(double[],         /* sol_vec - full dof vector for this proc   */
-                             const int,        /* var_no - VELOCITY1, etc.                  */
-                             const int,        /* k - species index                         */
-                             const int,        /* idof - dof #                              */
-                             const int,        /* matID - material index to scatter to      */
-                             const double[]);  /* nodal_vec - condensed node based vector   */
+static void inject_nodal_vec(double[],        /* sol_vec - full dof vector for this proc   */
+                             const int,       /* var_no - VELOCITY1, etc.                  */
+                             const int,       /* k - species index                         */
+                             const int,       /* idof - dof #                              */
+                             const int,       /* matID - material index to scatter to      */
+                             const double[]); /* nodal_vec - condensed node based vector   */
 
 static void inject_elem_vec(double[],          /* sol_vec - full dof vector for this proc   */
                             const int,         /* var_no - VELOCITY1, etc.                  */
@@ -107,9 +107,9 @@ static void inject_elem_vec(double[],          /* sol_vec - full dof vector for 
                             const int,         /* matID - material index to scatter to      */
                             const double[],    /* nodal_vec - condensed node based vector   */
                             const Exo_DB *exo, /* exodus database */
-                            const int num_elems_blk);   /* number of elements in the block. */
+                            const int num_elems_blk); /* number of elements in the block. */
 
-static void init_structural_shell_coord(double[]);      /* u[] - solution vector */
+static void init_structural_shell_coord(double[]); /* u[] - solution vector */
 
 static void init_shell_normal_unknowns(double[],        /* u[] - solution vector */
                                        const Exo_DB *); /* Exodus database */
@@ -270,12 +270,12 @@ void put_fill_vector(const int N, double x[], const double fill_vector[], const 
  *     x[] = Main solution vector
  *************************************************************************/
 {
-  int i;                                   /* i count from 0 to total number of nodes   */
-  int ie;                                  /* ie is the position of the variables of
-                                              interest in the x and xpred vectors       */
-  int mn;                                  /* Material number                           */
-  int nvdof;                               /* variables to keep Index_Solution happy    */
-  int ki;                                  /* counter from 0 to the number of dofs      */
+  int i;     /* i count from 0 to total number of nodes   */
+  int ie;    /* ie is the position of the variables of
+                interest in the x and xpred vectors       */
+  int mn;    /* Material number                           */
+  int nvdof; /* variables to keep Index_Solution happy    */
+  int ki;    /* counter from 0 to the number of dofs      */
 
   for (i = 0; i < N; i++) {
     nvdof = Dolphin[pg->imtrx][i][R_FILL]; /* Number of FILL dofs at this node. */
@@ -307,9 +307,9 @@ void get_fill_vector(const int N,
                      const double x[],
                      double fill_vector[],
                      const int node_to_fill[]) {
-  int i;     /* i count from 0 to total number of nodes   */
-  int ie;    /* ie is the position of the variables of
-                interest in the x and xpred vectors       */
+  int i;  /* i count from 0 to total number of nodes   */
+  int ie; /* ie is the position of the variables of
+             interest in the x and xpred vectors       */
   int mn;
   const int ktype = 0;
   int nvdof; /* Number of R_FILL degrees of freedom at a node */
@@ -864,7 +864,7 @@ double time_step_control(const double delta_t,
     Err_norm += ecp[SHELL_BDYVELO];
     num_unknowns += ncp[SHELL_BDYVELO];
   }
-  if (nAC > 0)             /* Don't we want to include the AC unknowns in time step control ? */
+  if (nAC > 0) /* Don't we want to include the AC unknowns in time step control ? */
   {
     if (use_var_norm[9]) { /* answer -> not usually since they are often algebraic constraints */
       for (i = 0; i < nAC; i++) {
@@ -2508,13 +2508,13 @@ int rd_vectors_from_exoII(double u[],
 {
   int i, error, vdex, num_dim, num_nodes, mn;
   int num_elem, num_elem_blk, num_node_sets, num_side_sets, time_step;
-  float version;                /* version number of EXODUS II */
-  int exoid;                    /* ID of the open EXODUS II file */
-  char title[MAX_LINE_LENGTH];  /* title of the EXODUS II database */
-  float ret_float;              /* any returned float */
-  char ret_char[3];             /* any returned character */
-  int num_vars;                 /* number of var_type variables */
-  char **var_names = NULL;      /* array containing num_vars variable names */
+  float version;               /* version number of EXODUS II */
+  int exoid;                   /* ID of the open EXODUS II file */
+  char title[MAX_LINE_LENGTH]; /* title of the EXODUS II database */
+  float ret_float;             /* any returned float */
+  char ret_char[3];            /* any returned character */
+  int num_vars;                /* number of var_type variables */
+  char **var_names = NULL;     /* array containing num_vars variable names */
   int num_elem_vars = 0;
   char **elem_var_names = NULL; /* array containing element variable names */
   int w;                        /* counter for species concentration */
@@ -3300,7 +3300,7 @@ static void inject_elem_vec(double sol_vec[],
   e_end = exo->eb_ptr[eb_index + 1];
   for (ielem = e_start; ielem < e_end; ielem++) {
 
-    ielem_type = Elem_Type(exo, ielem);     /* func defd in el_geom.h */
+    ielem_type = Elem_Type(exo, ielem); /* func defd in el_geom.h */
     num_local_nodes = elem_info(NNODES, ielem_type);
     iconnect_ptr = Proc_Connect_Ptr[ielem]; /* find ptr to beginning */
     /* of this element's */
@@ -3881,16 +3881,16 @@ int init_pmv_hyst(const Exo_DB *exo)
       pmv_hyst->sat_max_drain[ipore][inode] = mp_glob[mn]->u_PorousShellCapPres[ipore][5];
 
       /* Finally initialize the saturation and capillary pressure values at switching points*/
-      if (pmv_hyst->curve_type[ipore][inode] == 1)   /* If starting at draining curve */
+      if (pmv_hyst->curve_type[ipore][inode] == 1) /* If starting at draining curve */
       {
         pmv_hyst->sat_switch[ipore][inode] =
             mp_glob[mn]->u_PorousShellCapPres[0][4]; /* Switch at the minimum saturation */
         pmv_hyst->cap_pres_switch[ipore][inode] =
-            1.0e-12;                                 /* Set to arbitrary small capillary pressure */
+            1.0e-12; /* Set to arbitrary small capillary pressure */
       } else if (pmv_hyst->curve_type[ipore][inode] == 0) /* If starting at imbibition curve */
       {
         pmv_hyst->sat_switch[ipore][inode] =
-            mp_glob[mn]->u_PorousShellCapPres[0][1];      /* Switch at the maximum saturation */
+            mp_glob[mn]->u_PorousShellCapPres[0][1]; /* Switch at the maximum saturation */
         pmv_hyst->cap_pres_switch[ipore][inode] =
             1.0e12; /* Set to arbitrary large capillary pressure */
       }

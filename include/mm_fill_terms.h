@@ -48,11 +48,11 @@ EXTERN int assemble_mesh /* mm_fill_terms.c                           */
      int);               /* ip_total - total gauss integration points */
 
 EXTERN int assemble_momentum_path_dependence(
-    double,              /* time */
-    double,              /* tt, parameter to vary time integration from
-                          * explicit (tt = 1) to implicit (tt = 0)    */
-    double,              /* dt, current time step size                */
-    const PG_DATA *);    /* PG data needed for continuity stabilization */
+    double,           /* time */
+    double,           /* tt, parameter to vary time integration from
+                       * explicit (tt = 1) to implicit (tt = 0)    */
+    double,           /* dt, current time step size                */
+    const PG_DATA *); /* PG data needed for continuity stabilization */
 
 #if 0 
 EXTERN int assemble_continuity_path_dependence
@@ -74,45 +74,45 @@ EXTERN int assemble_continuity_path_dependence
 
 #endif
 
-EXTERN int assemble_volume           /* mm_fill_terms.c                           */
+EXTERN int assemble_volume /* mm_fill_terms.c                           */
     (bool);
 
 EXTERN int assemble_curvature(void); /* mm_fill_terms.c                         */
 
-EXTERN int assemble_normals          /* mm_fill_terms.c                         */
+EXTERN int assemble_normals /* mm_fill_terms.c                         */
     (void);
 
 EXTERN int assemble_ls_momentum_source(void);
 
 EXTERN int apply_ls_momentum_source(void);
 
-EXTERN int assemble_div_normals              /* mm_fill_terms.c                         */
+EXTERN int assemble_div_normals /* mm_fill_terms.c                         */
     (void);
 
-EXTERN int assemble_LSvelocity               /* mm_fill_terms.c                           */
+EXTERN int assemble_LSvelocity /* mm_fill_terms.c                           */
     (bool, int);
 
-EXTERN int assemble_acoustic                 /* mm_fill_terms.c                           */
-    (double,                                 /* time - present time value         */
-     double,                                 /* tt - parameter to vary time integration
-                                              * from explicit (tt = 1) to
-                                              * implicit (tt = 0)                   */
-     double,                                 /* dt - current time step size               */
-     const PG_DATA *,                        /* dvc_dnode                                 */
-     const int,                              /*  acoustic eqn id and var id		     */
+EXTERN int assemble_acoustic /* mm_fill_terms.c                           */
+    (double,                 /* time - present time value         */
+     double,                 /* tt - parameter to vary time integration
+                              * from explicit (tt = 1) to
+                              * implicit (tt = 0)                   */
+     double,                 /* dt - current time step size               */
+     const PG_DATA *,        /* dvc_dnode                                 */
+     const int,              /*  acoustic eqn id and var id		     */
      const int);
 
-EXTERN int assemble_poynting                 /* mm_fill_terms.c                           */
-    (double,                                 /* time - present time value         */
-     double,                                 /* tt - parameter to vary time integration
-                                              * from explicit (tt = 1) to
-                                              * implicit (tt = 0)                   */
-     double,                                 /* dt - current time step size               */
-     const PG_DATA *,                        /* dvc_dnode                                 */
-     const int,                              /*  Light intensity eqn id and var id		     */
+EXTERN int assemble_poynting /* mm_fill_terms.c                           */
+    (double,                 /* time - present time value         */
+     double,                 /* tt - parameter to vary time integration
+                              * from explicit (tt = 1) to
+                              * implicit (tt = 0)                   */
+     double,                 /* dt - current time step size               */
+     const PG_DATA *,        /* dvc_dnode                                 */
+     const int,              /*  Light intensity eqn id and var id		     */
      const int);
 
-EXTERN void restime_nobc_surf                /* mm_fill_terms.c                           */
+EXTERN void restime_nobc_surf /* mm_fill_terms.c                           */
     (double func[MAX_PDIM], double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]);
 
 EXTERN int assemble_acoustic_reynolds_stress /* mm_fill_terms.c */
@@ -121,20 +121,20 @@ EXTERN int assemble_acoustic_reynolds_stress /* mm_fill_terms.c */
      double,                                 /* dt */
      const PG_DATA *);                       /* dvc_dnode */
 
-EXTERN int assemble_pore_sink_mass           /* mm_fill_terms.c                           */
-    (double,                                 /* time - present time value         */
-     double,                                 /* tt - parameter to vary time integration
-                                              * from explicit (tt = 1) to
-                                              * implicit (tt = 0)                   */
-     double);                                /* dt - current time step size               */
+EXTERN int assemble_pore_sink_mass /* mm_fill_terms.c                           */
+    (double,                       /* time - present time value         */
+     double,                       /* tt - parameter to vary time integration
+                                    * from explicit (tt = 1) to
+                                    * implicit (tt = 0)                   */
+     double);                      /* dt - current time step size               */
 
-EXTERN int assemble_acoustic_energy          /* mm_fill_terms.c                 */
-    (double,                                 /* time - present time value         */
-     double,                                 /* tt - parameter to vary time integration
-                                              * from explicit (tt = 1) to
-                                              * implicit (tt = 0)                 */
-     double,                                 /* dt - current time step size               */
-     const PG_DATA *);                       /* dvc_dnode                                 */
+EXTERN int assemble_acoustic_energy /* mm_fill_terms.c                 */
+    (double,                        /* time - present time value         */
+     double,                        /* tt - parameter to vary time integration
+                                     * from explicit (tt = 1) to
+                                     * implicit (tt = 0)                 */
+     double,                        /* dt - current time step size               */
+     const PG_DATA *);              /* dvc_dnode                                 */
 
 EXTERN double acoustic_impedance             /* mm_fill_terms.c             */
     (CONDUCTIVITY_DEPENDENCE_STRUCT *, dbl); /* time */
@@ -171,12 +171,12 @@ EXTERN int continuous_surface_tension(double,
                                       double[DIM][DIM][MDE], /* derivative w.r.t. FILL       */
                                       double[DIM][DIM][DIM][MDE]); /* d with respect to mesh */
 
-EXTERN double quad_isomap_invert(const double,                     /*  coordinate1  */
-                                 const double,                     /*  coordinate2  */
-                                 const double,                     /*  coordinate3  */
-                                 const double[],                   /* grid points of coordinate1 */
-                                 const double[],                   /* grid points of coordinate2 */
-                                 const double[],                   /* grid points of coordinate3 */
+EXTERN double quad_isomap_invert(const double,   /*  coordinate1  */
+                                 const double,   /*  coordinate2  */
+                                 const double,   /*  coordinate3  */
+                                 const double[], /* grid points of coordinate1 */
+                                 const double[], /* grid points of coordinate2 */
+                                 const double[], /* grid points of coordinate3 */
                                  const double[], /* function values at grid points */
                                  const int,      /* # of grid points in direction 1 */
                                  const int,      /* # of grid points in direction 2 */
@@ -261,9 +261,9 @@ EXTERN int assemble_continuity_path_dependence(
     dbl,
     dbl, /* parameter to vary time integration from explicit (tt = 1) to implicit (tt = 0)    */
     dbl, /* current time step size                    */
-    const PG_DATA *);                  /* deriv. velocity wrt nodal variables   */
+    const PG_DATA *); /* deriv. velocity wrt nodal variables   */
 
-EXTERN void acoustic_flux(double[DIM], /* q[DIM] */
+EXTERN void acoustic_flux(double[DIM],                       /* q[DIM] */
                           ACOUSTIC_FLUX_DEPENDENCE_STRUCT *, /* dq     */
                           double,                            /* time   */
                           const int,                         /* acoustic eqn id and var id	*/

@@ -71,7 +71,7 @@ int ad_ls_modulate_viscosity(
 ADType ad_bingham_viscosity(struct Generalized_Newtonian *gn_local,
                             ADType gamma_dot[DIM][DIM]) { /* strain rate tensor */
 
-  ADType gammadot;                                        /* strain rate invariant */
+  ADType gammadot; /* strain rate invariant */
 
   ADType val1;
   ADType visc_cy;
@@ -267,7 +267,7 @@ int ad_assemble_momentum(dbl time,       /* current time */
 
   /* field variables */
 
-  dbl rho;       /* Density. */
+  dbl rho; /* Density. */
 
   ADType f[DIM]; /* Body force. */
 

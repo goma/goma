@@ -64,16 +64,16 @@ union BCCondMask {
     unsigned int DBCU3_STEF_VEL : 1; /* are surface_chemkin_bc.        */
     unsigned int DBCT : 1;
     unsigned int DBCY : 1;
-    unsigned int DBCY_SPEC : 1;      /* Some, but not all, species are
-                                        flagged */
+    unsigned int DBCY_SPEC : 1; /* Some, but not all, species are
+                                   flagged */
     unsigned int DBCS : 1;
     unsigned int DBCP : 1;
-    unsigned int DBCK : 1;           /* 1-bit for k-equation EBC's     */
-    unsigned int DBCE : 1;           /* 1-bit for e-equation EBC's     */
-    unsigned int DBCTV : 1;          /* 1-bit for TV-equation EBC's    */
+    unsigned int DBCK : 1;  /* 1-bit for k-equation EBC's     */
+    unsigned int DBCE : 1;  /* 1-bit for e-equation EBC's     */
+    unsigned int DBCTV : 1; /* 1-bit for TV-equation EBC's    */
 
-    unsigned int DBCES : 1;          /* 1-bit for electrostatic BC's   */
-    unsigned int DBCMS : 1;          /* 1-bit for magnetostatic BC's   */
+    unsigned int DBCES : 1; /* 1-bit for electrostatic BC's   */
+    unsigned int DBCMS : 1; /* 1-bit for magnetostatic BC's   */
   } BCCondBits;
 };
 
@@ -127,19 +127,19 @@ typedef struct Nodal_Resid_Wksp NODAL_RESID_WKSP_STRUCT;
  */
 
 struct Node_Info {
-  int Proc_Node_Num;        /* Node's (local) number on processor for
-                               a given mesh. This field
-                               indicates the order in which nodes are
-                               processed.  With the dynamic data
-                               structure, this field may change
-                               after the mesh is modified.
-                               Array index is mesh->Mesh_ID.         */
-  int *First_Unknown;       /* Location in soln vector of node's
-                               first unknown
-                               HKM -> Note there is no mesh
-                               dependence for this number
-                               in the goma version                   */
-  struct Node_Type Type;    /* Flags indicating the type of the node.*/
+  int Proc_Node_Num;     /* Node's (local) number on processor for
+                            a given mesh. This field
+                            indicates the order in which nodes are
+                            processed.  With the dynamic data
+                            structure, this field may change
+                            after the mesh is modified.
+                            Array index is mesh->Mesh_ID.         */
+  int *First_Unknown;    /* Location in soln vector of node's
+                            first unknown
+                            HKM -> Note there is no mesh
+                            dependence for this number
+                            in the goma version                   */
+  struct Node_Type Type; /* Flags indicating the type of the node.*/
 
   UMI_LIST_STRUCT Mat_List; /* This is a list of material indecises
                              * present at this node */

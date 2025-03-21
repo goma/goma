@@ -70,21 +70,21 @@ int elem_info(const int info, const int ielem_type)
 
   switch (ielem_type) { /* select type of element */
 
-  case LINEAR_TRI:      /* linear triangle */
-    switch (info) {     /* select type of information required */
-    case NNODES:        /* number of nodes */
+  case LINEAR_TRI:  /* linear triangle */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 3;
       break;
-    case NQUAD:         /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 3;
       break;
-    case NDIM:          /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
-    case NQUAD_SURF:    /* number of surface quad points */
+    case NQUAD_SURF: /* number of surface quad points */
       answer = 2;
       break;
-    case NQUAD_EDGE:    /* number of edge quad points */
+    case NQUAD_EDGE: /* number of edge quad points */
       answer = 1;
       break;
     default:
@@ -99,13 +99,13 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:    /* number of nodes */
       answer = 6;
       break;
-    case NQUAD:     /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 6;
       /*
       answer = 4;
       */
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
     case NQUAD_SURF: /* number of surface quad points */
@@ -121,15 +121,15 @@ int elem_info(const int info, const int ielem_type)
     }
     break;
 
-  case QUAD6_TRI:    /* quadratic triangle with 6th order quadrature */
-    switch (info) {  /* select type of information required */
-    case NNODES:     /* number of nodes */
+  case QUAD6_TRI:   /* quadratic triangle with 6th order quadrature */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 6;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 12;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
     case NQUAD_SURF: /* number of surface quad points */
@@ -145,15 +145,15 @@ int elem_info(const int info, const int ielem_type)
     }
     break;
 
-  case P0_QUAD:      /* constant on quadrilateral */
-    switch (info) {  /* select type of information required */
-    case NNODES:     /* number of nodes */
+  case P0_QUAD:     /* constant on quadrilateral */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 1;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 1;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
     case NQUAD_SURF: /* number of surface quad points */
@@ -169,15 +169,15 @@ int elem_info(const int info, const int ielem_type)
     }
     break;
 
-  case P1_QUAD:      /* linear on quadrilateral */
-    switch (info) {  /* select type of information required */
-    case NNODES:     /* number of nodes */
+  case P1_QUAD:     /* linear on quadrilateral */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 3;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 4;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
     case NQUAD_SURF: /* number of surface quad points */
@@ -198,16 +198,16 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:      /* number of nodes */
       answer = 4;
       break;
-    case NQUAD:       /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 4;
       break;
-    case NDIM:        /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
-    case NQUAD_SURF:  /* number of surface quad points */
+    case NQUAD_SURF: /* number of surface quad points */
       answer = 2;
       break;
-    case NQUAD_EDGE:  /* number of edge quad points */
+    case NQUAD_EDGE: /* number of edge quad points */
       answer = 1;
       break;
     default:
@@ -222,16 +222,16 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:        /* number of nodes */
       answer = 5;
       break;
-    case NQUAD:         /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 4;
       break;
-    case NDIM:          /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
-    case NQUAD_SURF:    /* number of surface quad points */
+    case NQUAD_SURF: /* number of surface quad points */
       answer = 2;
       break;
-    case NQUAD_EDGE:    /* number of edge quad points */
+    case NQUAD_EDGE: /* number of edge quad points */
       answer = 1;
       break;
     default:
@@ -246,16 +246,16 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:      /* number of nodes */
       answer = 8;
       break;
-    case NQUAD:       /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 9;
       break;
-    case NDIM:        /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
-    case NQUAD_SURF:  /* number of surface quad points */
+    case NQUAD_SURF: /* number of surface quad points */
       answer = 3;
       break;
-    case NQUAD_EDGE:  /* number of edge quad points */
+    case NQUAD_EDGE: /* number of edge quad points */
       answer = 1;
       break;
     default:
@@ -265,15 +265,15 @@ int elem_info(const int info, const int ielem_type)
     }
     break;
 
-  case BIQUAD_QUAD:  /* biquadratic quadrilateral */
-    switch (info) {  /* select type of information required */
-    case NNODES:     /* number of nodes */
+  case BIQUAD_QUAD: /* biquadratic quadrilateral */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 9;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 9;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
     case NQUAD_SURF: /* number of surface quad points */
@@ -294,16 +294,16 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:       /* number of nodes */
       answer = 9;
       break;
-    case NQUAD:        /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 25;
       break;
-    case NDIM:         /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
-    case NQUAD_SURF:   /* number of surface quad points */
+    case NQUAD_SURF: /* number of surface quad points */
       answer = 3;
       break;
-    case NQUAD_EDGE:   /* number of edge quad points */
+    case NQUAD_EDGE: /* number of edge quad points */
       answer = 1;
       break;
     default:
@@ -313,15 +313,15 @@ int elem_info(const int info, const int ielem_type)
     }
     break;
 
-  case P0_HEX:       /* bilinear quadrilateral */
-    switch (info) {  /* select type of information required */
-    case NNODES:     /* number of nodes */
+  case P0_HEX:      /* bilinear quadrilateral */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 1;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 1;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 3;
       break;
     case NQUAD_SURF: /* number of surface quad points */
@@ -337,15 +337,15 @@ int elem_info(const int info, const int ielem_type)
     }
     break;
 
-  case P1_HEX:       /* bilinear quadrilateral */
-    switch (info) {  /* select type of information required */
-    case NNODES:     /* number of nodes */
+  case P1_HEX:      /* bilinear quadrilateral */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 4;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 8;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 3;
       break;
     case NQUAD_SURF: /* number of surface quad points */
@@ -366,16 +366,16 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:      /* number of nodes */
       answer = 8;
       break;
-    case NQUAD:       /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 8;
       break;
-    case NDIM:        /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 3;
       break;
-    case NQUAD_SURF:  /* number of surface quad points */
+    case NQUAD_SURF: /* number of surface quad points */
       answer = 4;
       break;
-    case NQUAD_EDGE:  /* number of edge quad points */
+    case NQUAD_EDGE: /* number of edge quad points */
       answer = 2;
       break;
     default:
@@ -390,16 +390,16 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:        /* number of nodes */
       answer = 9;
       break;
-    case NQUAD:         /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 8;
       break;
-    case NDIM:          /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 3;
       break;
-    case NQUAD_SURF:    /* number of surface quad points */
+    case NQUAD_SURF: /* number of surface quad points */
       answer = 4;
       break;
-    case NQUAD_EDGE:    /* number of edge quad points */
+    case NQUAD_EDGE: /* number of edge quad points */
       answer = 2;
       break;
     default:
@@ -414,34 +414,10 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:      /* number of nodes */
       answer = 20;
       break;
-    case NQUAD:       /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 27;
       break;
-    case NDIM:        /* number of physical dimensions */
-      answer = 3;
-      break;
-    case NQUAD_SURF:  /* number of surface quad points */
-      answer = 9;
-      break;
-    case NQUAD_EDGE:  /* number of edge quad points */
-      answer = 3;
-      break;
-    default:
-      fprintf(stderr, "Unknown quantity\n");
-      answer = -1;
-      break;
-    }
-    break;
-
-  case TRIQUAD_HEX:  /* triquadratic hexahedron */
-    switch (info) {  /* select type of information required*/
-    case NNODES:     /* number of nodes */
-      answer = 27;
-      break;
-    case NQUAD:      /* number of quadrature points */
-      answer = 27;
-      break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 3;
       break;
     case NQUAD_SURF: /* number of surface quad points */
@@ -457,15 +433,39 @@ int elem_info(const int info, const int ielem_type)
     }
     break;
 
-  case LINEAR_TET:   /* linear tetrahedron */
-    switch (info) {  /* select type of information required */
-    case NNODES:     /* number of nodes */
+  case TRIQUAD_HEX: /* triquadratic hexahedron */
+    switch (info) { /* select type of information required*/
+    case NNODES:    /* number of nodes */
+      answer = 27;
+      break;
+    case NQUAD: /* number of quadrature points */
+      answer = 27;
+      break;
+    case NDIM: /* number of physical dimensions */
+      answer = 3;
+      break;
+    case NQUAD_SURF: /* number of surface quad points */
+      answer = 9;
+      break;
+    case NQUAD_EDGE: /* number of edge quad points */
+      answer = 3;
+      break;
+    default:
+      fprintf(stderr, "Unknown quantity\n");
+      answer = -1;
+      break;
+    }
+    break;
+
+  case LINEAR_TET:  /* linear tetrahedron */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 4;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 4;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 3;
       break;
     case NQUAD_SURF: /* number of surface quad points */
@@ -486,16 +486,16 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:      /* number of nodes */
       answer = 10;
       break;
-    case NQUAD:       /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 14;
       break;
-    case NDIM:        /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 3;
       break;
-    case NQUAD_SURF:  /* number of surface quad points */
+    case NQUAD_SURF: /* number of surface quad points */
       answer = 4;
       break;
-    case NQUAD_EDGE:  /* number of edge quad points */
+    case NQUAD_EDGE: /* number of edge quad points */
       answer = 2;
       break;
     default:
@@ -511,15 +511,15 @@ int elem_info(const int info, const int ielem_type)
      * with what existed in find_surf_st() and find_edge_s().
      */
 
-  case LINEAR_BAR:   /* 1D, linear element for shell elements */
-    switch (info) {  /* select type of information required */
-    case NNODES:     /* number of nodes */
+  case LINEAR_BAR:  /* 1D, linear element for shell elements */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 2;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 2;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 1;
       break;
     case NQUAD_SURF: /* number of "surface" quad points */
@@ -535,15 +535,15 @@ int elem_info(const int info, const int ielem_type)
     }
     break;
 
-  case QUAD_BAR:     /* 1D, quadratic element for shell elements */
-    switch (info) {  /* select type of information required */
-    case NNODES:     /* number of nodes */
+  case QUAD_BAR:    /* 1D, quadratic element for shell elements */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 3;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 3;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 1;
       break;
     case NQUAD_SURF: /* number of "surface" quad points */
@@ -564,16 +564,16 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:       /* number of nodes */
       answer = 4;
       break;
-    case NQUAD:        /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 4;
       break;
-    case NDIM:         /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
-    case NQUAD_SURF:   /* number of "surface" quad points */
+    case NQUAD_SURF: /* number of "surface" quad points */
       answer = 2;
       break;
-    case NQUAD_EDGE:   /* number of "edge" quad points */
+    case NQUAD_EDGE: /* number of "edge" quad points */
       answer = 1;
       break;
     default:
@@ -588,10 +588,10 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:     /* number of nodes */
       answer = 9;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 9;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
     case NQUAD_SURF: /* number of "surface" quad points */
@@ -612,16 +612,16 @@ int elem_info(const int info, const int ielem_type)
     case NNODES:          /* number of nodes */
       answer = 3;
       break;
-    case NQUAD:           /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 3;
       break;
-    case NDIM:            /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
-    case NQUAD_SURF:      /* number of surface quad points */
+    case NQUAD_SURF: /* number of surface quad points */
       answer = 2;
       break;
-    case NQUAD_EDGE:      /* number of edge quad points */
+    case NQUAD_EDGE: /* number of edge quad points */
       answer = 1;
       break;
     default:
@@ -631,15 +631,15 @@ int elem_info(const int info, const int ielem_type)
     }
     break;
 
-  case P1_SHELL:     /* linear discontinuous on shell */
-    switch (info) {  /* select type of information required */
-    case NNODES:     /* number of nodes */
+  case P1_SHELL:    /* linear discontinuous on shell */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 3;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 4;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
     case NQUAD_SURF: /* number of surface quad points */
@@ -655,15 +655,15 @@ int elem_info(const int info, const int ielem_type)
     }
     break;
 
-  case P0_SHELL:     /* constant discontinuous on shell */
-    switch (info) {  /* select type of information required */
-    case NNODES:     /* number of nodes */
+  case P0_SHELL:    /* constant discontinuous on shell */
+    switch (info) { /* select type of information required */
+    case NNODES:    /* number of nodes */
       answer = 1;
       break;
-    case NQUAD:      /* number of quadrature points */
+    case NQUAD: /* number of quadrature points */
       answer = 1;
       break;
-    case NDIM:       /* number of physical dimensions */
+    case NDIM: /* number of physical dimensions */
       answer = 2;
       break;
     case NQUAD_SURF: /* number of surface quad points */
@@ -1009,11 +1009,11 @@ int dof_lnode_interp_type(const int n,
     case I_Q1_D: /* 4 node, 1 dof/node, Lagrangian linear
                     at interfaces that are discontinuous */
       return ((n < 4) ? 1 : 0);
-    case I_Q2:   /* 10 node, 1 dof/node, Lagrangian quadratic */
+    case I_Q2: /* 10 node, 1 dof/node, Lagrangian quadratic */
       return ((n < 10) ? 1 : 0);
-    case I_P0:   /* 1 node, 1 dof/node, piecewise constant */
+    case I_P0: /* 1 node, 1 dof/node, piecewise constant */
       return ((n == 0) ? 1 : 0);
-    case I_P1:   /* 1 node, 4 dof/node, piecewise linear */
+    case I_P1: /* 1 node, 4 dof/node, piecewise linear */
       return ((n == 0) ? 4 : 0);
     case I_N1:
       return (n >= 4 && n < 10) ? 1 : 0;
@@ -1057,7 +1057,7 @@ int dof_lnode_interp_type(const int n,
     case I_Q1_XV:
     case I_Q1_XG:
       return ((n < 8) ? 2 : 0);
-    case I_S2:   /* 20 node, 1 dof/node, serendipity */
+    case I_S2: /* 20 node, 1 dof/node, serendipity */
       return ((n < 20) ? 1 : 0);
     case I_Q2:   /* 27 node, 1 dof/node, Lagrangian quadratic */
     case I_Q2_D: /* 27 node, 1 dof/node, Lagrangian quadratic
@@ -1428,12 +1428,12 @@ int getdofs(const int element_shape, const int interpolation)
     case I_Q1_XV:
     case I_Q1_XG:
       return (8);
-    case I_Q1_HV:  /* 4 node, 1 dof/node, Lagrangian bilinear + discontinuous enrichment */
+    case I_Q1_HV: /* 4 node, 1 dof/node, Lagrangian bilinear + discontinuous enrichment */
     case I_Q1_HG:
       return (5);
     case I_Q1_HVG: /* 4 node, 1 dof/node, Lagrangian bilinear + 2 dof discontinuous enrichment */
       return (6);
-    case I_Q2:     /* 9 node, 1 dof/node, Lagrangian biquadratic */
+    case I_Q2: /* 9 node, 1 dof/node, Lagrangian biquadratic */
     case I_Q2_D:
     case I_Q2_LSA:
     case I_Q2_D_LSA:
@@ -1444,19 +1444,19 @@ int getdofs(const int element_shape, const int interpolation)
     case I_Q2_XV:
     case I_Q2_XG:
       return (18);
-    case I_Q2_HV:  /* 9 node, 1 dof/node, Lagrangian bilinear + discontinuous enrichment */
+    case I_Q2_HV: /* 9 node, 1 dof/node, Lagrangian bilinear + discontinuous enrichment */
     case I_Q2_HG:
       return (10);
     case I_Q2_HVG: /* 9 node, 1 dof/node, Lagrangian bilinear + 2 dof discontinuous enrichment */
       return (11);
 
-    case I_SP:     /* 8 node, 0 or 1 dof/node, Lagrangian biquadratic subparametric*/
+    case I_SP: /* 8 node, 0 or 1 dof/node, Lagrangian biquadratic subparametric*/
       return (8);
 
-    case I_S2:     /* 8 node, 1 dof/node, serendipity */
+    case I_S2: /* 8 node, 1 dof/node, serendipity */
       return (8);
 
-    case I_P1:     /* 1 node, 3 dof/node, piecewise linear */
+    case I_P1: /* 1 node, 3 dof/node, piecewise linear */
     case I_P1_GP:
     case I_P1_GN:
       return (3);
@@ -1474,10 +1474,10 @@ int getdofs(const int element_shape, const int interpolation)
     case I_P1_XV:
       return (6);
 
-    case I_H3:  /* 4 node, 4 dof/node, Hermite bicubic */
+    case I_H3: /* 4 node, 4 dof/node, Hermite bicubic */
       return (16);
 
-    case I_Q3:  /* 16 node, 1 dof/node, Lagrangian bicubic */
+    case I_Q3: /* 16 node, 1 dof/node, Lagrangian bicubic */
       return (16);
 
     case I_PQ1: /* centroid node, 4 dof/node, bilinear discontinous */
@@ -1658,7 +1658,7 @@ void find_stu(const int iquad,      /* current GQ index  */
   static const double quad5_1 = 0.9061798459;
   static const double quad5_2 = 0.5384693101;
 
-  switch (ielem_type) {   /* select element */
+  switch (ielem_type) { /* select element */
 
   case LINEAR_TRI:        /* linear triangle */
   case BILINEAR_TRISHELL: /* linear triangular shell */
@@ -2316,10 +2316,10 @@ void find_surf_st(const int iquad,      /* current GQ index */
 
   switch (ielem_type) { /* select element */
 
-  case P0_QUAD:         /*constant discontinuous quadrilateral */
-  case P0_SHELL:        /*constant discontinuous shell */
-  case P1_QUAD:         /*linear discontinuous quadrilateral */
-  case P1_SHELL:        /*linear discontinuous shell */
+  case P0_QUAD:  /*constant discontinuous quadrilateral */
+  case P0_SHELL: /*constant discontinuous shell */
+  case P1_QUAD:  /*linear discontinuous quadrilateral */
+  case P1_SHELL: /*linear discontinuous shell */
     switch (iquad) {
     case 0:
       xi[i_s] = *s = 0.;
@@ -3117,7 +3117,7 @@ void find_nodal_stu(const int inode,      /* current node index */
     }
     break;
 
-  case BILINEAR_QUAD:   /* bilinear quadrilateral */
+  case BILINEAR_QUAD: /* bilinear quadrilateral */
   case BILINEAR_SHELL:
   case C_BILINEAR_QUAD: /* bilinear quadrilateral
                          * with additional centroid node */
@@ -3148,7 +3148,7 @@ void find_nodal_stu(const int inode,      /* current node index */
     }
     break;
 
-  case BIQUAD_QUAD:    /* biquadratic quadrilateral */
+  case BIQUAD_QUAD: /* biquadratic quadrilateral */
   case BIQUAD_SHELL:
   case BIQUAD_QUAD_LS: /* biquadratic quadrilateral for level set */
     *u = 0.0;
@@ -3517,7 +3517,7 @@ double Gq_weight(const int iquad,      /* current GQ index */
   case BILINEAR_TRISHELL: /* linear triangular shell */
     weight = tri1 / 2.0;
     break;
-  case QUAD_TRI:          /* quadratic triangle */
+  case QUAD_TRI: /* quadratic triangle */
     /* 6 point rule */
     if (iquad < 3)
       weight = tri2 / 2.0;
@@ -3725,7 +3725,7 @@ double Gq_surf_weight(const int iquad,      /* current GQ index  */
     break;
 
   case BIQUAD_SHELL:
-    weight = 1.0;         /* Note that this is a curve, probably needs more detail */
+    weight = 1.0; /* Note that this is a curve, probably needs more detail */
     break;
 
   case LINEAR_TRI:        /* linear triangle */
@@ -3982,7 +3982,7 @@ int get_type(char string[],   /* EXODUS name of parent element  */
     case 2:                             /* bilinear quadralateral */
       answer = LINEAR_BAR;
       break;
-    case 3:                             /* bilinear quadrilateral with additional centroid node */
+    case 3: /* bilinear quadrilateral with additional centroid node */
       answer = QUAD_BAR;
       break;
     default:
@@ -4029,10 +4029,10 @@ int get_type(char string[],   /* EXODUS name of parent element  */
     switch (nodes) {                         /* select number of nodes in this element */
     case 3:
       switch (attrs) {
-      case 0:                                /* bilinear triangle */
+      case 0: /* bilinear triangle */
         answer = LINEAR_TRI;
         break;
-      case 1:                                /* bilinear triangular shell */
+      case 1: /* bilinear triangular shell */
         answer = BILINEAR_TRISHELL;
         break;
       default:
@@ -4055,7 +4055,7 @@ int get_type(char string[],   /* EXODUS name of parent element  */
     case 4:                                    /* bilinear quadralateral */
       answer = LINEAR_TET;
       break;
-    case 10:                                   /* bilinear quadralateral */
+    case 10: /* bilinear quadralateral */
       answer = QUADRATIC_TET;
       break;
     default:
@@ -4069,7 +4069,7 @@ int get_type(char string[],   /* EXODUS name of parent element  */
     case 8:                                  /* trilinear hexahedron */
       answer = TRILINEAR_HEX;
       break;
-    case 9:  /* trilinear hexahedron with additional centroid node */
+    case 9: /* trilinear hexahedron with additional centroid node */
       answer = C_TRILINEAR_HEX;
       break;
     case 20: /* serendipity triquadratic hexahedron */

@@ -62,11 +62,11 @@
 #endif
 
 /* Choices for matrix fill -- what quantities to calculate */
-#define RHS_ONLY                   100
-#define MATRIX_ONLY                101
-#define RHS_MATRIX                 102
-#define RHS_MATRIX_SAVE            103
-#define RECOVER_MATRIX             104
+#define RHS_ONLY        100
+#define MATRIX_ONLY     101
+#define RHS_MATRIX      102
+#define RHS_MATRIX_SAVE 103
+#define RECOVER_MATRIX  104
 
 /* Choices for linear solve about the state of the Jacobian matrix*/
 #define NEW_JACOBIAN               200
@@ -76,14 +76,14 @@
 #define CHECK_JACOBIAN             204
 
 /* Internal flags for rhs calculation for continuation linear solves*/
-#define CONT_TANGENT               300
-#define ARC_CONT_SOL2              301
-#define TP_CONT_SOL2               302
-#define TP_CONT_SOL3               303
-#define TP_CONT_SOL4               304
-#define HP_CONT_SOL3               305
-#define HP_CONT_DMDX               306
-#define HP_CONT_DMDPARAM           307
+#define CONT_TANGENT     300
+#define ARC_CONT_SOL2    301
+#define TP_CONT_SOL2     302
+#define TP_CONT_SOL3     303
+#define TP_CONT_SOL4     304
+#define HP_CONT_SOL3     305
+#define HP_CONT_DMDX     306
+#define HP_CONT_DMDPARAM 307
 
 /*****************************************************************************/
 /*                       STRUCTURE DEFINITIONS                               */

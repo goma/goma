@@ -97,7 +97,7 @@ double power_law_time_const(struct PolymerTimeConstants *lambda_st,
 
   int i, j;
 
-  dbl gammadot;             /* strain rate invariant */
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
@@ -178,7 +178,7 @@ double carreau_polymer_time_const(struct PolymerTimeConstants *lambda_st,
 
   int i, j;
 
-  dbl gammadot;             /* strain rate invariant */
+  dbl gammadot; /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */

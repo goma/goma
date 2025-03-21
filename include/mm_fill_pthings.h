@@ -31,31 +31,31 @@
 #define EXTERN extern
 #endif
 
-EXTERN int assemble_pmomentum(double,                /* time - present time value                 */
-                              dbl,                   /* tt - parameter to vary time integration   *
-                                                      * from explicit (tt = 1) to                 *
-                                                      * implicit (tt = 0)                         */
-                              dbl);                  /* dt - current time step size               */
+EXTERN int assemble_pmomentum(double, /* time - present time value                 */
+                              dbl,    /* tt - parameter to vary time integration   *
+                                       * from explicit (tt = 1) to                 *
+                                       * implicit (tt = 0)                         */
+                              dbl);   /* dt - current time step size               */
 
-EXTERN int MMH_assemble_continuity(double,           /* time - present time value                 */
-                                   double,           /* parameter to vary time integration from
-                                                      * explicit (tt = 1) to implicit (tt = 0)    */
-                                   double,           /* current time step size */
-                                   double,           /* average global element size for PSPG,
-                                                      * taken to be constant wrt to Jacobian
-                                                      * entries                                   */
-                                   double[],         /* h - element size information for PSPG     */
-                                   double[][DIM],    /* hh - (DIM)(DIM) currently unused, but     *
-                                                      * remain just in case they are needed later */
-                                   double[][MDE],    /* dh_dxnode - (DIM)(MDE)                    */
-                                   double,           /* U_norm - global velocity norm for PSPG    *
-                                                      * calculations                              */
-                                   double);          /* mu_avg - element viscosity for PSPG calcs */
+EXTERN int MMH_assemble_continuity(double,        /* time - present time value                 */
+                                   double,        /* parameter to vary time integration from
+                                                   * explicit (tt = 1) to implicit (tt = 0)    */
+                                   double,        /* current time step size */
+                                   double,        /* average global element size for PSPG,
+                                                   * taken to be constant wrt to Jacobian
+                                                   * entries                                   */
+                                   double[],      /* h - element size information for PSPG     */
+                                   double[][DIM], /* hh - (DIM)(DIM) currently unused, but     *
+                                                   * remain just in case they are needed later */
+                                   double[][MDE], /* dh_dxnode - (DIM)(MDE)                    */
+                                   double,        /* U_norm - global velocity norm for PSPG    *
+                                                   * calculations                              */
+                                   double);       /* mu_avg - element viscosity for PSPG calcs */
 
-EXTERN int pmomentum_source_term(dbl[DIM],           /* Body force */
-                                 dbl[DIM][MDE],      /* For temperature dependence */
-                                 dbl[DIM][DIM][MDE], /* For spatial dependence */
+EXTERN int pmomentum_source_term(dbl[DIM],                /* Body force */
+                                 dbl[DIM][MDE],           /* For temperature dependence */
+                                 dbl[DIM][DIM][MDE],      /* For spatial dependence */
                                  dbl[DIM][MAX_CONC][MDE], /* For concentration */
                                  dbl[DIM][DIM][MDE]);     /* For velocity dependence */
 
-#endif                                                    /* GOMA_MM_FILL_PTHINGS_H */
+#endif /* GOMA_MM_FILL_PTHINGS_H */

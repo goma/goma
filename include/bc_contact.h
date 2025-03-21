@@ -69,10 +69,10 @@ EXTERN int apply_contact_bc(double[],          /* Solution vector for the curren
                             const double, /* time_value */
                             const Exo_DB *);
 
-EXTERN void find_segment_s_wt(const int,  /* current GQ index */
-                              const int,  /* number of quadrature points */
-                              double *,   /* Gaussian-quadrature point (s) (returned) */
-                              double *);  /* Gaussian-quadrature wt (returned) */
+EXTERN void find_segment_s_wt(const int, /* current GQ index */
+                              const int, /* number of quadrature points */
+                              double *,  /* Gaussian-quadrature point (s) (returned) */
+                              double *); /* Gaussian-quadrature wt (returned) */
 
 EXTERN void find_subsurf_st_wt(const int, /* current GQ index */
                                const int, /* number of quadrature points */
@@ -82,26 +82,26 @@ EXTERN void find_subsurf_st_wt(const int, /* current GQ index */
                                double *,  /* element coordinates (returned) */
                                double *); /* GQ weight (returned) */
 
-EXTERN double dof_distance(int,           /* variable type    */
-                           int);          /* dof number       */
+EXTERN double dof_distance(int,  /* variable type    */
+                           int); /* dof number       */
 
-EXTERN double lnn_distance(int);          /* local node number       */
+EXTERN double lnn_distance(int); /* local node number       */
 
 void gnn_distance(
     const int, const double[], const double[], const double[], double *, double *, double *);
 
-EXTERN int apply_embedded_bc(int,         /* ielem - element number */
-                             double[],    /* Solution vector for the current processor    */
-                             double,      /* delta_t - current time step size */
-                             double,      /* theta - parameter to vary time integration:
-                                           * explicit (theta = 1) --
-                                           * implicit (theta = 0) */
-                             double,      /* time_value */
+EXTERN int apply_embedded_bc(int,      /* ielem - element number */
+                             double[], /* Solution vector for the current processor    */
+                             double,   /* delta_t - current time step size */
+                             double,   /* theta - parameter to vary time integration:
+                                        * explicit (theta = 1) --
+                                        * implicit (theta = 0) */
+                             double,   /* time_value */
                              const PG_DATA *,
-                             int,         /* Base augmenting condition number */
-                             double *,    /* gAC array */
-                             double **,   /* bAC array */
-                             double **,   /* cAC array */
+                             int,       /* Base augmenting condition number */
+                             double *,  /* gAC array */
+                             double **, /* bAC array */
+                             double **, /* cAC array */
                              Exo_DB *);
 
 EXTERN void setup_shop_at_point(int,      /* ielem - element number */
@@ -132,7 +132,7 @@ EXTERN void contact_fn_dot_T(double[DIM],                                     /*
                              int[DIM],          /* dof_l */
                              double[DIM][MDE]); /* phi_l */
 
-EXTERN void Lagrange_mult_equation(double[DIM], /* func       */
+EXTERN void Lagrange_mult_equation(double[DIM],                                     /* func       */
                                    double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func     */
                                    double,                                          /*  tt       */
                                    double,                                          /*  dt       */
@@ -144,7 +144,7 @@ EXTERN void Lagrange_mult_equation(double[DIM], /* func       */
                                    double[DIM][MDE], /* phi_u */
                                    double[DIM]);     /*  fluid_velocity       */
 
-EXTERN void solid_kinematic_bc(double[DIM],          /* func       */
+EXTERN void solid_kinematic_bc(double[DIM],                                     /* func       */
                                double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func     */
                                double,                                          /*  dt       */
                                double,                                          /*  tt       */
@@ -154,21 +154,21 @@ EXTERN void solid_kinematic_bc(double[DIM],          /* func       */
                                double[DIM][MDE], /* phi_u */
                                double[DIM]);     /*  x_dot   (input)      */
 
-EXTERN int jump_down_to_fluid(const Exo_DB *,    /* Ptr to Exodus database */
-                              int,               /* bc_input_id */
-                              double[],          /* Solution vector */
-                              double[]);         /* xi in fluid element */
+EXTERN int jump_down_to_fluid(const Exo_DB *, /* Ptr to Exodus database */
+                              int,            /* bc_input_id */
+                              double[],       /* Solution vector */
+                              double[]);      /* xi in fluid element */
 
 EXTERN int find_2d_side_id(double, double);
 
 EXTERN int find_3d_side_id(double, double, double);
 
-EXTERN int first_overlap_ac(int,          /* solid element number */
-                            int);         /* side ID number */
+EXTERN int first_overlap_ac(int,  /* solid element number */
+                            int); /* side ID number */
 
-EXTERN int lookup_active_dof(int,         /* Current variable index */
-                             int,         /* Current DOF */
-                             int);        /* Proc_Elem_Connect */
+EXTERN int lookup_active_dof(int,  /* Current variable index */
+                             int,  /* Current DOF */
+                             int); /* Proc_Elem_Connect */
 
 EXTERN int assemble_embedded_bc(int,      /* element number */
                                 double[], /* Solution vector for the current processor    */

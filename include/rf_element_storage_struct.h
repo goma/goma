@@ -51,23 +51,23 @@ struct Element_Storage {
                                * =0. (false) means we are on the wetting/imbibition curve.
                                */
 
-  double *solidified;         /* 0 means material at gaus point has not solidified
-                               * 1 means solidified
-                               */
+  double *solidified; /* 0 means material at gaus point has not solidified
+                       * 1 means solidified
+                       */
 
-  double *sat_node;           /*
-                               * Storage of the saturation at the node
-                               * points. This is a vector of doubles.
-                               * (current time)
-                               */
-  double *p_cap_node;         /*
-                               * Storage of the capillary pressure
-                               * at the node
-                               * points. This is a vector of doubles.
-                               * (previous time step)
-                               */
+  double *sat_node;   /*
+                       * Storage of the saturation at the node
+                       * points. This is a vector of doubles.
+                       * (current time)
+                       */
+  double *p_cap_node; /*
+                       * Storage of the capillary pressure
+                       * at the node
+                       * points. This is a vector of doubles.
+                       * (previous time step)
+                       */
 
-  int *num_switch;            /* number of curve switching at current Gauss point and time step */
+  int *num_switch; /* number of curve switching at current Gauss point and time step */
   int *switch_now; /* Toggle on whether we are switching curve at current Gauss step and time step
                     * 0 means we are not switching at this time step
                     * 1 means we are switching

@@ -63,16 +63,16 @@
 
 #define GOMA_MM_NUMJAC_C
 
-static void piksr2                                   /* mm_numjac.c                               */
-    (int,                                            /* n                                         */
-     int[],                                          /* arr                                       */
-     int[],                                          /* brr                                       */
-     dbl[]);                                         /* crr                                       */
+static void piksr2 /* mm_numjac.c                               */
+    (int,          /* n                                         */
+     int[],        /* arr                                       */
+     int[],        /* brr                                       */
+     dbl[]);       /* crr                                       */
 
 #ifdef FORWARD_DIFF_NUMJAC
-static void compute_numerical_jacobian_errors(dbl,   /* analytic value */
-                                              dbl,   /* numerical value */
-                                              dbl[], /* absolute error */
+static void compute_numerical_jacobian_errors(dbl,    /* analytic value */
+                                              dbl,    /* numerical value */
+                                              dbl[],  /* absolute error */
                                               dbl[]); /* relative error */
 #endif
 
@@ -724,8 +724,8 @@ void numerical_jacobian(struct GomaLinearSolverData *ams,
                         double x_old[],        /* Value of the old solution vector */
                         double x_older[],      /* Value of the real old soln vect */
 
-                        double xdot[],         /* Value of xdot predicted for new solution */
-                        double xdot_old[],     /* Value of xdot at previous time */
+                        double xdot[],     /* Value of xdot predicted for new solution */
+                        double xdot_old[], /* Value of xdot at previous time */
 
                         double x_update[],
                         int num_total_nodes,
@@ -969,11 +969,11 @@ void numerical_jacobian(struct GomaLinearSolverData *ams,
   for (i = 0; i < NumUnknowns[pg->imtrx]; i++)
     aj_diag[i] = a[i]; /* diagonal elements */
 
-  kount = 0;           /* off-diagonal elements */
+  kount = 0; /* off-diagonal elements */
   for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
     nelem[i] = ija[i + 1] - ija[i];
     for (k = 0; k < nelem[i]; k++) {
-      irow[kount] = i;          /* row # in global jacobian matrix */
+      irow[kount] = i; /* row # in global jacobian matrix */
       ii = kount + NumUnknowns[pg->imtrx] + 1;
       jcolumn[kount] = ija[ii]; /* column # in global jacobian matrix */
       aj_off_diag[kount] = a[ii];

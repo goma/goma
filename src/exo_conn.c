@@ -514,8 +514,8 @@ void build_elem_elem(Exo_DB *exo) {
   int prev_set[MAX_EPN]; /* list of elements attached to previous node*/
   int curr_set[MAX_EPN]; /* list of elements attached to "this" node */
 
-  int ip[MAX_EPN];       /* indeces of hits for prev_set[] */
-  int ic[MAX_EPN];       /* indeces of hits for curr_set[] */
+  int ip[MAX_EPN]; /* indeces of hits for prev_set[] */
+  int ic[MAX_EPN]; /* indeces of hits for curr_set[] */
 
   /*
    * If the element->node and node->element connectivities have not been

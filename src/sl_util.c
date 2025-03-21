@@ -1007,10 +1007,10 @@ void hide_external(int n,     /* order of the original system      (in) */
                    int *ijas, /* save ija area */
                    double *a) /* original nonzero matrix values    (in) */
 {
-  int i;                      /* temporary index */
-  int d;                      /* difference */
-  int s;                      /* start of saving of external off diag names */
-  bool go_fast = FALSE;       /* start slow, finish fast */
+  int i;                /* temporary index */
+  int d;                /* difference */
+  int s;                /* start of saving of external off diag names */
+  bool go_fast = FALSE; /* start slow, finish fast */
 
   /*
    * Standard checks for sanity.
@@ -1136,9 +1136,9 @@ void show_external(int n,     /* order of the original system      (in) */
                    int *ijas, /* save ija area */
                    double *a) /* original nonzero matrix values    (in) */
 {
-  int i;                      /* temporary index */
-  int d;                      /* difference */
-  int s;                      /* start of saving of external off diag names */
+  int i; /* temporary index */
+  int d; /* difference */
+  int s; /* start of saving of external off diag names */
   /*  bool go_fast=FALSE;		 start slow, finish fast */
 
   /*

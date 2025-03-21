@@ -28,13 +28,13 @@ extern void display_parameterC(double,    /* PARAMETER VALUE */
                                Exo_DB *,  /* exo - ptr to finite element mesh database */
                                Dpi *);    /* dpi - ptr to distributed processing info */
 
-void display_parameterC(double lambda,    /* PARAMETER VALUE */
-                        double *x,        /* UNKNOWN VECTOR */
-                        double *xdot,     /* UNKNOWN_DOT VECTOR */
-                        double delta_s,   /* STEP */
-                        Comm_Ex *cx,      /* array of communications structures */
-                        Exo_DB *exo,      /* ptr to the finite element mesh database */
-                        Dpi *dpi)         /* distributed processing information */
+void display_parameterC(double lambda,  /* PARAMETER VALUE */
+                        double *x,      /* UNKNOWN VECTOR */
+                        double *xdot,   /* UNKNOWN_DOT VECTOR */
+                        double delta_s, /* STEP */
+                        Comm_Ex *cx,    /* array of communications structures */
+                        Exo_DB *exo,    /* ptr to the finite element mesh database */
+                        Dpi *dpi)       /* distributed processing information */
 {
   int mn;
   int ibc, idf;

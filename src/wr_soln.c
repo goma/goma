@@ -52,12 +52,12 @@ void write_solution(char output_file[],             /* name EXODUS II file */
                     struct Results_Description *rd, /* for post process vars
                                                        (rf_io_structs.h) */
                     double *gvec,
-                    double ***gvec_elem,            /* array vars [eb_index][ev_index][elem] */
-                    int *nprint,                    /* counter for time step number*/
-                    dbl delta_t,                    /* time step size */
-                    dbl theta,                      /* time integration parameter */
-                    dbl time_value,                 /* current time value */
-                    dbl *x_pp,                      /* post proc vars for export */
+                    double ***gvec_elem, /* array vars [eb_index][ev_index][elem] */
+                    int *nprint,         /* counter for time step number*/
+                    dbl delta_t,         /* time step size */
+                    dbl theta,           /* time integration parameter */
+                    dbl time_value,      /* current time value */
+                    dbl *x_pp,           /* post proc vars for export */
                     Exo_DB *exo,
                     Dpi *dpi)
 /*************************************************************************

@@ -1981,8 +1981,8 @@ int load_fv_vector(void)
  * Modified:
  ***************************************************************************/
 {
-  int v;    /* variable type indicator */
-  int i;    /* index */
+  int v; /* variable type indicator */
+  int i; /* index */
   int p;
   int dofs; /* degrees of freedom for a var in the elem */
   int status = 0;
@@ -2098,7 +2098,7 @@ int load_fv_grads(void)
   int dofs;       /* degrees of freedom */
   int w;          /* concentration species */
   int dim = pd->Num_Dim;
-  int mode;       /* modal counter */
+  int mode; /* modal counter */
   int status = 0;
   int transient_run = (pd->TimeIntegration != STEADY);
   BASIS_FUNCTIONS_STRUCT *bfn;
@@ -3917,18 +3917,18 @@ int load_fv_mesh_derivs(int okToZero)
  * Modified:	Tue Feb 21 11:16 MST 1995 pasacki@sandia.gov
  ****************************************************************************/
 {
-  int v;          /* variable type indicator */
-  int i, j;       /* index */
+  int v;    /* variable type indicator */
+  int i, j; /* index */
   int b;
   int p, q, r, s; /* dimension index */
   int vdofs = 0;  /* degrees of freedom for var  in the elem */
   int mdofs;      /* degrees of freedom for mesh in the elem */
   int w;          /* concentration species */
   int status;
-  int dimNonSym;  /* # of dimensions that don't have symmetry */
-  int dim;        /* # dimensions in the physical mesh */
+  int dimNonSym; /* # of dimensions that don't have symmetry */
+  int dim;       /* # dimensions in the physical mesh */
   unsigned int siz;
-  int mode;       /* modal counter */
+  int mode; /* modal counter */
   int transient_run, discontinuous_porous_media, ve_solid;
 
   dbl T_i, v_ri, P_i, d_ri, F_i, d_dot_ri;

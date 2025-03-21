@@ -127,17 +127,17 @@ typedef char *INFO_Record;
 #define SRC_DST(member) dst->member = src->member
 
 struct Exodus_Base {
-  int num_dim;         /* Number of spatial dimensions */
+  int num_dim; /* Number of spatial dimensions */
 
-  int num_elems;       /* Number of elements, total. */
+  int num_elems; /* Number of elements, total. */
 
   int num_elem_blocks; /* Number of element blocks. */
 
-  int num_node_sets;   /* Number of node sets. */
+  int num_node_sets; /* Number of node sets. */
 
-  int num_side_sets;   /* Number of side sets. */
+  int num_side_sets; /* Number of side sets. */
 
-  int num_nodes;       /* Number of nodes, total. */
+  int num_nodes; /* Number of nodes, total. */
 
   dbl *x_coord;
   dbl *y_coord;
@@ -181,13 +181,13 @@ struct Exodus_Base {
   int *ns_node_index;    /* Index in big list of nodes for ea ns.  */
   int *ns_distfact_index;
   dbl *ns_distfact_list;
-  int *ns_node_list;     /* Big list of nds for all ns. */
+  int *ns_node_list; /* Big list of nds for all ns. */
 
   /*
    * Side set information...
    */
-  int ss_elem_len;        /* Length of ss element/side lists. */
-  int ss_node_len;        /* Length of ss node list. */
+  int ss_elem_len; /* Length of ss element/side lists. */
+  int ss_node_len; /* Length of ss node list. */
 
   int *ss_id;             /* SS identifiers for ea side set. */
   int *ss_num_sides;      /* SS num sides per set. */
@@ -210,10 +210,10 @@ struct Exodus_Base {
   char **ss_prop_name; /* Names of side set properties. */
 
   int **eb_prop;
-  int **ns_prop;       /* Values of node set properties. */
-  int **ss_prop;       /* Values of side set properties. */
+  int **ns_prop; /* Values of node set properties. */
+  int **ss_prop; /* Values of side set properties. */
 
-  int *elem_var_tab;   /* [neb*nev], [blk_index*nev+ev_index] */
+  int *elem_var_tab; /* [neb*nev], [blk_index*nev+ev_index] */
 };
 
 /*
@@ -221,19 +221,19 @@ struct Exodus_Base {
  */
 
 struct Exodus_Database {
-  long state;        /* of the database in memory */
+  long state; /* of the database in memory */
 
-  char *path;        /* filename. Well, yes this could
-                      * change, too, for reasons beyond our
-                      * control.
-                      */
-  int exoid;         /* netCDF open file identifier. Strictly,
-                      * this only has meaning when the file is
-                      * open and is not part of the database.
-                      * In principle, this netCDF ID can be
-                      * assigned to an arbitrary integer
-                      * that could change from call to call.
-                      */
+  char *path; /* filename. Well, yes this could
+               * change, too, for reasons beyond our
+               * control.
+               */
+  int exoid;  /* netCDF open file identifier. Strictly,
+               * this only has meaning when the file is
+               * open and is not part of the database.
+               * In principle, this netCDF ID can be
+               * assigned to an arbitrary integer
+               * that could change from call to call.
+               */
 
   int comp_wordsize; /* native desired size for reals on machine */
   int io_wordsize;   /* size of reals in database (maybe difft) */
@@ -244,23 +244,23 @@ struct Exodus_Database {
 
   int cmode;
   int mode;
-  int num_dim;         /* Number of spatial dimensions */
+  int num_dim; /* Number of spatial dimensions */
 
-  int num_elems;       /* Number of elements, total. */
+  int num_elems; /* Number of elements, total. */
 
   int num_elem_blocks; /* Number of element blocks. */
 
-  int num_info;        /* Number of info[] records. */
+  int num_info; /* Number of info[] records. */
 
-  int num_node_sets;   /* Number of node sets. */
+  int num_node_sets; /* Number of node sets. */
 
-  int num_side_sets;   /* Number of side sets. */
+  int num_side_sets; /* Number of side sets. */
 
-  int num_nodes;       /* Number of nodes, total. */
+  int num_nodes; /* Number of nodes, total. */
 
-  int num_qa_rec;      /* Number of quality assurance records. */
+  int num_qa_rec; /* Number of quality assurance records. */
 
-  int num_times;       /* Number of time planes. */
+  int num_times; /* Number of time planes. */
 
   int node_map_exists;
   int elem_map_exists;
@@ -321,15 +321,15 @@ struct Exodus_Database {
   int *eb_ptr;        /* [neb+1] - ptr sums up eb_num_elems[ieb] */
   int *eb_elem_itype; /* an integer instead of a character string */
 
-  int *elem_ptr;      /* [num_elems+1] - pt into node list */
-  int *node_list;     /* concatenated eb_conn for all elemblocks */
+  int *elem_ptr;  /* [num_elems+1] - pt into node list */
+  int *node_list; /* concatenated eb_conn for all elemblocks */
 
-  int *elem_eb;       /* Mapping from the element number to the element
-                       * block index (candidate for removal because of
-                       * its large length - function
-                       * could do it just as easily)
-                       * Length = Total number of elements.
-                       */
+  int *elem_eb; /* Mapping from the element number to the element
+                 * block index (candidate for removal because of
+                 * its large length - function
+                 * could do it just as easily)
+                 * Length = Total number of elements.
+                 */
 
   /*
    * Additional element -> node connectivity information. Boolean indicates
@@ -409,9 +409,9 @@ struct Exodus_Database {
    * Side set information...
    */
 
-  int ss_elem_len;        /* Length of ss element/side lists. */
-  int ss_distfact_len;    /* Length of ss df list */
-  int ss_node_len;        /* Length of ss node list. */
+  int ss_elem_len;     /* Length of ss element/side lists. */
+  int ss_distfact_len; /* Length of ss df list */
+  int ss_node_len;     /* Length of ss node list. */
 
   int *ss_id;             /* SS identifiers for ea side set. */
   int *ss_num_sides;      /* SS num sides per set. */
@@ -421,7 +421,7 @@ struct Exodus_Database {
   int *ss_elem_list;      /* SS element list. */
   int *ss_side_list;      /* SS side list. */
 
-  dbl *ss_distfact_list;  /* SS df list. */
+  dbl *ss_distfact_list; /* SS df list. */
 
   /*
    * These weird beasts help to reference node names and the correct
@@ -444,17 +444,17 @@ struct Exodus_Database {
    * Properties...
    */
 
-  int ns_num_props;    /* Number of nodes set properites. */
-  int ss_num_props;    /* Number of side set properties. */
-  int eb_num_props;    /* Number of element block properties. */
+  int ns_num_props; /* Number of nodes set properites. */
+  int ss_num_props; /* Number of side set properties. */
+  int eb_num_props; /* Number of element block properties. */
 
   char **ns_prop_name; /* Names of node set properties. */
   char **ss_prop_name; /* Names of side set properties. */
   char **eb_prop_name; /* Names of element block properties. */
 
-  int **ns_prop;       /* Values of node set properties. */
-  int **ss_prop;       /* Values of side set properties. */
-  int **eb_prop;       /* Values of element block properties. */
+  int **ns_prop; /* Values of node set properties. */
+  int **ss_prop; /* Values of side set properties. */
+  int **eb_prop; /* Values of element block properties. */
 
   /*
    * Preliminary results data (meta-data) or about the results.
@@ -470,7 +470,7 @@ struct Exodus_Database {
 
   dbl *time_vals;
 
-  int *elem_var_tab;              /* [neb*nev], [blk_index*nev+ev_index] */
+  int *elem_var_tab; /* [neb*nev], [blk_index*nev+ev_index] */
   int elem_var_tab_exists;
   int *truth_table_existance_key; /* programurz cant rite or spel */
 

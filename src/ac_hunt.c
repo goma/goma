@@ -92,19 +92,19 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
                   Exo_DB *exo, /* ptr to the finite element mesh database */
                   Dpi *dpi)    /* distributed processing information */
 {
-  int *ija = NULL;             /* column pointer array                         */
-  double *a = NULL;            /* nonzero array                                */
-  double *a_old = NULL;        /* nonzero array                                */
-  double *x = NULL;            /* solution vector                              */
+  int *ija = NULL;      /* column pointer array                         */
+  double *a = NULL;     /* nonzero array                                */
+  double *a_old = NULL; /* nonzero array                                */
+  double *x = NULL;     /* solution vector                              */
 
-  int iAC;                     /* COUNTER                                      */
-  double *x_AC = NULL;         /* SOLUTION VECTOR OF EXTRA UNKNOWNS            */
-  double *x_AC_old = NULL;     /* old SOLUTION VECTOR OF EXTRA UNKNOWNS        */
+  int iAC;                 /* COUNTER                                      */
+  double *x_AC = NULL;     /* SOLUTION VECTOR OF EXTRA UNKNOWNS            */
+  double *x_AC_old = NULL; /* old SOLUTION VECTOR OF EXTRA UNKNOWNS        */
   double *x_AC_dot = NULL;
 
-  int iHC;                     /* COUNTER                                      */
+  int iHC; /* COUNTER                                      */
 
-  int *ija_attic = NULL;       /* storage for external dofs                    */
+  int *ija_attic = NULL; /* storage for external dofs                    */
 
   int eb_indx, ev_indx;
 

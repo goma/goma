@@ -83,13 +83,13 @@ struct GomaLinearSolverData {
 
   int mat_type;
 
-  int *bindx;      /* "ija" or bindx */
+  int *bindx; /* "ija" or bindx */
 
-  int *belfry;     /* for storing ija[] extern pieces to hide
-                    * them from the solver that only wants
-                    * rows owned by this processor
-                    * use of this thing betrays an
-                    * inherent inefficiency... */
+  int *belfry; /* for storing ija[] extern pieces to hide
+                * them from the solver that only wants
+                * rows owned by this processor
+                * use of this thing betrays an
+                * inherent inefficiency... */
 
   double *val;     /* "a" */
   double *val_old; /* "a_old" */
@@ -117,13 +117,13 @@ struct GomaLinearSolverData {
 
 struct Matrix_Data {
   struct GomaLinearSolverData *ams;
-  double *x;            /* Solution vector */
-  double *x_prev;       /* Solution vector */
-  double *x_old;        /* Solution vector , previous last time step */
-  double *x_older;      /* Solution vector , previous prev time step */
+  double *x;       /* Solution vector */
+  double *x_prev;  /* Solution vector */
+  double *x_old;   /* Solution vector , previous last time step */
+  double *x_older; /* Solution vector , previous prev time step */
   double *x_oldest;
-  double *xdot;         /* xdot of current solution                  */
-  double *xdot_old;     /* xdot_old of current solution              */
+  double *xdot;     /* xdot of current solution                  */
+  double *xdot_old; /* xdot_old of current solution              */
   double *xdot_older;
   double *x_update;     /* last update vector */
   double *resid_vector; /* Residual vector */

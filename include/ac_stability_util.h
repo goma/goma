@@ -50,26 +50,26 @@ EXTERN void get_eigen_outfile_name(char *, int, int);
 
 EXTERN int do_loca(Comm_Ex *, Exo_DB *, Dpi *);
 
-EXTERN int anneal_mesh_LSA            /* ac_stability_util.c */
-    (double[],                        /* x - solution vector */
-     Exo_DB *,                        /* exo - entire mesh desc. */
-     double **,                       /* Saved mesh coordinates */
-     double **);                      /* Saved displacement fields */
+EXTERN int anneal_mesh_LSA /* ac_stability_util.c */
+    (double[],             /* x - solution vector */
+     Exo_DB *,             /* exo - entire mesh desc. */
+     double **,            /* Saved mesh coordinates */
+     double **);           /* Saved displacement fields */
 
-EXTERN int unanneal_mesh_LSA          /* ac_stabililty_util.c */
-    (double[],                        /* x - solution vector */
-     Exo_DB *,                        /* exo - entire mesh desc. */
-     double **,                       /* Saved mesh coordinates */
-     double **);                      /* Saved displacement fields */
+EXTERN int unanneal_mesh_LSA /* ac_stabililty_util.c */
+    (double[],               /* x - solution vector */
+     Exo_DB *,               /* exo - entire mesh desc. */
+     double **,              /* Saved mesh coordinates */
+     double **);             /* Saved displacement fields */
 
-EXTERN void add_displacement_LSA      /* ac_stabililty_util.c */
-    (double[],                        /* x - eigenvector */
-     Exo_DB *,                        /* exo - entire mesh desc. */
-     double **);                      /* Saved displacement fields */
+EXTERN void add_displacement_LSA /* ac_stabililty_util.c */
+    (double[],                   /* x - eigenvector */
+     Exo_DB *,                   /* exo - entire mesh desc. */
+     double **);                 /* Saved displacement fields */
 
 EXTERN void undo_add_displacement_LSA /* ac_stabililty_util.c */
     (double[],                        /* x - eigenvector */
      Exo_DB *,                        /* exo - entire mesh desc. */
      double **);                      /* Saved displacement fields */
 
-#endif                                /* GOMA_AC_STABILITY_UTIL_H */
+#endif /* GOMA_AC_STABILITY_UTIL_H */

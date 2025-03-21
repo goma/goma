@@ -100,7 +100,7 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
                                                                   boundary condition structure   */
                      int num_total_nodes,
                      int bc_application,
-                     int CA_id[],                              /*  CA condition id array  */
+                     int CA_id[],     /*  CA condition id array  */
                      int CA_fselem[], /* array of free surface elements for CA
                                          conditions, initialized to -1 */
                      int CA_sselem[], /* array of solid surface elements for CA
@@ -126,13 +126,13 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
   int Gibbs = 1;
   int iapply = 0;
   int ieqn, eqn, var, pvar, ldof_eqn, p, q, index_eq;
-  int err;         /* status variable for functions */
+  int err; /* status variable for functions */
   int status = 0;
   int bc_input_id; /* bc # for side bc on this side */
   int j_bc_id;     /* bc # for point bc applied at current node */
   VARIABLE_DESCRIPTION_STRUCT *vd;
 
-  double xi[DIM];  /* Local element coordinates of Gauss point. */
+  double xi[DIM]; /* Local element coordinates of Gauss point. */
   double x_dot[MAX_PDIM];
 
   /* Normals for variable normal contact angle condition etc.       */
@@ -1504,8 +1504,8 @@ int apply_sharp_integrated_bc(double x[],            /* Solution vector for the 
                               const double theta,    /* parameter (0 to 1) to vary time integration
                                                       *  ( implicit - 0 to explicit - 1)          */
                               const double hsquared[DIM],
-                              const int ielem,       /* element number */
-                              const int ielem_type,  /* element type */
+                              const int ielem,      /* element number */
+                              const int ielem_type, /* element type */
                               const int num_local_nodes,
                               const int ielem_dim,
                               const int iconnect_ptr,

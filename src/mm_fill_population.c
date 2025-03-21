@@ -2129,7 +2129,7 @@ int assemble_moments(double time, /* present time value */
                      const PG_DATA *pg_data) {
   int eqn, var, peqn, pvar, dim, p, b, qq, w, i, j, status;
 
-  dbl mass;      /* For terms and their derivatives */
+  dbl mass; /* For terms and their derivatives */
 
   dbl advection; /* For terms and their derivatives */
   dbl advection_a;
@@ -2170,7 +2170,7 @@ int assemble_moments(double time, /* present time value */
 
   dbl det_J;
 
-  dbl d_det_J_dmeshbj;        /* for specified (b,j) mesh dof */
+  dbl d_det_J_dmeshbj; /* for specified (b,j) mesh dof */
   dbl wt;
 
   double vconv[MAX_PDIM];     /*Calculated convection velocity */
@@ -2226,9 +2226,9 @@ int assemble_moments(double time, /* present time value */
   d_msource = calloc(1, sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT));
   moment_source(msource, d_msource);
 
-  wt = fv->wt;           /* Gauss point weight. */
+  wt = fv->wt; /* Gauss point weight. */
 
-  h3 = fv->h3;           /* Differential volume element. */
+  h3 = fv->h3; /* Differential volume element. */
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 

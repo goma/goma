@@ -182,14 +182,14 @@ int DIFFUSION_VECTORS_POR_LIQ_GPHASE = -1;
 int DIFFUSION_VECTORS_POR_AIR_GPHASE = -1;
 /* Diffusion of the air in the
  * gas phase for porous flow problems */
-int DIV_PVELOCITY = -1;       /* check the divergence of the particle phase
-                               * velocities.  */
-int DIV_TOTAL = -1;           /* Divergence of the sum of the fluid and
-                               * particle phases.  This should be zero. */
-int DIV_VELOCITY = -1;        /* incompressibility constraint at vertex and
-                               * midside nodes, e.g. del*v = 0 */
-int ELECTRIC_FIELD = -1;      /* Electric field vectors: E = -grad(VOLTAGE) */
-int ELECTRIC_FIELD_MAG = -1;  /* Electric field magnitude: sqrt(E.E) */
+int DIV_PVELOCITY = -1;      /* check the divergence of the particle phase
+                              * velocities.  */
+int DIV_TOTAL = -1;          /* Divergence of the sum of the fluid and
+                              * particle phases.  This should be zero. */
+int DIV_VELOCITY = -1;       /* incompressibility constraint at vertex and
+                              * midside nodes, e.g. del*v = 0 */
+int ELECTRIC_FIELD = -1;     /* Electric field vectors: E = -grad(VOLTAGE) */
+int ELECTRIC_FIELD_MAG = -1; /* Electric field magnitude: sqrt(E.E) */
 
 int ENERGY_FLUXLINES = -1;    /* energy flux function, analogous to
                                * stream function ... */
@@ -209,28 +209,28 @@ int ERROR_ZZ_VEL = -1;        /* Zienkiewicz-Zhu error indicator (element
 int ERROR_ZZ_VEL_ELSIZE = -1; /* Recommended new element size from ZZ
                                * velocity measure */
 int SAT_CURVE_TYPE = -1;
-int SAT_QP_SWITCH = -1;       /* Value of sat. function at hysteretic
-                               * swtch point */
-int CAP_PRESS_SWITCH = -1;    /* Value of cap. press function at hysteretic
-                               * swtch point */
-int NUM_CURVE_SWITCH = -1;    /* Number of hysteretic curve switch */
-int SAT_HYST_MIN = -1;        /* Minimum saturation value for scanning imbibition curve */
-int SAT_HYST_MAX = -1;        /* Maximum saturation value for scanning draining curve */
+int SAT_QP_SWITCH = -1;    /* Value of sat. function at hysteretic
+                            * swtch point */
+int CAP_PRESS_SWITCH = -1; /* Value of cap. press function at hysteretic
+                            * swtch point */
+int NUM_CURVE_SWITCH = -1; /* Number of hysteretic curve switch */
+int SAT_HYST_MIN = -1;     /* Minimum saturation value for scanning imbibition curve */
+int SAT_HYST_MAX = -1;     /* Maximum saturation value for scanning draining curve */
 
 int EVP_DEF_GRAD_TENSOR = -1;
-int EXTERNAL_POST = -1;       /* external field variables read from other
-                               * files */
-int FILL_CONT = -1;           /* fill at vertex & midside nodes*/
+int EXTERNAL_POST = -1; /* external field variables read from other
+                         * files */
+int FILL_CONT = -1;     /* fill at vertex & midside nodes*/
 int FIRST_INVAR_STRAIN = -1;
 int FLUXLINES = -1;           /* mass flux function. This is analogous to
                                * stream function but represents mass flux */
 int LAGRANGE_CONVECTION = -1; /* Lagrangian convection velocity */
 int MEAN_SHEAR = -1;
 int MEAN_VORTICITY = -1;
-int MM_RESIDUALS = -1;        /* stress equation residuals at vertex
-                               * and midside nodes*/
-int NS_RESIDUALS = -1;        /* Navier-Stokes residuals at vertex
-                               * and midside nodes */
+int MM_RESIDUALS = -1; /* stress equation residuals at vertex
+                        * and midside nodes*/
+int NS_RESIDUALS = -1; /* Navier-Stokes residuals at vertex
+                        * and midside nodes */
 int POROUS_RHO_GAS_SOLVENTS = -1;
 /* gas phase concentration of each solvent
  * species in a porous media */
@@ -248,24 +248,24 @@ int POROUS_LIQUID_ACCUM_RATE = -1;
 /* The rate at which liquid in a partially
  * saturated porous medium is accumulating
  * at a point */
-int REL_LIQ_PERM = -1;               /* Relative liquid permeability in porous media */
+int REL_LIQ_PERM = -1; /* Relative liquid permeability in porous media */
 
-int PRESSURE_CONT = -1;              /* pressure at vertex & midside nodes*/
-int SH_DIV_S_V_CONT = -1;            /* SH_DIV_S_V at midside nodes */
-int SH_CURV_CONT = -1;               /* SH_SURF_CURV at midside nodes */
+int PRESSURE_CONT = -1;   /* pressure at vertex & midside nodes*/
+int SH_DIV_S_V_CONT = -1; /* SH_DIV_S_V at midside nodes */
+int SH_CURV_CONT = -1;    /* SH_SURF_CURV at midside nodes */
 int REAL_STRESS_TENSOR = -1;
-int SEC_INVAR_STRAIN = -1;           /* 2nd strain invariant vertex,midside nodes*/
-int STRAIN_TENSOR = -1;              /* strain tensor for mesh deformation  */
-int STREAM = -1;                     /* stream function*/
-int STREAM_NORMAL_STRESS = -1;       /* streamwise normal stress function*/
-int STREAM_SHEAR_STRESS = -1;        /* streamwise shear stress function*/
-int STREAM_TENSION = -1;             /* streamwise tension - (Ttt-Tnn)/R*/
-int STRESS_CONT = -1;                /* stress at vertex & midside nodes*/
-int STRESS_TENSOR = -1;              /* stress tensor for mesh deformation
-                                      * (Lagrangian pressure) */
-int SURFACE_VECTORS = -1;            /* vector field of normals and tangents on
-                                      * surfaces, curves and vertices */
-int SHELL_NORMALS = -1;              /* vector field of smoothed normals computed from fv->sh_ang */
+int SEC_INVAR_STRAIN = -1;     /* 2nd strain invariant vertex,midside nodes*/
+int STRAIN_TENSOR = -1;        /* strain tensor for mesh deformation  */
+int STREAM = -1;               /* stream function*/
+int STREAM_NORMAL_STRESS = -1; /* streamwise normal stress function*/
+int STREAM_SHEAR_STRESS = -1;  /* streamwise shear stress function*/
+int STREAM_TENSION = -1;       /* streamwise tension - (Ttt-Tnn)/R*/
+int STRESS_CONT = -1;          /* stress at vertex & midside nodes*/
+int STRESS_TENSOR = -1;        /* stress tensor for mesh deformation
+                                * (Lagrangian pressure) */
+int SURFACE_VECTORS = -1;      /* vector field of normals and tangents on
+                                * surfaces, curves and vertices */
+int SHELL_NORMALS = -1;        /* vector field of smoothed normals computed from fv->sh_ang */
 int THIRD_INVAR_STRAIN = -1;
 int TIME_DERIVATIVES = -1;           /* time derivatives */
 int TOTAL_STRESS11 = -1;             /* sum over all modes for multi-mode models */
@@ -344,10 +344,10 @@ int CONTACT_DISTANCE = -1;
 int PP_FLUID_STRESS = -1; /* Fluid Stress without Pressure contribution */
 int LUB_CONVECTION = -1;
 
-int len_u_post_proc = 0;  /* size of dynamically allocated u_post_proc
-                           * actually is */
-double *u_post_proc = 0;  /* user-provided values used in calculating
-                           * user defined post processing variable */
+int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
+                          * actually is */
+double *u_post_proc = 0; /* user-provided values used in calculating
+                          * user defined post processing variable */
 
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_def.h
@@ -401,37 +401,37 @@ static int calc_zz_error_vel /* mm_post_proc.c                            */
      double[],
      double[],
      double[],
-     int,                     /* ev_indx - Variable index for zz_error     */
-     double ***,              /* gvec_elem - element variable values that  *
-                               * are indexed: [eb_indx][ev_indx][elem]     */
-     Exo_DB *const,           /* exo                                       */
-     Dpi *const,              /* dpi                                       */
-     int);                    /* compute_elem_size                         */
+     int,           /* ev_indx - Variable index for zz_error     */
+     double ***,    /* gvec_elem - element variable values that  *
+                     * are indexed: [eb_indx][ev_indx][elem]     */
+     Exo_DB *const, /* exo                                       */
+     Dpi *const,    /* dpi                                       */
+     int);          /* compute_elem_size                         */
 
-static int abs_error_at_elem  /* mm_post_proc.c                            */
-    (int,                     /* i_elem                                    */
-     double ***,              /* tau_nodal_lsp                             */
-     double *,                /* gvec_elem                                 */
-     double *,                /* velocity_norm                             */
-     double *);               /* ielem_area                                */
+static int abs_error_at_elem /* mm_post_proc.c                            */
+    (int,                    /* i_elem                                    */
+     double ***,             /* tau_nodal_lsp                             */
+     double *,               /* gvec_elem                                 */
+     double *,               /* velocity_norm                             */
+     double *);              /* ielem_area                                */
 
-static int fill_lhs_lspatch   /* mm_post_proc.c                            */
-    (double *,                /* i_node_coords                             */
-     double *,                /* wt_gp_loc                                 */
-     double *,                /* xgp_loc                                   */
-     double *,                /* ygp_loc                                   */
-     double *,                /* zgp_loc                                   */
-     double *,                /* det_gp_loc                                */
-     int,                     /* max_terms                                 */
-     double **,               /* s_lhs                                     */
-     int,                     /* elem                                      */
-     double ****);            /* tau_gp_ptch                               */
+static int fill_lhs_lspatch /* mm_post_proc.c                            */
+    (double *,              /* i_node_coords                             */
+     double *,              /* wt_gp_loc                                 */
+     double *,              /* xgp_loc                                   */
+     double *,              /* ygp_loc                                   */
+     double *,              /* zgp_loc                                   */
+     double *,              /* det_gp_loc                                */
+     int,                   /* max_terms                                 */
+     double **,             /* s_lhs                                     */
+     int,                   /* elem                                      */
+     double ****);          /* tau_gp_ptch                               */
 
-static int calc_stream_fcn    /* mm_post_proc.c                            */
-    (double[],                /* x                             soln vector */
-     double[4],               /* del_stream_fcn                            */
-     double[MAX_PDIM][MDE]);  /* vel - array for local nodal velocity     *
-                               * values which must be divergence free     */
+static int calc_stream_fcn   /* mm_post_proc.c                            */
+    (double[],               /* x                             soln vector */
+     double[4],              /* del_stream_fcn                            */
+     double[MAX_PDIM][MDE]); /* vel - array for local nodal velocity     *
+                              * values which must be divergence free     */
 
 static int correct_stream_fcn /* mm_post_proc.c                            */
     (int *,                   /* kount - counter for element connectivity  */
@@ -447,8 +447,8 @@ static int look_for_post_proc /* mm_post_proc.c                            */
      char *,                  /* search_string -                           */
      int *);                  /* flag_variable - integer flag for options  */
 
-static int midsid(double[],   /* stream_fcn_vect */
-                  Exo_DB *);  /* exo */
+static int midsid(double[],  /* stream_fcn_vect */
+                  Exo_DB *); /* exo */
 
 static bool post_process_variable_is_active(pp_Average *pp_average, int matrix_index);
 
@@ -559,10 +559,10 @@ static int calc_standard_fields(double **post_proc_vect,
  ****************************************************************************/
 {
   int dim, a, b, c, eqn, var, w, w1, i, j, I, index, status, mode;
-  dbl det_J;            /* determinant of Jacobian: has "r" in it for
-                           axisymmetric case, no "r" for Cartesian*/
-  dbl phi_i;            /* Weighting functions for i-th residuals */
-  dbl phi_j;            /* Interpolation functions for variables */
+  dbl det_J; /* determinant of Jacobian: has "r" in it for
+                axisymmetric case, no "r" for Cartesian*/
+  dbl phi_i; /* Weighting functions for i-th residuals */
+  dbl phi_j; /* Interpolation functions for variables */
   dbl wt;
   dbl n[MAX_CONC][DIM]; /* Diffusion flux vector. */
   dbl qc[DIM];          /* Conduction flux vector. */
@@ -4318,23 +4318,23 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
   int eb_index;
   int mesh_exoid, cpu_word_size, io_word_size;
   float version;
-  int err;                /* temp variable to hold diagnostic flags. */
-  int ip;                 /* ip is the local quadrature point index      */
-  int ip_total;           /* ip_total is the total number of volume
-                             quadrature points in the element            */
-  int j, k, l;            /* local index loop counter                  */
-  int i, id;              /* Index for the local node number - row     */
-  int I;                  /* Indeces for global node number - row      */
-  int ielem = 0, iel;     /* Index for elements                        */
-  int ielem_type;         /* Element type of the current element         */
-  int ielem_dim;          /* Element physical dimension                  */
-  int num_local_nodes;    /* Number of local basis functions in the
-                             current element                             */
-  int iconnect_ptr;       /* Pointer to the beginning of the connectivity
-                             list for the current element                */
-  int eqn = -1;           /* equation name (R_ENERGY, etc) */
-  int var;                /* variable name (TEMPERATURE, etc) */
-  int w;                  /* species counter */
+  int err;             /* temp variable to hold diagnostic flags. */
+  int ip;              /* ip is the local quadrature point index      */
+  int ip_total;        /* ip_total is the total number of volume
+                          quadrature points in the element            */
+  int j, k, l;         /* local index loop counter                  */
+  int i, id;           /* Index for the local node number - row     */
+  int I;               /* Indeces for global node number - row      */
+  int ielem = 0, iel;  /* Index for elements                        */
+  int ielem_type;      /* Element type of the current element         */
+  int ielem_dim;       /* Element physical dimension                  */
+  int num_local_nodes; /* Number of local basis functions in the
+                          current element                             */
+  int iconnect_ptr;    /* Pointer to the beginning of the connectivity
+                          list for the current element                */
+  int eqn = -1;        /* equation name (R_ENERGY, etc) */
+  int var;             /* variable name (TEMPERATURE, etc) */
+  int w;               /* species counter */
 
   double s, t, u;         /* Gaussian-quadrature point locations        */
   int *bloated_node_list; /* temporary used to point to raw SS node list
@@ -4366,9 +4366,9 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
      post processing variables */
   double **post_proc_vect;
 
-  double **lumped_mass;      /* vector to hold lumped mass matrix         */
+  double **lumped_mass; /* vector to hold lumped mass matrix         */
   int *listnd = NULL;
-  int *listndm[MAX_CONC];    /*  */
+  int *listndm[MAX_CONC]; /*  */
   int *listnde = NULL;
   int check, e_start, e_end, mn;
   double del_stream_fcn[4];  /* elemental side increments to stream function
@@ -4402,8 +4402,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
   double p_xold[MAX_PDIM], p_x[MAX_PDIM], sum;
   double p_vel[MAX_PDIM], p_velold[MAX_PDIM];
   double f_vel[MAX_PDIM], f_velold[MAX_PDIM];
-  FILE *jfp = NULL;                   /*  file pointer  */
-  int velo_interp = 0;                /*  velocity basis functions  */
+  FILE *jfp = NULL;    /*  file pointer  */
+  int velo_interp = 0; /*  velocity basis functions  */
 
   struct Porous_Media_Terms pm_terms; /*added for POROUS_LIQUID_ACCUM_RATE*/
 
@@ -4645,21 +4645,21 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
       err = bf_mp_init(pd);
       GOMA_EH(err, "bf_mp_init");
       ielem_type = ei[pg->imtrx]->ielem_type;
-      ip_total = elem_info(NQUAD, ielem_type);          /* number of
-                                                         * quadrature pts */
+      ip_total = elem_info(NQUAD, ielem_type); /* number of
+                                                * quadrature pts */
 
       num_local_nodes = ei[pg->imtrx]->num_local_nodes; /* number of
                                                          * local basis
                                                          * functions */
 
-      ielem_dim = ei[pg->imtrx]->ielem_dim;             /* physical
-                                                         * dimension of this
-                                                         * element */
+      ielem_dim = ei[pg->imtrx]->ielem_dim; /* physical
+                                             * dimension of this
+                                             * element */
 
-      iconnect_ptr = ei[pg->imtrx]->iconnect_ptr;       /* pointer to
-                                                         * beginning of this
-                                                         * element's
-                                                         * connectivity list */
+      iconnect_ptr = ei[pg->imtrx]->iconnect_ptr; /* pointer to
+                                                   * beginning of this
+                                                   * element's
+                                                   * connectivity list */
 
       struct Petrov_Galerkin_Data pg_data;
 
@@ -5810,18 +5810,18 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
 } /*   END OF post_process_nodal                                             */
 /*****************************************************************************/
 
-void post_process_elem(double x[],            /* soln vector */
-                       double x_old[],        /* soln vector at previous time step */
-                       double xdot[],         /* time derivative of soln vector */
+void post_process_elem(double x[],     /* soln vector */
+                       double x_old[], /* soln vector at previous time step */
+                       double xdot[],  /* time derivative of soln vector */
                        double xdot_old[],
                        double resid_vector[], /* Residual vector */
                        const int tev,
                        const int tev_post,
-                       double ***gvec_elem,   /* Triply indexed array containing
-                                               * element variable values on return.
-                                               * convention:
-                                               * [elemblock_index][elemvar_index]
-                                               *      [element_index(inblock)] */
+                       double ***gvec_elem, /* Triply indexed array containing
+                                             * element variable values on return.
+                                             * convention:
+                                             * [elemblock_index][elemvar_index]
+                                             *      [element_index(inblock)] */
                        const int ts,
                        const double *time_ptr,
                        const double delta_t,
@@ -6182,11 +6182,11 @@ static int calc_zz_error_vel(double x[], /* Solution vector                     
     if (max_dim > 2 && min_gp > 9) {
       max_terms = 10; /* 3D with quadratic elements */
     } else if (max_dim > 2 && min_gp <= 9) {
-      max_terms = 4;  /* 3D with linear elements */
+      max_terms = 4; /* 3D with linear elements */
     } else if (max_dim <= 2 && min_gp > 5) {
-      max_terms = 6;  /* 2D with quadratic elements */
+      max_terms = 6; /* 2D with quadratic elements */
     } else {
-      max_terms = 3;  /* 2D with linear elements */
+      max_terms = 3; /* 2D with linear elements */
     }
 
     s_lhs = (double **)smalloc(max_terms * sizeof(double *));
@@ -6713,9 +6713,9 @@ static int abs_error_at_elem(int i_elem,
 {
   int status = 0;
   int i, j, i_elem_gp, eqn, global_node_num, a, b;
-  int err;                /* temp variable to hold diagnostic flags. */
+  int err; /* temp variable to hold diagnostic flags. */
   double sum_tau, phi_i, ***tau_gp_fem, ***tau_gp_lsp, ***tau_gp_ext;
-  double xi[DIM];         /* Local element coordinates of Gauss point. */
+  double xi[DIM]; /* Local element coordinates of Gauss point. */
   double det, wt;
   double gamma[DIM][DIM]; /* shrearrate tensor based on velocity */
 
@@ -6758,8 +6758,8 @@ static int abs_error_at_elem(int i_elem,
   for (i = 0; i < i_elem_gp; i++) {
     find_stu(i, ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]); /* find quadrature point */
 
-    fv->wt = Gq_weight(i, ei[pg->imtrx]->ielem_type);               /* find quadrature weights for
-                                                            current ip */
+    fv->wt = Gq_weight(i, ei[pg->imtrx]->ielem_type); /* find quadrature weights for
+                                              current ip */
     wt = fv->wt;
 
     err = load_basis_functions(xi, bfd);
@@ -6989,9 +6989,9 @@ static int fill_lhs_lspatch(double *i_node_coords,
 {
   int i, j, i_elem_gp, eqn, local_i, a, b;
   int status = 0;
-  int err;                /* temp variable to hold diagnostic flags. */
+  int err; /* temp variable to hold diagnostic flags. */
   double sumx, sumy, sumz, phi_i;
-  double xi[DIM];         /* Local element coordinates of Gauss point. */
+  double xi[DIM]; /* Local element coordinates of Gauss point. */
   double xgp, ygp, zgp, det, wt;
   double gamma[DIM][DIM]; /* shrearrate tensor based on velocity */
 
@@ -7017,8 +7017,8 @@ static int fill_lhs_lspatch(double *i_node_coords,
   for (i = 0; i < i_elem_gp; i++) {
     find_stu(i, ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]); /* find quadrature point */
 
-    wt_gp_loc[i] = Gq_weight(i, ei[pg->imtrx]->ielem_type);         /* find quadrature weights for
-                                                            current ip */
+    wt_gp_loc[i] = Gq_weight(i, ei[pg->imtrx]->ielem_type); /* find quadrature weights for
+                                                    current ip */
     fv->wt = wt_gp_loc[i];
 
     err = load_basis_functions(xi, bfd);
@@ -7386,7 +7386,7 @@ static int fill_lhs_lspatch(double *i_node_coords,
 /*   Routine calc_stream_fcn                                                 */
 /*****************************************************************************/
 
-static int calc_stream_fcn(double x[],                /* soln vector */
+static int calc_stream_fcn(double x[], /* soln vector */
                            double del_stream_fcn[4],
                            double vel[MAX_PDIM][MDE]) /* array for local
                                                        * nodal velocity
@@ -7633,7 +7633,7 @@ static int correct_stream_fcn(int *kount, /* a counter for element connectivity 
                                                          * stream function calculated by*
                                                          * calc_stream_fcn()            */
                               double stream_fcn_vect[],
-                              int listnd[])             /* count number of times node is accessed */
+                              int listnd[]) /* count number of times node is accessed */
 
 /******************************************************************************
   Function which corrects the values of the stream function

@@ -178,8 +178,8 @@ extern double second_(void);
 #define MAX_ITRS 2
 #define MODE     6
 
-#define SHIFTI   3 /* Shift and Invert */
-#define CAYLEY   4 /* mode 4 in dnaupc, used for Cayley transform */
+#define SHIFTI 3 /* Shift and Invert */
+#define CAYLEY 4 /* mode 4 in dnaupc, used for Cayley transform */
 
 /*********** G L O B A L   F U N C T I O N S   I N   T H I S   F I L E ********
  *

@@ -19,7 +19,7 @@
 #ifndef GOMA_RF_IO_STRUCTS_H
 #define GOMA_RF_IO_STRUCTS_H
 
-#include "std.h"         /* define proto if not already done so. */
+#include "std.h" /* define proto if not already done so. */
 
 #include "rf_io_const.h" /* Just in case you haven't done so already. */
 

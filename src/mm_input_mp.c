@@ -6214,7 +6214,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         }
 
         memset(mat_ptr->PorousShellPermTensor[ipore], 0,
-               sizeof(double) * DIM * DIM);               /*these are loaded up later */
+               sizeof(double) * DIM * DIM); /*these are loaded up later */
         mat_ptr->PorousShellPermeability[ipore] =
             mat_ptr->u_PorousShellPermeability[ipore][0]; /*just in case */
 

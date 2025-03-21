@@ -90,15 +90,15 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
   dbl invdeform_dot_grad[DIM][DIM];
   dbl d_invdeform_grad_dx[DIM][DIM][DIM][MDE];
   dbl d_invdeform_dot_grad_dx[DIM][DIM][DIM][MDE];
-  dbl grad_d[DIM][DIM];                 /* displacement gradient*/
-  dbl d_grad_d[DIM][DIM][DIM][MDE];     /* displacement gradient*/
+  dbl grad_d[DIM][DIM];             /* displacement gradient*/
+  dbl d_grad_d[DIM][DIM][DIM][MDE]; /* displacement gradient*/
   dbl grad_d_old[DIM][DIM];
   dbl grad_d_dot[DIM][DIM];
   dbl d_grad_d_dot[DIM][DIM][DIM][MDE]; /* displacement gradient*/
   dbl ddet2d_dx[DIM][MDE];              /* sensitivity */
   dbl ddet2d_dot_dx[DIM][MDE];          /* sensitivity */
   dbl cauchy_green[DIM][DIM];           /* strain tensor without division by determinant, etc. */
-  dbl d_cauchy_green_dx[DIM][DIM][DIM][MDE];     /* sensitivity */
+  dbl d_cauchy_green_dx[DIM][DIM][DIM][MDE]; /* sensitivity */
   dbl cauchy_green_old[DIM][DIM];
   dbl cauchy_green_dot[DIM][DIM];
   dbl d_cauchy_green_dot_dx[DIM][DIM][DIM][MDE]; /* sensitivity */
@@ -1636,11 +1636,11 @@ void rep_force_n_dot_f_bc(double func[DIM],
                           const int bc_type)     /*  bc id  */
 {
   int j, var, dim, a;
-  int jvar;                                      /* Degree of freedom counter */
+  int jvar; /* Degree of freedom counter */
 
-  double d_dist[DIM];                            /* distance derivatives  */
-  double dist = 1e12;                            /* squared distance from surface to wall     */
-  double xpl, ypl, zpl;                          /* coordinates of plane  */
+  double d_dist[DIM];   /* distance derivatives  */
+  double dist = 1e12;   /* squared distance from surface to wall     */
+  double xpl, ypl, zpl; /* coordinates of plane  */
   double factor, denom, dist_sign = 0.0;
   double force = 0.0, d_force = 0.0;
 
@@ -1790,9 +1790,9 @@ void rep_force_roll_n_dot_f_bc(double func[DIM],
                                const int bc_type)         /*  bc id  */
 {
   int j, var, dim, a;
-  int jvar;                                               /* Degree of freedom counter */
+  int jvar; /* Degree of freedom counter */
 
-  double d_dist[DIM];                                     /* distance derivatives  */
+  double d_dist[DIM]; /* distance derivatives  */
   double dist = 1e12; /* squared distance from surface to wall     */
   double factor;
   double coord[3], axis_pt[3], t;
@@ -3739,13 +3739,13 @@ int get_evp_stress_tensor(double TT[DIM][DIM],
                           int ip_total) /* number of gauss points in element    */
 {
 
-  double F[DIM][DIM];                   /* deformation gradient tensor with the gradient operator
-                                        based on the undeformed coordinates */
-  double F_inv[DIM][DIM];               /* the inverse of the deformation gradient tensor */
-  double F_vp[DIM][DIM];                /* the viscoplastic deformation gradient tensor */
-  double F_vp_old[DIM][DIM];            /* the viscoplastic deformation gradient tensor of
-                                        previous converged time step */
-  double F_vp_inv[DIM][DIM];            /* inverse of viscoplastic deformation gradient */
+  double F[DIM][DIM];        /* deformation gradient tensor with the gradient operator
+                             based on the undeformed coordinates */
+  double F_inv[DIM][DIM];    /* the inverse of the deformation gradient tensor */
+  double F_vp[DIM][DIM];     /* the viscoplastic deformation gradient tensor */
+  double F_vp_old[DIM][DIM]; /* the viscoplastic deformation gradient tensor of
+                             previous converged time step */
+  double F_vp_inv[DIM][DIM]; /* inverse of viscoplastic deformation gradient */
   double dF_dx[DIM][DIM][DIM][MDE];
   double dF_vp_inv_dx[DIM][DIM][DIM][MDE];
   double dF_vp_inv_dc[DIM][DIM][MAX_CONC][MDE];
@@ -3753,16 +3753,16 @@ int get_evp_stress_tensor(double TT[DIM][DIM],
   double dF_vp_dc[DIM][DIM][MAX_CONC][MDE];
   double dF_e_dx[DIM][DIM][DIM][MDE];
   double dF_e_dc[DIM][DIM][MAX_CONC][MDE];
-  double F_e[DIM][DIM];    /* the elastic deformation gradient tensor */
-  double C_e[DIM][DIM];    /* product of (transpose F_e) by F_e */
-  double E_e[DIM][DIM];    /* the elastic strain tensor */
+  double F_e[DIM][DIM]; /* the elastic deformation gradient tensor */
+  double C_e[DIM][DIM]; /* product of (transpose F_e) by F_e */
+  double E_e[DIM][DIM]; /* the elastic strain tensor */
   double dE_e_dx[DIM][DIM][DIM][MDE];
   double dE_e_dc[DIM][DIM][MAX_CONC][MDE];
-  double S[DIM][DIM];      /* the second Piola-Kirchoff stress tensor, i.e.
-                           the stress tensor based on the stress-free
-                           frame of reference */
-  double alpha;            /* the linear shrinkage parameter that depends on solvent
-                           concentration */
+  double S[DIM][DIM]; /* the second Piola-Kirchoff stress tensor, i.e.
+                      the stress tensor based on the stress-free
+                      frame of reference */
+  double alpha;       /* the linear shrinkage parameter that depends on solvent
+                      concentration */
   int k;
 
   double grad_d[DIM][DIM]; /* displacement gradient */

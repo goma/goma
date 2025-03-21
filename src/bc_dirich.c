@@ -62,8 +62,8 @@ int put_dirichlet_in_matrix(double x[], const int num_total_nodes)
   int i, ieqn, ibc; /* local node number in current element */
   int eqn, var;     /* squished equation and variable number */
   int var_type;
-  int I;            /* processor node number */
-  int ldof_eqn;     /* conversion from node to local dof */
+  int I;        /* processor node number */
+  int ldof_eqn; /* conversion from node to local dof */
   int offset, lvdesc, idof, matID, j, ledof, matID_dof, found;
   double V_set;
   NODE_INFO_STRUCT *node;

@@ -1024,7 +1024,7 @@ void set_unknown_map(Exo_DB *exo, Dpi *dpi)
         i1 = dpi->node_index_global[i] + 1; /* convert 0-based to 1-based */
       } else {
         gdof = gcount;
-        i1 = i + 1;                         /* convert 0-based internal node numbering */
+        i1 = i + 1; /* convert 0-based internal node numbering */
       } /* to 1-based node numbering of BLOT, etc. */
 
       /*

@@ -56,10 +56,10 @@
 
 int setup_pd(void) {
   int i;
-  int mn;               /* Current material number */
-  int imtrx;            /* Current matrix number */
-  int ce;               /* Current equation. */
-  int v;                /* Current variable. */
+  int mn;    /* Current material number */
+  int imtrx; /* Current matrix number */
+  int ce;    /* Current equation. */
+  int v;     /* Current variable. */
   int status;
 
   int kkSurf = 10000;   /* Legacy variables made ridiculously large */

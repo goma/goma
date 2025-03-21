@@ -91,15 +91,15 @@ int ad_assemble_turb_omega(dbl time_value, /* current time */
                            const PG_DATA *pg_data);
 dbl ad_sa_viscosity(struct Generalized_Newtonian *gn_local, VISCOSITY_DEPENDENCE_STRUCT *d_mu);
 void fill_ad_field_variables();
-int ad_assemble_spalart_allmaras(dbl time_value,    /* current time */
-                                 dbl tt,            /* parameter to vary time integration from
-                                                       explicit (tt = 1) to implicit (tt = 0)    */
-                                 dbl dt,            /* current time step size                    */
+int ad_assemble_spalart_allmaras(dbl time_value, /* current time */
+                                 dbl tt,         /* parameter to vary time integration from
+                                                    explicit (tt = 1) to implicit (tt = 0)    */
+                                 dbl dt,         /* current time step size                    */
                                  const PG_DATA *pg_data);
-int ad_assemble_turb_k_modified(dbl time_value,     /* current time */
-                                dbl tt,             /* parameter to vary time integration from
-                                                       explicit (tt = 1) to implicit (tt = 0)    */
-                                dbl dt,             /* current time step size                    */
+int ad_assemble_turb_k_modified(dbl time_value, /* current time */
+                                dbl tt,         /* parameter to vary time integration from
+                                                   explicit (tt = 1) to implicit (tt = 0)    */
+                                dbl dt,         /* current time step size                    */
                                 const PG_DATA *pg_data);
 int ad_assemble_turb_omega_modified(dbl time_value, /* current time */
                                     dbl tt,         /* parameter to vary time integration from
@@ -109,16 +109,16 @@ int ad_assemble_turb_omega_modified(dbl time_value, /* current time */
 int ad_assemble_turb_k_omega_modified(dbl time_value, /* current time */
                                       dbl tt,         /* parameter to vary time integration from
                                                          explicit (tt = 1) to implicit (tt = 0)    */
-                                      dbl dt,        /* current time step size                    */
+                                      dbl dt, /* current time step size                    */
                                       const PG_DATA *pg_data);
 int ad_assemble_k_omega_sst_modified(dbl time_value, /* current time */
                                      dbl tt,         /* parameter to vary time integration from
                                                         explicit (tt = 1) to implicit (tt = 0)    */
                                      dbl dt,         /* current time step size                    */
                                      const PG_DATA *pg_data);
-int ad_assemble_invariant(double tt,                 /* parameter to vary time integration from
-                                                      * explicit (tt = 1) to implicit (tt = 0)    */
-                          double dt);                /*  time step size                          */
+int ad_assemble_invariant(double tt,  /* parameter to vary time integration from
+                                       * explicit (tt = 1) to implicit (tt = 0)    */
+                          double dt); /*  time step size                          */
 void ad_omega_wall_func(double func[DIM], double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]);
 
 #ifdef __cplusplus

@@ -28,19 +28,19 @@
 #define EXTERN extern
 #endif
 
-EXTERN void noahs_raven   /* dp_vif.c */
+EXTERN void noahs_raven /* dp_vif.c */
     (void);
 
-EXTERN void noahs_ark     /* dp_vif.c */
+EXTERN void noahs_ark /* dp_vif.c */
     (void);
 
-EXTERN void noahs_dove    /* dp_vif.c */
+EXTERN void noahs_dove /* dp_vif.c */
     (void);
 
 EXTERN void raven_landing /* dp_vif.c */
     (void);
 
-EXTERN void ark_landing   /* dp_vif.c */
+EXTERN void ark_landing /* dp_vif.c */
     (void);
 
-#endif                    /* GOMA_DP_VIF_H */
+#endif /* GOMA_DP_VIF_H */

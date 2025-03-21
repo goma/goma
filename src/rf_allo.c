@@ -145,7 +145,7 @@ double *array_alloc(va_alist) va_dcl
   // clang-format on
 
 #ifndef __STDC__
-  int numdim;     /* Number of dimensions			*/
+  int numdim; /* Number of dimensions			*/
 #endif
   int total;      /* Total size of the array		*/
   double *dfield; /* ptr to avoid lint complaints		*/

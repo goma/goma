@@ -39,7 +39,7 @@ int usr_print(double *t MAYBE_UNUSED, /* time value */
               double dt MAYBE_UNUSED, /* time step size */
               double *x MAYBE_UNUSED, /* solution vector */
               double **post_proc_vect MAYBE_UNUSED,
-              int var MAYBE_UNUSED)   /* variable of post_proc_vect */
+              int var MAYBE_UNUSED) /* variable of post_proc_vect */
 {
   /*  static int status = 0; */
   int retn = 0;

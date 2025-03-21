@@ -218,8 +218,8 @@ double density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     x0 = mp->u_density[1];           /* Initial fluorinert mass fraction */
     Rgas = mp->u_density[2];         /* Gas constant in appropriate units */
     MW = mp->u_density[3];
-    rho_epoxy = mp->u_density[4];    /* Density of epoxy resin */
-    rho_fluor = mp->u_density[5];    /* Density of liquid fluorinert */
+    rho_epoxy = mp->u_density[4]; /* Density of epoxy resin */
+    rho_fluor = mp->u_density[5]; /* Density of liquid fluorinert */
 
     if (fv->c[species] > 0.)
       vol = fv->c[species];

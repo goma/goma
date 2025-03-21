@@ -55,7 +55,7 @@ int WIM;
 
 /* Boundary Condition information */
 
-int Num_BC;             /* number of boundary conditions which are defined  */
+int Num_BC; /* number of boundary conditions which are defined  */
 
 int Num_Interface_Srcs; /* number *_D interfaces*/
 int IntSrc_BCID[MAX_INTERFACE];
@@ -116,14 +116,14 @@ int Num_Shapes;
 int Unique_Shapes[MAX_ELEMENT_SHAPES];
 
 /* Parameters to select time integration technique                           */
-int TimeIntegration;  /* Select time integration method                    */
-int Use_Level_Set;    /* Global switch to turn on level set computations   */
-int Use_Phase_Field;  /* Global switch to turn on phase-field computations   */
+int TimeIntegration; /* Select time integration method                    */
+int Use_Level_Set;   /* Global switch to turn on level set computations   */
+int Use_Phase_Field; /* Global switch to turn on phase-field computations   */
 
 /* double  theta;  */ /* Time step parameter: theta = 0. => Backward Euler
                                               theta = 1. => Forward  Euler */
 
-double eps;           /* Time step error                                   */
+double eps; /* Time step error                                   */
 int print_freq;
 double print_delt;
 double print_delt2_time, print_delt2;
@@ -191,11 +191,11 @@ String_line Matrix_Drop_Tolerance;
 
 String_line Matrix_Factorization_Save; /* Aztec 2 */
 
-String_line Matrix_ILUT_Fill_Factor;   /* Aztec 2 */
+String_line Matrix_ILUT_Fill_Factor; /* Aztec 2 */
 
-String_line Matrix_RILU_Relax_Factor;  /* Aztec 2 */
+String_line Matrix_RILU_Relax_Factor; /* Aztec 2 */
 
-String_line Matrix_BILU_Threshold;     /* Trilinos 1 */
+String_line Matrix_BILU_Threshold; /* Trilinos 1 */
 
 String_line Matrix_Relative_Threshold; /* Trilinos 2 */
 
@@ -219,11 +219,11 @@ String_line Amesos2_File[MAX_NUM_MATRICES];
 
 String_line Matrix_Reorder;
 
-int Linear_Solver;     /* Aztec, Sparse, MA28, UMFPACK */
+int Linear_Solver; /* Aztec, Sparse, MA28, UMFPACK */
 
-int UMFPACK_IDIM;      /* UMFPACK STORAGE CONSTANT */
-int UMFPACK_XDIM;      /* UMFPACK STORAGE CONSTANT */
-int LOCA_UMF_ID;       /* UMFPACK SYSTEM ID */
+int UMFPACK_IDIM; /* UMFPACK STORAGE CONSTANT */
+int UMFPACK_XDIM; /* UMFPACK STORAGE CONSTANT */
+int LOCA_UMF_ID;  /* UMFPACK SYSTEM ID */
 
 int Max_Newton_Steps;  /* Maximum number of Newton steps to take.     */
 int Guess_Flag;        /* Indicates the type of initial guess         */
@@ -235,55 +235,55 @@ double damp_factor1; /* Relaxation factor for Newton iteration */
 /* damp_factor1 = 1.0 is full Newton */
 /* damp_factor1 = 0.0 is not updating our */
 /*                   solution estimate */
-double damp_factor2,                  /* Additional damping factors for custom */
-    damp_factor3,                     /* schemes for automatic control with    */
-    custom_tol1,                      /* NORM(0,0) tolerances                  */
+double damp_factor2, /* Additional damping factors for custom */
+    damp_factor3,    /* schemes for automatic control with    */
+    custom_tol1,     /* NORM(0,0) tolerances                  */
     custom_tol2, custom_tol3;
-double var_damp[MAX_VARIABLE_TYPES];  /* variable specific damp factors */
+double var_damp[MAX_VARIABLE_TYPES]; /* variable specific damp factors */
 
 int Newt_Jacobian_Reformation_stride; /*Stride for reformation of jacobian for
                                    modified newton scheme               */
 int Time_Jacobian_Reformation_stride;
 int Newton_Line_Search_Type;
 double Line_Search_Minimum_Damping;
-int modified_newton;                 /*boolean flag for modified Newton */
-int save_old_A;                      /*boolean flag for saving old A matrix
-                                      for resolve reasons with AZTEC.   There
-                                      are at least four reasons, that you
-                                      can see in sl_util.c */
-double convergence_rate_tolerance;   /* tolerance for jacobian reformation
-                                         based on convergence rate */
-double modified_newt_norm_tol;       /* tolerance for jacobian reformation
-                                             based on residual norm */
+int modified_newton;               /*boolean flag for modified Newton */
+int save_old_A;                    /*boolean flag for saving old A matrix
+                                    for resolve reasons with AZTEC.   There
+                                    are at least four reasons, that you
+                                    can see in sl_util.c */
+double convergence_rate_tolerance; /* tolerance for jacobian reformation
+                                       based on convergence rate */
+double modified_newt_norm_tol;     /* tolerance for jacobian reformation
+                                           based on residual norm */
 
 double Epsilon[MAX_NUM_MATRICES][3]; /* Used for determining stopping criteria.     */
 int Solver_Output_Format;            /* Bitmap for Solver Output Format     */
 int Output_Variable_Stats;           /* Toggle for Variable Stats Output    */
 int Output_Variable_Regression;      /* Toggle for Variable Regression    */
 
-int NZeros;                          /* Number of nonzeros in this procs matrix     */
+int NZeros; /* Number of nonzeros in this procs matrix     */
 
-int nnz_own;                         /* number of nonzeroes in the matrix that
-                                      * belong to this processor
-                                      */
+int nnz_own; /* number of nonzeroes in the matrix that
+              * belong to this processor
+              */
 
-int nnz_total;                       /* total number of nonzeroes in the matrix
-                                      * that this processor sees, including the
-                                      * entries for external unknowns that will
-                                      * not be updated by this processor  */
+int nnz_total; /* total number of nonzeroes in the matrix
+                * that this processor sees, including the
+                * entries for external unknowns that will
+                * not be updated by this processor  */
 
-int GNZeros;                         /* Number of nonzeros in global matrix         */
+int GNZeros; /* Number of nonzeros in global matrix         */
 
-int fill_zeros;                      /* number of nonzeros in fill matrix for this
-                                       processor */
+int fill_zeros; /* number of nonzeros in fill matrix for this
+                  processor */
 
-int Gfill_zeros;                     /* number of nonzeros in fill matrix for the
-                                       global problem */
+int Gfill_zeros; /* number of nonzeros in fill matrix for the
+                   global problem */
 
-int PSPG;                            /* 1 means pressure stabilized Petrov-Galerkin is used */
-int PSPP;                            /* 1 means pressure stabilized polynomial projection is used */
-double PS_scaling;                   /* This term is a constant scaling for the PSPG or PSPP term */
-int Cont_GLS;                        /* 1 means continuity stabilization is used */
+int PSPG;          /* 1 means pressure stabilized Petrov-Galerkin is used */
+int PSPP;          /* 1 means pressure stabilized polynomial projection is used */
+double PS_scaling; /* This term is a constant scaling for the PSPG or PSPP term */
+int Cont_GLS;      /* 1 means continuity stabilization is used */
 
 int Filter_Species, filter_species_material_number;
 double c_min, c_max;
@@ -326,13 +326,13 @@ int *Particle_Number_Samples_Existing;             /* How many are tagged for ea
 int *Particle_Number_Samples;          /* How many particles to output for dataset #n? */
 int *Particle_Number_Output_Variables; /* How many output vars for each sample. */
 particle_variable_s *
-    *Particle_Output_Variables;        /* List of variable indices to output for dataset #n */
+    *Particle_Output_Variables; /* List of variable indices to output for dataset #n */
 particle_filename_s *Particle_Filename_Template; /* Template of where to put the data... */
 
-dbl Particle_Density;                            /* Density of particle in problem units */
-dbl Particle_Radius;                             /* Radius of particle in problem units. */
-dbl Particle_Ratio;                              /* Real/computational particle ratio. */
-int Particle_Show_Debug_Info;                    /* Show particle debug info. */
+dbl Particle_Density;         /* Density of particle in problem units */
+dbl Particle_Radius;          /* Radius of particle in problem units. */
+dbl Particle_Ratio;           /* Real/computational particle ratio. */
+int Particle_Show_Debug_Info; /* Show particle debug info. */
 enum Particle_Domain_t Particle_Creation_Domain;
 enum Particle_Domain_t Particle_Move_Domain;
 particle_filename_s Particle_Creation_Domain_Filename;

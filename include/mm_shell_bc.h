@@ -97,7 +97,7 @@ EXTERN void shell_n_dot_gradp_bc(double func[DIM],
                                  double xi[DIM],     /* Local stu coords */
                                  const Exo_DB *exo); /* ExodusII database struct pointer */
 
-EXTERN void shell_n_dot_gradh_bc(double[DIM],        /* func */
+EXTERN void shell_n_dot_gradh_bc(double[DIM],                                     /* func */
                                  double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                  const double);
 
@@ -175,20 +175,20 @@ match_lubrication_film_pressure(double func[DIM],
                                 const int eb_mat_lubp,   /* element block for lubp equation */
                                 const int eb_mat_filmp); /* element block for filmp equation */
 
-EXTERN void put_lub_flux_in_film                         /* mm_shell_bc.c                    */
-    (int,                                                /* id - local element node number for the
-                                                          * current node whose residual contribution
-                                                          * is being sought                           */
-     int,      /* I - Global node number                    */
-     int,      /* ielem_dim - physical dimension of element,
-                * ie., 1, 2, 3                              */
-     double[], /* resid_vector - Residual vector NO DUH!    */
-     int,      /* i_mat_lubp     */
-     int,      /* i_mat_filmp    */
-     int[]);   /* local_node_list_fs - MDE list to keep track
-                * of nodes at which liquid contributions have
-                * been transfered to solid (fluid-solid
-                * boundaries)                               */
+EXTERN void put_lub_flux_in_film /* mm_shell_bc.c                    */
+    (int,                        /* id - local element node number for the
+                                  * current node whose residual contribution
+                                  * is being sought                           */
+     int,                        /* I - Global node number                    */
+     int,                        /* ielem_dim - physical dimension of element,
+                                  * ie., 1, 2, 3                              */
+     double[],                   /* resid_vector - Residual vector NO DUH!    */
+     int,                        /* i_mat_lubp     */
+     int,                        /* i_mat_filmp    */
+     int[]);                     /* local_node_list_fs - MDE list to keep track
+                                  * of nodes at which liquid contributions have
+                                  * been transfered to solid (fluid-solid
+                                  * boundaries)                               */
 EXTERN void shell_tfmp_avg_plate_velo_gas(double func[DIM],
                                           double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                                           const double time,    /* current time */

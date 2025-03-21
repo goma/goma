@@ -29,14 +29,14 @@
 #define EXTERN extern
 #endif
 
-EXTERN dbl ut                 /* user time in seconds */
+EXTERN dbl ut /* user time in seconds */
     (void);
 
-EXTERN double ust             /* user + system time in seconds */
+EXTERN double ust /* user + system time in seconds */
     (void);
 
 EXTERN void get_date(char *); /* string - fill in with mm/dd/yy */
 
 EXTERN void get_time(char *); /* string - fill in with hh:mm:ss */
 
-#endif                        /* GOMA_MD_TIMER_H */
+#endif /* GOMA_MD_TIMER_H */

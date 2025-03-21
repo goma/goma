@@ -49,7 +49,7 @@ apply_integrated_curve_bc(double[],     /* x - soln vector for the current proce
                           const int,                    /* num_total_nodes */
                           const int,                    /* bc_application - flag indicating whether
                                                          * to integrate strong or weak BC's          */
-                          const Exo_DB *);          /* exo - ptr to FE database                  */
+                          const Exo_DB *); /* exo - ptr to FE database                  */
 
 EXTERN int apply_point_colloc_edge_bc(double[],     /* x - Soln vector                           */
                                       double[],     /* x_old - Soln vector, previous timestep    */
@@ -76,4 +76,4 @@ EXTERN int apply_point_colloc_edge_bc(double[],     /* x - Soln vector          
                                                       * liquid (fluid-solid boundaries)           */
                                       const double); /* time_value                                */
 
-#endif                                               /* GOMA_BC_CURVE_H */
+#endif /* GOMA_BC_CURVE_H */

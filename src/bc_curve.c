@@ -85,9 +85,9 @@ int apply_integrated_curve_bc(
     struct elem_edge_bc_struct *elem_edge_bc, /* Pointer to an element side
                                                * boundary condition structure */
     const int num_total_nodes,
-    const int bc_application,                 /* flag indicating whether to integrate
-                                               * strong or weak BC's */
-    const Exo_DB *exo)                        /* ptr to FE database */
+    const int bc_application, /* flag indicating whether to integrate
+                               * strong or weak BC's */
+    const Exo_DB *exo)        /* ptr to FE database */
 
 /************************************************************************
  *
@@ -105,7 +105,7 @@ int apply_integrated_curve_bc(
   int status = 0;
   int bc_input_id, BC_Name, ip_total;
 
-  double s;       /* Gaussian-quadrature point locations          */
+  double s; /* Gaussian-quadrature point locations          */
 
   double phi_i;
   double xi[DIM]; /* Local element coordinates of Gauss point. */
@@ -581,9 +581,9 @@ int apply_point_colloc_edge_bc(
     struct elem_edge_bc_struct *elem_edge_bc, /* Pointer to an element side boundary condition
                                                  structure (writable by Gibbs ipin) */
     const int num_total_nodes,
-    int local_node_list_fs[],                 /* dimensioned [MDE]; list to keep track of
-                                                  nodes at which solid contributions have been
-                                                  transfered to liquid (fluid-solid boundaries)  */
+    int local_node_list_fs[], /* dimensioned [MDE]; list to keep track of
+                                  nodes at which solid contributions have been
+                                  transfered to liquid (fluid-solid boundaries)  */
     const double time_value)
 
 /*************************************************************************

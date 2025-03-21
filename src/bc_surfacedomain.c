@@ -65,7 +65,7 @@ void mass_flux_sd_bc(double func[],
   int j, j_id, w1, dim, kdir;
   int var, jvar;
   double phi_j;
-  double Y_w;                 /* local concentration of current species */
+  double Y_w; /* local concentration of current species */
 
   double vconv[MAX_PDIM];     /*Calculated convection velocity */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/

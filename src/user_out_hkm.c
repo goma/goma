@@ -105,7 +105,7 @@ void usr_out_hkm(int status MAYBE_UNUSED,
  * step number 1.
  **************************************************************************/
 {
-  int mn;                          /* Material ID Number */
+  int mn; /* Material ID Number */
   static int time_step_num = 0;
 
   double *soln_mole = NULL;        /* solution vector with mole fractions

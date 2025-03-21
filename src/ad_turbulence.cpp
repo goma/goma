@@ -3296,7 +3296,7 @@ int ad_assemble_invariant(double tt, /* parameter to vary time integration from
 
   peqn = upd->ep[pg->imtrx][eqn];
 
-  wt = fv->wt;                /* Numerical integration weight */
+  wt = fv->wt; /* Numerical integration weight */
 
   ADType det_J = ad_fv->detJ; /* Really, ought to be mesh eqn. */
 

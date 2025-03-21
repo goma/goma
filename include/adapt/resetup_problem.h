@@ -10,6 +10,6 @@ struct GomaLinearSolverData;
 int resetup_problem(Exo_DB *exo, Dpi *dpi); /* ptr to the finite element mesh database */
 int resetup_matrix(struct GomaLinearSolverData **ams, Exo_DB *exo, Dpi *dpi);
 
-#endif                                      // GOMA_ADAPT_RESETUP_PROBLEM_H
+#endif // GOMA_ADAPT_RESETUP_PROBLEM_H
 
 // vim: expandtab sw=2 ts=8

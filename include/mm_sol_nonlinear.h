@@ -80,84 +80,84 @@ solve_nonlinear_problem(struct GomaLinearSolverData *, /* ams - ptrs to Aztec li
                         double **,  /*  x_sens_p - solution sensitivities        */
                         void *);    /* con_ptr pointer                           */
 
-EXTERN double L2_norm               /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     int);                          /* nloc */
+EXTERN double L2_norm /* mm_sol_nonlinear.c */
+    (double *,        /* vector */
+     int);            /* nloc */
 
-EXTERN double L2_norm_diff          /* mm_sol_nonlinear.c */
-    (double *,                      /* vector 1 */
-     double *,                      /* vector 2 */
-     int);                          /* nloc */
+EXTERN double L2_norm_diff /* mm_sol_nonlinear.c */
+    (double *,             /* vector 1 */
+     double *,             /* vector 2 */
+     int);                 /* nloc */
 
-EXTERN double L2_norm_r             /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     double *,                      /* vector scale */
-     int);                          /* nloc */
+EXTERN double L2_norm_r /* mm_sol_nonlinear.c */
+    (double *,          /* vector */
+     double *,          /* vector scale */
+     int);              /* nloc */
 
-EXTERN double L1_norm               /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     int);                          /* nloc */
+EXTERN double L1_norm /* mm_sol_nonlinear.c */
+    (double *,        /* vector */
+     int);            /* nloc */
 
-EXTERN double L1_norm_r             /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     double *,                      /* vector scale */
-     int);                          /* nloc */
+EXTERN double L1_norm_r /* mm_sol_nonlinear.c */
+    (double *,          /* vector */
+     double *,          /* vector scale */
+     int);              /* nloc */
 
-EXTERN double Loo_norm              /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     int,                           /* nloc */
-     int *,                         /* num_unk - save the index! */
-     char *);                       /* dofname_x - dof name for num_unk  */
+EXTERN double Loo_norm /* mm_sol_nonlinear.c */
+    (double *,         /* vector */
+     int,              /* nloc */
+     int *,            /* num_unk - save the index! */
+     char *);          /* dofname_x - dof name for num_unk  */
 
-EXTERN double Loo_norm_r            /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     double *,                      /* vector scale */
-     int,                           /* nloc */
-     int *,                         /* num_unk - save the index! */
-     char *);                       /* dofname_r - dof name for num_unk  */
+EXTERN double Loo_norm_r /* mm_sol_nonlinear.c */
+    (double *,           /* vector */
+     double *,           /* vector scale */
+     int,                /* nloc */
+     int *,              /* num_unk - save the index! */
+     char *);            /* dofname_r - dof name for num_unk  */
 
-EXTERN double L2_norm_1p            /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     int);                          /* nloc */
+EXTERN double L2_norm_1p /* mm_sol_nonlinear.c */
+    (double *,           /* vector */
+     int);               /* nloc */
 
-EXTERN double L2_norm_diff_1p       /* mm_sol_nonlinear.c */
-    (double *,                      /* vector 1 */
-     double *,                      /* vector 2 */
-     int);                          /* nloc */
+EXTERN double L2_norm_diff_1p /* mm_sol_nonlinear.c */
+    (double *,                /* vector 1 */
+     double *,                /* vector 2 */
+     int);                    /* nloc */
 
-EXTERN double L2_norm_r_1p          /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     double *,                      /* vector scale */
-     int);                          /* nloc */
+EXTERN double L2_norm_r_1p /* mm_sol_nonlinear.c */
+    (double *,             /* vector */
+     double *,             /* vector scale */
+     int);                 /* nloc */
 
-EXTERN double L1_norm_1p            /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     int);                          /* nloc */
+EXTERN double L1_norm_1p /* mm_sol_nonlinear.c */
+    (double *,           /* vector */
+     int);               /* nloc */
 
-EXTERN double L1_norm_r_1p          /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     double *,                      /* vector scale */
-     int);                          /* nloc */
+EXTERN double L1_norm_r_1p /* mm_sol_nonlinear.c */
+    (double *,             /* vector */
+     double *,             /* vector scale */
+     int);                 /* nloc */
 
-EXTERN double Loo_norm_1p           /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     int,                           /* nloc */
-     int *,                         /* num_unk - save the index! */
-     char *);                       /* dofname_x - dof name for num_unk  */
+EXTERN double Loo_norm_1p /* mm_sol_nonlinear.c */
+    (double *,            /* vector */
+     int,                 /* nloc */
+     int *,               /* num_unk - save the index! */
+     char *);             /* dofname_x - dof name for num_unk  */
 
-EXTERN double Loo_norm_r_1p         /* mm_sol_nonlinear.c */
-    (double *,                      /* vector */
-     double *,                      /* vector scale */
-     int,                           /* nloc */
-     int *,                         /* num_unk - save the index! */
-     char *);                       /* dofname_r - dof name for num_unk  */
+EXTERN double Loo_norm_r_1p /* mm_sol_nonlinear.c */
+    (double *,              /* vector */
+     double *,              /* vector scale */
+     int,                   /* nloc */
+     int *,                 /* num_unk - save the index! */
+     char *);               /* dofname_r - dof name for num_unk  */
 
-EXTERN void print_array             /* mm_sol_nonlinear.c */
-    (const void *,                  /* array - generic pointer */
-     const int,                     /* length - of the array */
-     const char *,                  /* name - used to print name[23] = value */
-     const Edt,                     /* datatype - std.h, type_int or type_double */
-     const int);                    /* procid  */
+EXTERN void print_array /* mm_sol_nonlinear.c */
+    (const void *,      /* array - generic pointer */
+     const int,         /* length - of the array */
+     const char *,      /* name - used to print name[23] = value */
+     const Edt,         /* datatype - std.h, type_int or type_double */
+     const int);        /* procid  */
 
 /*
  * EDW: Moved here from mm_sol_nonlinear.c ---

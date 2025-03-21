@@ -37,4 +37,4 @@ EXTERN void hunt_problem(Comm_Ex *, /* array of communications structures */
                          Exo_DB *,  /* ptr to the finite element mesh database */
                          Dpi *);    /* distributed processing information */
 
-#endif                              /* GOMA_AC_HUNT_H */
+#endif /* GOMA_AC_HUNT_H */

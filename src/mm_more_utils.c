@@ -869,7 +869,7 @@ void extract_elem_vec(const double sol_vec[],
 
     for (ielem = e_start; ielem < e_end; ielem++) {
 
-      ielem_type = Elem_Type(exo, ielem);     /* func defd in el_geom.h */
+      ielem_type = Elem_Type(exo, ielem); /* func defd in el_geom.h */
       num_local_nodes = elem_info(NNODES, ielem_type);
       iconnect_ptr = Proc_Connect_Ptr[ielem]; /* find ptr to beginning */
       /* of this element's */

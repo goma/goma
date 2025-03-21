@@ -348,7 +348,7 @@ void h0_minus_ndotd(double tt,
   // construct the normal - there are probably better names for these enums
   switch (mp->ehl_normal_method) {
   case NCM_PRIMITIVE_XY:
-    for (k = 0; k < pd->Num_Dim; k++) {   // vector element k
+    for (k = 0; k < pd->Num_Dim; k++) { // vector element k
       normal[k] = fv->n[k];
       for (l = 0; l < pd->Num_Dim; l++) { // derivative direction l
         grad_normal[k][l] = fv->grad_n[k][l];
@@ -547,7 +547,7 @@ void h0_minus_ndotd(double tt,
         }
       }
 
-      for (l = 0; l < DIM; l++) {         // gradient direction l
+      for (l = 0; l < DIM; l++) { // gradient direction l
         for (i = 0; i < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];
              i++) {                       // element degree of freedom i
           for (int m = 0; m < DIM; m++) { // sensitivity to displacement m

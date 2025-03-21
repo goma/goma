@@ -30,17 +30,17 @@
 #define EXTERN extern
 #endif
 
-EXTERN void build_elem_node               /* exo_conn.c */
-    (Exo_DB *);                           /* exo - ptr to EXODUS II database struct */
+EXTERN void build_elem_node /* exo_conn.c */
+    (Exo_DB *);             /* exo - ptr to EXODUS II database struct */
 
-EXTERN void build_node_elem               /* exo_conn.c */
-    (Exo_DB *);                           /* exo - ptr to EXODUS II database struct */
+EXTERN void build_node_elem /* exo_conn.c */
+    (Exo_DB *);             /* exo - ptr to EXODUS II database struct */
 
-EXTERN void build_node_node               /* exo_conn.c */
-    (Exo_DB *);                           /* exo - ptr to EXODUS II database struct */
+EXTERN void build_node_node /* exo_conn.c */
+    (Exo_DB *);             /* exo - ptr to EXODUS II database struct */
 
-EXTERN void build_elem_elem               /* exo_conn.c */
-    (Exo_DB *);                           /* exo - ptr to EXODUS II database struct */
+EXTERN void build_elem_elem /* exo_conn.c */
+    (Exo_DB *);             /* exo - ptr to EXODUS II database struct */
 
 EXTERN int build_side_node_list(int,      /* elem - the element number */
                                 int,      /* face - the face number */
@@ -53,4 +53,4 @@ int sides2nodes(const int face,      /* assume face number 0,1,...,num_faces-1 *
                 const int shape,     /* one of LINE_SEGMENT, etc. */
                 int *local_indeces); /* get filled with right ones */
 
-#endif                               /* GOMA_EXO_CONN_H */
+#endif /* GOMA_EXO_CONN_H */

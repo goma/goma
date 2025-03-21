@@ -212,7 +212,7 @@ void user_aug_cond_residuals(int iAC,
 
   /**  loop over all AC conditions **/
 
-  if (augc[iAC].Type == AC_USERBC)                /* BC augmenting condition */
+  if (augc[iAC].Type == AC_USERBC) /* BC augmenting condition */
   {
     AC[iAC] = BC_Types[4].BC_Data_Float[0] - 2.0; /* Goma Test Suite */
   } else if (augc[iAC].Type == AC_USERMAT)        /* MT augmenting condition */

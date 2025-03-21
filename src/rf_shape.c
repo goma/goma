@@ -37,7 +37,7 @@
    Revised:        11/21/92 (SAH)
 */
 
-double shape(const double s,       /* quadrature point coordinates */
+double shape(const double s, /* quadrature point coordinates */
              const double t,
              const double u,
              const int Ielem_type, /* element type */
@@ -49,12 +49,12 @@ double shape(const double s,       /* quadrature point coordinates */
 
   switch (Ielem_type) { /* select element */
 
-  case LINEAR_TRI:      /* triangle shape functions */
+  case LINEAR_TRI: /* triangle shape functions */
   case BILINEAR_TRISHELL:
 
-    switch (Iquant) {   /* select quantity */
-    case PSI:           /* shape function */
-      switch (Inode) {  /* select specific shape function */
+    switch (Iquant) {  /* select quantity */
+    case PSI:          /* shape function */
+      switch (Inode) { /* select specific shape function */
       case 0:
         value = s;
         break;
@@ -102,7 +102,7 @@ double shape(const double s,       /* quadrature point coordinates */
     }
     break;
 
-  case QUAD_TRI:       /* triangle shape functions */
+  case QUAD_TRI: /* triangle shape functions */
   case QUAD6_TRI:
     temp = 1. - s - t;
     switch (Iquant) {  /* select quantity */
@@ -358,7 +358,7 @@ double shape(const double s,       /* quadrature point coordinates */
     }
     break;
 
-  case BIQUAD_QUAD:    /* 9 node biquadratic shape fucntions */
+  case BIQUAD_QUAD: /* 9 node biquadratic shape fucntions */
   case BIQUAD_SHELL:
   case BIQUAD_QUAD_LS: /* biquadratic quadrilateral for level set */
 
@@ -543,7 +543,7 @@ double shape(const double s,       /* quadrature point coordinates */
       break;
     }
 
-    break;             /*Case LINEAR_TET */
+    break; /*Case LINEAR_TET */
 
   case QUADRATIC_TET:
     switch (Iquant) {  /* select quantity */
@@ -693,7 +693,7 @@ double shape(const double s,       /* quadrature point coordinates */
       break;
     }
 
-    break;            /*Case QUADRATIC_TET */
+    break; /*Case QUADRATIC_TET */
 
   case TRILINEAR_HEX: /* trilinear shape functions */
   case C_TRILINEAR_HEX:

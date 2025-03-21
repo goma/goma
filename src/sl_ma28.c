@@ -98,11 +98,11 @@ int cmsr_ma28(const int n,   /* order of matrix system */
   int err;
   int iaction;
 
-  static int licn;           /* length of A[] matrix */
-  static int *irn;           /* holds row indeces on input */
-  static int lirn;           /* length of irn[] array */
-  static int *icn;           /* holds column indeces on input */
-  static int *ikeep;         /* workspace; preserve between calls */
+  static int licn;   /* length of A[] matrix */
+  static int *irn;   /* holds row indeces on input */
+  static int lirn;   /* length of irn[] array */
+  static int *icn;   /* holds column indeces on input */
+  static int *ikeep; /* workspace; preserve between calls */
   static int *iw;
 
   static int *ivect, *jvect; /* used for 2nd and subsequent factorizations */

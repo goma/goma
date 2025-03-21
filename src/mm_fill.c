@@ -128,8 +128,8 @@ extern struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
 double mm_fill_total;
 extern int PRS_mat_ielem;
 
-static void load_lec(Exo_DB *,  /* Exodus database pointer */
-                     int,       /* element number we are working on */
+static void load_lec(Exo_DB *, /* Exodus database pointer */
+                     int,      /* element number we are working on */
                      struct GomaLinearSolverData *,
                      double[],  /* Solution vector */
                      double[],  /* Residual vector */
@@ -366,25 +366,25 @@ Revised:         Summer 1998, SY Tam (UNM)
   static int CA_sselem[MAX_CA]; /*  array of CA solid surface elements */
   static int CA_proc[MAX_CA];   /*  Processor which has each CA */
 
-  int mn;                       /* material block counter */
-  int err;                      /* temp variable to hold diagnostic flags.      */
-  int ip;                       /* ip is the local quadrature point index       */
-  int ip_total;                 /* ip_total is the total number of volume
-                                   quadrature points in the element             */
-  int j;                        /* local index loop counter 	             */
-  int i;                        /* Index for the local node number - row        */
-  int b, eqn = -1, e, lm_dof;   /*convenient params for neatness */
-  int I;                        /* Index for global node number - row        */
-  int ielem_type = 0;           /* Element type of the current element          */
-  int ielem_dim;                /* Element physical dimension                   */
-  int num_local_nodes;          /* Number of local basis functions in the
-                                   current element                              */
-  int iconnect_ptr;             /* Pointer to the beginning of the connectivity
-                                   list for the current element                 */
-  int ibc;                      /* Index for the boundary condition 	      */
-  int var = -1;                 /* variable name (TEMPERATURE, etc) */
+  int mn;                     /* material block counter */
+  int err;                    /* temp variable to hold diagnostic flags.      */
+  int ip;                     /* ip is the local quadrature point index       */
+  int ip_total;               /* ip_total is the total number of volume
+                                 quadrature points in the element             */
+  int j;                      /* local index loop counter 	             */
+  int i;                      /* Index for the local node number - row        */
+  int b, eqn = -1, e, lm_dof; /*convenient params for neatness */
+  int I;                      /* Index for global node number - row        */
+  int ielem_type = 0;         /* Element type of the current element          */
+  int ielem_dim;              /* Element physical dimension                   */
+  int num_local_nodes;        /* Number of local basis functions in the
+                                 current element                              */
+  int iconnect_ptr;           /* Pointer to the beginning of the connectivity
+                                 list for the current element                 */
+  int ibc;                    /* Index for the boundary condition 	      */
+  int var = -1;               /* variable name (TEMPERATURE, etc) */
 
-  double s, t, u;               /* Gaussian-quadrature point locations          */
+  double s, t, u; /* Gaussian-quadrature point locations          */
 
   int call_int, call_col, call_contact, call_shell_grad, call_sharp_int;
   /* int call_special; */
@@ -399,10 +399,10 @@ Revised:         Summer 1998, SY Tam (UNM)
   /* ___________________________________________________________________________*/
   /* ___________________________________________________________________________*/
 
-  double xi[DIM];                    /* Local element coordinates of Gauss point. */
+  double xi[DIM]; /* Local element coordinates of Gauss point. */
 
-  double wt = 0.0;                   /* Quadrature weights
-                                      units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
+  double wt = 0.0; /* Quadrature weights
+                    units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
 
   double ls_F[MDE];                  /* local copy for adaptive weights  */
   double ad_wtpos[10], ad_wtneg[10]; /*adaptive integration weights  */
@@ -441,14 +441,14 @@ Revised:         Summer 1998, SY Tam (UNM)
   int local_node_list_fs[MDE]; /* list to keep track of nodes at which solid contributions
                                   have been transfered to liquid (fluid-solid boundaries)*/
 
-  int discontinuous_mass;      /* flag that tells you if you are doing Discontinuous Galerkin
-                                  for the species equations */
-  int discontinuous_stress;    /* flag that tells you if you are doing Discontinuous Galerkin
-                                  for the species equations */
-  int ielem_type_mass = -1;    /* flag to give discontinuous interpolation type */
+  int discontinuous_mass;   /* flag that tells you if you are doing Discontinuous Galerkin
+                               for the species equations */
+  int discontinuous_stress; /* flag that tells you if you are doing Discontinuous Galerkin
+                               for the species equations */
+  int ielem_type_mass = -1; /* flag to give discontinuous interpolation type */
 
   int pspg_local = 0;
-  int PorousShellOn = 0;       /* flag for porous shell equations */
+  int PorousShellOn = 0; /* flag for porous shell equations */
   bool owner = TRUE;
 
   NODE_INFO_STRUCT *node;
@@ -458,7 +458,7 @@ Revised:         Summer 1998, SY Tam (UNM)
 
   static double mm_fill_start, mm_fill_end; /* Count CPU time this call. */
 
-  static char yo[] = "matrix_fill";         /* My name to take blame... */
+  static char yo[] = "matrix_fill"; /* My name to take blame... */
 
   int *pde;
 
@@ -645,11 +645,11 @@ Revised:         Summer 1998, SY Tam (UNM)
     discontinuous_stress = 1;
   }
 
-  ielem_type = ei[pg->imtrx]->ielem_type;           /* element type */
+  ielem_type = ei[pg->imtrx]->ielem_type; /* element type */
 
   num_local_nodes = ei[pg->imtrx]->num_local_nodes; /* number of local  basis functions */
 
-  ielem_dim = ei[pg->imtrx]->ielem_dim;             /* physical dimension  of this element */
+  ielem_dim = ei[pg->imtrx]->ielem_dim; /* physical dimension  of this element */
 
   iconnect_ptr =
       ei[pg->imtrx]
@@ -2711,7 +2711,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         GOMA_EH(err, " assemble_pf_constraint \n");
       }
     }
-#else  /* PHASE_COUPLED_FILL */
+#else /* PHASE_COUPLED_FILL */
     if (pde[R_PHASE1]) {
       ls_old = ls;
       ls = pfd->ls[0];
@@ -2775,7 +2775,7 @@ Revised:         Summer 1998, SY Tam (UNM)
     if (pfd != NULL)
       ls = pfd->ls[0]; /* this is a major hack */
     assemble_boundary_extension_velocity(x, exo, dpi);
-    ls = ls_old;       /*Make things right again */
+    ls = ls_old; /*Make things right again */
   }
 
   /*First apply BCS to embedded primary level-set surface. */
@@ -3795,7 +3795,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
                        int zeroCA)               /* boolean to zero zeroCA */
 
 {
-  double delta_t, theta, time_value;             /*see arg list */
+  double delta_t, theta, time_value; /*see arg list */
   int ielem, num_total_nodes;
 
 #if 0
@@ -3809,25 +3809,25 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
   static int CA_sselem[MAX_CA]; /*  array of CA solid surface elements */
   static int CA_proc[MAX_CA];   /*  Processor which has each CA */
 
-  int mn;                       /* material block counter */
-  int err;                      /* temp variable to hold diagnostic flags.      */
-  int ip;                       /* ip is the local quadrature point index       */
-  int ip_total;                 /* ip_total is the total number of volume
-                                   quadrature points in the element             */
-  int j;                        /* local index loop counter 	             */
-  int i;                        /* Index for the local node number - row        */
-  int b, eqn = -1, e, lm_dof;   /*convenient params for neatness */
-  int I;                        /* Index for global node number - row        */
-  int ielem_type = 0;           /* Element type of the current element          */
-  int ielem_dim;                /* Element physical dimension                   */
-  int num_local_nodes;          /* Number of local basis functions in the
-                                   current element                              */
-  int iconnect_ptr;             /* Pointer to the beginning of the connectivity
-                                   list for the current element                 */
-  int ibc;                      /* Index for the boundary condition 	      */
-  int var = -1;                 /* variable name (TEMPERATURE, etc) */
+  int mn;                     /* material block counter */
+  int err;                    /* temp variable to hold diagnostic flags.      */
+  int ip;                     /* ip is the local quadrature point index       */
+  int ip_total;               /* ip_total is the total number of volume
+                                 quadrature points in the element             */
+  int j;                      /* local index loop counter 	             */
+  int i;                      /* Index for the local node number - row        */
+  int b, eqn = -1, e, lm_dof; /*convenient params for neatness */
+  int I;                      /* Index for global node number - row        */
+  int ielem_type = 0;         /* Element type of the current element          */
+  int ielem_dim;              /* Element physical dimension                   */
+  int num_local_nodes;        /* Number of local basis functions in the
+                                 current element                              */
+  int iconnect_ptr;           /* Pointer to the beginning of the connectivity
+                                 list for the current element                 */
+  int ibc;                    /* Index for the boundary condition 	      */
+  int var = -1;               /* variable name (TEMPERATURE, etc) */
 
-  double s, t, u;               /* Gaussian-quadrature point locations          */
+  double s, t, u; /* Gaussian-quadrature point locations          */
 
   int call_int, call_col, call_contact, call_shell_grad, call_sharp_int;
   /* int call_special; */
@@ -3842,7 +3842,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
   /* ___________________________________________________________________________*/
   /* ___________________________________________________________________________*/
 
-  double xi[DIM];  /* Local element coordinates of Gauss point. */
+  double xi[DIM]; /* Local element coordinates of Gauss point. */
 
   double wt = 0.0; /* Quadrature weights
                     units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
@@ -3867,9 +3867,9 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
   int local_node_list_fs[MDE]; /* list to keep track of nodes at which solid contributions
                                   have been transfered to liquid (fluid-solid boundaries)*/
 
-  int discontinuous_stress;    /* flag that tells you if you are doing Discontinuous Galerkin
-                                  for the species equations */
-  int ielem_type_mass = -1;    /* flag to give discontinuous interpolation type */
+  int discontinuous_stress; /* flag that tells you if you are doing Discontinuous Galerkin
+                               for the species equations */
+  int ielem_type_mass = -1; /* flag to give discontinuous interpolation type */
 
   int pspg_local = 0;
 
@@ -3880,7 +3880,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
 
   static double mm_fill_start, mm_fill_end; /* Count CPU time this call. */
 
-  static char yo[] = "matrix_fill";         /* My name to take blame... */
+  static char yo[] = "matrix_fill"; /* My name to take blame... */
 
   int *pde;
 
@@ -3975,11 +3975,11 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
     discontinuous_stress = 1;
   }
 
-  ielem_type = ei[pg->imtrx]->ielem_type;           /* element type */
+  ielem_type = ei[pg->imtrx]->ielem_type; /* element type */
 
   num_local_nodes = ei[pg->imtrx]->num_local_nodes; /* number of local  basis functions */
 
-  ielem_dim = ei[pg->imtrx]->ielem_dim;             /* physical dimension  of this element */
+  ielem_dim = ei[pg->imtrx]->ielem_dim; /* physical dimension  of this element */
 
   iconnect_ptr =
       ei[pg->imtrx]
@@ -5145,8 +5145,8 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
   return 0;
 } /*   END OF matrix_fill_stress                                                     */
 
-static void load_lec(Exo_DB *exo,           /* ptr to EXODUS II finite element mesh db */
-                     int ielem,             /* Element number we are working on */
+static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
+                     int ielem,   /* Element number we are working on */
                      struct GomaLinearSolverData *ams,
                      double x[],            /* Solution vector */
                      double resid_vector[], /* Residual vector */
@@ -5505,7 +5505,7 @@ static void load_lec(Exo_DB *exo,           /* ptr to EXODUS II finite element m
                             J = Proc_Elem_Connect[ei_ptr->iconnect_ptr +
                                                   j]; /* J is the global column block index */
                             K = in_list(J, bpntr[I], bpntr[I + 1],
-                                        bindx);       /* K is the block index */
+                                        bindx); /* K is the block index */
                             GOMA_EH(K, " Can't locate column index in bindx ");
                             a_ptr =
                                 a + indx[K]; /* a_ptr points to first entry in val of Kth block */

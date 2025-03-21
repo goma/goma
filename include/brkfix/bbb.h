@@ -31,22 +31,22 @@
 #endif
 
 #include "brkfix/fix.h"
-EXTERN void build_big_bones     /* bbb.c */
-    (Exo_DB *,                  /* EXODUS info from representative polylith */
-     Dpi *,                     /* distributed processing info from polylith */
-     Exo_DB *,                  /* ptr to monolithic EXODUS II database */
+EXTERN void build_big_bones /* bbb.c */
+    (Exo_DB *,              /* EXODUS info from representative polylith */
+     Dpi *,                 /* distributed processing info from polylith */
+     Exo_DB *,              /* ptr to monolithic EXODUS II database */
      struct fix_data *);
 
-EXTERN void build_global_conn   /* bbb.c */
-    (Exo_DB *,                  /* EXODUS info from representative polylith */
-     Dpi *,                     /* distributed processing info from polylith */
-     Exo_DB *,                  /* ptr to monolithic EXODUS II database */
+EXTERN void build_global_conn /* bbb.c */
+    (Exo_DB *,                /* EXODUS info from representative polylith */
+     Dpi *,                   /* distributed processing info from polylith */
+     Exo_DB *,                /* ptr to monolithic EXODUS II database */
      struct fix_data *);
 
-EXTERN void build_global_attr   /* bbb.c */
-    (Exo_DB *,                  /* EXODUS info from representative polylith */
-     Dpi *,                     /* distributed processing info from polylith */
-     Exo_DB *,                  /* ptr to monolithic EXODUS II database */
+EXTERN void build_global_attr /* bbb.c */
+    (Exo_DB *,                /* EXODUS info from representative polylith */
+     Dpi *,                   /* distributed processing info from polylith */
+     Exo_DB *,                /* ptr to monolithic EXODUS II database */
      struct fix_data *);
 
 EXTERN void build_global_coords /* bbb.c */
@@ -54,24 +54,24 @@ EXTERN void build_global_coords /* bbb.c */
      Dpi *,                     /* distributed processing info from polylith */
      Exo_DB *);                 /* ptr to monolithic EXODUS II database */
 
-EXTERN void build_global_ns     /* bbb.c */
-    (Dpi *,                     /* distributed processing info from polylith */
-     Exo_DB *,                  /* ptr to monolithic EXODUS II database */
+EXTERN void build_global_ns /* bbb.c */
+    (Dpi *,                 /* distributed processing info from polylith */
+     Exo_DB *,              /* ptr to monolithic EXODUS II database */
      struct fix_data *);
 
-EXTERN void build_global_ss     /* bbb.c */
-    (Dpi *,                     /* distributed processing info from polylith */
-     Exo_DB *,                  /* ptr to monolithic EXODUS II database */
+EXTERN void build_global_ss /* bbb.c */
+    (Dpi *,                 /* distributed processing info from polylith */
+     Exo_DB *,              /* ptr to monolithic EXODUS II database */
      struct fix_data *);
 
-EXTERN void build_global_res    /* bbb.c */
-    (Exo_DB *,                  /* EXODUS info from representative polylith */
-     Dpi *,                     /* distributed processing info from polylith */
-     Exo_DB *,                  /* ptr to monolithic EXODUS II database */
+EXTERN void build_global_res /* bbb.c */
+    (Exo_DB *,               /* EXODUS info from representative polylith */
+     Dpi *,                  /* distributed processing info from polylith */
+     Exo_DB *,               /* ptr to monolithic EXODUS II database */
      struct fix_data *);
 
-EXTERN void mononame            /* bbb.c */
-    (char *,                    /* in  - string to be mono-sized "a_b.c" */
-     char *);                   /* out - result string "a.c"  */
+EXTERN void mononame /* bbb.c */
+    (char *,         /* in  - string to be mono-sized "a_b.c" */
+     char *);        /* out - result string "a.c"  */
 
-#endif                          /* GOMA_BBB_H */
+#endif /* GOMA_BBB_H */

@@ -284,15 +284,15 @@ int apply_strong_fill_ca_bc(
     const double theta_,  /* parameter (0 to 1) to vary time integration
                             ( implicit - 0 to explicit - 1)  */
     int node_to_fill[],
-    const int ielem,      /* element number */
-    int ielem_type,       /* element type  */
+    const int ielem, /* element number */
+    int ielem_type,  /* element type  */
     const int num_local_nodes,
     const int ielem_dim,
     const int iconnect_ptr,
     struct elem_side_bc_struct *elem_side_bc, /* Pointer to an element side
                                                  boundary condition structure */
     const int num_total_nodes,
-    const double ca,                          /* contact angle */
+    const double ca, /* contact angle */
     const Exo_DB *exo)
 
 /******************************************************************************
@@ -313,7 +313,7 @@ int apply_strong_fill_ca_bc(
   int local_elem_node_id[MAX_NODES_PER_SIDE];
 
   int eqn;
-  int err;         /* status variable for functions */
+  int err; /* status variable for functions */
   int ip_total;
   int nvdofi, nvdofj, ki, kj;
   dbl grad_F[DIM]; /* gradient of Fill. */
@@ -656,9 +656,9 @@ int assemble_level_project(double afill[], /* Jacobian matrix for fill equation 
     return (status);
   }
 
-  wt = fv->wt;           /* Gauss point weight. */
+  wt = fv->wt; /* Gauss point weight. */
 
-  h3 = fv->h3;           /* Differential volume element. */
+  h3 = fv->h3; /* Differential volume element. */
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
@@ -8260,7 +8260,7 @@ int assemble_extension_velocity(dbl hsquared[DIM], dbl hh[DIM][DIM], dbl dh_dxno
 
   /*grad_F = fv->grad_F;  */
   grad_ext_v = fv->grad_ext_v;
-#define GRADF_GRADEXTV  1
+#define GRADF_GRADEXTV 1
 /* DRN: although the option NORMAL_GRADEXTV seems more logical,
    the normal is discontinuous so it can show pathological
    behavior that GRADF_GRADEXTV may not suffer from
@@ -8552,7 +8552,7 @@ void ls_surface_extents(double x[], Exo_DB *exo, double min[3], double max[3]) {
   s = list.start;
   while (s != NULL) {
     for (iside = 0; iside < s->num_sides; iside++) {
-      if (s->bc_sides[iside])  /* side is on ls interface */
+      if (s->bc_sides[iside]) /* side is on ls interface */
       {
         if (s->num_nodes == 6) /* only quadratic triangles supported for now */
         {
@@ -9707,7 +9707,7 @@ void build_integ_element(Integ_Elem *e,
         e->subelements[3] = (Integ_Elem *)smalloc(sizeof(Integ_Elem));
         build_integ_element(e->subelements[3], isoval, tri_type, nodes, side_ids, FALSE);
 
-      } else {                           /* no subelements */
+      } else { /* no subelements */
 
         if (ls->Integration_Depth > 0) { /* diffuse interface */
           /* assign sign of element */

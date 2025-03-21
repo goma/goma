@@ -35,17 +35,17 @@
 #define EXTERN extern
 #endif
 
-EXTERN int assemble_momentum               /* mm_fill_terms.c                           */
-    (double,                               /* time - present time value                 */
-     dbl,                                  /* tt - parm to vary time integration from
-                                            * explicit (tt = 1) to implicit (tt = 0)    */
-     dbl,                                  /* dt - current time step size               */
-     dbl,                                  /* h_elem_avg - average global element size  */
-     const PG_DATA *,                      /* dvc_dnode                                 */
-     dbl xi[DIM],                          /* Local stu coords */
-     const Exo_DB *exo);                   /* ExodusII database struct pointer */
+EXTERN int assemble_momentum /* mm_fill_terms.c                           */
+    (double,                 /* time - present time value                 */
+     dbl,                    /* tt - parm to vary time integration from
+                              * explicit (tt = 1) to implicit (tt = 0)    */
+     dbl,                    /* dt - current time step size               */
+     dbl,                    /* h_elem_avg - average global element size  */
+     const PG_DATA *,        /* dvc_dnode                                 */
+     dbl xi[DIM],            /* Local stu coords */
+     const Exo_DB *exo);     /* ExodusII database struct pointer */
 
-EXTERN void fluid_stress(double[DIM][DIM], /* Pi[DIM][DIM] */
+EXTERN void fluid_stress(double[DIM][DIM],            /* Pi[DIM][DIM] */
                          STRESS_DEPENDENCE_STRUCT *); /* d_Pi         */
 
 void ve_polymer_stress(double gamma[DIM][DIM],
@@ -56,4 +56,4 @@ int momentum_source_term /* mm_fill_terms.c                           */
     (dbl[DIM],           /* f - Body force.                           */
      MOMENTUM_SOURCE_DEPENDENCE_STRUCT *,
      double);
-#endif                   /* GOMA_MM_FILL_MOMENTUM_H */
+#endif /* GOMA_MM_FILL_MOMENTUM_H */

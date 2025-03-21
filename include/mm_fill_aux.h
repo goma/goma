@@ -53,13 +53,13 @@ EXTERN double global_velocity_norm(const dbl[],    /* x - solution vector       
 
 EXTERN dbl element_viscosity(void);
 
-EXTERN void element_velocity(dbl[DIM],         /* v_avg                                     */
-                             dbl[DIM][MDE],    /* dv_dnode                                  */
-                             const Exo_DB *);  /* exo - ptr to FE db                        */
+EXTERN void element_velocity(dbl[DIM],        /* v_avg                                     */
+                             dbl[DIM][MDE],   /* dv_dnode                                  */
+                             const Exo_DB *); /* exo - ptr to FE db                        */
 
-EXTERN void h_elem_siz(dbl[DIM],               /* h                                         */
-                       dbl[DIM][DIM],          /* hh                                        */
-                       dbl[DIM][MDE],          /* dh_dxnode                                 */
+EXTERN void h_elem_siz(dbl[DIM],      /* h                                         */
+                       dbl[DIM][DIM], /* hh                                        */
+                       dbl[DIM][MDE], /* dh_dxnode                                 */
                        const int DeformingMesh);
 
 EXTERN void get_supg_stuff(dbl *,              /* supg_term                                 */
@@ -69,16 +69,16 @@ EXTERN void get_supg_stuff(dbl *,              /* supg_term                     
                            dbl[MDE][DIM],      /* d_supg_term_dx                            */
                            const int);         /* DeformingMesh                             */
 
-EXTERN void const_h_elem_siz(dbl[DIM],         /* h                                         */
-                             dbl[DIM][DIM],    /* hh                                        */
-                             dbl[DIM][MDE]);   /* dh_dxnode                                 */
+EXTERN void const_h_elem_siz(dbl[DIM],       /* h                                         */
+                             dbl[DIM][DIM],  /* hh                                        */
+                             dbl[DIM][MDE]); /* dh_dxnode                                 */
 
-EXTERN dbl global_h_elem_siz(dbl[],            /* x                                         */
-                             dbl[],            /* x_old                                     */
-                             dbl[],            /* xdot                                      */
-                             dbl[],            /* resid_vector                              */
-                             Exo_DB *,         /* exo - ptr to EXODUS II FE database        */
-                             Dpi *);           /* dpi - distributed processing information  */
+EXTERN dbl global_h_elem_siz(dbl[],    /* x                                         */
+                             dbl[],    /* x_old                                     */
+                             dbl[],    /* xdot                                      */
+                             dbl[],    /* resid_vector                              */
+                             Exo_DB *, /* exo - ptr to EXODUS II FE database        */
+                             Dpi *);   /* dpi - distributed processing information  */
 
 EXTERN void surface_determinant_and_normal(const int, /* ielem - current element number */
                                            const int, /* iconnect_ptr - Pointer to beginning of

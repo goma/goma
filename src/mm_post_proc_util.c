@@ -49,22 +49,22 @@
  *
  */
 
-int find_id_elem(const double x,    /* x-coordinate */
-                 const double y,    /* y-coordinate */
-                 const double z,    /* z-coordinate */
+int find_id_elem(const double x, /* x-coordinate */
+                 const double y, /* y-coordinate */
+                 const double z, /* z-coordinate */
                  double xv[],
                  const Exo_DB *exo, /* ptr to basic exodus ii mesh information */
                  const int e_start, /* start of search */
                  const int e_end)   /* end of search */
 {
 
-  int element_no = -1;              /*local element number */
-  int i;                            /*local element counters */
+  int element_no = -1; /*local element number */
+  int i;               /*local element counters */
   dbl sum_xcoord, sum_ycoord, sum_zcoord;
   dbl x_center, y_center, z_center;
-  int id, I;                        /*global node number */
+  int id, I; /*global node number */
   int i_elem;
-  int mode = 0;                     /* temporary.  You may want to pass in someday */
+  int mode = 0; /* temporary.  You may want to pass in someday */
   dbl separation, closest_distance;
   int iconn_ptr, ebn, mn, ielem_type, num_local_nodes;
 
@@ -137,20 +137,20 @@ int find_id_elem(const double x,    /* x-coordinate */
 
 int invert_isoparametric_map(int *current_ielem, /* initial element of search */
                              const double coordinate[],
-                             double xi[],        /* s-coordinate output */
+                             double xi[], /* s-coordinate output */
                              const Exo_DB *exo,
-                             double xv[],        /*  solution vector  */
-                             int *velo_interp)   /* velocity basis fcns  */
+                             double xv[],      /*  solution vector  */
+                             int *velo_interp) /* velocity basis fcns  */
 {
   /* Local variables */
   int err;
-  int a, b, c;                     /*  loop counters */
-  int dim;                         /*  problem dimension */
-  int converged, inewton;          /*  convergence flag, iteration counter */
-  double R[MAX_PDIM];              /* residual vector for invert */
-  double update[MAX_PDIM] = {0};   /* update vector for xi */
-  double norm;                     /* convergence norm */
-  double max_xi, tmp;              /*  element switching vars, flags  */
+  int a, b, c;                   /*  loop counters */
+  int dim;                       /*  problem dimension */
+  int converged, inewton;        /*  convergence flag, iteration counter */
+  double R[MAX_PDIM];            /* residual vector for invert */
+  double update[MAX_PDIM] = {0}; /* update vector for xi */
+  double norm;                   /* convergence norm */
+  double max_xi, tmp;            /*  element switching vars, flags  */
   int i_max_xi, face = 0, newface = 0, old_ielem;
 
   double xi_tmp[MAX_PDIM];         /*  extra vector for isopar. coords */

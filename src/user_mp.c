@@ -139,9 +139,9 @@ int usr_thermal_conductivity(dbl *param MAYBE_UNUSED,
 {
   int a;
 
-  dbl k, dkdT;                /* thermal conductivity and its derivative wrt temperature*/
-  dbl dkdX[DIM];              /* thermal conductivity derivative wrt displacement*/
-  dbl dkdC[MAX_CONC];         /* thermal conductivity derivative wrt concentration*/
+  dbl k, dkdT;        /* thermal conductivity and its derivative wrt temperature*/
+  dbl dkdX[DIM];      /* thermal conductivity derivative wrt displacement*/
+  dbl dkdC[MAX_CONC]; /* thermal conductivity derivative wrt concentration*/
 
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
 
@@ -171,7 +171,7 @@ int usr_thermal_conductivity(dbl *param MAYBE_UNUSED,
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
+  T = fv->T; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -202,10 +202,10 @@ int usr_electrical_conductivity(dbl *param MAYBE_UNUSED,
 {
   int a;
 
-  dbl k, dkdT;                   /* electrical conductivity and its derivative wrt temperature*/
-  dbl dkdV;                      /* electrical conductivity derivative wrt voltage*/
-  dbl dkdX[DIM];                 /* electrical conductivity derivative wrt displacement*/
-  dbl dkdC[MAX_CONC];            /* electrical conductivity derivative wrt concentration*/
+  dbl k, dkdT;        /* electrical conductivity and its derivative wrt temperature*/
+  dbl dkdV;           /* electrical conductivity derivative wrt voltage*/
+  dbl dkdX[DIM];      /* electrical conductivity derivative wrt displacement*/
+  dbl dkdC[MAX_CONC]; /* electrical conductivity derivative wrt concentration*/
 
   dbl X[DIM], T, C[MAX_CONC], V; /* Convenient local variables */
 
@@ -236,8 +236,8 @@ int usr_electrical_conductivity(dbl *param MAYBE_UNUSED,
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
-  V = fv->V;         /*Do not touch */
+  T = fv->T; /*Do not touch */
+  V = fv->V; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -293,7 +293,7 @@ int usr_density(dbl *param MAYBE_UNUSED) /* pointer to user-defined parameter li
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
+  T = fv->T; /*Do not touch */
   for (w = 0; w < pd->Num_Species_Eqn; w++)
     C[w] = fv->c[w]; /*Do not touch */
 
@@ -363,9 +363,9 @@ int usr_heat_capacity(dbl *param MAYBE_UNUSED,
 {
   int a;
 
-  dbl Cp, dCpdT;              /* heat capacity and its derivative wrt temperature*/
-  dbl dCpdX[DIM];             /* heat capacity derivative wrt displacement */
-  dbl dCpdC[MAX_CONC];        /* heat capacity derivative wrt concentration*/
+  dbl Cp, dCpdT;       /* heat capacity and its derivative wrt temperature*/
+  dbl dCpdX[DIM];      /* heat capacity derivative wrt displacement */
+  dbl dCpdC[MAX_CONC]; /* heat capacity derivative wrt concentration*/
 
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
 
@@ -395,7 +395,7 @@ int usr_heat_capacity(dbl *param MAYBE_UNUSED,
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
+  T = fv->T; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -474,10 +474,10 @@ int usr_heat_source(dbl *param MAYBE_UNUSED,
 {
   int a;
 
-  dbl h, dhdT, dhdV;             /*heat sourceand its derivative wrt temperature, voltage*/
-  dbl dhdv[DIM];                 /* heat source derivative wrt velocity*/
-  dbl dhdC[MAX_CONC];            /* heat source derivative wrt concentration*/
-  dbl dhdX[DIM];                 /* heat source derivative wrt displacement*/
+  dbl h, dhdT, dhdV;  /*heat sourceand its derivative wrt temperature, voltage*/
+  dbl dhdv[DIM];      /* heat source derivative wrt velocity*/
+  dbl dhdC[MAX_CONC]; /* heat source derivative wrt concentration*/
+  dbl dhdX[DIM];      /* heat source derivative wrt displacement*/
 
   int i;
   dbl X[DIM], T, V, C[MAX_CONC]; /* Convenient local variables */
@@ -492,9 +492,9 @@ int usr_heat_source(dbl *param MAYBE_UNUSED,
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  h = 0;          /*Do not touch */
-  dhdT = 0;       /*Do not touch */
-  dhdV = 0;       /*Do not touch */
+  h = 0;    /*Do not touch */
+  dhdT = 0; /*Do not touch */
+  dhdV = 0; /*Do not touch */
   for (a = 0; a < DIM; a++)
     dhdv[a] = 0.; /*Do not touch */
   for (a = 0; a < DIM; a++)
@@ -506,8 +506,8 @@ int usr_heat_source(dbl *param MAYBE_UNUSED,
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
-  V = fv->V;         /*Do not touch */
+  T = fv->T; /*Do not touch */
+  V = fv->V; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -601,10 +601,10 @@ int usr_species_source(int species_no MAYBE_UNUSED, /* Current species number   
 {
   int a;
 
-  dbl s, dsdT, dsdV;             /*species sourceand its derivative wrt temperature, voltage*/
-  dbl dsdv[DIM];                 /* species source derivative wrt velocity*/
-  dbl dsdC[MAX_CONC];            /* species source derivative wrt concentration*/
-  dbl dsdX[DIM];                 /* species source derivative wrt displacement*/
+  dbl s, dsdT, dsdV;  /*species sourceand its derivative wrt temperature, voltage*/
+  dbl dsdv[DIM];      /* species source derivative wrt velocity*/
+  dbl dsdC[MAX_CONC]; /* species source derivative wrt concentration*/
+  dbl dsdX[DIM];      /* species source derivative wrt displacement*/
 
   int i;
   dbl X[DIM], T, V, C[MAX_CONC]; /* Convenient local variables */
@@ -619,9 +619,9 @@ int usr_species_source(int species_no MAYBE_UNUSED, /* Current species number   
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  s = 0;          /*Do not touch */
-  dsdT = 0;       /*Do not touch */
-  dsdV = 0;       /*Do not touch */
+  s = 0;    /*Do not touch */
+  dsdT = 0; /*Do not touch */
+  dsdV = 0; /*Do not touch */
   for (a = 0; a < DIM; a++)
     dsdv[a] = 0.; /*Do not touch */
   for (a = 0; a < DIM; a++)
@@ -633,8 +633,8 @@ int usr_species_source(int species_no MAYBE_UNUSED, /* Current species number   
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
-  V = fv->V;         /*Do not touch */
+  T = fv->T; /*Do not touch */
+  V = fv->V; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -719,11 +719,11 @@ int usr_current_source(dbl *param MAYBE_UNUSED) /* pointer to user-defined param
 {
   int a;
 
-  dbl h, dhdT;                   /* current source and its derivative wrt temperature*/
-  dbl dhdV;                      /* current source derivative wrt voltage */
-  dbl dhdv[DIM];                 /* current source derivative wrt velocity*/
-  dbl dhdC[MAX_CONC];            /* current source derivative wrt concentration*/
-  dbl dhdX[DIM];                 /* current source derivative wrt displacement*/
+  dbl h, dhdT;        /* current source and its derivative wrt temperature*/
+  dbl dhdV;           /* current source derivative wrt voltage */
+  dbl dhdv[DIM];      /* current source derivative wrt velocity*/
+  dbl dhdC[MAX_CONC]; /* current source derivative wrt concentration*/
+  dbl dhdX[DIM];      /* current source derivative wrt displacement*/
 
   int i;
   dbl X[DIM], T, V, C[MAX_CONC]; /* Convenient local variables */
@@ -738,9 +738,9 @@ int usr_current_source(dbl *param MAYBE_UNUSED) /* pointer to user-defined param
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  h = 0;          /*Do not touch */
-  dhdT = 0;       /*Do not touch */
-  dhdV = 0;       /*Do not touch */
+  h = 0;    /*Do not touch */
+  dhdT = 0; /*Do not touch */
+  dhdV = 0; /*Do not touch */
   for (a = 0; a < DIM; a++)
     dhdv[a] = 0.; /*Do not touch */
   for (a = 0; a < DIM; a++)
@@ -752,8 +752,8 @@ int usr_current_source(dbl *param MAYBE_UNUSED) /* pointer to user-defined param
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
-  V = fv->V;         /*Do not touch */
+  T = fv->T; /*Do not touch */
+  V = fv->V; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -836,10 +836,10 @@ int usr_viscosity(dbl *param MAYBE_UNUSED) /* pointer to user-defined parameter 
 {
   /* Local Variables */
   int a;
-  dbl mu, dmudT;                 /* thermal conductivity and its derivative wrt temperature*/
-  dbl dmudV[DIM];                /* heat source derivative wrt velocity*/
-  dbl dmudC[MAX_CONC];           /* heat source derivative wrt concentration*/
-  dbl dmudX[DIM];                /* heat source derivative wrt displacement*/
+  dbl mu, dmudT;       /* thermal conductivity and its derivative wrt temperature*/
+  dbl dmudV[DIM];      /* heat source derivative wrt velocity*/
+  dbl dmudC[MAX_CONC]; /* heat source derivative wrt concentration*/
+  dbl dmudX[DIM];      /* heat source derivative wrt displacement*/
 
   dbl X[DIM], F, T, C[MAX_CONC]; /* Convenient local variables */
 
@@ -854,8 +854,8 @@ int usr_viscosity(dbl *param MAYBE_UNUSED) /* pointer to user-defined parameter 
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  mu = 0;          /*Do not touch */
-  dmudT = 0;       /*Do not touch */
+  mu = 0;    /*Do not touch */
+  dmudT = 0; /*Do not touch */
   for (a = 0; a < DIM; a++)
     dmudV[a] = 0.; /*Do not touch */
   for (a = 0; a < DIM; a++)
@@ -867,8 +867,8 @@ int usr_viscosity(dbl *param MAYBE_UNUSED) /* pointer to user-defined parameter 
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
-  F = fv->F;         /*Do not touch */
+  T = fv->T; /*Do not touch */
+  F = fv->F; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (a = 0; a < pd->Num_Species_Eqn; a++)
@@ -915,10 +915,10 @@ int usr_surface_tension(dbl *param MAYBE_UNUSED) /* ptr to user-defined paramete
 {
   int a;
 
-  dbl sigma, dsigmadT;        /* surface tension and its derivative wrt temperature*/
-  dbl dsigmadV[DIM];          /* surface tension derivative wrt velocity*/
-  dbl dsigmadC[MAX_CONC];     /* surface tension derivative wrt concentration*/
-  dbl dsigmadX[DIM];          /* surface tension derivative wrt displacement*/
+  dbl sigma, dsigmadT;    /* surface tension and its derivative wrt temperature*/
+  dbl dsigmadV[DIM];      /* surface tension derivative wrt velocity*/
+  dbl dsigmadC[MAX_CONC]; /* surface tension derivative wrt concentration*/
+  dbl dsigmadX[DIM];      /* surface tension derivative wrt displacement*/
 
   int i;
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
@@ -934,8 +934,8 @@ int usr_surface_tension(dbl *param MAYBE_UNUSED) /* ptr to user-defined paramete
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  sigma = 0;          /*Do not touch */
-  dsigmadT = 0;       /*Do not touch */
+  sigma = 0;    /*Do not touch */
+  dsigmadT = 0; /*Do not touch */
   for (a = 0; a < DIM; a++)
     dsigmadV[a] = 0.; /*Do not touch */
   for (a = 0; a < DIM; a++)
@@ -947,7 +947,7 @@ int usr_surface_tension(dbl *param MAYBE_UNUSED) /* ptr to user-defined paramete
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
+  T = fv->T; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -1043,10 +1043,10 @@ int usr_momentum_source(dbl *param MAYBE_UNUSED) /* ptr to user-defined paramete
   int a, b;
   int w;
 
-  dbl f[DIM], dfdT[DIM];      /* momentum sources and its derivative wrt temperature*/
-  dbl dfdV[DIM][DIM];         /* momentum source derivative wrt velocity*/
-  dbl dfdC[DIM][MAX_CONC];    /* momentum source derivative wrt concentration*/
-  dbl dfdX[DIM][DIM];         /* momentum source derivative wrt displacement*/
+  dbl f[DIM], dfdT[DIM];   /* momentum sources and its derivative wrt temperature*/
+  dbl dfdV[DIM][DIM];      /* momentum source derivative wrt velocity*/
+  dbl dfdC[DIM][MAX_CONC]; /* momentum source derivative wrt concentration*/
+  dbl dfdX[DIM][DIM];      /* momentum source derivative wrt displacement*/
 
   int i;
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
@@ -1062,8 +1062,8 @@ int usr_momentum_source(dbl *param MAYBE_UNUSED) /* ptr to user-defined paramete
 
   /************Initialize everything for saftey**************/
   for (a = 0; a < DIM; a++) {
-    f[a] = 0;          /*Do not touch */
-    dfdT[a] = 0;       /*Do not touch */
+    f[a] = 0;    /*Do not touch */
+    dfdT[a] = 0; /*Do not touch */
     for (b = 0; b < DIM; b++)
       dfdV[a][b] = 0.; /*Do not touch */
     for (b = 0; b < DIM; b++)
@@ -1076,7 +1076,7 @@ int usr_momentum_source(dbl *param MAYBE_UNUSED) /* ptr to user-defined paramete
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
+  T = fv->T; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -1143,10 +1143,10 @@ int usr_lame_mu(struct Elastic_Constitutive *ep MAYBE_UNUSED,
   int a, b;
   int w;
 
-  dbl f, dfdT;                /* momentum sources and its derivative wrt temperature*/
-  dbl dfdV[DIM];              /* momentum source derivative wrt velocity*/
-  dbl dfdC[MAX_CONC];         /* momentum source derivative wrt concentration*/
-  dbl dfdX[DIM];              /* momentum source derivative wrt displacement*/
+  dbl f, dfdT;        /* momentum sources and its derivative wrt temperature*/
+  dbl dfdV[DIM];      /* momentum source derivative wrt velocity*/
+  dbl dfdC[MAX_CONC]; /* momentum source derivative wrt concentration*/
+  dbl dfdX[DIM];      /* momentum source derivative wrt displacement*/
 
   int i;
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
@@ -1162,8 +1162,8 @@ int usr_lame_mu(struct Elastic_Constitutive *ep MAYBE_UNUSED,
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  f = 0;          /*Do not touch */
-  dfdT = 0;       /*Do not touch */
+  f = 0;    /*Do not touch */
+  dfdT = 0; /*Do not touch */
   for (b = 0; b < DIM; b++)
     dfdV[b] = 0.; /*Do not touch */
   for (b = 0; b < DIM; b++)
@@ -1175,7 +1175,7 @@ int usr_lame_mu(struct Elastic_Constitutive *ep MAYBE_UNUSED,
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
+  T = fv->T; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -1300,10 +1300,10 @@ int usr_lame_lambda(struct Elastic_Constitutive *ep MAYBE_UNUSED,
   int a, b;
   int w;
 
-  dbl f, dfdT;                /* momentum sources and its derivative wrt temperature*/
-  dbl dfdV[DIM];              /* momentum source derivative wrt velocity*/
-  dbl dfdC[MAX_CONC];         /* momentum source derivative wrt concentration*/
-  dbl dfdX[DIM];              /* momentum source derivative wrt displacement*/
+  dbl f, dfdT;        /* momentum sources and its derivative wrt temperature*/
+  dbl dfdV[DIM];      /* momentum source derivative wrt velocity*/
+  dbl dfdC[MAX_CONC]; /* momentum source derivative wrt concentration*/
+  dbl dfdX[DIM];      /* momentum source derivative wrt displacement*/
 
   int i;
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
@@ -1319,8 +1319,8 @@ int usr_lame_lambda(struct Elastic_Constitutive *ep MAYBE_UNUSED,
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  f = 0;          /*Do not touch */
-  dfdT = 0;       /*Do not touch */
+  f = 0;    /*Do not touch */
+  dfdT = 0; /*Do not touch */
   for (b = 0; b < DIM; b++)
     dfdV[b] = 0.; /*Do not touch */
   for (b = 0; b < DIM; b++)
@@ -1332,7 +1332,7 @@ int usr_lame_lambda(struct Elastic_Constitutive *ep MAYBE_UNUSED,
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
+  T = fv->T; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -1410,10 +1410,10 @@ int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
   int a, b;
   int w;
 
-  dbl f, dfdT;                /* sources and its derivative wrt temperature*/
-  dbl dfdV[DIM];              /* source derivative wrt velocity*/
-  dbl dfdC[MAX_CONC];         /* source derivative wrt concentration*/
-  dbl dfdX[DIM];              /* source derivative wrt displacement*/
+  dbl f, dfdT;        /* sources and its derivative wrt temperature*/
+  dbl dfdV[DIM];      /* source derivative wrt velocity*/
+  dbl dfdC[MAX_CONC]; /* source derivative wrt concentration*/
+  dbl dfdX[DIM];      /* source derivative wrt displacement*/
 
   int i;
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
@@ -1429,8 +1429,8 @@ int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  f = 0;          /*Do not touch */
-  dfdT = 0;       /*Do not touch */
+  f = 0;    /*Do not touch */
+  dfdT = 0; /*Do not touch */
   for (b = 0; b < DIM; b++)
     dfdV[b] = 0.; /*Do not touch */
   for (b = 0; b < DIM; b++)
@@ -1442,7 +1442,7 @@ int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
+  T = fv->T; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -1534,9 +1534,9 @@ int usr_diffusivity(int species_no MAYBE_UNUSED, /* Species number of diffusivit
   int a;
   int w;
 
-  dbl D, dDdT;                /* diffusivity and its derivative wrt temperature*/
-  dbl dDdX[DIM];              /* diffusivity derivative wrt displacement*/
-  dbl dDdC[MAX_CONC];         /* diffusivity derivative wrt concentration*/
+  dbl D, dDdT;        /* diffusivity and its derivative wrt temperature*/
+  dbl dDdX[DIM];      /* diffusivity derivative wrt displacement*/
+  dbl dDdC[MAX_CONC]; /* diffusivity derivative wrt concentration*/
 
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
 
@@ -1569,7 +1569,7 @@ int usr_diffusivity(int species_no MAYBE_UNUSED, /* Species number of diffusivit
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
+  T = fv->T; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -1630,10 +1630,10 @@ int usr_FlowingLiquidViscosity(dbl *param MAYBE_UNUSED) /* ptr to user-defined p
 {
   /* Local Variables */
   int a;
-  dbl mu, dmudT;                 /* thermal conductivity and its derivative wrt temperature*/
-  dbl dmudV[DIM];                /* heat source derivative wrt velocity*/
-  dbl dmudC[MAX_CONC];           /* heat source derivative wrt concentration*/
-  dbl dmudX[DIM];                /* heat source derivative wrt displacement*/
+  dbl mu, dmudT;       /* thermal conductivity and its derivative wrt temperature*/
+  dbl dmudV[DIM];      /* heat source derivative wrt velocity*/
+  dbl dmudC[MAX_CONC]; /* heat source derivative wrt concentration*/
+  dbl dmudX[DIM];      /* heat source derivative wrt displacement*/
 
   dbl X[DIM], F, T, C[MAX_CONC]; /* Convenient local variables */
 
@@ -1648,8 +1648,8 @@ int usr_FlowingLiquidViscosity(dbl *param MAYBE_UNUSED) /* ptr to user-defined p
   /**********************************************************/
 
   /************Initialize everything for safety**************/
-  mu = 0;          /*Do not touch */
-  dmudT = 0;       /*Do not touch */
+  mu = 0;    /*Do not touch */
+  dmudT = 0; /*Do not touch */
   for (a = 0; a < DIM; a++)
     dmudV[a] = 0.; /*Do not touch */
   for (a = 0; a < DIM; a++)
@@ -1661,8 +1661,8 @@ int usr_FlowingLiquidViscosity(dbl *param MAYBE_UNUSED) /* ptr to user-defined p
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
-  F = fv->F;         /*Do not touch */
+  T = fv->T; /*Do not touch */
+  F = fv->F; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (a = 0; a < pd->Num_Species_Eqn; a++)
@@ -1734,10 +1734,10 @@ int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list       
   int a, b;
   int w;
 
-  dbl f, dfdT;                /* momentum sources and its derivative wrt temperature*/
-  dbl dfdV[DIM];              /* momentum source derivative wrt velocity*/
-  dbl dfdC[MAX_CONC];         /* momentum source derivative wrt concentration*/
-  dbl dfdX[DIM];              /* momentum source derivative wrt displacement*/
+  dbl f, dfdT;        /* momentum sources and its derivative wrt temperature*/
+  dbl dfdV[DIM];      /* momentum source derivative wrt velocity*/
+  dbl dfdC[MAX_CONC]; /* momentum source derivative wrt concentration*/
+  dbl dfdX[DIM];      /* momentum source derivative wrt displacement*/
 
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
 
@@ -1754,8 +1754,8 @@ int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list       
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  f = 0;          /*Do not touch */
-  dfdT = 0;       /*Do not touch */
+  f = 0;    /*Do not touch */
+  dfdT = 0; /*Do not touch */
   for (b = 0; b < DIM; b++)
     dfdV[b] = 0.; /*Do not touch */
   for (b = 0; b < DIM; b++)
@@ -1767,7 +1767,7 @@ int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list       
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
+  T = fv->T; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -1838,10 +1838,10 @@ int usr_solid_dil_viscosity(dbl *param, /* ptr to user-defined parameter list   
   int a, b;
   int w;
 
-  dbl f, dfdT;                /* momentum sources and its derivative wrt temperature*/
-  dbl dfdV[DIM];              /* momentum source derivative wrt velocity*/
-  dbl dfdC[MAX_CONC];         /* momentum source derivative wrt concentration*/
-  dbl dfdX[DIM];              /* momentum source derivative wrt displacement*/
+  dbl f, dfdT;        /* momentum sources and its derivative wrt temperature*/
+  dbl dfdV[DIM];      /* momentum source derivative wrt velocity*/
+  dbl dfdC[MAX_CONC]; /* momentum source derivative wrt concentration*/
+  dbl dfdX[DIM];      /* momentum source derivative wrt displacement*/
 
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
 
@@ -1858,8 +1858,8 @@ int usr_solid_dil_viscosity(dbl *param, /* ptr to user-defined parameter list   
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  f = 0;          /*Do not touch */
-  dfdT = 0;       /*Do not touch */
+  f = 0;    /*Do not touch */
+  dfdT = 0; /*Do not touch */
   for (b = 0; b < DIM; b++)
     dfdV[b] = 0.; /*Do not touch */
   for (b = 0; b < DIM; b++)
@@ -1871,7 +1871,7 @@ int usr_solid_dil_viscosity(dbl *param, /* ptr to user-defined parameter list   
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
+  T = fv->T; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (i = 0; i < pd->Num_Species_Eqn; i++)
@@ -1927,7 +1927,7 @@ double usr_heat_flux(const double gradP[] MAYBE_UNUSED,      /*   pressure gradi
  ****************************************************/
 int usr_permeability(dbl *param) /* user-defined parameter list */
 {
-  dbl k, phi, dkdphi;            /* permeability and its derivative wrt porosity*/
+  dbl k, phi, dkdphi; /* permeability and its derivative wrt porosity*/
 
   /* Comment out or remove this line if using this routine */
 
@@ -1996,11 +1996,11 @@ int usr_yield_stress(dbl *param, dbl time) /* pointer to user-defined parameter 
 {
   /* Local Variables */
   int a;
-  dbl tau_y;                     /* thermal conductivity and its derivative wrt temperature*/
+  dbl tau_y; /* thermal conductivity and its derivative wrt temperature*/
   dbl dtau_ydT;
-  dbl dtau_ydV[DIM];             /* heat source derivative wrt velocity*/
-  dbl dtau_ydC[MAX_CONC];        /* heat source derivative wrt concentration*/
-  dbl dtau_ydX[DIM];             /* heat source derivative wrt displacement*/
+  dbl dtau_ydV[DIM];      /* heat source derivative wrt velocity*/
+  dbl dtau_ydC[MAX_CONC]; /* heat source derivative wrt concentration*/
+  dbl dtau_ydX[DIM];      /* heat source derivative wrt displacement*/
 
   dbl X[DIM], F, T, C[MAX_CONC]; /* Convenient local variables */
 
@@ -2015,8 +2015,8 @@ int usr_yield_stress(dbl *param, dbl time) /* pointer to user-defined parameter 
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  tau_y = 0;          /*Do not touch */
-  dtau_ydT = 0;       /*Do not touch */
+  tau_y = 0;    /*Do not touch */
+  dtau_ydT = 0; /*Do not touch */
   for (a = 0; a < DIM; a++)
     dtau_ydV[a] = 0.; /*Do not touch */
   for (a = 0; a < DIM; a++)
@@ -2028,8 +2028,8 @@ int usr_yield_stress(dbl *param, dbl time) /* pointer to user-defined parameter 
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;         /*Do not touch */
-  F = fv->F;         /*Do not touch */
+  T = fv->T; /*Do not touch */
+  F = fv->F; /*Do not touch */
   for (a = 0; a < DIM; a++)
     X[a] = fv->x[a]; /*Do not touch */
   for (a = 0; a < pd->Num_Species_Eqn; a++)

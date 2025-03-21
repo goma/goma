@@ -37,35 +37,35 @@ struct GomaLinearSolverData;
 #define EXTERN extern
 #endif
 
-EXTERN void canine_chaos(int,                   /* local_order                          (in) */
-                         int,                   /* local_order_plus - order including
-                                                 * external rows                        (in) */
-                         int,                   /* local_nnz - number of nonzeroes      (in) */
-                         int,                   /* local_nnz_plus - including external
-                                                 * rows                                 (in) */
-                         int *,                 /* global_order - the real order       (out) */
-                         int *,                 /* global_order_plus - overcounting external
-                                                 * rows                                (out) */
-                         int *,                 /* global_nnz - the strict count       (out) */
-                         int *);                /* global_nnz_plus - overcounting external
-                                                 * rows                                (out) */
+EXTERN void canine_chaos(int,    /* local_order                          (in) */
+                         int,    /* local_order_plus - order including
+                                  * external rows                        (in) */
+                         int,    /* local_nnz - number of nonzeroes      (in) */
+                         int,    /* local_nnz_plus - including external
+                                  * rows                                 (in) */
+                         int *,  /* global_order - the real order       (out) */
+                         int *,  /* global_order_plus - overcounting external
+                                  * rows                                (out) */
+                         int *,  /* global_nnz - the strict count       (out) */
+                         int *); /* global_nnz_plus - overcounting external
+                                  * rows                                (out) */
 
-EXTERN void print_msr_matrix                    /* sl_matrix_util.c                          */
-    (int,                                       /* n - order of matrix system                */
-     int *,                                     /* ija - column pointer list                 */
-     double *,                                  /* a - nonzero matrix entries                */
-     double *);                                 /* x - solution vector                       */
+EXTERN void print_msr_matrix /* sl_matrix_util.c                          */
+    (int,                    /* n - order of matrix system                */
+     int *,                  /* ija - column pointer list                 */
+     double *,               /* a - nonzero matrix entries                */
+     double *);              /* x - solution vector                       */
 
-EXTERN void print_vbr_matrix                    /* sl_matrix_util.c                          */
-    (struct GomaLinearSolverData *,             /* matrix info                  */
-     Exo_DB *,                                  /* ptr to the whole mesh                     */
-     Dpi *,                                     /* distributed processing info               */
-     int[]);                                    /* number of unknowns per node               */
+EXTERN void print_vbr_matrix        /* sl_matrix_util.c                          */
+    (struct GomaLinearSolverData *, /* matrix info                  */
+     Exo_DB *,                      /* ptr to the whole mesh                     */
+     Dpi *,                         /* distributed processing info               */
+     int[]);                        /* number of unknowns per node               */
 
-EXTERN void row_sum_scaling_scale               /* sl_matrix_util.c                        */
+EXTERN void row_sum_scaling_scale /* sl_matrix_util.c                        */
     (struct GomaLinearSolverData *,
-     double[],                                  /* scaling matrix                            */
-     double[]);                                 /* b - rhs                                   */
+     double[],  /* scaling matrix                            */
+     double[]); /* b - rhs                                   */
 
 EXTERN void row_sum_scaling_scale_AC(double **, /* cAC */
                                      double **, /* dAC */
