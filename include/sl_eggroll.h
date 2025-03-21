@@ -33,7 +33,7 @@
 #include "rf_io_structs.h"  /* for struct Results_Description */
 #include "sl_eggroll_def.h" /* for typedef struct EV */
 
-extern void gevp_solver_rc /* sl_eggroll01.c */
+extern void gevp_solver_rc  /* sl_eggroll01.c */
     (int,
      int,
      int,
@@ -82,42 +82,42 @@ extern void gevp_arnoldi_rc /* sl_eggroll02.c */
      dbl *,
      dbl *);
 
-extern void eigenvv /* sl_eggroll04.c */
+extern void eigenvv             /* sl_eggroll04.c */
     (int, dbl **, EV *);
 
-extern void balanc /* sl_eggroll04.c */
+extern void balanc              /* sl_eggroll04.c */
     (int, dbl **, dbl *);
 
-extern void elmhes /* sl_eggroll04.c */
+extern void elmhes              /* sl_eggroll04.c */
     (int, dbl **, int *);
 
-extern void eltran /* sl_eggroll04.c */
+extern void eltran              /* sl_eggroll04.c */
     (int, dbl **, int *, EV *);
 
-extern void balbak /* sl_eggroll04.c */
+extern void balbak              /* sl_eggroll04.c */
     (int, dbl *, EV *);
 
-extern void eighqr /* sl_eggroll04.c */
+extern void eighqr              /* sl_eggroll04.c */
     (int, dbl **, EV *);
 
-extern void _heapsort /* sl_eggroll04.c */
+extern void _heapsort           /* sl_eggroll04.c */
     (int, dbl *, dbl *, dbl *, int *, int);
 
-extern void jeapsort /* sl_eggroll04.c */
+extern void jeapsort            /* sl_eggroll04.c */
     (int, dbl *, dbl *, dbl *, int *, int);
 
-extern void cdiv /* sl_eggrollutil.c */
+extern void cdiv                /* sl_eggrollutil.c */
     (dbl, dbl, dbl, dbl, dbl *, dbl *);
 
-extern void gevp_order /* sl_eggroll05.c */
-    (int,              /* nj */
-     int,              /* ev_n */
-     dbl *,            /* ev_r */
-     dbl *,            /* ev_i */
-     dbl *,            /* ev_e */
-     dbl *,            /* ev_x */
-     dbl **,           /* evect */
-     dbl **);          /* schur */
+extern void gevp_order          /* sl_eggroll05.c */
+    (int,                       /* nj */
+     int,                       /* ev_n */
+     dbl *,                     /* ev_r */
+     dbl *,                     /* ev_i */
+     dbl *,                     /* ev_e */
+     dbl *,                     /* ev_x */
+     dbl **,                    /* evect */
+     dbl **);                   /* schur */
 
 extern void gevp_transformation /* sl_eggroll03.c */
     (int,                       /* UMF_system_id */
@@ -137,31 +137,31 @@ extern void gevp_transformation /* sl_eggroll03.c */
      dbl,                       /* r_sigma */
      dbl);                      /* i_sigma */
 
-extern void eggrollwrap /* sl_eggrollwrap.c */
-    (int *,             /* Info for eigenvalue extraction */
-     dbl *,             /* Info for eigenvalue extraction */
-     int *,             /* Column pointer array */
-     dbl *,             /* Nonzero array */
-     dbl *,             /* Nonzero array - same structure
-                           as jac[] (ija[]) */
-     dbl *,             /* Value of the solution vector */
-     char *,            /* Name of exoII output file */
+extern void eggrollwrap         /* sl_eggrollwrap.c */
+    (int *,                     /* Info for eigenvalue extraction */
+     dbl *,                     /* Info for eigenvalue extraction */
+     int *,                     /* Column pointer array */
+     dbl *,                     /* Nonzero array */
+     dbl *,                     /* Nonzero array - same structure
+                                   as jac[] (ija[]) */
+     dbl *,                     /* Value of the solution vector */
+     char *,                    /* Name of exoII output file */
      int,
-     dbl,   /* Time step size */
-     dbl,   /* Variable time integration parameter
-               explicit (theta = 1) to
-               implicit (theta = 0) */
-     dbl *, /* Value of the old solution vector */
-     dbl *, /* Value of xdot predicted for new
-               solution */
+     dbl,                       /* Time step size */
+     dbl,                       /* Variable time integration parameter
+                                   explicit (theta = 1) to
+                                   implicit (theta = 0) */
+     dbl *,                     /* Value of the old solution vector */
+     dbl *,                     /* Value of xdot predicted for new
+                                   solution */
      dbl *,
      dbl *,
-     int *, /* Whether the Newton has converged */
-     int *, /* Counter for time step number */
-     int,   /* Number of nodal results */
-     int,   /* Number of post processing results */
-     int,   /* Number of element results */
-     int,   /* Number of element post processing results */
+     int *,                     /* Whether the Newton has converged */
+     int *,                     /* Counter for time step number */
+     int,                       /* Number of nodal results */
+     int,                       /* Number of post processing results */
+     int,                       /* Number of element results */
+     int,                       /* Number of element post processing results */
      struct Results_Description *,
      int *,
      int *,

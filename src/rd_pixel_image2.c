@@ -75,9 +75,9 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   char voxfilename[MAX_FNL];
 
   /* Field variables.  */
-  int num_nod_vars;     // Number of field variables (no duplicates)
-  int dupflag;          // Flag for checking duplicates
-  char **nod_var_names; // Variable names array, no duplicates
+  int num_nod_vars;                           // Number of field variables (no duplicates)
+  int dupflag;                                // Flag for checking duplicates
+  char **nod_var_names;                       // Variable names array, no duplicates
   char *
       nod_var_names_temp[MAX_EXTERNAL_FIELD]; // Variable names array, including possible duplicates
 
@@ -356,7 +356,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
 
     ngp = elem_info(NQUAD, ei[pg->imtrx]->ielem_type); // Number of Gauss points (GP) in element
 
-    for (igp = 0; igp < ngp; igp++) // Loop over GP's
+    for (igp = 0; igp < ngp; igp++)                    // Loop over GP's
     {
       err = load_basis_functions(xi, bfd);
       GOMA_EH(err, "problem from load_basis_functions");
@@ -381,7 +381,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
       if (pixinterp) {
         if (pixsize[2] == 1) { // bilinear interpolation
           val = bi_interp(xg, yg, resolution, pixdata, pixsize);
-        } else { // trilinear interpolation
+        } else {               // trilinear interpolation
           val = tri_interp(xg, yg, zg, resolution, pixdata, pixsize);
         }
       } else {

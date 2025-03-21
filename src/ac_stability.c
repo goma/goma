@@ -86,11 +86,11 @@ int LSA_current_wave_number = 0;
  * too fat...
  */
 int solve_stability_problem(struct GomaLinearSolverData *ams,
-                            double x[],     /* Value of the solution vector */
-                            double delta_t, /* Time step size */
-                            double theta,   /* Variable time integration parameter
-                                               explicit (theta = 1) to
-                                               implicit (theta = 0) */
+                            double x[],        /* Value of the solution vector */
+                            double delta_t,    /* Time step size */
+                            double theta,      /* Variable time integration parameter
+                                                  explicit (theta = 1) to
+                                                  implicit (theta = 0) */
                             double resid_vector[],
                             double x_old[],    /* Value of the old solution vector */
                             double x_older[],  /* */
@@ -146,11 +146,11 @@ int solve_stability_problem(struct GomaLinearSolverData *ams,
  * "regular" systems.  That means it is NOT for 3D stability of a 2D
  * flow. */
 int solve_full_stability_problem(struct GomaLinearSolverData *ams,
-                                 double x[],     /* Value of the solution vector */
-                                 double delta_t, /* Time step size */
-                                 double theta,   /* Variable time integration parameter
-                                                  * explicit (theta = 1) to implicit
-                                                  * (theta = 0) */
+                                 double x[],        /* Value of the solution vector */
+                                 double delta_t,    /* Time step size */
+                                 double theta,      /* Variable time integration parameter
+                                                     * explicit (theta = 1) to implicit
+                                                     * (theta = 0) */
                                  double resid_vector[],
                                  double x_old[],    /* Value of the old solution vector */
                                  double x_older[],  /* */
@@ -380,11 +380,11 @@ for(i = 0; i < NZeros+1; i++)
  * calculations of 3D stability of a 2D flow.
  */
 int solve_3D_of_2D_stability_problem(struct GomaLinearSolverData *ams,
-                                     double x[],     /* Value of the solution vector */
-                                     double delta_t, /* Time step size */
-                                     double theta,   /* Variable time integration parameter
-                                                      * explicit (theta = 1) to implicit
-                                                      * (theta = 0) */
+                                     double x[],        /* Value of the solution vector */
+                                     double delta_t,    /* Time step size */
+                                     double theta,      /* Variable time integration parameter
+                                                         * explicit (theta = 1) to implicit
+                                                         * (theta = 0) */
                                      double resid_vector[],
                                      double x_old[],    /* Value of the old solution vector */
                                      double x_older[],  /* */
@@ -945,7 +945,7 @@ void eggroll_init(const int nj,    /* Number of equations */
   dstuff[1] = 1.0;            /* f vector ? */
   dstuff[2] = 1.0;            /* m sign ? */
   dstuff[3] =
-      eigen->Eigen_IV_Wt; /* amount of uniform randomness to add to initial vector (0 = none) */
+      eigen->Eigen_IV_Wt;     /* amount of uniform randomness to add to initial vector (0 = none) */
   for (i = 0; i < istuff[7]; i++)
     dstuff[10 + i] = eigen->Eigen_Shifts[i]; /* initial shift values. */
 }

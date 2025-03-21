@@ -33,4 +33,4 @@
 EXTERN void pre_process /* rf_pre_proc.c */
     (Exo_DB *exo);
 
-#endif /* GOMA_RF_PRE_PROC_H */
+#endif                  /* GOMA_RF_PRE_PROC_H */

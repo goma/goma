@@ -468,7 +468,7 @@ int ad_load_bf_grad(void) {
         }
       }
     } /* end of if v */
-  }   /* end of basis function loop. */
+  } /* end of basis function loop. */
 
   return (status);
 }
@@ -1613,7 +1613,7 @@ extern "C" int ad_assemble_spalart_allmaras(dbl time_value, /* current time */
       resid[i] += mass + adv + src + diff;
       lec->R[LEC_R_INDEX(peqn, i)] += mass.val() + adv.val() + src.val() + diff.val();
     } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
-  }   /* end of if assemble residual */
+  } /* end of if assemble residual */
 
   /*
    * Jacobian terms...
@@ -1633,7 +1633,7 @@ extern "C" int ad_assemble_spalart_allmaras(dbl time_value, /* current time */
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[i].dx(ad_fv->offset[EDDY_NU] + j);
         } /* End of loop over j */
-      }   /* End of if the variable is active */
+      } /* End of if the variable is active */
 
       /* Sensitivity w.r.t. velocity */
       for (b = 0; b < VIM; b++) {
@@ -1645,11 +1645,11 @@ extern "C" int ad_assemble_spalart_allmaras(dbl time_value, /* current time */
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[i].dx(ad_fv->offset[var] + j);
 
           } /* End of loop over j */
-        }   /* End of if the variale is active */
-      }     /* End of loop over velocity components */
+        } /* End of if the variale is active */
+      } /* End of loop over velocity components */
 
     } /* End of loop over i */
-  }   /* End of if assemble Jacobian */
+  } /* End of if assemble Jacobian */
   return (status);
 }
 
@@ -1887,7 +1887,7 @@ extern "C" int ad_assemble_turb_k(dbl time_value, /* current time */
       resid[i] += mass + adv + src + diff;
       lec->R[LEC_R_INDEX(peqn, i)] += mass.val() + adv.val() + src.val() + diff.val();
     } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
-  }   /* end of if assemble residual */
+  } /* end of if assemble residual */
 
   /*
    * Jacobian terms...
@@ -1909,7 +1909,7 @@ extern "C" int ad_assemble_turb_k(dbl time_value, /* current time */
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[i].dx(ad_fv->offset[var] + j);
 
           } /* End of loop over j */
-        }   /* End of if the variale is active */
+        } /* End of if the variale is active */
       }
     }
   } /* End of if assemble Jacobian */
@@ -2146,7 +2146,7 @@ extern "C" int ad_assemble_turb_omega(dbl time_value, /* current time */
       resid[i] += mass + adv + src + diff;
       lec->R[LEC_R_INDEX(peqn, i)] += mass.val() + adv.val() + src.val() + diff.val();
     } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
-  }   /* end of if assemble residual */
+  } /* end of if assemble residual */
 
   /*
    * Jacobian terms...
@@ -2168,7 +2168,7 @@ extern "C" int ad_assemble_turb_omega(dbl time_value, /* current time */
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[i].dx(ad_fv->offset[var] + j);
 
           } /* End of loop over j */
-        }   /* End of if the variale is active */
+        } /* End of if the variale is active */
       }
     }
   } /* End of if assemble Jacobian */
@@ -2335,7 +2335,7 @@ extern "C" int ad_assemble_turb_k_modified(dbl time_value, /* current time */
       resid[i] -= mass + adv + src + diff;
       lec->R[LEC_R_INDEX(peqn, i)] -= mass.val() + adv.val() + src.val() + diff.val();
     } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
-  }   /* end of if assemble residual */
+  } /* end of if assemble residual */
 
   /*
    * Jacobian terms...
@@ -2357,7 +2357,7 @@ extern "C" int ad_assemble_turb_k_modified(dbl time_value, /* current time */
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[i].dx(ad_fv->offset[var] + j);
 
           } /* End of loop over j */
-        }   /* End of if the variale is active */
+        } /* End of if the variale is active */
       }
     }
   } /* End of if assemble Jacobian */
@@ -2521,7 +2521,7 @@ extern "C" int ad_assemble_turb_omega_modified(dbl time_value, /* current time *
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[i].dx(ad_fv->offset[var] + j);
 
           } /* End of loop over j */
-        }   /* End of if the variale is active */
+        } /* End of if the variale is active */
       }
     }
   } /* End of if assemble Jacobian */
@@ -2729,7 +2729,7 @@ ad_assemble_turb_k_omega_modified(dbl time_value, /* current time */
       resid[1][i] -= mass + adv + src + diff;
       lec->R[LEC_R_INDEX(peqn, i)] -= mass.val() + adv.val() + src.val() + diff.val();
     } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
-  }   /* end of if assemble residual */
+  } /* end of if assemble residual */
 
   /*
    * Jacobian terms...
@@ -2751,7 +2751,7 @@ ad_assemble_turb_k_omega_modified(dbl time_value, /* current time */
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[0][i].dx(ad_fv->offset[var] + j);
 
           } /* End of loop over j */
-        }   /* End of if the variale is active */
+        } /* End of if the variale is active */
       }
     }
     eqn = TURB_K;
@@ -2769,7 +2769,7 @@ ad_assemble_turb_k_omega_modified(dbl time_value, /* current time */
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[1][i].dx(ad_fv->offset[var] + j);
 
           } /* End of loop over j */
-        }   /* End of if the variale is active */
+        } /* End of if the variale is active */
       }
     }
   } /* End of if assemble Jacobian */
@@ -3228,7 +3228,7 @@ extern "C" int ad_assemble_k_omega_sst_modified(dbl time_value, /* current time 
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[1][i].dx(ad_fv->offset[var] + j);
 
           } /* End of loop over j */
-        }   /* End of if the variale is active */
+        } /* End of if the variale is active */
       }
     }
     eqn = TURB_K;
@@ -3246,7 +3246,7 @@ extern "C" int ad_assemble_k_omega_sst_modified(dbl time_value, /* current time 
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[0][i].dx(ad_fv->offset[var] + j);
 
           } /* End of loop over j */
-        }   /* End of if the variale is active */
+        } /* End of if the variale is active */
       }
     }
   } /* End of if assemble Jacobian */
@@ -3296,7 +3296,7 @@ int ad_assemble_invariant(double tt, /* parameter to vary time integration from
 
   peqn = upd->ep[pg->imtrx][eqn];
 
-  wt = fv->wt; /* Numerical integration weight */
+  wt = fv->wt;                /* Numerical integration weight */
 
   ADType det_J = ad_fv->detJ; /* Really, ought to be mesh eqn. */
 
@@ -3401,7 +3401,7 @@ int ad_assemble_invariant(double tt, /* parameter to vary time integration from
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[i].dx(ad_fv->offset[var] + j);
 
           } /* End of loop over j */
-        }   /* End of if the variale is active */
+        } /* End of if the variale is active */
       }
     }
   } /* end of if(af,, */

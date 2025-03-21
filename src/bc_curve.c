@@ -85,9 +85,9 @@ int apply_integrated_curve_bc(
     struct elem_edge_bc_struct *elem_edge_bc, /* Pointer to an element side
                                                * boundary condition structure */
     const int num_total_nodes,
-    const int bc_application, /* flag indicating whether to integrate
-                               * strong or weak BC's */
-    const Exo_DB *exo)        /* ptr to FE database */
+    const int bc_application,                 /* flag indicating whether to integrate
+                                               * strong or weak BC's */
+    const Exo_DB *exo)                        /* ptr to FE database */
 
 /************************************************************************
  *
@@ -105,7 +105,7 @@ int apply_integrated_curve_bc(
   int status = 0;
   int bc_input_id, BC_Name, ip_total;
 
-  double s; /* Gaussian-quadrature point locations          */
+  double s;       /* Gaussian-quadrature point locations          */
 
   double phi_i;
   double xi[DIM]; /* Local element coordinates of Gauss point. */
@@ -543,18 +543,18 @@ int apply_integrated_curve_bc(
                                 weight * fv->edge_det * d_func[p][MAX_VARIABLE_TYPES + w][j];
                           }
                         } /* end of loop over species */
-                      }   /* end of if MASS_FRACTION */
-                    }     /* end of variable exists and condition is sensitive to it */
-                  }       /* end of loop over variable types */
-                }         /* end of NEWTON */
-              }           /* if (ldof_eqn >= 0) */
-            }             /* end of if (Res_BC != NULL) - i.e. apply residual at this node */
-          }               /* end of loop over equations that this condition applies to */
-        }                 /* end for (i=0; i< num_nodes_on_side; i++) */
+                      } /* end of if MASS_FRACTION */
+                    } /* end of variable exists and condition is sensitive to it */
+                  } /* end of loop over variable types */
+                } /* end of NEWTON */
+              } /* if (ldof_eqn >= 0) */
+            } /* end of if (Res_BC != NULL) - i.e. apply residual at this node */
+          } /* end of loop over equations that this condition applies to */
+        } /* end for (i=0; i< num_nodes_on_side; i++) */
 
       } /*End (if INT) (CAPILLARY and KINEMATIC and VELO_NORMAL and VELO_TANGENT . . .) */
-    }   /*(end for ibc) */
-  }     /*End for ip = 1,...*/
+    } /*(end for ibc) */
+  } /*End for ip = 1,...*/
 
   return (status);
 } /* end of routine apply_integrated_curve_bc */
@@ -581,9 +581,9 @@ int apply_point_colloc_edge_bc(
     struct elem_edge_bc_struct *elem_edge_bc, /* Pointer to an element side boundary condition
                                                  structure (writable by Gibbs ipin) */
     const int num_total_nodes,
-    int local_node_list_fs[], /* dimensioned [MDE]; list to keep track of
-                                  nodes at which solid contributions have been
-                                  transfered to liquid (fluid-solid boundaries)  */
+    int local_node_list_fs[],                 /* dimensioned [MDE]; list to keep track of
+                                                  nodes at which solid contributions have been
+                                                  transfered to liquid (fluid-solid boundaries)  */
     const double time_value)
 
 /*************************************************************************
@@ -1062,21 +1062,21 @@ int apply_point_colloc_edge_bc(
                               BIG_PENALTY * d_func[p][MAX_VARIABLE_TYPES + w][j];
                         }
                       } /* end of loop over species */
-                    }   /* end of if MASS_FRACTION */
-                  }     /* end of variable exists and condition is sensitive to it */
-                }       /* end of loop over variable types */
-              }         /* end of NEWTON */
+                    } /* end of if MASS_FRACTION */
+                  } /* end of variable exists and condition is sensitive to it */
+                } /* end of loop over variable types */
+              } /* end of NEWTON */
             }
 
           } /* END of if (Res_BC != NULL), i.e. (index_eqn != -1) */
-        }   /* END of if COLLOCATE */
-            /*****************************************************************************/
-      }     /* END for (ibc = 0; (int) elem_side_bc->BC_input_id[ibc] != ...*/
-            /*****************************************************************************/
-    }       /* END if (I < num_total_nodes) 				      */
-            /*****************************************************************************/
-  }         /* END for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) */
-            /*****************************************************************************/
+        } /* END of if COLLOCATE */
+        /*****************************************************************************/
+      } /* END for (ibc = 0; (int) elem_side_bc->BC_input_id[ibc] != ...*/
+      /*****************************************************************************/
+    } /* END if (I < num_total_nodes) 				      */
+    /*****************************************************************************/
+  } /* END for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) */
+  /*****************************************************************************/
   return (status);
 } /* end of routine apply_collocated_edge_bc */
 /*****************************************************************************/

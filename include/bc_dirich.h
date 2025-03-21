@@ -31,4 +31,4 @@
 EXTERN int put_dirichlet_in_matrix(double[],   /* x - Solution vector                       */
                                    const int); /* num_total_nodes */
 
-#endif /* GOMA_BC_DIRICH_H */
+#endif                                         /* GOMA_BC_DIRICH_H */

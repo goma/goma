@@ -126,15 +126,15 @@ typedef char CK_NAME_STR[64];
 
 /* Define values for determining side of LS */
 
-#define LS_OFF      0
-#define LS_POSITIVE 1
-#define LS_NEGATIVE 2
+#define LS_OFF                               0
+#define LS_POSITIVE                          1
+#define LS_NEGATIVE                          2
 
 /*
  * Define for right now the maximum number of local variable type descriptions
  * to be equal to the maximum number of different variable types in the problem
  */
-#define MAX_LOCAL_VAR_DESC (MAX_PROB_VAR + MAX_CONC)
+#define MAX_LOCAL_VAR_DESC                   (MAX_PROB_VAR + MAX_CONC)
 
 #define LEC_R_INDEX(peqn_macro, index_macro) ((lec->max_dof * (peqn_macro)) + index_macro)
 
@@ -316,10 +316,10 @@ struct Element_Indices {
    *   MallocSize = [MAX_LOCAL_VAR_DESC]
    *   ActualSize  = [Num_Lvdesc]
    */
-  int *VDindex_to_Lvdesc; /*  Index pointing from the variable description
-                           *  index to the current local variable description
-                           *  index for the local variable
-                           */
+  int *VDindex_to_Lvdesc;      /*  Index pointing from the variable description
+                                *  index to the current local variable description
+                                *  index for the local variable
+                                */
 
   int *owningElementForColVar; /* Indicator of who owns the column variable
                                 * type. We separate and distinguish all columns
@@ -495,34 +495,34 @@ struct Element_Variable_Pointers {
   dbl *Enorm[MDE];                              /* |E| for dielectrophoresis. */
   dbl *pv[DIM][MDE];                            /* Particle velocity */
 
-  dbl *p_liq[MDE];    /* *p_liq[MDE], liquid-phase pressure in porous media */
-  dbl *p_gas[MDE];    /* *p_gas[MDE], liquid-phase pressure in porous media */
-  dbl *porosity[MDE]; /* *porosity[MDE],liquid-phase pressure porous media */
+  dbl *p_liq[MDE];               /* *p_liq[MDE], liquid-phase pressure in porous media */
+  dbl *p_gas[MDE];               /* *p_gas[MDE], liquid-phase pressure in porous media */
+  dbl *porosity[MDE];            /* *porosity[MDE],liquid-phase pressure porous media */
 
-  dbl *vd[DIM][MDE]; /* Vorticity principle flow direction (NOT
-                      *  vorticity vector) */
-  dbl *vlambda[MDE]; /* Eigenvalue associated with vorticity direction */
-  dbl *nn[MDE];      /* This is the bond evolution */
+  dbl *vd[DIM][MDE];             /* Vorticity principle flow direction (NOT
+                                  *  vorticity vector) */
+  dbl *vlambda[MDE];             /* Eigenvalue associated with vorticity direction */
+  dbl *nn[MDE];                  /* This is the bond evolution */
 
-  dbl *lm[DIM][MDE]; /* Lagrange Multiplier field */
+  dbl *lm[DIM][MDE];             /* Lagrange Multiplier field */
 
-  dbl *ext_v[MDE]; /* Extension velocity, normal direction */
+  dbl *ext_v[MDE];               /* Extension velocity, normal direction */
 
-  dbl *E_field[DIM][MDE]; /* Electric field */
+  dbl *E_field[DIM][MDE];        /* Electric field */
 
-  dbl *H[DIM]; /* Level Set Curvature */
+  dbl *H[DIM];                   /* Level Set Curvature */
 
-  dbl *n[DIM][MDE]; /* level set normal OR shell normal */
+  dbl *n[DIM][MDE];              /* level set normal OR shell normal */
 
-  dbl *sh_K[MDE];            /* Shell curvature */
-  dbl *sh_K2[MDE];           /* Shell second curvature */
-  dbl *sh_tens[MDE];         /* Shell tension */
-  dbl *sh_x[MDE];            /* Shell y coordinate */
-  dbl *sh_y[MDE];            /* Shell x coordinate */
-  dbl *sh_u[MDE];            /* Shell user */
-  dbl *sh_ang[DIM - 1][MDE]; /* Shell orientation angles */
-  dbl *div_s_v[MDE];         /* sundry pieces (next 4) for surface rheological
-                                constitutive eqn */
+  dbl *sh_K[MDE];                /* Shell curvature */
+  dbl *sh_K2[MDE];               /* Shell second curvature */
+  dbl *sh_tens[MDE];             /* Shell tension */
+  dbl *sh_x[MDE];                /* Shell y coordinate */
+  dbl *sh_y[MDE];                /* Shell x coordinate */
+  dbl *sh_u[MDE];                /* Shell user */
+  dbl *sh_ang[DIM - 1][MDE];     /* Shell orientation angles */
+  dbl *div_s_v[MDE];             /* sundry pieces (next 4) for surface rheological
+                                    constitutive eqn */
   dbl *curv[MDE];
   dbl *grad_v_dot_n[DIM][MDE];   /* grad_s (v_) dot n  Vector variable  */
   dbl *n_dot_curl_s_v[MDE];      /* n dot (curl_s v) Scalar variable used in shell
@@ -561,18 +561,18 @@ struct Element_Variable_Pointers {
   dbl *tfmp_sat[MDE];            /* thin-film multi-phase saturation */
   dbl *moment[MAX_MOMENTS][MDE]; /* moments */
   dbl *rho[MDE];
-  dbl *restime[MDE];    /* residence time function field */
-  dbl *em_er[DIM][MDE]; /* EMwave Electric Field real part */
-  dbl *em_ei[DIM][MDE]; /* EMwave Electric Field imag part */
-  dbl *em_hr[DIM][MDE]; /* EMwave Magnetic Field real part */
-  dbl *em_hi[DIM][MDE]; /* EMwave Magnetic Field imag part */
-  dbl *sh_sat_1[MDE];   /* Porous shell saturation layer 1 */
-  dbl *sh_sat_2[MDE];   /* Porous shell saturation layer 2 */
-  dbl *sh_sat_3[MDE];   /* Porous shell saturation layer 3 */
+  dbl *restime[MDE];             /* residence time function field */
+  dbl *em_er[DIM][MDE];          /* EMwave Electric Field real part */
+  dbl *em_ei[DIM][MDE];          /* EMwave Electric Field imag part */
+  dbl *em_hr[DIM][MDE];          /* EMwave Magnetic Field real part */
+  dbl *em_hi[DIM][MDE];          /* EMwave Magnetic Field imag part */
+  dbl *sh_sat_1[MDE];            /* Porous shell saturation layer 1 */
+  dbl *sh_sat_2[MDE];            /* Porous shell saturation layer 2 */
+  dbl *sh_sat_3[MDE];            /* Porous shell saturation layer 3 */
 
-  dbl *eddy_nu[MDE];    /* Eddy viscosity for turbulent flow */
-  dbl *turb_k[MDE];     /* Eddy viscosity for turbulent flow */
-  dbl *turb_omega[MDE]; /* Eddy viscosity for turbulent flow */
+  dbl *eddy_nu[MDE];             /* Eddy viscosity for turbulent flow */
+  dbl *turb_k[MDE];              /* Eddy viscosity for turbulent flow */
+  dbl *turb_omega[MDE];          /* Eddy viscosity for turbulent flow */
 };
 
 /*___________________________________________________________________________*/
@@ -601,53 +601,53 @@ struct Element_Stiffness_Pointers {
    * are defined
    */
 
-  dbl **T;       /* *T[MDE], temperature */
-  dbl ***v;      /* *v[DIM][MDE], velocity */
-  dbl ***v_star; /* *v_star[DIM][MDE], velocity* segregated */
-  dbl ***d;      /* *d[DIM][MDE], mesh displacement */
-  dbl ***d_rs;   /* *d_rs[DIM][MDE], real solid displacement */
-  dbl ***c;      /* *c[MAX_CONC][MDE], concentration  */
-  dbl **P;       /* *P[MDE], pressure */
+  dbl **T;              /* *T[MDE], temperature */
+  dbl ***v;             /* *v[DIM][MDE], velocity */
+  dbl ***v_star;        /* *v_star[DIM][MDE], velocity* segregated */
+  dbl ***d;             /* *d[DIM][MDE], mesh displacement */
+  dbl ***d_rs;          /* *d_rs[DIM][MDE], real solid displacement */
+  dbl ***c;             /* *c[MAX_CONC][MDE], concentration  */
+  dbl **P;              /* *P[MDE], pressure */
   dbl **P_star;
-  dbl *****S; /* *S[MAX_MODES][DIM][DIM][MDE], polymeric
-                 stress tensor */
-  dbl ****G;  /* *G[DIM][DIM][MDE], velocity gradient
-                 tensor */
-  dbl **V;    /* *V[MDE], voltage potential */
-  dbl **qs;   /* *qs[MDE], surface charge density */
-  dbl **F;    /* *F[MDE], fill */
-  dbl **SH;   /* *SH[MDE], shear rate from second
-                   invariant */
+  dbl *****S;           /* *S[MAX_MODES][DIM][DIM][MDE], polymeric
+                           stress tensor */
+  dbl ****G;            /* *G[DIM][DIM][MDE], velocity gradient
+                           tensor */
+  dbl **V;              /* *V[MDE], voltage potential */
+  dbl **qs;             /* *qs[MDE], surface charge density */
+  dbl **F;              /* *F[MDE], fill */
+  dbl **SH;             /* *SH[MDE], shear rate from second
+                             invariant */
 
-  dbl **Enorm; /* Enorm[MDE], |E| */
-  dbl **H;     /* H[MDE] curvature of level set function */
+  dbl **Enorm;          /* Enorm[MDE], |E| */
+  dbl **H;              /* H[MDE] curvature of level set function */
 
-  dbl ***pv; /* *pv[DIM][MDE], particle velocity */
+  dbl ***pv;            /* *pv[DIM][MDE], particle velocity */
 
-  dbl **p_liq;    /* *p_liq[MDE], liquid-phase pressure in porous media */
-  dbl **p_gas;    /* *p_gas[MDE], liquid-phase pressure in porous media */
-  dbl **porosity; /* *porosity[MDE],liquid-phase pressure porous media */
-  dbl ***vd;      /* *vd[DIM][MDE}, vorticity prinicple flow direction. */
-  dbl **vlambda;  /* *vlambda[MDE], eigenvalue associated with vd. */
-  dbl **nn;       /* *nn[MDE], bond evolution */
+  dbl **p_liq;          /* *p_liq[MDE], liquid-phase pressure in porous media */
+  dbl **p_gas;          /* *p_gas[MDE], liquid-phase pressure in porous media */
+  dbl **porosity;       /* *porosity[MDE],liquid-phase pressure porous media */
+  dbl ***vd;            /* *vd[DIM][MDE}, vorticity prinicple flow direction. */
+  dbl **vlambda;        /* *vlambda[MDE], eigenvalue associated with vd. */
+  dbl **nn;             /* *nn[MDE], bond evolution */
 
-  dbl ***lm; /* lm_gama[DIM][MDE] is the lagrange multiplier vector field */
+  dbl ***lm;            /* lm_gama[DIM][MDE] is the lagrange multiplier vector field */
 
-  dbl **ext_v; /* Extension velocity */
+  dbl **ext_v;          /* Extension velocity */
 
-  dbl ***E_field; /* Electric field */
+  dbl ***E_field;       /* Electric field */
 
-  dbl ***n; /* n[DIM][MDE],  level set normal OR shell normal */
+  dbl ***n;             /* n[DIM][MDE],  level set normal OR shell normal */
 
-  dbl **sh_K;    /* sh_K[MDE],   Shell curvature */
-  dbl **sh_K2;   /* sh_K2[MDE],  Shell second curvature */
-  dbl **sh_tens; /* sh_tens[MDE], Shell tensions */
-  dbl **sh_x;    /* sh_x[MDE],   Shell x coordinate */
-  dbl **sh_y;    /* sh_y[MDE], Shell y coordinate */
-  dbl **sh_u;    /* sh_u[MDE], Shell user */
-  dbl ***sh_ang; /* sh_ang[DIM-1][MDE], Shell orientation angles */
-  dbl **div_s_v; /* sundry pieces (next 4) for surface rheological constitutive
-                    eqn */
+  dbl **sh_K;           /* sh_K[MDE],   Shell curvature */
+  dbl **sh_K2;          /* sh_K2[MDE],  Shell second curvature */
+  dbl **sh_tens;        /* sh_tens[MDE], Shell tensions */
+  dbl **sh_x;           /* sh_x[MDE],   Shell x coordinate */
+  dbl **sh_y;           /* sh_y[MDE], Shell y coordinate */
+  dbl **sh_u;           /* sh_u[MDE], Shell user */
+  dbl ***sh_ang;        /* sh_ang[DIM-1][MDE], Shell orientation angles */
+  dbl **div_s_v;        /* sundry pieces (next 4) for surface rheological constitutive
+                           eqn */
   dbl **curv;
   dbl ***grad_v_dot_n;  /* grad_s_v_dot_n[DIM][MDE] , grad_s_v_dot_n[] defined at
                            a surface */
@@ -690,18 +690,18 @@ struct Element_Stiffness_Pointers {
   dbl **tfmp_sat;       /* thin-film multi-phase saturation */
   dbl ***moment;        /* *moment[MAX_MOMENTS][MDE], moments */
   dbl **rho;
-  dbl **restime;  /* Residence Time Function Field */
-  dbl ***em_er;   /* *em_xx[DIM][MDE], em_wave*/
-  dbl ***em_ei;   /* *em_xx[DIM][MDE], em_wave*/
-  dbl ***em_hr;   /* *em_xx[DIM][MDE], em_wave*/
-  dbl ***em_hi;   /* *em_xx[DIM][MDE], em_wave*/
-  dbl **sh_sat_1; /* Porous shell saturation layer 1 */
-  dbl **sh_sat_2; /* Porous shell saturation layer 2 */
-  dbl **sh_sat_3; /* Porous shell saturation layer 3 */
+  dbl **restime;        /* Residence Time Function Field */
+  dbl ***em_er;         /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_ei;         /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_hr;         /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_hi;         /* *em_xx[DIM][MDE], em_wave*/
+  dbl **sh_sat_1;       /* Porous shell saturation layer 1 */
+  dbl **sh_sat_2;       /* Porous shell saturation layer 2 */
+  dbl **sh_sat_3;       /* Porous shell saturation layer 3 */
 
-  dbl **eddy_nu;    /* Eddy viscosity for turbulent flow */
-  dbl **turb_k;     /* Eddy viscosity for turbulent flow */
-  dbl **turb_omega; /* Eddy viscosity for turbulent flow */
+  dbl **eddy_nu;        /* Eddy viscosity for turbulent flow */
+  dbl **turb_k;         /* Eddy viscosity for turbulent flow */
+  dbl **turb_omega;     /* Eddy viscosity for turbulent flow */
 
   /*
    * These are for debugging purposes...
@@ -831,20 +831,20 @@ typedef struct turbulent_information {
  */
 
 struct Uniform_Problem_Description {
-  int Total_Num_Matrices; /* Total number of problem graphs to be solved */
+  int Total_Num_Matrices;                /* Total number of problem graphs to be solved */
 
-  int Total_Num_EQ[MAX_NUM_MATRICES];  /* This is used in conjunction with the
-                                        * ep[] array.  The number of nonzero
-                                        * entries in this array will  equal the
-                                        * number of non neg 1 entries in the
-                                        * ep[][]  array.
-                                        */
-  int Total_Num_Var[MAX_NUM_MATRICES]; /* This is used in conjunction with the
-                                        * vp[] array. The number of nonzero
-                                        * entries in this array will equal the
-                                        * number of non neg 1 entries in the
-                                        * vp[][] array.
-                                        */
+  int Total_Num_EQ[MAX_NUM_MATRICES];    /* This is used in conjunction with the
+                                          * ep[] array.  The number of nonzero
+                                          * entries in this array will  equal the
+                                          * number of non neg 1 entries in the
+                                          * ep[][]  array.
+                                          */
+  int Total_Num_Var[MAX_NUM_MATRICES];   /* This is used in conjunction with the
+                                          * vp[] array. The number of nonzero
+                                          * entries in this array will equal the
+                                          * number of non neg 1 entries in the
+                                          * vp[][] array.
+                                          */
   int CoordinateSystem;
   int vp[MAX_NUM_MATRICES]
         [MAX_VARIABLE_TYPES + MAX_CONC]; /* Mapping from the actual variable type index
@@ -855,48 +855,48 @@ struct Uniform_Problem_Description {
                                           * index.
                                           */
   int ep[MAX_NUM_MATRICES]
-        [MAX_EQNS + MAX_CONC]; /* Mapping from the actual equation variable type index
-                                * to a uniform problem equation
-                                * index valid for all materials. If a variable type is
-                                * active anywhere in the domain, then its corresponding
-                                * entry in this array will be nonzero and contain a unique
-                                * index.
-                                */
-  int Max_Num_Species;         /* The maximum number of species in any one
-                                  volumetric materials domain in the problem */
-  int Max_Num_Species_Eqn;     /* The maximum number of species equations
-                                  in any one  volumetric materials domain
-                                  in the problem */
-  int Tot_Num_VolSpecies;      /* Total number of different volumetric species in
-                                  all of the domains */
-  int Num_Mat;                 /* Total number of materials, eventually this will be
-                                  distinct from the the number of element blocks
-                                  It will be less than or equal to the number of
-                                  element blocks. */
-  int Species_Var_Type;        /* Default type of the species variable, i.e., mass
-                                  fraction,    mole fraction,  concentration, capillary
-                                  pressure,    etc employed for the independent variable.
-                                  This may    be overwritten by the value in the materials
-                                  structure    for the present material. The acceptable
-                                  values are listed    in rf_fem_const.h. This variable
-                                  influences all aspects    of the species conservation
-                                  equation, as well as    the names that are put into the
-                                  output files. It    determines the units for the species
-                                  equation, for    example. */
-  double Pressure_Datum;       /* Set the pressure Datum for use in thermodynamic
-                                  equations of state calculations.
-                                  This is an additive constant that get added onto the
-                                  pressure field before calculation of all
-                                  thermodynamic   equations of state calculations. It is
-                                  a constant   over the entire domain. Therefore, it is
-                                  not included   in any one materials file. The default
-                                  units for   the quantity are cgs units, and the
-                                  default value   for the quantity is 1 atmosphere
-                                  = 1.01325E6   gm cm-1 sec-2  (dyne cm-2).
-                                  (conversion factor is to an exact standard atm) */
-  int Max_Num_Porous_Eqn;      /* max number of porous media Equations */
-  dbl Acoustic_Frequency;      /* Frequency for Acoustic Harmonic Eqns */
-  dbl EM_Frequency;            /* Frequency for Time-Harmonic Maxwell Eqns */
+        [MAX_EQNS + MAX_CONC];           /* Mapping from the actual equation variable type index
+                                          * to a uniform problem equation
+                                          * index valid for all materials. If a variable type is
+                                          * active anywhere in the domain, then its corresponding
+                                          * entry in this array will be nonzero and contain a unique
+                                          * index.
+                                          */
+  int Max_Num_Species;                   /* The maximum number of species in any one
+                                            volumetric materials domain in the problem */
+  int Max_Num_Species_Eqn;               /* The maximum number of species equations
+                                            in any one  volumetric materials domain
+                                            in the problem */
+  int Tot_Num_VolSpecies;                /* Total number of different volumetric species in
+                                            all of the domains */
+  int Num_Mat;                           /* Total number of materials, eventually this will be
+                                            distinct from the the number of element blocks
+                                            It will be less than or equal to the number of
+                                            element blocks. */
+  int Species_Var_Type;                  /* Default type of the species variable, i.e., mass
+                                            fraction,    mole fraction,  concentration, capillary
+                                            pressure,    etc employed for the independent variable.
+                                            This may    be overwritten by the value in the materials
+                                            structure    for the present material. The acceptable
+                                            values are listed    in rf_fem_const.h. This variable
+                                            influences all aspects    of the species conservation
+                                            equation, as well as    the names that are put into the
+                                            output files. It    determines the units for the species
+                                            equation, for    example. */
+  double Pressure_Datum;                 /* Set the pressure Datum for use in thermodynamic
+                                            equations of state calculations.
+                                            This is an additive constant that get added onto the
+                                            pressure field before calculation of all
+                                            thermodynamic   equations of state calculations. It is
+                                            a constant   over the entire domain. Therefore, it is
+                                            not included   in any one materials file. The default
+                                            units for   the quantity are cgs units, and the
+                                            default value   for the quantity is 1 atmosphere
+                                            = 1.01325E6   gm cm-1 sec-2  (dyne cm-2).
+                                            (conversion factor is to an exact standard atm) */
+  int Max_Num_Porous_Eqn;                /* max number of porous media Equations */
+  dbl Acoustic_Frequency;                /* Frequency for Acoustic Harmonic Eqns */
+  dbl EM_Frequency;                      /* Frequency for Time-Harmonic Maxwell Eqns */
   dbl Free_Space_Permittivity; /* Free space permittivity for Time-Harmonic Maxwell Eqns */
   dbl Free_Space_Permeability; /* Free space permeability for Time-Harmonic Maxwell Eqns */
   dbl Light_Cosmu;             /* Inclination of Incident Light */
@@ -997,10 +997,10 @@ struct Problem_Description {
                                                   a matrix
                                                 */
 
-  int w[MAX_NUM_MATRICES][MAX_EQNS];                   /* Weight function for equations */
-  int i[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES];         /* Interpolation type for each unknown
-                                                        * in the current element block */
-  int m[MAX_NUM_MATRICES][MAX_EQNS];                   /* Mapping from input file to real names. */
+  int w[MAX_NUM_MATRICES][MAX_EQNS];           /* Weight function for equations */
+  int i[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES]; /* Interpolation type for each unknown
+                                                * in the current element block */
+  int m[MAX_NUM_MATRICES][MAX_EQNS];           /* Mapping from input file to real names. */
   dbl etm[MAX_NUM_MATRICES][MAX_EQNS][MAX_TERM_TYPES]; /* equation term multipliers */
   int CoordinateSystem;                                /* Cartesian, cylindrical, etc. */
   int MeshMotion;                                      /* Arbitrary or lagrangian or total ALE*/
@@ -1064,8 +1064,8 @@ struct External_Field_Variables {
                                    poroelastic flow activity */
   int ev_dpordt_index;          /* Index for the d porosity/dt external field */
 
-  int ev_etch_area;  /* external area fraction in which etching reaction takes place */
-  int ev_etch_depth; /* external depth field due to etching reaction */
+  int ev_etch_area;             /* external area fraction in which etching reaction takes place */
+  int ev_etch_depth;            /* external depth field due to etching reaction */
 
   char name[MAX_EXTERNAL_FIELD][32];
   /* names of external field variables*/
@@ -1119,29 +1119,29 @@ struct Transient_Information {
   int step;
   int MaxSteadyStateSteps;
   int MaxTimeSteps;
-  int Fill_Weight_Fcn;       /* Weight function to use on the transient fill equation
-                              */
-  int Fill_Equation;         /* Equation for fill-level set */
-  dbl Delta_t0;              /* initial time step */
-  dbl Delta_t_min;           /* minimum time step size */
-  dbl Delta_t_max;           /* maximum time step size */
-  dbl time_step_decelerator; /* factor used to make time step smaller when a
-                                time step fails to converge */
-  dbl resolved_delta_t_min;  /* if dt < resolved_delta_t_min, accept any
-                                converged soln  regardless of time step error */
-  dbl TimeMax;               /* time at which to end integration */
-  dbl theta;                 /* time step parameter: theta = 0. => Backward Euler
-                                                     theta = 1. => Forward Euler
-                                                     theta = .5 => Crack-Nicholson  */
+  int Fill_Weight_Fcn;                  /* Weight function to use on the transient fill equation
+                                         */
+  int Fill_Equation;                    /* Equation for fill-level set */
+  dbl Delta_t0;                         /* initial time step */
+  dbl Delta_t_min;                      /* minimum time step size */
+  dbl Delta_t_max;                      /* maximum time step size */
+  dbl time_step_decelerator;            /* factor used to make time step smaller when a
+                                           time step fails to converge */
+  dbl resolved_delta_t_min;             /* if dt < resolved_delta_t_min, accept any
+                                           converged soln  regardless of time step error */
+  dbl TimeMax;                          /* time at which to end integration */
+  dbl theta;                            /* time step parameter: theta = 0. => Backward Euler
+                                                                theta = 1. => Forward Euler
+                                                                theta = .5 => Crack-Nicholson  */
   dbl current_theta;
   dbl eps;                              /* time step error  */
   int use_var_norm[MAX_VARIABLE_TYPES]; /* Booleans used for time step
                                            truncation error control */
   int fix_freq;
   int print_freq;
-  int march_to_steady_state;     /* boolean if problem should be marched to steady
-                                    state */
-  double steady_state_tolerance; /* Tolerance for march to steady state */
+  int march_to_steady_state;            /* boolean if problem should be marched to steady
+                                           state */
+  double steady_state_tolerance;        /* Tolerance for march to steady state */
   double print_delt;
   double print_delt2_time;
   double print_delt2;
@@ -1550,7 +1550,7 @@ struct Basis_Functions {
    */
   int shape_dof;
   dbl detJ;
-  dbl B[DIM][DIM]; /* inverse Jacobian */
+  dbl B[DIM][DIM];            /* inverse Jacobian */
   dbl d_det_J_dm[DIM][MDE];
   dbl dJ[DIM][DIM][DIM][MDE]; /* d( J[i][j] ) / d (d_k,l) */
   dbl dB[DIM][DIM][DIM][MDE];
@@ -1578,8 +1578,8 @@ struct Basis_Functions {
    *		    Jacobian		  factors
    */
 
-  dbl d_phi[MDE][DIM];    /* d_phi[i][a]    = d(phi_i)/d(q_a) */
-  dbl grad_phi[MDE][DIM]; /* grad_phi[i][a] = e_a . grad(phi_i) */
+  dbl d_phi[MDE][DIM];                /* d_phi[i][a]    = d(phi_i)/d(q_a) */
+  dbl grad_phi[MDE][DIM];             /* grad_phi[i][a] = e_a . grad(phi_i) */
 
   dbl grad_phi_e[MDE][DIM][DIM][DIM]; /* grad_phi_e[i][a][p][q] */
                                       /* = (e_p e_q): grad(phi_i e_a) */
@@ -1624,7 +1624,7 @@ typedef struct Basis_Functions BASIS_FUNCTIONS_STRUCT;
  */
 
 struct Field_Variables {
-  dbl wt; /* Gauss weight. */
+  dbl wt;      /* Gauss weight. */
 
   dbl x[DIM];  /* Position in physical space. */
   dbl x0[DIM]; /* Initial Position in physical space. */
@@ -1649,17 +1649,17 @@ struct Field_Variables {
   dbl dh3dmesh[DIM][MDE]; /* Derivative of volume element factor */
   /* wrt mesh displacement "b" with dof "j" */
 
-  dbl T;               /* Temperature. */
-  dbl v[DIM];          /* Velocity. */
-  dbl v_star[DIM];     /* AUX Velocity, segregated */
-  dbl pv[DIM];         /* Particle velocity. */
-  dbl d[DIM];          /* Mesh displacement. */
-  dbl x_first[DIM];    /* Initial mesh displacement on startup */
-  dbl x_rs_first[DIM]; /* Initial solid displacement on startup */
-  dbl d_rs[DIM];       /* real solid displacement. */
-  dbl d_rs_first[DIM]; /* Initial solid displacement on startup */
-  dbl c[MAX_CONC];     /* Concentration(s). */
-  dbl P;               /* Pressure. */
+  dbl T;                      /* Temperature. */
+  dbl v[DIM];                 /* Velocity. */
+  dbl v_star[DIM];            /* AUX Velocity, segregated */
+  dbl pv[DIM];                /* Particle velocity. */
+  dbl d[DIM];                 /* Mesh displacement. */
+  dbl x_first[DIM];           /* Initial mesh displacement on startup */
+  dbl x_rs_first[DIM];        /* Initial solid displacement on startup */
+  dbl d_rs[DIM];              /* real solid displacement. */
+  dbl d_rs_first[DIM];        /* Initial solid displacement on startup */
+  dbl c[MAX_CONC];            /* Concentration(s). */
+  dbl P;                      /* Pressure. */
   dbl P_star;
   dbl S[MAX_MODES][DIM][DIM]; /* Polymer Stress, for each mode */
   dbl G[DIM][DIM];            /* Velocity Gradient */
@@ -1674,36 +1674,36 @@ struct Field_Variables {
   dbl p_gas;                  /* gas-phase pressure, porous media variables(s). */
   dbl porosity;               /* porosity, porous media variables(s). */
 
-  dbl vd[DIM]; /* Vorticity principle flow direction. */
-  dbl vlambda; /* Eigenvalue associated with dv. */
-  dbl nn;      /* This is the bond evolution*/
+  dbl vd[DIM];                /* Vorticity principle flow direction. */
+  dbl vlambda;                /* Eigenvalue associated with dv. */
+  dbl nn;                     /* This is the bond evolution*/
 
-  dbl ext_v; /* Extension velocity */
+  dbl ext_v;                  /* Extension velocity */
 
-  dbl E_field[DIM]; /* Electric field */
+  dbl E_field[DIM];           /* Electric field */
 
-  dbl lm[DIM]; /* Lagrange Multiplier vector variable */
+  dbl lm[DIM];                /* Lagrange Multiplier vector variable */
 
-  dbl sh_K;                 /* Shell region curvature */
-  dbl sh_K2;                /* Shell region second curvature */
-  dbl sh_tens;              /* Shell region tension */
-  dbl sh_x;                 /* Shell region x coordinate */
-  dbl sh_y;                 /* Shell region y coordinate */
-  dbl sh_u;                 /* Shell user */
-  dbl sh_ang[DIM - 1];      /* Shell orientation angles */
-  dbl div_s_v;              /* The scalar field evaluated on a shell element is div_s of v
-                               or (( I - n n) dot del) dot v      */
-  dbl curv;                 /* The scalar field evaluated on a shell element is the curvature */
-  dbl grad_v_dot_n[DIM];    /* This vector field is the del_s v dotted into the
-                               surface normal */
-  dbl n_dot_curl_s_v;       /* n dot (curl_s v) Scalar variable used in shell
-                               equations - curl_s is surface curl */
-  dbl pF[MAX_PHASE_FUNC];   /* phase function */
-  dbl sh_J;                 /* Shell surface diffusion flux */
-  dbl sh_Kd;                /* Shell surface curvature */
-  dbl apr, api, ars, sh_bv; /* Acoustic pressure */
-  dbl epr, epi;             /* LAGR MULT EM continuity */
-  dbl sink_mass;            /* porous sink mass */
+  dbl sh_K;                   /* Shell region curvature */
+  dbl sh_K2;                  /* Shell region second curvature */
+  dbl sh_tens;                /* Shell region tension */
+  dbl sh_x;                   /* Shell region x coordinate */
+  dbl sh_y;                   /* Shell region y coordinate */
+  dbl sh_u;                   /* Shell user */
+  dbl sh_ang[DIM - 1];        /* Shell orientation angles */
+  dbl div_s_v;                /* The scalar field evaluated on a shell element is div_s of v
+                                 or (( I - n n) dot del) dot v      */
+  dbl curv;                   /* The scalar field evaluated on a shell element is the curvature */
+  dbl grad_v_dot_n[DIM];      /* This vector field is the del_s v dotted into the
+                                 surface normal */
+  dbl n_dot_curl_s_v;         /* n dot (curl_s v) Scalar variable used in shell
+                                 equations - curl_s is surface curl */
+  dbl pF[MAX_PHASE_FUNC];     /* phase function */
+  dbl sh_J;                   /* Shell surface diffusion flux */
+  dbl sh_Kd;                  /* Shell surface curvature */
+  dbl apr, api, ars, sh_bv;   /* Acoustic pressure */
+  dbl epr, epi;               /* LAGR MULT EM continuity */
+  dbl sink_mass;              /* porous sink mass */
 
   dbl external_field[MAX_EXTERNAL_FIELD];      /* External field to be read and held
                                                   const*/
@@ -1711,39 +1711,39 @@ struct Field_Variables {
   dbl initial_displacements[2 * DIM];          /* Initial displacements to be read and
                                                   held const */
 
-  dbl sh_p;           /* shell lub approx. */
-  dbl lubp;           /* lub approx. */
-  dbl lubp_2;         /* lub_2 approx. */
-  dbl sh_fp;          /* lub pressure approx in thin film */
-  dbl sh_fh;          /* film thickness approx */
-  dbl sh_pc;          /* particles concentration */
-  dbl sh_sat_closed;  /* closed shell saturation - SAR */
-  dbl sh_p_open;      /* open shell pressure - SAR */
-  dbl sh_p_open_2;    /* open shell pressure 2 - PRS*/
-  dbl sh_t;           /* shell temperature - PRS */
-  dbl sh_dh;          /* shell delta h     - PRS */
-  dbl sh_l_curv;      /* Lubrication shell curvature - SAR */
-  dbl sh_l_curv_2;    /* Lubrication 2 shell curvature - SAR */
-  dbl sh_sat_gasn;    /* shell saturation, gas compression - SAR */
-  dbl sh_shear_top;   /* Top wall shear rate */
-  dbl sh_shear_bot;   /* Bottom wall shear rate */
-  dbl sh_cross_shear; /* Cross stream shear stress */
-  dbl max_strain;     /* Maximum Von Mises strain */
-  dbl cur_strain;     /* Von Mises strain */
-  dbl poynt[DIM];     /* Poynting Vector */
-  dbl tfmp_pres;      /* thin-film multi-phase lubrication pressure */
-  dbl tfmp_sat;       /* thin-film multi-phase saturation */
-  dbl restime;        /* residence time function field */
+  dbl sh_p;                                    /* shell lub approx. */
+  dbl lubp;                                    /* lub approx. */
+  dbl lubp_2;                                  /* lub_2 approx. */
+  dbl sh_fp;                                   /* lub pressure approx in thin film */
+  dbl sh_fh;                                   /* film thickness approx */
+  dbl sh_pc;                                   /* particles concentration */
+  dbl sh_sat_closed;                           /* closed shell saturation - SAR */
+  dbl sh_p_open;                               /* open shell pressure - SAR */
+  dbl sh_p_open_2;                             /* open shell pressure 2 - PRS*/
+  dbl sh_t;                                    /* shell temperature - PRS */
+  dbl sh_dh;                                   /* shell delta h     - PRS */
+  dbl sh_l_curv;                               /* Lubrication shell curvature - SAR */
+  dbl sh_l_curv_2;                             /* Lubrication 2 shell curvature - SAR */
+  dbl sh_sat_gasn;                             /* shell saturation, gas compression - SAR */
+  dbl sh_shear_top;                            /* Top wall shear rate */
+  dbl sh_shear_bot;                            /* Bottom wall shear rate */
+  dbl sh_cross_shear;                          /* Cross stream shear stress */
+  dbl max_strain;                              /* Maximum Von Mises strain */
+  dbl cur_strain;                              /* Von Mises strain */
+  dbl poynt[DIM];                              /* Poynting Vector */
+  dbl tfmp_pres;                               /* thin-film multi-phase lubrication pressure */
+  dbl tfmp_sat;                                /* thin-film multi-phase saturation */
+  dbl restime;                                 /* residence time function field */
   dbl moment[MAX_MOMENTS];
   dbl rho;
 
-  dbl em_er[DIM]; /* EM Electric Field Vector (real)*/
-  dbl em_ei[DIM]; /* EM Electric Field Vector (imag)*/
-  dbl em_hr[DIM]; /* EM Magnetic Field Vector (real)*/
-  dbl em_hi[DIM]; /* EM Magnetic Field Vector (imag)*/
-  dbl sh_sat_1;   /* Porous shell saturation layer 1 */
-  dbl sh_sat_2;   /* Porous shell saturation layer 2 */
-  dbl sh_sat_3;   /* Porous shell saturation layer 3 */
+  dbl em_er[DIM];                  /* EM Electric Field Vector (real)*/
+  dbl em_ei[DIM];                  /* EM Electric Field Vector (imag)*/
+  dbl em_hr[DIM];                  /* EM Magnetic Field Vector (real)*/
+  dbl em_hi[DIM];                  /* EM Magnetic Field Vector (imag)*/
+  dbl sh_sat_1;                    /* Porous shell saturation layer 1 */
+  dbl sh_sat_2;                    /* Porous shell saturation layer 2 */
+  dbl sh_sat_3;                    /* Porous shell saturation layer 3 */
 
   dbl eddy_nu;                     /* Eddy viscosity for turbulent flow */
   dbl turb_k;                      /* Eddy viscosity for turbulent flow */
@@ -1791,12 +1791,12 @@ struct Field_Variables {
   dbl grad_sh_l_curv_2[DIM];                       /* Gradient of shell curvature_2 */
   dbl grad_sh_p_open[DIM];                         /* Gradient of open porous shell pressure */
   dbl grad_sh_p_open_2[DIM];                       /* Gradient of open porous shell pressure */
-  dbl grad_tfmp_pres[DIM]; /* Gradient of the thin-film multi-phase lubrication pressure */
-  dbl grad_tfmp_sat[DIM];  /* Gradient of the thin-film multi-phase lubrication saturation */
-  dbl grad_restime[DIM];   /* Gradient of the residence time function */
-  dbl grad_sh_sat_1[DIM];  /* Gradient of porous shell saturation layer 1 */
-  dbl grad_sh_sat_2[DIM];  /* Gradient of porous shell saturation layer 2 */
-  dbl grad_sh_sat_3[DIM];  /* Gradient of porous shell saturation layer 3 */
+  dbl grad_tfmp_pres[DIM];     /* Gradient of the thin-film multi-phase lubrication pressure */
+  dbl grad_tfmp_sat[DIM];      /* Gradient of the thin-film multi-phase lubrication saturation */
+  dbl grad_restime[DIM];       /* Gradient of the residence time function */
+  dbl grad_sh_sat_1[DIM];      /* Gradient of porous shell saturation layer 1 */
+  dbl grad_sh_sat_2[DIM];      /* Gradient of porous shell saturation layer 2 */
+  dbl grad_sh_sat_3[DIM];      /* Gradient of porous shell saturation layer 3 */
 
   dbl grad_eddy_nu[DIM];       /* Gradient of Eddy viscosity */
   dbl grad_turb_k[DIM];        /* Gradient of Eddy viscosity */
@@ -1807,30 +1807,30 @@ struct Field_Variables {
    * Grads of vectors...
    */
 
-  dbl div_v;                 /* Divergence of velocity. */
-  dbl grad_v[DIM][DIM];      /* Gradient of velocity.  d (v_i) / d (x_j) */
-  dbl div_v_star;            /* Divergence of velocity*. */
-  dbl grad_v_star[DIM][DIM]; /* Velocity* segregated */
-  dbl curl_v[DIM];           /* Curl of velocity, aka vorticity. */
+  dbl div_v;                         /* Divergence of velocity. */
+  dbl grad_v[DIM][DIM];              /* Gradient of velocity.  d (v_i) / d (x_j) */
+  dbl div_v_star;                    /* Divergence of velocity*. */
+  dbl grad_v_star[DIM][DIM];         /* Velocity* segregated */
+  dbl curl_v[DIM];                   /* Curl of velocity, aka vorticity. */
 
-  dbl div_pv;            /* Divergence of particle velocity. */
-  dbl grad_pv[DIM][DIM]; /* Gradient of particle velocity. */
+  dbl div_pv;                        /* Divergence of particle velocity. */
+  dbl grad_pv[DIM][DIM];             /* Gradient of particle velocity. */
 
-  dbl div_d;                /* Divergence of mesh displacement. */
-  dbl div_d_dot;            /* Divergence of mesh velocity     */
-  dbl grad_d[DIM][DIM];     /* Gradient of mesh displacement. */
-  dbl grad_d_dot[DIM][DIM]; /* Gradient tensor of mesh velocity */
+  dbl div_d;                         /* Divergence of mesh displacement. */
+  dbl div_d_dot;                     /* Divergence of mesh velocity     */
+  dbl grad_d[DIM][DIM];              /* Gradient of mesh displacement. */
+  dbl grad_d_dot[DIM][DIM];          /* Gradient tensor of mesh velocity */
 
-  dbl div_d_rs;            /* Divergence of solid displacement. */
-  dbl grad_d_rs[DIM][DIM]; /* Gradient of solid displacement. */
+  dbl div_d_rs;                      /* Divergence of solid displacement. */
+  dbl grad_d_rs[DIM][DIM];           /* Gradient of solid displacement. */
 
-  dbl grad_vd[DIM][DIM]; /* Gradient of vorticity principle flow direction. */
-  dbl div_vd;            /* Divergence of vorticity direction. */
+  dbl grad_vd[DIM][DIM];             /* Gradient of vorticity principle flow direction. */
+  dbl div_vd;                        /* Divergence of vorticity direction. */
 
-  dbl grad_E_field[DIM][DIM]; /* Electric field */
+  dbl grad_E_field[DIM][DIM];        /* Electric field */
 
-  dbl grad_n[DIM][DIM];  /* Normal to level set function OR shell normal */
-  dbl d_n_dxi[DIM][DIM]; /* Derivative of normal w.r.t. isoparametric coordinates */
+  dbl grad_n[DIM][DIM];              /* Normal to level set function OR shell normal */
+  dbl d_n_dxi[DIM][DIM];             /* Derivative of normal w.r.t. isoparametric coordinates */
 
   dbl div_n;                         /* Divergence of LS normal field */
   dbl div_s_n;                       /* Surface divergence of LS normal field */
@@ -1855,30 +1855,30 @@ struct Field_Variables {
   dbl grad_G[DIM][DIM][DIM];            /* Gradient of velocity tensor ( or most of it!) */
   dbl grad_Gt[DIM][DIM][DIM];           /* Gradient of the transpose of the velocity tensor */
   dbl div_G[DIM];                       /* Divergence of velocity gradient tensor */
-  dbl div_Gt[DIM]; /* Divergence of the transpose of velocity gradient tensor */
+  dbl div_Gt[DIM];              /* Divergence of the transpose of velocity gradient tensor */
 
-  dbl grad_n_dot_curl_s_v[DIM];            /* This is the normal gradient of a scalar field
-                                              defined on a shell. The scalar field is n dot
-                                              curl_s v or n dotted into the (I-nn) Del
-                                              cross v see - apply_surface_viscosity()   */
-  dbl grad_div_s_v[DIM];                   /* This is the normal gradient of a scalar field
-                                              defined on a shell.        The scalar field is div_s of v
-                                              or (( I - n n) dot del) dot v
-                                              see - apply_surface_viscosity()   */
-  dbl grad_curv[DIM];                      /* This is the normal gradient of a scalar field defined
-                                             on a shell. The scalar field is curv  or - 1/2 Del_s dot
-                                             v see - apply_surface_viscosity()   */
+  dbl grad_n_dot_curl_s_v[DIM]; /* This is the normal gradient of a scalar field
+                                   defined on a shell. The scalar field is n dot
+                                   curl_s v or n dotted into the (I-nn) Del
+                                   cross v see - apply_surface_viscosity()   */
+  dbl grad_div_s_v[DIM];        /* This is the normal gradient of a scalar field
+                                   defined on a shell.        The scalar field is div_s of v
+                                   or (( I - n n) dot del) dot v
+                                   see - apply_surface_viscosity()   */
+  dbl grad_curv[DIM];           /* This is the normal gradient of a scalar field defined
+                                  on a shell. The scalar field is curv  or - 1/2 Del_s dot
+                                  v see - apply_surface_viscosity()   */
   dbl serialgrad_grad_s_v_dot_n[DIM][DIM]; /* This is the normal gradient of a
                                      scalar field defined on a shell. The scalar
                                      field is grad_s_v_dot_n[b]
                                      */
 
-  dbl density;                     /* total density of material at gauss point */
-  dbl d_density_dc[MAX_CONC][MDE]; /* Derivative of density wrt species unknown vector */
-  dbl d_density_dmesh[DIM][MDE];   /* Derivative of density wrt mesh position
-                                      unknown vector */
-  dbl d_density_dT[MDE];           /* Derivative of density wrt temperature vector */
-  dbl d_density_dP[MDE];           /* Derivative of density wrt pressure unknown vectors*/
+  dbl density;                             /* total density of material at gauss point */
+  dbl d_density_dc[MAX_CONC][MDE];         /* Derivative of density wrt species unknown vector */
+  dbl d_density_dmesh[DIM][MDE];           /* Derivative of density wrt mesh position
+                                              unknown vector */
+  dbl d_density_dT[MDE];                   /* Derivative of density wrt temperature vector */
+  dbl d_density_dP[MDE];                   /* Derivative of density wrt pressure unknown vectors*/
 
   /*
    * Mesh derivatives of field variable gradients...
@@ -2056,15 +2056,15 @@ struct Field_Variables {
  */
 
 struct Diet_Field_Variables {
-  dbl x[DIM]; /* Position in physical space. */
-  dbl T;      /* Temperature. */
-  dbl v[DIM]; /* Velocity. */
+  dbl x[DIM];                             /* Position in physical space. */
+  dbl T;                                  /* Temperature. */
+  dbl v[DIM];                             /* Velocity. */
   dbl v_star[DIM];
-  dbl pv[DIM];     /* Particle velocity. */
-  dbl d[DIM];      /* Mesh displacement. */
-  dbl d_rs[DIM];   /* SOLID displacement. */
-  dbl c[MAX_CONC]; /* Concentration(s). */
-  dbl P;           /* Pressure. */
+  dbl pv[DIM];                            /* Particle velocity. */
+  dbl d[DIM];                             /* Mesh displacement. */
+  dbl d_rs[DIM];                          /* SOLID displacement. */
+  dbl c[MAX_CONC];                        /* Concentration(s). */
+  dbl P;                                  /* Pressure. */
   dbl P_star;
   dbl F;                                  /* Fill. */
   dbl V;                                  /* Potential; added by KSC: 2/4/99 */
@@ -2082,23 +2082,23 @@ struct Diet_Field_Variables {
                                              const*/
   dbl ext_v;                              /* Extension velocity */
   dbl lm[DIM];
-  dbl sh_K;            /*shell element curvature */
-  dbl sh_K2;           /*shell element second curvature */
-  dbl sh_tens;         /*shell element tension */
-  dbl sh_x;            /*shell element x coordinate */
-  dbl sh_y;            /*shell element y coordinate */
-  dbl sh_u;            /* Shell user */
-  dbl sh_ang[DIM - 1]; /* Shell orientation angles */
-  dbl div_s_v;         /* sundry pieces (next 4) for surface rheological constitutive
-                          eqn */
+  dbl sh_K;                               /*shell element curvature */
+  dbl sh_K2;                              /*shell element second curvature */
+  dbl sh_tens;                            /*shell element tension */
+  dbl sh_x;                               /*shell element x coordinate */
+  dbl sh_y;                               /*shell element y coordinate */
+  dbl sh_u;                               /* Shell user */
+  dbl sh_ang[DIM - 1];                    /* Shell orientation angles */
+  dbl div_s_v;               /* sundry pieces (next 4) for surface rheological constitutive
+                                eqn */
   dbl curv;
-  dbl grad_v_dot_n[DIM];    /* grad_s_v_dot_n[DIM] */
-  dbl n_dot_curl_s_v;       /* n dot (curl_s v) Scalar variable used in shell
-                               equations - curl_s is surface curl */
-  dbl pF[MAX_PHASE_FUNC];   /* Phase function */
-  dbl sh_J;                 /* shell surface diffusion flux */
-  dbl sh_Kd;                /* shell surface curvature */
-  dbl apr, api, ars, sh_bv; /* Acoustic pressure */
+  dbl grad_v_dot_n[DIM];     /* grad_s_v_dot_n[DIM] */
+  dbl n_dot_curl_s_v;        /* n dot (curl_s v) Scalar variable used in shell
+                                equations - curl_s is surface curl */
+  dbl pF[MAX_PHASE_FUNC];    /* Phase function */
+  dbl sh_J;                  /* shell surface diffusion flux */
+  dbl sh_Kd;                 /* shell surface curvature */
+  dbl apr, api, ars, sh_bv;  /* Acoustic pressure */
   dbl epr, epi;
   dbl sink_mass;             /* porous sink mass */
   dbl sh_p;                  /* lub approx. */
@@ -2131,23 +2131,23 @@ struct Diet_Field_Variables {
   dbl tfmp_sat;              /* thin-film multi-phase saturation */
   dbl moment[MAX_MOMENTS];
   dbl rho;
-  dbl restime;    /* residence time field */
-  dbl em_er[DIM]; /* EM wave Fields */
-  dbl em_ei[DIM]; /* EM wave Fields */
-  dbl em_hr[DIM]; /* EM wave Fields */
-  dbl em_hi[DIM]; /* EM wave Fields */
-  dbl sh_sat_1;   /* Porous shell saturation layer 1 */
-  dbl sh_sat_2;   /* Porous shell saturation layer 2 */
-  dbl sh_sat_3;   /* Porous shell saturation layer 3 */
+  dbl restime;               /* residence time field */
+  dbl em_er[DIM];            /* EM wave Fields */
+  dbl em_ei[DIM];            /* EM wave Fields */
+  dbl em_hr[DIM];            /* EM wave Fields */
+  dbl em_hi[DIM];            /* EM wave Fields */
+  dbl sh_sat_1;              /* Porous shell saturation layer 1 */
+  dbl sh_sat_2;              /* Porous shell saturation layer 2 */
+  dbl sh_sat_3;              /* Porous shell saturation layer 3 */
 
-  dbl eddy_nu;    /* Eddy viscosity for turbulent flow */
-  dbl turb_k;     /* Eddy viscosity for turbulent flow */
-  dbl turb_omega; /* Eddy viscosity for turbulent flow */
+  dbl eddy_nu;               /* Eddy viscosity for turbulent flow */
+  dbl turb_k;                /* Eddy viscosity for turbulent flow */
+  dbl turb_omega;            /* Eddy viscosity for turbulent flow */
 
-  dbl grad_em_er[DIM][DIM]; /* EM wave Fields */
-  dbl grad_em_ei[DIM][DIM]; /* EM wave Fields */
-  dbl grad_em_hr[DIM][DIM]; /* EM wave Fields */
-  dbl grad_em_hi[DIM][DIM]; /* EM wave Fields */
+  dbl grad_em_er[DIM][DIM];  /* EM wave Fields */
+  dbl grad_em_ei[DIM][DIM];  /* EM wave Fields */
+  dbl grad_em_hr[DIM][DIM];  /* EM wave Fields */
+  dbl grad_em_hi[DIM][DIM];  /* EM wave Fields */
   /*
    * Gradients... concentration is the only one we use in the
    * old form for VOF/Taylor-Galerkin stuff
@@ -2159,21 +2159,21 @@ struct Diet_Field_Variables {
   dbl grad_v[DIM][DIM];             // Gradient of velocity
   dbl grad_P[DIM];                  // Gradient of pressure
   dbl grad_P_star[DIM];
-  dbl grad_p_liq[DIM];    /* Gradient of porous liq-phase pressure variable. */
-  dbl grad_p_gas[DIM];    /* Gradient of porous gas-phase pressure variable. */
-  dbl grad_porosity[DIM]; /* Gradient of porous  porosity variable. */
+  dbl grad_p_liq[DIM];              /* Gradient of porous liq-phase pressure variable. */
+  dbl grad_p_gas[DIM];              /* Gradient of porous gas-phase pressure variable. */
+  dbl grad_porosity[DIM];           /* Gradient of porous  porosity variable. */
 
-  dbl grad_T[DIM];         /* Gradient of porous  temperature variable. */
-  dbl grad_d[DIM][DIM];    /* Gradient of mesh displacement. */
-  dbl grad_d_rs[DIM][DIM]; /* Gradient of solid displacement. */
+  dbl grad_T[DIM];                  /* Gradient of porous  temperature variable. */
+  dbl grad_d[DIM][DIM];             /* Gradient of mesh displacement. */
+  dbl grad_d_rs[DIM][DIM];          /* Gradient of solid displacement. */
 
-  dbl grad_tfmp_pres[DIM]; /* Gradient of the thin-film multi-phase lubrication pressure */
-  dbl grad_tfmp_sat[DIM];  /* Gradient of the thin-film multi-phase lubrication saturation */
+  dbl grad_tfmp_pres[DIM];          /* Gradient of the thin-film multi-phase lubrication pressure */
+  dbl grad_tfmp_sat[DIM]; /* Gradient of the thin-film multi-phase lubrication saturation */
 
-  dbl grad_n[DIM][DIM]; /* Normal to level set function OR shell normal */
+  dbl grad_n[DIM][DIM];   /* Normal to level set function OR shell normal */
   dbl grad_turb_omega[DIM];
   dbl grad_turb_k[DIM];
-  dbl div_n; /* Divergence of LS normal field */
+  dbl div_n;              /* Divergence of LS normal field */
 
   /* Material tensors used at old time values */
   dbl strain[DIM][DIM]; /* Strain tensor */
@@ -2531,10 +2531,10 @@ struct Porous_Media_Variables_Hysteresis {
 
   /*  Each member has dimension of [MAX_POR_SHELL][NUM_NODES]  */
 
-  int *curve_type[MAX_POR_SHELL]; /*Draining = 1, imbibition = 0*/
+  int *curve_type[MAX_POR_SHELL];         /*Draining = 1, imbibition = 0*/
   int *curve_type_old[MAX_POR_SHELL];
-  int *curve_switch[MAX_POR_SHELL]; /*Trigger to switch the curves */
-  int *num_switch[MAX_POR_SHELL];   /*Number of curve switch on each node*/
+  int *curve_switch[MAX_POR_SHELL];       /*Trigger to switch the curves */
+  int *num_switch[MAX_POR_SHELL];         /*Number of curve switch on each node*/
   double *sat_switch[MAX_POR_SHELL] /*Saturation value at switch point*/;
   double *cap_pres_switch[MAX_POR_SHELL]; /*Capillary pressure value at switch point*/
   double *sat_min_imbibe[MAX_POR_SHELL];  /* Minimum saturation value of imbibition curve*/
@@ -2974,7 +2974,7 @@ struct Search_Grid_Structure {
   struct Search_Grid_Structure **neighbors; /* neighboring search grids of this
                                                grid - Currently unused.  */
   int num_subgrids;
-  struct Search_Grid_Structure **subgrids; /* children of the search grid */
+  struct Search_Grid_Structure **subgrids;  /* children of the search grid */
 };
 
 typedef struct Search_Grid_Structure SGRID;
@@ -3179,9 +3179,9 @@ struct pspg_dependence {
   double eddy_nu[DIM][MDE];
   double turb_k[DIM][MDE];
   double turb_omega[DIM][MDE];
-  double P[DIM][MDE];           /* pressure dependence. */
-  double C[DIM][MAX_CONC][MDE]; /* conc dependence. */
-  double X[DIM][DIM][MDE];      /* mesh dependence. */
+  double P[DIM][MDE];                      /* pressure dependence. */
+  double C[DIM][MAX_CONC][MDE];            /* conc dependence. */
+  double X[DIM][DIM][MDE];                 /* mesh dependence. */
   double g[DIM][DIM][DIM][MDE];
   double S[DIM][MAX_MODES][DIM][DIM][MDE]; /* stress mode dependence. */
 };
@@ -3217,52 +3217,52 @@ typedef struct Petrov_Galerkin_Data PG_DATA;
  * These values are calculated at the current quadrature point.
  */
 struct Lubrication_Auxiliaries {
-  double q[DIM];             /* Volumetric flow rate per unit width */
-  double v_avg[DIM];         /* Average velocity, i.e. q divided by height */
-  double gradP[DIM];         /* Composite pressure gradient vector */
-  double gradP_mag;          /* Magnitude of pressure gradient */
-  double gradP_tangent[DIM]; /* Tangent vector of the pressure gradient */
-  double gradP_normal[DIM];  /* Unit vector perpendicular to the pressure */
-  double H;                  /* Lubrication Gap Height */
-  double H_cap;              /* Lubrication Gap Height unaffected by wall effects */
-  double srate;              /* Lubrication Characteristic Shear Rate */
-  double mu_star;            /* Lubrication Characteristic Viscosity */
-  double op_curv;            /* Lubrication Out-of-plane Curvature */
-  double visc_diss;          /* Lubrication Integrated Viscous Dissipation */
+  double q[DIM];                        /* Volumetric flow rate per unit width */
+  double v_avg[DIM];                    /* Average velocity, i.e. q divided by height */
+  double gradP[DIM];                    /* Composite pressure gradient vector */
+  double gradP_mag;                     /* Magnitude of pressure gradient */
+  double gradP_tangent[DIM];            /* Tangent vector of the pressure gradient */
+  double gradP_normal[DIM];             /* Unit vector perpendicular to the pressure */
+  double H;                             /* Lubrication Gap Height */
+  double H_cap;                         /* Lubrication Gap Height unaffected by wall effects */
+  double srate;                         /* Lubrication Characteristic Shear Rate */
+  double mu_star;                       /* Lubrication Characteristic Viscosity */
+  double op_curv;                       /* Lubrication Out-of-plane Curvature */
+  double visc_diss;                     /* Lubrication Integrated Viscous Dissipation */
 
-  double dgradP_mag_dP;          /* Pressure gradient magnitude sensitivities w.r.t.
-                                    pressure */
-  double dgradP_tangent_dP[DIM]; /* Pressure gradient tangent sensitivities
-                                    w.r.t. pressure */
-  double dgradP_normal_dP[DIM];  /* Pressure gradient normal sensitivities w.r.t.
-                                    pressure */
+  double dgradP_mag_dP;                 /* Pressure gradient magnitude sensitivities w.r.t.
+                                           pressure */
+  double dgradP_tangent_dP[DIM];        /* Pressure gradient tangent sensitivities
+                                           w.r.t. pressure */
+  double dgradP_normal_dP[DIM];         /* Pressure gradient normal sensitivities w.r.t.
+                                           pressure */
 
-  double dq_dh[DIM][MDE];           /* Flow rate sensitivities w.r.t. height */
-  double dq_dh1[DIM][MDE];          /* Flow rate sensitivities w.r.t. height */
-  double dq_dh2[DIM][MDE];          /* Flow rate sensitivities w.r.t. height */
-  double dq_dp[DIM][MDE];           /* Flow rate sensitivities w.r.t. lubrication pressure */
-  double dq_dp2[DIM];               /* Flow rate sensitivities w.r.t. lubrication pressure */
-  double dq_df[DIM][MDE];           /* Flow rate sensitivities w.r.t. level set */
-  double dq_dk[DIM];                /* Flow rate sensitivities w.r.t. curvature */
-  double dq_dx[DIM][DIM][MDE];      /* Flow rate sensitivities w.r.t. mesh deformation */
-  double dq_dnormal[DIM][DIM][MDE]; /* Flow rate sensitivities w.r.t. shell normal */
-  double dq_drs[DIM][DIM][MDE];     /* Flow rate sensitivities w.r.t. real solid
-                                       deformation */
-  double dq_ddh[DIM];               /* Flow rate sensitivities w.r.t. heat transport */
-  double dq_dc[DIM][MDE];           /* Flow rate sensitivities w.r.t. particles volume
-                                       fraction */
+  double dq_dh[DIM][MDE];               /* Flow rate sensitivities w.r.t. height */
+  double dq_dh1[DIM][MDE];              /* Flow rate sensitivities w.r.t. height */
+  double dq_dh2[DIM][MDE];              /* Flow rate sensitivities w.r.t. height */
+  double dq_dp[DIM][MDE];               /* Flow rate sensitivities w.r.t. lubrication pressure */
+  double dq_dp2[DIM];                   /* Flow rate sensitivities w.r.t. lubrication pressure */
+  double dq_df[DIM][MDE];               /* Flow rate sensitivities w.r.t. level set */
+  double dq_dk[DIM];                    /* Flow rate sensitivities w.r.t. curvature */
+  double dq_dx[DIM][DIM][MDE];          /* Flow rate sensitivities w.r.t. mesh deformation */
+  double dq_dnormal[DIM][DIM][MDE];     /* Flow rate sensitivities w.r.t. shell normal */
+  double dq_drs[DIM][DIM][MDE];         /* Flow rate sensitivities w.r.t. real solid
+                                           deformation */
+  double dq_ddh[DIM];                   /* Flow rate sensitivities w.r.t. heat transport */
+  double dq_dc[DIM][MDE];               /* Flow rate sensitivities w.r.t. particles volume
+                                           fraction */
   double dq_dconc[DIM][DIM][MAX_CONC]
-                 [MDE];             /* Flow rate sensitivities w.r.t. species concentration */
-  double dq_dshear_top[DIM][MDE];   /* Flow rate sensitivities w.r.t. top wall
-                                       shear rate */
-  double dq_dshear_bot[DIM][MDE];   /* Flow rate sensitivities w.r.t. bottom wall
-                                       shear rate */
-  double dq_dcross_shear[DIM][MDE]; /* Flow rate sensitivities w.r.t. cross
-                                       stream shear stress */
-  double dq_dgradp[DIM][DIM];       /* Flow rate sensitivities w.r.t. pressure gradient */
-  double dq_dT[DIM];                /* Flow rate sensitivities w.r.t. Temperature */
-  double dq_dshrw[DIM];             /* Flow rate sensitivities w.r.t. Wall shear rate */
-  double dq_dv[DIM][DIM][MDE];      /* Flow rate sensitivities w.r.t. velocities */
+                 [MDE];                 /* Flow rate sensitivities w.r.t. species concentration */
+  double dq_dshear_top[DIM][MDE];       /* Flow rate sensitivities w.r.t. top wall
+                                           shear rate */
+  double dq_dshear_bot[DIM][MDE];       /* Flow rate sensitivities w.r.t. bottom wall
+                                           shear rate */
+  double dq_dcross_shear[DIM][MDE];     /* Flow rate sensitivities w.r.t. cross
+                                           stream shear stress */
+  double dq_dgradp[DIM][DIM];           /* Flow rate sensitivities w.r.t. pressure gradient */
+  double dq_dT[DIM];                    /* Flow rate sensitivities w.r.t. Temperature */
+  double dq_dshrw[DIM];                 /* Flow rate sensitivities w.r.t. Wall shear rate */
+  double dq_dv[DIM][DIM][MDE];          /* Flow rate sensitivities w.r.t. velocities */
 
   double dv_avg_dh[DIM][MDE];           /* Average velocity sensitivities w.r.t. height */
   double dv_avg_dh1[DIM][MDE];          /* Average velocity sensitivities w.r.t. height */

@@ -38,32 +38,32 @@ EXTERN int rd_dpi                                        /* rd_dpi.c */
 int zero_dpi(Dpi *d);
 int one_dpi(Dpi *d);
 
-EXTERN void getdid /* rd_dpi.c */
-    (int,          /* netcdf_unit */
-     char *,       /* string_name */
-     int,          /* boolean for hard error interpretation */
-     int *);       /* dimension_identifier_address */
+EXTERN void getdid          /* rd_dpi.c */
+    (int,                   /* netcdf_unit */
+     char *,                /* string_name */
+     int,                   /* boolean for hard error interpretation */
+     int *);                /* dimension_identifier_address */
 
-EXTERN void getvid /* rd_dpi.c */
-    (int,          /* netcdf_unit */
-     char *,       /* string_name */
-     int,          /* boolean for hard error interpretation */
-     int *);       /* variable_identifier_address */
+EXTERN void getvid          /* rd_dpi.c */
+    (int,                   /* netcdf_unit */
+     char *,                /* string_name */
+     int,                   /* boolean for hard error interpretation */
+     int *);                /* variable_identifier_address */
 
-EXTERN void getdim /* rd_dpi.c */
-    (int,          /* netcdf_unit */
-     int,          /* dimension_id */
-     int *);       /* where -- to put the dimension value */
+EXTERN void getdim          /* rd_dpi.c */
+    (int,                   /* netcdf_unit */
+     int,                   /* dimension_id */
+     int *);                /* where -- to put the dimension value */
 
-EXTERN void uni_dpi /* rd_dpi.c                                  */
-    (Dpi *,         /* dpi                                       */
-     Exo_DB *);     /* exo                                       */
+EXTERN void uni_dpi         /* rd_dpi.c                                  */
+    (Dpi *,                 /* dpi                                       */
+     Exo_DB *);             /* exo                                       */
 
-EXTERN void free_dpi /* rd_dpi.c */
-    (Dpi *);         /* fantastic structure defd in "dpi.h" */
+EXTERN void free_dpi        /* rd_dpi.c */
+    (Dpi *);                /* fantastic structure defd in "dpi.h" */
 
-EXTERN void free_dpi_uni /* rd_dpi.c */
-    (Dpi *);             /* fantastic structure defd in "dpi.h" */
+EXTERN void free_dpi_uni    /* rd_dpi.c */
+    (Dpi *);                /* fantastic structure defd in "dpi.h" */
 
 EXTERN void init_dpi_struct /* rd_dpi.c */
     (Dpi *);                /* fantastic structure defd in "dpi.h" */

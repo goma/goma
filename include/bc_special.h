@@ -61,13 +61,13 @@ EXTERN int apply_special_bc(struct GomaLinearSolverData *,
                             int, /* iconnect_ptr                              */
                             struct elem_side_bc_struct *, /* elem_side_bc - Pointer to an element
                                                            *  side boundary condition structure   */
-                            int,      /* num_total_nodes                           */
-                            int,      /* bc_application                            */
-                            int[],    /* CA_id CA condition id array */
-                            int[],    /* CA_fselem free surface element array */
-                            int[],    /* CA_sselem solid surface element array */
-                            Exo_DB *, /* exo - ptr to FE EXODUS II database        */
-                            double);  /* time_value */
+                            int,                  /* num_total_nodes                           */
+                            int,                  /* bc_application                            */
+                            int[],                /* CA_id CA condition id array */
+                            int[],                /* CA_fselem free surface element array */
+                            int[],                /* CA_sselem solid surface element array */
+                            Exo_DB *,             /* exo - ptr to FE EXODUS II database        */
+                            double);              /* time_value */
 
 EXTERN int apply_shell_grad_bc(double[],          /* x - Soln vector                           */
                                double[],          /* resid_vector -                            */
@@ -85,11 +85,11 @@ EXTERN int apply_shell_grad_bc(double[],          /* x - Soln vector            
                                const int,         /* iconnect_ptr                              */
                                struct elem_side_bc_struct *, /* elem_side_bc - Pointer to an element
                                                               * side boundary condition structure */
-                               const int,       /* num_total_nodes                           */
-                               const int,       /* bc_application - flag indicating whether
-                                                 * to integrate strong or weak BC's          */
-                               const double,    /* time_value                                */
-                               const Exo_DB *); /* exo - ptr to FE database                  */
+                               const int,          /* num_total_nodes                           */
+                               const int,          /* bc_application - flag indicating whether
+                                                    * to integrate strong or weak BC's          */
+                               const double,       /* time_value                                */
+                               const Exo_DB *);    /* exo - ptr to FE database                  */
 
 EXTERN int apply_sharp_integrated_bc(double[],     /* Solution vector for the current processor */
                                      double[],     /* Residual vector for the current processor */

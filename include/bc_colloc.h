@@ -59,26 +59,26 @@ apply_point_colloc_bc(double[],                     /* resid_vector */
                       const double,                 /* time value */
                       Exo_DB *);
 
-EXTERN void moving_plane(int,      /* ielem_dim */
-                         double *, /* func */
-                         double[], /* d_func */
-                         dbl *,    /* aa */
-                         double);  /* time */
+EXTERN void moving_plane(int,                       /* ielem_dim */
+                         double *,                  /* func */
+                         double[],                  /* d_func */
+                         dbl *,                     /* aa */
+                         double);                   /* time */
 
-EXTERN void fmesh_constraint(double *,   /* func */
-                             double[],   /* d_func */
-                             const int); /* bc_id */
+EXTERN void fmesh_constraint(double *,              /* func */
+                             double[],              /* d_func */
+                             const int);            /* bc_id */
 
-EXTERN void fplane(const int, /* ielem_dim */
-                   double *,  /* func */
-                   double[],  /* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
-                   dbl *);    /* aa - function parameters from data card  */
+EXTERN void fplane(const int,                       /* ielem_dim */
+                   double *,                        /* func */
+                   double[],             /* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+                   dbl *);               /* aa - function parameters from data card  */
 
-EXTERN void f_fillet(const int,      /* ielem_dim */
-                     double *,       /* func */
-                     double[],       /* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
-                     const double *, /* p - function parameters from data card  */
-                     const int);     /* number of parameters from bc card  */
+EXTERN void f_fillet(const int,          /* ielem_dim */
+                     double *,           /* func */
+                     double[],           /* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+                     const double *,     /* p - function parameters from data card  */
+                     const int);         /* number of parameters from bc card  */
 
 EXTERN void f_double_rad(const int,      /* ielem_dim */
                          double *,       /* func */
@@ -87,64 +87,64 @@ EXTERN void f_double_rad(const int,      /* ielem_dim */
                          const int);     /* number of parameters from bc card  */
 
 #ifdef FEATURE_ROLLON_PLEASE
-EXTERN void f_feature_rollon(const int, /* ielem_dim */
-                             double *,  /* func */
-                             double[],  /* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+EXTERN void f_feature_rollon(const int,  /* ielem_dim */
+                             double *,   /* func */
+                             double[],   /* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
                              const double *, /* p - function parameters from data card  */
                              const int,      /* number of parameters from bc card  */
                              const int,      /* geometry model id  */
                              const double);  /* time - time at which BC's are evaluated  */
 #endif
 
-EXTERN void f_roll_fluid(const int,      /* ielem_dim */
-                         double *,       /* func */
+EXTERN void f_roll_fluid(const int,          /* ielem_dim */
+                         double *,           /* func */
                          double[],       /* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
                          const double *, /* p - function parameters from data card  */
                          const int,      /* number of parameters from bc card  */
                          double *);      /* number of parameters from bc card  */
 
-EXTERN void fvelocity_profile(const int,     /* var_flag */
-                              const int,     /* ielem_dim */
-                              const int,     /* velo_condition */
-                              double *,      /* func */
-                              double[],      /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
-                              double[],      /* p - parameters passed in thru input deck */
-                              const double); /* time - time at which BC's are evaluated  */
+EXTERN void fvelocity_profile(const int, /* var_flag */
+                              const int, /* ielem_dim */
+                              const int, /* velo_condition */
+                              double *,  /* func */
+                              double[],  /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
+                              double[],  /* p - parameters passed in thru input deck */
+                              const double);     /* time - time at which BC's are evaluated  */
 
-EXTERN void fvelocity_parabola(const int,      /* var_flag */
-                               const int,      /* ielem_dim */
-                               const int,      /* velo_condition */
-                               double *,       /* func */
-                               double[],       /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
-                               const double[], /* p - parameters passed in thru input deck */
-                               const double,   /* time - time at which BC's are evaluated  */
-                               const int);     /* number of parameters */
+EXTERN void fvelocity_parabola(const int,        /* var_flag */
+                               const int,        /* ielem_dim */
+                               const int,        /* velo_condition */
+                               double *,         /* func */
+                               double[],         /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
+                               const double[],   /* p - parameters passed in thru input deck */
+                               const double,     /* time - time at which BC's are evaluated  */
+                               const int);       /* number of parameters */
 
-EXTERN void f_vestress_parabola(const int,      /* var_flag */
-                                const int,      /* ielem_dim */
-                                const int,      /* velo_condition */
-                                const int,      /* mn */
-                                double *,       /* func */
-                                double[],       /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
-                                const double[], /* p - parameters passed in thru input deck */
-                                const double,   /* time - time at which BC's are evaluated  */
-                                const int);     /* number of parameters */
+EXTERN void f_vestress_parabola(const int,       /* var_flag */
+                                const int,       /* ielem_dim */
+                                const int,       /* velo_condition */
+                                const int,       /* mn */
+                                double *,        /* func */
+                                double[],        /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
+                                const double[],  /* p - parameters passed in thru input deck */
+                                const double,    /* time - time at which BC's are evaluated  */
+                                const int);      /* number of parameters */
 
-EXTERN void fspline(const int,     /* ielem_dim */
-                    double *,      /* func */
-                    double[],      /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
-                    double[],      /* p - parameterize eqn model */
-                    const double); /* time - at which bc's are evaluated */
+EXTERN void fspline(const int,                   /* ielem_dim */
+                    double *,                    /* func */
+                    double[],                    /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
+                    double[],                    /* p - parameterize eqn model */
+                    const double);               /* time - at which bc's are evaluated */
 
-EXTERN void fspline_rs(const int,     /* ielem_dim */
-                       double *,      /* func */
-                       double[],      /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
-                       double[],      /* p - parameterize eqn model */
-                       const double); /* time - at which bc's are evaluated */
+EXTERN void fspline_rs(const int,                /* ielem_dim */
+                       double *,                 /* func */
+                       double[],                 /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
+                       double[],                 /* p - parameterize eqn model */
+                       const double);            /* time - at which bc's are evaluated */
 
-EXTERN void fTmelting(double *, /* func */
-                      double[], /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
-                      double);  /* a1 - function parameter from data card   */
+EXTERN void fTmelting(double *,                  /* func */
+                      double[],                  /* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
+                      double);                   /* a1 - function parameter from data card   */
 
 EXTERN int fgeneralized_dirichlet(double *,      /* func */
                                   double[],      /* d_func - MAX_VARIABLE_TYPES + MAX_CONC */
@@ -156,15 +156,15 @@ EXTERN int fgeneralized_dirichlet(double *,      /* func */
                                                   * implicit (tt = 0) */
                                   const double); /* dt - current time step size          */
 
-EXTERN int load_variable(double *,     /* x_var - variable value */
-                         double *,     /* d_x_var - sensitivities of variable value */
-                         const int,    /* jvar - variable number */
-                         const int,    /* wspec - species number */
-                         const double, /* tt - parameter to vary time integration
-                                        * from explicit (tt = 1) to
-                                        * implicit (tt = 0) */
-                         const double, /* dt - current time step size */
-                         double[]);    /* vector sensitivity vector - SPEED */
+EXTERN int load_variable(double *,               /* x_var - variable value */
+                         double *,               /* d_x_var - sensitivities of variable value */
+                         const int,              /* jvar - variable number */
+                         const int,              /* wspec - species number */
+                         const double,           /* tt - parameter to vary time integration
+                                                  * from explicit (tt = 1) to
+                                                  * implicit (tt = 0) */
+                         const double,           /* dt - current time step size */
+                         double[]);              /* vector sensitivity vector - SPEED */
 
 extern int bc_eqn_index(int, int, int, int, int, int *, int *, VARIABLE_DESCRIPTION_STRUCT **);
 
@@ -178,19 +178,19 @@ EXTERN int bc_eqn_index_stress(int id,          /* local node number            
                                int *matID_retn, /* material ID to apply this eqn on           */
                                VARIABLE_DESCRIPTION_STRUCT **vd_retn);
 
-EXTERN int evaluate_time_func(const double, /* time                                      */
-                              double *,     /* f_time - computed time function           */
-                              const int);   /* bc_input_id                               */
+EXTERN int evaluate_time_func(const double,     /* time                                      */
+                              double *,         /* f_time - computed time function           */
+                              const int);       /* bc_input_id                               */
 
-EXTERN void apply_table_bc(double *, /* func                                      */
+EXTERN void apply_table_bc(double *,            /* func                                      */
                            double[MAX_VARIABLE_TYPES + MAX_CONC], /* d_func                       */
-                           struct Boundary_Condition *, /* BC_Type                             */
-                           double);                     /* time _value */
+                           struct Boundary_Condition *,  /* BC_Type                             */
+                           double);                      /* time _value */
 
-EXTERN double interpolate_table(struct Data_Table *, /* table               */
-                                double[],            /* x            */
-                                double *,            /* slope                 */
-                                double[]);           /* gradient array         */
+EXTERN double interpolate_table(struct Data_Table *,     /* table               */
+                                double[],                /* x            */
+                                double *,                /* slope                 */
+                                double[]);               /* gradient array         */
 
 EXTERN double table_distance_search(struct Data_Table *, /* table               */
                                     double[],            /* x            */
@@ -200,4 +200,4 @@ EXTERN double table_distance_search(struct Data_Table *, /* table               
 EXTERN double interpolate_table_sat(struct Data_Table *, /* table */
                                     double[DIM]); /* slope                                     */
 
-#endif /* GOMA_BC_COLLOC_H */
+#endif                                            /* GOMA_BC_COLLOC_H */

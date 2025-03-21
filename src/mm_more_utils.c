@@ -810,7 +810,7 @@ void extract_nodal_eb_vec(double sol_vec[],
         }
       }
     } /* END if (midside) */
-  }   /* END for (ielem = e_start; ielem < e_end; ielem++) */
+  } /* END for (ielem = e_start; ielem < e_end; ielem++) */
   return;
 }
 /********************** end of extract_nodal_eb_vec *****************************/
@@ -869,7 +869,7 @@ void extract_elem_vec(const double sol_vec[],
 
     for (ielem = e_start; ielem < e_end; ielem++) {
 
-      ielem_type = Elem_Type(exo, ielem); /* func defd in el_geom.h */
+      ielem_type = Elem_Type(exo, ielem);     /* func defd in el_geom.h */
       num_local_nodes = elem_info(NNODES, ielem_type);
       iconnect_ptr = Proc_Connect_Ptr[ielem]; /* find ptr to beginning */
       /* of this element's */

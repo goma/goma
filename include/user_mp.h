@@ -34,46 +34,46 @@ struct Elastic_Constitutive;
 #define EXTERN extern
 #endif
 
-EXTERN int usr_thermal_conductivity(dbl *, dbl); /* param - user-defined parameter list       */
+EXTERN int usr_thermal_conductivity(dbl *, dbl);    /* param - user-defined parameter list       */
 
 EXTERN int usr_electrical_conductivity(dbl *, dbl); /* param - user-defined parameter list       */
 
-EXTERN int usr_density(dbl *); /* param - user-defined parameter list       */
+EXTERN int usr_density(dbl *);                      /* param - user-defined parameter list       */
 
-EXTERN int usr_heat_capacity(dbl *, dbl); /* param - user-defined parameter list       */
+EXTERN int usr_heat_capacity(dbl *, dbl);           /* param - user-defined parameter list       */
 
-EXTERN int usr_heat_source(dbl *, dbl); /* param - user-defined parameter list       */
+EXTERN int usr_heat_source(dbl *, dbl);             /* param - user-defined parameter list       */
 
-EXTERN int usr_species_source(int,    /* species_no - Current species number       */
-                              dbl *); /* param - ptr to user-defined parm list     */
+EXTERN int usr_species_source(int,                  /* species_no - Current species number       */
+                              dbl *);               /* param - ptr to user-defined parm list     */
 
-EXTERN int usr_current_source(dbl *); /* param - ptr to user-defined parm list     */
+EXTERN int usr_current_source(dbl *);               /* param - ptr to user-defined parm list     */
 
-EXTERN int usr_viscosity(dbl *); /* param - ptr to user-defined parm list     */
+EXTERN int usr_viscosity(dbl *);                    /* param - ptr to user-defined parm list     */
 
-EXTERN int usr_surface_tension(dbl *); /* param - ptr to user-defined parm list     */
+EXTERN int usr_surface_tension(dbl *);              /* param - ptr to user-defined parm list     */
 
-EXTERN int usr_momentum_source(dbl *); /* param - ptr to user-defined parm list     */
+EXTERN int usr_momentum_source(dbl *);              /* param - ptr to user-defined parm list     */
 
 EXTERN int usr_lame_mu(struct Elastic_Constitutive *,
-                       dbl *, /* param - ptr to user-defined parm list     */
+                       dbl *,                       /* param - ptr to user-defined parm list     */
                        const int);
 
 EXTERN int usr_lame_lambda(struct Elastic_Constitutive *,
                            dbl *); /* param - ptr to user-defined parm list     */
 
-EXTERN int usr_expansion(dbl *, /* param - ptr to user-defined parm list     */
+EXTERN int usr_expansion(dbl *,    /* param - ptr to user-defined parm list     */
                          double *,
                          double[MAX_VARIABLE_TYPES + MAX_CONC],
                          const int,
                          const double);
 
-EXTERN int usr_diffusivity(int,    /* species_no - of diffusivity etc. needed   */
-                           dbl *); /* param - ptr to user-defined parm list     */
+EXTERN int usr_diffusivity(int,               /* species_no - of diffusivity etc. needed   */
+                           dbl *);            /* param - ptr to user-defined parm list     */
 
 EXTERN int usr_FlowingLiquidViscosity(dbl *); /* param - ptr to user-defined parm list     */
 
-EXTERN int usr_solid_viscosity(dbl *, /* param - ptr to user-defined parm list     */
+EXTERN int usr_solid_viscosity(dbl *,         /* param - ptr to user-defined parm list     */
                                double *,
                                double[MAX_VARIABLE_TYPES + MAX_CONC],
                                const int);
@@ -90,8 +90,8 @@ EXTERN double usr_heat_flux(const double[],   /*   temperature gradient       */
                             const double      /* time */
 );
 
-EXTERN int usr_permeability(dbl *); /* param - ptr to user-defined parm list     */
+EXTERN int usr_permeability(dbl *);           /* param - ptr to user-defined parm list     */
 
-EXTERN int usr_yield_stress(dbl *, dbl); /* param - ptr to user-defined parm list, time*/
+EXTERN int usr_yield_stress(dbl *, dbl);      /* param - ptr to user-defined parm list, time*/
 
-#endif /* GOMA_USER_MP_H */
+#endif                                        /* GOMA_USER_MP_H */

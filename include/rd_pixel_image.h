@@ -52,6 +52,6 @@ EXTERN int find_xi(int elem_id,               /*known element id number*/
                    double nodecoor[MDE][DIM], /*global coordinates of local nodes  nodecoor[local
                                                  node number][x y or z]*/
                    int si,
-                   int N_ext); /*Interpolation index */
+                   int N_ext);                /*Interpolation index */
 
-#endif /* GOMA_RD_PIXEL_H */
+#endif                                        /* GOMA_RD_PIXEL_H */

@@ -100,7 +100,7 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
                                                                   boundary condition structure   */
                      int num_total_nodes,
                      int bc_application,
-                     int CA_id[],     /*  CA condition id array  */
+                     int CA_id[],                              /*  CA condition id array  */
                      int CA_fselem[], /* array of free surface elements for CA
                                          conditions, initialized to -1 */
                      int CA_sselem[], /* array of solid surface elements for CA
@@ -126,13 +126,13 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
   int Gibbs = 1;
   int iapply = 0;
   int ieqn, eqn, var, pvar, ldof_eqn, p, q, index_eq;
-  int err; /* status variable for functions */
+  int err;         /* status variable for functions */
   int status = 0;
   int bc_input_id; /* bc # for side bc on this side */
   int j_bc_id;     /* bc # for point bc applied at current node */
   VARIABLE_DESCRIPTION_STRUCT *vd;
 
-  double xi[DIM]; /* Local element coordinates of Gauss point. */
+  double xi[DIM];  /* Local element coordinates of Gauss point. */
   double x_dot[MAX_PDIM];
 
   /* Normals for variable normal contact angle condition etc.       */
@@ -874,8 +874,8 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
                       default:
                         GOMA_WH(-1, "Wall velocity bc not found\n");
                       } /* switch bc	*/
-                    }   /*  if BC_Types  */
-                  }     /*  Num_BC loop  */
+                    } /*  if BC_Types  */
+                  } /*  Num_BC loop  */
                   if (!found_wall_velocity) {
                     wall_velocity = 0;
                     GOMA_WH(-1, "Wall velocity not found : setting to zero\n");
@@ -1204,10 +1204,10 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
                               weight * d_func[p][MAX_PROB_VAR + w][j];
                         }
                       } /* end of loop over species */
-                    }   /* end of if MASS_FRACTION */
-                  }     /* end of variable exists and condition is sensitive to it */
-                }       /* end of loop over variable types */
-              }         /* end of NEWTON */
+                    } /* end of if MASS_FRACTION */
+                  } /* end of variable exists and condition is sensitive to it */
+                } /* end of loop over variable types */
+              } /* end of NEWTON */
 
               if (jflag != -1 && CA_fselem[jflag] != -1 && CA_sselem[jflag] != -1 &&
                   CA_id[jflag] == j_bc_id && j_bc_id != -1) {
@@ -1215,12 +1215,12 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
               }
 
             } /* end of if Res_BC */
-          }   /* end of loop over p for vector conditions */
-        }     /* end of if j_bc_id != -1 */
+          } /* end of loop over p for vector conditions */
+        } /* end of if j_bc_id != -1 */
 
       } /*End (if (CAPILLARY and KINEMATIC)) */
-    }   /* end for (i=0; i< num_nodes_on_side; i++) */
-  }     /*(end for ibc) */
+    } /* end for (i=0; i< num_nodes_on_side; i++) */
+  } /*(end for ibc) */
   return status;
 } /* END of apply_special_bc  */
 
@@ -1481,13 +1481,13 @@ int apply_shell_grad_bc(double x[],              /* Solution vector for the curr
                     lec->J[LEC_J_INDEX(pe, pv, ib, j)] += local_j[pe][pv][i][j];
                   }
                 } /* End of term transfer */
-              }   /* End of ei[pg->imtrx]->dof[eqn] loop */
-            }     /* End of eqn loop */
-          }       /* End of applicable BC if block */
-        }         /* End of loop over all BC's */
-      }           /* End of loop over shell Gauss points */
-    }             /* End of (ielem_dim - nbr_dim) == 1 if block */
-  }               /* End of loop over friends of bulk element */
+              } /* End of ei[pg->imtrx]->dof[eqn] loop */
+            } /* End of eqn loop */
+          } /* End of applicable BC if block */
+        } /* End of loop over all BC's */
+      } /* End of loop over shell Gauss points */
+    } /* End of (ielem_dim - nbr_dim) == 1 if block */
+  } /* End of loop over friends of bulk element */
 
   /* Cleanup: return to bulk element */
   err = load_elem_dofptr(elem1, exo, x_static, x_old_static, xdot_static, xdot_old_static, 0);
@@ -1504,8 +1504,8 @@ int apply_sharp_integrated_bc(double x[],            /* Solution vector for the 
                               const double theta,    /* parameter (0 to 1) to vary time integration
                                                       *  ( implicit - 0 to explicit - 1)          */
                               const double hsquared[DIM],
-                              const int ielem,      /* element number */
-                              const int ielem_type, /* element type */
+                              const int ielem,       /* element number */
+                              const int ielem_type,  /* element type */
                               const int num_local_nodes,
                               const int ielem_dim,
                               const int iconnect_ptr,
@@ -1808,11 +1808,11 @@ void assemble_sharp_integrated_bc(
                   }
                 }
               } /* end of if( af->Assemble_Jacobian */
-            }   /* end of if ( CalcSurfDeps */
-          }     /* end of if ( (ldof_eqn = */
-        }       /* end of if( index_eq >= */
-      }         /* end of for ( p=0 ; ... */
-    }           /* end of for( i=0 ... */
+            } /* end of if ( CalcSurfDeps */
+          } /* end of if ( (ldof_eqn = */
+        } /* end of if( index_eq >= */
+      } /* end of for ( p=0 ; ... */
+    } /* end of for( i=0 ... */
     ibc++;
   }
 }

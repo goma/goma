@@ -40,4 +40,4 @@ EXTERN void mass_flux_sd_bc(double[], /* func                                   
                             double); /* tt - parameter varies time integration    *
                                       * from explicit to implicit                 */
 
-#endif /* GOMA_BC_SURFACEDOMAIN_H */
+#endif                               /* GOMA_BC_SURFACEDOMAIN_H */

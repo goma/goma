@@ -77,18 +77,18 @@
  * This variable is used for more than one linear solver package.
  */
 
-static int neighbor_fill(Exo_DB *,    /* exo                                       */
-                         dbl[],       /* x                                         */
-                         int,         /* current_elem                              */
-                         int,         /* neighbor_elem                             */
-                         dbl[],       /* F_neighbor                                */
-                         int,         /* num_local_nodes                           */
-                         int,         /* nodes_per_side                            */
-                         int[],       /* local_elem_node_id                        */
-                         int,         /* ielem_type                                */
-                         int,         /* ielem_type_fill                           */
-                         int[],       /* node_to_fill                              */
-                         dbl[][DIM]); /* x_n                                       */
+static int neighbor_fill(Exo_DB *,           /* exo                                       */
+                         dbl[],              /* x                                         */
+                         int,                /* current_elem                              */
+                         int,                /* neighbor_elem                             */
+                         dbl[],              /* F_neighbor                                */
+                         int,                /* num_local_nodes                           */
+                         int,                /* nodes_per_side                            */
+                         int[],              /* local_elem_node_id                        */
+                         int,                /* ielem_type                                */
+                         int,                /* ielem_type_fill                           */
+                         int[],              /* node_to_fill                              */
+                         dbl[][DIM]);        /* x_n                                       */
 
 static int neighbor_species(Exo_DB *,        /* exo - ptr to exodus ii mesh information   */
                             dbl[],           /* x                                         */
@@ -152,41 +152,41 @@ int assemble_fill(double tt,
   int eqn, var, peqn, pvar, dim, status;
   int i, j, a, b, c;
 
-  dbl F_dot;          /* Fill derivative wrt time. */
-  dbl *grad_F;        /* Fill gradient. */
-  dbl grad_II_F[DIM]; /* Fill surface gradient */
+  dbl F_dot;                     /* Fill derivative wrt time. */
+  dbl *grad_F;                   /* Fill gradient. */
+  dbl grad_II_F[DIM];            /* Fill surface gradient */
   dbl d_grad_II_F_dmesh[DIM][DIM][MDE];
 
-  dbl *v;     /* Local velocity. */
-  dbl *v_old; /* Old v[]. */
+  dbl *v;                        /* Local velocity. */
+  dbl *v_old;                    /* Old v[]. */
 
-  dbl *xx;    /* Nodal coordinates. */
-  dbl *x_old; /* Old xx[]. */
+  dbl *xx;                       /* Nodal coordinates. */
+  dbl *x_old;                    /* Old xx[]. */
 
-  dbl x_dot[DIM];         /* Time derivative of the mesh displacements. */
-  /*dbl x_dot_old[DIM];*/ /* Old x_dot[]. */
-  dbl *x_dot_old;         /* Old x_dot[]. */
+  dbl x_dot[DIM];                /* Time derivative of the mesh displacements. */
+  /*dbl x_dot_old[DIM];*/        /* Old x_dot[]. */
+  dbl *x_dot_old;                /* Old x_dot[]. */
 
-  dbl v_rel[DIM];     /* Velocity relative to the mesh. */
-  dbl v_rel_old[DIM]; /* Old v_rel[]. */
+  dbl v_rel[DIM];                /* Velocity relative to the mesh. */
+  dbl v_rel_old[DIM];            /* Old v_rel[]. */
 
   dbl zero[3] = {0.0, 0.0, 0.0}; /* An array of zeros, for convienience. */
 
-  dbl phi_i;       /* i-th basis function for the FILL equation. */
-  dbl *grad_phi_i; /* Gradient of phi_i. */
+  dbl phi_i;                     /* i-th basis function for the FILL equation. */
+  dbl *grad_phi_i;               /* Gradient of phi_i. */
   dbl grad_II_phi_i[DIM];
   dbl d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
 
-  dbl phi_j;       /* j-th basis function of a field variable. */
-  dbl *grad_phi_j; /* Gradient of phi_j. */
+  dbl phi_j;            /* j-th basis function of a field variable. */
+  dbl *grad_phi_j;      /* Gradient of phi_j. */
   dbl grad_II_phi_j[DIM];
-  dbl h3;        /* Volume element (scale factors). */
-  dbl det_J;     /* Determinant of the Jacoabian of transformation. */
-  dbl wt;        /* Gauss point weight. */
-  dbl rmp[MDE];  /* Hold on to the integrands from the residuals. */
-  dbl wfcn;      /* The weight function. */
-  dbl d_wfcn_du; /* Deriv. of wfcn w.r.t. the fluid velocity. */
-  dbl d_wfcn_dx; /* Deriv. of wfcn w.r.t. the mesh displacement. */
+  dbl h3;               /* Volume element (scale factors). */
+  dbl det_J;            /* Determinant of the Jacoabian of transformation. */
+  dbl wt;               /* Gauss point weight. */
+  dbl rmp[MDE];         /* Hold on to the integrands from the residuals. */
+  dbl wfcn;             /* The weight function. */
+  dbl d_wfcn_du;        /* Deriv. of wfcn w.r.t. the fluid velocity. */
+  dbl d_wfcn_dx;        /* Deriv. of wfcn w.r.t. the mesh displacement. */
   dbl mass = 0.0, advection = 0.0;
   dbl v_dot_Dphi[MDE];  /* v.grad(phi) */
   dbl vc_dot_Dphi[MDE]; /* vcent.grad(phi) */
@@ -345,7 +345,7 @@ int assemble_fill(double tt,
       if (lubon) {
         v_dot_DF += v_rel[a] * grad_II_F[a]; /* v.gradII(F) */
       } else {
-        v_dot_DF += v_rel[a] * grad_F[a]; /* v.grad(F) */
+        v_dot_DF += v_rel[a] * grad_F[a];    /* v.grad(F) */
       }
     }
     if (lubon)
@@ -372,7 +372,7 @@ int assemble_fill(double tt,
       if (lubon) {
         v_dot_DF += v_rel[a] * grad_II_F[a]; /* v.gradII(F) */
       } else {
-        v_dot_DF += v_rel[a] * grad_F[a]; /* v.grad(F) */
+        v_dot_DF += v_rel[a] * grad_F[a];    /* v.grad(F) */
       }
     }
 
@@ -385,7 +385,7 @@ int assemble_fill(double tt,
       if (lubon) {
         v_dot_DF += v_rel[a] * grad_II_F[a]; /* v.gradII(F) */
       } else {
-        v_dot_DF += v_rel[a] * grad_F[a]; /* v.grad(F) */
+        v_dot_DF += v_rel[a] * grad_F[a];    /* v.grad(F) */
       }
     }
   }
@@ -1448,41 +1448,41 @@ int assemble_fill_ext_v(
   int eqn, var, peqn, pvar, dim, status;
   int i, j, a, b;
 
-  dbl F_dot;   /* Fill derivative wrt time. */
-  dbl *grad_F; /* Fill gradient. */
+  dbl F_dot;                     /* Fill derivative wrt time. */
+  dbl *grad_F;                   /* Fill gradient. */
 
-  dbl *xx;    /* Nodal coordinates. */
-  dbl *x_old; /* Old xx[]. */
+  dbl *xx;                       /* Nodal coordinates. */
+  dbl *x_old;                    /* Old xx[]. */
 
-  dbl x_dot[DIM];         /* Time derivative of the mesh displacements. */
-  /*dbl x_dot_old[DIM];*/ /* Old x_dot[]. */
-  dbl *x_dot_old;         /* Old x_dot[]. */
+  dbl x_dot[DIM];                /* Time derivative of the mesh displacements. */
+  /*dbl x_dot_old[DIM];*/        /* Old x_dot[]. */
+  dbl *x_dot_old;                /* Old x_dot[]. */
 
-  dbl v_rel_n;     /* Normal velocity relative to the mesh. */
-  dbl v_rel_n_old; /* Old v_rel[]. */
+  dbl v_rel_n;                   /* Normal velocity relative to the mesh. */
+  dbl v_rel_n_old;               /* Old v_rel[]. */
 
   dbl zero[3] = {0.0, 0.0, 0.0}; /* An array of zeros, for convienience. */
 
-  dbl phi_i; /* i-th basis function for the FILL equation. */
+  dbl phi_i;                     /* i-th basis function for the FILL equation. */
 
-  dbl phi_j;       /* j-th basis function of a field variable. */
-  dbl *grad_phi_i; /* Gradient of phi_i. */
-  dbl *grad_phi_j; /* Gradient of phi_j. */
-  dbl h3;          /* Volume element (scale factors). */
-  dbl det_J;       /* Determinant of the Jacoabian of transformation. */
-  dbl wt;          /* Gauss point weight. */
-  dbl tmp;         /* A temporary variable. */
+  dbl phi_j;                     /* j-th basis function of a field variable. */
+  dbl *grad_phi_i;               /* Gradient of phi_i. */
+  dbl *grad_phi_j;               /* Gradient of phi_j. */
+  dbl h3;                        /* Volume element (scale factors). */
+  dbl det_J;                     /* Determinant of the Jacoabian of transformation. */
+  dbl wt;                        /* Gauss point weight. */
+  dbl tmp;                       /* A temporary variable. */
   dbl mass = 0.0, advection = 0.0, source = 0.0;
-  dbl rmp[MDE];        /* Hold on to the integrands from the residuals. */
-  dbl wfcn;            /* The weight function. */
-  dbl d_wfcn_dext_v;   /* Deriv. of wfcn w.r.t. the extension velocity. */
-  dbl d_wfcn_dF;       /* Deriv. of wfcn w.r.t. the Level Set F. */
-  dbl v_dot_Dphi[MDE]; /* v.grad(phi) */
-  dbl v_dot_DF;        /* v.grad(F) */
-  dbl v_dot_n;         /* v.n */
+  dbl rmp[MDE];                  /* Hold on to the integrands from the residuals. */
+  dbl wfcn;                      /* The weight function. */
+  dbl d_wfcn_dext_v;             /* Deriv. of wfcn w.r.t. the extension velocity. */
+  dbl d_wfcn_dF;                 /* Deriv. of wfcn w.r.t. the Level Set F. */
+  dbl v_dot_Dphi[MDE];           /* v.grad(phi) */
+  dbl v_dot_DF;                  /* v.grad(F) */
+  dbl v_dot_n;                   /* v.n */
   dbl v_old_dot_DF, v_dot_n_old;
-  dbl dtinv;           /* = 1 / dt */
-  int Fill_Weight_Fcn; /* Fill weight function. */
+  dbl dtinv;                     /* = 1 / dt */
+  int Fill_Weight_Fcn;           /* Fill weight function. */
 
   /* Terms needed for GLS stabilization */
 
@@ -1607,7 +1607,7 @@ int assemble_fill_ext_v(
     }
     v_rel_n = ext_v - x_dot_n;
     v_rel_n_old = ext_v_old - x_dot_n_old;
-    v_dot_n = v_rel_n; /* v.n */
+    v_dot_n = v_rel_n;               /* v.n */
     v_dot_n_old = v_rel_n_old;
     v_dot_DF = v_rel_n * lsi->gfmag; /* v.n.grad(F)_mag */
     v_old_dot_DF = v_rel_n_old * lsi->gfmag;
@@ -1618,7 +1618,7 @@ int assemble_fill_ext_v(
     }
     v_rel_n = ext_v;
     v_rel_n_old = ext_v_old;
-    v_dot_n = v_rel_n; /* v.n */
+    v_dot_n = v_rel_n;               /* v.n */
     v_dot_n_old = v_rel_n_old;
     v_dot_DF = v_rel_n * lsi->gfmag; /* v.n.grad(F)_mag */
     v_old_dot_DF = v_rel_n_old * lsi->gfmag;
@@ -2104,8 +2104,8 @@ int assemble_fill_gradf(
   int eqn, var, peqn, pvar, dim, status;
   int i, j, a, b;
 
-  dbl *grad_F; /* Fill gradient. */
-  dbl phi_i;   /* i-th basis function for the FILL equation. */
+  dbl *grad_F;                   /* Fill gradient. */
+  dbl phi_i;                     /* i-th basis function for the FILL equation. */
 
   dbl phi_j;                     /* j-th basis function of a field variable. */
   dbl *grad_phi_j;               /* Gradient of phi_j. */
@@ -2495,14 +2495,14 @@ int assemble_fill_fake(double tt, double dt)
 /***************************************************************************************/
 /***************************************************************************************/
 /***************************************************************************************/
-int assemble_surface(Exo_DB *exo,    /* ptr to basic exodus ii mesh information */
-                     double x[],     /* global vector containing all unknowns  */
-                     double afill[], /* Jacobian matrix for fill equation  */
-                     int ijaf[],     /* pointer to nonzeros in Jacobian matrix   */
-                     double rf[],    /* rhs vector   */
-                     double delta_t, /* current time step size */
-                     double theta,   /* parameter to vary time integration from
-                                      * explicit (theta = 1),implicit (theta = 0) */
+int assemble_surface(Exo_DB *exo,         /* ptr to basic exodus ii mesh information */
+                     double x[],          /* global vector containing all unknowns  */
+                     double afill[],      /* Jacobian matrix for fill equation  */
+                     int ijaf[],          /* pointer to nonzeros in Jacobian matrix   */
+                     double rf[],         /* rhs vector   */
+                     double delta_t,      /* current time step size */
+                     double theta,        /* parameter to vary time integration from
+                                           * explicit (theta = 1),implicit (theta = 0) */
                      int node_to_fill[],
                      int ielem_type,      /* element type  */
                      int ielem_type_fill, /* element type for fill function */
@@ -2537,7 +2537,7 @@ int assemble_surface(Exo_DB *exo,    /* ptr to basic exodus ii mesh information 
   double xi[DIM]; /* Local element coordinates of Gauss point. */
   dbl vdotn, vdotn_avg = 1e12;
   dbl vdotn_norm;
-  double wt; /* Quadrature weights units - ergs/(sec*cm*K) = g*cm/(sec^3*K) */
+  double wt;      /* Quadrature weights units - ergs/(sec*cm*K) = g*cm/(sec^3*K) */
   NODE_INFO_STRUCT *node;
   NODAL_VARS_STRUCT *nv;
   VARIABLE_DESCRIPTION_STRUCT *vd;
@@ -2905,7 +2905,7 @@ int get_side_info(const int ielem_type,
 
   switch (ielem_type) { /* select element */
 
-  case LINEAR_TRI: /* linear triangle */
+  case LINEAR_TRI:      /* linear triangle */
   case BILINEAR_TRISHELL:
     *nodes_per_side = 2;
     switch (id_side) {
@@ -3311,7 +3311,7 @@ int get_side_info(const int ielem_type,
 /***************************************************************************************/
 /***************************************************************************************/
 
-int assemble_surface_species(Exo_DB *exo, /* ptr to basic exodus ii mesh information */
+int assemble_surface_species(Exo_DB *exo,         /* ptr to basic exodus ii mesh information */
                              double x[],
                              double delta_t,      /* current time step size */
                              double theta,        /* parameter to vary time integration from
@@ -3351,7 +3351,7 @@ int assemble_surface_species(Exo_DB *exo, /* ptr to basic exodus ii mesh informa
   double xi[DIM]; /* Local element coordinates of Gauss point. */
   dbl vdotn, vdotn_avg = 1e12;
   dbl vdotn_norm;
-  double wt; /* Quadrature weights units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
+  double wt;      /* Quadrature weights units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
 
   /***************************************************************************/
 
@@ -3941,7 +3941,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
   dbl x_dot[DIM]; /* Time derivative of the mesh displacements. */
   dbl *x_dot_old; /* Old x_dot[]. */
 
-  dbl dtinv; /* = 1 / dt */
+  dbl dtinv;      /* = 1 / dt */
   double v_rel[DIM], v_rel_old[DIM];
 
   double v_dot_grad_pf, v_dot_Dphi[MDE], vc_dot_Dphi[MDE];
@@ -3987,7 +3987,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3; /* Differential volume element (scales). */
+  h3 = fv->h3;           /* Differential volume element (scales). */
 
   dtinv = 1.0 / dt;
 
@@ -4268,7 +4268,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
               lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += tmp;
 
             } /* for ( j = 0 ... */
-          }   /* if ( pd->v[pg->imtrx][var] ) */
+          } /* if ( pd->v[pg->imtrx][var] ) */
           /* T */
 
           var = TEMPERATURE;
@@ -4298,7 +4298,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
               lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += tmp;
 
             } /* for ( j = 0 ... */
-          }   /* if ( pd->v[pg->imtrx][var] ) */
+          } /* if ( pd->v[pg->imtrx][var] ) */
 
           /*
            *   J_pf_v
@@ -4458,8 +4458,8 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
           } /* if: SHELL_LUB_CURV exisits */
 
         } /* if( active...) */
-      }   /* for(i : */
-    }     /* af->Jacobian */
+      } /* for(i : */
+    } /* af->Jacobian */
     ls = ls_old;
   }
 
@@ -4489,7 +4489,7 @@ int assemble_pf_constraint(double delta_t,
 
   det_J = bf[R_PHASE1]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3; /* Differential volume element (scales). */
+  h3 = fv->h3;                /* Differential volume element (scales). */
 
   for (i = 0, sum_old = sum = 0.0; i < pfd->num_phase_funcs; i++) {
     ls = pfd->ls[i];

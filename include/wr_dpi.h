@@ -32,4 +32,4 @@
 
 EXTERN int wr_dpi(Dpi *d, char *filename); /* verbosity - how much to talk */
 
-#endif /* GOMA_WR_DPI_H */
+#endif                                     /* GOMA_WR_DPI_H */

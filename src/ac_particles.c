@@ -95,8 +95,8 @@ static dbl *el_volume;
 static FILE **pa_fp;
 static FILE *pa_full_fp;
 
-static int pdim; /* particle dimension (coordinate, velocities, etc.) */
-static int mdim; /* mesh dimension */
+static int pdim;                 /* particle dimension (coordinate, velocities, etc.) */
+static int mdim;                 /* mesh dimension */
 
 static int Num_Impermeable_PBCs; /* Number of IMPERMEABLE particle boundary conditions. */
 
@@ -650,7 +650,7 @@ static void find_exit_wound(const int elem_id,
 
       if (fabs(xi_tmp[1]) > 1.0) /* Not this intersection!  Do exit_id2... */
       {
-        xi_tmp[0] = xi[0]; /* reset initial guess for Newton's method. */
+        xi_tmp[0] = xi[0];       /* reset initial guess for Newton's method. */
         xi_tmp[1] = (exit_id2 == 0 ? -1.0 : 1.0);
         get_boundary_xi_newton(coeff, elem_id, xi_tmp, 1, 1.0e-12);
 
@@ -679,7 +679,7 @@ static void find_exit_wound(const int elem_id,
           get_boundary_xi_newton(coeff, elem_id, xi_tmp, 0, 1.0e-12);
           exit_id1 = 3;
         }
-      } else /* fabs(xi[1]) > 1.0 */
+      } else             /* fabs(xi[1]) > 1.0 */
       {
         if (xi[1] > 1.0) /* to side 2 (0-based) */
         {
@@ -741,7 +741,7 @@ static void find_exit_wound(const int elem_id,
       if (fabs(xi_tmp[1]) > 1.0 ||
           fabs(xi_tmp[2]) > 1.0) /* Not this intersection!  Do exit_id2... */
       {
-        xi_tmp[0] = xi[0]; /* reset initial guess for Newton's method. */
+        xi_tmp[0] = xi[0];       /* reset initial guess for Newton's method. */
         xi_tmp[2] = xi[2];
         xi_tmp[1] = (exit_id2 == 0 ? -1.0 : 1.0);
         get_boundary_xi_newton(coeff, elem_id, xi_tmp, 1, xi_boundary_tolerances[tolerance_level]);
@@ -794,7 +794,7 @@ static void find_exit_wound(const int elem_id,
           exit_id1 = exit_id2; /* exit_id1 should have the final intersecting face. */
       }
     } else if (num_crossed == 2) {
-      if (!bdry_crossed[0]) /* crossed xi[1] and xi[2] */
+      if (!bdry_crossed[0])    /* crossed xi[1] and xi[2] */
       {
         exit_id1 = (xi[1] < -1.0) ? 0 : 2;
         exit_id2 = (xi[2] < -1.0) ? 4 : 5;
@@ -809,7 +809,7 @@ static void find_exit_wound(const int elem_id,
             fabs(xi_tmp[2]) > 1.0) /* Not this intersction!  Do exit_id2... */
         {
           memcpy(first_xi_tmp, xi_tmp, DIM * sizeof(dbl));
-          xi_tmp[1] = xi[1]; /* reset initial guess for Newton's method. */
+          xi_tmp[1] = xi[1];       /* reset initial guess for Newton's method. */
           xi_tmp[2] = (exit_id2 == 4) ? -1.0 : 1.0;
           get_boundary_xi_newton(coeff, elem_id, xi_tmp, 2,
                                  xi_boundary_tolerances[tolerance_level]);
@@ -846,7 +846,7 @@ static void find_exit_wound(const int elem_id,
                      exit_id3, xi[0], xi[1], xi[2], xi_tmp[0], xi_tmp[1], xi_tmp[2], stack_count);
             }
           } else
-            exit_id1 = exit_id2; /* exit_id1 should have the intersecting face. */
+            exit_id1 = exit_id2;   /* exit_id1 should have the intersecting face. */
         }
       } else if (!bdry_crossed[1]) /* crossed xi[0] and xi[2] */
       {
@@ -861,7 +861,7 @@ static void find_exit_wound(const int elem_id,
             fabs(xi_tmp[2]) > 1.0) /* Not this intersction!  Do exit_id2... */
         {
           memcpy(first_xi_tmp, xi_tmp, DIM * sizeof(dbl));
-          xi_tmp[0] = xi[0]; /* reset initial guess for Newton's method. */
+          xi_tmp[0] = xi[0];       /* reset initial guess for Newton's method. */
           xi_tmp[2] = (exit_id2 == 4) ? -1.0 : 1.0;
           get_boundary_xi_newton(coeff, elem_id, xi_tmp, 2,
                                  xi_boundary_tolerances[tolerance_level]);
@@ -900,7 +900,7 @@ static void find_exit_wound(const int elem_id,
           } else
             exit_id1 = exit_id2; /* exit_id1 should have the intersecting face. */
         }
-      } else /* crossed xi[0] and xi[1] */
+      } else                     /* crossed xi[0] and xi[1] */
       {
         exit_id1 = (xi[0] < -1.0) ? 3 : 1;
         exit_id2 = (xi[1] < -1.0) ? 0 : 2;
@@ -913,7 +913,7 @@ static void find_exit_wound(const int elem_id,
             fabs(xi_tmp[2]) > 1.0) /* Not this intersction!  Do exit_id2... */
         {
           memcpy(first_xi_tmp, xi_tmp, DIM * sizeof(dbl));
-          xi_tmp[0] = xi[0]; /* reset initial guess for Newton's method. */
+          xi_tmp[0] = xi[0];       /* reset initial guess for Newton's method. */
           xi_tmp[1] = (exit_id2 == 0) ? -1.0 : 1.0;
           get_boundary_xi_newton(coeff, elem_id, xi_tmp, 1,
                                  xi_boundary_tolerances[tolerance_level]);
@@ -953,11 +953,11 @@ static void find_exit_wound(const int elem_id,
             exit_id1 = exit_id2; /* exit_id1 should have the intersecting face. */
         }
       }
-    } else /* one coordinate crossing. */
+    } else                       /* one coordinate crossing. */
     {
-      if (bdry_crossed[0]) /* crossed a xi[0] face */
+      if (bdry_crossed[0])       /* crossed a xi[0] face */
       {
-        if (xi[0] <= -1.0) /* xi[0] = -1 */
+        if (xi[0] <= -1.0)       /* xi[0] = -1 */
         {
           xi_tmp[0] = -1.0;
           get_boundary_xi_newton(coeff, elem_id, xi_tmp, 0,
@@ -1028,7 +1028,7 @@ static void find_exit_wound(const int elem_id,
         }
       } else if (bdry_crossed[1]) /* crossed a xi[1] face */
       {
-        if (xi[1] <= -1.0) /* xi[1] = -1 */
+        if (xi[1] <= -1.0)        /* xi[1] = -1 */
         {
           xi_tmp[1] = -1.0;
           get_boundary_xi_newton(coeff, elem_id, xi_tmp, 1,
@@ -1097,7 +1097,7 @@ static void find_exit_wound(const int elem_id,
           }
           exit_id1 = 2;
         }
-      } else /* crossed a xi[2] face */
+      } else               /* crossed a xi[2] face */
       {
         if (xi[2] <= -1.0) /* xi[2] = -1 */
         {
@@ -1391,7 +1391,7 @@ int compute_particles(const Exo_DB *exo,         /* mesh */
       {
         num_particles--;
         remove_from_element_particle_list(p, el_index);
-        free(p); /* Bye bye */
+        free(p);                                /* Bye bye */
         fprintf(stderr, "REMOVING A PARTICLE\n");
       } else if (p->state == ACTIVE &&
                  el_index != p->owning_elem_id) /* I moved elements on the same processor. */
@@ -1581,8 +1581,8 @@ int compute_particles(const Exo_DB *exo,         /* mesh */
         {
           add_to_send_list(p);
           local_num_to_send++;
-        } else if (p->state == DEAD) /* Delete me */
-          free(p);                   /* Bye bye */
+        } else if (p->state == DEAD)               /* Delete me */
+          free(p);                                 /* Bye bye */
         else {
           create_a_particle(p, p->owning_elem_id); /* This num_particles++ already */
           free(p);
@@ -2213,7 +2213,7 @@ static void create_element_particle_info_maps(void) {
    * -2 => I'm done, go to next proc.
    */
   if (Num_Proc == 1)
-    return; /* Nothing to do, right? */
+    return;                      /* Nothing to do, right? */
 
   nodes_per_side = (mdim == 2 ? 2 : 4);
   msg_size = nodes_per_side + 1; /* num side nodes + 1 */
@@ -2310,8 +2310,8 @@ static void create_element_particle_info_maps(void) {
               element_particle_info[elem_id].owner_local_element_id[side_id] = msg[1];
               msg_tag++;
             } /* if unknown reference ... */
-          }   /* for side_id ... */
-      }       /* for elem_id ... */
+          } /* for side_id ... */
+      } /* for elem_id ... */
       if (output) {
         fprintf(fp, "Proc %d sending termination ticket.\n", ProcID);
         fclose(fp);
@@ -2429,7 +2429,7 @@ static void create_element_particle_info_maps(void) {
                 if (node_compares[node_id] != msg[node_id + 1])
                   match_found = 0;
             } /* for side_id ... */
-          }   /* for elem_id ... */
+          } /* for elem_id ... */
           if (match_found) {
             elem_id--;
             if (output) {
@@ -2450,9 +2450,9 @@ static void create_element_particle_info_maps(void) {
           }
           msg_tag++;
         } /* msg[0] indicates node matching */
-      }   /* while(not terminated) */
-    }     /* proc_id != ProcID */
-  }       /* for i = 0 ... Num_Proc-1 */
+      } /* while(not terminated) */
+    } /* proc_id != ProcID */
+  } /* for i = 0 ... Num_Proc-1 */
   free(msg);
   if (output)
     fclose(fp2);
@@ -2616,9 +2616,9 @@ static void generate_source_particles(const dbl tt, /* parameter to vary time in
               create_a_particle(&p, elem_id);
             }
           } /* for k ... static_exo->ss_num_sides[j] */
-        }   /* SS_id == static_exo->ss_id[j] */
-    }       /* PBC_Type == PBC_SOURCE || PBC_FREESTREAM_SOURCE */
-  }         /* i = ... Particle_Number_PBCs */
+        } /* SS_id == static_exo->ss_id[j] */
+    } /* PBC_Type == PBC_SOURCE || PBC_FREESTREAM_SOURCE */
+  } /* i = ... Particle_Number_PBCs */
 }
 
 /* This routine will initialize the parameters in a sane way to the
@@ -3271,7 +3271,7 @@ static dbl compute_particle_dt(particle_t *const p, const dbl max_dt) {
   if (pd->CoordinateSystem == CARTESIAN)
     gravity_index = 2 * pdim - 1; /* y or z depending on 2D or 3D */
   else
-    gravity_index = pdim; /* z in (z,r) */
+    gravity_index = pdim;         /* z in (z,r) */
 
   min_side_length = get_element_minimum_side_length(p->owning_elem_id);
   particle_speed = nnorm(DIM, p->v);
@@ -3508,8 +3508,8 @@ static int move_particle(particle_t *const p,
                          dbl global_time_step) {
   int i, j, return_value = -1;
   int gravity_index;
-  dbl ext_velocity[DIM];   /* Additional velocity applied to particle. */
-  dbl total_velocity[DIM]; /* total velocity at particle. */
+  dbl ext_velocity[DIM];       /* Additional velocity applied to particle. */
+  dbl total_velocity[DIM];     /* total velocity at particle. */
   dbl time_fraction;
   dbl current_v[DIM];          /* For implicit methods, this is current velocity. */
   dbl vel_rel[DIM];            /* Relative velocity. */
@@ -3552,7 +3552,7 @@ static int move_particle(particle_t *const p,
   if (pd->CoordinateSystem == CARTESIAN)
     gravity_index = 2 * pdim - 1; /* y or z depending on 2D or 3D */
   else
-    gravity_index = pdim; /* z in (z,r) */
+    gravity_index = pdim;         /* z in (z,r) */
 
   switch (Particle_Model) {
   case TRACER_EXPLICIT:
@@ -4653,10 +4653,10 @@ static void advance_a_particle(particle_t *p,
 static void remove_from_element_particle_list(particle_t *p, const int elem_id) {
   if (!(p->last)) /* If I'm the head */
     element_particle_list_head[elem_id] = p->next;
-  else /* Fix my previous neighbor */
+  else            /* Fix my previous neighbor */
     p->last->next = p->next;
 
-  if (p->next) /* Fix my next neighbor */
+  if (p->next)    /* Fix my next neighbor */
     p->next->last = p->last;
 }
 
@@ -4977,7 +4977,7 @@ static void load_restart_file(void) {
       if (fscanf(fp, "%lf ", &p.x[i]) != 1)
         continue; /* probable EOF */
     if (fscanf(fp, "%lf %d", &p.time, &p.owning_elem_id) != 2)
-      continue; /* probable EOF */
+      continue;   /* probable EOF */
     fgetserr = fgets(garbage, 254, fp);
     if (fgetserr == NULL) {
       GOMA_EH(GOMA_ERROR, "Error reading line in particle restart file");

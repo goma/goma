@@ -380,12 +380,12 @@ void setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc) {
   int npe;
   int num_sides;
   int ss_index;
-  int ss_index_max; /* index for SS touching the most EBs */
+  int ss_index_max;                /* index for SS touching the most EBs */
 
-  int *ebl; /* element block list */
-  int *ebp; /* ptrs based on element blocks */
-  int *ssl; /* lists of sidesets that EBs touch */
-  int *ssp; /* side set pointers */
+  int *ebl;                        /* element block list */
+  int *ebp;                        /* ptrs based on element blocks */
+  int *ssl;                        /* lists of sidesets that EBs touch */
+  int *ssp;                        /* side set pointers */
 
   char Title[MAX_LINE_LENGTH + 1]; /* EXODUS II title                              */
   char err_msg[MAX_CHAR_ERR_MSG];
@@ -1296,8 +1296,8 @@ void sseb_conn(Exo_DB *e,                    /* see exo_struct.h for full def   
                int **element_block_pointers, /* ptrs into ss_list            (out) */
                int **side_set_list)          /* lists of ss's for eb's               (out) */
 {
-  int begin;             /* where to start in concatenate SS elem list */
-  int current_list_size; /* of minibuffer list */
+  int begin;                                 /* where to start in concatenate SS elem list */
+  int current_list_size;                     /* of minibuffer list */
   int i;
   int j;
   /* int k; */

@@ -37,4 +37,4 @@ EXTERN void lu(const int,  /* N                                         */
                double[],   /* x                                         */
                const int); /* factor_flag                               */
 
-#endif /* GOMA_SL_LU_H */
+#endif                     /* GOMA_SL_LU_H */

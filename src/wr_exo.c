@@ -81,7 +81,7 @@ static int has_been_called = 0;
 
 extern char **Argv; /* global shadow of argv, def'd in main.c */
 
-static Spfrtn sr; /* sprintf() return type, whatever it is. */
+static Spfrtn sr;   /* sprintf() return type, whatever it is. */
 
 /***********************************************************************/
 /***********************************************************************/
@@ -439,7 +439,7 @@ void wr_result_prelim_exo(struct Results_Description *rd,
                           char *filename,
                           double ***gvec_elem) {
   int i, error;
-  int filename_exists; /* boolean */
+  int filename_exists;      /* boolean */
 
   int num_vars;             /* number of var_type variables to be written */
   char *var_names[MAX_NNV]; /* NOTE: this array must be sized to be the
@@ -556,7 +556,7 @@ void wr_result_prelim_exo_segregated(struct Results_Description **rd,
                                      char *filename,
                                      double ****gvec_elem) {
   int i, error;
-  int filename_exists; /* boolean */
+  int filename_exists;      /* boolean */
 
   int num_vars;             /* number of var_type variables to be written */
   char *var_names[MAX_NNV]; /* NOTE: this array must be sized to be the
@@ -831,7 +831,7 @@ void wr_global_result_exo(
    * changes this restriction should be removed. TAB 3/2002 */
 
   if (u == NULL)
-    return; /* Do nothing if this is NULL */
+    return;             /* Do nothing if this is NULL */
 
   exo->cmode = EX_WRITE;
   exo->io_wordsize = 0; /* query */

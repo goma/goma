@@ -37,4 +37,4 @@ EXTERN double shape /* rf_shape.c                                */
      const int,     /* Iquant - desired quantity (phi, phi_s, ...*/
      const int);    /* Inode - current element node              */
 
-#endif /* GOMA_RF_SHAPE_H */
+#endif              /* GOMA_RF_SHAPE_H */

@@ -66,41 +66,41 @@
  *   - Feb 98 -> Oct 98, another checkin
  *   - Jan 13, 2000, MMH rearranged and conformed to Goma style.
  */
-void eggrollwrap(int *istuff, /* info for eigenvalue extraction */
-                 dbl *dstuff, /* info for eigenvalue extraction */
+void eggrollwrap(int *istuff,      /* info for eigenvalue extraction */
+                 dbl *dstuff,      /* info for eigenvalue extraction */
 
-                 int *ija, /* column pointer array */
-                 dbl *jac, /* nonzero array */
-                 dbl *mas, /* nonzero array - same structure
-                              as jac[] (ija[]) */
+                 int *ija,         /* column pointer array */
+                 dbl *jac,         /* nonzero array */
+                 dbl *mas,         /* nonzero array - same structure
+                                      as jac[] (ija[]) */
 
                  dbl *x,           /* Value of the solution vector */
                  char *ExoFileOut, /* Name of exoII output file */
                  int prob_type,
-                 dbl delta_t,   /* time step size */
-                 dbl theta,     /* variable time integration parameter
-                                   explicit (theta = 1) to
-                                   implicit (theta = 0) */
-                 dbl *x_old,    /* Value of the old solution vector */
-                 dbl *xdot,     /* Value of xdot predicted for new
-                                   solution */
-                 dbl *xdot_old, /* dx/dt at previous time step */
+                 dbl delta_t,      /* time step size */
+                 dbl theta,        /* variable time integration parameter
+                                      explicit (theta = 1) to
+                                      implicit (theta = 0) */
+                 dbl *x_old,       /* Value of the old solution vector */
+                 dbl *xdot,        /* Value of xdot predicted for new
+                                      solution */
+                 dbl *xdot_old,    /* dx/dt at previous time step */
                  dbl *resid_vector,
-                 int *converged, /* whether the Newton has converged */
-                 int *nprint,    /* counter for time step number */
-                 int tnv,        /* number of nodal results */
-                 int tnv_post,   /* number of post processing results */
-                 int tev,        /* Number of elements variable results */
-                 int tev_post,   /* Number of post processing results */
+                 int *converged,   /* whether the Newton has converged */
+                 int *nprint,      /* counter for time step number */
+                 int tnv,          /* number of nodal results */
+                 int tnv_post,     /* number of post processing results */
+                 int tev,          /* Number of elements variable results */
+                 int tev_post,     /* Number of post processing results */
                  struct Results_Description *rd,
                  int *gindex,
                  int *p_gsize,
                  dbl *gvec,
                  dbl ***gvec_elem, /* gvec_elem*/
                  dbl time_value,
-                 Exo_DB *exo,  /* ptr to finite element mesh db */
-                 int Num_Proc, /* number of processors used */
-                 Dpi *dpi)     /* ptr to distributed processing info */
+                 Exo_DB *exo,      /* ptr to finite element mesh db */
+                 int Num_Proc,     /* number of processors used */
+                 Dpi *dpi)         /* ptr to distributed processing info */
 {
   int i, j, ic, nj, nnz_j, first_linear_solver_call, Factor_Flag, matr_form, error, rcflag, action,
       ev_n, ev_jac, filter, mm, max_itr, nev_want, nev_found, lead,

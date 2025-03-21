@@ -68,8 +68,8 @@ static char err_msg[MAX_CHAR_ERR_MSG];
  * Function definitions.
  */
 
-void build_big_bones(Exo_DB *p, /* EXODUS info from representative polylith */
-                     Dpi *d,    /* distributed processing info from polylith */
+void build_big_bones(Exo_DB *p,           /* EXODUS info from representative polylith */
+                     Dpi *d,              /* distributed processing info from polylith */
                      Exo_DB *m,
                      struct fix_data *fd) /* ptr to monolithic EXODUS II database */
 {
@@ -530,14 +530,14 @@ void build_big_bones(Exo_DB *p, /* EXODUS info from representative polylith */
  * Revised:
  */
 
-void build_global_conn(Exo_DB *p, /* EXODUS info from representative polylith */
-                       Dpi *d,    /* distributed processing info from polylith */
+void build_global_conn(Exo_DB *p,           /* EXODUS info from representative polylith */
+                       Dpi *d,              /* distributed processing info from polylith */
                        Exo_DB *m,
                        struct fix_data *fd) /* ptr to monolithic EXODUS II database */
 {
-  int e;          /* element index */
-  int ebi;        /* element block index */
-  int ebi_global; /* element block index in global problem */
+  int e;                                    /* element index */
+  int ebi;                                  /* element block index */
+  int ebi_global;                           /* element block index in global problem */
   int elem_global;
   int elem_global_this_block;
 
@@ -615,8 +615,8 @@ void build_global_conn(Exo_DB *p, /* EXODUS info from representative polylith */
  * Revised:
  */
 
-void build_global_attr(Exo_DB *p, /* EXODUS info from representative polylith */
-                       Dpi *d,    /* distributed processing info from polylith */
+void build_global_attr(Exo_DB *p,           /* EXODUS info from representative polylith */
+                       Dpi *d,              /* distributed processing info from polylith */
                        Exo_DB *m,
                        struct fix_data *fd) /* ptr to monolithic EXODUS II database */
 {
@@ -771,7 +771,7 @@ void build_global_coords(Exo_DB *p, /* EXODUS info from representative polylith 
  * Revised:
  */
 
-void build_global_ns(Dpi *d, /* distributed processing info from polylith */
+void build_global_ns(Dpi *d,              /* distributed processing info from polylith */
                      Exo_DB *m,
                      struct fix_data *fd) /* ptr to monolithic EXODUS II database */
 {
@@ -820,7 +820,7 @@ void build_global_ns(Dpi *d, /* distributed processing info from polylith */
  * Revised:
  */
 
-void build_global_ss(Dpi *d, /* distributed processing info from polylith */
+void build_global_ss(Dpi *d,              /* distributed processing info from polylith */
                      Exo_DB *m,
                      struct fix_data *fd) /* ptr to monolithic EXODUS II database */
 {
@@ -876,13 +876,13 @@ void build_global_ss(Dpi *d, /* distributed processing info from polylith */
  * Revised:
  */
 
-void build_global_res(Exo_DB *p, /* EXODUS info from representative polylith */
-                      Dpi *d,    /* distributed processing info from polylith */
+void build_global_res(Exo_DB *p,           /* EXODUS info from representative polylith */
+                      Dpi *d,              /* distributed processing info from polylith */
                       Exo_DB *m,
                       struct fix_data *fd) /* ptr to monolithic EXODUS II database */
 {
-  int b;        /* element block index - local */
-  int b_global; /* element block index - global */
+  int b;                                   /* element block index - local */
+  int b_global;                            /* element block index - global */
   int e;
   int eg;
   int elem_local;

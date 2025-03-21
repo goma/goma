@@ -40,16 +40,16 @@ apply_integrated_bc(double x[],            /* Solution vector for the current pr
                                             *  ( implicit - 0 to explicit - 1)             */
                     const PG_DATA *pg_data,
 
-                    const int ielem,      /* element number */
-                    const int ielem_type, /* element type */
+                    const int ielem,       /* element number */
+                    const int ielem_type,  /* element type */
                     const int num_local_nodes,
                     const int ielem_dim,
                     const int iconnect_ptr,
                     ELEM_SIDE_BC_STRUCT *elem_side_bc, /* Pointer to an element side boundary
                                                         * condition structure */
                     const int num_total_nodes,
-                    const int bc_application, /* flag indicating whether to integrate
-                                               * strong or weak BC's */
+                    const int bc_application,          /* flag indicating whether to integrate
+                                                        * strong or weak BC's */
                     const double time_value,
                     SGRID *grid,
                     const Exo_DB *exo);
@@ -60,16 +60,16 @@ int apply_nedelec_bc(double x[],            /* Solution vector for the current p
                      const double theta,    /* parameter (0 to 1) to vary time integration
                                              *  ( implicit - 0 to explicit - 1)             */
                      const PG_DATA *pg_data,
-                     const int ielem,      /* element number */
-                     const int ielem_type, /* element type */
+                     const int ielem,       /* element number */
+                     const int ielem_type,  /* element type */
                      const int num_local_nodes,
                      const int ielem_dim,
                      const int iconnect_ptr,
                      ELEM_SIDE_BC_STRUCT *elem_side_bc, /* Pointer to an element side boundary
                                                          * condition structure */
                      const int num_total_nodes,
-                     const int bc_application, /* flag indicating whether to integrate
-                                                * strong or weak BC's */
+                     const int bc_application,          /* flag indicating whether to integrate
+                                                         * strong or weak BC's */
                      const double time_value,
                      SGRID *grid,
                      const Exo_DB *exo);

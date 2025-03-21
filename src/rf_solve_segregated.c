@@ -201,7 +201,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
    * Variables
    */
 
-  static double **x = NULL; /* solution vector                   */
+  static double **x = NULL;          /* solution vector                   */
 
   static double **x_old = NULL;      /* old solution vector               */
   static double **x_older = NULL;    /* older solution vector             */
@@ -296,7 +296,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
   double time2 = 0.0;
   struct Extended_Shape_Fcn_Basics **matrix_xfem = NULL;
   tran->solid_inertia = 0;
-  static int callnum = 1; /* solve_problem_segregated call counter */
+  static int callnum = 1;                              /* solve_problem_segregated call counter */
 
   static const char yo[] = "solve_problem_segregated"; /* So my name is in a string.        */
 
@@ -348,9 +348,9 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
       GOMA_EH(GOMA_ERROR, "\t");
     }
 
-    rd[pg->imtrx]->nev = 0; /* number element variables in results */
-    rd[pg->imtrx]->ngv = 0; /* number global variables in results  */
-    rd[pg->imtrx]->nhv = 0; /* number history variables in results */
+    rd[pg->imtrx]->nev = 0;       /* number element variables in results */
+    rd[pg->imtrx]->ngv = 0;       /* number global variables in results  */
+    rd[pg->imtrx]->nhv = 0;       /* number history variables in results */
 
     rd[pg->imtrx]->ngv = 6 + nAC; /* number global variables in results
                                    * see load_global_var_info for names
@@ -2497,7 +2497,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
           }
         }
 
-      }    /*  if(converged && success_dt) */
+      } /*  if(converged && success_dt) */
       else /* not converged or unsuccessful time step */
       {
         /* Set bit TRUE in next line to enable retries for failed first
@@ -2575,7 +2575,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
         break;
       }
     } /* end of time step loop */
-  }   /* end of if steady else transient */
+  } /* end of if steady else transient */
 free_and_clear:
 
   if (timestep_subcycle) {

@@ -44,19 +44,19 @@ EXTERN int apply_rotated_bc(double[], /* resid_vector                           
                                                              * element. Its length is equal to the
                                                              * total number of elements defined on
                                                              * the current processor.             */
-                            const int,       /* ielem - element number                    */
-                            const int,       /* ielem_type - element type                 */
-                            const int,       /* num_local_nodes                           */
-                            const int,       /* ielem_dim                                 */
-                            const int,       /* iconnect_ptr                              */
-                            const int,       /* num_total_nodes                           */
-                            const Exo_DB *); /* exo - ptr to FE database                  */
+                            const int,            /* ielem - element number                    */
+                            const int,            /* ielem_type - element type                 */
+                            const int,            /* num_local_nodes                           */
+                            const int,            /* ielem_dim                                 */
+                            const int,            /* iconnect_ptr                              */
+                            const int,            /* num_total_nodes                           */
+                            const Exo_DB *);      /* exo - ptr to FE database                  */
 
-EXTERN void rotate_mesh_eqn(const int, /* id - Elemental stiffness matrix row index */
-                            const int, /* I - Global node number                    */
-                            const int, /* iconnect_ptr - Pointer to beginning of
-                                        * connectivity list for the current element */
-                            const int, /* dim - physical dim of problem             */
+EXTERN void rotate_mesh_eqn(const int,            /* id - Elemental stiffness matrix row index */
+                            const int,            /* I - Global node number                    */
+                            const int,            /* iconnect_ptr - Pointer to beginning of
+                                                   * connectivity list for the current element */
+                            const int,            /* dim - physical dim of problem             */
                             struct GomaLinearSolverData *);
 
 EXTERN void rotate_res_jac_mesh(int,              /* irow_index - Elemental stiffness matrix   *
@@ -78,7 +78,7 @@ EXTERN void rotate_res_jac_mesh(int,              /* irow_index - Elemental stif
                                                                      * surface tangent vector 1 or 2
                                                                      * * component-i wrt
                                                                      * displacement-j at node-k */
-                                double); /* sign - of tangent vector                  */
+                                double);         /* sign - of tangent vector                  */
 
 EXTERN void rotate_res_jac_mom(int,              /* irow_index - Elemental stiffness matrix   *
                                                   * row index                                 */
@@ -101,20 +101,20 @@ EXTERN void rotate_res_jac_mom(int,              /* irow_index - Elemental stiff
                                /* Array of derivatives ([i][j][k]) of surface
                                   tangent vector 1 or 2: component-i
                                   wrt displacement-j at node-k         */
-                               double); /* sign - of tangent vector                  */
+                               double);              /* sign - of tangent vector                  */
 
-EXTERN void rotate_momentum_eqn(const int, /* id - Elemental stiffness matrix row index */
-                                const int, /* I - Global node number                    */
-                                const int, /* iconnect_ptr - Pointer to beginning of
-                                            * connectivity list for the current element */
-                                const int, /* dim - physical dim of problem             */
+EXTERN void rotate_momentum_eqn(const int,           /* id - Elemental stiffness matrix row index */
+                                const int,           /* I - Global node number                    */
+                                const int,           /* iconnect_ptr - Pointer to beginning of
+                                                      * connectivity list for the current element */
+                                const int,           /* dim - physical dim of problem             */
                                 struct GomaLinearSolverData *);
 
-EXTERN void calculate_all_rotation_vectors(Exo_DB *,  /* exo - ptr to the whole FE mesh */
+EXTERN void calculate_all_rotation_vectors(Exo_DB *, /* exo - ptr to the whole FE mesh */
                                            double[]); /* x - Soln vector */
 
-EXTERN void calculate_2D_rotation_vectors(Exo_DB *,  /* exo - ptr to the whole FE mesh */
-                                          double[]); /* x - Soln vector */
+EXTERN void calculate_2D_rotation_vectors(Exo_DB *,   /* exo - ptr to the whole FE mesh */
+                                          double[]);  /* x - Soln vector */
 
 EXTERN void append_vectors(int, int, int, int *, ROTATION_VECTORS_STRUCT **);
 
@@ -170,36 +170,36 @@ static void rotate_res_jac_mesh(const int,   /* irow_index - Elemental stiffness
                                                            * at node-k */
                                 const double sign); /* sign of tangent vector                    */
 
-static void rotate_res_jac_mom(const int,          /* irow_index - Elemental stiffness row      */
-                               const int,          /* I - Global node number                    */
-                               const int,          /* iconnect_ptr - Pointer to beginning of
-                                                    * connectivity list for the current element */
-                               const int,          /* nodes_per_elem - number of nodes in the
-                                                    * element                                   */
-                               const int,          /* ielem_surf_dim - physical dim of element
-                                                    * surface - 0,1,2                           */
-                               double[],           /* snormal - vector components of surface
-                                                    * normal                                    */
-                               double[][DIM][MDE], /* dsnormal_dx - Array of derivatives
-                                                    * ([i][j][k]) of surface normal:
-                                                    * component-i wrt displacement-j at node-k  */
-                               double[][DIM],      /* stangent - vector components of 2 mutually
-                                                    * orthogonal surface tangent vectors        */
+static void rotate_res_jac_mom(const int,           /* irow_index - Elemental stiffness row      */
+                               const int,           /* I - Global node number                    */
+                               const int,           /* iconnect_ptr - Pointer to beginning of
+                                                     * connectivity list for the current element */
+                               const int,           /* nodes_per_elem - number of nodes in the
+                                                     * element                                   */
+                               const int,           /* ielem_surf_dim - physical dim of element
+                                                     * surface - 0,1,2                           */
+                               double[],            /* snormal - vector components of surface
+                                                     * normal                                    */
+                               double[][DIM][MDE],  /* dsnormal_dx - Array of derivatives
+                                                     * ([i][j][k]) of surface normal:
+                                                     * component-i wrt displacement-j at node-k  */
+                               double[][DIM],       /* stangent - vector components of 2 mutually
+                                                     * orthogonal surface tangent vectors        */
                                double[][DIM][DIM][MDE], /* dstangent_dx - Array of derivatives
                                                          * ([i][j][k]) of surface tangent vector 1
                                                          * or 2: component-i wrt displacement-j at
                                                          * node-k */
                                const double sign); /* sign of tangent vector                    */
 
-static void load_element_indices(const Exo_DB *, /* exo - ptr to FE db                        */
-                                 const int,      /* mn - material number                      */
-                                 const int,      /* ielem - element index number              */
-                                 int *,          /* iconnect_ptr                              */
-                                 int *,          /* ielem_type                                */
-                                 int *,          /* ip_total                                  */
-                                 int *,          /* num_local_nodes                           */
-                                 int *,          /* ielem_dim                                 */
-                                 int *);         /* dim                                       */
+static void load_element_indices(const Exo_DB *,   /* exo - ptr to FE db                        */
+                                 const int,        /* mn - material number                      */
+                                 const int,        /* ielem - element index number              */
+                                 int *,            /* iconnect_ptr                              */
+                                 int *,            /* ielem_type                                */
+                                 int *,            /* ip_total                                  */
+                                 int *,            /* num_local_nodes                           */
+                                 int *,            /* ielem_dim                                 */
+                                 int *);           /* dim                                       */
 
 #endif
 
@@ -208,9 +208,9 @@ void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
                           int dim, /* physical dim of problem              */
                           struct GomaLinearSolverData *ams);
 
-void rotate_mesh_auto(int id,  /* Elemental stiffness matrix row index */
-                      int I,   /* Global node number                   */
-                      int dim, /* physical dim of problem              */
+void rotate_mesh_auto(int id,      /* Elemental stiffness matrix row index */
+                      int I,       /* Global node number                   */
+                      int dim,     /* physical dim of problem              */
                       struct GomaLinearSolverData *ams);
 
-#endif /* GOMA_BC_ROTATE_H */
+#endif                             /* GOMA_BC_ROTATE_H */

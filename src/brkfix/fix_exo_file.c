@@ -54,11 +54,11 @@
 #include "wr_exo.h"
 #include <string.h>
 
-extern int *ep; /* element pointers into node list */
-extern int *np; /* node pointers into element list */
+extern int *ep;  /* element pointers into node list */
+extern int *np;  /* node pointers into element list */
 
-extern int *nl; /* node list */
-extern int *el; /* element list */
+extern int *nl;  /* node list */
+extern int *el;  /* element list */
 
 extern int *ebl; /* element block list */
 
@@ -81,17 +81,17 @@ int fix_exo_file(int num_procs, const char *exo_mono_name) {
   int p, pmax = 0, num_node_var_max = 0;
   int t;
 
-  Exo_DB *mono; /* monolith mesh */
-  Exo_DB *poly; /* polylith mesh+dpi+results in */
+  Exo_DB *mono;                              /* monolith mesh */
+  Exo_DB *poly;                              /* polylith mesh+dpi+results in */
 
-  Dpi *dpin; /* polylith dpi in */
+  Dpi *dpin;                                 /* polylith dpi in */
 
   char monolith_file_name[FILENAME_MAX_ACK]; /* original mesh */
 
-  char polylith_name[FILENAME_MAX_ACK]; /* "basename_1of2.exoII" */
+  char polylith_name[FILENAME_MAX_ACK];      /* "basename_1of2.exoII" */
 
   char err_msg[MAX_CHAR_ERR_MSG];
-  char *tmp; /* char pointer junkyard of no interest */
+  char *tmp;                                 /* char pointer junkyard of no interest */
 
   Spfrtn sr = 0;
 

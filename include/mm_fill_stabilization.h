@@ -86,10 +86,10 @@ int calc_pspg(dbl pspg[DIM],
               dbl dt,         /* current time step size                    */
               const PG_DATA *pg_data);
 
-int calc_cont_gls /* mm_fill_terms.c                           */
+int calc_cont_gls             /* mm_fill_terms.c                           */
     (dbl *,
      CONT_GLS_DEPENDENCE_STRUCT *,
-     dbl, /* current time                              */
+     dbl,                     /* current time                              */
      const PG_DATA *);
 
 bool is_evss_f_model(int model);

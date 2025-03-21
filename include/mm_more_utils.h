@@ -37,17 +37,17 @@ struct Results_Description;
 #define EXTERN extern
 #endif
 
-EXTERN int cnt_nodal_vars /* mm_more_utils.c                           */
+EXTERN int cnt_nodal_vars          /* mm_more_utils.c                           */
     (void);
 
-EXTERN int cnt_elem_vars /* mm_more_utils.c                           */
+EXTERN int cnt_elem_vars           /* mm_more_utils.c                           */
     (const Exo_DB *);
 
-EXTERN int goal_post_nodal /* mm_more_utils.c                           */
-    (const int);           /* var  */
+EXTERN int goal_post_nodal         /* mm_more_utils.c                           */
+    (const int);                   /* var  */
 
-EXTERN int goal_post_elem /* mm_more_utils.c                           */
-    (const int);          /* var  */
+EXTERN int goal_post_elem          /* mm_more_utils.c                           */
+    (const int);                   /* var  */
 
 EXTERN int set_nv_tkud             /* mm_more_utils.c                           */
     (struct Results_Description *, /* r - just node results for Exodus II  */
@@ -74,47 +74,47 @@ EXTERN int load_global_var_info    /* mm_more_utils.c                           
      const int,                    /* i - index                                 */
      const char *);                /* name - name (short)                       */
 
-EXTERN void sum_total_stress /* mm_more_utils.c                           */
-    (double[],               /* sol_vec                                   */
-     int,                    /* var_no                                    */
-     int,                    /* k                                         */
-     double[],               /* nodal_vec                                 */
-     Exo_DB *);              /* exo                                       */
+EXTERN void sum_total_stress       /* mm_more_utils.c                           */
+    (double[],                     /* sol_vec                                   */
+     int,                          /* var_no                                    */
+     int,                          /* k                                         */
+     double[],                     /* nodal_vec                                 */
+     Exo_DB *);                    /* exo                                       */
 
-EXTERN void extract_nodal_vec /* mm_more_utils.c                           */
-    (double[],                /* sol_vec                                   */
-     int,                     /* var_no                                    */
-     int,                     /* k                                         */
-     int,                     /* matIndex                                  */
-     double[],                /* nodal_vec                                 */
-     Exo_DB *,                /* exo                                       */
-     int,                     /* timeDerivative                            */
-     dbl);                    /* current time                              */
+EXTERN void extract_nodal_vec      /* mm_more_utils.c                           */
+    (double[],                     /* sol_vec                                   */
+     int,                          /* var_no                                    */
+     int,                          /* k                                         */
+     int,                          /* matIndex                                  */
+     double[],                     /* nodal_vec                                 */
+     Exo_DB *,                     /* exo                                       */
+     int,                          /* timeDerivative                            */
+     dbl);                         /* current time                              */
 
-EXTERN void extract_nodal_eb_vec /* mm_more_utils.c                          */
-    (double[],                   /* sol_vec                                   */
-     int,                        /* var_no                                    */
-     int,                        /* ktype                                     */
-     int,                        /* matIndex                                  */
-     int,                        /* eb_index                                  */
-     double[],                   /* nodal_vec                                 */
-     Exo_DB *,                   /* exo                                       */
-     int,                        /* timeDeriviative                           */
-     double);                    /* time                                      */
+EXTERN void extract_nodal_eb_vec   /* mm_more_utils.c                          */
+    (double[],                     /* sol_vec                                   */
+     int,                          /* var_no                                    */
+     int,                          /* ktype                                     */
+     int,                          /* matIndex                                  */
+     int,                          /* eb_index                                  */
+     double[],                     /* nodal_vec                                 */
+     Exo_DB *,                     /* exo                                       */
+     int,                          /* timeDeriviative                           */
+     double);                      /* time                                      */
 
-EXTERN void extract_elem_vec /* mm_more_utils.c                           */
-    (const double[],         /* sol_vec                                   */
-     const int,              /* ev_indx                                   */
-     const int,              /* var_no                                    */
-     double ***,             /* gvec_elem                                 */
+EXTERN void extract_elem_vec       /* mm_more_utils.c                           */
+    (const double[],               /* sol_vec                                   */
+     const int,                    /* ev_indx                                   */
+     const int,                    /* var_no                                    */
+     double ***,                   /* gvec_elem                                 */
      const Exo_DB *,
-     const int dof); /* degrees of freedom                                       */
+     const int dof);               /* degrees of freedom                                       */
 
-EXTERN void anneal_map /* mm_more_utils.c                           */
-    (const int,        /* dim                                       */
-     const double[],   /* X_old                                     */
-     const double[],   /* displacement                              */
-     double[]);        /* X_new                                     */
+EXTERN void anneal_map             /* mm_more_utils.c                           */
+    (const int,                    /* dim                                       */
+     const double[],               /* X_old                                     */
+     const double[],               /* displacement                              */
+     double[]);                    /* X_new                                     */
 
 EXTERN int get_new_coord(double *[DIM], double *, const Exo_DB *);
 

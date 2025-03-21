@@ -63,14 +63,14 @@ struct heat_source_dependence {
 };
 typedef struct heat_source_dependence HEAT_SOURCE_DEPENDENCE_STRUCT;
 
-int assemble_energy /* mm_fill_terms.c                           */
-    (double,        /* time - present time value                 */
-     double,        /* tt - parameter to vary time integration
-                     * from explicit (tt = 1) to
-                     * implicit (tt = 0)                   */
-     double,        /* dt - current time step size        */
+int assemble_energy  /* mm_fill_terms.c                           */
+    (double,         /* time - present time value                 */
+     double,         /* tt - parameter to vary time integration
+                      * from explicit (tt = 1) to
+                      * implicit (tt = 0)                   */
+     double,         /* dt - current time step size        */
      const PG_DATA *);
-double conductivity /* mm_fill_terms.c             */
+double conductivity  /* mm_fill_terms.c             */
     (CONDUCTIVITY_DEPENDENCE_STRUCT *, dbl);
 double heat_capacity /* mm_fill_terms.c                  */
     (HEAT_CAPACITY_DEPENDENCE_STRUCT *, dbl);
@@ -81,12 +81,12 @@ double ls_modulate_heatcapacity(
 void heat_flux(double[DIM],                   /* q[DIM] */
                HEAT_FLUX_DEPENDENCE_STRUCT *, /* dq     */
                double);
-double heat_source /* mm_fill_terms.c                  */
+double heat_source                            /* mm_fill_terms.c                  */
     (HEAT_SOURCE_DEPENDENCE_STRUCT *,
-     double, /* time - present time value                 */
-     double, /* tt - parameter to vary time integration
-              * from explicit (tt = 1) to
-              * implicit (tt = 0)                         */
+     double,                                  /* time - present time value                 */
+     double,                                  /* tt - parameter to vary time integration
+                                               * from explicit (tt = 1) to
+                                               * implicit (tt = 0)                         */
      double);
 int ls_modulate_heatsource(
     double *, double, double, double, double, HEAT_SOURCE_DEPENDENCE_STRUCT *, const int);
@@ -96,9 +96,9 @@ double visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *,
                                  dbl *, /* param - General multipliers   */
                                  int);
 double em_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *,
-                           dbl *, /* param - General multipliers   */
+                           dbl *,       /* param - General multipliers   */
                            int);
 double em_diss_e_curlcurl_source(HEAT_SOURCE_DEPENDENCE_STRUCT *,
                                  dbl *, /* param - General multipliers   */
                                  int);
-#endif // GOMA_MM_FILL_ENERGY_H
+#endif                                  // GOMA_MM_FILL_ENERGY_H

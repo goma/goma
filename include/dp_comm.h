@@ -30,14 +30,14 @@
 #define EXTERN extern
 #endif
 
-EXTERN void exchange_dof(Comm_Ex *, /* cx - ptr to communications exchange info */
-                         Dpi *,     /* dpi - distributed processing info */
-                         double *,  /* x - local processor dof-based vector */
+EXTERN void exchange_dof(Comm_Ex *,             /* cx - ptr to communications exchange info */
+                         Dpi *,                 /* dpi - distributed processing info */
+                         double *,              /* x - local processor dof-based vector */
                          int);
 
-EXTERN void exchange_dof_int(Comm_Ex *, /* cx - ptr to communications exchange info */
-                             Dpi *,     /* dpi - distributed processing info */
-                             int *,     /* x - local processor dof-based vector */
+EXTERN void exchange_dof_int(Comm_Ex *,         /* cx - ptr to communications exchange info */
+                             Dpi *,             /* dpi - distributed processing info */
+                             int *,             /* x - local processor dof-based vector */
                              int);
 
 EXTERN void exchange_dof_long_long(Comm_Ex *,   /* cx - ptr to communications exchange info */
@@ -45,8 +45,8 @@ EXTERN void exchange_dof_long_long(Comm_Ex *,   /* cx - ptr to communications ex
                                    long long *, /* x - local processor dof-based vector */
                                    int);
 
-EXTERN void exchange_node(Comm_Ex *cx, /* cx - ptr to communications exchange info */
-                          Dpi *d,      /* dpi - distributed processing info */
-                          double *a);  /* x - local processor node-based vector */
+EXTERN void exchange_node(Comm_Ex *cx,          /* cx - ptr to communications exchange info */
+                          Dpi *d,               /* dpi - distributed processing info */
+                          double *a);           /* x - local processor node-based vector */
 
-#endif /* GOMA_DP_COMM_H */
+#endif                                          /* GOMA_DP_COMM_H */

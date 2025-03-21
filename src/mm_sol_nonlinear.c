@@ -162,8 +162,8 @@ static int soln_sens                /* mm_sol_nonlinear.c                       
      double *,                      /*  scaling_max */
      double *,                      /*  h_elem_avg  */
      double *,
-     int,     /* UMF_system_id */
-     char[]); /* calling purpose */
+     int,                           /* UMF_system_id */
+     char[]);                       /* calling purpose */
 
 /*
  * The one place place these global variables are defined.
@@ -258,16 +258,16 @@ assemble_prefill(struct GomaLinearSolverData *ams, double x[], Exo_DB *exo, Dpi 
 
 int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                             /* ptrs to Aztec linear systems */
-                            double x[],        /* soln vector on this proc */
-                            double delta_t,    /* time step size */
-                            double theta,      /* parameter to vary time
-                                                * integration from
-                                                *   explicit (theta = 1) to
-                                                *   implicit (theta = 0) */
-                            double x_old[],    /* soln vector @ previous time */
-                            double x_older[],  /* soln vector @ previous, previous time */
-                            double xdot[],     /* dxdt predicted for new time */
-                            double xdot_old[], /* dxdt for previous time */
+                            double x[],            /* soln vector on this proc */
+                            double delta_t,        /* time step size */
+                            double theta,          /* parameter to vary time
+                                                    * integration from
+                                                    *   explicit (theta = 1) to
+                                                    *   implicit (theta = 0) */
+                            double x_old[],        /* soln vector @ previous time */
+                            double x_older[],      /* soln vector @ previous, previous time */
+                            double xdot[],         /* dxdt predicted for new time */
+                            double xdot_old[],     /* dxdt for previous time */
                             double resid_vector[],
                             double x_update[],
                             double scale[],        /*Scale factor held for modified newton
@@ -303,46 +303,46 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
   static int prev_matrix = 0;
 
-  double *a = ams->val;  /* nonzero values of a CMSR matrix */
-  int *ija = ams->bindx; /* column pointer array into matrix "a"*/
+  double *a = ams->val;           /* nonzero values of a CMSR matrix */
+  int *ija = ams->bindx;          /* column pointer array into matrix "a"*/
 
-  int *ija_save = ams->belfry; /* to hide external row/eqns from Aztec */
+  int *ija_save = ams->belfry;    /* to hide external row/eqns from Aztec */
 
   static int dofs_hidden = FALSE; /* boolean indicating when dofs are hidden */
 
   int i, j, k;
 
-  int numProcUnknowns; /* number of degrees of freedom this processor
-                        * sees (internal+boundary+external) but no
-                        * more. */
+  int numProcUnknowns;                     /* number of degrees of freedom this processor
+                                            * sees (internal+boundary+external) but no
+                                            * more. */
 
-  int GNumUnknowns; /* Global number of unknowns in the */
-                    /* system    */
-  int inewton;      /* Newton iteration counter */
+  int GNumUnknowns;                        /* Global number of unknowns in the */
+                                           /* system    */
+  int inewton;                             /* Newton iteration counter */
   dbl Initial_Norm = 1e-100;
 
-  int return_value; /* nonzero if things screw up ...  */
+  int return_value;                        /* nonzero if things screw up ...  */
 
-  int print_damp_factor; /* Always printed after update norms */
+  int print_damp_factor;                   /* Always printed after update norms */
 
-  int print_visc_sens; /* Always printed after update norms */
+  int print_visc_sens;                     /* Always printed after update norms */
 
-  double Norm[5][3]; /* Global norms... */
-                     /*   [0][0] == residual, L_oo norm */
-                     /*   [0][1] == residual, L_1  norm */
-                     /*   [0][2] == residual, L_2  norm */
-                     /*   [1][0] == correction, L_oo norm */
-                     /*   [1][1] == correction, L_1  norm */
-                     /*   [1][2] == correction, L_2  norm */
-                     /*   [2][0] == AC residual, L_oo norm */
-                     /*   [2][1] == AC residual, L_1  norm */
-                     /*   [2][2] == AC residual, L_2  norm */
-                     /*   [3][0] == AC correction, L_oo norm */
-                     /*   [3][1] == AC correction, L_1  norm */
-                     /*   [3][2] == AC correction, L_2  norm */
-                     /*   [4][0] == solution, L_oo norm */
-                     /*   [4][1] == solution, L_1  norm */
-                     /*   [4][2] == solution, L_2  norm */
+  double Norm[5][3];                       /* Global norms... */
+                                           /*   [0][0] == residual, L_oo norm */
+                                           /*   [0][1] == residual, L_1  norm */
+                                           /*   [0][2] == residual, L_2  norm */
+                                           /*   [1][0] == correction, L_oo norm */
+                                           /*   [1][1] == correction, L_1  norm */
+                                           /*   [1][2] == correction, L_2  norm */
+                                           /*   [2][0] == AC residual, L_oo norm */
+                                           /*   [2][1] == AC residual, L_1  norm */
+                                           /*   [2][2] == AC residual, L_2  norm */
+                                           /*   [3][0] == AC correction, L_oo norm */
+                                           /*   [3][1] == AC correction, L_1  norm */
+                                           /*   [3][2] == AC correction, L_2  norm */
+                                           /*   [4][0] == solution, L_oo norm */
+                                           /*   [4][1] == solution, L_1  norm */
+                                           /*   [4][2] == solution, L_2  norm */
 
   double Norm_r[2][3];                     /* Relative (to solution vector) norms... */
                                            /*   [0][0] == correction, L_oo norm */
@@ -357,23 +357,23 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
   double Conv_rate = 0, Soln_rate = 0;     /* Convergence rates, i.e. neg. semilog slope*/
   double AConv_order = 0, ASoln_order = 0; /* AC counterparts  */
   double AConv_rate = 0, ASoln_rate = 0;
-  double AC_Resid_Norm_stack[3]; /* Place holder for last residual norms   */
-  double AC_Soln_Norm_stack[3];  /* Place holder for last update norms   */
-  int Norm_below_tolerance;      /* Boolean for modified newton test*/
-  int Rate_above_tolerance;      /* Boolean for modified newton test*/
-  int step_reform;               /* counter for Jacobian reformation */
+  double AC_Resid_Norm_stack[3];           /* Place holder for last residual norms   */
+  double AC_Soln_Norm_stack[3];            /* Place holder for last update norms   */
+  int Norm_below_tolerance;                /* Boolean for modified newton test*/
+  int Rate_above_tolerance;                /* Boolean for modified newton test*/
+  int step_reform;                         /* counter for Jacobian reformation */
 
   double Reltol = 1.0e-2, Abstol = 1.0e-6; /* LOCA convergence criteria */
   int continuation_converged = TRUE;
   int num_total_nodes = dpi->num_universe_nodes;
   /* Number of nodes that each processor is
    * responsible for                           */
-  dbl h_elem_avg; /* global average element size for PSPG */
-  dbl U_norm;     /* global average velocity for PSPG */
+  dbl h_elem_avg;                               /* global average element size for PSPG */
+  dbl U_norm;                                   /* global average velocity for PSPG */
 
-  double delta_s = 0.0; /* STEP */
+  double delta_s = 0.0;                         /* STEP */
   int *ncod = NULL;
-  dbl *bc = NULL; /* Dummy pointers for non-Front cases */
+  dbl *bc = NULL;                               /* Dummy pointers for non-Front cases */
 
   static char yo[] = "solve_nonlinear_problem"; /* routine identifier */
 
@@ -413,18 +413,18 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
   
                      */
 
-  int matr_form = 0; /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */
+  int matr_form = 0;        /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */
 
   int i_post;
   int err = 0;
 
   dbl total_mesh_volume; /* global variable value */
 
-  int local_order;      /* of the unknowns that this processor owns */
-  int local_order_plus; /* and if the external rows are included */
-  int local_nnz;        /* number of nonzero matrix entries that
-                         * are owned by this processor */
-  int local_nnz_plus;   /* and if the external rows are included */
+  int local_order;       /* of the unknowns that this processor owns */
+  int local_order_plus;  /* and if the external rows are included */
+  int local_nnz;         /* number of nonzero matrix entries that
+                          * are owned by this processor */
+  int local_nnz_plus;    /* and if the external rows are included */
 
   int global_order;      /* order of the global system */
   int global_order_plus; /* and if the external rows are overincluded */
@@ -432,16 +432,16 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                           * entries owned by each processor */
   int global_nnz_plus;   /* a sum that overincludes the external rows */
 
-  char stringer[80];    /* holding format of num linear solve itns */
-  char stringer_AC[80]; /* holding format of num AC linear solve itns */
+  char stringer[80];     /* holding format of num linear solve itns */
+  char stringer_AC[80];  /* holding format of num AC linear solve itns */
 
-  dbl a_start; /* mark start of assembly */
-  dbl a_end;   /* mark end of assembly */
+  dbl a_start;           /* mark start of assembly */
+  dbl a_end;             /* mark end of assembly */
 
-  char ctod[80]; /* hold current time of day */
+  char ctod[80];         /* hold current time of day */
 
-  dbl s_start; /* mark start of solve */
-  dbl s_end;   /* mark end of solve */
+  dbl s_start;           /* mark start of solve */
+  dbl s_end;             /* mark end of solve */
 
   /*
    * With the advent of the Benner's frontal solver it is more difficult to
@@ -474,7 +474,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
   dbl smallpiv;
   dbl singpiv;
   int iautopiv;
-  int iscale; /* you will have to turn this off for resolves */
+  int iscale;       /* you will have to turn this off for resolves */
   dbl scaling_max;
 
   dbl ac_start = 0; /* mark start of AC assembly */
@@ -485,7 +485,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
   double param_val;
   int sens_vec_ct;
-  char sens_caller[40]; /* string containing caller of soln_sens */
+  char sens_caller[40];                /* string containing caller of soln_sens */
 
   int linear_solver_blk;               /* count calls to AZ_solve() */
   int total_ls_its = 0;                /* linear solver iteration counter */
@@ -2611,7 +2611,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     inewton++;
     af->Sat_hyst_reevaluate = FALSE; /*only want this true
                                        for first iteration*/
-  }                                  /* End of loop over newton iterations */
+  } /* End of loop over newton iterations */
 
   /**********************************************************************/
   /**********************************************************************
@@ -3358,8 +3358,8 @@ static int soln_sens(double lambda,  /*  parameter */
   double dlambda, lambda_tmp, hunt_val;
 
   int i, iHC, iAC;
-  dbl a_start; /* mark start of assembly */
-  dbl a_end;   /* mark end of assembly */
+  dbl a_start;               /* mark start of assembly */
+  dbl a_end;                 /* mark end of assembly */
   int err;
 
   int linear_solver_blk;     /* count calls to AZ_solve() */

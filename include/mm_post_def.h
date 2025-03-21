@@ -32,57 +32,57 @@
  *  requests.
  */
 
-#define FORCE_NORMAL             0
-#define FORCE_TANGENT1           1
-#define FORCE_TANGENT2           2
-#define FORCE_X                  3
-#define FORCE_Y                  4
-#define FORCE_Z                  5
-#define VOLUME_FLUX              6
-#define SPECIES_FLUX             7
-#define HEAT_FLUX                8
-#define TORQUE                   9
-#define AVERAGE_CONC             10
-#define SURF_DISSIP              11
-#define AREA                     12
-#define VOL_REVOLUTION           13
-#define PORE_LIQ_FLUX            14
-#define CHARGED_SPECIES_FLUX     15
-#define CURRENT_FICKIAN          16
-#define CURRENT                  17
-#define NEG_LS_FLUX              18
-#define POS_LS_FLUX              19
-#define N_DOT_X                  20
-#define ELEC_FORCE_NORMAL        21
-#define ELEC_FORCE_TANGENT1      22
-#define ELEC_FORCE_TANGENT2      23
-#define ELEC_FORCE_X             24
-#define ELEC_FORCE_Y             25
-#define ELEC_FORCE_Z             26
-#define NET_SURF_CHARGE          27
-#define DELTA                    28
-#define ACOUSTIC_FLUX_NORMAL     29
-#define ACOUSTIC_FLUX_TANGENT1   301
-#define ACOUSTIC_FLUX_TANGENT2   311
-#define ACOUSTIC_FLUX_X          321
-#define ACOUSTIC_FLUX_Y          331
-#define ACOUSTIC_FLUX_Z          341
-#define ACOUSTIC_INTENSITY       351
-#define LS_DCA                   361
-#define SHELL_VOLUME_FLUX        30
-#define SHELL_FORCE_NORMAL       3131
-#define FORCE_X_POS              371
-#define FORCE_Y_POS              372
-#define FORCE_Z_POS              373
-#define FORCE_X_NEG              374
-#define FORCE_Y_NEG              375
-#define FORCE_Z_NEG              376
-#define SPECIES_FLUX_REVOLUTION  398
-#define REPULSIVE_FORCE          399
-#define POYNTING_X               400
-#define POYNTING_Y               401
-#define POYNTING_Z               402
-#define SCATTERING_CROSS_SECTION 403
+#define FORCE_NORMAL              0
+#define FORCE_TANGENT1            1
+#define FORCE_TANGENT2            2
+#define FORCE_X                   3
+#define FORCE_Y                   4
+#define FORCE_Z                   5
+#define VOLUME_FLUX               6
+#define SPECIES_FLUX              7
+#define HEAT_FLUX                 8
+#define TORQUE                    9
+#define AVERAGE_CONC              10
+#define SURF_DISSIP               11
+#define AREA                      12
+#define VOL_REVOLUTION            13
+#define PORE_LIQ_FLUX             14
+#define CHARGED_SPECIES_FLUX      15
+#define CURRENT_FICKIAN           16
+#define CURRENT                   17
+#define NEG_LS_FLUX               18
+#define POS_LS_FLUX               19
+#define N_DOT_X                   20
+#define ELEC_FORCE_NORMAL         21
+#define ELEC_FORCE_TANGENT1       22
+#define ELEC_FORCE_TANGENT2       23
+#define ELEC_FORCE_X              24
+#define ELEC_FORCE_Y              25
+#define ELEC_FORCE_Z              26
+#define NET_SURF_CHARGE           27
+#define DELTA                     28
+#define ACOUSTIC_FLUX_NORMAL      29
+#define ACOUSTIC_FLUX_TANGENT1    301
+#define ACOUSTIC_FLUX_TANGENT2    311
+#define ACOUSTIC_FLUX_X           321
+#define ACOUSTIC_FLUX_Y           331
+#define ACOUSTIC_FLUX_Z           341
+#define ACOUSTIC_INTENSITY        351
+#define LS_DCA                    361
+#define SHELL_VOLUME_FLUX         30
+#define SHELL_FORCE_NORMAL        3131
+#define FORCE_X_POS               371
+#define FORCE_Y_POS               372
+#define FORCE_Z_POS               373
+#define FORCE_X_NEG               374
+#define FORCE_Y_NEG               375
+#define FORCE_Z_NEG               376
+#define SPECIES_FLUX_REVOLUTION   398
+#define REPULSIVE_FORCE           399
+#define POYNTING_X                400
+#define POYNTING_Y                401
+#define POYNTING_Z                402
+#define SCATTERING_CROSS_SECTION  403
 
 #define I_VOLUME                  0
 #define I_DISSIP                  1
@@ -277,8 +277,8 @@ int Num_Vol_Names = sizeof(pp_vol_names) / sizeof(VOL_NAME_STRUCT);
 #define PP_GLOBAL_COUNT                        2 /* Increase when another is added */
 
 struct Post_Processing_Global_Names {
-  char *name; /* flux string */
-  int Index;  /* identifier  */
+  char *name;                                    /* flux string */
+  int Index;                                     /* identifier  */
 };
 
 typedef struct Post_Processing_Global_Names GLOBAL_NAME_STRUCT;
@@ -559,18 +559,18 @@ extern int ERROR_ZZ_VEL;        /* Zienkiewicz-Zhu error indicator (element
 extern int ERROR_ZZ_VEL_ELSIZE; /* Recommended new element size from ZZ
                                  * velocity measure */
 extern int EVP_DEF_GRAD_TENSOR;
-extern int EXTERNAL_POST; /* external field variables read from other
-                           * files */
-extern int FILL_CONT;     /* fill at vertex & midside nodes*/
+extern int EXTERNAL_POST;       /* external field variables read from other
+                                 * files */
+extern int FILL_CONT;           /* fill at vertex & midside nodes*/
 extern int FIRST_INVAR_STRAIN;
 extern int FLUXLINES;           /* mass flux function. This is analogous to
                                  * stream function but represents mass flux */
 extern int LAGRANGE_CONVECTION; /* Lagrangian convection velocity */
 extern int MEAN_SHEAR;
-extern int MM_RESIDUALS; /* stress equation residuals at vertex
-                          * and midside nodes*/
-extern int NS_RESIDUALS; /* Navier-Stokes residuals at vertex
-                          * and midside nodes */
+extern int MM_RESIDUALS;        /* stress equation residuals at vertex
+                                 * and midside nodes*/
+extern int NS_RESIDUALS;        /* Navier-Stokes residuals at vertex
+                                 * and midside nodes */
 extern int POROUS_RHO_GAS_SOLVENTS;
 /* gas phase concentration of each solvent
  * species in a porous media */
@@ -589,10 +589,10 @@ extern int POROUS_LIQUID_ACCUM_RATE;
 /* The rate at which liquid in a partially
  * saturated porous medium is accumulating
  * at a point */
-extern int REL_LIQ_PERM;    /* Relative liquid permeability in porous media */
-extern int PRESSURE_CONT;   /* pressure at vertex & midside nodes*/
-extern int SH_DIV_S_V_CONT; /* SH_DIV_S_V at midside nodes */
-extern int SH_CURV_CONT;    /* SH_SURF_CURV at midside nodes */
+extern int REL_LIQ_PERM;         /* Relative liquid permeability in porous media */
+extern int PRESSURE_CONT;        /* pressure at vertex & midside nodes*/
+extern int SH_DIV_S_V_CONT;      /* SH_DIV_S_V at midside nodes */
+extern int SH_CURV_CONT;         /* SH_SURF_CURV at midside nodes */
 extern int REAL_STRESS_TENSOR;
 extern int SEC_INVAR_STRAIN;     /* 2nd strain invariant vertex,midside nodes*/
 extern int STRAIN_TENSOR;        /* strain tensor for mesh deformation  */
@@ -607,59 +607,59 @@ extern int SURFACE_VECTORS;      /* vector field of normals and tangents on
                                   * surfaces, curves and vertices */
 extern int SHELL_NORMALS;        /* vector field of smoothed normals computed from fv->sh_ang */
 extern int THIRD_INVAR_STRAIN;
-extern int TIME_DERIVATIVES;           /* time derivatives */
-extern int TOTAL_STRESS11;             /* sum over all modes for multi-mode models */
-extern int TOTAL_STRESS12;             /* sum over all modes for multi-mode models */
-extern int TOTAL_STRESS13;             /* sum over all modes for multi-mode models */
-extern int TOTAL_STRESS22;             /* sum over all modes for multi-mode models */
-extern int TOTAL_STRESS23;             /* sum over all modes for multi-mode models */
-extern int TOTAL_STRESS33;             /* sum over all modes for multi-mode models */
-extern int USER_POST;                  /* a user defined function */
-extern int PP_Viscosity;               /* Value of the fluid viscosity */
+extern int TIME_DERIVATIVES;     /* time derivatives */
+extern int TOTAL_STRESS11;       /* sum over all modes for multi-mode models */
+extern int TOTAL_STRESS12;       /* sum over all modes for multi-mode models */
+extern int TOTAL_STRESS13;       /* sum over all modes for multi-mode models */
+extern int TOTAL_STRESS22;       /* sum over all modes for multi-mode models */
+extern int TOTAL_STRESS23;       /* sum over all modes for multi-mode models */
+extern int TOTAL_STRESS33;       /* sum over all modes for multi-mode models */
+extern int USER_POST;            /* a user defined function */
+extern int PP_Viscosity;         /* Value of the fluid viscosity */
 extern int PP_FlowingLiquid_Viscosity; /* Value of the fluid flowing liquid viscosity (Porous
                                           Brinkman term) */
 extern int PP_VolumeFractionGas;       /* Value of the volume fraction of the gas component
                                           in a foam or other two phase material */
 
-extern int len_u_post_proc;         /* size of dynamically allocated u_post_proc
-                                     * actually is */
-extern double *u_post_proc;         /* user-provided values used in calculating
-                                     * user defined post processing variable */
-extern int SAT_CURVE_TYPE;          /*Saturation hysteresis curve type */
-extern int CAP_PRESS_SWITCH;        /*Capillary pressure at hysteresis switch */
-extern int SAT_QP_SWITCH;           /*Saturation at hysteresis switch*/
-extern int NUM_CURVE_SWITCH;        /* Number of hysteretic curve switch */
-extern int SAT_HYST_MIN;            /* Minimum saturation value for scanning imbibition curve */
-extern int SAT_HYST_MAX;            /* Maximum saturation value for scanning draining curve */
-extern int ACOUSTIC_PRESSURE;       /* Acoustic Pressure Magnitude	*/
-extern int ACOUSTIC_PHASE_ANGLE;    /* Acoustic Pressure Phase Angle	*/
-extern int ACOUSTIC_ENERGY_DENSITY; /* Acoustic Energy Density	*/
-extern int LIGHT_INTENSITY;         /* Light Intensity	*/
-extern int PRINCIPAL_STRESS;        /* Principal Stresses*/
-extern int PRINCIPAL_REAL_STRESS;   /* Principal Real Stresses*/
-extern int LUB_HEIGHT;              /* Lubrication gap*/
-extern int LUB_HEIGHT_2;            /* Lubrication gap, second layer*/
-extern int LUB_VELO_UPPER;          /* Lubrication upper surface velocity*/
-extern int LUB_VELO_LOWER;          /* Lubrication lower surface velocity*/
-extern int LUB_VELO_FIELD;          /* Velocity field calculated from lubrication */
-extern int LUB_VELO_FIELD_2;        /* Velocity field calculated from lubrication, second layer */
-extern int DISJ_PRESS;              /* Disjoining pressure */
-extern int SH_SAT_OPEN;             /* Saturation for open porous shells */
-extern int SH_SAT_OPEN_2;           /* Saturation for open porous shells 2 */
-extern int SH_CAP_PRES;             /* Capillary pressure for porous shell */
-extern int SH_PORE_FLUX;            /* Flux between porous shell layers */
-extern int SH_STRESS_TENSOR;        /* stress tensor for structural shell */
-extern int SH_TANG;                 /* Tangents vectors for structural shell */
-extern int PP_LAME_MU;              /* Lame MU coefficient for solid/mesh */
-extern int PP_LAME_LAMBDA;          /* Lame LAMBDA coefficient for solid/mesh */
+extern int len_u_post_proc;            /* size of dynamically allocated u_post_proc
+                                        * actually is */
+extern double *u_post_proc;            /* user-provided values used in calculating
+                                        * user defined post processing variable */
+extern int SAT_CURVE_TYPE;             /*Saturation hysteresis curve type */
+extern int CAP_PRESS_SWITCH;           /*Capillary pressure at hysteresis switch */
+extern int SAT_QP_SWITCH;              /*Saturation at hysteresis switch*/
+extern int NUM_CURVE_SWITCH;           /* Number of hysteretic curve switch */
+extern int SAT_HYST_MIN;               /* Minimum saturation value for scanning imbibition curve */
+extern int SAT_HYST_MAX;               /* Maximum saturation value for scanning draining curve */
+extern int ACOUSTIC_PRESSURE;          /* Acoustic Pressure Magnitude	*/
+extern int ACOUSTIC_PHASE_ANGLE;       /* Acoustic Pressure Phase Angle	*/
+extern int ACOUSTIC_ENERGY_DENSITY;    /* Acoustic Energy Density	*/
+extern int LIGHT_INTENSITY;            /* Light Intensity	*/
+extern int PRINCIPAL_STRESS;           /* Principal Stresses*/
+extern int PRINCIPAL_REAL_STRESS;      /* Principal Real Stresses*/
+extern int LUB_HEIGHT;                 /* Lubrication gap*/
+extern int LUB_HEIGHT_2;               /* Lubrication gap, second layer*/
+extern int LUB_VELO_UPPER;             /* Lubrication upper surface velocity*/
+extern int LUB_VELO_LOWER;             /* Lubrication lower surface velocity*/
+extern int LUB_VELO_FIELD;             /* Velocity field calculated from lubrication */
+extern int LUB_VELO_FIELD_2; /* Velocity field calculated from lubrication, second layer */
+extern int DISJ_PRESS;       /* Disjoining pressure */
+extern int SH_SAT_OPEN;      /* Saturation for open porous shells */
+extern int SH_SAT_OPEN_2;    /* Saturation for open porous shells 2 */
+extern int SH_CAP_PRES;      /* Capillary pressure for porous shell */
+extern int SH_PORE_FLUX;     /* Flux between porous shell layers */
+extern int SH_STRESS_TENSOR; /* stress tensor for structural shell */
+extern int SH_TANG;          /* Tangents vectors for structural shell */
+extern int PP_LAME_MU;       /* Lame MU coefficient for solid/mesh */
+extern int PP_LAME_LAMBDA;   /* Lame LAMBDA coefficient for solid/mesh */
 extern int VON_MISES_STRAIN;
 extern int VON_MISES_STRESS;
-extern int CONF_MAP; /* Map log-conformation tensor to stress */
-extern int J_FLUX;   /* Particle stress flux                  */
-extern int EIG;      /* Eigenvalues of rate-of-strain tensor  */
-extern int EIG1;     /* Eigenvector of rate-of-strain tensor  */
-extern int EIG2;     /* Eigenvector of rate-of-strain tensor  */
-extern int EIG3;     /* Eigenvector of rate-of-strain tensor  */
+extern int CONF_MAP;         /* Map log-conformation tensor to stress */
+extern int J_FLUX;           /* Particle stress flux                  */
+extern int EIG;              /* Eigenvalues of rate-of-strain tensor  */
+extern int EIG1;             /* Eigenvector of rate-of-strain tensor  */
+extern int EIG2;             /* Eigenvector of rate-of-strain tensor  */
+extern int EIG3;             /* Eigenvector of rate-of-strain tensor  */
 extern int HEAVISIDE;
 extern int RHO_DOT;
 extern int MOMENT_SOURCES;
@@ -681,8 +681,8 @@ extern int POYNTING_VECTORS; /* EM Poynting Vectors*/
 extern int PSPG_PP;          /* 2nd invariant of grad_v  */
 extern int SARAMITO_YIELD;
 extern int STRESS_NORM;
-extern int SPECIES_SOURCES; /* Species sources */
-extern int VISCOUS_STRESS;  /* Viscous stress */
+extern int SPECIES_SOURCES;  /* Species sources */
+extern int VISCOUS_STRESS;   /* Viscous stress */
 extern int PP_VELOCITY_GRADIENTS;
 extern int VISCOUS_STRESS_NORM;
 extern int VISCOUS_VON_MISES_STRESS;

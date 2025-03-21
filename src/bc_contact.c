@@ -200,7 +200,7 @@ int apply_contact_bc(double x[],              /* Solution vector for the current
     GOMA_EH(err, "beer_belly");
 
     /* precalculate variables at  current integration pt.*/
-    err = load_fv(); /*PRS: not sure I need this for getting fluid stresses*/
+    err = load_fv();      /*PRS: not sure I need this for getting fluid stresses*/
     GOMA_EH(err, "load_fv");
 
     err = load_bf_grad(); /*PRS: DITTO */
@@ -833,17 +833,17 @@ int apply_contact_bc(double x[],              /* Solution vector for the current
                         lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] += jac;
                       }
                     } /* end of variable exists and BC is sensitive to it */
-                  }   /* end of var loop over variable types */
+                  } /* end of var loop over variable types */
 
                 } /* end of NEWTON */
               }
             } /* end of if (Res_BC != NULL) - i.e. apply residual at this node */
-          }   /* end of loop over equations that this condition applies to */
-        }     /* end for (i=0; i< num_nodes_on_side; i++) */
+          } /* end of loop over equations that this condition applies to */
+        } /* end for (i=0; i< num_nodes_on_side; i++) */
 
       } /*End (if INT) (CAPILLARY and KINEMATIC and VELO_NORMAL and VELO_TANGENT . . .) */
-    }   /*(end for ibc) */
-  }     /*End for ip = 1,...*/
+    } /*(end for ibc) */
+  } /*End for ip = 1,...*/
 
   return (status);
 } /* END of routine apply_contact_bc */
@@ -953,7 +953,7 @@ void contact_fn_dot_T(double func[DIM],
   /*    TAB certifies that this function conforms to the exo/patran side numbering convention
    * 11/10/98. */
   int a, j;
-  int var, jvar; /* Degree of freedom counter                 */
+  int var, jvar;     /* Degree of freedom counter                 */
 
   int DeformingMesh; /* Logical.                                  */
 
@@ -1008,7 +1008,7 @@ void Lagrange_mult_equation(double func[DIM],
   /*    TAB certifies that this function conforms to the exo/patran side numbering convention
    * 11/10/98. */
   int a, j;
-  int var, jvar; /* Degree of freedom counter                 */
+  int var, jvar;     /* Degree of freedom counter                 */
 
   int DeformingMesh; /* Logical.                                  */
   double phi_j;
@@ -1140,8 +1140,8 @@ int apply_embedded_bc(int ielem,    /* element number */
                                      *  ( implicit - 0 to explicit - 1)     */
                       double time_value,
                       const PG_DATA *pg_data,
-                      int oAC,     /* Flag indicating calling function */
-                      double *gAC, /* Augmenting condition arrays */
+                      int oAC,      /* Flag indicating calling function */
+                      double *gAC,  /* Augmenting condition arrays */
                       double **bAC,
                       double **cAC,
                       Exo_DB *exo)
@@ -1389,8 +1389,8 @@ int assemble_embedded_bc(int ielem,    /* element number */
                          double theta, /* parameter (0 to 1) to vary time integration
                                         *  ( implicit - 0 to explicit - 1)     */
                          double time_value,
-                         int oAC,     /* Flag indicating calling function */
-                         double *gAC, /* Augmenting condition arrays */
+                         int oAC,      /* Flag indicating calling function */
+                         double *gAC,  /* Augmenting condition arrays */
                          double **bAC,
                          double **cAC,
                          Exo_DB *exo,

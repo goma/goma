@@ -26,7 +26,7 @@
 #endif
 
 dbl power_law_time_const(struct PolymerTimeConstants *lambda_st,
-                         dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+                         dbl gamma_dot[DIM][DIM],       /* strain rate tensor */
                          POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lambda);
 dbl carreau_polymer_time_const(struct PolymerTimeConstants *lambda_st,
                                dbl gamma_dot[DIM][DIM], /* strain rate tensor */

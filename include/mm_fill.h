@@ -109,17 +109,17 @@ EXTERN int matrix_fill_stress(struct GomaLinearSolverData *,
                                                                * number of elements defined on
                                                                * current processor */
                               double *,                       /* time_value  */
-                              Exo_DB *, /* exo - ptr to EXODUS II finite element db  */
-                              Dpi *,    /* dpi - ptr to distributed processing info  */
-                              int *,    /* ielem - element number                    */
-                              int *,    /* num_total_nodes - Number of nodes that each
-                                         * processor is responsible for              */
-                              dbl *,    /* h_elem_avg - global average element size
-                                         * for PSPG                                  */
-                              dbl *,    /* U_norm - global average velocity for PSPG */
-                              dbl *,    /* estifm - element stiffness Matrix for
-                                         * frontal solver                            */
-                              int);     /* zeroCA */
+                              Exo_DB *,      /* exo - ptr to EXODUS II finite element db  */
+                              Dpi *,         /* dpi - ptr to distributed processing info  */
+                              int *,         /* ielem - element number                    */
+                              int *,         /* num_total_nodes - Number of nodes that each
+                                              * processor is responsible for              */
+                              dbl *,         /* h_elem_avg - global average element size
+                                              * for PSPG                                  */
+                              dbl *,         /* U_norm - global average velocity for PSPG */
+                              dbl *,         /* estifm - element stiffness Matrix for
+                                              * frontal solver                            */
+                              int);          /* zeroCA */
 
 EXTERN int checkfinite(const char *file,
                        const int line,       /* line                                      */

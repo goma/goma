@@ -54,14 +54,14 @@
 #define MAX_PARTICLE_FILENAME_LENGTH        80
 #define MAX_PARTICLE_STRING_LENGTH          255
 
-#define XI_BOUNDARY_TOLERANCE0 1.0e-8
-#define XI_BOUNDARY_TOLERANCE1 1.0e-12
-#define XI_BOUNDARY_TOLERANCE2 1.0e-14
+#define XI_BOUNDARY_TOLERANCE0              1.0e-8
+#define XI_BOUNDARY_TOLERANCE1              1.0e-12
+#define XI_BOUNDARY_TOLERANCE2              1.0e-14
 
-#define MAX_RANK 6 /* Used in the solve_NxN_system routine to avoid lots of malloc()'s. */
+#define MAX_RANK                            6 /* Used in the solve_NxN_system routine to avoid lots of malloc()'s. */
 
-#define EXIT    1 /* For calling the dump() routine. */
-#define NO_EXIT 0
+#define EXIT                                1 /* For calling the dump() routine. */
+#define NO_EXIT                             0
 
 /* This is the "right" way to do it, but the current Sun compilers
  * can't handle it, so I have all the more explicit call definisions
@@ -69,10 +69,10 @@
 /*
 #define dump(ec, p, ...) dump_fcn(__FILE__, __LINE__, ec, p, __VA_ARGS__)
 */
-#define dump1(ec, p, x1)             dump_fcn(__FILE__, __LINE__, ec, p, x1)
-#define dump2(ec, p, x1, x2)         dump_fcn(__FILE__, __LINE__, ec, p, x1, x2)
-#define dump3(ec, p, x1, x2, x3)     dump_fcn(__FILE__, __LINE__, ec, p, x1, x2, x3)
-#define dump4(ec, p, x1, x2, x3, x4) dump_fcn(__FILE__, __LINE__, ec, p, x1, x2, x3, x4)
+#define dump1(ec, p, x1)                    dump_fcn(__FILE__, __LINE__, ec, p, x1)
+#define dump2(ec, p, x1, x2)                dump_fcn(__FILE__, __LINE__, ec, p, x1, x2)
+#define dump3(ec, p, x1, x2, x3)            dump_fcn(__FILE__, __LINE__, ec, p, x1, x2, x3)
+#define dump4(ec, p, x1, x2, x3, x4)        dump_fcn(__FILE__, __LINE__, ec, p, x1, x2, x3, x4)
 #define dump10(ec, p, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) \
   dump_fcn(__FILE__, __LINE__, ec, p, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10)
 #define dump20(ec, p, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17,  \
@@ -210,4 +210,4 @@ EXTERN int compute_particles(const Exo_DB *,
 
 EXTERN void rd_particle_specs /* mm_input_particles.c */
     (FILE *, char *);
-#endif /* GOMA_AC_PARTICLES_H */
+#endif                        /* GOMA_AC_PARTICLES_H */

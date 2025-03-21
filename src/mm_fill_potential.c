@@ -130,10 +130,10 @@ int assemble_potential(double time, /* present time value */
   int i = -1;
   int j, status;
 
-  dbl ii[DIM];     /* current density due to electrical potential gradient */
-  dbl ii2[DIM];    /* current density due to concentration
-                      gradients of charged species */
-  dbl grad_V[DIM]; /* voltage potential gradient. */
+  dbl ii[DIM];             /* current density due to electrical potential gradient */
+  dbl ii2[DIM];            /* current density due to concentration
+                              gradients of charged species */
+  dbl grad_V[DIM];         /* voltage potential gradient. */
 
   dbl k = 1e12;            /* electrical conductivity. */
   dbl dkdT[MDE];           /* Temperature derivative of electrical conductivity. */
@@ -150,7 +150,7 @@ int assemble_potential(double time, /* present time value */
   /* dbl dhdV[DIM];	*/ /* Voltage derivative for the c.s. */
   dbl dhdV[MDE];           /* Voltage derivative for the c.s. */
 
-  dbl didmesh[DIM]; /* At a specific (b,j) mesh dof. */
+  dbl didmesh[DIM];        /* At a specific (b,j) mesh dof. */
   dbl diffusion, diff_a, diff_b, diff_c, diff_d, source;
   dbl lambda_d;
 
@@ -167,8 +167,8 @@ int assemble_potential(double time, /* present time value */
   dbl grad_phi_j[DIM];
   dbl d_i_V_j[DIM];
 
-  dbl h3;          /* Volume element (scale factors). */
-  dbl dh3dmesh_bj; /* Sensitivity to (b,j) mesh dof. */
+  dbl h3;                     /* Volume element (scale factors). */
+  dbl dh3dmesh_bj;            /* Sensitivity to (b,j) mesh dof. */
   dbl det_J;
 
   dbl d_det_J_dmeshbj;        /* for specified (b,j) mesh dof */
@@ -185,14 +185,14 @@ int assemble_potential(double time, /* present time value */
                              /* ERROR -> appears to be an error because this is never set!!!! */
   DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
-  dbl *M = mp->molecular_weight; /* Ptr to species molecular weights */
-  dbl M_mix = 0.0;               /* Molecular weight of electrolyte solution */
-                                 /* ERROR -> appears to be an error because this is never set!!!! */
-  dbl grad_x[MAX_CONC][DIM];     /* mole fraction gradient */
+  dbl *M = mp->molecular_weight;          /* Ptr to species molecular weights */
+  dbl M_mix = 0.0;                        /* Molecular weight of electrolyte solution */
+  /* ERROR -> appears to be an error because this is never set!!!! */
+  dbl grad_x[MAX_CONC][DIM];      /* mole fraction gradient */
 
-  dbl *z = mp->charge_number; /* ptr to the charge numbers for species */
-  dbl sumdelx;                /* dummy variables */
-  const double F = 96487.0;   /* Faraday's constant in units of C/equiv. */
+  dbl *z = mp->charge_number;     /* ptr to the charge numbers for species */
+  dbl sumdelx;                    /* dummy variables */
+  const double F = 96487.0;       /* Faraday's constant in units of C/equiv. */
   dbl h_term1;
   dbl dii2dC[DIM][MAX_CONC][MDE]; /* concentration derivative of ii2 -- RSL 3/28/00 */
   int n = -1, l, m, kk, w1;
@@ -301,7 +301,7 @@ int assemble_potential(double time, /* present time value */
     {
       T = mp->solution_temperature;
     } else if (mp->SolutionTemperatureModel ==
-               THERMAL_BATTERY) /* thermal battery temperature model */
+               THERMAL_BATTERY)             /* thermal battery temperature model */
     {
       electrolyte_temperature(time, dt, 0); /* calculate electrolyte temperature at present time */
       T = mp->electrolyte_temperature;
@@ -633,7 +633,7 @@ int assemble_potential(double time, /* present time value */
       lec->R[LEC_R_INDEX(peqn, i)] += diffusion + source;
 
     } /* end of loop over i */
-  }   /* end of Assemble_Residual */
+  } /* end of Assemble_Residual */
 
   /*
    * Jacobian terms...
@@ -874,8 +874,8 @@ int assemble_potential(double time, /* present time value */
 
                 if (mp->VoltageFormulation == V_CONDUCTIVITY) {
                   if (cr->MassFluxModel ==
-                          STEFAN_MAXWELL_CHARGED || /* add ii2 contribution for
-     Stefan-Maxwell diffusion of charged species in concentrated solutions, KSC: 9/10/00 */
+                          STEFAN_MAXWELL_CHARGED ||           /* add ii2 contribution for
+               Stefan-Maxwell diffusion of charged species in concentrated solutions, KSC: 9/10/00 */
                       cr->MassFluxModel == STEFAN_MAXWELL_VOLUME ||
                       cr->MassFluxModel == FICKIAN_CHARGED_X) /* RSL 9/18
 /00 */
@@ -905,10 +905,10 @@ transport of dilute charged species in electrolyte, KSC: 9/10/00; modified: 10/4
 
             lec->J[LEC_J_INDEX(peqn, MAX_PROB_VAR + w, i, j)] += diffusion + source;
           } /* end of loop over j */
-        }   /* end of loop over w */
-      }     /* end of var = MASS_FRACTION */
-    }       /* end of loop over i */
-  }         /* end of Assemble_Jacobian */
+        } /* end of loop over w */
+      } /* end of var = MASS_FRACTION */
+    } /* end of loop over i */
+  } /* end of Assemble_Jacobian */
 
   return (status);
 } /* end of assemble_potential */
@@ -994,8 +994,8 @@ void current_BV_surf(double func[DIM],
   double i;                                  /* current density                             */
   double d_i[MAX_VARIABLE_TYPES + MAX_CONC]; /* Jacobian for cuurent density  */
 
-  double vconv[MAX_PDIM];     /*Calculated convection velocity */
-  double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
+  double vconv[MAX_PDIM];                    /*Calculated convection velocity */
+  double vconv_old[MAX_PDIM];                /*Calculated convection velocity at previous time*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
 
@@ -1409,7 +1409,7 @@ int assemble_Enorm(void) {
 
       lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][R_ENORM], i)] += advection + source;
     } /* for i = 0 ... dof[R_ENORM] */
-  }   /* if(Assemble_Residual) */
+  } /* if(Assemble_Residual) */
 
   if (af->Assemble_Jacobian) {
     for (i = 0; i < ei[pg->imtrx]->dof[R_ENORM]; i++) {
@@ -1440,8 +1440,8 @@ int assemble_Enorm(void) {
 
         lec->J[LEC_J_INDEX(upd->ep[pg->imtrx][R_ENORM], upd->vp[pg->imtrx][ENORM], i, k)] += source;
       } /* for k = 0 ... dof[ENORM] */
-    }   /* for i = 0 ... dof[R_ENORM] */
-  }     /* if (Assemble_Jacobian) */
+    } /* for i = 0 ... dof[R_ENORM] */
+  } /* if (Assemble_Jacobian) */
   return 0;
 }
 
@@ -1455,13 +1455,13 @@ int assemble_electric_field(void) /* Least square equation Efield = grad (voltag
   int i, j;
   int status;
 
-  dbl h3;          /* Volume element (scale factors). */
-  dbl dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
+  dbl h3;               /* Volume element (scale factors). */
+  dbl dh3dmesh_pj;      /* Sensitivity to (p,j) mesh dof. */
 
-  dbl grad_V[DIM]; /* gradient of voltage */
-  dbl Efield[DIM]; /* Electric field vector */
+  dbl grad_V[DIM];      /* gradient of voltage */
+  dbl Efield[DIM];      /* Electric field vector */
 
-  dbl det_J; /* determinant of element Jacobian */
+  dbl det_J;            /* determinant of element Jacobian */
 
   dbl d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
 
@@ -1525,7 +1525,7 @@ int assemble_electric_field(void) /* Least square equation Efield = grad (voltag
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3; /* Differential volume element (scales). */
+  h3 = fv->h3;           /* Differential volume element (scales). */
 
   /*
    * Field variables...
@@ -1810,9 +1810,9 @@ double electrical_conductivity(double dkdT[MDE],
 {
   int dim, var, var_offset;
   int i, j, a, w;
-  dbl k = 1e12; /* electrical conductivity. */
+  dbl k = 1e12;              /* electrical conductivity. */
   int n_species = mp->Num_Species;
-  dbl sumx, sumk; /* dummy variables */
+  dbl sumx, sumk;            /* dummy variables */
   dbl A_inv[MAX_CONC * DIM]
            [MAX_CONC * DIM]; /* inverse of Stefan_Maxwell coefficient matrix; KSC: 10/28/98 */
   dbl *D = mp->diffusivity;  /* Fickian diffusion coefficients */
@@ -1824,13 +1824,13 @@ double electrical_conductivity(double dkdT[MDE],
   dbl rho;                   /* Mass density of electrolyte solution */
   DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
-  dbl *M = mp->molecular_weight; /* Ptr to species molecular weights */
-  dbl M_mix;                     /* Molecular weight of electrolyte solution */
-  dbl x[MAX_CONC];               /* mole fraction */
+  dbl *M = mp->molecular_weight;          /* Ptr to species molecular weights */
+  dbl M_mix;                              /* Molecular weight of electrolyte solution */
+  dbl x[MAX_CONC];                        /* mole fraction */
 
-  dbl *z = mp->charge_number; /* ptr to the charge numbers for species */
+  dbl *z = mp->charge_number;             /* ptr to the charge numbers for species */
 
-  int i_elec_cond; /* index of external field elec. conductivity */
+  int i_elec_cond;                        /* index of external field elec. conductivity */
   int n, l, m, mn, kk;
   dbl sum1, sum2, sum3;
 
@@ -2075,7 +2075,7 @@ double electrical_conductivity(double dkdT[MDE],
       if (pd_glob[mn]->e[pg->imtrx][R_ENERGY]) /* if the energy equation is being solved */
       {
         T = fv->T;
-      } else /* if the energy equation is NOT being solved */
+      } else                                   /* if the energy equation is NOT being solved */
       {
         if (mp->SolutionTemperatureModel == CONSTANT) {
           T = mp->solution_temperature;

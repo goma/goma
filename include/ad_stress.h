@@ -6,13 +6,13 @@ extern "C" {
 
 #include "std.h"
 
-int ad_assemble_momentum(dbl time,       /* current time */
-                         dbl tt,         /* parameter to vary time integration from
-                                            explicit (tt = 1) to implicit (tt = 0) */
-                         dbl dt,         /* current time step size */
-                         dbl h_elem_avg, /* average global element size for PSPG*/
+int ad_assemble_momentum(dbl time,         /* current time */
+                         dbl tt,           /* parameter to vary time integration from
+                                              explicit (tt = 1) to implicit (tt = 0) */
+                         dbl dt,           /* current time step size */
+                         dbl h_elem_avg,   /* average global element size for PSPG*/
                          const PG_DATA *pg_data,
-                         double xi[DIM], /* Local stu coordinates */
+                         double xi[DIM],   /* Local stu coordinates */
                          const Exo_DB *exo);
 
 int ad_assemble_continuity(dbl time_value, /* current time */
@@ -20,9 +20,9 @@ int ad_assemble_continuity(dbl time_value, /* current time */
                                               explicit (tt = 1) to implicit (tt = 0)    */
                            dbl dt,         /* current time step size                    */
                            const PG_DATA *pg_data);
-int ad_assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
-                                          * explicit (tt = 1) to implicit (tt = 0) */
-                                 dbl dt, /* current time step size */
+int ad_assemble_stress_sqrt_conf(dbl tt,   /* parameter to vary time integration from
+                                            * explicit (tt = 1) to implicit (tt = 0) */
+                                 dbl dt,   /* current time step size */
                                  PG_DATA *pg_data);
 
 dbl ad_viscosity_wrap(struct Generalized_Newtonian *gn_local);

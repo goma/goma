@@ -74,11 +74,11 @@ EXTERN int assemble_emwave /* mm_fill_em.c                           */
 
 EXTERN void calc_emwave_stabilization_term(struct emwave_stabilization *, double);
 
-int assemble_ewave_curlcurl(double time,       // present time
-                            double tt,         // time integration method parameter
-                            double dt,         // current time step size
-                            const int em_eqn,  // eqn id
-                            const int em_var); //  variable id - should match me_eqn
+int assemble_ewave_curlcurl(double time,        // present time
+                            double tt,          // time integration method parameter
+                            double dt,          // current time step size
+                            const int em_eqn,   // eqn id
+                            const int em_var);  //  variable id - should match me_eqn
 
 int assemble_ewave_laplacian(double time,       // present time
                              double tt,         // time integration method parameter
@@ -100,4 +100,4 @@ int apply_ewave_nedelec_farfield(double func[DIM],
                                  double time,    // present time
                                  const int bc_name,
                                  double *bc_data);
-#endif /* GOMA_MM_FILL_EM_H */
+#endif                                           /* GOMA_MM_FILL_EM_H */

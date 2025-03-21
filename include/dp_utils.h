@@ -46,9 +46,9 @@ EXTERN void ddd_add_member(DDD,           /* which collection? */
                            int,           /* how many of type? */
                            MPI_Datatype); /* what type? */
 
-EXTERN void ddd_add_member2(void *,  /* address */
-                            int,     /* blockcount */
-                            size_t); /* byte_size*/
+EXTERN void ddd_add_member2(void *,       /* address */
+                            int,          /* blockcount */
+                            size_t);      /* byte_size*/
 
 EXTERN void ddd_set_commit2(void);
 

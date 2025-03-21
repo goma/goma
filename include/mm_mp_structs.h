@@ -75,21 +75,21 @@ struct Material_Properties {
   int Num_Matrl_Elem_Blk;           /* Number of element blocks comprising this
                                      * material                                     */
 
-  int *Matrl_Elem_Blk_Ids; /* Malloced list of element block ids comprising
-                            * this material
-                            * Length = Num_Matrl_Elem_Blk */
+  int *Matrl_Elem_Blk_Ids;          /* Malloced list of element block ids comprising
+                                     * this material
+                                     * Length = Num_Matrl_Elem_Blk */
 
-  int DefaultDatabase; /* Default place to look for physical property data
-                        *      GOMA_MAT = 0 = Default
-                        *      CHEMKIN_MAT = 1: Look up all property data
-                        *                       in the chemkin data bases
-                        */
-  int Num_Species;     /* Number of species defined for this material */
-  int Num_Species_Eqn; /* Number of species equations solved for in this
-                        * material: NOTE: this is usually one less than
-                        * the total number of species in the material due
-                        * to the implicit imposition of the sum MF = 1
-                        * constraint                                    */
+  int DefaultDatabase;              /* Default place to look for physical property data
+                                     *      GOMA_MAT = 0 = Default
+                                     *      CHEMKIN_MAT = 1: Look up all property data
+                                     *                       in the chemkin data bases
+                                     */
+  int Num_Species;                  /* Number of species defined for this material */
+  int Num_Species_Eqn;              /* Number of species equations solved for in this
+                                     * material: NOTE: this is usually one less than
+                                     * the total number of species in the material due
+                                     * to the implicit imposition of the sum MF = 1
+                                     * constraint                                    */
   int Dropped_Last_Species_Eqn;
   /* True if the last species equation and only
    * the last species equn has been dropped from
@@ -146,13 +146,13 @@ struct Material_Properties {
    * advection, diffusion,  and reaction, etc
    * (FALSE).
    */
-  int Num_Porous_Eqn; /* Number of porous media eqns solved for in this
-                       * material
-                       */
+  int Num_Porous_Eqn;                  /* Number of porous media eqns solved for in this
+                                        * material
+                                        */
 
-  int Num_Porous_Shell_Eqn; /* Number of porous media shell eqns solved for in this
-                             * material
-                             */
+  int Num_Porous_Shell_Eqn;            /* Number of porous media shell eqns solved for in this
+                                        * material
+                                        */
 
   int Porous_Eqn[MAX_PMV];             /* array containing the porous media equations
                                         * active in this material
@@ -161,10 +161,10 @@ struct Material_Properties {
                                         * active in this material
                                         */
 
-  char **Porous_Names; /* Pointer to a vector of porous phase names for the
-                        * current material */
+  char **Porous_Names;                 /* Pointer to a vector of porous phase names for the
+                                        * current material */
 
-  dbl thermal_conductivity; /* Yeah, you could make this a tensor... */
+  dbl thermal_conductivity;            /* Yeah, you could make this a tensor... */
   dbl d_thermal_conductivity[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_thermal_conductivity;
   dbl *u_thermal_conductivity;
@@ -222,7 +222,7 @@ struct Material_Properties {
   dbl d_wave_number[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_wave_number;
   dbl *u_wave_number;
-  int wave_numberModel; /* CONSTANT */
+  int wave_numberModel;       /* CONSTANT */
   int wave_number_tableid;
 
   dbl acoustic_ksquared_sign; /* Sign of wavenumber squared -- captures imaginary wavenumbers */
@@ -327,9 +327,9 @@ struct Material_Properties {
                                    * of the density wrt the state variables */
   int SBM_Length_enabled;
 
-  int DensityModel;  /* Model type: for types, see mm_mp_const.h  */
-  int len_u_density; /* Constants for user-defined density model*/
-  dbl *u_density;    /* Constants for user-defined density model*/
+  int DensityModel;               /* Model type: for types, see mm_mp_const.h  */
+  int len_u_density;              /* Constants for user-defined density model*/
+  dbl *u_density;                 /* Constants for user-defined density model*/
   /*
    * HKM Note: d_density is now superfluous and will be eliminated eventually
    */
@@ -439,27 +439,27 @@ struct Material_Properties {
   int len_u_gadiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
   int len_u_mdiffusivity[MAX_CONC];  /*this is currently defined for MPI*/
   int len_u_fdiffusivity[MAX_CONC];
-  int len_u_gdiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
-  int len_SBM_Lengths2[MAX_CONC];   /*this is currently defined for MPI*/
-  int len_u_cdiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
-  int len_u_qdiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
+  int len_u_gdiffusivity[MAX_CONC];  /*this is currently defined for MPI*/
+  int len_SBM_Lengths2[MAX_CONC];    /*this is currently defined for MPI*/
+  int len_u_cdiffusivity[MAX_CONC];  /*this is currently defined for MPI*/
+  int len_u_qdiffusivity[MAX_CONC];  /*this is currently defined for MPI*/
   int len_u_nscoeff[MAX_CONC];
 
-  dbl gam_diffusivity[MAX_CONC]; /* Kc from shear-gradient term */
+  dbl gam_diffusivity[MAX_CONC];     /* Kc from shear-gradient term */
   dbl *u_gadiffusivity[MAX_CONC];
-  dbl mu_diffusivity[MAX_CONC]; /* Kmu from viscosity-gradient term */
+  dbl mu_diffusivity[MAX_CONC];      /* Kmu from viscosity-gradient term */
   dbl *u_mdiffusivity[MAX_CONC];
-  dbl f_diffusivity[MAX_CONC]; /* normal Fickian diffusion term */
+  dbl f_diffusivity[MAX_CONC];       /* normal Fickian diffusion term */
   dbl *u_fdiffusivity[MAX_CONC];
-  dbl g_diffusivity[MAX_CONC]; /* hindered settling function */
-  dbl SBM_Lengths[MAX_CONC];   /* hindered settling function */
+  dbl g_diffusivity[MAX_CONC];       /* hindered settling function */
+  dbl SBM_Lengths[MAX_CONC];         /* hindered settling function */
   dbl NSCoeff[MAX_CONC];
   dbl *u_nscoeff[MAX_CONC];
-  dbl *u_gdiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
-  dbl *SBM_Lengths2[MAX_CONC];   /*this is currently defined for MPI*/
-  dbl cur_diffusivity[MAX_CONC]; /* curvature induced migration term */
+  dbl *u_gdiffusivity[MAX_CONC];     /*this is currently defined for MPI*/
+  dbl *SBM_Lengths2[MAX_CONC];       /*this is currently defined for MPI*/
+  dbl cur_diffusivity[MAX_CONC];     /* curvature induced migration term */
   dbl *u_cdiffusivity[MAX_CONC];
-  dbl q_diffusivity[MAX_CONC][DIM]; /* Q tensor diffusion components. */
+  dbl q_diffusivity[MAX_CONC][DIM];  /* Q tensor diffusion components. */
   dbl *u_qdiffusivity[MAX_CONC];
 
   /* Parameters for Ryan's Qtensor model */
@@ -1178,9 +1178,9 @@ struct Positive_LS_Viscoelastic_Properties {
 
   double alpha; /* This is the Geisekus mobility parameter */
 
-  double xi; /* This is the PTT upper convected / lower convected weight parameter */
+  double xi;    /* This is the PTT upper convected / lower convected weight parameter */
 
-  double eps; /* This is the PTT elongational parameter */
+  double eps;   /* This is the PTT elongational parameter */
 };
 
 struct Viscoelastic_Constitutive {
@@ -1193,10 +1193,10 @@ struct Viscoelastic_Constitutive {
   dbl alpha; /* This is the Geisekus mobility parameter */
   int alphaModel;
 
-  dbl xi; /* This is the PTT upper convected / lower convected weight parameter */
+  dbl xi;    /* This is the PTT upper convected / lower convected weight parameter */
   int xiModel;
 
-  dbl eps; /* This is the PTT elongational parameter */
+  dbl eps;   /* This is the PTT elongational parameter */
   int epsModel;
 
   // Rolie Poly
@@ -1374,9 +1374,9 @@ struct Viscoplastic_Constitutive {
    * pretty big so they won't be allocated unless you are doing an EVP model
    */
 
-  dbl ****F_vp_glob; /*viscoplastic deformation gradient = I + int(D_vp)dt */
+  dbl ****F_vp_glob;     /*viscoplastic deformation gradient = I + int(D_vp)dt */
   dbl ****F_vp_old_glob;
-  dbl ****TT_glob; /*Plastic potential stress */
+  dbl ****TT_glob;       /*Plastic potential stress */
   dbl ****TT_old_glob;
   dbl ******dTT_dx_glob; /*Stress sensitivities */
   dbl ******dTT_dx_old_glob;

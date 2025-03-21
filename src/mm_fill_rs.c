@@ -112,8 +112,8 @@ int assemble_real_solid(double time_value, double tt, double dt) {
 
   dbl det_J;
   dbl d_det_J_dmeshbj;
-  dbl h3;          /* Volume element (scale factors). */
-  dbl dh3dmesh_bj; /* Sensitivity to (b,j) mesh dof. */
+  dbl h3;                     /* Volume element (scale factors). */
+  dbl dh3dmesh_bj;            /* Sensitivity to (b,j) mesh dof. */
 
   dbl VV[DIM][DIM];           /* Inertia Tensor... */
   double vconv[MAX_PDIM];     /*Calculated convection velocity */
@@ -144,7 +144,7 @@ int assemble_real_solid(double time_value, double tt, double dt) {
   dbl mu;
   dbl lambda, rho;
 
-  dbl g[DIM]; /* solid body force. */
+  dbl g[DIM];                             /* solid body force. */
 
   dbl diff_a = 0, diff_b = 0, diff_c = 0; /* Temporary variables hold partially */
   /* constructed diffusion terms... */
@@ -195,7 +195,7 @@ int assemble_real_solid(double time_value, double tt, double dt) {
                   /* to do...*/
 
   wt = fv->wt;
-  h3 = fv->h3; /* Differential volume element (scales). */
+  h3 = fv->h3;    /* Differential volume element (scales). */
 
   /*
    * Bail out fast if there's nothing to do...
@@ -805,8 +805,8 @@ int assemble_real_solid(double time_value, double tt, double dt) {
         }
 
       } /* end of loop over equations i  */
-    }   /* end of loop over equation directions a */
-  }     /* end of if jacobian */
+    } /* end of loop over equation directions a */
+  } /* end of if jacobian */
 
   return (status);
 }

@@ -134,7 +134,7 @@ int assemble_csf_tensor(void) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -373,7 +373,7 @@ int assemble_div_n_source(void) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -572,7 +572,7 @@ int assemble_div_s_n_source(void) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -764,7 +764,7 @@ int assemble_cap_hysing(double dt, double scale) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -931,7 +931,7 @@ int assemble_cap_denner_diffusion(double dt, double scale) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -1112,7 +1112,7 @@ int assemble_cap_denner_diffusion_n(double dt, double scale) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }

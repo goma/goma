@@ -128,8 +128,8 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                      const dbl time_value,   /* current time */
                      const int print_flag)   /*  flag for printing results,1=print*/
 {
-  int j; /* local index loop counter                 */
-  int i; /* Index for the local node number - row    */
+  int j;                                     /* local index loop counter                 */
+  int i;                                     /* Index for the local node number - row    */
   int ip = 0, a, b, c, p, w = -1;
   int mn;
   int var;
@@ -153,20 +153,20 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
   dbl mu = 0.0;
   dbl gamma_dot = 0.0;
   int elem_sign_org;
-  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
+  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;     /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
-  dbl q[DIM], dq_gradT[DIM][DIM]; /* heat flux vector, sensitvity */
+  dbl q[DIM], dq_gradT[DIM][DIM];              /* heat flux vector, sensitvity */
   dbl dq_dX[DIM][DIM];
-  dbl k = 0;                                 /* Thermal conductivity. */
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; /* Thermal conductivity dependence. */
+  dbl k = 0;                                   /* Thermal conductivity. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct;   /* Thermal conductivity dependence. */
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
 
   dbl Cp = 0.0;                                /* Heat capacity. */
   HEAT_CAPACITY_DEPENDENCE_STRUCT d_Cp_struct; /* Heat capacity dependence. */
   HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp = &d_Cp_struct;
 
-  dbl R_imped; /* Acoustic impedance */
+  dbl R_imped;                                 /* Acoustic impedance */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_R_struct;
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_R = &d_R_struct;
 
@@ -174,14 +174,14 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
   CONDUCTIVITY_DEPENDENCE_STRUCT d_wnum_struct;
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_wnum = &d_wnum_struct;
 
-  dbl dkdT[MDE];           /* Temperature derivative of electrical conductivity. */
-  dbl dkdV[MDE];           /* Potential derivative of electrical conductivity. */
-  dbl dkdC[MAX_CONC][MDE]; /* Concentration derivative of electrical conductivity. */
-  dbl dkdX[DIM][MDE];      /* Spatial derivatives of electrical conductivity. */
+  dbl dkdT[MDE];                 /* Temperature derivative of electrical conductivity. */
+  dbl dkdV[MDE];                 /* Potential derivative of electrical conductivity. */
+  dbl dkdC[MAX_CONC][MDE];       /* Concentration derivative of electrical conductivity. */
+  dbl dkdX[DIM][MDE];            /* Spatial derivatives of electrical conductivity. */
 
-  double rho = 0; /*  density variables */
+  double rho = 0;                /*  density variables */
   dbl e_theta[DIM] = {0., 0.,
-                      1.}; /* direction vector in theta direction for SWIRLING flow problems*/
+                      1.};       /* direction vector in theta direction for SWIRLING flow problems*/
 
   double TT[MAX_PDIM][MAX_PDIM]; /**  solid stresses  **/
   dbl dTT_drs[DIM][DIM][DIM][MDE];
@@ -211,22 +211,22 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
   dbl d_p_dC[MAX_CONC][MDE];                       /* Concentration derivative of permittivity. */
   dbl d_p_dX[DIM][MDE];                            /* Spatial derivatives of permittivity. */
 
-  double vs[MAX_PDIM][MAX_PDIM]; /* viscous stress */
-  double dsigma_dx[DIM][MDE];    /* surface tension terms */
+  double vs[MAX_PDIM][MAX_PDIM];                   /* viscous stress */
+  double dsigma_dx[DIM][MDE];                      /* surface tension terms */
   double dsigmadT = 0, dsigmadC[MAX_CONC];
 
-  double ves[MAX_PDIM][MAX_PDIM]; /* viscoelastic stress */
+  double ves[MAX_PDIM][MAX_PDIM];                  /* viscoelastic stress */
   int ve_mode;
   int v_s[MAX_MODES][DIM][DIM];
 
-  double x_dot[MAX_PDIM]; /*    moving mesh stuff  */
+  double x_dot[MAX_PDIM];       /*    moving mesh stuff  */
 
-  double s, t, u; /* Gaussian-quadrature point locations          */
+  double s, t, u;               /* Gaussian-quadrature point locations          */
   double det;
   double local_flux = 0.0;      /* these are actually the integrated contact and*/
   double local_flux_conv = 0.0; /*  convective fluxes  */
   double local_area = 0.0;
-  double local_q = 0; /* these are the actual fluxes  */
+  double local_q = 0;           /* these are the actual fluxes  */
   double local_qconv = 0;
 
   double param[3] = {0., 0., 0.};
@@ -249,7 +249,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
   double Torque0[DIM] = {0, 0, 0};
 #endif
 
-  double xi[DIM]; /* Local element coordinates of Gauss point. */
+  double xi[DIM];      /* Local element coordinates of Gauss point. */
 
   int num_side_in_set; /* returned number of sides(faces or edges) is  */
   int num_elem_in_set, num_node_in_set, num_nodes_on_side;
@@ -3711,9 +3711,9 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
           }
 
         } /*  material id conditional */
-      }   /*   element loop */
-    }     /* num_side_in_set > 0 */
-  }       /*   sset id   */
+      } /*   element loop */
+    } /* num_side_in_set > 0 */
+  } /*   sset id   */
   else {
 
     /**  Apply end point conditions when the nset is not found   **/
@@ -4028,14 +4028,14 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                   break;
                 }
               } /*  J_AC  */
-            }   /*  blk_id  */
+            } /*  blk_id  */
           }
         } /* ss_sides loop	*/
         if (corner_elem == -1)
           GOMA_EH(GOMA_ERROR, "corner element not found");
 
       } /* if sset_id	*/
-    }   /* if nset_id	*/
+    } /* if nset_id	*/
     else {
 #ifndef PARALLEL
       (void)sprintf(Err_Msg, "%s could not locate SSID %d.", yo, side_set_id);
@@ -5836,8 +5836,8 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
                           const double time_value, /* current time */
                           const int print_flag)    /*  printing control flag */
 {
-  int j; /* local index loop counter                 */
-  int i; /* Index for the local node number - row    */
+  int j;                                           /* local index loop counter                 */
+  int i;                                           /* Index for the local node number - row    */
   int ip;
   int a, b;
   int mn;
@@ -5871,13 +5871,13 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
   HEAT_CAPACITY_DEPENDENCE_STRUCT d_Cp_struct; /* Heat capacity dependence. */
   HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp = &d_Cp_struct;
 
-  double rho = 0;                  /*  density variables */
-  dbl e_theta[DIM] = {0., 0., 1.}; /* torque w.r.t theta only*/
+  double rho = 0;                              /*  density variables */
+  dbl e_theta[DIM] = {0., 0., 1.};             /* torque w.r.t theta only*/
 
-  double vs_sens[MAX_PDIM][MAX_PDIM]; /* viscous stress */
+  double vs_sens[MAX_PDIM][MAX_PDIM];          /* viscous stress */
   double vs[MAX_PDIM][MAX_PDIM];
 
-  double ves_sens[MAX_PDIM][MAX_PDIM]; /* viscoelastic stress */
+  double ves_sens[MAX_PDIM][MAX_PDIM];         /* viscoelastic stress */
   double ves[MAX_PDIM][MAX_PDIM];
   int ve_mode;
   int v_s[MAX_MODES][DIM][DIM];
@@ -5903,9 +5903,9 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
   double es_sens[MAX_PDIM][MAX_PDIM], efield_sens[MAX_PDIM]; /* electric stress */
   double efield_sqr_sens;                                    /* efield magnitude squared  */
 
-  double dsigma_dx[DIM][MDE]; /* surface tension terms */
+  double dsigma_dx[DIM][MDE];                                /* surface tension terms */
   double dsigmadT, dsigmadC[MAX_CONC], sigma_sens;
-  double x_dot[MAX_PDIM]; /*    moving mesh stuff  */
+  double x_dot[MAX_PDIM];                                    /*    moving mesh stuff  */
   double normal_sens[MAX_PDIM], tangent_sens[2][MAX_PDIM];
 
   double s, t, u; /* Gaussian-quadrature point locations       */
@@ -5921,9 +5921,9 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
   double global_area = 0.0;      /* area sum over all procs */
 #endif
 
-  double xi[DIM]; /* Local element coordinates of Gauss point. */
+  double xi[DIM];                /* Local element coordinates of Gauss point. */
 
-  int num_side_in_set; /* returned number of sides(faces or edges) is  */
+  int num_side_in_set;           /* returned number of sides(faces or edges) is  */
   int num_elem_in_set, num_node_in_set, num_nodes_on_side;
   /* in the side set                              */
   int num_dist_fact_in_set; /* returned number of distribution factors in   */
@@ -6978,9 +6978,9 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
           }
 
         } /*  material id conditional */
-      }   /*   element loop */
-    }     /* num_side_in_set > 0 */
-  }       /*   sset id   */
+      } /*   element loop */
+    } /* num_side_in_set > 0 */
+  } /*   sset id   */
   else {
     /**  Apply end point conditions when the nset is not found   **/
     nset_id = in_list(side_set_id, 0, exo->num_node_sets, exo->ns_id);
@@ -7160,13 +7160,13 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
                 GOMA_EH(GOMA_ERROR, "Illegal flux type");
                 break;
               } /*  end of switch */
-            }   /*  mat_id  */
+            } /*  mat_id  */
           }
         } /*  ss_sides loop  */
         if (corner_elem == -1)
           GOMA_EH(GOMA_ERROR, "corner element not found");
       } /*  if sset_id     */
-    }   /*  if nset_id     */
+    } /*  if nset_id     */
     else {
 #ifndef PARALLEL
       (void)sprintf(Err_Msg, "%s could not locate SSID %d.", yo, side_set_id);
@@ -7238,9 +7238,9 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
  */
 
 static int load_fv_sens(void) {
-  int v;    /* variable type indicator */
-  int i;    /* index */
-  int p, q; /* dimension indeces */
+  int v;       /* variable type indicator */
+  int i;       /* index */
+  int p, q;    /* dimension indeces */
   int dim;
   int velodim; /* Someday...we might have more velocity */
   /* components than we have spatial dimensions */
@@ -7809,7 +7809,7 @@ static int load_fv_sens(void) {
    * Velocity (vector)...
    */
 
-  velodim = dim; /* Later, this might include v_theta... */
+  velodim = dim;       /* Later, this might include v_theta... */
   if (pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN ||
       pd->CoordinateSystem == CARTESIAN_2pt5D)
     velodim = dim + 1; /* Later is Now!  Woo!!! */
@@ -8823,7 +8823,7 @@ int adaptive_weight(double w[],
         break;
       default:
         printf("unknown weight fcn type %d \n", wt_type);
-      }      /* end of wt_type switch */
+      } /* end of wt_type switch */
       break; /* end of dim switch, case 1 */
 
     case 2:
@@ -9458,7 +9458,7 @@ int interface_crossing_2DQ(const double ls_F[],
       }
       break;
     } /* end of nint2D[iside] switch */
-  }   /* end of for iside loop  */
+  } /* end of for iside loop  */
 
   /**  check for interface duplication from corner nodes  **/
   for (i = 0; i < is2D; i++) {

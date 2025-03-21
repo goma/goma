@@ -160,20 +160,20 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
   int i, j, m, status;
   struct Basis_Functions *bfm;
 
-  dbl pv[DIM];     /* Velocity field. */
-  dbl pv_dot[DIM]; /* time derivative of velocity field. */
-  dbl x_dot[DIM];  /* current position field derivative wrt time. */
+  dbl pv[DIM];                  /* Velocity field. */
+  dbl pv_dot[DIM];              /* time derivative of velocity field. */
+  dbl x_dot[DIM];               /* current position field derivative wrt time. */
 
-  dbl h3;          /* Volume element (scale factors). */
-  dbl dh3dmesh_bj; /* Sensitivity to (b,j) mesh dof. */
+  dbl h3;                       /* Volume element (scale factors). */
+  dbl dh3dmesh_bj;              /* Sensitivity to (b,j) mesh dof. */
 
-  dbl grad_pv[DIM][DIM]; /* Gradient of pv. */
-  dbl gamma[DIM][DIM];   /* shrearrate tensor based on velocity */
+  dbl grad_pv[DIM][DIM];        /* Gradient of pv. */
+  dbl gamma[DIM][DIM];          /* shrearrate tensor based on velocity */
 
-  dbl Pi[DIM][DIM];     /* Total stress tensor (multiplied by coeff). */
-  dbl Pi_raw[DIM][DIM]; /* Rate of strain tensor (no coeff). */
+  dbl Pi[DIM][DIM];             /* Total stress tensor (multiplied by coeff). */
+  dbl Pi_raw[DIM][DIM];         /* Rate of strain tensor (no coeff). */
 
-  dbl rho; /* Density. */
+  dbl rho;                      /* Density. */
 
   dbl coeff;                    /* Takes place of viscosity...  Coefficient
                                  * of the particle stress tensor.
@@ -184,11 +184,11 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
   dbl dfdv[DIM][DIM][MDE];      /* For velocity dependence. */
   dbl dfdC[DIM][MAX_CONC][MDE]; /* For concentration dependence. */
 
-  dbl det_J; /* determinant of element Jacobian */
+  dbl det_J;                    /* determinant of element Jacobian */
 
-  dbl d_det_J_dmesh_bj; /* for specific (b,j) mesh dof */
+  dbl d_det_J_dmesh_bj;         /* for specific (b,j) mesh dof */
 
-  dbl mass; /* For terms and their derivatives */
+  dbl mass;                     /* For terms and their derivatives */
   dbl advection;
   dbl advection_a, advection_b, advection_c;
   dbl porous;
@@ -334,7 +334,7 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3; /* Differential volume element (scales). */
+  h3 = fv->h3;           /* Differential volume element (scales). */
 
   /*
    * Material property constants, etc. Any variations for this
@@ -775,7 +775,7 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
           lec->R[LEC_R_INDEX(peqn, ii)] += mass + advection + porous + diffusion + source;
 
         } /* end of if (active_dof) */
-      }   /* end of for i=0,ei[pg->imtrx]->dof statement */
+      } /* end of for i=0,ei[pg->imtrx]->dof statement */
     }
   }
 
@@ -1377,7 +1377,7 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
             }
           }
         } /* end of if(active_dof) */
-      }   /* end_of for(i=0,ei[pg->imtrx]->dof[eqn])*/
+      } /* end_of for(i=0,ei[pg->imtrx]->dof[eqn])*/
     }
   }
 
@@ -1438,10 +1438,10 @@ int MMH_assemble_continuity(double time_value,       /* current value of time */
   int i, j;
   int status, err;
 
-  dbl v[DIM]; /* Velocity field. */
-  dbl div_pv; /* Divergence of v. */
+  dbl v[DIM];   /* Velocity field. */
+  dbl div_pv;   /* Divergence of v. */
 
-  dbl P; /* Pressure. */
+  dbl P;        /* Pressure. */
 
   dbl mu = 0.0; /* Viscosity. */
 
@@ -1528,7 +1528,7 @@ int MMH_assemble_continuity(double time_value,       /* current value of time */
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
-  dbl gamma[DIM][DIM]; /* shrearrate tensor based on velocity */
+  dbl gamma[DIM][DIM];                     /* shrearrate tensor based on velocity */
 
   /*
    * Species diffusive flux and sensitivity terms
@@ -1595,7 +1595,7 @@ int MMH_assemble_continuity(double time_value,       /* current value of time */
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3; /* Differential volume element (scales). */
+  h3 = fv->h3;           /* Differential volume element (scales). */
 
   for (a = 0; a < dim; a++) {
     v[a] = fv->v[a];

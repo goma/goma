@@ -33,4 +33,4 @@ EXTERN int element_quality(Exo_DB *, /* Exodus database structure */
                            double *, /* Solution vector */
                            int *);   /* proc_config array */
 
-#endif /* GOMA_EL_QUALITY_H */
+#endif                               /* GOMA_EL_QUALITY_H */

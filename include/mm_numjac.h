@@ -36,7 +36,7 @@ struct elem_side_bc_struct;
 #define EXTERN extern
 #endif
 
-#define ELEM_LIST_SIZE (MAX_SUR_ELEM_3D * MAX_SUR_ELEM_3D)
+#define ELEM_LIST_SIZE            (MAX_SUR_ELEM_3D * MAX_SUR_ELEM_3D)
 
 /* Good for Debug_Flag == -2: 1.0e-3, 1.0e-4, 1.0e-2, 1.0e-8, 1.0e-4, 1.0e-12 */
 /* Good for Debug_Flag == -3: 1.0e-3, 1.0e-3, 1.0e-2, 1.0e-4, 1.0e-3, 1.0e-8 */
@@ -45,26 +45,26 @@ struct elem_side_bc_struct;
  * is normally set to the square root of machine precision, according to
  * most text books on the subject. This is roughly 1.0E-7.
  */
-#define DELTA_UNKNOWN (1.0e-7) /* for infinitesimal finite difference */
+#define DELTA_UNKNOWN             (1.0e-7) /* for infinitesimal finite difference */
 // #define FD_DELTA_UNKNOWN (1.0e-4)	   /* for finite difference */
-#define FD_DELTA_UNKNOWN (1.0e-6) /* for finite difference */
+#define FD_DELTA_UNKNOWN          (1.0e-6)    /* for finite difference */
 
-#define RESIDUAL_TOLERANCE        (1.0e-3) /* absolute error required for output */
-#define SCALED_RESIDUAL_TOLERANCE (1.0e-2) /* scaled error required for output */
-#define MIXED_RESIDUAL_TOLERANCE                        \
-  (1.0e-4) /* If the scaled error is too large, but the \
-            * aboslute error is smaller than this,      \
-            * then don't report.  This should never be  \
-            * larger than RESIDUAL_TOLERANCE. */
-#define MIXED_SCALED_RESIDUAL_TOLERANCE             \
-  (1.0e-3) /* If the aboslute error is too large,   \
-            * but the scaled error is smaller than  \
-            * this, then don't report.  This should \
-            * never be larger than                  \
-            * SCALED_RESIDUAL_TOLERANCE. */
-#define SCALED_RESIDUAL_TOLERANCE_CUTOFF          \
-  (1.0e-8) /* don't report scaled error if values \
-            * are this small */
+#define RESIDUAL_TOLERANCE        (1.0e-3)    /* absolute error required for output */
+#define SCALED_RESIDUAL_TOLERANCE (1.0e-2)    /* scaled error required for output */
+#define MIXED_RESIDUAL_TOLERANCE                                                           \
+  (1.0e-4)                                    /* If the scaled error is too large, but the \
+                                               * aboslute error is smaller than this,      \
+                                               * then don't report.  This should never be  \
+                                               * larger than RESIDUAL_TOLERANCE. */
+#define MIXED_SCALED_RESIDUAL_TOLERANCE                                                \
+  (1.0e-3)                                    /* If the aboslute error is too large,   \
+                                               * but the scaled error is smaller than  \
+                                               * this, then don't report.  This should \
+                                               * never be larger than                  \
+                                               * SCALED_RESIDUAL_TOLERANCE. */
+#define SCALED_RESIDUAL_TOLERANCE_CUTOFF                                             \
+  (1.0e-8)                                    /* don't report scaled error if values \
+                                               * are this small */
 EXTERN int
 numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
                                   double x[], /* Solution vector for the current processor */

@@ -1113,11 +1113,11 @@ void update_MT_parameter(double lambda, /* Parameter value */
 /*******************************************************************************/
 
 void update_UM_parameter(
-    double lambda, /* Parameter value */
-    int mn,        /* Material number index */
-    int mpr,       /* Material property index */
-    int ic,        /* User model float index */
-    Comm_Ex *cx,   /* array of communications structures */
+    double lambda,                                          /* Parameter value */
+    int mn,                                                 /* Material number index */
+    int mpr,                                                /* Material property index */
+    int ic,                                                 /* User model float index */
+    Comm_Ex *cx,                                            /* array of communications structures */
     Exo_DB *exo,
     /* ptr to the finite element mesh database */ Dpi *dpi) /* distributed processing information */
 /*
@@ -2069,11 +2069,11 @@ void retrieve_AC_parameter(double *lambda, /* Parameter value */
 /*******************************************************************************/
 
 void retrieve_UM_parameter(
-    double *lambda, /* Parameter value */
-    int mn,         /* Material number index */
-    int mpr,        /* Material property index */
-    int ic,         /* User model float index */
-    Comm_Ex *cx,    /* array of communications structures */
+    double *lambda,                                         /* Parameter value */
+    int mn,                                                 /* Material number index */
+    int mpr,                                                /* Material property index */
+    int ic,                                                 /* User model float index */
+    Comm_Ex *cx,                                            /* array of communications structures */
     Exo_DB *exo,
     /* ptr to the finite element mesh database */ Dpi *dpi) /* distributed processing information */
 {

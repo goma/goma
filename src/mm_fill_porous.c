@@ -166,7 +166,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
   dbl phi_j;
   dbl h3; /* Product of all 3 scale factors used for */
   /* volume integrals in this coordinate system*/
-  dbl dh3dmesh_bj; /* Mesh derivative of same. */
+  dbl dh3dmesh_bj;            /* Mesh derivative of same. */
   dbl det_J = 0.0;
   dbl d_det_J_dmeshbj;        /* for specified (b,j) mesh dof */
   dbl dgrad_phi_i_dmesh[DIM]; /* ditto.  */
@@ -356,10 +356,10 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
             lec->R[LEC_R_INDEX(peqn, ii)] += mass + advection + advection_supg + diffusion + source;
 
           } /* if active_dofs */
-        }   /* end of loop over equations */
-      }     /* If(pd->e[pg->imtrx][eqn]) */
-    }       /* loop over PMV equation-types with w */
-  }         /* end of assemble residuals */
+        } /* end of loop over equations */
+      } /* If(pd->e[pg->imtrx][eqn]) */
+    } /* loop over PMV equation-types with w */
+  } /* end of assemble residuals */
 
   /*
    * Jacobian terms...
@@ -780,9 +780,9 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
    * Interpolation functions for variables and some of their derivatives.
    */
   dbl phi_j;
-  dbl h3;       /* Product of all 3 scale factors used for */
-                /* volume integrals in this coordinate system*/
-  dbl dh3dmesh; /* Mesh derivative of same. */
+  dbl h3;            /* Product of all 3 scale factors used for */
+                     /* volume integrals in this coordinate system*/
+  dbl dh3dmesh;      /* Mesh derivative of same. */
   dbl det_J;
   dbl d_det_J_dmesh; /* for specified (b,j) mesh dof */
   dbl wt, wt_total;
@@ -981,7 +981,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
       }
 
     } /* End of loop over i-th equation */
-  }   /* End of if Assemble_Jacobian */
+  } /* End of if Assemble_Jacobian */
 
   //   GOMA_EH(GOMA_ERROR,"if you got here you need to contact P. R. Schunk.  Pore-Sink-mass");
   return status;
@@ -1027,7 +1027,7 @@ int load_porous_properties(void)
   double d_cap_pres[4], n_pow;
   const int i_pl = 0, i_pg = 1, i_pore = 2, i_pe = 3;
   int siz;
-  int MTV; /* maximum number of variables types plus species unknowns */
+  int MTV;                           /* maximum number of variables types plus species unknowns */
 
   static int is_initialized = FALSE; /* This static flag is set TRUE after the first pass through.
                                       * This is to reduce the tremendous overhead associated with
@@ -1035,7 +1035,7 @@ int load_porous_properties(void)
                                       */
 
   if (mp->PorousMediaType == CONTINUOUS)
-    return 0; /* shouldn't get here */
+    return 0;                        /* shouldn't get here */
   // if (mp->PorousMediaType == POROUS_SHELL) return 0;
 
   MTV = MAX_VARIABLE_TYPES + MAX_CONC;
@@ -2071,7 +2071,7 @@ void load_nodal_shell_porous_properties(double tt, double dt, int eqn)
                           "porous open equation");
     }
 
-    phi = mp->porosity; /* Porosity */
+    phi = mp->porosity;                     /* Porosity */
 
     H = porous_shell_closed_height_model(); /* Pore height (vertical */
     Patm = mp->PorousShellPatm;             /* Gas pressure - always constant */
@@ -2865,7 +2865,7 @@ int get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
         }
       }
     } /* end of SUPG */
-  }   /* end of if Jacobian */
+  } /* end of if Jacobian */
   return 0;
 }
 /* end of get_porous_part_sat_terms */
@@ -4129,12 +4129,12 @@ void porous_normal_velocity_bc(double func[],
                                dbl dt,            /* current value of the time step         */
                                int bc_input_id,
                                struct Boundary_Condition *BC_Types,
-                               int eb_mat_solid, /* elem block id of porous phase  */
-                               int eb_mat_fluid, /* elem block id of gas phase     */
-                               int i_pl,         /*HARDWIRED to liquid-solvent
-                                                   vapor in gas for now until
-                                                   multiple species is allowed. */
-                               double dens_vap)  /* density of pure solvent vapor */
+                               int eb_mat_solid,  /* elem block id of porous phase  */
+                               int eb_mat_fluid,  /* elem block id of gas phase     */
+                               int i_pl,          /*HARDWIRED to liquid-solvent
+                                                    vapor in gas for now until
+                                                    multiple species is allowed. */
+                               double dens_vap)   /* density of pure solvent vapor */
 
 /*******************************************************************************
  *
@@ -4263,10 +4263,10 @@ void put_gas_flux_in_pores(double func[],
                            dbl dt,            /* current value of the time step         */
                            int bc_input_id,
                            struct Boundary_Condition *BC_Types,
-                           int eb_mat_solid, /* elem block id of porous phase  */
-                           int eb_mat_fluid, /* elem block id of gas phase     */
+                           int eb_mat_solid,  /* elem block id of porous phase  */
+                           int eb_mat_fluid,  /* elem block id of gas phase     */
                            int wspec,
-                           double dens_vap, /* density of pure solvent vapor */
+                           double dens_vap,   /* density of pure solvent vapor */
                            double vapor_recoil)
 
 /******************************************************************************
@@ -4384,10 +4384,10 @@ void porous_vapor_equil_bc(double func[],
                            dbl dt,            /* current value of the time step         */
                            int bc_input_id,
                            struct Boundary_Condition *BC_Types,
-                           int eb_mat_solid, /* elem block id of porous phase  */
-                           int eb_mat_fluid, /* elem block id of gas phase     */
+                           int eb_mat_solid,  /* elem block id of porous phase  */
+                           int eb_mat_fluid,  /* elem block id of gas phase     */
                            int wspec,
-                           double amb_pres) /* ambient pressure              */
+                           double amb_pres)   /* ambient pressure              */
 
 /***************************************************************************
  *
@@ -6639,7 +6639,7 @@ double load_cap_pres(int ipore, int ilnode, int ignode, double saturation)
       } else {
         GOMA_EH(GOMA_ERROR, "Either we are on draining curve or wetting curve!");
       }
-    } else if (switch_now == 1) /* We are switching */
+    } else if (switch_now == 1)                               /* We are switching */
     {
       if ((draining_curve == 1) && (draining_curve_old == 0)) /* Wetting going to draining */
       {
@@ -6904,7 +6904,7 @@ double load_cap_pres(int ipore, int ilnode, int ignode, double saturation)
       } else {
         GOMA_EH(GOMA_ERROR, "Either we are on draining curve or wetting curve!");
       }
-    } else if (switch_now == 1) /* We are switching */
+    } else if (switch_now == 1)                               /* We are switching */
     {
       if ((draining_curve == 1) && (draining_curve_old == 0)) /* Wetting going to draining */
       {
@@ -9322,10 +9322,10 @@ void load_MandE_flux(double porosity, double cap_pres, double saturation, double
                 } /* for (j=0 ... */
               }
             } /* for (w1=0 ... */
-          }   /* for (a=0 ... */
-        }     /* if(w != ... */
-      }       /* for (w=0 ... */
-    }         /* PorousFluxModel */
+          } /* for (a=0 ... */
+        } /* if(w != ... */
+      } /* for (w=0 ... */
+    } /* PorousFluxModel */
 
     var = POR_SINK_MASS;
     if (pd->v[pg->imtrx][var]) {
@@ -9348,9 +9348,9 @@ void load_MandE_flux(double porosity, double cap_pres, double saturation, double
               pmv->d_rel_mass_flux_dSM[i_pl][a][j] += t3;
 
             } /* for (j=0 ... */
-          }   /* for (a=0 ... */
-        }     /* for (w = 0 ... */
-      }       /* PorousFluxModel */
+          } /* for (a=0 ... */
+        } /* for (w = 0 ... */
+      } /* PorousFluxModel */
     }
 
     if (cr->PorousFluxModel == DARCY_FICKIAN) {
@@ -9439,8 +9439,8 @@ void load_MandE_flux(double porosity, double cap_pres, double saturation, double
           }
 
         } /* j<ei[pg->imtrx]->dof[var] */
-      }   /* a<VIM */
-    }     /* DARCY_FICKIAN */
+      } /* a<VIM */
+    } /* DARCY_FICKIAN */
 
     /* Additional terms for energy equation - conduction in solid
      * Assume thermal conductivity a function of temperature only
@@ -9504,7 +9504,7 @@ void load_MandE_flux(double porosity, double cap_pres, double saturation, double
                     }
                   }
                 } /* w!=i_pore */
-              }   /* w<MAX_PMV */
+              } /* w<MAX_PMV */
 
               /* Additional terms for energy equation */
               if (pd->e[pg->imtrx][R_POR_GAS_PRES])
@@ -9525,10 +9525,10 @@ void load_MandE_flux(double porosity, double cap_pres, double saturation, double
                 }
               }
             } /* DARCY_FICKIAN */
-          }   /* a<WIM */
-        }     /* j<ei[pg->imtrx]->dof[var] */
-      }       /*if ( pd->v[pg->imtrx][var] ) */
-    }         /*  b<pd->Num_Dim */
+          } /* a<WIM */
+        } /* j<ei[pg->imtrx]->dof[var] */
+      } /*if ( pd->v[pg->imtrx][var] ) */
+    } /*  b<pd->Num_Dim */
 
     var = TEMPERATURE;
     if (pd->v[pg->imtrx][var] && !pd->e[pg->imtrx][R_POR_ENERGY]) {
@@ -9642,8 +9642,8 @@ void calc_darcy_velocity() {
           pmv->gas_darcy_velocity[a] = 0.0;
         }
       } /* b < WIM */
-    }   /* a < WIM */
-  }     /* PermeabilityModel */
+    } /* a < WIM */
+  } /* PermeabilityModel */
 
   if (af->Assemble_Jacobian) {
 
@@ -9723,8 +9723,8 @@ void calc_darcy_velocity() {
                   mp->perm_tensor[a][b] * mp->rel_gas_perm * bf[var]->grad_phi[j][b];
             }
           } /* for (b=0 ...) */
-        }   /* for (J=0 ...) */
-      }     /* for (a=0 ...) */
+        } /* for (J=0 ...) */
+      } /* for (a=0 ...) */
 
       var = POR_POROSITY;
       if (pd->v[pg->imtrx][var] && mp->PermeabilityModel == KC_TENSOR) {
@@ -9755,7 +9755,7 @@ void calc_darcy_velocity() {
       }
 
     } /*end if (PERM TENSOR) */
-  }   /* Assemble_Jacobian */
+  } /* Assemble_Jacobian */
   return;
 }
 
@@ -10271,9 +10271,9 @@ void load_mass_flux(double porosity, double cap_pres, double saturation, double 
               }
 
             } /* j<ei[pg->imtrx]->dof[var] */
-          }   /* a<VIM */
-        }     /* w!=i_pore */
-      }       /* w<MAX_PMV */
+          } /* a<VIM */
+        } /* w!=i_pore */
+      } /* w<MAX_PMV */
 
     } /* DARCY_FICKIAN */
 
@@ -10379,7 +10379,7 @@ void load_mass_flux(double porosity, double cap_pres, double saturation, double 
                     }
                   }
                 } /* w!=i_pore */
-              }   /* w<MAX_PMV */
+              } /* w<MAX_PMV */
 
               /* Additional terms for energy equation */
               if (pd->e[pg->imtrx][R_POR_GAS_PRES])
@@ -10447,10 +10447,10 @@ void load_mass_flux(double porosity, double cap_pres, double saturation, double 
                 }
               }
             } /* DARCY_FICKIAN */
-          }   /* a<VIM */
-        }     /* j<ei[pg->imtrx]->dof[var] */
-      }       /*if ( pd->v[pg->imtrx][var] ) */
-    }         /*  b<pd->Num_Dim */
+          } /* a<VIM */
+        } /* j<ei[pg->imtrx]->dof[var] */
+      } /*if ( pd->v[pg->imtrx][var] ) */
+    } /*  b<pd->Num_Dim */
 
     var = TEMPERATURE;
     if (pd->v[pg->imtrx][var] && !pd->e[pg->imtrx][R_POR_ENERGY]) {

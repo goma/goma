@@ -125,10 +125,10 @@ int assemble_continuity(dbl time_value, /* current time */
   int i, j;
   int status, err;
 
-  dbl time = 0.0; /*  RSL 6/6/02  */
+  dbl time = 0.0;                     /*  RSL 6/6/02  */
 
-  dbl *v = fv->v;        /* Velocity field. */
-  dbl div_v = fv->div_v; /* Divergence of v. */
+  dbl *v = fv->v;                     /* Velocity field. */
+  dbl div_v = fv->div_v;              /* Divergence of v. */
 
   dbl epsilon = 0.0, derivative, sum; /*  RSL 7/24/00  */
   dbl sum1, sum2;                     /*  RSL 8/15/00  */
@@ -160,7 +160,7 @@ int assemble_continuity(dbl time_value, /* current time */
   dbl div_phi_j_e_b;
   dbl(*grad_phi)[DIM]; /* weight-function for PSPG term */
 
-  dbl div_v_dmesh; /* for specific (b,j) mesh dof */
+  dbl div_v_dmesh;     /* for specific (b,j) mesh dof */
 
   /*
    * Variables for Pressure Stabilization Petrov-Galerkin...
@@ -1422,8 +1422,8 @@ double FoamVolumeSource(double time,
     x0 = mp->u_density[1];           /* Initial fluorinert mass fraction */
     Rgas = mp->u_density[2];         /* Gas constant in appropriate units */
     MW = mp->u_density[3];
-    rho_epoxy = mp->u_density[4]; /* Density of epoxy resin */
-    rho_fluor = mp->u_density[5]; /* Density of liquid fluorinert */
+    rho_epoxy = mp->u_density[4];    /* Density of epoxy resin */
+    rho_fluor = mp->u_density[5];    /* Density of liquid fluorinert */
 
     if (fv->c[species] > 0.)
       vol = fv->c[species];
@@ -2338,7 +2338,7 @@ int assemble_projection_time_stabilization(Exo_DB *exo, double time, double tt, 
   int var, pvar, ip, i, j, a, b, ipass, num_passes;
   double xi[DIM];
   /* Variables for vicosity and derivative */
-  double gamma[DIM][DIM]; /* shrearrate tensor based on velocity */
+  double gamma[DIM][DIM];                  /* shrearrate tensor based on velocity */
   double mu;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
@@ -2488,7 +2488,7 @@ int assemble_projection_stabilization(Exo_DB *exo, double time)
   int var, pvar, ip, i, j, a, b, ipass, num_passes;
   double xi[DIM];
   /* Variables for vicosity and derivative */
-  double gamma[DIM][DIM]; /* shrearrate tensor based on velocity */
+  double gamma[DIM][DIM];                  /* shrearrate tensor based on velocity */
   double mu;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
@@ -2639,7 +2639,7 @@ int assemble_PPPS_generalized(Exo_DB *exo)
   int var, pvar, ip, i, j, a, b, m, n, k;
   double xi[DIM];
   /* Variables for vicosity and derivative */
-  double gamma[DIM][DIM]; /* shrearrate tensor based on velocity */
+  double gamma[DIM][DIM];                  /* shrearrate tensor based on velocity */
   double mu, visc_e = 0.0, d_visc_e_dv[DIM][MDE], d_visc_e_dx[DIM][MDE];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;

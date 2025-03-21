@@ -71,7 +71,7 @@ int ad_ls_modulate_viscosity(
 ADType ad_bingham_viscosity(struct Generalized_Newtonian *gn_local,
                             ADType gamma_dot[DIM][DIM]) { /* strain rate tensor */
 
-  ADType gammadot; /* strain rate invariant */
+  ADType gammadot;                                        /* strain rate invariant */
 
   ADType val1;
   ADType visc_cy;
@@ -267,7 +267,7 @@ int ad_assemble_momentum(dbl time,       /* current time */
 
   /* field variables */
 
-  dbl rho; /* Density. */
+  dbl rho;       /* Density. */
 
   ADType f[DIM]; /* Body force. */
 
@@ -524,7 +524,7 @@ int ad_assemble_momentum(dbl time,       /* current time */
           //   printf("diff = %.15f\n", diffusion.val());
           // }
         } /*end if (active_dofs) */
-      }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
   }
 
@@ -555,12 +555,12 @@ int ad_assemble_momentum(dbl time,       /* current time */
                 lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += resid[a][ii].dx(ad_fv->offset[var] + j);
 
               } /* End of loop over j */
-            }   /* End of if the variale is active */
+            } /* End of if the variale is active */
           }
 
         } /* end of if(active_dofs) */
-      }   /* End of loop over i */
-    }     /* End of if assemble Jacobian */
+      } /* End of loop over i */
+    } /* End of if assemble Jacobian */
   }
   safe_free((void *)n_dof);
   return (status);
@@ -735,7 +735,7 @@ void ad_fluid_stress(ADType Pi[DIM][DIM]) {
       mu += Heaviside * mu_num * at * mup;
 
     } // for mode
-  }   // if POLYMER_STRESS
+  } // if POLYMER_STRESS
 
   /*
    * Calculate the dilational viscosity, if necessary
@@ -1454,10 +1454,10 @@ int ad_assemble_continuity(dbl time_value, /* current time */
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[i].dx(ad_fv->offset[var] + j);
           } /* End of loop over j */
-        }   /* End of if the variale is active */
+        } /* End of if the variale is active */
       }
 
     } /* End of loop over i */
-  }   /* End of if assemble Jacobian */
+  } /* End of if assemble Jacobian */
   return 0;
 }

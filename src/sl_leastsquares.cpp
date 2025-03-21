@@ -163,7 +163,7 @@ static void bf_mat_to_Epetra(
 
   (*A).PutScalar(0.0);
 
-  Epetra_Map Map(NumMyRows, 0, comm); // Not a square matrix, though,as this supposes
+  Epetra_Map Map(NumMyRows, 0, comm);       // Not a square matrix, though,as this supposes
   int *MyGlobalElements = Map.MyGlobalElements();
 
   Epetra_Map DomainMap(NumMyCols, 0, comm); // Not a square matrix, though,as this supposes

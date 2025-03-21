@@ -161,7 +161,7 @@ void matrix_dump_msr(struct Aztec_Linear_Solver_System *ams, Exo_DB *exo, Dpi *d
  *
  *****************************************************************************/
 {
-  extern int Num_Dim; /* Number of dimensions in the problem       */
+  extern int Num_Dim;   /* Number of dimensions in the problem       */
   char *yo = "matrix_dump_msr ERROR:";
   static int index = 0; /* Static variable containing the file
                            index. This routine will dump out files
@@ -186,19 +186,19 @@ void matrix_dump_msr(struct Aztec_Linear_Solver_System *ams, Exo_DB *exo, Dpi *d
   int num_owned_nodes = dpi->num_owned_nodes;
   /* # of unknowns in this mesh updated by
      this processor (internal + border)        */
-  int num_unknowns_node; /* Number of unknowns at the current
-                            node                                      */
-  int gNodeLocalNext;    /* the global node number of the next
-                            local node to process                     */
-  int gNodeGlobalMin;    /* Global minimum for the global node number
-                            yet to be processed                       */
+  int num_unknowns_node;   /* Number of unknowns at the current
+                              node                                      */
+  int gNodeLocalNext;      /* the global node number of the next
+                              local node to process                     */
+  int gNodeGlobalMin;      /* Global minimum for the global node number
+                              yet to be processed                       */
 
-  int *gNodeS, *iorder; /* pointers that will be used to order
-                           block columns in ascending global node
-                           number order                              */
+  int *gNodeS, *iorder;    /* pointers that will be used to order
+                              block columns in ascending global node
+                              number order                              */
 
-  int *ordered_gnodes; /* Pointers that will be used to order nodes
-                          in ascending global node number order     */
+  int *ordered_gnodes;     /* Pointers that will be used to order nodes
+                              in ascending global node number order     */
   int *ordered_index;
   NODE_INFO_STRUCT *node;  /* Pointer to the NODE_INFO_STRUCT for the
                               node corresponding to the current block
@@ -762,7 +762,7 @@ void matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams, Exo_DB *exo, Dpi *d
  *
  *****************************************************************************/
 {
-  extern int Num_Dim; /* Number of dimensions in the problem       */
+  extern int Num_Dim;   /* Number of dimensions in the problem       */
   char yo[] = "matrix_dump_vbr ERROR:";
   static int index = 0; /* Static variable containing the file
                            index. This routine will dump out files
@@ -772,8 +772,8 @@ void matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams, Exo_DB *exo, Dpi *d
   char fname[80];       /* Name of the serial file                   */
   char *stringPtr;
   int file_version = 1;
-  FILE *fptr; /* File pointer for opening up the serial
-                 file.                                     */
+  FILE *fptr;           /* File pointer for opening up the serial
+                           file.                                     */
   int *indx, *bindx, *rpntr, *bpntr, *cpntr;
   /* Old definitions of VBR index vectors ->
      They are now storred in the AZ_MATRIX     */
@@ -786,19 +786,19 @@ void matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams, Exo_DB *exo, Dpi *d
   int num_owned_nodes = dpi->num_owned_nodes;
   /* # of unknowns in this mesh updated by
      this processor (internal + border)        */
-  int num_unknowns_node; /* Number of unknowns at the current
-                            node                                      */
-  int gNodeLocalNext;    /* the global node number of the next
-                            local node to process                     */
-  int gNodeGlobalMin;    /* Global minimum for the global node number
-                            yet to be processed                       */
+  int num_unknowns_node;   /* Number of unknowns at the current
+                              node                                      */
+  int gNodeLocalNext;      /* the global node number of the next
+                              local node to process                     */
+  int gNodeGlobalMin;      /* Global minimum for the global node number
+                              yet to be processed                       */
 
-  int *gNodeS, *iorder; /* pointers that will be used to order
-                           block columns in ascending global node
-                           number order                              */
+  int *gNodeS, *iorder;    /* pointers that will be used to order
+                              block columns in ascending global node
+                              number order                              */
 
-  int *ordered_gnodes; /* Pointers that will be used to order nodes
-                          in ascending global node number order     */
+  int *ordered_gnodes;     /* Pointers that will be used to order nodes
+                              in ascending global node number order     */
   int *ordered_index;
   NODE_INFO_STRUCT *node;  /* Pointer to the NODE_INFO_STRUCT for the
                               node corresponding to the current block

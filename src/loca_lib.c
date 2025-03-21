@@ -83,26 +83,26 @@ int con_lib(struct con_struct *con, Exo_DB *exo, struct GomaLinearSolverData *am
 
   /* Local Variables */
 
-  int n;     /* Loop index                          */
-  int order; /* Continuation order flag:
-                       0 - zero-order continuation
-                       1 - first-order continuation
-                       2 - arc-length continuation
-                     This flag is always 0 on the first
-                     solve, and 0 for turning point or any
-                     other special continuation */
+  int n;                      /* Loop index                          */
+  int order;                  /* Continuation order flag:
+                                        0 - zero-order continuation
+                                        1 - first-order continuation
+                                        2 - arc-length continuation
+                                      This flag is always 0 on the first
+                                      solve, and 0 for turning point or any
+                                      other special continuation */
   int i;
-  int num_newt_conv = 0; /* Number of newton iterations to reach
-                                 convergence for last nonlinear solve
-                                 -- used to pick next step size
-                                 ALSO error flag, when < 0            */
+  int num_newt_conv = 0;      /* Number of newton iterations to reach
+                                      convergence for last nonlinear solve
+                                      -- used to pick next step size
+                                      ALSO error flag, when < 0            */
   const char *yo = "con_lib";
   int sn_old = 0, sn_new = 0; /* Sign of cpi->dp_ds, to check for a
                                  turning point                        */
 
-  int tan_flag; /* Set to zero when tang_factor is smaller
-                   than step limit specified: step will be
-                   halved and repeated even though converged */
+  int tan_flag;               /* Set to zero when tang_factor is smaller
+                                 than step limit specified: step will be
+                                 halved and repeated even though converged */
 
   /* These quantities are used
      for arc length step control:              */

@@ -44,15 +44,15 @@ EXTERN int usr_heat_source_gen(dbl *,              /* h - volumetric heat source
                                dbl *,              /* param - user-defined parameter list       */
                                dbl);               /* time */
 
-EXTERN int usr_viscosity_gen(dbl *,              /* mu - viscosity                            */
-                             dbl[DIM][DIM],      /* gamma_dot - strain rate tensor            */
-                             dbl *,              /* d_mu_dgd - deriv of viscosity wrt strain  *
-                                                  * rate inv                                  */
-                             dbl[DIM][MDE],      /* d_mu_dv                                   */
-                             dbl[DIM][MDE],      /* d_mu_dmesh                                */
-                             dbl[MDE],           /* d_mu_dT                                   */
-                             dbl[MDE],           /* d_mu_dp                                   */
-                             dbl[MAX_CONC][MDE], /* d_mu_dC                                   */
-                             dbl *param);        /* user-defined parameter list               */
+EXTERN int usr_viscosity_gen(dbl *,                /* mu - viscosity                            */
+                             dbl[DIM][DIM],        /* gamma_dot - strain rate tensor            */
+                             dbl *,                /* d_mu_dgd - deriv of viscosity wrt strain  *
+                                                    * rate inv                                  */
+                             dbl[DIM][MDE],        /* d_mu_dv                                   */
+                             dbl[DIM][MDE],        /* d_mu_dmesh                                */
+                             dbl[MDE],             /* d_mu_dT                                   */
+                             dbl[MDE],             /* d_mu_dp                                   */
+                             dbl[MAX_CONC][MDE],   /* d_mu_dC                                   */
+                             dbl *param);          /* user-defined parameter list               */
 
-#endif /* GOMA_USER_MP_GEN_H */
+#endif                                             /* GOMA_USER_MP_GEN_H */

@@ -87,10 +87,10 @@
  * Prototypes declarations of static functions in defined in this file.
  */
 
-static int find_MSR_problem_graph(int *[],   /* ija - column pointer array                */
-                                  int,       /* itotal_nodes - number of nodes this
-                                              * processor is resposible for               */
-                                  Exo_DB *); /* exo - ptr to FE EXODUS II database */
+static int find_MSR_problem_graph(int *[],    /* ija - column pointer array                */
+                                  int,        /* itotal_nodes - number of nodes this
+                                               * processor is resposible for               */
+                                  Exo_DB *);  /* exo - ptr to FE EXODUS II database */
 
 static int find_problem_graph_fill(int *[],   /* ija - column pointer array                */
                                    int,       /* itotal_nodes - number of nodes this
@@ -2010,7 +2010,7 @@ int load_bf_grad(void)
           }
         }
       } /* end of if v */
-    }   /* end of basis function loop. */
+    } /* end of basis function loop. */
   }
 
   return (status);
@@ -2093,8 +2093,8 @@ int load_bf_mesh_derivs(void) {
   int mdofs; /* degrees of freedom for mesh displacement */
   /* unknowns interpolated using bfm */
   int mn = ei[pg->imtrx]->mn;
-  dbl f, g[DIM], g2[DIM];     /* Temporary variables for convenience. */
-  dbl phi_m[MDE], phi_l[MDE]; /* load shapefunctions into local variables */
+  dbl f, g[DIM], g2[DIM];      /* Temporary variables for convenience. */
+  dbl phi_m[MDE], phi_l[MDE];  /* load shapefunctions into local variables */
 
   BASIS_FUNCTIONS_STRUCT *bfl; /* Basis function of current interest */
   BASIS_FUNCTIONS_STRUCT *bfm; /* Basis function for mesh displacement */
@@ -2906,9 +2906,9 @@ Revised:	   1997/10/28 16:48 MST pasacki@sandia.gov
   double *a;
   double *a_old;
 
-  int *ija_temp; /* temporary vector used in determining ija and
-                    its size                                     */
-  int nnz;       /* number of nonzero entries in 'a'             */
+  int *ija_temp;                          /* temporary vector used in determining ija and
+                                             its size                                     */
+  int nnz;                                /* number of nonzero entries in 'a'             */
 
   itotal_nodes = dpi->num_universe_nodes; /* include internal, boundary and
                                            * external nodes that are in the
@@ -4308,7 +4308,7 @@ double extended_shape(const double xi[],       /* local coordinates    */
                                                 * but for pressure basis functions, this    *
                                                 * can be a dof at the centroid node         */
 {
-  int xfem_active = FALSE; /* innocent till proven guilty, how american! */
+  int xfem_active = FALSE;                     /* innocent till proven guilty, how american! */
   int base_interp, base_dof, extended_dof;
   double F_i;
   double value = 0.0;

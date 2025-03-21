@@ -125,17 +125,17 @@ int assemble_mesh(double time,
 
   dbl det_J;
   dbl d_det_J_dmeshbj;
-  dbl h3;          /* Volume element (scale factors). */
-  dbl dh3dmesh_bj; /* Sensitivity to (b,j) mesh dof. */
+  dbl h3;                     /* Volume element (scale factors). */
+  dbl dh3dmesh_bj;            /* Sensitivity to (b,j) mesh dof. */
 
-  dbl VV[DIM][DIM]; /* Inertia Tensor... */
+  dbl VV[DIM][DIM];           /* Inertia Tensor... */
 
   double vconv[MAX_PDIM];     /*Calculated convection velocity */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
 
-  dbl TT[DIM][DIM]; /* Mesh stress tensor... */
+  dbl TT[DIM][DIM];                    /* Mesh stress tensor... */
 
   dbl dTT_dx[DIM][DIM][DIM][MDE];      /* Sensitivity of stress tensor...
                           to nodal displacements */
@@ -161,7 +161,7 @@ int assemble_mesh(double time,
   dbl mu;
   dbl lambda, rho;
 
-  dbl g[DIM]; /* Mesh body force. */
+  dbl g[DIM];                 /* Mesh body force. */
 
   dbl diff_a, diff_b, diff_c; /* Temporary variables hold partially */
   /* constructed diffusion terms... */
@@ -226,7 +226,7 @@ int assemble_mesh(double time,
                  /* to tell whether there is anything */
                  /* to do...*/
   wt = fv->wt;
-  h3 = fv->h3; /* Differential volume element (scales). */
+  h3 = fv->h3;   /* Differential volume element (scales). */
 
   /*
    * Bail out fast if there's nothing to do...
@@ -1020,8 +1020,8 @@ int assemble_mesh(double time,
         }
 
       } /* end of loop over equations i  */
-    }   /* end of loop over equation directions a */
-  }     /* end of if jacobian */
+    } /* end of loop over equation directions a */
+  } /* end of if jacobian */
 
   return (status);
 }
@@ -1079,9 +1079,9 @@ int assemble_volume(bool owner) {
   dbl func;
   dbl phi_j;
   dbl d_det_J_dmeshbj;
-  dbl dh3dmesh_bj; /* Sensitivity to (b,j) mesh dof. */
+  dbl dh3dmesh_bj;          /* Sensitivity to (b,j) mesh dof. */
   dbl d_detJh3_dmeshbj;
-  dbl d_func_dmeshbj; /* Sensitivity of func to (b,j)mesh dof. */
+  dbl d_func_dmeshbj;       /* Sensitivity of func to (b,j)mesh dof. */
 
   double P_amb = 1.013E+06; /* cgs units */
   double R_gas = 82.07 * 1.013E+06;
@@ -1572,7 +1572,7 @@ int assemble_div_normals(void) /*  time step size      */
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -1724,8 +1724,8 @@ int assemble_LSvelocity(bool owner, int ielem) {
   dbl d_H_dmeshbj; /* Sensitivity of H to (b,j) mesh dof. */
   dbl d_H_dFj;     /* Sensitivity of H to j fill function dof. */
 
-  dbl alpha; /* Level set length scale */
-  dbl H;     /* Level set heaviside function  */
+  dbl alpha;       /* Level set length scale */
+  dbl H;           /* Level set heaviside function  */
 
   /*
    * Unpack variables from structures for local convenience...
@@ -2278,7 +2278,7 @@ int apply_ls_momentum_source(void) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -4966,7 +4966,7 @@ int assemble_pf_capillary(double *pf_surf_tens) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -5269,7 +5269,7 @@ int assemble_curvature_with_normals_source(void) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -5444,7 +5444,7 @@ int assemble_curvature_source(void) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -5636,7 +5636,7 @@ int assemble_q_source(double flux) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -5781,7 +5781,7 @@ int assemble_t_source(double T, double time) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -6063,7 +6063,7 @@ int assemble_qlaser_source(const double p[], double time) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -6228,7 +6228,7 @@ int assemble_qvapor_source(const double p[]) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -6380,7 +6380,7 @@ int assemble_qrad_source(double htc, double Tref, double emiss, double sigma) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -6541,7 +6541,7 @@ int assemble_cont_t_source(double *xi) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -6732,7 +6732,7 @@ int assemble_ls_yflux_source(int wspec,              /* species number of this b
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -6989,7 +6989,7 @@ int assemble_cont_vel_source(double *xi, Exo_DB *exo) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -7189,7 +7189,7 @@ int assemble_extv_kinematic(dbl tt, /* parameter to vary time integration from
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -7670,7 +7670,7 @@ int assemble_interface_extension_velocity_sic(int ext_vel_sign) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -7843,7 +7843,7 @@ int assemble_eik_kinematic(dbl tt, /* parameter to vary time integration from
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -8964,7 +8964,7 @@ int assemble_precoil_source(const double p[]) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -9475,7 +9475,7 @@ int assemble_uvw_source(int eqn, double val) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -9808,7 +9808,7 @@ int assemble_extension_velocity_path_dependence(void) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -9892,7 +9892,7 @@ int assemble_fill_path_dependence(void) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -9959,12 +9959,12 @@ int assemble_energy_path_dependence(
 {
   int eqn, var, peqn, pvar, dim, p, i, j, status;
 
-  dbl T_dot; /* Temperature derivative wrt time. */
+  dbl T_dot;     /* Temperature derivative wrt time. */
 
-  dbl q[DIM]; /* Heat flux vector. */
-  dbl rho;    /* Density */
-  dbl Cp;     /* Heat capacity. */
-  dbl h;      /* Heat source. */
+  dbl q[DIM];    /* Heat flux vector. */
+  dbl rho;       /* Density */
+  dbl Cp;        /* Heat capacity. */
+  dbl h;         /* Heat source. */
 
   dbl mass;      /* For terms and their derivatives */
   dbl advection; /* For terms and their derivatives */
@@ -10031,7 +10031,7 @@ int assemble_energy_path_dependence(
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -10182,18 +10182,18 @@ int assemble_momentum_path_dependence(dbl time, /* currentt time step */
   dbl *v_dot;                    /* time derivative of velocity field. */
   dbl *x_dot;                    /* current position field derivative wrt time. */
 
-  dbl h3;    /* Volume element (scale factors). */
-  dbl det_J; /* determinant of element Jacobian */
+  dbl h3;                        /* Volume element (scale factors). */
+  dbl det_J;                     /* determinant of element Jacobian */
 
   /* field variables */
   dbl *grad_v[DIM];
   dbl *v = fv->v;
 
-  dbl rho; /* Density. */
+  dbl rho;    /* Density. */
 
   dbl f[DIM]; /* Body force. */
 
-  dbl mass; /* For terms and their derivatives */
+  dbl mass;   /* For terms and their derivatives */
   dbl advection;
   dbl porous;
   dbl diffusion;
@@ -10227,8 +10227,8 @@ int assemble_momentum_path_dependence(dbl time, /* currentt time step */
   /* Flowing-liquid viscosity sensitivities */
   VISCOSITY_DEPENDENCE_STRUCT d_flow_mu_struct; /* density dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_flow_mu = &d_flow_mu_struct;
-  dbl sc;    /* inertial coefficient */
-  dbl speed; /* magnitude of the velocity vector */
+  dbl sc;                                       /* inertial coefficient */
+  dbl speed;                                    /* magnitude of the velocity vector */
 
   int v_s[MAX_MODES][DIM][DIM];
 
@@ -10296,7 +10296,7 @@ int assemble_momentum_path_dependence(dbl time, /* currentt time step */
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -10567,7 +10567,7 @@ int assemble_momentum_path_dependence(dbl time, /* currentt time step */
           }
 
         } /*end if (active_dofs) */
-      }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
   }
   return (status);
@@ -10593,10 +10593,10 @@ int assemble_continuity_path_dependence(dbl time_value,
 
   int status, err;
 
-  dbl time = 0.0; /*  RSL 6/6/02  */
+  dbl time = 0.0;                   /*  RSL 6/6/02  */
 
-  dbl *v = fv->v;        /* Velocity field. */
-  dbl div_v = fv->div_v; /* Divergence of v. */
+  dbl *v = fv->v;                   /* Velocity field. */
+  dbl div_v = fv->div_v;            /* Divergence of v. */
 
   dbl epsilon = 0, derivative, sum; /*  RSL 7/24/00  */
 
@@ -10675,7 +10675,7 @@ int assemble_continuity_path_dependence(dbl time_value,
   dim = pd->Num_Dim;
 
   wt = fv->wt;
-  h3 = fv->h3; /* Differential volume element (scales). */
+  h3 = fv->h3;           /* Differential volume element (scales). */
 
   if (ls->on_sharp_surf) /* sharp interface */
   {
@@ -11050,7 +11050,7 @@ int assemble_LM_source(double *xi,
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -11581,15 +11581,15 @@ int assemble_cur_strain(void) {
  *
  */
 
-int assemble_acoustic(double time, /* present time value */
-                      double tt,   /* parameter to vary time integration from
-                                    * explicit (tt = 1) to implicit (tt = 0) */
-                      double dt,   /* current time step size */
+int assemble_acoustic(double time,      /* present time value */
+                      double tt,        /* parameter to vary time integration from
+                                         * explicit (tt = 1) to implicit (tt = 0) */
+                      double dt,        /* current time step size */
                       const PG_DATA *pg_data,
                       const int ac_eqn, /* acoustic eqn id and var id	*/
                       const int ac_var) {
   int eqn, var, peqn, pvar, dim, p, b, w, i, j, status;
-  int conj_var = 0; /* identity of conjugate variable  */
+  int conj_var = 0;                     /* identity of conjugate variable  */
 
   dbl P = 0, P_conj = 0, sign_conj = 0; /* acoustic pressure	*/
   dbl q[DIM];
@@ -11600,16 +11600,16 @@ int assemble_acoustic(double time, /* present time value */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_R_struct;
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_R = &d_R_struct;
 
-  dbl k; /* Acoustic wave number. */
+  dbl k;         /* Acoustic wave number. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct;
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
   dbl ksqr_sign; /* Sign of wavenumber squared */
 
-  dbl alpha; /* Acoustic Absorption */
+  dbl alpha;     /* Acoustic Absorption */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_alpha_struct;
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha = &d_alpha_struct;
 
-  dbl mass; /* For terms and their derivatives */
+  dbl mass;      /* For terms and their derivatives */
 
   dbl advection; /* For terms and their derivatives */
 
@@ -12048,7 +12048,7 @@ int assemble_acoustic_reynolds_stress(double time, /* present time value */
 
   dbl omega, acous_pgrad = 0;
 
-  dbl mass; /* For terms and their derivatives */
+  dbl mass;      /* For terms and their derivatives */
 
   dbl advection; /* For terms and their derivatives */
 
@@ -12407,9 +12407,9 @@ void acoustic_flux(double q[DIM],
   CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; /* Acoustic wave number. */
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
 
-  dbl kR_inv; /* k*R product inverse	*/
+  dbl kR_inv;                                /* k*R product inverse	*/
 
-  dbl grad_P[DIM]; /* Acoustic pressure. */
+  dbl grad_P[DIM];                           /* Acoustic pressure. */
 
   int b, j, p, w;
   int var;
@@ -12540,7 +12540,7 @@ int assemble_ars_source(double ars_jump, double grad_jump) {
   if (ls->on_sharp_surf) /* sharp interface */
   {
     det_J = fv->sdet;
-  } else /* diffuse interface */
+  } else                 /* diffuse interface */
   {
     det_J = bf[eqn]->detJ;
   }
@@ -12757,10 +12757,10 @@ int assemble_ars_source(double ars_jump, double grad_jump) {
  *
  */
 
-int assemble_poynting(double time, /* present time value */
-                      double tt,   /* parameter to vary time integration from
-                                    * explicit (tt = 1) to implicit (tt = 0) */
-                      double dt,   /* current time step size */
+int assemble_poynting(double time,      /* present time value */
+                      double tt,        /* parameter to vary time integration from
+                                         * explicit (tt = 1) to implicit (tt = 0) */
+                      double dt,        /* current time step size */
                       const PG_DATA *pg_data,
                       const int py_eqn, /* eqn id and var id	*/
                       const int py_var) {
@@ -12770,7 +12770,7 @@ int assemble_poynting(double time, /* present time value */
   dbl P = 0;                 /* Light Intensity	*/
   dbl grad_P = 0, Psign = 0; /* grad intensity */
 
-  dbl alpha; /* Acoustic Absorption */
+  dbl alpha;                 /* Acoustic Absorption */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_alpha_struct;
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha = &d_alpha_struct;
 

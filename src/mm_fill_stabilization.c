@@ -851,10 +851,10 @@ void get_supg_tau(SUPG_terms *supg_terms, int dim, dbl diffusivity, PG_DATA *pg_
 
 int calc_pspg(dbl pspg[DIM],
               PSPG_DEPENDENCE_STRUCT *d_pspg,
-              dbl time_value, /* current time */
-              dbl tt,         /* parameter to vary time integration from
-                                                 explicit (tt = 1) to implicit (tt = 0)    */
-              dbl dt,         /* current time step size                    */
+              dbl time_value,              /* current time */
+              dbl tt,                      /* parameter to vary time integration from
+                                                              explicit (tt = 1) to implicit (tt = 0)    */
+              dbl dt,                      /* current time step size                    */
               const PG_DATA *pg_data) {
   const dbl h_elem_avg = pg_data->h_elem_avg;
   const dbl *hsquared = pg_data->hsquared; /* element size information for PSPG         */
@@ -886,7 +886,7 @@ int calc_pspg(dbl pspg[DIM],
    */
   dbl rho;
   dbl rho_t;
-  DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
+  DENSITY_DEPENDENCE_STRUCT d_rho_struct;      /* density dependence */
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
   dbl f[DIM];                                  /* Body force. */

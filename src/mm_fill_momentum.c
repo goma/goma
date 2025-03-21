@@ -120,29 +120,29 @@ int assemble_momentum(dbl time,       /* current time */
 
   dbl zero[3] = {0.0, 0.0, 0.0}; /* A zero array, for convenience. */
 
-  /*dbl v_dot[DIM];*/ /* time derivative of velocity field. */
-  dbl *v_dot;         /* time derivative of velocity field. */
+  /*dbl v_dot[DIM];*/            /* time derivative of velocity field. */
+  dbl *v_dot;                    /* time derivative of velocity field. */
 
-  /*dbl x_dot[DIM];*/ /* current position field derivative wrt time. */
-  dbl *x_dot;         /* current position field derivative wrt time. */
+  /*dbl x_dot[DIM];*/            /* current position field derivative wrt time. */
+  dbl *x_dot;                    /* current position field derivative wrt time. */
 
-  dbl h3;          /* Volume element (scale factors). */
-  dbl dh3dmesh_bj; /* Sensitivity to (b,j) mesh dof. */
+  dbl h3;                        /* Volume element (scale factors). */
+  dbl dh3dmesh_bj;               /* Sensitivity to (b,j) mesh dof. */
 
   /* field variables */
   /*dbl grad_v[DIM][DIM];*/ /* Gradient of v. */
   dbl *grad_v[DIM];
   dbl *v = fv->v;
 
-  dbl rho; /* Density. */
+  dbl rho;                                     /* Density. */
 
   dbl f[DIM];                                  /* Body force. */
   MOMENTUM_SOURCE_DEPENDENCE_STRUCT df_struct; /* Body force dependence */
   MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df = &df_struct;
 
-  dbl det_J; /* determinant of element Jacobian */
+  dbl det_J;                                   /* determinant of element Jacobian */
 
-  dbl d_det_J_dmesh_bj; /* for specific (b,j) mesh dof */
+  dbl d_det_J_dmesh_bj;                        /* for specific (b,j) mesh dof */
 
   dbl d_area;
 
@@ -202,8 +202,8 @@ int assemble_momentum(dbl time,       /* current time */
   VISCOSITY_DEPENDENCE_STRUCT d_flow_mu_struct; /* density dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_flow_mu = &d_flow_mu_struct;
 
-  dbl sc;    /* inertial coefficient */
-  dbl speed; /* magnitude of the velocity vector */
+  dbl sc;                                       /* inertial coefficient */
+  dbl speed;                                    /* magnitude of the velocity vector */
 
   /* density derivatives */
   DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
@@ -275,7 +275,7 @@ int assemble_momentum(dbl time,       /* current time */
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3; /* Differential volume element (scales). */
+  h3 = fv->h3;           /* Differential volume element (scales). */
 
   d_area = det_J * wt * h3;
 
@@ -665,7 +665,7 @@ int assemble_momentum(dbl time,       /* current time */
 #endif /* DEBUG_MOMENTUM_RES */
 
         } /*end if (active_dofs) */
-      }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
   }
 
@@ -2463,7 +2463,7 @@ int assemble_momentum(dbl time,       /* current time */
             }
           }
         } /* end of if(active_dofs) */
-      }   /* end of for(i=ei[pg->imtrx]->dof*/
+      } /* end of for(i=ei[pg->imtrx]->dof*/
     }
   }
   safe_free((void *)n_dof);
@@ -2876,18 +2876,18 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
   dbl d_tau_p_dy[DIM][DIM][MAX_CONC][MDE];
   dbl d_tau_p_dmesh[DIM][DIM][DIM][MDE];
   dbl d_tau_p_dp[DIM][DIM][MDE];
-  int w0; /* suspension species number */
+  int w0;                   /* suspension species number */
 
   dbl gamma[DIM][DIM];      /* shrearrate tensor based on velocity */
   dbl s[DIM][DIM];          /* polymer stress tensor */
   dbl gamma_cont[DIM][DIM]; /* shearrate tensor based on continuous gradient of velocity */
   dbl P;
 
-  dbl evss_f; /* flag to add in the continuous velocity
-                 gradient tensor for Fortin's formulation */
+  dbl evss_f;               /* flag to add in the continuous velocity
+                               gradient tensor for Fortin's formulation */
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
-  int mode; /* index for modal viscoelastic counter */
+  int mode;                 /* index for modal viscoelastic counter */
 
   //! Flag for doing dilational viscosity contributions.
   int do_dilational_visc = 0;
@@ -3230,7 +3230,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
         }
       }
     } // for mode
-  }   // if POLYMER_STRESS
+  } // if POLYMER_STRESS
 
   /*
    * Calculate the dilational viscosity, if necessary

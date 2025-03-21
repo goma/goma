@@ -108,7 +108,7 @@ dbl velo_vary_fnc(const int velo_condition,
     double z0 = 0.0; //(2.162810-1.21031)*0.5 + 1.21031;
     double y0 = 0.0;
 
-    double R = 0.1; // 0.254*0.25;//0.1; // Radius of tube
+    double R = 0.1;  // 0.254*0.25;//0.1; // Radius of tube
 
     double v_max = 5 * tanh(time);
 
@@ -129,8 +129,8 @@ dbl velo_vary_fnc(const int velo_condition,
     double x0 = -0.461101; //(2.162810-1.21031)*0.5 + 1.21031;
     double y0 = -0.127;
 
-    double R = 0.17; // Radius of tube
-                     // double R = 5; // Radius of tube
+    double R = 0.17;       // Radius of tube
+                           // double R = 5; // Radius of tube
 
     double v_max = 0.1;
     double coeff = v_max * (1 / (R * R)) * tanh(time * 2);
@@ -338,7 +338,7 @@ dbl dvelo_vary_fnc_d3(const int velo_condition MAYBE_UNUSED,
   /* for PI use M_PIE Constant from std.h include file. */
   dbl f;
 
-  f = 0.; /* enter your function here */
+  f = 0.;     /* enter your function here */
 
   return (f); /* Here's a good default behavior! */
 
@@ -433,7 +433,7 @@ dbl dfncd3(const dbl x1 MAYBE_UNUSED,
 
   /*  f = p[2];        time translating plane */
 
-  f = 0.0; /* expanding sphere */
+  f = 0.0;    /* expanding sphere */
 
   return (f); /* Here's a good default behavior! */
 

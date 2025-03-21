@@ -83,15 +83,15 @@ EXTERN void fvelo_normal_lub_bc(double[DIM], /* func                            
                                 const Exo_DB *exo, /* ExodusII database struct pointer */
                                 const double[]);   /* Parameters */
 
-EXTERN void fmesh_etch_bc(double *, /* func                                      */
+EXTERN void fmesh_etch_bc(double *,                /* func                                      */
                           double[MAX_VARIABLE_TYPES + MAX_CONC], /* d_func           */
                           const int,                             /* Etch plane                 */
                           const int,                             /* Local node ID                 */
                           const double[MAX_PDIM],                /* Mesh velocity */
-                          const double,  /* tt - parameter to vary time integration
-                                          * from explicit (tt = 1) to
-                                          * implicit (tt = 0)                         */
-                          const double); /* dt - current value of the time step       */
+                          const double,         /* tt - parameter to vary time integration
+                                                 * from explicit (tt = 1) to
+                                                 * implicit (tt = 0)                         */
+                          const double);        /* dt - current value of the time step       */
 
 EXTERN void fvelo_tangential_ls_bc(double[DIM], /* func                                      */
                                    double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
@@ -106,15 +106,15 @@ EXTERN void fvelo_tangential_ls_bc(double[DIM], /* func                         
                                    const double,  /* interface zone shift                */
                                    const double); /* gas leak angle (degrees)            */
 
-EXTERN double sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *,  /*  *func_jac        */
-                              BOUNDARY_CONDITION_STRUCT *, /*  *bc              */
-                              int,                         /*  ip               */
-                              ELEM_SIDE_BC_STRUCT *,       /*  *elem_side_bc    */
-                              const double[MAX_PDIM],      /*  x_dot[MAX_PDIM]  */
-                              const double,                /*  time               */
-                              const double,                /*  tt               */
-                              const double,                /*  dt               */
-                              const int);                  /*  interface_id               */
+EXTERN double sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *,         /*  *func_jac        */
+                              BOUNDARY_CONDITION_STRUCT *,        /*  *bc              */
+                              int,                                /*  ip               */
+                              ELEM_SIDE_BC_STRUCT *,              /*  *elem_side_bc    */
+                              const double[MAX_PDIM],             /*  x_dot[MAX_PDIM]  */
+                              const double,                       /*  time               */
+                              const double,                       /*  tt               */
+                              const double,                       /*  dt               */
+                              const int);                         /*  interface_id               */
 
 EXTERN double sdc_stefan_volume_flow(JACOBIAN_VAR_DESC_STRUCT *,  /*  *func_jac        */
                                      BOUNDARY_CONDITION_STRUCT *, /*  *bc              */
@@ -124,15 +124,15 @@ EXTERN double sdc_stefan_volume_flow(JACOBIAN_VAR_DESC_STRUCT *,  /*  *func_jac 
                                      const double,                /*  tt               */
                                      const double);               /*  dt               */
 
-EXTERN double mass_flux_surface(JACOBIAN_VAR_DESC_STRUCT *, /*  *func_jac        */
-                                const double[MAX_PDIM],     /*  x_dot[MAX_PDIM]  */
-                                const double,               /*  tt               */
-                                const double);              /*  dt               */
+EXTERN double mass_flux_surface(JACOBIAN_VAR_DESC_STRUCT *,       /*  *func_jac        */
+                                const double[MAX_PDIM],           /*  x_dot[MAX_PDIM]  */
+                                const double,                     /*  tt               */
+                                const double);                    /*  dt               */
 
-extern double vol_flux_surface(JACOBIAN_VAR_DESC_STRUCT *, /*  *func_jac        */
-                               const double[MAX_PDIM],     /*  x_dot[MAX_PDIM]  */
-                               const double,               /*  tt               */
-                               const double);              /*  dt               */
+extern double vol_flux_surface(JACOBIAN_VAR_DESC_STRUCT *,        /*  *func_jac        */
+                               const double[MAX_PDIM],            /*  x_dot[MAX_PDIM]  */
+                               const double,                      /*  tt               */
+                               const double);                     /*  dt               */
 
 EXTERN void fvelo_normal_edge_bc(double[DIM], /* func                                      */
                                  double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
@@ -142,7 +142,7 @@ EXTERN void fvelo_normal_edge_bc(double[DIM], /* func                           
                                                           * from explicit (tt=1) to implicit (tt=0)   */
                                  const double); /* dt - current value of the time step       */
 
-EXTERN void fvelo_normal_disc_bc(double[DIM], /* func                                      */
+EXTERN void fvelo_normal_disc_bc(double[DIM],   /* func                                      */
                                  double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                  const double, /* vnormal - normal velocity (speed)         */
                                  const double[MAX_PDIM], /* x_dot - mesh velocity vector */
@@ -150,7 +150,7 @@ EXTERN void fvelo_normal_disc_bc(double[DIM], /* func                           
                                                           * from explicit (tt=1) to implicit (tt=0)   */
                                  const double); /* dt - current value of the time step       */
 
-EXTERN void fvelo_tangent_edge_bc(double[DIM], /* func                                      */
+EXTERN void fvelo_tangent_edge_bc(double[DIM],  /* func                                      */
                                   double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                   double *, /* pvv - velocity of substrate               */
                                   const double[MAX_PDIM], /* x_dot - mesh velocity vector */
@@ -158,7 +158,7 @@ EXTERN void fvelo_tangent_edge_bc(double[DIM], /* func                          
                                                            * from explicit (tt=1) to implicit (tt=0)   */
                                   const double); /* dt - current value of the time step       */
 
-EXTERN void fvelo_tangential_bc(double[], /* func                                      */
+EXTERN void fvelo_tangential_bc(double[],        /* func                                      */
                                 double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                 double[],     /* x - Soln vector                           */
                                 const int,    /* dcl_node - global node number of the
@@ -185,7 +185,7 @@ EXTERN void fvelo_tangential_bc(double[], /* func                               
                                 const double[], /* parameter_list*/
                                 const int);     /* number of parameters  */
 
-EXTERN void fvelo_tangent_3d(double[MAX_PDIM],                                     /* func */
+EXTERN void fvelo_tangent_3d(double[MAX_PDIM],  /* func */
                              double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* dfunc */
                              const double[MAX_PDIM], /* free surface velocity x_dot */
                              const double,           /* specified tangential speed */
@@ -218,7 +218,7 @@ fvelo_tangential_solid_bc(double[], /* func                                     
                                                    * method from BE(0) to CN(1/2) to FE(1)     */
                           const dbl);             /* dt - current value of the time step size  */
 
-EXTERN void fvelo_normal_solid_bc(double[], /* func                                      */
+EXTERN void fvelo_normal_solid_bc(double[],       /* func                                      */
                                   double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                   double[MAX_PDIM], /* solution vector x                         */
                                   double[DIM],      /* time derivative of solution vector x      */
@@ -233,8 +233,8 @@ EXTERN void fvelo_normal_solid_bc(double[], /* func                             
 void fvelo_slip_bc(double func[MAX_PDIM],
                    double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                    double x[],
-                   const int type,      /* whether rotational or not */
-                   const int max_float, /* max float number */
+                   const int type,               /* whether rotational or not */
+                   const int max_float,          /* max float number */
                    double bc_float[MAX_BC_FLOAT_DATA],
                    const int dcl_node,           /*   node id for DCL  */
                    const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *
@@ -247,7 +247,7 @@ void fvelo_slip_power_bc(double func[MAX_PDIM],
                          const int type,      /* whether rotational or not */
                          const int max_float, /* Max float number from input file */
                          double bc_float[MAX_BC_FLOAT_DATA],
-                         const double tt, /* parameter in time stepping alg           */
+                         const double tt,     /* parameter in time stepping alg           */
                          const double dt);
 
 int exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */);
@@ -275,7 +275,7 @@ void fvelo_slip_ls_oriented(double func[MAX_PDIM],
 void fvelo_airfilm_bc(double func[MAX_PDIM],
                       double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                       double x[],
-                      const int type, /* whether rotational or not */
+                      const int type,               /* whether rotational or not */
                       double bc_float[MAX_BC_FLOAT_DATA],
                       const int dcl_node,           /*   node id for DCL  */
                       const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *
@@ -283,42 +283,42 @@ void fvelo_airfilm_bc(double func[MAX_PDIM],
                       const double tt,              /* parameter in time stepping alg           */
                       const double dt);             /* current time step value                  */
 
-EXTERN void fvelo_slip_level(double[MAX_PDIM], /* func                                      */
+EXTERN void fvelo_slip_level(double[MAX_PDIM],      /* func                                      */
                              double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-                             const int,     /* type - whether rotational or not          */
-                             double,        /* width   */
-                             double,        /* beta    */
-                             const double,  /* vsx                                       */
-                             const double,  /* vsy                                       */
-                             const double,  /* vsz - velocity components of solid surface*/
-                             const double,  /* beta for outside of interface region      */
-                             const double,  /* gas phase factor                          */
-                             const double,  /* contact fraction*/
-                             const double,  /* time stabilization factor*/
-                             const double,  /* tt - parameter to vary time integration */
-                             const double); /* dt - current value of the time step size  */
+                             const int,        /* type - whether rotational or not          */
+                             double,           /* width   */
+                             double,           /* beta    */
+                             const double,     /* vsx                                       */
+                             const double,     /* vsy                                       */
+                             const double,     /* vsz - velocity components of solid surface*/
+                             const double,     /* beta for outside of interface region      */
+                             const double,     /* gas phase factor                          */
+                             const double,     /* contact fraction*/
+                             const double,     /* time stabilization factor*/
+                             const double,     /* tt - parameter to vary time integration */
+                             const double);    /* dt - current value of the time step size  */
 
 EXTERN void
 fvelo_slip_electrokinetic_bc(double[MAX_PDIM], /* func                                      */
                              double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-                             double,  /* permitivity       */
-                             double); /* zeta_potential    */
+                             double,      /* permitivity       */
+                             double);     /* zeta_potential    */
 
 EXTERN void
-fvelo_electrokinetic_3d(double[MAX_PDIM],                                     /* func */
+fvelo_electrokinetic_3d(double[MAX_PDIM], /* func */
                         double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* dfunc */
-                        const double[MAX_PDIM], /* free surface velocity x_dot */
-                        const double,           /* permitivity       */
-                        const double,           /* zeta_potential    */
-                        const double,           /* x-component of surface tangent */
-                        const double,           /* y-component of surface tangent */
-                        const double,           /* z-component of surface tangent */
-                        const double,           /* tt - parameter to vary time integration */
-                        const double);          /* dt - current value of the time step size  */
+                        const double[MAX_PDIM],  /* free surface velocity x_dot */
+                        const double,            /* permitivity       */
+                        const double,            /* zeta_potential    */
+                        const double,            /* x-component of surface tangent */
+                        const double,            /* y-component of surface tangent */
+                        const double,            /* z-component of surface tangent */
+                        const double,            /* tt - parameter to vary time integration */
+                        const double);           /* dt - current value of the time step size  */
 
 EXTERN void load_surface_tension(double[][MDE]); /* dsigma_dx - dimensions [DIM][MDE] */
 
-EXTERN void elec_surf_stress(double[MDE][DIM], /* cfunc                                     */
+EXTERN void elec_surf_stress(double[MDE][DIM],   /* cfunc                                     */
                              double[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_cfunc     */
                              const int, /* id_side - ID of the side of the element   */
                              struct elem_side_bc_struct *, /* elem_side_bc */
@@ -327,7 +327,7 @@ EXTERN void elec_surf_stress(double[MDE][DIM], /* cfunc                         
                              const double, /* Equation term multiplier                  */
                              const int);   /* BC type                 */
 
-EXTERN void fn_dot_T(double[MDE][DIM], /* cfunc                                     */
+EXTERN void fn_dot_T(double[MDE][DIM],     /* cfunc                                     */
                      double[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_cfunc     */
                      const int,                    /* id_side - ID of the side of the element   */
                      const double,                 /* sigma - surface tension                   */
@@ -402,10 +402,10 @@ EXTERN void apply_vapor_recoil(double cfunc[MDE][DIM],
 
 EXTERN void flow_n_dot_T_hydro(double[DIM], /* func                                      */
                                double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
-                               const double,  /* a for pressure variation                  */
-                               const double,  /* b for pressure variation                  */
-                               const double,  /* c for pressure variation                  */
-                               const double); /* d - pressure variation                    */
+                               const double,      /* a for pressure variation                  */
+                               const double,      /* b for pressure variation                  */
+                               const double,      /* c for pressure variation                  */
+                               const double);     /* d - pressure variation                    */
 
 EXTERN void flow_n_dot_T_var_density(double[DIM], /* func                                      */
                                      double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
@@ -425,17 +425,17 @@ EXTERN void flow_n_dot_T_nobc(double[DIM], /* func                              
                               const int,     /* iflag - 1 to use pdatum, otherwise use P  */
                               const double); /* time - current time                       */
 
-EXTERN void flow_n_dot_T_gradv(double[DIM], /* func                                      */
+EXTERN void flow_n_dot_T_gradv(double[DIM],  /* func                                      */
                                double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                const double, /* pdatum - pressure datum from input card   */
                                const int);   /* iflag - -1 to use pdatum, otherwise use P */
 
 void flow_n_dot_T_gradv_t(double func[DIM],
                           double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                          const double pdatum, /* pressure datum from input card */
-                          const int iflag);    /* -1 to use pdatum, otherwise use P  */
+                          const double pdatum,   /* pressure datum from input card */
+                          const int iflag);      /* -1 to use pdatum, otherwise use P  */
 
-EXTERN void flow_n_dot_T_segregated(double[DIM],                                      // func
+EXTERN void flow_n_dot_T_segregated(double[DIM], // func
                                     double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]); // d_func
 
 EXTERN void stress_no_v_dot_gradS(double func[MAX_MODES][6],
@@ -466,7 +466,7 @@ EXTERN void flow_n_dot_T_gradv_sic(double[DIM],                                 
                                    const double, /* pdatum - pressure datum from input card   */
                                    const int);   /* iflag - -1 to use pdatum, otherwise use P */
 
-EXTERN void press_poisson_segregated(double *,                                        // func
+EXTERN void press_poisson_segregated(double *,   // func
                                      double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], // d_func
                                      double,  // current time
                                      double); // time step
@@ -524,7 +524,7 @@ EXTERN void fapply_var_CA(double *, /* func                                     
                           const double);          /* dt - current time step size               */
 
 EXTERN void
-fapply_var_CA_user(double *, /* func                                      */
+fapply_var_CA_user(double *,                      /* func                                      */
                    double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
                    double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func_ss   */
                    const double[MAX_PDIM],          /* fsnormal - free surface normal components */
@@ -554,25 +554,25 @@ fapply_var_CA_user(double *, /* func                                      */
                    const double);                   /* dt - current time step size               */
 
 EXTERN int
-evaluate_gibbs_criterion(const double[MAX_PDIM], /* fsnormal - free surface normal vector     */
-                         const double[MAX_PDIM], /* ssnormal - solid surface normal vector    */
-                         int *ipin,              /* Flag indicates pinned or not        (out) */
-                         const double,           /* contact_angle - Static or dynamic contact
-                                                  * angle                                     */
-                         const double,           /* x_pos - x-coordinate of sharp edge        */
-                         const double,           /* y_pos - y-coordinate of sharp edge        */
-                         const double,           /* z_pos - z-coordinate of sharp edge        */
-                         const double,           /* sign_origx - original relative sign on the
-                                                  * x-position of contact line with specified
-                                                  * sharp edge                                */
-                         const double,           /* sign_origy - original relative sign on the
-                                                  * y-position of contact line with specified
-                                                  * sharp edge                                */
-                         const double);          /* sign_origz - original relative sign on the
-                                                  * z-position of contact line with specified
-                                                  * sharp edge                                */
+evaluate_gibbs_criterion(const double[MAX_PDIM],    /* fsnormal - free surface normal vector     */
+                         const double[MAX_PDIM],    /* ssnormal - solid surface normal vector    */
+                         int *ipin,                 /* Flag indicates pinned or not        (out) */
+                         const double,              /* contact_angle - Static or dynamic contact
+                                                     * angle                                     */
+                         const double,              /* x_pos - x-coordinate of sharp edge        */
+                         const double,              /* y_pos - y-coordinate of sharp edge        */
+                         const double,              /* z_pos - z-coordinate of sharp edge        */
+                         const double,              /* sign_origx - original relative sign on the
+                                                     * x-position of contact line with specified
+                                                     * sharp edge                                */
+                         const double,              /* sign_origy - original relative sign on the
+                                                     * y-position of contact line with specified
+                                                     * sharp edge                                */
+                         const double);             /* sign_origz - original relative sign on the
+                                                     * z-position of contact line with specified
+                                                     * sharp edge                                */
 
-EXTERN void fapply_moving_CA(double *, /* func                                      */
+EXTERN void fapply_moving_CA(double *,              /* func                                      */
                              double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
                              double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func_ss   */
                              const double[MAX_PDIM], /* fsnormal - free surface normal components */
@@ -585,15 +585,15 @@ EXTERN void fapply_moving_CA(double *, /* func                                  
                                                                * normal derivatives
                                                                * ([i][j][k]) component i wrt
                                                                * displacement j at node k   */
-                             const double, /* stat_ca - Static or dynamic contact angle */
-                             const double, /* advancing_ca - Static or dynamic contact
-                                            * angle                                     */
-                             const double, /* receding_ca - Static or dynamic contact
-                                            * angle                                     */
-                             const double, /* scaling - Static or dynamic contact angle */
-                             const double, /* vwx - x-Velocity of wall                  */
-                             const double, /* vwy - y-Velocity of wall                  */
-                             const double, /* vwz - z-Velocity of wall                  */
+                             const double,           /* stat_ca - Static or dynamic contact angle */
+                             const double,           /* advancing_ca - Static or dynamic contact
+                                                      * angle                                     */
+                             const double,           /* receding_ca - Static or dynamic contact
+                                                      * angle                                     */
+                             const double,           /* scaling - Static or dynamic contact angle */
+                             const double,           /* vwx - x-Velocity of wall                  */
+                             const double,           /* vwy - y-Velocity of wall                  */
+                             const double,           /* vwz - z-Velocity of wall                  */
 
                              const double[MAX_PDIM], /* xdot - Current mesh velocity vector       */
                              const double,           /* dt - current time step size               */
@@ -602,7 +602,7 @@ EXTERN void fapply_moving_CA(double *, /* func                                  
                                                       * BE(0) to CN(1/2) to FE(1)                 */
 
 EXTERN void
-fapply_moving_CA_sinh(double *,                                             /* func */
+fapply_moving_CA_sinh(double *,                      /* func */
                       double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                       double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func_ss */
                       const double[MAX_PDIM], /* fsnormal - free surface normal components */
@@ -634,19 +634,19 @@ fapply_moving_CA_sinh(double *,                                             /* f
                       double[MAX_PDIM][MDE],  /* wall velo derivs     */
                       const int);             /* local_node_number    */
 
-EXTERN void apply_ST(const int,                     /* irow_index - Row index for Elemental
-                                                     * stiffness matrix                          */
-                     const int,                     /* I - Global node number                    */
-                     const int,                     /* iconnect_ptr - Pointer for element into
-                                                     * connectivity array                        */
-                     const int,                     /* ielem_dim - Physical dimension of element,
-                                                     * i.e., 1, 2, 3                             */
-                     int[],                         /* ija - column pointer array                */
-                     double[],                      /* a - nonzero elements of matrix            */
-                     double[],                      /* resid_vector - Residual vector	     */
-                     double[],                      /* x - Vector containing current solution    */
-                     const int,                     /* num_nodes_on_side - Number of nodes on
-                                                     * the side of the element                   */
+EXTERN void apply_ST(const int,               /* irow_index - Row index for Elemental
+                                               * stiffness matrix                          */
+                     const int,               /* I - Global node number                    */
+                     const int,               /* iconnect_ptr - Pointer for element into
+                                               * connectivity array                        */
+                     const int,               /* ielem_dim - Physical dimension of element,
+                                               * i.e., 1, 2, 3                             */
+                     int[],                   /* ija - column pointer array                */
+                     double[],                /* a - nonzero elements of matrix            */
+                     double[],                /* resid_vector - Residual vector	     */
+                     double[],                /* x - Vector containing current solution    */
+                     const int,               /* num_nodes_on_side - Number of nodes on
+                                               * the side of the element                   */
                      const int[MAX_NODES_PER_SIDE], /* local_elem_node_id - Vector of
                                                      * local elem node numbers on the
                                                      * element side                       */
@@ -664,15 +664,15 @@ EXTERN void apply_ST(const int,                     /* irow_index - Row index fo
                      const int);                    /* wfixed - w-flag for fixing z-component of
                                                      * velocity                                  */
 
-EXTERN void fapply_ST(double[MAX_PDIM], /* func                                      */
+EXTERN void fapply_ST(double[MAX_PDIM],             /* func                                      */
                       double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-                      const double, /* tx - x-component surface tangent outflow  */
-                      const double, /* ty - y-component surface tangent outflow  */
-                      const double, /* tz - z-component surface tangent outflow  */
-                      const double, /* sigma - surface tension                   */
-                      const double, /* rcoord - r coord in axisym problems: used
-                                     * in r dr dz                                */
-                      const int);   /* id_side */
+                      const double,           /* tx - x-component surface tangent outflow  */
+                      const double,           /* ty - y-component surface tangent outflow  */
+                      const double,           /* tz - z-component surface tangent outflow  */
+                      const double,           /* sigma - surface tension                   */
+                      const double,           /* rcoord - r coord in axisym problems: used
+                                               * in r dr dz                                */
+                      const int);             /* id_side */
 
 EXTERN void apply_ST_scalar(double[MAX_PDIM], /* func                                      */
                             double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
@@ -683,18 +683,18 @@ EXTERN void apply_ST_scalar(double[MAX_PDIM], /* func                           
 
 EXTERN void apply_ST_3D(double[MAX_PDIM], /* func                                      */
                         double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-                        const double,  /* tx - x-component surface tangent outflow  */
-                        const double,  /* ty - y-component surface tangent outflow  */
-                        const double,  /* tz - z-component surface tangent outflow  */
-                        const double); /* sigma - surface tension                   */
+                        const double,            /* tx - x-component surface tangent outflow  */
+                        const double,            /* ty - y-component surface tangent outflow  */
+                        const double,            /* tz - z-component surface tangent outflow  */
+                        const double);           /* sigma - surface tension                   */
 
 EXTERN void apply_ST_scalar_3D(double[MAX_PDIM], /* func                                      */
                                double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                const double); /* sigma - surface tension                   */
 
-EXTERN void apply_CA_FILL(double[MAX_PDIM], /* func                                      */
+EXTERN void apply_CA_FILL(double[MAX_PDIM],   /* func                                      */
                           double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-                          const double); /* contact angle                             */
+                          const double);     /* contact angle                             */
 
 EXTERN void apply_sharp_ca(double[MAX_PDIM], /* func                                      */
                            double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
@@ -727,21 +727,21 @@ EXTERN void apply_wetting_tension(double[MAX_PDIM], /* func                     
                                   double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                   const double); /* wetting tension                           */
 
-EXTERN void velocity_profile(const int, /* irow_index - Elemental stiffness matrix
-                                         * row index                                 */
-                             const int, /* I - Global node number                    */
-                             const int, /* iconnect_ptr - pointer for this element
-                                         * into the elem-node connectivity           */
-                             const int, /* ielem_dim - physical dimension of the
-                                         * element, ie., 1, 2, 3                     */
-                             int[],     /* ija - column pointer array                */
-                             double[],  /* a - nonzero matrix elements               */
-                             double[],  /* resid_vector - Residual vector	     */
-                             double[],  /* x - Vector containing current solution    */
-                             const int, /* velo_condition - integer denoting which
-                                         * condition is being applied                */
-                             const int, /* num_nodes_on_side - Number of nodes on
-                                         * the side of the element                   */
+EXTERN void velocity_profile(const int,          /* irow_index - Elemental stiffness matrix
+                                                  * row index                                 */
+                             const int,          /* I - Global node number                    */
+                             const int,          /* iconnect_ptr - pointer for this element
+                                                  * into the elem-node connectivity           */
+                             const int,          /* ielem_dim - physical dimension of the
+                                                  * element, ie., 1, 2, 3                     */
+                             int[],              /* ija - column pointer array                */
+                             double[],           /* a - nonzero matrix elements               */
+                             double[],           /* resid_vector - Residual vector	     */
+                             double[],           /* x - Vector containing current solution    */
+                             const int,          /* velo_condition - integer denoting which
+                                                  * condition is being applied                */
+                             const int,          /* num_nodes_on_side - Number of nodes on
+                                                  * the side of the element                   */
                              const int[MAX_NODES_PER_SIDE], /* local_elem_node_id - local
                                                              * element's node numbers located on
                                                              * the side of the element 	     */
@@ -749,7 +749,7 @@ EXTERN void velocity_profile(const int, /* irow_index - Elemental stiffness matr
                              const double,  /* a2 - parameters from input deck card      */
                              const double); /* time - at which bc's are evaluated        */
 
-EXTERN void ftmelt_bc(double[DIM], /* func                                      */
+EXTERN void ftmelt_bc(double[DIM],          /* func                                      */
                       double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
                       const double,           /* a1 - function parameters from data card   */
                       const double[MAX_PDIM], /* x_dot -  mesh velocity vector             */
@@ -759,17 +759,17 @@ EXTERN void ftmelt_bc(double[DIM], /* func                                      
                       const dbl);             /* dt - current value of the time step size  */
 
 EXTERN void
-continuous_tangent_velocity(double[DIM], /* func                                      */
+continuous_tangent_velocity(double[DIM],      /* func                                      */
                             double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-                            const int); /* ielem_dim - physical dimension of the
-                                         * element, ie., 1, 2, 3                     */
+                            const int);             /* ielem_dim - physical dimension of the
+                                                     * element, ie., 1, 2, 3                     */
 
 EXTERN void continuous_normal_velocity(double[DIM], /* func                                      */
                                        double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                        const int); /* ielem_dim - physical dimension of the
                                                     * element, ie., 1, 2, 3                     */
 
-EXTERN void discontinuous_velocity(double[DIM], /* func                                      */
+EXTERN void discontinuous_velocity(double[DIM],    /* func                                      */
                                    double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                    double[MAX_PDIM], /* x_dot - mesh velocity vector              */
                                    const int,        /* mode - Evporation or dissolution          */
@@ -780,12 +780,12 @@ EXTERN void discontinuous_velocity(double[DIM], /* func                         
                                                       * implicit (tt = 0)                         */
                                    const dbl);       /* dt - current value of the time step size  */
 
-EXTERN void fnormal_stress_bc(double[DIM], /* func                                      */
+EXTERN void fnormal_stress_bc(double[DIM],           /* func                                      */
                               double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                               const double, /* stress_normal -             normal stress */
                               const dbl);   /* relax - relaxation parameters             */
 
-EXTERN void qside_directional(double[DIM],                                       /* func */
+EXTERN void qside_directional(double[DIM],  /* func */
                               double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],   /*   d_func   */
                               const double,                                      /* value of qx  */
                               const double,                                      /* value of qy  */
@@ -796,7 +796,7 @@ EXTERN void qside_contact_resis(double[DIM],                                    
                                 const int,     /* value id_block_2  */
                                 const double); /* value Rinv  */
 
-EXTERN void qside_light_jump(double[DIM],                                     /* func */
+EXTERN void qside_light_jump(double[DIM],      /* func */
                              double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /*   d_func   */
                              const double, /* Time                                      */
                              const int,    /* bc_type */
@@ -804,7 +804,7 @@ EXTERN void qside_light_jump(double[DIM],                                     /*
                              const int     /* value id_block_2  */
 );                                         /* value Rinv  */
 
-EXTERN void qside_ls(double[DIM],                                     /* func */
+EXTERN void qside_ls(double[DIM],          /* func */
                      double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /*  d_func */
                      int,                                             /* no_LS_block_id */
                      int,                                             /* LS_block_id */
@@ -823,21 +823,21 @@ EXTERN void q_velo_slip_bc /* mm_fill_terms.c                           */
 EXTERN void qnobc_surf /* mm_fill_terms.c                           */
     (double[DIM],      /* func                                      */
      double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-     const double); /* Time                                      */
+     const double);                          /* Time                                      */
 
 EXTERN void potential_nobc_surf(double[DIM], /* func                                      */
                                 double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                 const double); /* Time                                      */
 
-EXTERN void qlaser_surf /* mm_fill_terms.c                           */
-    (double[DIM],       /* func                                      */
+EXTERN void qlaser_surf                        /* mm_fill_terms.c                           */
+    (double[DIM],                              /* func                                      */
      double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
      const double[], /* p- parameters for the bc                  */
      const double[], /* goma solution vector          	     */
      const double);  /* Time                                      */
 
-EXTERN void q_vapor /* mm_fill_terms.c                           */
-    (double[DIM],   /* func                                      */
+EXTERN void q_vapor  /* mm_fill_terms.c                           */
+    (double[DIM],    /* func                                      */
      double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
      const double[], /* p- parameters for the bc                  */
      const double[], /* goma solution vector          	     */
@@ -851,11 +851,11 @@ EXTERN double calculate_vapor_cool(const double[], double *, double);
 EXTERN void qrad_surf /* mm_fill_terms.c                           */
     (double[DIM],     /* func                                      */
      double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-     double,  /* heat_tran_coeff - (cgs units)             */
-     double,  /* T_c - bath temperature (Kelvin)	     */
-     double,  /* emissivity                                */
-     double,  /* Boltzmann's constant                      */
-     double); /* Kelvin-to-Celsius Conversion              */
+     double,                  /* heat_tran_coeff - (cgs units)             */
+     double,                  /* T_c - bath temperature (Kelvin)	     */
+     double,                  /* emissivity                                */
+     double,                  /* Boltzmann's constant                      */
+     double);                 /* Kelvin-to-Celsius Conversion              */
 
 EXTERN void qrad_surf_repulse /* mm_ns_bc.c                           */
     (double[DIM],             /* func                                      */
@@ -915,13 +915,13 @@ void apply_blake_wetting_velocity_sic(double[MAX_PDIM],
 EXTERN void
 acoustic_plane_transmission(double[DIM], /* func                                      */
                             double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-                            const double, /* Time                                      */
-                            const int,    /* bc_type */
-                            const double, /*  boundary impedance	*/
-                            const double, /*  boundary absorption	*/
-                            const double, /*  boundary incident real*/
-                            const double, /*  boundary incident imaginary	*/
-                            const int);   /* element block id */
+                            const double,   /* Time                                      */
+                            const int,      /* bc_type */
+                            const double,   /*  boundary impedance	*/
+                            const double,   /*  boundary absorption	*/
+                            const double,   /*  boundary incident real*/
+                            const double,   /*  boundary incident imaginary	*/
+                            const int);     /* element block id */
 
 EXTERN void light_transmission(double[DIM], /* func                                      */
                                double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
@@ -932,7 +932,7 @@ EXTERN void light_transmission(double[DIM], /* func                             
                                const double, /*  boundary incident */
                                const int);   /* element block id */
 
-EXTERN void acoustic_nobc_surf(double[DIM], /* func                                      */
+EXTERN void acoustic_nobc_surf(double[DIM],  /* func                                      */
                                double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                const double, /* Time                                      */
                                const int);   /* bc_type */
@@ -973,9 +973,9 @@ void fgamma1_deriv_bc(double[DIM], /* func                                      
                       double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
                       const double); /* vnormal - normal velocity                 */
 
-void fgamma2_deriv_bc(double[DIM], /* func                                      */
+void fgamma2_deriv_bc(double[DIM],   /* func                                      */
                       double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-                      const double); /* vnormal - normal velocity                 */
+                      const double);  /* vnormal - normal velocity                 */
 
 void dvzdr_zero_deriv_bc(double[DIM], /* func                                      */
                          double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
@@ -991,6 +991,6 @@ void shear_stress_applied(double func[DIM],
                           double *user,      /* surface tension                           */
                           struct elem_side_bc_struct *elem_side_bc,
                           const int iconnect_ptr,
-                          dbl *xi, /* Natural coordinates of the integration point */
+                          dbl *xi,           /* Natural coordinates of the integration point */
                           const Exo_DB *exo);
-#endif /* GOMA_MM_NS_BC_H */
+#endif                                       /* GOMA_MM_NS_BC_H */

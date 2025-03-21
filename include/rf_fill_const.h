@@ -179,13 +179,13 @@
 #define EXTERN extern
 #endif
 
-double calc_surf_det(int,    /* ielem  */
-                     int,    /* iconnect_ptr */
-                     int,    /* nodes_per_elem  */
-                     int,    /* ielem_surf_dim  */
-                     int,    /* id_side  */
-                     int,    /* num_nodes_on_side */
-                     int[]); /* local_elem_node_id [] */
+double calc_surf_det(int,                /* ielem  */
+                     int,                /* iconnect_ptr */
+                     int,                /* nodes_per_elem  */
+                     int,                /* ielem_surf_dim  */
+                     int,                /* id_side  */
+                     int,                /* num_nodes_on_side */
+                     int[]);             /* local_elem_node_id [] */
 
 void fill_surf_shape(int,                /* num_local_nodes, number of nodes in this element   */
                      int,                /* ielem_surf_dim, physical dimension of element surface */
@@ -235,7 +235,7 @@ double Ysurf_quad(double[],                     /* x[]  */
                   struct elem_side_bc_struct *, /* *elem_side_bc  */
                   int);                         /* w  */
 
-#if 0 /* old */
+#if 0                                           /* old */
 void 
 fvelo_tangential_bc
    ( double *,         /* *func,   */

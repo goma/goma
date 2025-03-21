@@ -577,7 +577,7 @@ void fvelo_normal_bc(double func[DIM],
       }
 
     } /* for: kdir */
-  }   /* end of if Assemble_Jacobian */
+  } /* end of if Assemble_Jacobian */
 
 } /* END of routine fvelo_normal_bc  */
 /*****************************************************************************/
@@ -997,7 +997,7 @@ void fvelo_tangential_ls_bc(double func[DIM],
       }
 
     } /* for: kdir */
-  }   /* end of if Assemble_Jacobian */
+  } /* end of if Assemble_Jacobian */
 
 } /* END of routine fvelo_tangential_ls_bc  */
 
@@ -2469,8 +2469,8 @@ void fvelo_tangential_solid_bc(double func[],
                                const int eb_mat_solid,
                                const int eb_mat_fluid, /* element block ID's for solid and fluid */
                                dbl beta,
-                               const int dcl_node,           /*   node id for DCL  */
-                               double alpha,                 /* extent of slip  */
+                               const int dcl_node,     /*   node id for DCL  */
+                               double alpha,           /* extent of slip  */
                                const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *
                                                               * point, i.e. current position  */
                                const dbl tt, /* parameter to vary time integration method */
@@ -2483,11 +2483,11 @@ void fvelo_tangential_solid_bc(double func[],
   int dim, err;
   double betainv;
   int icount;
-  double dist; /* distance btw current position and dynamic
-                     contact lines                                */
+  double dist;                /* distance btw current position and dynamic
+                                    contact lines                                */
   double v_solid_mesh[DIM];
-  double xdcl[MAX_PDIM]; /* coordinates of dynamic contact lines         */
-  double disp;           /* DCL point displacement */
+  double xdcl[MAX_PDIM];      /* coordinates of dynamic contact lines         */
+  double disp;                /* DCL point displacement */
 
   double vconv[MAX_PDIM];     /*Calculated convection velocity */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
@@ -2846,9 +2846,9 @@ void fvelo_tangential_solid_bc(double func[],
 void fvelo_normal_solid_bc(double func[],
                            double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                            double x[MAX_PDIM],
-                           double x_dot[DIM],    /* mesh velocity vector                      */
-                           double x_rs_dot[DIM], /* real solid velocity vector */
-                           const int type,       /* BC_Name */
+                           double x_dot[DIM],      /* mesh velocity vector                      */
+                           double x_rs_dot[DIM],   /* real solid velocity vector */
+                           const int type,         /* BC_Name */
                            const int eb_mat_solid,
                            const int eb_mat_fluid, /* element block ID's for solid and fluid */
                            const dbl tt,           /* parameter to vary time integration method */
@@ -3035,8 +3035,8 @@ void fvelo_normal_solid_bc(double func[],
 void fvelo_slip_bc(double func[MAX_PDIM],
                    double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                    double x[],
-                   const int type,      /* whether rotational or not */
-                   const int max_float, /* Max float number from input file */
+                   const int type,               /* whether rotational or not */
+                   const int max_float,          /* Max float number from input file */
                    double bc_float[MAX_BC_FLOAT_DATA],
                    const int dcl_node,           /*   node id for DCL  */
                    const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *
@@ -3555,8 +3555,8 @@ void fvelo_slip_power_bc(double func[MAX_PDIM],
                          const int type,      /* whether rotational or not */
                          const int max_float, /* Max float number from input file */
                          double bc_float[MAX_BC_FLOAT_DATA],
-                         const double tt, /* parameter in time stepping alg           */
-                         const double dt) /* current time step value                  */
+                         const double tt,     /* parameter in time stepping alg           */
+                         const double dt)     /* current time step value                  */
 
 /*************************************************************************
  *
@@ -3761,7 +3761,7 @@ int exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC 
 void fvelo_airfilm_bc(double func[MAX_PDIM],
                       double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                       double x[],
-                      const int type, /* whether rotational or not */
+                      const int type,               /* whether rotational or not */
                       double bc_float[MAX_BC_FLOAT_DATA],
                       const int dcl_node,           /*   node id for DCL  */
                       const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *
@@ -4022,7 +4022,7 @@ void fvelo_airfilm_bc(double func[MAX_PDIM],
 #if 1
 void fvelo_slip_level(double func[MAX_PDIM],
                       double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                      const int type, /* whether rotational or not */
+                      const int type,            /* whether rotational or not */
                       double width,
                       double beta_inside,        /* slip coefficient from input deck */
                       const double vsx,          /* velocity components of solid  */
@@ -5151,7 +5151,7 @@ void apply_repulsion(double cfunc[MDE][DIM],
   /* Local variables */
 
   int j, i, id, var, a, eqn, I, ldof;
-  int jvar; /* Degree of freedom counter                 */
+  int jvar;           /* Degree of freedom counter                 */
 
   double d_dist[DIM]; /* distance from surface to wall             */
   double dist = 0;    /* squared distance from surface to wall     */
@@ -5250,7 +5250,7 @@ void apply_repulsion_roll(double cfunc[MDE][DIM],
 
   /* Local variables */
 
-  int dim, jvar; /* Degree of freedom counter */
+  int dim, jvar;      /* Degree of freedom counter */
 
   double d_dist[DIM]; /* distance derivatives  */
   double dist = 1e12; /* squared distance from surface to wall     */
@@ -5520,7 +5520,7 @@ void apply_repulsion_user(double cfunc[MDE][DIM],
 
   /* Local variables */
 
-  int dim, jvar; /* Degree of freedom counter */
+  int dim, jvar;      /* Degree of freedom counter */
 
   double d_dist[DIM]; /* distance derivatives  */
   double dist = 1e12; /* squared distance from surface to wall     */
@@ -5697,7 +5697,7 @@ void apply_repulsion_table(double cfunc[MDE][DIM],
 
   /* Local variables */
 
-  int dim, jvar; /* Degree of freedom counter */
+  int dim, jvar;                   /* Degree of freedom counter */
 
   double d_dist[DIM], d_tfcn[DIM]; /* distance derivatives  */
   double dist;                     /* squared distance from surface to wall     */
@@ -6140,8 +6140,8 @@ void flow_n_dot_T_var_density(
   MOMENTUM_SOURCE_DEPENDENCE_STRUCT df_struct; /* Body force dependence */
   MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df = &df_struct;
 
-  rho = density(d_rho, time);              // Density
-  (void)momentum_source_term(f, df, time); // Momentum source term for gravity vector
+  rho = density(d_rho, time);                  // Density
+  (void)momentum_source_term(f, df, time);     // Momentum source term for gravity vector
 
   if (af->Assemble_LSA_Mass_Matrix)
     return;
@@ -6700,7 +6700,7 @@ void flow_n_dot_T_gradv_t(double func[DIM],
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct; /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
   zeroStructures(d_mup, 1);
-  dbl gamma[DIM][DIM]; // Shear rate tensor based on velocity
+  dbl gamma[DIM][DIM];                      // Shear rate tensor based on velocity
   for (int a = 0; a < VIM; a++) {
     for (int b = 0; b < VIM; b++) {
       gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
@@ -6807,7 +6807,7 @@ void flow_n_dot_T_gradv_t(double func[DIM],
         }
       }
     } // for mode
-  }   // if evss_f
+  } // if evss_f
   /* now is the time to clean up, so, if using the datum for pressure, fix fv->P
    */
   /* Ahh...no.  This seems like a bad idea.
@@ -7136,11 +7136,11 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
   dbl grad_v[DIM][DIM]; /* Velocity gradient based on velocity - discontinuous across element */
   dbl gamma[DIM][DIM];  /* Shear-rate tensor based on velocity */
 
-  dbl s[DIM][DIM];     /* stress tensor */
-  dbl trace = 0.0;     /* trace of the stress tensor */
-  dbl s_dot[DIM][DIM]; /* stress tensor from last time step */
-  dbl g[DIM][DIM];     /* velocity gradient tensor */
-  dbl gt[DIM][DIM];    /* transpose of velocity gradient tensor */
+  dbl s[DIM][DIM];      /* stress tensor */
+  dbl trace = 0.0;      /* trace of the stress tensor */
+  dbl s_dot[DIM][DIM];  /* stress tensor from last time step */
+  dbl g[DIM][DIM];      /* velocity gradient tensor */
+  dbl gt[DIM][DIM];     /* transpose of velocity gradient tensor */
 
   dbl g_dot[DIM][DIM];  /* velocity gradient tensor time derivative */
   dbl gt_dot[DIM][DIM]; /* transpose of velocity gradient tensor time derivative */
@@ -7671,11 +7671,11 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                 }
               }
             } /* End of J_S_S */
-          }   /* End of if a == b */
-        }     /* End of loop over dimension "b" */
-      }       /* End of loop over dimension "a" */
-    }         /*  end of if Assemble_Jacobian  */
-  }           /* End of loop over modes */
+          } /* End of if a == b */
+        } /* End of loop over dimension "b" */
+      } /* End of loop over dimension "a" */
+    } /*  end of if Assemble_Jacobian  */
+  } /* End of loop over modes */
 } /* END of routine stress_no_v_dot_gradS                                    */
 /*****************************************************************************/
 
@@ -7711,11 +7711,11 @@ void stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
   dbl grad_v[DIM][DIM]; /* Velocity gradient based on velocity - discontinuous across element */
   dbl gamma[DIM][DIM];  /* Shear-rate tensor based on velocity */
 
-  dbl s[DIM][DIM];     /* stress tensor (log-conformation tensor) */
-  dbl exp_s[DIM][DIM]; // Exponential of log_conf
-  dbl trace = 0.0;     /* trace of the stress tensor */
-  dbl s_dot[DIM][DIM]; /* stress tensor from last time step */
-  dbl gt[DIM][DIM];    /* transpose of velocity gradient tensor */
+  dbl s[DIM][DIM];      /* stress tensor (log-conformation tensor) */
+  dbl exp_s[DIM][DIM];  // Exponential of log_conf
+  dbl trace = 0.0;      /* trace of the stress tensor */
+  dbl s_dot[DIM][DIM];  /* stress tensor from last time step */
+  dbl gt[DIM][DIM];     /* transpose of velocity gradient tensor */
 
   dbl source_term1[DIM][DIM];
   dbl advection_term1[DIM][DIM];
@@ -7984,13 +7984,13 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   int evss_gradv = 0;
 
   int i, j, mode;
-  dbl v[DIM];     /* Velocity field. */
-  dbl x_dot[DIM]; /* current position field derivative wrt time. */
+  dbl v[DIM];          /* Velocity field. */
+  dbl x_dot[DIM];      /* current position field derivative wrt time. */
 
   dbl grad_v[DIM][DIM];
   dbl gamma[DIM][DIM]; /* Shear-rate tensor based on velocity */
 
-  dbl mass; /* For terms and their derivatives */
+  dbl mass;            /* For terms and their derivatives */
   dbl mass_a, mass_b;
   dbl advection;
   dbl advection_a, advection_b, advection_c, advection_d;
@@ -8002,7 +8002,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   dbl lambda = 0; /* polymer relaxation constant */
   double xi;
   double d_xi_dF[MDE];
-  dbl eps = 0; /* This is the PTT elongation parameter */
+  dbl eps = 0;    /* This is the PTT elongation parameter */
   double d_eps_dF[MDE];
   /*
    *
@@ -8035,14 +8035,14 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
 
-  dbl b[DIM][DIM];     /* stress tensor */
-  dbl b_dot[DIM][DIM]; /* stress tensor from last time step */
+  dbl b[DIM][DIM];         /* stress tensor */
+  dbl b_dot[DIM][DIM];     /* stress tensor from last time step */
   dbl grad_b[DIM][DIM][DIM];
   dbl d_grad_s_dmesh[DIM][DIM][DIM][DIM]
                     [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
 
-  dbl g[DIM][DIM];  /* velocity gradient tensor */
-  dbl gt[DIM][DIM]; /* transpose of velocity gradient tensor */
+  dbl g[DIM][DIM];         /* velocity gradient tensor */
+  dbl gt[DIM][DIM];        /* transpose of velocity gradient tensor */
 
   /* dot product tensors */
 
@@ -8735,7 +8735,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
         }
       }
     } /* End Assemble Jacobian */
-  }   /* End loop over modes */
+  } /* End loop over modes */
 }
 
 void stress_no_v_dot_gradS_logc_transient(
@@ -8771,10 +8771,10 @@ void stress_no_v_dot_gradS_logc_transient(
   dbl grad_v[DIM][DIM]; /* Velocity gradient based on velocity - discontinuous across element */
   dbl gamma[DIM][DIM];  /* Shear-rate tensor based on velocity */
 
-  dbl exp_s[DIM][DIM]; // Exponential of log_conf
-  dbl trace = 0.0;     /* trace of the stress tensor */
-  dbl s_dot[DIM][DIM]; /* stress tensor from last time step */
-  dbl gt[DIM][DIM];    /* transpose of velocity gradient tensor */
+  dbl exp_s[DIM][DIM];  // Exponential of log_conf
+  dbl trace = 0.0;      /* trace of the stress tensor */
+  dbl s_dot[DIM][DIM];  /* stress tensor from last time step */
+  dbl gt[DIM][DIM];     /* transpose of velocity gradient tensor */
 
   dbl source_term1[DIM][DIM];
   dbl advection_term1[DIM][DIM];
@@ -9085,11 +9085,11 @@ void stress_no_v_dot_gradS_logc_transient(
                 }
               }
             } /* End of J_S_S */
-          }   /* End of if a == b */
-        }     /* End of loop over dimension "b" */
-      }       /* End of loop over dimension "a" */
-    }         /*  end of if Assemble_Jacobian  */
-  }           /* End of loop over modes */
+          } /* End of if a == b */
+        } /* End of loop over dimension "b" */
+      } /* End of loop over dimension "a" */
+    } /*  end of if Assemble_Jacobian  */
+  } /* End of loop over modes */
 } /* END of routine stress_no_v_dot_gradS_logc_transient */
 
 void PSPG_consistency_bc(double *func,
@@ -9159,14 +9159,14 @@ void PSPG_consistency_bc(double *func,
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
-  dbl gamma[DIM][DIM]; /* shrearrate tensor based on velocity */
+  dbl gamma[DIM][DIM];                     /* shrearrate tensor based on velocity */
 
-  dbl div_tau_p[DIM];                     /* divergence of the particle stress*/
-  dbl d_div_tau_p_dgd[DIM][MDE];          /* derivative wrt shear_rate_invariant */
-  dbl d_div_tau_p_dy[DIM][MAX_CONC][MDE]; /* derivative wrt concentration */
-  dbl d_div_tau_p_dv[DIM][DIM][MDE];      /* derivative wrt velocity */
-  dbl d_div_tau_p_dmesh[DIM][DIM][MDE];   /* derivative wrt mesh */
-  dbl d_div_tau_p_dp[DIM][MDE];           /* derivative wrt pressure dir */
+  dbl div_tau_p[DIM];                      /* divergence of the particle stress*/
+  dbl d_div_tau_p_dgd[DIM][MDE];           /* derivative wrt shear_rate_invariant */
+  dbl d_div_tau_p_dy[DIM][MAX_CONC][MDE];  /* derivative wrt concentration */
+  dbl d_div_tau_p_dv[DIM][DIM][MDE];       /* derivative wrt velocity */
+  dbl d_div_tau_p_dmesh[DIM][DIM][MDE];    /* derivative wrt mesh */
+  dbl d_div_tau_p_dp[DIM][MDE];            /* derivative wrt pressure dir */
 
   stress_eqn_pointer(v_s);
 
@@ -9703,7 +9703,7 @@ void PSPG_consistency_bc(double *func,
 /*****************************************************************************/
 /*****************************************************************************/
 
-void fapply_CA(double *func, /* Value of the Residual Function */
+void fapply_CA(double *func,                       /* Value of the Residual Function */
                double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                double d_func_ss[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                const double fsnormal[DIM],         /* free surface normal components      */
@@ -11351,7 +11351,7 @@ void apply_CA_FILL(double func[MAX_PDIM],
                              (sin_ca * fv->snormal[p] + cos_ca * t[p]);
 
       } /* for: j=0,...,ei[pg->imtrx]->dof[FILL] */
-    }   /* for: p=0,...,dim */
+    } /* for: p=0,...,dim */
 
     /* Derivatives w.r.t MESH */
     if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
@@ -13481,8 +13481,8 @@ void apply_blake_wetting_velocity_sic(double func[MAX_PDIM],
           }
         }
       } /*  end of concentration sensitivities	*/
-    }   /* af->Assemble_Jacobian */
-  }     /*  lsi->near		*/
+    } /* af->Assemble_Jacobian */
+  } /*  lsi->near		*/
 
   /* Elsewhere on the boundary we apply the slip velocity as a Dirichlet condition */
 
@@ -13660,7 +13660,7 @@ void continuous_tangent_velocity(double func[DIM],
                                  const int ielem_dim) /* dimension of element     */
 {
   int j, kdir, var, p;
-  double phi_j; /* Basis Function			      */
+  double phi_j;                                       /* Basis Function			      */
 
   if (af->Assemble_LSA_Mass_Matrix)
     return;
@@ -13692,7 +13692,7 @@ void continuous_tangent_velocity(double func[DIM],
         }
       }
     } /* end of if Assemble_Jacobian */
-  }   /* end if Num_Dim */
+  } /* end if Num_Dim */
 
   /* Calculate the residual contribution	*/
   if (pd->Num_Dim == 2) {
@@ -13713,7 +13713,7 @@ void continuous_normal_velocity(double func[DIM],
                                 const int ielem_dim) /* dimension of element     */
 {
   int j, kdir, var, p;
-  double phi_j; /* Basis Function			      */
+  double phi_j;                                      /* Basis Function			      */
 
   if (af->Assemble_LSA_Mass_Matrix)
     return;
@@ -13745,7 +13745,7 @@ void continuous_normal_velocity(double func[DIM],
         }
       }
     } /* end of if Assemble_Jacobian */
-  }   /* end if Num_Dim */
+  } /* end if Num_Dim */
 
   /* Calculate the residual contribution	*/
   if (pd->Num_Dim == 2) {
@@ -13772,11 +13772,11 @@ void discontinuous_velocity(double func[DIM],
                             const dbl dt)            /* current value of the time step            */
 {
   int idblock = 0, j, kdir, var, p, w;
-  double phi_j;                      /* Basis Function			     */
-  double conc_insoluble_species = 0; /* concentration of insoluble species   *
-                                      * like air                             */
-  double diffusion_flux[MAX_CONC];   /* diffusion flux normal to interface of volatile species */
-  double d_diffusion_flux_dc;        /* diffusion flux normal to interface of volatile species */
+  double phi_j;                                      /* Basis Function			     */
+  double conc_insoluble_species = 0;                 /* concentration of insoluble species   *
+                                                      * like air                             */
+  double diffusion_flux[MAX_CONC]; /* diffusion flux normal to interface of volatile species */
+  double d_diffusion_flux_dc;      /* diffusion flux normal to interface of volatile species */
   double d_diffusion_flux_dx[MAX_CONC][DIM][MDE];
   /* derivative of diffusion flux normal to interface of volatile species */
   double vnormal = 0;
@@ -14848,7 +14848,7 @@ double calculate_laser_flux(const double p[],
   beam_v = p[25];
   beam_w = p[26];
 
-  if (sw_trv_spt < -0.2) /*if pseudo-spot weld*/
+  if (sw_trv_spt < -0.2)                            /*if pseudo-spot weld*/
   {
     spot_space = 0.0;
   } else if (sw_trv_spt > -0.1 && sw_trv_spt < 0.1) /*if spot weld*/
@@ -16263,5 +16263,5 @@ void ls_wall_angle_bc(double func[DIM],
         }
       }
     } /* for: kdir */
-  }   /* end of if Assemble_Jacobian */
+  } /* end of if Assemble_Jacobian */
 }

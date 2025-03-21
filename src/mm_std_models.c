@@ -122,7 +122,7 @@
  * ----------------------------------------------------------------------------
  */
 
-int bouss_momentum_source(dbl f[DIM], /* Body force. */
+int bouss_momentum_source(dbl f[DIM],      /* Body force. */
                           MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df,
                           int jxb,         /* Flag for turning on and off jxb */
                           int hydrostatic) /* Boolean for including hydrostatic *
@@ -133,7 +133,7 @@ int bouss_momentum_source(dbl f[DIM], /* Body force. */
 
   int w;
 
-  dbl T, C[MAX_CONC]; /* Convenient local variables */
+  dbl T, C[MAX_CONC];     /* Convenient local variables */
 
   dbl J[DIM], B[DIM];     /* Local versions for REAL j-field and b-field */
   dbl J_I[DIM], B_I[DIM]; /* Local versions for Imag j-field and b-field */
@@ -1709,16 +1709,16 @@ double butler_volmer_source(dbl *a, int key, dbl *dh) {
   int wspec;
 
   /***************** Source parameters ******************************/
-  wspec = a[0];  /* species number */
-  s = a[1];      /* stoichiometric coefficient */
-  ai0 = a[2];    /* product of interfacial area by
-                    exchange current density, A/cm^3 */
-  beta = a[3];   /* reaction order */
-  cref = a[4];   /* reference species concentration, moles/cm^3 */
-  alphaa = a[5]; /* anodic transfer coeficient */
-  alphac = a[6]; /* cathodic transfer coefficient */
-  T = a[7];      /* temperature, K */
-  U0 = a[8];     /* open-circuit potential, V */
+  wspec = a[0];    /* species number */
+  s = a[1];        /* stoichiometric coefficient */
+  ai0 = a[2];      /* product of interfacial area by
+                      exchange current density, A/cm^3 */
+  beta = a[3];     /* reaction order */
+  cref = a[4];     /* reference species concentration, moles/cm^3 */
+  alphaa = a[5];   /* anodic transfer coeficient */
+  alphac = a[6];   /* cathodic transfer coefficient */
+  T = a[7];        /* temperature, K */
+  U0 = a[8];       /* open-circuit potential, V */
   if (key == 2)
     n = a[9];      /* for species source/sink, get the number
                       of electrons involved in the reaction */
@@ -2154,14 +2154,14 @@ double visc_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
   dbl mu;
 
-  dbl gammadot; /* strain rate invariant */
+  dbl gammadot;             /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
   dbl d_gd_dmesh[DIM][MDE]; /* derivative of strain rate invariant
                                wrt mesh */
 
-  dbl s[DIM][DIM]; /* viscoelastic stress variable */
+  dbl s[DIM][DIM];          /* viscoelastic stress variable */
   int mode;
   int v_s[MAX_MODES][DIM][DIM];
 
@@ -2878,11 +2878,11 @@ int Free_Vol_Theory_Diffusivity(int species_no, /* current species number*/
   double d_V_fh_gamma_dc[MAX_CONC], dexponen_dc[MAX_CONC];
   double c0, density_tot; /* solvent dens, total density*/
 
-  double Q_thermo = 0.0; /* the thermodynamic factor */
-  double beta;           /* a fudge factor in Q_thermo */
-  double MW_1 = 0.0;     /* solvent molecular weight */
-  double MW_2 = 0.0;     /* polymer molecular weight */
-  double D1 = 0.0;       /* the solvent self diffusion coefficient */
+  double Q_thermo = 0.0;  /* the thermodynamic factor */
+  double beta;            /* a fudge factor in Q_thermo */
+  double MW_1 = 0.0;      /* solvent molecular weight */
+  double MW_2 = 0.0;      /* polymer molecular weight */
+  double D1 = 0.0;        /* the solvent self diffusion coefficient */
   double D_o_polymer = 0.0, E_div_R_polymer = 0.0, A_friction = 0.0, ratio_D1_D2_term = 0.0;
   /* used solely for friction model */
   double exponen_D2 = 0.0, D2 = 0.0; /* used solely for friction model */
@@ -4046,10 +4046,10 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
   dbl d_div_tau_p_dmesh[DIM][DIM][MDE];   /* derivative wrt mesh */
   dbl d_div_tau_p_dp[DIM][MDE];           /* derivative wrt pressure */
 
-  dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
-                               wrt velocity */
-  dbl d_gd_dmesh[DIM][MDE]; /* derivative of strain rate invariant
-                               wrt mesh */
+  dbl d_gd_dv[DIM][MDE];                  /* derivative of strain rate invariant
+                                             wrt velocity */
+  dbl d_gd_dmesh[DIM][MDE];               /* derivative of strain rate invariant
+                                             wrt mesh */
 
   dbl df_dmu0 = 0.0, dmu0_dcure = 0.0, dmu0_dT = 0.0;
   dbl del_rho = 0.0;
@@ -4082,7 +4082,7 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
     mu0 = gn->mu0; /* viscosity of pure fluid */
   } else {
     maxpack = .68;
-    mu0 = mu; /* viscosity of pure fluid */
+    mu0 = mu;      /* viscosity of pure fluid */
   }
 
   /* If non-neutrally bouyant suspension, compute density difference
@@ -4363,7 +4363,7 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
     mu0 = gn->mu0; /* viscosity of pure fluid */
   } else {
     maxpack = .68;
-    mu0 = mu; /* viscosity of pure fluid */
+    mu0 = mu;      /* viscosity of pure fluid */
   }
 
   y_norm = Y[w] / maxpack;
@@ -4663,7 +4663,7 @@ int divergence_particle_stress(
     mu0 = gn->mu0; /* viscosity of pure fluid */
   } else {
     maxpack = .68;
-    mu0 = mu; /* viscosity of pure fluid */
+    mu0 = mu;      /* viscosity of pure fluid */
   }
 
   y_norm = Y[w] / maxpack;
@@ -5126,12 +5126,12 @@ int epoxy_flowing_liquid_viscosity(dbl *vis, /* Base FLOWING LIQUID VISCOITY  */
   dbl Aexp = param[4];         /* exponent for thermal viscosity dependence */
   int species = (int)param[5]; /* species number for cure equation */
 
-  dbl mu;    /* viscosity */
-  dbl alpha; /* extent of reaction */
+  dbl mu;                      /* viscosity */
+  dbl alpha;                   /* extent of reaction */
   dbl exponent;
   dbl ratio;
-  dbl deriv; /* stuff for the first derivative */
-  dbl T;     /* Convenient local variables */
+  dbl deriv;                   /* stuff for the first derivative */
+  dbl T;                       /* Convenient local variables */
   int j, var;
 
   /* Begin Execution */
@@ -5513,7 +5513,7 @@ int electrode_species_source(int species_no, /* Current species number */
       U0 = mp->thermodynamic_potential;
     }
 
-    eta = PHI1 - PHI2 - U0; /* overpotential */
+    eta = PHI1 - PHI2 - U0;      /* overpotential */
     mp->species_source[0] = (ai0 / F) * x[0] * (exp(alphaa * FRT * eta) - exp(-alphac * FRT * eta));
     mp->species_source[1] = 0.0; /* species 1 is being neither produced nor consumed */
     mp->species_source[2] = 0.0; /* species 2 is being neither produced nor consumed */
@@ -5528,11 +5528,11 @@ int electrode_species_source(int species_no, /* Current species number */
       util0 = mp->u_interfacial_area[1];
       E = mp->u_interfacial_area[2] * 4.184; /* convert E from cal/mol-K to J/mol-k */
       T0 = mp->u_interfacial_area[3];
-      Lc = mp->u_interfacial_area[4]; /* cathode thickness */
-      ec = mp->u_interfacial_area[5]; /* cathode porosity */
-      Vc = mp->u_interfacial_area[6]; /* molar volume of active cathode material */
-      i = mp->u_interfacial_area[7];  /* current density */
-      nc = mp->u_interfacial_area[8]; /* number of electrons invloved in cathode rxn */
+      Lc = mp->u_interfacial_area[4];        /* cathode thickness */
+      ec = mp->u_interfacial_area[5];        /* cathode porosity */
+      Vc = mp->u_interfacial_area[6];        /* molar volume of active cathode material */
+      i = mp->u_interfacial_area[7];         /* current density */
+      nc = mp->u_interfacial_area[8];        /* number of electrons invloved in cathode rxn */
       tau = nc * Lc * ec * F / Vc / i;
       util = time / tau;
       ER = E / R;
@@ -5575,7 +5575,7 @@ int electrode_species_source(int species_no, /* Current species number */
       U0 = mp->thermodynamic_potential;
     }
 
-    eta = PHI1 - PHI2 - U0; /* overpotential */
+    eta = PHI1 - PHI2 - U0;      /* overpotential */
     mp->species_source[0] = (ai0 / F) * x[0] * (exp(alphaa * FRT * eta) - exp(-alphac * FRT * eta));
     mp->species_source[1] = 0.0; /* species 1 is being neither produced nor consumed */
     mp->species_source[2] = 0.0; /* species 2 is being neither produced nor consumed */
@@ -5587,8 +5587,8 @@ int electrode_species_source(int species_no, /* Current species number */
   }
 
   /* Sensitivities */
-  mp->d_species_source[MAX_VARIABLE_TYPES + 1] = 0.; /* wrt species # 2 */
-  if (species_no == 1 || species_no == 2 || mn == 1) /* for separator region and species 2 & 3 */
+  mp->d_species_source[MAX_VARIABLE_TYPES + 1] = 0.;   /* wrt species # 2 */
+  if (species_no == 1 || species_no == 2 || mn == 1)   /* for separator region and species 2 & 3 */
   {
     mp->d_species_source[MAX_VARIABLE_TYPES + 0] = 0.; /* wrt species # 1 */
     mp->d_species_source[TEMPERATURE] = 0.;            /* wrt electrode potential */
@@ -5831,7 +5831,7 @@ int electrolyte_temperature(double t,       /* present value of time */
 
   int status = 0;
   FILE *fp;
-  dbl T; /* electrolyte temperature in K - Joule heating neglected */
+  dbl T;     /* electrolyte temperature in K - Joule heating neglected */
   dbl t0 = 0;
   dbl T0;    /* initial electrolyte temperature in K */
   dbl Ta;    /* ambient temperature in K */
@@ -5982,7 +5982,7 @@ int assemble_bond_evolution(double time, /* present time value */
 
   dbl gamma_dot[DIM][DIM];
 
-  dbl gammadot; /* strain rate invariant */
+  dbl gammadot;             /* strain rate invariant */
 
   dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
                                wrt velocity */
@@ -6409,12 +6409,12 @@ static void cal_current_density(double x[],           /* global nodal solution v
 
   int nsw_acc, nse_acc, nsw_ccc, nse_ccc;
 
-  double PHI1e_acc, PHI1w_acc;      /* electrode potential in acc, V */
-  double PHI1e_ccc, PHI1w_ccc;      /* electrode potential in ccc, V */
-  int idx_PHI1w_acc, idx_PHI1e_acc; /* acc potential indices */
-  int idx_PHI1w_ccc, idx_PHI1e_ccc; /* ccc potential indices */
-  double xw_acc, xe_acc;            /* locations of acc and its neighbor */
-  double xw_ccc, xe_ccc;            /* locations of ccc and its neighbor */
+  double PHI1e_acc, PHI1w_acc;                      /* electrode potential in acc, V */
+  double PHI1e_ccc, PHI1w_ccc;                      /* electrode potential in ccc, V */
+  int idx_PHI1w_acc, idx_PHI1e_acc;                 /* acc potential indices */
+  int idx_PHI1w_ccc, idx_PHI1e_ccc;                 /* ccc potential indices */
+  double xw_acc, xe_acc;                            /* locations of acc and its neighbor */
+  double xw_ccc, xe_ccc;                            /* locations of ccc and its neighbor */
 
   sigma_anode = mp_glob[0]->thermal_conductivity;   /* anode conductivity, S/cm*/
   sigma_cathode = mp_glob[2]->thermal_conductivity; /* cathode conductivity, S/cm */
@@ -6454,8 +6454,8 @@ static void cal_current_density(double x[],           /* global nodal solution v
   electrolyte_temperature(time, delta_t, 0); /* get cell temperature */
   T = mp->electrolyte_temperature;
 
-  local_value[0] = i_acc; /* return anode current density to rf_solve.c */
-  local_value[1] = i_ccc; /* return cathode current density to rf_solve.c */
+  local_value[0] = i_acc;                    /* return anode current density to rf_solve.c */
+  local_value[1] = i_ccc;                    /* return cathode current density to rf_solve.c */
 
   fprintf(stderr, "In cal_current_density, time =%g\n", time);
   fprintf(stderr, "In cal_current_density: T =%g\n", T);

@@ -26,9 +26,9 @@ typedef enum type_elem {
   C_BILINEAR_QUAD, /* 5-node quad.  4 corner nodes + centroid node*/
   S_BIQUAD_QUAD,
   BIQUAD_QUAD,
-  BIQUAD_QUAD_LS, /* uses higher order integration */
-  P1_QUAD,        /* added 94/03/15 pas */
-  P0_QUAD,        /* added 98/02/09 rrr */
+  BIQUAD_QUAD_LS,  /* uses higher order integration */
+  P1_QUAD,         /* added 94/03/15 pas */
+  P0_QUAD,         /* added 98/02/09 rrr */
 
   TRILINEAR_HEX,
   C_TRILINEAR_HEX, /* 9 node hex.  8 corner nodes + centroid node */
@@ -42,10 +42,10 @@ typedef enum type_elem {
 
   LINEAR_TRI,
   QUAD_TRI,
-  QUAD6_TRI, /* quadratic triangle with 6th order quadrature */
+  QUAD6_TRI,         /* quadratic triangle with 6th order quadrature */
 
-  LINEAR_TET,    /* 3D linear tetrahedral element type */
-  QUADRATIC_TET, /* 3D quadratic tetrahedral element type */
+  LINEAR_TET,        /* 3D linear tetrahedral element type */
+  QUADRATIC_TET,     /* 3D quadratic tetrahedral element type */
 
   BILINEAR_SHELL,    /* 2D, linear elements for 3D shells */
   BIQUAD_SHELL,      /* 2D, quadratic elements for 3D shells */
@@ -82,19 +82,19 @@ typedef enum type_elem {
 
 /* define element data "request for information" types */
 
-#define NNODES     1
-#define NQUAD      2
-#define NDIM       3
-#define NQUAD_SURF 4
-#define NQUAD_EDGE 5
+#define NNODES        1
+#define NQUAD         2
+#define NDIM          3
+#define NQUAD_SURF    4
+#define NQUAD_EDGE    5
 
 /* define shape function information types */
 
-#define PSI      0
-#define DPSI_S   1
-#define DPSI_T   2
-#define DPSI_U   3
-#define CURL_PSI 4
+#define PSI           0
+#define DPSI_S        1
+#define DPSI_T        2
+#define DPSI_U        3
+#define CURL_PSI      4
 
 /* define maximum quantities */
 
@@ -118,21 +118,21 @@ typedef enum type_elem {
 #endif
 
 #ifndef MAX_SURF_GP
-#define MAX_SURF_GP 9 /* Maximum number of surface quad points  */
+#define MAX_SURF_GP 9       /* Maximum number of surface quad points  */
 #endif
 
-#define OUTER_SPACE (-1) /* Special value for element id flags */
-                         /* "non elements" for the element-element */
-                         /* connectivity. Later, other values will */
-                         /* indicate "element on another processor" */
+#define OUTER_SPACE    (-1) /* Special value for element id flags */
+                            /* "non elements" for the element-element */
+                            /* connectivity. Later, other values will */
+                            /* indicate "element on another processor" */
 
-#define ANOTHER_PROC (-2) /* here it is. */
+#define ANOTHER_PROC   (-2) /* here it is. */
 
 #define UNASSIGNED_YET (-3) /* for the initial fill */
 
-#define MAX_EPN                                   \
-  MAX_SUR_ELEM_3D /* convenient alias for maximum \
-                   * number of elements per node */
+#define MAX_EPN                                             \
+  MAX_SUR_ELEM_3D           /* convenient alias for maximum \
+                             * number of elements per node */
 
 #ifndef MAX_NODES_PER_SIDE
 #define MAX_NODES_PER_SIDE (9)
@@ -152,6 +152,6 @@ typedef enum type_elem {
 
 extern int ID_Side_Quad[]; /* defined in exo_conn.c */
 
-extern int ID_Side_Hex[]; /* defined in exo_conn.c */
+extern int ID_Side_Hex[];  /* defined in exo_conn.c */
 
 #endif

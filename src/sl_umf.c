@@ -243,7 +243,7 @@ int SL_UMF(int system_id,
          back into the rows.
       */
       k = 0;
-      for (i = 0; i < ums->n; i++) { /* loop over rows */
+      for (i = 0; i < ums->n; i++) {            /* loop over rows */
         ums->atp[i] = k;
         hit_diag = FALSE;
         for (j = col[i]; j < col[i + 1]; j++) { /* loop over colums within row */
@@ -295,10 +295,10 @@ int SL_UMF(int system_id,
     case -1: /* FACTORIZATION WITH PAST ANALYSIS */
       umf_option = 0;
       break;
-    case 0: /* FULL ANALYSIS AND FACTORIZATION */
+    case 0:  /* FULL ANALYSIS AND FACTORIZATION */
       umf_option = 1;
       break;
-    case 1: /* FACTORIZATION WITH PAST ANALYSIS */
+    case 1:  /* FACTORIZATION WITH PAST ANALYSIS */
       umf_option = 0;
       break;
     case 3:

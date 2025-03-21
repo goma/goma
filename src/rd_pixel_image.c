@@ -486,23 +486,23 @@ extern int find_xi(int elem_id,               /*known element id number*/
                    double nodecoor[MDE][DIM], /*global coordinates of local nodes  nodecoor[local
                                                  node number][x y or z]*/
                    int si,
-                   int N_ext) /*Interpolation index */
+                   int N_ext)                 /*Interpolation index */
 {
 
   /* local variables*/
   int i, j, error;
   int ielem_shape;
   int nodenum;
-  int converged, inewton; /*flag for convergence and counter for iterations*/
+  int converged, inewton;     /*flag for convergence and counter for iterations*/
 
   double R[DIM];              // residual vector
   double update[DIM] = {0.0}; // update for xi[]
 
-  double norm; // convergence norm
+  double norm;                // convergence norm
 
-  double phi[MDE]; // basis functions, one for each local node
+  double phi[MDE];            // basis functions, one for each local node
 
-  double x_intp[DIM]; // sum over local nodes of global coordinates
+  double x_intp[DIM];         // sum over local nodes of global coordinates
 
   converged = 0;
   inewton = 0;

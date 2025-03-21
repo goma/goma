@@ -637,8 +637,8 @@ double global_velocity_norm(const dbl x[],     /* solution vector */
  *  Revised: 1997/08/25 08:39 MDT pasacki@sandia.gov
  ********************************************************************/
 {
-  int norm_unknowns = 0; /* norm_unknowns is the actual number of
-                            variables used in the norm calculation  */
+  int norm_unknowns = 0;    /* norm_unknowns is the actual number of
+                               variables used in the norm calculation  */
 #ifdef PARALLEL
   int global_norm_unknowns; /* sum over all processors */
   double global_U_norm;     /* average over all processors */
@@ -1161,8 +1161,8 @@ dbl global_h_elem_siz(dbl x[], dbl x_old[], dbl xdot[], dbl resid_vector[], Exo_
 {
   int e, dim, p;
   dbl h, h_elem, hsquared[DIM], hhv[DIM][DIM], dhv_dxnode[DIM][MDE];
-  dbl weight;    /* 1 usually, except for multiprocessing */
-  dbl smele_mun; /* (1/num_elems) */
+  dbl weight;                    /* 1 usually, except for multiprocessing */
+  dbl smele_mun;                 /* (1/num_elems) */
 #ifdef PARALLEL
   dbl h_global_really_i_mean_it; /* You have any doubt, now? */
 #endif

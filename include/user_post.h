@@ -32,7 +32,7 @@
 #define EXTERN extern
 #endif
 
-EXTERN double user_post(dbl *); /* param - ptr to user-defined list          */
+EXTERN double user_post(dbl *);          /* param - ptr to user-defined list          */
 
 EXTERN int usr_ptracking(FILE *,         /*  jfp - filename for output                */
                          const int,      /*  part_id - particle id - starts at 1      */
@@ -44,4 +44,4 @@ EXTERN int usr_ptracking(FILE *,         /*  jfp - filename for output          
                          const double,   /*  time_value - particle time               */
                          const double);  /*  time_step - time step                    */
 
-#endif /* GOMA_USER_POST_H */
+#endif                                   /* GOMA_USER_POST_H */

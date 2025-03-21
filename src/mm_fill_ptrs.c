@@ -1145,14 +1145,14 @@ int load_elem_dofptr(const int ielem,
                                               * global_h_elem_siz, but not all the
                                               * computationally expensive pointers */
 {
-  int eqn; /* equation, variable name indeces */
-  int gnn; /* Global Node Number */
+  int eqn;                                   /* equation, variable name indeces */
+  int gnn;                                   /* Global Node Number */
   int dofs = 0;
   int nvdof, ledof, mode;
-  int ie;   /* index into global solution */
-  int i;    /* indeces for dofs */
-  int b, c; /* index for concentration */
-  int p;    /* for vector eq.'s. */
+  int ie;                                    /* index into global solution */
+  int i;                                     /* indeces for dofs */
+  int b, c;                                  /* index for concentration */
+  int p;                                     /* for vector eq.'s. */
   int status;
   int k;
   int R_s[MAX_MODES][DIM][DIM], R_g[DIM][DIM];
@@ -2086,8 +2086,8 @@ int load_elem_dofptr(const int ielem,
  */
 /* TODO: REFACTOR OUT */
 int load_elem_dofptr_all(const int ielem, const Exo_DB *exo) {
-  int eqn; /* equation, variable name indeces */
-  int gnn; /* Global Node Number */
+  int eqn;  /* equation, variable name indeces */
+  int gnn;  /* Global Node Number */
   int dofs = 0;
   int nvdof, ledof, mode;
   int ie;   /* index into global solution */

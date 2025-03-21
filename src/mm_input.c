@@ -18,7 +18,7 @@
 
 #define _XOPEN_SOURCE /* POSIX WEXITSTATUS */
 
-#include <ctype.h> /* for toupper(), isspace() */
+#include <ctype.h>    /* for toupper(), isspace() */
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -7698,7 +7698,7 @@ void rd_matl_blk_specs(FILE *ifp, char *input) {
   upd->Max_Num_Species = -123456789;     /* initialize */
   upd->Max_Num_Porous_Eqn = -123456789;  /* initialize */
 
-  Num_Interpolations = 0; /* Initialize counter (cf rf_fem.h) */
+  Num_Interpolations = 0;                /* Initialize counter (cf rf_fem.h) */
 
   for (i = 0; i < MAX_INTERPOLATIONS; i++) {
     Unique_Interpolations[i] = I_NOTHING;
@@ -7958,23 +7958,23 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
   int nonDilute = FALSE; /* Flag to indicate if the species
                             equations use the dilute approximation or not */
   int i, j, retn;
-  int imtrx;  /* Current matrix line from input. */
-  int ieqn;   /* Current equation linefrom input. */
-  int neqn;   /* Current number of equations active within
-                 the current material. This will be greater
-                 or equal to the number of equation lines */
-  int ce;     /* Current identifiable equation. */
-  int cv = 0; /* Current identifiable variable. */
+  int imtrx;             /* Current matrix line from input. */
+  int ieqn;              /* Current equation linefrom input. */
+  int neqn;              /* Current number of equations active within
+                            the current material. This will be greater
+                            or equal to the number of equation lines */
+  int ce;                /* Current identifiable equation. */
+  int cv = 0;            /* Current identifiable variable. */
   int cem, cvm, n, err = 0;
-  int eqnMult;          /* This variable refers to how many actual variable
-                         * types the current line refers to. Normally, its
-                         * one. However, for the SPECIES_UNK_# variables
-                         * types, it can be greater than one
-                         */
-  int numEqnLines = 0;  /* Number of Equation lines to be read */
-  int mtrx_index1 = 0;  /* Current matrix index read from input file - 1 based */
-  int mtrx_index0 = 0;  /* Current matrix index read from input file - 0 based */
-  int numMtrxLines = 0; /* Number of matrix lines to be read */
+  int eqnMult;           /* This variable refers to how many actual variable
+                          * types the current line refers to. Normally, its
+                          * one. However, for the SPECIES_UNK_# variables
+                          * types, it can be greater than one
+                          */
+  int numEqnLines = 0;   /* Number of Equation lines to be read */
+  int mtrx_index1 = 0;   /* Current matrix index read from input file - 1 based */
+  int mtrx_index0 = 0;   /* Current matrix index read from input file - 0 based */
+  int numMtrxLines = 0;  /* Number of matrix lines to be read */
   int MeshMotion = -1;
   PROBLEM_DESCRIPTION_STRUCT *pd_ptr = pd_glob[mn];
   char ts[MAX_BC_KEYWORD_LENGTH] = "\0";
@@ -8457,7 +8457,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
      * Initialize....
      */
 
-    ce = 0; /* Current equation. */
+    ce = 0;                                  /* Current equation. */
 
     for (i = 0; i < MAX_EQNS; i++) {
       pd_ptr->e[mtrx_index0][i] = T_NOTHING; /* No terms active in this equation. */
@@ -10555,10 +10555,10 @@ int look_for_mat_prop(FILE *imp,              /* ptr to input stream (in)*/
                                                * reconstructed input card for output
                                                * to the echo file for this mat */
 {
-  char input[MAX_CHAR_IN_INPUT] = "zilch\0"; /* storage for input strings */
-  int iread = -1;                            /* status flag  */
-  double a0, a1, a2;                         /* dummy for storing input properties */
-  int DumModel = 0;                          /* dummy int for story input model */
+  char input[MAX_CHAR_IN_INPUT] = "zilch\0";  /* storage for input strings */
+  int iread = -1;                             /* status flag  */
+  double a0, a1, a2;                          /* dummy for storing input properties */
+  int DumModel = 0;                           /* dummy int for story input model */
   char line[132];
   char *arguments[MAX_NUMBER_PARAMS];
 
@@ -10779,10 +10779,10 @@ int look_for_mat_proptable(FILE *imp,              /* ptr to input stream (in)*/
                                                     * (in) */
                            char *echo_string)      /*   string to copy echoed data to */
 {
-  char input[MAX_CHAR_IN_INPUT] = "zilch\0"; /* storage for input strings */
-  int iread = -1;                            /* status flag  */
-  double a0, a1, a2;                         /* dummy for storing input properties */
-  int DumModel;                              /* dummy int for story input model */
+  char input[MAX_CHAR_IN_INPUT] = "zilch\0";       /* storage for input strings */
+  int iread = -1;                                  /* status flag  */
+  double a0, a1, a2;                               /* dummy for storing input properties */
+  int DumModel;                                    /* dummy int for story input model */
   char line[132];
   char *arguments[MAX_NUMBER_PARAMS];
   int num_const = 0, i, species_no, got_it;
@@ -10961,11 +10961,11 @@ int look_for_modal_prop(FILE *imp,                 /* ptr to input stream (in)*/
                         int *MaterialModel,        /* int material model (out)*/
                         dbl *modal_const,          /* modal data (out) */
                         char *model_name,
-                        char *echo_string) /*character array to pass back echoed input */
+                        char *echo_string)         /*character array to pass back echoed input */
 {
-  char input[MAX_CHAR_IN_INPUT]; /* dummy storage for input strings */
-  int iread = -1;                /* status flag  */
-  int DumModel;                  /* dummy int for story input model */
+  char input[MAX_CHAR_IN_INPUT];                   /* dummy storage for input strings */
+  int iread = -1;                                  /* status flag  */
+  int DumModel;                                    /* dummy int for story input model */
   char line[132];
   char *arguments[MAX_NUMBER_PARAMS];
   int num_const, i, got_it;
@@ -12789,7 +12789,7 @@ int count_datalines(FILE *ifp, char *input, const char *endlist) {
 
       strip(input);
     }
-  } else /* reading table data from a separate file */
+  } else                                        /* reading table data from a separate file */
   {
     while (read_string(ifp, input, '\n') != -1) /* Read until you encounter EOF */
     {

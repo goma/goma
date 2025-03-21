@@ -35,11 +35,11 @@
 #define EXTERN extern
 #endif
 
-EXTERN int ns_data_print(pp_Data *,      /* post processing information */
-                         double[],       /* solution vector */
-                         const Exo_DB *, /* handle to EXODUS II info */
-                         const double,   /* current time */
-                         const double);  /* current time step size */
+EXTERN int ns_data_print(pp_Data *,           /* post processing information */
+                         double[],            /* solution vector */
+                         const Exo_DB *,      /* handle to EXODUS II info */
+                         const double,        /* current time */
+                         const double);       /* current time step size */
 
 EXTERN int ns_data_sens_print(const struct Post_Processing_Data_Sens *,
                               const double[], /* solution vector */

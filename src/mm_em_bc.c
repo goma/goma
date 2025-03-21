@@ -407,7 +407,7 @@ int apply_em_free_vec(double func[DIM],
                       double xi[DIM], /* Local stu coordinates */
                       const int bc_name) {
 
-  double normal[DIM]; // surface normal vector
+  double normal[DIM];                 // surface normal vector
 
   // need Surface Normal vector
   for (int p = 0; p < DIM; p++) {
@@ -864,14 +864,14 @@ int apply_ewave_curlcurl_farfield_vec(double func[DIM],
 
   // Compute complex material properties
   complex double cpx_refractive_index_1, cpx_rel_permittivity_1,
-      cpx_permittivity_1; //, impedance;
+      cpx_permittivity_1;                          //, impedance;
 
   cpx_refractive_index_1 = n_1 + _Complex_I * k_1; // k > 0 is extinction
   cpx_rel_permittivity_1 = SQUARE(cpx_refractive_index_1);
   cpx_permittivity_1 =
       cpx_rel_permittivity_1 * mp->permittivity; // better set permittivity to vacuum in input deck?
 
-  double complex E_1[DIM]; // complex field inside domain
+  double complex E_1[DIM];                       // complex field inside domain
 
   for (int p = 0; p < DIM; p++) {
     E_1[p] = fv->em_er[p] + _Complex_I * fv->em_ei[p];
@@ -1283,14 +1283,14 @@ int apply_ewave_nedelec_farfield(double func[DIM],
 
   // Compute complex material properties
   complex double cpx_refractive_index_1, cpx_rel_permittivity_1,
-      cpx_permittivity_1; //, impedance;
+      cpx_permittivity_1;                          //, impedance;
 
   cpx_refractive_index_1 = n_1 + _Complex_I * k_1; // k > 0 is extinction
   cpx_rel_permittivity_1 = SQUARE(cpx_refractive_index_1);
   cpx_permittivity_1 =
       cpx_rel_permittivity_1 * mp->permittivity; // better set permittivity to vacuum in input deck?
 
-  double complex E_1[DIM]; // complex field inside domain
+  double complex E_1[DIM];                       // complex field inside domain
 
   for (int p = 0; p < DIM; p++) {
     E_1[p] = fv->em_er[p] + _Complex_I * fv->em_ei[p];

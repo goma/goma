@@ -288,9 +288,9 @@ int turning_point_alg(
   b_big = 1.0 / ltransnorm(b, phi);    /*SCALED*/
   a_big = -ltransnorm(a, phi) * b_big; /*SCALED*/
   for (i = 0; i < cgi->numUnks; i++)
-    a[i] += a_big * b[i]; /*SCALED*/
+    a[i] += a_big * b[i];              /*SCALED*/
   for (i = 0; i < cgi->numUnks; i++)
-    b[i] *= b_big; /*SCALED*/
+    b[i] *= b_big;                     /*SCALED*/
 #endif
 
   /* Next, "c" is calculated as a function of a and y. */
@@ -322,9 +322,9 @@ int turning_point_alg(
   d_big = 1.0 / ltransnorm(d, phi);    /*SCALED*/
   c_big = -ltransnorm(c, phi) * d_big; /*SCALED*/
   for (i = 0; i < cgi->numUnks; i++)
-    c[i] += c_big * d[i]; /*SCALED*/
+    c[i] += c_big * d[i];              /*SCALED*/
   for (i = 0; i < cgi->numUnks; i++)
-    d[i] *= d_big; /*SCALED*/
+    d[i] *= d_big;                     /*SCALED*/
 #endif
 
   dt_p = ((1.0 - AGS_option * ltransnorm(y, phi)) - ltransnorm(c, phi)) / ltransnorm(d, phi);

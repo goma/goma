@@ -56,8 +56,8 @@ extern int placid(
 /*
  *   Defined constants for the bulkFunc parameter to placid
  */
-#define BULK_DEPOSITION 1
-#define BULK_ETCH       2
+#define BULK_DEPOSITION  1
+#define BULK_ETCH        2
 
 /**************************************************************************/
 /**************************************************************************/

@@ -36,9 +36,9 @@
 
 extern int Num_Proc; /* Total number of processors */
 
-extern int ProcID; /* This processor's number */
+extern int ProcID;   /* This processor's number */
 
-extern int Dim; /* Dimension of logical hypercube */
+extern int Dim;      /* Dimension of logical hypercube */
 
 extern MPI_Request *Request;
 

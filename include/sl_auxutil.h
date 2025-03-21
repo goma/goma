@@ -64,12 +64,12 @@
 EXTERN double **Dmatrix_birth(const int,  /* n */
                               const int); /* m */
 
-EXTERN int **Imatrix_birth(const int,  /* n */
-                           const int); /* m */
+EXTERN int **Imatrix_birth(const int,     /* n */
+                           const int);    /* m */
 
-EXTERN double *Dvector_birth(const int); /* n */
+EXTERN double *Dvector_birth(const int);  /* n */
 
-EXTERN int *Ivector_birth(const int); /* n */
+EXTERN int *Ivector_birth(const int);     /* n */
 
 /*
  * ... the life of these is short, a tenuous span twixt birth & death ...

@@ -152,7 +152,7 @@ void luf(const int N,
       for (i = N; i < N + NExt; i++) {
         if (n == 1) { /* create nonzero pattern */
           element[k++] = spGetElement(matrix, i + 1, i + 1);
-        } else { /* fill in numerical values */
+        } else {      /* fill in numerical values */
           spADD_REAL_ELEMENT(element[k++], 1.0);
         }
       }
@@ -196,7 +196,7 @@ void luf(const int N,
 
 } /* END of routine luf */
 
-#else // GOMA_ENABLE_SPARSE
+#else  // GOMA_ENABLE_SPARSE
 #include "mm_eh.h"
 
 void luf(const int N,

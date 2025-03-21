@@ -719,11 +719,11 @@ int assemble_vorticity_direction(void) {
       pd->CoordinateSystem == CARTESIAN_2pt5D)
     WIM = WIM + 1;
 
-  wt = fv->wt; /* Numerical integration weight */
+  wt = fv->wt;           /* Numerical integration weight */
 
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3; /* Differential volume element (scales). */
+  h3 = fv->h3;           /* Differential volume element (scales). */
 
   dV = wt * det_J * h3;
 
@@ -1418,7 +1418,7 @@ int hydro_qtensor_flux_new(struct Species_Conservation_Terms *st, int w) /* spec
 
   dbl phi_j = 0.0;
 
-  dbl maxpack = 0.0; /*  ERROR !!! maxpack is never set before use !!!! */
+  dbl maxpack = 0.0;        /*  ERROR !!! maxpack is never set before use !!!! */
 
   dbl div_gdYVQVt[DIM];     /* div(gammadot * Y * (V Q Vt)) */
   dbl VQVt_grad_mu[DIM];    /* (V Q V^t) . grad(mu) */

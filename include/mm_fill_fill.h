@@ -73,10 +73,10 @@ EXTERN int integrate_explicit_eqn(struct GomaLinearSolverData *, /* ams - cf "sl
                                   Dpi *,      /* dpi - distributed processing info         */
                                   Comm_Ex *); /* cx - comm structure                       */
 
-EXTERN int assemble_fill_fake(double,  /* tt - parameter varies time integration from
-                                        *      explicit (tt = 1) to
-                                        *      implicit (tt = 0)                    */
-                              double); /* dt - current time step size               */
+EXTERN int assemble_fill_fake(double,         /* tt - parameter varies time integration from
+                                               *      explicit (tt = 1) to
+                                               *      implicit (tt = 0)                    */
+                              double);        /* dt - current time step size               */
 
 int assemble_fill(double tt,
                   double dt,
@@ -95,46 +95,46 @@ EXTERN int assemble_fill_gradf(
 
 EXTERN void map_direction(double *, double *);
 
-EXTERN int fill_matrix(double[], /* afill - matrix for fill variables only */
-                       int[],    /* ijaf - pointer to nonzeros in fill matrix */
-                       double[], /* rf - residual for fill equation only */
-                       double[], /* xf - vector with fill at nodes only     */
-                       double[], /* x - Solution vector for the current proc */
-                       double[], /* x_old - Solution vector at last time step */
-                       double[], /* xdot - time derivative of solution vector */
-                       dbl,      /* delta_t - time step size */
-                       dbl,      /* theta - time integration parameter */
-                       int,      /* equation type being integrated */
-                       int[],    /* node_to_fill - mapping */
+EXTERN int fill_matrix(double[],                   /* afill - matrix for fill variables only */
+                       int[],                      /* ijaf - pointer to nonzeros in fill matrix */
+                       double[],                   /* rf - residual for fill equation only */
+                       double[],                   /* xf - vector with fill at nodes only     */
+                       double[],                   /* x - Solution vector for the current proc */
+                       double[],                   /* x_old - Solution vector at last time step */
+                       double[],                   /* xdot - time derivative of solution vector */
+                       dbl,                        /* delta_t - time step size */
+                       dbl,                        /* theta - time integration parameter */
+                       int,                        /* equation type being integrated */
+                       int[],                      /* node_to_fill - mapping */
                        struct elem_side_bc_struct *[],
-                       Exo_DB *, /* exo - ptr to finite element database */
-                       Dpi *);   /* distributed processing  info */
+                       Exo_DB *,                   /* exo - ptr to finite element database */
+                       Dpi *);                     /* distributed processing  info */
 
-EXTERN int assemble_surface(Exo_DB *, /* exo - ptr to basic exodus ii mesh info */
-                            double[], /* x - global vector containing all unknowns */
-                            double[], /* afill - Jacobian matrix fill equation */
-                            int[],    /* ijaf - ptr to nonzeros Jacobian matrix */
-                            double[], /* rf - rhs vector   */
-                            double,   /* delta_t - current time step size */
-                            double,   /* theta - parameter to vary time integration
-                                       * explicit (theta = 1) implicit (theta = 0) */
-                            int[],    /* node_to_fill  */
-                            int,      /* ielem_type - element type  */
-                            int,      /* ielem_type_fill - element type for
-                                       * fill function */
-                            int,      /* id_side - id number of current side
-                                       * according to EXODUS convention  */
-                            double,   /* F_inlet */
-                            int,      /* neighbor - element neighboring this side */
-                            int,      /* ielem - current element */
-                            int);     /* num_local_nodes - number of nodes per
-                                       * element */
-EXTERN int get_side_info(const int,   /* ielem_type                                */
-                         const int,   /* id_side - 1-based EXODUS/PATRAN side num  */
-                         int *,       /* nodes_per_side                            */
-                         int[]);      /* local_elem_node_id                        */
+EXTERN int assemble_surface(Exo_DB *,              /* exo - ptr to basic exodus ii mesh info */
+                            double[],              /* x - global vector containing all unknowns */
+                            double[],              /* afill - Jacobian matrix fill equation */
+                            int[],                 /* ijaf - ptr to nonzeros Jacobian matrix */
+                            double[],              /* rf - rhs vector   */
+                            double,                /* delta_t - current time step size */
+                            double,                /* theta - parameter to vary time integration
+                                                    * explicit (theta = 1) implicit (theta = 0) */
+                            int[],                 /* node_to_fill  */
+                            int,                   /* ielem_type - element type  */
+                            int,                   /* ielem_type_fill - element type for
+                                                    * fill function */
+                            int,                   /* id_side - id number of current side
+                                                    * according to EXODUS convention  */
+                            double,                /* F_inlet */
+                            int,                   /* neighbor - element neighboring this side */
+                            int,                   /* ielem - current element */
+                            int);                  /* num_local_nodes - number of nodes per
+                                                    * element */
+EXTERN int get_side_info(const int,                /* ielem_type                                */
+                         const int,                /* id_side - 1-based EXODUS/PATRAN side num  */
+                         int *,                    /* nodes_per_side                            */
+                         int[]);                   /* local_elem_node_id                        */
 
-int assemble_surface_species(Exo_DB *exo, /* ptr to basic exodus ii mesh information */
+int assemble_surface_species(Exo_DB *exo,          /* ptr to basic exodus ii mesh information */
                              double x[],
                              double delta_t,       /* current time step size */
                              double theta,         /* parameter to vary time integration from
@@ -147,9 +147,9 @@ int assemble_surface_species(Exo_DB *exo, /* ptr to basic exodus ii mesh informa
                              int ielem,            /* current element */
                              int num_local_nodes); /* number of nodes per element */
 
-EXTERN int elem_on_ss(Exo_DB *, /* exo                                       */
-                      int,      /* ss_id                                     */
-                      int);     /* elem                                      */
+EXTERN int elem_on_ss(Exo_DB *,                    /* exo                                       */
+                      int,                         /* ss_id                                     */
+                      int);                        /* elem                                      */
 
 #ifdef LS_CODE
 
@@ -192,8 +192,8 @@ EXTERN int apply_strong_fill_ca_bc(double[],     /* afill - Jacobian matrix fill
                                    const int,    /* ielem_dim */
                                    const int,    /* iconnect_ptr */
                                    struct elem_side_bc_struct *,
-                                   const int,       /* num_total_nodes */
-                                   const double,    /* contact angle */
+                                   const int,    /* num_total_nodes */
+                                   const double, /* contact angle */
                                    const Exo_DB *); /* exo - ptr to basic exodus ii mesh info */
 
 EXTERN int elem_on_isosurface(int, double[], const Exo_DB *, int, double);
@@ -243,21 +243,21 @@ EXTERN int level_set_interface(const double,      /*  F                         
                                double[DIM],       /*  d_normal_dF[DIM]          */
                                double[DIM][DIM]); /*  d_normal_dgradF[DIM][DIM] */
 
-EXTERN int level_set_property(const double, /*  p0           */
-                              const double, /*  p1           */
-                              const double, /*  width        */
-                              double *,     /* *pp           */
-                              double[MDE]); /*  d_pp_dF[MDE] */
+EXTERN int level_set_property(const double,       /*  p0           */
+                              const double,       /*  p1           */
+                              const double,       /*  width        */
+                              double *,           /* *pp           */
+                              double[MDE]);       /*  d_pp_dF[MDE] */
 
-EXTERN int ls_transport_property(const double, /*  p0           */
-                                 const double, /*  p1           */
-                                 const double, /*  width        */
-                                 double *,     /* *pp           */
-                                 double *);    /*  d_pp_dF */
+EXTERN int ls_transport_property(const double,    /*  p0           */
+                                 const double,    /*  p1           */
+                                 const double,    /*  width        */
+                                 double *,        /* *pp           */
+                                 double *);       /*  d_pp_dF */
 
 EXTERN void zero_lsi(void);
 
-EXTERN int load_lsi(const double); /* width */
+EXTERN int load_lsi(const double);              /* width */
 
 EXTERN int load_lsi_shell_second(const double); /* width */
 
@@ -266,12 +266,12 @@ EXTERN int load_lsi_derivs(void);
 EXTERN double
 find_LS_global_flux(const Exo_DB *, const Dpi *, const double *, double *, double[], int);
 
-EXTERN double find_LS_vel(const Exo_DB *, /* exo */
-                          const Dpi *,    /* dpi */
-                          const double *, /* params[] */
-                          const int,      /* chosen_vel */
-                          double[],       /* x[] (solution vector) */
-                          int);           /* num_total_unknowns */
+EXTERN double find_LS_vel(const Exo_DB *,  /* exo */
+                          const Dpi *,     /* dpi */
+                          const double *,  /* params[] */
+                          const int,       /* chosen_vel */
+                          double[],        /* x[] (solution vector) */
+                          int);            /* num_total_unknowns */
 
 EXTERN void semi_lagrange_step(int,        /* num_total_nodes */
                                int,        /* num_total_unknowns */

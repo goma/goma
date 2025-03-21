@@ -72,16 +72,16 @@
  *
  */
 
-int assemble_emwave(double time, /* present time value */
-                    double tt,   /* parameter to vary time integration from
-                                  * explicit (tt = 1) to implicit (tt = 0) */
-                    double dt,   /* current time step size */
+int assemble_emwave(double time,      /* present time value */
+                    double tt,        /* parameter to vary time integration from
+                                       * explicit (tt = 1) to implicit (tt = 0) */
+                    double dt,        /* current time step size */
                     const PG_DATA *pg_data,
                     const int em_eqn, /* emwave eqn id and var id	*/
                     const int em_var,
                     const int em_conjvar) {
   int eqn, var, peqn, pvar, dim, p, q, b, w, i, j, status;
-  int dir = 0; /* identity of conjugate variable  */
+  int dir = 0;               /* identity of conjugate variable  */
 
   dbl EMF = 0, EMF_conj = 0; /* acoustic pressure	*/
   dbl omega, emf_coeff = 0, conj_coeff = 0;
@@ -99,7 +99,7 @@ int assemble_emwave(double time, /* present time value */
                                    // divphi_div, phi_divsquared and
                                    // dphi_divsquared
 
-  dbl n; /* Refractive index. */
+  dbl n;                           /* Refractive index. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_n_struct;
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_n = &d_n_struct;
 
@@ -173,7 +173,7 @@ int assemble_emwave(double time, /* present time value */
 
   // Compute complex impedance
   complex double cpx_refractive_index, cpx_rel_permittivity,
-      cpx_permittivity; //, impedance;
+      cpx_permittivity;                      //, impedance;
 
   cpx_refractive_index = n + _Complex_I * k; // k > 0 is extinction
   cpx_rel_permittivity = SQUARE(cpx_refractive_index);
@@ -728,7 +728,7 @@ int assemble_ewave(double time,      // present time
 
   // Compute complex material properties
   complex double cpx_refractive_index, cpx_rel_permittivity,
-      cpx_permittivity; //, impedance;
+      cpx_permittivity;                      //, impedance;
   double r_elperm, i_elperm;
 
   cpx_refractive_index = n + _Complex_I * k; // k > 0 is extinction
@@ -899,7 +899,7 @@ int assemble_ewave_curlcurl(double time,      // present time
 
   // Compute complex material properties
   complex double cpx_refractive_index, cpx_rel_permittivity,
-      cpx_permittivity; //, impedance;
+      cpx_permittivity;                      //, impedance;
   double r_elperm, i_elperm;
 
   cpx_refractive_index = n + _Complex_I * k; // k > 0 is extinction
@@ -1249,7 +1249,7 @@ int assemble_ewave_laplacian(double time,      // present time
 
   // Compute complex material properties
   complex double cpx_refractive_index, cpx_rel_permittivity,
-      cpx_permittivity; //, impedance;
+      cpx_permittivity;                      //, impedance;
   double r_elperm, i_elperm;
 
   cpx_refractive_index = n + _Complex_I * k; // k > 0 is extinction
@@ -1507,7 +1507,7 @@ int assemble_em_continuity() {
 
   // Compute complex material properties
   complex double cpx_refractive_index, cpx_rel_permittivity,
-      cpx_permittivity; //, impedance;
+      cpx_permittivity;                      //, impedance;
   double r_elperm, i_elperm;
 
   cpx_refractive_index = n + _Complex_I * k; // k > 0 is extinction

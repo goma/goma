@@ -224,7 +224,7 @@ int ad_sqrt_conf_source(int mode, ADType b[DIM][DIM], ADType source_term[DIM][DI
   return GOMA_SUCCESS;
 }
 void ad_load_modal_pointers(
-    int ve_mode, /* mode number */
+    int ve_mode,                  /* mode number */
     dbl tt,
     dbl dt,
     ADType s[DIM][DIM],           /* stress tensor for mode ve_mode */
@@ -232,7 +232,7 @@ void ad_load_modal_pointers(
     ADType grad_s[DIM][DIM][DIM]) /* grad of stress tensor for mode ve_mode */
 
 {
-  int a, b, p; /* indeces for dimensions */
+  int a, b, p;                    /* indeces for dimensions */
   /* load up things we need in the assembly routine for each mode in turn*/
 
   /* put stress in a nice working array */
@@ -268,9 +268,9 @@ int ad_assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration f
   int evss_gradv = 0;
 
   int i, j, status, mode;
-  ADType v[DIM];     /* Velocity field. */
-  ADType x_dot[DIM]; /* current position field derivative wrt time. */
-  dbl h3;            /* Volume element (scale factors). */
+  ADType v[DIM];          /* Velocity field. */
+  ADType x_dot[DIM];      /* current position field derivative wrt time. */
+  dbl h3;                 /* Volume element (scale factors). */
 
   ADType grad_v[DIM][DIM];
   ADType gamma[DIM][DIM]; /* Shear-rate tensor based on velocity */
@@ -278,11 +278,11 @@ int ad_assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration f
   ADType det_J;           /* determinant of element Jacobian */
 
   int err;
-  dbl alpha = 0;  /* This is the Geisekus mobility parameter */
-  dbl lambda = 0; /* polymer relaxation constant */
+  dbl alpha = 0;          /* This is the Geisekus mobility parameter */
+  dbl lambda = 0;         /* polymer relaxation constant */
   double xi;
   double d_xi_dF[MDE];
-  dbl eps = 0; /* This is the PTT elongation parameter */
+  dbl eps = 0;            /* This is the PTT elongation parameter */
   double d_eps_dF[MDE];
   /*
    *
@@ -318,8 +318,8 @@ int ad_assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration f
   ADType b_dot[DIM][DIM]; /* stress tensor from last time step */
   ADType grad_b[DIM][DIM][DIM];
 
-  ADType g[DIM][DIM];  /* velocity gradient tensor */
-  ADType gt[DIM][DIM]; /* transpose of velocity gradient tensor */
+  ADType g[DIM][DIM];     /* velocity gradient tensor */
+  ADType gt[DIM][DIM];    /* transpose of velocity gradient tensor */
 
   /* dot product tensors */
 
@@ -370,7 +370,7 @@ int ad_assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration f
 
   det_J = ad_fv->detJ; /* Really, ought to be mesh eqn. */
 
-  h3 = fv->h3; /* Differential volume element (scales). */
+  h3 = fv->h3;         /* Differential volume element (scales). */
 
   /* load eqn and variable number in tensor form */
   (void)stress_eqn_pointer(v_s);

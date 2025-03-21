@@ -65,8 +65,8 @@ EXTERN int apply_strong_fill_ca_bc(double[],     /* afill - Jacobian matrix fill
                                    const int,    /* ielem_dim */
                                    const int,    /* iconnect_ptr */
                                    struct elem_side_bc_struct *,
-                                   const int,       /* num_total_nodes */
-                                   const double,    /* contact angle */
+                                   const int,    /* num_total_nodes */
+                                   const double, /* contact angle */
                                    const Exo_DB *); /* exo - ptr to basic exodus ii mesh info */
 
 EXTERN int
@@ -137,32 +137,32 @@ EXTERN struct LS_Surf *create_surf_facet_line(struct LS_Surf *, struct LS_Surf *
 
 EXTERN void ls_var_initialization(double **, Exo_DB *, Dpi *, Comm_Ex **);
 
-EXTERN int level_set_interface(const double,      /*  F                         */
-                               const double[DIM], /*  grad_F[DIM]               */
-                               const double,      /*  width                     */
-                               const int,         /*  do_deriv                  */
-                               int *,             /* *near                      */
-                               double *,          /* *H                         */
-                               double *,          /* *d_H_dF                    */
-                               double[DIM],       /*  d_H_dgradF[DIM]           */
-                               double *,          /* *delta                     */
-                               double *,          /* *d_delta_dF                */
-                               double[DIM],       /*  d_delta_dgradF[DIM]       */
-                               double[DIM],       /*  normal[DIM]               */
-                               double[DIM],       /*  d_normal_dF[DIM]          */
-                               double[DIM][DIM]); /*  d_normal_dgradF[DIM][DIM] */
+EXTERN int level_set_interface(const double,       /*  F                         */
+                               const double[DIM],  /*  grad_F[DIM]               */
+                               const double,       /*  width                     */
+                               const int,          /*  do_deriv                  */
+                               int *,              /* *near                      */
+                               double *,           /* *H                         */
+                               double *,           /* *d_H_dF                    */
+                               double[DIM],        /*  d_H_dgradF[DIM]           */
+                               double *,           /* *delta                     */
+                               double *,           /* *d_delta_dF                */
+                               double[DIM],        /*  d_delta_dgradF[DIM]       */
+                               double[DIM],        /*  normal[DIM]               */
+                               double[DIM],        /*  d_normal_dF[DIM]          */
+                               double[DIM][DIM]);  /*  d_normal_dgradF[DIM][DIM] */
 
-EXTERN int level_set_property(const double, /*  p0           */
-                              const double, /*  p1           */
-                              const double, /*  width        */
-                              double *,     /* *pp           */
-                              double[MDE]); /*  d_pp_dF[MDE] */
+EXTERN int level_set_property(const double,        /*  p0           */
+                              const double,        /*  p1           */
+                              const double,        /*  width        */
+                              double *,            /* *pp           */
+                              double[MDE]);        /*  d_pp_dF[MDE] */
 
-EXTERN int level_set_property_log(const double, /*  p0           */
-                                  const double, /*  p1           */
-                                  const double, /*  width        */
-                                  double *,     /* *pp           */
-                                  double[MDE]); /*  d_pp_dF[MDE] */
+EXTERN int level_set_property_log(const double,    /*  p0           */
+                                  const double,    /*  p1           */
+                                  const double,    /*  width        */
+                                  double *,        /* *pp           */
+                                  double[MDE]);    /*  d_pp_dF[MDE] */
 
 EXTERN int level_set_property_offset(const double, /*  p0           */
                                      const double, /*  p1           */
@@ -170,11 +170,11 @@ EXTERN int level_set_property_offset(const double, /*  p0           */
                                      double *,     /* *pp           */
                                      double[MDE]); /*  d_pp_dF[MDE] */
 
-EXTERN int ls_transport_property(const double, /*  p0           */
-                                 const double, /*  p1           */
-                                 const double, /*  width        */
-                                 double *,     /* *pp           */
-                                 double *);    /*  d_pp_dF */
+EXTERN int ls_transport_property(const double,     /*  p0           */
+                                 const double,     /*  p1           */
+                                 const double,     /*  width        */
+                                 double *,         /* *pp           */
+                                 double *);        /*  d_pp_dF */
 
 EXTERN double
 ls_modulate_property(double, double, double, double, double, double[MDE], double *, const int);
@@ -219,14 +219,14 @@ EXTERN void load_xfem_for_elem(double[], const Exo_DB *);
 
 EXTERN void load_xfem_for_stu(const double[]);
 
-EXTERN void xfem_correct(int,      /* num_total_nodes    */
-                         double[], /* x[]                */
-                         double[], /* xdot[]             */
-                         double[], /* x_old[]            */
-                         double[], /* xdot_old[]         */
-                         double[], /* delta_x[]         */
-                         double,   /* theta_arg          */
-                         double);  /* delta_t            */
+EXTERN void xfem_correct(int,       /* num_total_nodes    */
+                         double[],  /* x[]                */
+                         double[],  /* xdot[]             */
+                         double[],  /* x_old[]            */
+                         double[],  /* xdot_old[]         */
+                         double[],  /* delta_x[]         */
+                         double,    /* theta_arg          */
+                         double);   /* delta_t            */
 
 EXTERN void xfem_predict(int,       /* num_total_nodes    */
                          int,       /* numProcUnknowns    */
@@ -248,7 +248,7 @@ EXTERN void zero_lsi(void);
 
 EXTERN void zero_lsi_derivs(void);
 
-EXTERN int load_lsi(const double); /* width */
+EXTERN int load_lsi(const double);        /* width */
 
 EXTERN int load_lsi_offset(const double); /* width */
 

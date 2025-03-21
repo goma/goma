@@ -65,9 +65,9 @@ EXTERN void save_place  /* mm_eh.c                                   */
      const char *const, /* file_name                                 */
      const int);        /* line_number                               */
 
-EXTERN void logprintf /* mm_eh.c                                   */
-    (const char *,    /* format                                    */
-     ...);            /* var args */
+EXTERN void logprintf   /* mm_eh.c                                   */
+    (const char *,      /* format                                    */
+     ...);              /* var args */
 
 EXTERN void smooth_stop_with_msg(const char *msg);
 
@@ -116,7 +116,7 @@ EXTERN void smooth_stop_with_msg(const char *msg);
 
 #define GOMA_WH_MANY(IERR, FORMAT, ...) goma_wh(IERR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
 
-#define TIME_STRING_SIZE (256)
+#define TIME_STRING_SIZE                (256)
 
 extern char current_routine[]; /* name of current routine. */
 extern char current_file[];    /* name of current file */

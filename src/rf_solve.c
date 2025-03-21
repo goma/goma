@@ -283,8 +283,8 @@ void initial_guess_stress_to_log_conf(double *x, int num_total_nodes) {
         x[s_idx[1][1]] = log_s[1][1];
 
       } /* Loop over nodes */
-    }   /* Loop over modes */
-  }     /* Loop over materials */
+    } /* Loop over modes */
+  } /* Loop over materials */
 }
 
 void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
@@ -303,11 +303,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
    * (MSR format.  See "SPARSKIT: a basic tool kit for sparse matrix
    * computations" by Youcef Saad)
    */
-  int *ija = NULL;              /* column pointer array                     */
-  double *a = NULL;             /* nonzero array                            */
-  double *a_old = NULL;         /* nonzero array                            */
-  static double *x = NULL;      /* solution vector                          */
-  static double *x_save = NULL; /* solution vector for reset */
+  int *ija = NULL;                      /* column pointer array                     */
+  double *a = NULL;                     /* nonzero array                            */
+  double *a_old = NULL;                 /* nonzero array                            */
+  static double *x = NULL;              /* solution vector                          */
+  static double *x_save = NULL;         /* solution vector for reset */
 
   int iAC;                              /* Counter                                  */
   static double *x_AC = NULL;           /* Solution vector of extra unknowns          */
@@ -319,7 +319,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   static double *x_AC_dot_older = NULL; /* Older time derivative of extra unknowns    */
   static double *x_AC_pred = NULL;      /* predicted extraunknowns */
 
-  int *ija_attic = NULL; /* storage for external dofs                  */
+  int *ija_attic = NULL;                /* storage for external dofs                  */
 
   int eb_indx, ev_indx;
 
@@ -335,9 +335,9 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   static double *xdot_old = NULL;   /* old time derivative of soln       */
   static double *xdot_older = NULL; /* old time derivative of soln       */
 
-  double *x_sens = NULL;    /* solution sensitivity                     */
-  double **x_sens_p = NULL; /* solution sensitivity for parameters      */
-  int num_pvector = 0;      /* number of solution sensitivity vectors   */
+  double *x_sens = NULL;            /* solution sensitivity                     */
+  double **x_sens_p = NULL;         /* solution sensitivity for parameters      */
+  int num_pvector = 0;              /* number of solution sensitivity vectors   */
 #ifdef GOMA_ENABLE_OMEGA_H
   int adapt_step = 0;
 #endif
@@ -349,12 +349,12 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
   /* "sl_util_structs.h" */
 
-  double *x_update = NULL; /* update at last iteration                 */
+  double *x_update = NULL;          /* update at last iteration                 */
 
   double *resid_vector = NULL;      /* residual                                 */
   double *resid_vector_sens = NULL; /* residual sensitivity                  */
 
-  double *scale = NULL; /* scale vector for modified newton         */
+  double *scale = NULL;             /* scale vector for modified newton         */
 
   int *node_to_fill = NULL;
 
@@ -362,19 +362,19 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
                             * parameter, theta [0=BE,.5=CN,1=FE] but
                             * any float possible...                    */
 
-  int n;                 /* total number of time steps attempted     */
-  int nt;                /* total number of successful time steps    */
-  int last_renorm_nt;    /* time step at which last renorm occured   */
-  int time_step_reform;  /* counter for jacobian reformation stride  */
-  int converged = TRUE;  /* success or failure of Newton iteration   */
-  int success_dt = TRUE; /* success or failure of time step          */
+  int n;                   /* total number of time steps attempted     */
+  int nt;                  /* total number of successful time steps    */
+  int last_renorm_nt;      /* time step at which last renorm occured   */
+  int time_step_reform;    /* counter for jacobian reformation stride  */
+  int converged = TRUE;    /* success or failure of Newton iteration   */
+  int success_dt = TRUE;   /* success or failure of time step          */
   int failed_recently_countdown = 0;
   int i, num_total_nodes;
   int numProcUnknowns;
   int const_delta_t, const_delta_ts, step_print;
   int step_fix = 0, i_fix = 0; /* What step to fix the problem on */
   int good_mesh = TRUE;
-  int w; /* counter for looping external variables */
+  int w;                       /* counter for looping external variables */
   static int nprint = 0;
   double time_print, i_print;
   double theta = 0.0, time;
@@ -405,12 +405,12 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   static struct Results_Description *rd;
   struct Level_Set_Data *ls_old;
 
-  int tnv;      /* total number of nodal variables and kinds */
-  int tev;      /* total number of elem variables and kinds  */
-  int tnv_post; /* total number of nodal variables and kinds
-                   for post processing                       */
-  int tev_post; /* total number of elem variables and kinds
-                   for post processing                       */
+  int tnv;                      /* total number of nodal variables and kinds */
+  int tev;                      /* total number of elem variables and kinds  */
+  int tnv_post;                 /* total number of nodal variables and kinds
+                                   for post processing                       */
+  int tev_post;                 /* total number of elem variables and kinds
+                                   for post processing                       */
 
   double *gv;                   /* Global variable values */
   double *x_pp = NULL;          /* Post-proc variables for export */
@@ -423,19 +423,19 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   int max_unk_elem, one, three; /* variables used as mf_setup arguments      */
 #endif
   unsigned int matrix_systems_mask;
-  int did_renorm;         /* Flag indicating if we renormalized.       */
-  int Renorm_Now = FALSE; /* Flag forcing renormalization regardless of gradient */
+  int did_renorm;               /* Flag indicating if we renormalized.       */
+  int Renorm_Now = FALSE;       /* Flag forcing renormalization regardless of gradient */
   double evol_local = 0.0;
   double lsvel_local = 0.0;
 #ifdef PARALLEL
   double evol_global = 0.0;
   double lsvel_global = 0.0;
-#endif /* PARALLEL */
+#endif                    /* PARALLEL */
 
   static int callnum = 1; /* solve_problem call counter */
   int last_call = TRUE;   /* Indicates final rf_solve call */
 #ifdef LIBRARY_MODE
-  int last_step = FALSE; /* Indicates final time step on this call */
+  int last_step = FALSE;  /* Indicates final time step on this call */
 #endif
   double damp_factor_org[2] = {damp_factor1, damp_factor2};
 #ifdef RELAX_ON_TRANSIENT_PLEASE
@@ -1668,7 +1668,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               DPRINTF(stdout, "\n\t\t Exodus file read initialization for phase function fields");
               break;
             } /* end of switch(ls->Init_Method ) */
-          }   /* end of i<pfd->num_phase_funcs */
+          } /* end of i<pfd->num_phase_funcs */
 
           ls = ls_save; /* OK, used the level set routines now be nice and point
                            ls back to where you found it */
@@ -2939,7 +2939,7 @@ int anneal_mesh(double x[],
   int displacement_somewhere; /* boolean */
   int i;
   int j;
-  int m; /* matl index */
+  int m;                      /* matl index */
   int num_nodes, rd_nnv_save, rd_nev_save;
   int p;
   int ielem;
@@ -2964,8 +2964,8 @@ int anneal_mesh(double x[],
                                                        * written...                */
   double **new_coord;
 
-  double *nodal_result_vector; /* temporarily hold one nodal variable
-                                * prior to writing out into EXODUS II file */
+  double *nodal_result_vector;                        /* temporarily hold one nodal variable
+                                                       * prior to writing out into EXODUS II file */
   char afilename[MAX_FNL];
 
   FILE *anneal_dat;
@@ -3404,10 +3404,10 @@ int variable_stats(double *x, const double time, const int coord_linear) {
   int crd_ncp[DIM], fcn_ncp[MAX_VARIABLE_TYPES];
   int pdim = pd->Num_Dim;
 #ifdef PARALLEL
-  double max_buf[MAX_VARIABLE_TYPES];  /* accumulated over all procs */
-  double min_buf[MAX_VARIABLE_TYPES];  /* accumulated over all procs */
-  double mean_buf[MAX_VARIABLE_TYPES]; /* accumulated over all procs */
-  double sqr_buf[MAX_VARIABLE_TYPES];  /* accumulated over all procs */
+  double max_buf[MAX_VARIABLE_TYPES];            /* accumulated over all procs */
+  double min_buf[MAX_VARIABLE_TYPES];            /* accumulated over all procs */
+  double mean_buf[MAX_VARIABLE_TYPES];           /* accumulated over all procs */
+  double sqr_buf[MAX_VARIABLE_TYPES];            /* accumulated over all procs */
   int ncp_buf[MAX_VARIABLE_TYPES];
   double crd_sum_buf[DIM];                       /* accumulated over all procs */
   double crd_sqr_buf[2 * DIM];                   /* accumulated over all procs */

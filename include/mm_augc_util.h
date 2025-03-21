@@ -96,34 +96,34 @@ EXTERN int alc_aug_cond(int,
                         struct con_struct *,
                         MF_Args *);
 
-EXTERN void load_extra_unknownsAC(int,       /* NUMBER OF AC'S */
-                                  double *,  /* VECTOR OF EXTRA UNKNOWNS */
-                                  Comm_Ex *, /* cx  - array of communications structures */
-                                  Exo_DB *,  /* exo - ptr to finite element mesh database */
-                                  Dpi *);    /* dpi - ptr to distributed processing info */
+EXTERN void load_extra_unknownsAC(int,             /* NUMBER OF AC'S */
+                                  double *,        /* VECTOR OF EXTRA UNKNOWNS */
+                                  Comm_Ex *,       /* cx  - array of communications structures */
+                                  Exo_DB *,        /* exo - ptr to finite element mesh database */
+                                  Dpi *);          /* dpi - ptr to distributed processing info */
 
-EXTERN int arc_length_status(struct con_struct *, /* Continuation data from LOCA */
-                             double,              /* Arc length equation residual */
-                             double,              /* Arc length parameter update */
-                             double,              /* Relative convergence tolerance */
-                             double);             /* Absolute convergence tolerance */
+EXTERN int arc_length_status(struct con_struct *,  /* Continuation data from LOCA */
+                             double,               /* Arc length equation residual */
+                             double,               /* Arc length parameter update */
+                             double,               /* Relative convergence tolerance */
+                             double);              /* Absolute convergence tolerance */
 
-EXTERN int periodic_bc_cond(int,        /* iAC */
-                            int,        /* nAC */
-                            double[],   /* x_AC */
-                            double **,  /* bAC */
-                            double **,  /* cAC */
-                            double **,  /* dAC */
-                            double *,   /* gAC */
-                            double *,   /* resid_vector */
-                            double *,   /* scale */
-                            int,        /* numProcUnknowns */
-                            Comm_Ex *,  /* cx */
-                            MF_Args *); /* mf_args */
+EXTERN int periodic_bc_cond(int,                   /* iAC */
+                            int,                   /* nAC */
+                            double[],              /* x_AC */
+                            double **,             /* bAC */
+                            double **,             /* cAC */
+                            double **,             /* dAC */
+                            double *,              /* gAC */
+                            double *,              /* resid_vector */
+                            double *,              /* scale */
+                            int,                   /* numProcUnknowns */
+                            Comm_Ex *,             /* cx */
+                            MF_Args *);            /* mf_args */
 
-EXTERN int create_overlap_acs(Exo_DB *, /* Ptr to ExodusII database */
-                              int);     /* Input Overlap AC index */
+EXTERN int create_overlap_acs(Exo_DB *,            /* Ptr to ExodusII database */
+                              int);                /* Input Overlap AC index */
 
 EXTERN int assign_overlap_acs(double[], Exo_DB *); /* Ptr to ExodusII database */
 
-#endif /* GOMA_MM_AUGC_UTIL_H */
+#endif                                             /* GOMA_MM_AUGC_UTIL_H */

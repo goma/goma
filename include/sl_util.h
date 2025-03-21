@@ -44,37 +44,37 @@ struct GomaLinearSolverData;
  *  Definitions of Constants for use in mm_fill_fill routines
  */
 
-#define ADVECT            0
-#define CORRECT           1
-#define PROJECT           2
-#define EXO_READ          4
-#define HUYGENS           5
-#define SURFACES          6
-#define HUYGENS_C         7
-#define SM_OBJECT         8
-#define HUYGENS_MASS_ITER 9
-#define SMOLIANSKI_ONLY   10
+#define ADVECT                    0
+#define CORRECT                   1
+#define PROJECT                   2
+#define EXO_READ                  4
+#define HUYGENS                   5
+#define SURFACES                  6
+#define HUYGENS_C                 7
+#define SM_OBJECT                 8
+#define HUYGENS_MASS_ITER         9
+#define SMOLIANSKI_ONLY           10
 
-#define LS_SURF_POINT      0
-#define LS_SURF_PLANE      1
-#define LS_SURF_CIRCLE     2
-#define LS_SURF_SPHERE     3
-#define LS_SURF_FACET      4
-#define LS_SURF_NS         5
-#define LS_SURF_SS         6
-#define LS_SURF_ISOSURFACE 7
-#define LS_SURF_USER       8
-#define LS_SURF_ARC        9
+#define LS_SURF_POINT             0
+#define LS_SURF_PLANE             1
+#define LS_SURF_CIRCLE            2
+#define LS_SURF_SPHERE            3
+#define LS_SURF_FACET             4
+#define LS_SURF_NS                5
+#define LS_SURF_SS                6
+#define LS_SURF_ISOSURFACE        7
+#define LS_SURF_USER              8
+#define LS_SURF_ARC               9
 
 #define LS_EVOLVE_ADVECT_EXPLICIT 0 /* Subcycled advection equation */
 #define LS_EVOLVE_ADVECT_COUPLED  1 /* Fully coupled advection equation */
 #define LS_EVOLVE_SLAVE           2
 #define LS_EVOLVE_SEMILAGRANGIAN  3
 
-#define MAX_NXN_RANK 6 /* To avoid many malloc()'s in solve_NxN_system(). */
+#define MAX_NXN_RANK              6 /* To avoid many malloc()'s in solve_NxN_system(). */
 
-#define GRID_SEARCH    1 /* Search for points of zero level set via nested boxes */
-#define SEGMENT_SEARCH 0 /* Conventional search method on segments from connected nodes */
+#define GRID_SEARCH               1 /* Search for points of zero level set via nested boxes */
+#define SEGMENT_SEARCH            0 /* Conventional search method on segments from connected nodes */
 
 /*
  * Function prototypes used in sl_util.c
@@ -82,19 +82,19 @@ struct GomaLinearSolverData;
 
 extern void sl_init(unsigned int, /* option flag */
                     struct GomaLinearSolverData *[],
-                    Exo_DB *,   /* all the mesh information */
-                    Dpi *,      /* all the distributed processing information */
-                    Comm_Ex[]); /* after initialization, on a per proc basis */
+                    Exo_DB *,     /* all the mesh information */
+                    Dpi *,        /* all the distributed processing information */
+                    Comm_Ex[]);   /* after initialization, on a per proc basis */
 
 extern void sl_free(unsigned int, /* option_mask                               */
                     struct GomaLinearSolverData *[]); /* ams                       */
 
-extern void free_ams(struct GomaLinearSolverData *); /* ptr to ONE such system */
+extern void free_ams(struct GomaLinearSolverData *);  /* ptr to ONE such system */
 
-extern void set_aztec_options_params(int[],     /* options */
-                                     double[]); /* params */
+extern void set_aztec_options_params(int[],           /* options */
+                                     double[]);       /* params */
 
-extern void dump_aztec_status(double[]); /* status - filled by AZ_solve() */
+extern void dump_aztec_status(double[]);              /* status - filled by AZ_solve() */
 
 extern void hide_external(int,       /* n - order of the original system     (in) */
                           int,       /* m - order of the truncated system    (in) */
@@ -108,20 +108,20 @@ extern void show_external(int,       /* n - order of the original system     (in
                           int *,     /* ijas - save ija area                      */
                           double *); /* a - original nonzero matrix values   (in) */
 
-extern int cmsr_ma28 /* sl_ma28.c                                 */
-    (const int,      /* n - order of matrix system                */
-     const int,      /* nnz - nominal number of nonzeroes in a    */
-     double[],       /* a - vector of nonzeroes in a matrix       */
-     int[],          /* ija - column numbers nonzero entries      */
-     double[],       /* x - space for solution vector             */
-     double[]);      /* b - right hand side vector                */
+extern int cmsr_ma28                 /* sl_ma28.c                                 */
+    (const int,                      /* n - order of matrix system                */
+     const int,                      /* nnz - nominal number of nonzeroes in a    */
+     double[],                       /* a - vector of nonzeroes in a matrix       */
+     int[],                          /* ija - column numbers nonzero entries      */
+     double[],                       /* x - space for solution vector             */
+     double[]);                      /* b - right hand side vector                */
 
-extern void row_scaling /* sl_matrix_util.c                          */
-    (const int,         /* N                                         */
-     double[],          /* a                                         */
-     int[],             /* ija                                       */
-     double[],          /* b                                         */
-     double[]);         /* scale                                     */
+extern void row_scaling              /* sl_matrix_util.c                          */
+    (const int,                      /* N                                         */
+     double[],                       /* a                                         */
+     int[],                          /* ija                                       */
+     double[],                       /* b                                         */
+     double[]);                      /* scale                                     */
 
 /*****************************************************************************/
 
@@ -129,19 +129,19 @@ extern void row_scaling /* sl_matrix_util.c                          */
  * Function prototypes used in sl_lu_fill.c
  */
 
-extern void luf  /* sl_lu_fill.c */
-    (const int,  /* N - order of matrix */
-     const int,  /* NExt - number of external unknowns */
-     const int,  /* M - number of nonzero matrix entries in a */
-     double[],   /* a - nonzero matrix values */
-     int[],      /* ija - column ptrs, nonzero matrix values */
-     double[],   /* x - RHS on input, solution vector on out */
-     const int); /* factor_flag - what to do */
+extern void luf                          /* sl_lu_fill.c */
+    (const int,                          /* N - order of matrix */
+     const int,                          /* NExt - number of external unknowns */
+     const int,                          /* M - number of nonzero matrix entries in a */
+     double[],                           /* a - nonzero matrix values */
+     int[],                              /* ija - column ptrs, nonzero matrix values */
+     double[],                           /* x - RHS on input, solution vector on out */
+     const int);                         /* factor_flag - what to do */
 
-extern void aztec_stringer /* Called after AZ_solve(...) */
-    (int,                  /* status[AZ_why] */
-     double,               /* status[AZ_its] */
-     char *);              /* status string  */
+extern void aztec_stringer               /* Called after AZ_solve(...) */
+    (int,                                /* status[AZ_why] */
+     double,                             /* status[AZ_its] */
+     char *);                            /* status string  */
 
 extern void solve_NxN_system(dbl *,      /* A */
                              dbl *,      /* b */
