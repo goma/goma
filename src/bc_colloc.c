@@ -847,20 +847,20 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
                           }
                         }
                       } /* end of loop over species */
-                    }   /* end of if MASS_FRACTION */
-                  }     /* end of variable exists and condition is sensitive to it */
-                }       /* end of loop over variable types */
-              }         /* end of NEWTON */
-            }           /* if (ldof_eqn != -1) */
-          }             /* END of if (Res_BC != NULL), i.e. (index_eqn != -1) */
-        }               /* END of if COLLOCATED BC */
+                    } /* end of if MASS_FRACTION */
+                  } /* end of variable exists and condition is sensitive to it */
+                } /* end of loop over variable types */
+              } /* end of NEWTON */
+            } /* if (ldof_eqn != -1) */
+          } /* END of if (Res_BC != NULL), i.e. (index_eqn != -1) */
+        } /* END of if COLLOCATED BC */
         /*****************************************************************************/
       } /* END for (ibc = 0; (int) elem_side_bc->BC_input_id[ibc] != ...*/
-        /*****************************************************************************/
-    }   /* END if (I < num_owned_nodes) 				      */
-        /*****************************************************************************/
-  }     /* END for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) */
-        /*****************************************************************************/
+      /*****************************************************************************/
+    } /* END if (I < num_owned_nodes) 				      */
+    /*****************************************************************************/
+  } /* END for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) */
+  /*****************************************************************************/
   return (status);
 } /* end of routine apply_point_colloc_bc() */
 /*****************************************************************************/

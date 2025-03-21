@@ -3209,7 +3209,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   if (pde[R_MOMENTUM1] && goma_automatic_rotations.automatic_rotations) {
     /* determine if rotation is needed */
@@ -3236,7 +3236,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
   if (pde[R_MESH1] && goma_automatic_rotations.automatic_rotations) {
     /* determine if rotation is needed */
     for (i = 0; i < num_local_nodes; i++) {
@@ -3262,7 +3262,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   /******************************************************************************/
   /*                              BLOCK 9                                       */
@@ -4771,7 +4771,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   if (pde[R_MOMENTUM1] && goma_automatic_rotations.automatic_rotations) {
     int id_mom; /* local temporary things */
@@ -4797,7 +4797,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   /******************************************************************************/
   /*                              BLOCK 9                                       */

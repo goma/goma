@@ -93,7 +93,7 @@ static goma_error initialize_PCD_matrices(PetscMatrixData *matrix_data,
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }   /* END for (ieb loop) */
+  } /* END for (ieb loop) */
 
   if (Num_Proc == 1) {
     MatSeqAIJSetPreallocation(matrix_data->pcd_data->Mp, 0, d_nnz);

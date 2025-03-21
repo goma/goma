@@ -356,10 +356,10 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
             lec->R[LEC_R_INDEX(peqn, ii)] += mass + advection + advection_supg + diffusion + source;
 
           } /* if active_dofs */
-        }   /* end of loop over equations */
-      }     /* If(pd->e[pg->imtrx][eqn]) */
-    }       /* loop over PMV equation-types with w */
-  }         /* end of assemble residuals */
+        } /* end of loop over equations */
+      } /* If(pd->e[pg->imtrx][eqn]) */
+    } /* loop over PMV equation-types with w */
+  } /* end of assemble residuals */
 
   /*
    * Jacobian terms...
@@ -981,7 +981,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
       }
 
     } /* End of loop over i-th equation */
-  }   /* End of if Assemble_Jacobian */
+  } /* End of if Assemble_Jacobian */
 
   //   GOMA_EH(GOMA_ERROR,"if you got here you need to contact P. R. Schunk.  Pore-Sink-mass");
   return status;
@@ -2865,7 +2865,7 @@ int get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
         }
       }
     } /* end of SUPG */
-  }   /* end of if Jacobian */
+  } /* end of if Jacobian */
   return 0;
 }
 /* end of get_porous_part_sat_terms */
@@ -9322,10 +9322,10 @@ void load_MandE_flux(double porosity, double cap_pres, double saturation, double
                 } /* for (j=0 ... */
               }
             } /* for (w1=0 ... */
-          }   /* for (a=0 ... */
-        }     /* if(w != ... */
-      }       /* for (w=0 ... */
-    }         /* PorousFluxModel */
+          } /* for (a=0 ... */
+        } /* if(w != ... */
+      } /* for (w=0 ... */
+    } /* PorousFluxModel */
 
     var = POR_SINK_MASS;
     if (pd->v[pg->imtrx][var]) {
@@ -9348,9 +9348,9 @@ void load_MandE_flux(double porosity, double cap_pres, double saturation, double
               pmv->d_rel_mass_flux_dSM[i_pl][a][j] += t3;
 
             } /* for (j=0 ... */
-          }   /* for (a=0 ... */
-        }     /* for (w = 0 ... */
-      }       /* PorousFluxModel */
+          } /* for (a=0 ... */
+        } /* for (w = 0 ... */
+      } /* PorousFluxModel */
     }
 
     if (cr->PorousFluxModel == DARCY_FICKIAN) {
@@ -9439,8 +9439,8 @@ void load_MandE_flux(double porosity, double cap_pres, double saturation, double
           }
 
         } /* j<ei[pg->imtrx]->dof[var] */
-      }   /* a<VIM */
-    }     /* DARCY_FICKIAN */
+      } /* a<VIM */
+    } /* DARCY_FICKIAN */
 
     /* Additional terms for energy equation - conduction in solid
      * Assume thermal conductivity a function of temperature only
@@ -9504,7 +9504,7 @@ void load_MandE_flux(double porosity, double cap_pres, double saturation, double
                     }
                   }
                 } /* w!=i_pore */
-              }   /* w<MAX_PMV */
+              } /* w<MAX_PMV */
 
               /* Additional terms for energy equation */
               if (pd->e[pg->imtrx][R_POR_GAS_PRES])
@@ -9525,10 +9525,10 @@ void load_MandE_flux(double porosity, double cap_pres, double saturation, double
                 }
               }
             } /* DARCY_FICKIAN */
-          }   /* a<WIM */
-        }     /* j<ei[pg->imtrx]->dof[var] */
-      }       /*if ( pd->v[pg->imtrx][var] ) */
-    }         /*  b<pd->Num_Dim */
+          } /* a<WIM */
+        } /* j<ei[pg->imtrx]->dof[var] */
+      } /*if ( pd->v[pg->imtrx][var] ) */
+    } /*  b<pd->Num_Dim */
 
     var = TEMPERATURE;
     if (pd->v[pg->imtrx][var] && !pd->e[pg->imtrx][R_POR_ENERGY]) {
@@ -9642,8 +9642,8 @@ void calc_darcy_velocity() {
           pmv->gas_darcy_velocity[a] = 0.0;
         }
       } /* b < WIM */
-    }   /* a < WIM */
-  }     /* PermeabilityModel */
+    } /* a < WIM */
+  } /* PermeabilityModel */
 
   if (af->Assemble_Jacobian) {
 
@@ -9723,8 +9723,8 @@ void calc_darcy_velocity() {
                   mp->perm_tensor[a][b] * mp->rel_gas_perm * bf[var]->grad_phi[j][b];
             }
           } /* for (b=0 ...) */
-        }   /* for (J=0 ...) */
-      }     /* for (a=0 ...) */
+        } /* for (J=0 ...) */
+      } /* for (a=0 ...) */
 
       var = POR_POROSITY;
       if (pd->v[pg->imtrx][var] && mp->PermeabilityModel == KC_TENSOR) {
@@ -9755,7 +9755,7 @@ void calc_darcy_velocity() {
       }
 
     } /*end if (PERM TENSOR) */
-  }   /* Assemble_Jacobian */
+  } /* Assemble_Jacobian */
   return;
 }
 
@@ -10271,9 +10271,9 @@ void load_mass_flux(double porosity, double cap_pres, double saturation, double 
               }
 
             } /* j<ei[pg->imtrx]->dof[var] */
-          }   /* a<VIM */
-        }     /* w!=i_pore */
-      }       /* w<MAX_PMV */
+          } /* a<VIM */
+        } /* w!=i_pore */
+      } /* w<MAX_PMV */
 
     } /* DARCY_FICKIAN */
 
@@ -10379,7 +10379,7 @@ void load_mass_flux(double porosity, double cap_pres, double saturation, double 
                     }
                   }
                 } /* w!=i_pore */
-              }   /* w<MAX_PMV */
+              } /* w<MAX_PMV */
 
               /* Additional terms for energy equation */
               if (pd->e[pg->imtrx][R_POR_GAS_PRES])
@@ -10447,10 +10447,10 @@ void load_mass_flux(double porosity, double cap_pres, double saturation, double 
                 }
               }
             } /* DARCY_FICKIAN */
-          }   /* a<VIM */
-        }     /* j<ei[pg->imtrx]->dof[var] */
-      }       /*if ( pd->v[pg->imtrx][var] ) */
-    }         /*  b<pd->Num_Dim */
+          } /* a<VIM */
+        } /* j<ei[pg->imtrx]->dof[var] */
+      } /*if ( pd->v[pg->imtrx][var] ) */
+    } /*  b<pd->Num_Dim */
 
     var = TEMPERATURE;
     if (pd->v[pg->imtrx][var] && !pd->e[pg->imtrx][R_POR_ENERGY]) {

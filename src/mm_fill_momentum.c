@@ -665,7 +665,7 @@ int assemble_momentum(dbl time,       /* current time */
 #endif /* DEBUG_MOMENTUM_RES */
 
         } /*end if (active_dofs) */
-      }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
   }
 
@@ -2463,7 +2463,7 @@ int assemble_momentum(dbl time,       /* current time */
             }
           }
         } /* end of if(active_dofs) */
-      }   /* end of for(i=ei[pg->imtrx]->dof*/
+      } /* end of for(i=ei[pg->imtrx]->dof*/
     }
   }
   safe_free((void *)n_dof);
@@ -3230,7 +3230,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
         }
       }
     } // for mode
-  }   // if POLYMER_STRESS
+  } // if POLYMER_STRESS
 
   /*
    * Calculate the dilational viscosity, if necessary

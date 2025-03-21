@@ -156,17 +156,17 @@ int usr_thermal_conductivity(dbl *param MAYBE_UNUSED,
   /**********************************************************/
 
   /************Initialize everything for safety**************/
-  k = 0.;                        /*Do not touch */
-  dkdT = 0.;                     /*Do not touch */
-  for (i = 0; i < DIM; i++)      /*Do not touch */
-  {                              /*Do not touch */
-    dkdX[i] = 0.;                /*Do not touch */
-  }                              /*Do not touch */
+  k = 0.;                   /*Do not touch */
+  dkdT = 0.;                /*Do not touch */
+  for (i = 0; i < DIM; i++) /*Do not touch */
+  {                         /*Do not touch */
+    dkdX[i] = 0.;           /*Do not touch */
+  } /*Do not touch */
   for (i = 0; i < MAX_CONC; i++) /*Do not touch */
   {                              /*Do not touch */
     dkdC[i] = 0.;                /*Do not touch */
-  }                              /*Do not touch */
-                                 /**********************************************************/
+  } /*Do not touch */
+  /**********************************************************/
 
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
@@ -187,7 +187,7 @@ int usr_thermal_conductivity(dbl *param MAYBE_UNUSED,
   for (a = 0; a < DIM; a++)                                       /*Do not touch */
   {                                                               /*Do not touch */
     mp->d_thermal_conductivity[MESH_DISPLACEMENT1 + a] = dkdX[a]; /*Do not touch */
-  }                                                               /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < MAX_CONC; a++)                                  /*Do not touch */
   {                                                               /*Do not touch */
     mp->d_thermal_conductivity[MAX_VARIABLE_TYPES + a] = dkdC[a]; /*Do not touch */
@@ -220,18 +220,18 @@ int usr_electrical_conductivity(dbl *param MAYBE_UNUSED,
   /**********************************************************/
 
   /************Initialize everything for safety**************/
-  k = 0.;                        /*Do not touch */
-  dkdT = 0.;                     /*Do not touch */
-  dkdV = 0.;                     /*Do not touch */
-  for (i = 0; i < DIM; i++)      /*Do not touch */
-  {                              /*Do not touch */
-    dkdX[i] = 0.;                /*Do not touch */
-  }                              /*Do not touch */
+  k = 0.;                   /*Do not touch */
+  dkdT = 0.;                /*Do not touch */
+  dkdV = 0.;                /*Do not touch */
+  for (i = 0; i < DIM; i++) /*Do not touch */
+  {                         /*Do not touch */
+    dkdX[i] = 0.;           /*Do not touch */
+  } /*Do not touch */
   for (i = 0; i < MAX_CONC; i++) /*Do not touch */
   {                              /*Do not touch */
     dkdC[i] = 0.;                /*Do not touch */
-  }                              /*Do not touch */
-                                 /**********************************************************/
+  } /*Do not touch */
+  /**********************************************************/
 
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
@@ -254,7 +254,7 @@ int usr_electrical_conductivity(dbl *param MAYBE_UNUSED,
   for (a = 0; a < DIM; a++)                                          /*Do not touch */
   {                                                                  /*Do not touch */
     mp->d_electrical_conductivity[MESH_DISPLACEMENT1 + a] = dkdX[a]; /*Do not touch */
-  }                                                                  /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < MAX_CONC; a++)                                     /*Do not touch */
   {                                                                  /*Do not touch */
     mp->d_electrical_conductivity[MAX_VARIABLE_TYPES + a] = dkdC[a]; /*Do not touch */
@@ -287,8 +287,8 @@ int usr_density(dbl *param MAYBE_UNUSED) /* pointer to user-defined parameter li
   for (w = 0; w < MAX_CONC; w++) /*Do not touch */
   {                              /*Do not touch */
     d_rho_dC[w] = 0.;            /*Do not touch */
-  }                              /*Do not touch */
-                                 /**********************************************************/
+  } /*Do not touch */
+  /**********************************************************/
 
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
@@ -380,17 +380,17 @@ int usr_heat_capacity(dbl *param MAYBE_UNUSED,
   /**********************************************************/
 
   /************Initialize everything for saftey**************/
-  Cp = 0;                        /*Do not touch */
-  dCpdT = 0;                     /*Do not touch */
-  for (a = 0; a < DIM; a++)      /*Do not touch */
-  {                              /*Do not touch */
-    dCpdX[a] = 0.;               /*Do not touch */
-  }                              /*Do not touch */
+  Cp = 0;                   /*Do not touch */
+  dCpdT = 0;                /*Do not touch */
+  for (a = 0; a < DIM; a++) /*Do not touch */
+  {                         /*Do not touch */
+    dCpdX[a] = 0.;          /*Do not touch */
+  } /*Do not touch */
   for (i = 0; i < MAX_CONC; i++) /*Do not touch */
   {                              /*Do not touch */
     dCpdC[i] = 0.;               /*Do not touch */
-  }                              /*Do not touch */
-                                 /**********************************************************/
+  } /*Do not touch */
+  /**********************************************************/
 
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
@@ -412,11 +412,11 @@ int usr_heat_capacity(dbl *param MAYBE_UNUSED,
   for (a = 0; a < DIM; a++)                                 /*Do not touch */
   {                                                         /*Do not touch */
     mp->d_heat_capacity[MESH_DISPLACEMENT1 + a] = dCpdX[a]; /*Do not touch */
-  }                                                         /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < MAX_CONC; a++)                            /*Do not touch */
   {                                                         /*Do not touch */
     mp->d_heat_capacity[MAX_VARIABLE_TYPES + a] = dCpdC[a]; /*Do not touch */
-  }                                                         /*Do not touch */
+  } /*Do not touch */
   /**********************************************************/
 
   return (0);
@@ -518,22 +518,22 @@ int usr_heat_source(dbl *param MAYBE_UNUSED,
   /*******Add property function and sensitivities here*******/
 
   /****************Don't touch these lines***********************/
-  mp->heat_source = h;                                   /*Do not touch */
-  mp->d_heat_source[TEMPERATURE] = dhdT;                 /*Do not touch */
-  mp->d_heat_source[VOLTAGE] = dhdV;                     /*Do not touch */
-                                                         /*Do not touch */
-  for (a = 0; a < DIM; a++)                              /*Do not touch */
-  {                                                      /*Do not touch */
-    mp->d_heat_source[VELOCITY1 + a] = dhdv[a];          /*Do not touch */
-  }                                                      /*Do not touch */
+  mp->heat_source = h;                          /*Do not touch */
+  mp->d_heat_source[TEMPERATURE] = dhdT;        /*Do not touch */
+  mp->d_heat_source[VOLTAGE] = dhdV;            /*Do not touch */
+                                                /*Do not touch */
+  for (a = 0; a < DIM; a++)                     /*Do not touch */
+  {                                             /*Do not touch */
+    mp->d_heat_source[VELOCITY1 + a] = dhdv[a]; /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < DIM; a++)                              /*Do not touch */
   {                                                      /*Do not touch */
     mp->d_heat_source[MESH_DISPLACEMENT1 + a] = dhdX[a]; /*Do not touch */
-  }                                                      /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < MAX_CONC; a++)                         /*Do not touch */
   {                                                      /*Do not touch */
     mp->d_heat_source[MAX_VARIABLE_TYPES + a] = dhdC[a]; /*Do not touch */
-  }                                                      /*Do not touch */
+  } /*Do not touch */
 
   return (0);
 } /* End of usr_heat_source */
@@ -645,22 +645,22 @@ int usr_species_source(int species_no MAYBE_UNUSED, /* Current species number   
   /*******Add property function and sensitivities here*******/
 
   /****************Don't touch these lines***********************/
-  mp->species_source[species_no] = s;                       /*Do not touch */
-  mp->d_species_source[TEMPERATURE] = dsdT;                 /*Do not touch */
-  mp->d_species_source[VOLTAGE] = dsdV;                     /*Do not touch */
-                                                            /*Do not touch */
-  for (a = 0; a < DIM; a++)                                 /*Do not touch */
-  {                                                         /*Do not touch */
-    mp->d_species_source[VELOCITY1 + a] = dsdv[a];          /*Do not touch */
-  }                                                         /*Do not touch */
+  mp->species_source[species_no] = s;              /*Do not touch */
+  mp->d_species_source[TEMPERATURE] = dsdT;        /*Do not touch */
+  mp->d_species_source[VOLTAGE] = dsdV;            /*Do not touch */
+                                                   /*Do not touch */
+  for (a = 0; a < DIM; a++)                        /*Do not touch */
+  {                                                /*Do not touch */
+    mp->d_species_source[VELOCITY1 + a] = dsdv[a]; /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < DIM; a++)                                 /*Do not touch */
   {                                                         /*Do not touch */
     mp->d_species_source[MESH_DISPLACEMENT1 + a] = dsdX[a]; /*Do not touch */
-  }                                                         /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < MAX_CONC; a++)                            /*Do not touch */
   {                                                         /*Do not touch */
     mp->d_species_source[MAX_VARIABLE_TYPES + a] = dsdC[a]; /*Do not touch */
-  }                                                         /*Do not touch */
+  } /*Do not touch */
 
   return (0);
 } /* End of usr_species_source */
@@ -764,22 +764,22 @@ int usr_current_source(dbl *param MAYBE_UNUSED) /* pointer to user-defined param
   /*******Add property function and sensitivities here*******/
 
   /****************Don't touch these lines***********************/
-  mp->current_source = h;                                   /*Do not touch */
-  mp->d_current_source[TEMPERATURE] = dhdT;                 /*Do not touch */
-  mp->d_current_source[VOLTAGE] = dhdV;                     /*Do not touch */
-                                                            /*Do not touch */
-  for (a = 0; a < DIM; a++)                                 /*Do not touch */
-  {                                                         /*Do not touch */
-    mp->d_current_source[VELOCITY1 + a] = dhdv[a];          /*Do not touch */
-  }                                                         /*Do not touch */
+  mp->current_source = h;                          /*Do not touch */
+  mp->d_current_source[TEMPERATURE] = dhdT;        /*Do not touch */
+  mp->d_current_source[VOLTAGE] = dhdV;            /*Do not touch */
+                                                   /*Do not touch */
+  for (a = 0; a < DIM; a++)                        /*Do not touch */
+  {                                                /*Do not touch */
+    mp->d_current_source[VELOCITY1 + a] = dhdv[a]; /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < DIM; a++)                                 /*Do not touch */
   {                                                         /*Do not touch */
     mp->d_current_source[MESH_DISPLACEMENT1 + a] = dhdX[a]; /*Do not touch */
-  }                                                         /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < MAX_CONC; a++)                            /*Do not touch */
   {                                                         /*Do not touch */
     mp->d_current_source[MAX_VARIABLE_TYPES + a] = dhdC[a]; /*Do not touch */
-  }                                                         /*Do not touch */
+  } /*Do not touch */
 
   return (0);
 } /* End of usr_current_source */
@@ -891,21 +891,21 @@ int usr_viscosity(dbl *param MAYBE_UNUSED) /* pointer to user-defined parameter 
   }
 
   /****************Don't touch these lines***********************/
-  mp->viscosity = mu;                                   /*Do not touch */
-  mp->d_viscosity[TEMPERATURE] = dmudT;                 /*Do not touch */
-                                                        /*Do not touch */
-  for (a = 0; a < DIM; a++)                             /*Do not touch */
-  {                                                     /*Do not touch */
-    mp->d_viscosity[VELOCITY1 + a] = dmudV[a];          /*Do not touch */
-  }                                                     /*Do not touch */
+  mp->viscosity = mu;                          /*Do not touch */
+  mp->d_viscosity[TEMPERATURE] = dmudT;        /*Do not touch */
+                                               /*Do not touch */
+  for (a = 0; a < DIM; a++)                    /*Do not touch */
+  {                                            /*Do not touch */
+    mp->d_viscosity[VELOCITY1 + a] = dmudV[a]; /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < DIM; a++)                             /*Do not touch */
   {                                                     /*Do not touch */
     mp->d_viscosity[MESH_DISPLACEMENT1 + a] = dmudX[a]; /*Do not touch */
-  }                                                     /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < MAX_CONC; a++)                        /*Do not touch */
   {                                                     /*Do not touch */
     mp->d_viscosity[MAX_VARIABLE_TYPES + a] = dmudC[a]; /*Do not touch */
-  }                                                     /*Do not touch */
+  } /*Do not touch */
 
   return (0);
 } /* End of usr_viscosity */
@@ -964,21 +964,21 @@ int usr_surface_tension(dbl *param MAYBE_UNUSED) /* ptr to user-defined paramete
    */
 
   /****************Don't touch these lines***********************/
-  mp->surface_tension = sigma;                                   /*Do not touch */
-  mp->d_surface_tension[TEMPERATURE] = dsigmadT;                 /*Do not touch */
-                                                                 /*Do not touch */
-  for (a = 0; a < DIM; a++)                                      /*Do not touch */
-  {                                                              /*Do not touch */
-    mp->d_surface_tension[VELOCITY1 + a] = dsigmadV[a];          /*Do not touch */
-  }                                                              /*Do not touch */
+  mp->surface_tension = sigma;                          /*Do not touch */
+  mp->d_surface_tension[TEMPERATURE] = dsigmadT;        /*Do not touch */
+                                                        /*Do not touch */
+  for (a = 0; a < DIM; a++)                             /*Do not touch */
+  {                                                     /*Do not touch */
+    mp->d_surface_tension[VELOCITY1 + a] = dsigmadV[a]; /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < DIM; a++)                                      /*Do not touch */
   {                                                              /*Do not touch */
     mp->d_surface_tension[MESH_DISPLACEMENT1 + a] = dsigmadX[a]; /*Do not touch */
-  }                                                              /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < MAX_CONC; a++)                                 /*Do not touch */
   {                                                              /*Do not touch */
     mp->d_surface_tension[MAX_VARIABLE_TYPES + a] = dsigmadC[a]; /*Do not touch */
-  }                                                              /*Do not touch */
+  } /*Do not touch */
 
   return (0);
 } /* End of usr_surface_tension */
@@ -1088,17 +1088,17 @@ int usr_momentum_source(dbl *param MAYBE_UNUSED) /* ptr to user-defined paramete
 
   /****************Don't touch these lines***********************/
   for (a = 0; a < DIM; a++) {
-    mp->momentum_source[a] = f[a];                                   /*Do not touch */
-    mp->d_momentum_source[a][TEMPERATURE] = dfdT[a];                 /*Do not touch */
-                                                                     /*Do not touch */
-    for (b = 0; b < DIM; b++)                                        /*Do not touch */
-    {                                                                /*Do not touch */
-      mp->d_momentum_source[a][VELOCITY1 + b] = dfdV[a][b];          /*Do not touch */
-    }                                                                /*Do not touch */
+    mp->momentum_source[a] = f[a];                          /*Do not touch */
+    mp->d_momentum_source[a][TEMPERATURE] = dfdT[a];        /*Do not touch */
+                                                            /*Do not touch */
+    for (b = 0; b < DIM; b++)                               /*Do not touch */
+    {                                                       /*Do not touch */
+      mp->d_momentum_source[a][VELOCITY1 + b] = dfdV[a][b]; /*Do not touch */
+    } /*Do not touch */
     for (b = 0; b < DIM; b++)                                        /*Do not touch */
     {                                                                /*Do not touch */
       mp->d_momentum_source[a][MESH_DISPLACEMENT1 + a] = dfdX[a][b]; /*Do not touch */
-    }                                                                /*Do not touch */
+    } /*Do not touch */
     for (w = 0; w < MAX_CONC; w++)                                   /*Do not touch */
     {                                                                /*Do not touch */
       mp->d_momentum_source[a][MAX_VARIABLE_TYPES + w] = dfdC[a][w]; /*Do not touch */
@@ -1245,22 +1245,22 @@ int usr_lame_mu(struct Elastic_Constitutive *ep MAYBE_UNUSED,
   dfdT = -G0 * SQUARE(aT) * B1 * exp(B1 * (T - Tref));
   /****************Don't touch these lines***********************/
   for (a = 0; a < DIM; a++) {
-    ep->lame_mu = f;                                   /*Do not touch */
-    ep->d_lame_mu[TEMPERATURE] = dfdT;                 /*Do not touch */
-                                                       /*Do not touch */
-    for (b = 0; b < DIM; b++)                          /*Do not touch */
-    {                                                  /*Do not touch */
-      ep->d_lame_mu[VELOCITY1 + b] = dfdV[b];          /*Do not touch */
-    }                                                  /*Do not touch */
+    ep->lame_mu = f;                          /*Do not touch */
+    ep->d_lame_mu[TEMPERATURE] = dfdT;        /*Do not touch */
+                                              /*Do not touch */
+    for (b = 0; b < DIM; b++)                 /*Do not touch */
+    {                                         /*Do not touch */
+      ep->d_lame_mu[VELOCITY1 + b] = dfdV[b]; /*Do not touch */
+    } /*Do not touch */
     for (b = 0; b < DIM; b++)                          /*Do not touch */
     {                                                  /*Do not touch */
       ep->d_lame_mu[MESH_DISPLACEMENT1 + a] = dfdX[b]; /*Do not touch */
-    }                                                  /*Do not touch */
+    } /*Do not touch */
     for (w = 0; w < MAX_CONC; w++)                     /*Do not touch */
     {                                                  /*Do not touch */
       ep->d_lame_mu[MAX_VARIABLE_TYPES + w] = dfdC[w]; /*Do not touch */
-    }                                                  /*Do not touch */
-  }                                                    /*Do not touch */
+    } /*Do not touch */
+  } /*Do not touch */
 
   return (0);
 } /* End of usr_lame_mu */
@@ -1372,22 +1372,22 @@ int usr_lame_lambda(struct Elastic_Constitutive *ep MAYBE_UNUSED,
 
   /****************Don't touch these lines***********************/
   for (a = 0; a < DIM; a++) {
-    ep->lame_lambda = f;                                   /*Do not touch */
-    ep->d_lame_lambda[TEMPERATURE] = dfdT;                 /*Do not touch */
-                                                           /*Do not touch */
-    for (b = 0; b < DIM; b++)                              /*Do not touch */
-    {                                                      /*Do not touch */
-      ep->d_lame_lambda[VELOCITY1 + b] = dfdV[b];          /*Do not touch */
-    }                                                      /*Do not touch */
+    ep->lame_lambda = f;                          /*Do not touch */
+    ep->d_lame_lambda[TEMPERATURE] = dfdT;        /*Do not touch */
+                                                  /*Do not touch */
+    for (b = 0; b < DIM; b++)                     /*Do not touch */
+    {                                             /*Do not touch */
+      ep->d_lame_lambda[VELOCITY1 + b] = dfdV[b]; /*Do not touch */
+    } /*Do not touch */
     for (b = 0; b < DIM; b++)                              /*Do not touch */
     {                                                      /*Do not touch */
       ep->d_lame_lambda[MESH_DISPLACEMENT1 + a] = dfdX[b]; /*Do not touch */
-    }                                                      /*Do not touch */
+    } /*Do not touch */
     for (w = 0; w < MAX_CONC; w++)                         /*Do not touch */
     {                                                      /*Do not touch */
       ep->d_lame_lambda[MAX_VARIABLE_TYPES + w] = dfdC[w]; /*Do not touch */
-    }                                                      /*Do not touch */
-  }                                                        /*Do not touch */
+    } /*Do not touch */
+  } /*Do not touch */
 
   return (0);
 } /* End of usr_lame_lambda */
@@ -1508,21 +1508,21 @@ int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
    */
 
   /****************Don't touch these lines***********************/
-  *thermexp = f;                                     /*Do not touch */
-  d_thermexp_dx[TEMPERATURE] = dfdT;                 /*Do not touch */
-                                                     /*Do not touch */
-  for (b = 0; b < DIM; b++)                          /*Do not touch */
-  {                                                  /*Do not touch */
-    d_thermexp_dx[VELOCITY1 + b] = dfdV[b];          /*Do not touch */
-  }                                                  /*Do not touch */
+  *thermexp = f;                            /*Do not touch */
+  d_thermexp_dx[TEMPERATURE] = dfdT;        /*Do not touch */
+                                            /*Do not touch */
+  for (b = 0; b < DIM; b++)                 /*Do not touch */
+  {                                         /*Do not touch */
+    d_thermexp_dx[VELOCITY1 + b] = dfdV[b]; /*Do not touch */
+  } /*Do not touch */
   for (b = 0; b < DIM; b++)                          /*Do not touch */
   {                                                  /*Do not touch */
     d_thermexp_dx[MESH_DISPLACEMENT1 + b] = dfdX[b]; /*Do not touch */
-  }                                                  /*Do not touch */
+  } /*Do not touch */
   for (w = 0; w < MAX_CONC; w++)                     /*Do not touch */
   {                                                  /*Do not touch */
     d_thermexp_dx[MAX_VARIABLE_TYPES + w] = dfdC[w]; /*Do not touch */
-  }                                                  /*Do not touch */
+  } /*Do not touch */
 
   return (0);
 } /* End of usr_expansion */
@@ -1554,17 +1554,17 @@ int usr_diffusivity(int species_no MAYBE_UNUSED, /* Species number of diffusivit
   /**********************************************************/
 
   /************Initialize everything for safety**************/
-  D = 0.;                        /*Do not touch */
-  dDdT = 0.;                     /*Do not touch */
-  for (i = 0; i < DIM; i++)      /*Do not touch */
-  {                              /*Do not touch */
-    dDdX[i] = 0.;                /*Do not touch */
-  }                              /*Do not touch */
+  D = 0.;                   /*Do not touch */
+  dDdT = 0.;                /*Do not touch */
+  for (i = 0; i < DIM; i++) /*Do not touch */
+  {                         /*Do not touch */
+    dDdX[i] = 0.;           /*Do not touch */
+  } /*Do not touch */
   for (i = 0; i < MAX_CONC; i++) /*Do not touch */
   {                              /*Do not touch */
     dDdC[i] = 0.;                /*Do not touch */
-  }                              /*Do not touch */
-                                 /**********************************************************/
+  } /*Do not touch */
+  /**********************************************************/
 
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
@@ -1615,7 +1615,7 @@ int usr_diffusivity(int species_no MAYBE_UNUSED, /* Species number of diffusivit
   for (a = 0; a < DIM; a++)                                 /*Do not touch */
   {                                                         /*Do not touch */
     mp->d_diffusivity[w][MESH_DISPLACEMENT1 + a] = dDdX[a]; /*Do not touch */
-  }                                                         /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < MAX_CONC; a++)                            /*Do not touch */
   {                                                         /*Do not touch */
     mp->d_diffusivity[w][MAX_VARIABLE_TYPES + a] = dDdC[a]; /*Do not touch */
@@ -1679,21 +1679,21 @@ int usr_FlowingLiquidViscosity(dbl *param MAYBE_UNUSED) /* ptr to user-defined p
    *
    */
   /****************Don't touch these lines***********************/
-  mp->FlowingLiquid_viscosity = mu;                                   /*Do not touch */
-  mp->d_FlowingLiquid_viscosity[TEMPERATURE] = dmudT;                 /*Do not touch */
-                                                                      /*Do not touch */
-  for (a = 0; a < DIM; a++)                                           /*Do not touch */
-  {                                                                   /*Do not touch */
-    mp->d_FlowingLiquid_viscosity[VELOCITY1 + a] = dmudV[a];          /*Do not touch */
-  }                                                                   /*Do not touch */
+  mp->FlowingLiquid_viscosity = mu;                          /*Do not touch */
+  mp->d_FlowingLiquid_viscosity[TEMPERATURE] = dmudT;        /*Do not touch */
+                                                             /*Do not touch */
+  for (a = 0; a < DIM; a++)                                  /*Do not touch */
+  {                                                          /*Do not touch */
+    mp->d_FlowingLiquid_viscosity[VELOCITY1 + a] = dmudV[a]; /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < DIM; a++)                                           /*Do not touch */
   {                                                                   /*Do not touch */
     mp->d_FlowingLiquid_viscosity[MESH_DISPLACEMENT1 + a] = dmudX[a]; /*Do not touch */
-  }                                                                   /*Do not touch */
+  } /*Do not touch */
   for (a = 0; a < MAX_CONC; a++)                                      /*Do not touch */
   {                                                                   /*Do not touch */
     mp->d_FlowingLiquid_viscosity[MAX_VARIABLE_TYPES + a] = dmudC[a]; /*Do not touch */
-  }                                                                   /*Do not touch */
+  } /*Do not touch */
 
   return (0);
 } /* End of usr_FlowingLiquidViscosity */
@@ -1787,22 +1787,22 @@ int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list       
 
   /****************Don't touch these lines***********************/
   for (a = 0; a < DIM; a++) {
-    *viscos = f;                                     /*Do not touch */
-    d_viscos_dx[TEMPERATURE] = dfdT;                 /*Do not touch */
-                                                     /*Do not touch */
-    for (b = 0; b < DIM; b++)                        /*Do not touch */
-    {                                                /*Do not touch */
-      d_viscos_dx[VELOCITY1 + b] = dfdV[b];          /*Do not touch */
-    }                                                /*Do not touch */
+    *viscos = f;                            /*Do not touch */
+    d_viscos_dx[TEMPERATURE] = dfdT;        /*Do not touch */
+                                            /*Do not touch */
+    for (b = 0; b < DIM; b++)               /*Do not touch */
+    {                                       /*Do not touch */
+      d_viscos_dx[VELOCITY1 + b] = dfdV[b]; /*Do not touch */
+    } /*Do not touch */
     for (b = 0; b < DIM; b++)                        /*Do not touch */
     {                                                /*Do not touch */
       d_viscos_dx[MESH_DISPLACEMENT1 + a] = dfdX[b]; /*Do not touch */
-    }                                                /*Do not touch */
+    } /*Do not touch */
     for (w = 0; w < MAX_CONC; w++)                   /*Do not touch */
     {                                                /*Do not touch */
       d_viscos_dx[MAX_VARIABLE_TYPES + w] = dfdC[w]; /*Do not touch */
-    }                                                /*Do not touch */
-  }                                                  /*Do not touch */
+    } /*Do not touch */
+  } /*Do not touch */
 
   return (0);
 } /* End of usr_solid_viscosity */
@@ -1888,22 +1888,22 @@ int usr_solid_dil_viscosity(dbl *param, /* ptr to user-defined parameter list   
 
   /****************Don't touch these lines***********************/
   for (a = 0; a < DIM; a++) {
-    *viscos = f;                                     /*Do not touch */
-    d_viscos_dx[TEMPERATURE] = dfdT;                 /*Do not touch */
-                                                     /*Do not touch */
-    for (b = 0; b < DIM; b++)                        /*Do not touch */
-    {                                                /*Do not touch */
-      d_viscos_dx[VELOCITY1 + b] = dfdV[b];          /*Do not touch */
-    }                                                /*Do not touch */
+    *viscos = f;                            /*Do not touch */
+    d_viscos_dx[TEMPERATURE] = dfdT;        /*Do not touch */
+                                            /*Do not touch */
+    for (b = 0; b < DIM; b++)               /*Do not touch */
+    {                                       /*Do not touch */
+      d_viscos_dx[VELOCITY1 + b] = dfdV[b]; /*Do not touch */
+    } /*Do not touch */
     for (b = 0; b < DIM; b++)                        /*Do not touch */
     {                                                /*Do not touch */
       d_viscos_dx[MESH_DISPLACEMENT1 + a] = dfdX[b]; /*Do not touch */
-    }                                                /*Do not touch */
+    } /*Do not touch */
     for (w = 0; w < MAX_CONC; w++)                   /*Do not touch */
     {                                                /*Do not touch */
       d_viscos_dx[MAX_VARIABLE_TYPES + w] = dfdC[w]; /*Do not touch */
-    }                                                /*Do not touch */
-  }                                                  /*Do not touch */
+    } /*Do not touch */
+  } /*Do not touch */
 
   return (0);
 } /* End of usr_solid_dil_viscosity */

@@ -577,7 +577,7 @@ void fvelo_normal_bc(double func[DIM],
       }
 
     } /* for: kdir */
-  }   /* end of if Assemble_Jacobian */
+  } /* end of if Assemble_Jacobian */
 
 } /* END of routine fvelo_normal_bc  */
 /*****************************************************************************/
@@ -997,7 +997,7 @@ void fvelo_tangential_ls_bc(double func[DIM],
       }
 
     } /* for: kdir */
-  }   /* end of if Assemble_Jacobian */
+  } /* end of if Assemble_Jacobian */
 
 } /* END of routine fvelo_tangential_ls_bc  */
 
@@ -6807,7 +6807,7 @@ void flow_n_dot_T_gradv_t(double func[DIM],
         }
       }
     } // for mode
-  }   // if evss_f
+  } // if evss_f
   /* now is the time to clean up, so, if using the datum for pressure, fix fv->P
    */
   /* Ahh...no.  This seems like a bad idea.
@@ -7671,11 +7671,11 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                 }
               }
             } /* End of J_S_S */
-          }   /* End of if a == b */
-        }     /* End of loop over dimension "b" */
-      }       /* End of loop over dimension "a" */
-    }         /*  end of if Assemble_Jacobian  */
-  }           /* End of loop over modes */
+          } /* End of if a == b */
+        } /* End of loop over dimension "b" */
+      } /* End of loop over dimension "a" */
+    } /*  end of if Assemble_Jacobian  */
+  } /* End of loop over modes */
 } /* END of routine stress_no_v_dot_gradS                                    */
 /*****************************************************************************/
 
@@ -8735,7 +8735,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
         }
       }
     } /* End Assemble Jacobian */
-  }   /* End loop over modes */
+  } /* End loop over modes */
 }
 
 void stress_no_v_dot_gradS_logc_transient(
@@ -9085,11 +9085,11 @@ void stress_no_v_dot_gradS_logc_transient(
                 }
               }
             } /* End of J_S_S */
-          }   /* End of if a == b */
-        }     /* End of loop over dimension "b" */
-      }       /* End of loop over dimension "a" */
-    }         /*  end of if Assemble_Jacobian  */
-  }           /* End of loop over modes */
+          } /* End of if a == b */
+        } /* End of loop over dimension "b" */
+      } /* End of loop over dimension "a" */
+    } /*  end of if Assemble_Jacobian  */
+  } /* End of loop over modes */
 } /* END of routine stress_no_v_dot_gradS_logc_transient */
 
 void PSPG_consistency_bc(double *func,
@@ -11351,7 +11351,7 @@ void apply_CA_FILL(double func[MAX_PDIM],
                              (sin_ca * fv->snormal[p] + cos_ca * t[p]);
 
       } /* for: j=0,...,ei[pg->imtrx]->dof[FILL] */
-    }   /* for: p=0,...,dim */
+    } /* for: p=0,...,dim */
 
     /* Derivatives w.r.t MESH */
     if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
@@ -13481,8 +13481,8 @@ void apply_blake_wetting_velocity_sic(double func[MAX_PDIM],
           }
         }
       } /*  end of concentration sensitivities	*/
-    }   /* af->Assemble_Jacobian */
-  }     /*  lsi->near		*/
+    } /* af->Assemble_Jacobian */
+  } /*  lsi->near		*/
 
   /* Elsewhere on the boundary we apply the slip velocity as a Dirichlet condition */
 
@@ -13692,7 +13692,7 @@ void continuous_tangent_velocity(double func[DIM],
         }
       }
     } /* end of if Assemble_Jacobian */
-  }   /* end if Num_Dim */
+  } /* end if Num_Dim */
 
   /* Calculate the residual contribution	*/
   if (pd->Num_Dim == 2) {
@@ -13745,7 +13745,7 @@ void continuous_normal_velocity(double func[DIM],
         }
       }
     } /* end of if Assemble_Jacobian */
-  }   /* end if Num_Dim */
+  } /* end if Num_Dim */
 
   /* Calculate the residual contribution	*/
   if (pd->Num_Dim == 2) {
@@ -16263,5 +16263,5 @@ void ls_wall_angle_bc(double func[DIM],
         }
       }
     } /* for: kdir */
-  }   /* end of if Assemble_Jacobian */
+  } /* end of if Assemble_Jacobian */
 }

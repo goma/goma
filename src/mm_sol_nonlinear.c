@@ -2611,7 +2611,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     inewton++;
     af->Sat_hyst_reevaluate = FALSE; /*only want this true
                                        for first iteration*/
-  }                                  /* End of loop over newton iterations */
+  } /* End of loop over newton iterations */
 
   /**********************************************************************/
   /**********************************************************************

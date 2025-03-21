@@ -4268,7 +4268,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
               lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += tmp;
 
             } /* for ( j = 0 ... */
-          }   /* if ( pd->v[pg->imtrx][var] ) */
+          } /* if ( pd->v[pg->imtrx][var] ) */
           /* T */
 
           var = TEMPERATURE;
@@ -4298,7 +4298,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
               lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += tmp;
 
             } /* for ( j = 0 ... */
-          }   /* if ( pd->v[pg->imtrx][var] ) */
+          } /* if ( pd->v[pg->imtrx][var] ) */
 
           /*
            *   J_pf_v
@@ -4458,8 +4458,8 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
           } /* if: SHELL_LUB_CURV exisits */
 
         } /* if( active...) */
-      }   /* for(i : */
-    }     /* af->Jacobian */
+      } /* for(i : */
+    } /* af->Jacobian */
     ls = ls_old;
   }
 

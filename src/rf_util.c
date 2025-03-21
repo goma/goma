@@ -1901,9 +1901,9 @@ void init_vec(
               }
             }
           } /* end for j<Num_Var_Init_Mat[mn] */
-        }   /* end for n<num_nodes */
-      }     /* end for e_start=ielem<e_end */
-    }       /* end if (Num_Var_Init_Mat[mn] > 0 */
+        } /* end for n<num_nodes */
+      } /* end for e_start=ielem<e_end */
+    } /* end if (Num_Var_Init_Mat[mn] > 0 */
   }
   /*  safer_free((void **) &block_order);  */
   /*
@@ -2133,10 +2133,10 @@ void init_vec(
               }
             }
           } /* end for j<Num_Var_Init_Mat[mn] */
-        }   /* end for n<num_nodes */
-      }     /* end for e_start=ielem<e_end */
-    }       /* end if (Num_Var_Init_Mat[mn] > 0 */
-  }         /* end for element blocks */
+        } /* end for n<num_nodes */
+      } /* end for e_start=ielem<e_end */
+    } /* end if (Num_Var_Init_Mat[mn] > 0 */
+  } /* end for element blocks */
   safer_free((void **)&block_order);
 
   /*
@@ -2182,8 +2182,8 @@ void init_structural_shell_coord(double u[])
           u[dof] = Coor[comp][node];
         }
       } /* for: node(s) */
-    }   /* if: var in upd-> */
-  }     /* for: comp(onents) */
+    } /* if: var in upd-> */
+  } /* for: comp(onents) */
 
   return;
 

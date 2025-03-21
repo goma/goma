@@ -833,17 +833,17 @@ int apply_contact_bc(double x[],              /* Solution vector for the current
                         lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] += jac;
                       }
                     } /* end of variable exists and BC is sensitive to it */
-                  }   /* end of var loop over variable types */
+                  } /* end of var loop over variable types */
 
                 } /* end of NEWTON */
               }
             } /* end of if (Res_BC != NULL) - i.e. apply residual at this node */
-          }   /* end of loop over equations that this condition applies to */
-        }     /* end for (i=0; i< num_nodes_on_side; i++) */
+          } /* end of loop over equations that this condition applies to */
+        } /* end for (i=0; i< num_nodes_on_side; i++) */
 
       } /*End (if INT) (CAPILLARY and KINEMATIC and VELO_NORMAL and VELO_TANGENT . . .) */
-    }   /*(end for ibc) */
-  }     /*End for ip = 1,...*/
+    } /*(end for ibc) */
+  } /*End for ip = 1,...*/
 
   return (status);
 } /* END of routine apply_contact_bc */

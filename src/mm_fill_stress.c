@@ -2589,7 +2589,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
         }
       }
     } /* End Assemble Jacobian */
-  }   /* End loop over modes */
+  } /* End loop over modes */
 
   return (status);
 }
@@ -3057,10 +3057,10 @@ int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data) {
               lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][eqn], i)] +=
                   mass + advection + diffusion + source;
             } // i loop
-          }   // if a<=b
-        }     // b loop
-      }       // a loop
-    }         // if Residual
+          } // if a<=b
+        } // b loop
+      } // a loop
+    } // if Residual
   }
   return (status);
 }
@@ -3410,10 +3410,10 @@ int assemble_stress_log_conf_transient(dbl tt, dbl dt, PG_DATA *pg_data) {
               }
               lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][eqn], i)] += mass + advection + source;
             } // i loop
-          }   // if a<=b
-        }     // b loop
-      }       // a loop
-    }         // if Residual
+          } // if a<=b
+        } // b loop
+      } // a loop
+    } // if Residual
     if (af->Assemble_Jacobian) {
       for (a = 0; a < VIM; a++) {
         for (b = 0; b < VIM; b++) {
@@ -3473,10 +3473,10 @@ int assemble_stress_log_conf_transient(dbl tt, dbl dt, PG_DATA *pg_data) {
                 }
               }
             } // i loop
-          }   // if a<=b
-        }     // b loop
-      }       // a loop
-    }         // if Residual
+          } // if a<=b
+        } // b loop
+      } // a loop
+    } // if Residual
   }
   return (status);
 }
@@ -5236,11 +5236,11 @@ int assemble_surface_stress(Exo_DB *exo, /* ptr to basic exodus ii mesh informat
               }
               }
             } /* end check for right element */
-          }   /* end loop over sides of ins */
-        }     /*close if loop for BC_ID check */
-      }       /*close loop over all side sets */
-    }         /* end if loop over tables */
-  }           /* end loop over all bc's */
+          } /* end loop over sides of ins */
+        } /*close if loop for BC_ID check */
+      } /*close loop over all side sets */
+    } /* end if loop over tables */
+  } /* end loop over all bc's */
 
   num_zeros = 0;
 
@@ -5852,7 +5852,7 @@ int neighbor_stress_table(Exo_DB *exo, /* ptr to basic exodus ii mesh informatio
         }
       }
     } /* close mode loop*/
-  }   /* close ip loop */
+  } /* close ip loop */
 
   status = 1;
   return (status);
@@ -8727,7 +8727,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
         }
       }
     } /* End Assemble Jacobian */
-  }   /* End loop over modes */
+  } /* End loop over modes */
 
   return (status);
 }
@@ -9965,7 +9965,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
         }
       }
     } /* End Assemble Jacobian */
-  }   /* End loop over modes */
+  } /* End loop over modes */
 
   return (status);
 }

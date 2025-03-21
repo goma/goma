@@ -2010,7 +2010,7 @@ int load_bf_grad(void)
           }
         }
       } /* end of if v */
-    }   /* end of basis function loop. */
+    } /* end of basis function loop. */
   }
 
   return (status);
