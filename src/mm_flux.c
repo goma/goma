@@ -4162,12 +4162,12 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
       (quantity == I_NEG_FILL || quantity == I_MASS_NEGATIVE_FILL || quantity == I_NEG_VOLPLANE ||
        quantity == I_NEG_VX || quantity == I_NEG_VY || quantity == I_NEG_VZ ||
        quantity == I_NEG_CENTER_X || quantity == I_NEG_CENTER_Y || quantity == I_NEG_CENTER_Z ||
-       I_HEAT_ENERGY_NEG);
+       quantity == I_HEAT_ENERGY_NEG);
   int pos_LS_integ =
       (quantity == I_POS_FILL || quantity == I_MASS_POSITIVE_FILL || quantity == I_POS_VOLPLANE ||
        quantity == I_POS_VX || quantity == I_POS_VY || quantity == I_POS_VZ ||
        quantity == I_POS_CENTER_X || quantity == I_POS_CENTER_Y || quantity == I_POS_CENTER_Z ||
-       I_HEAT_ENERGY_POS);
+       quantity == I_HEAT_ENERGY_POS);
   int do_LS_integ = (neg_LS_integ || pos_LS_integ);
 
   adaptive_integration_active = (ls != NULL && ls->AdaptIntegration && do_LS_integ);

@@ -30,7 +30,9 @@
 #endif
 
 #ifdef PARALLEL
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #endif
 extern void handle_ieee(void);
 
@@ -347,12 +349,14 @@ int main(int argc, char **argv)
   error = MPI_Comm_size(MPI_COMM_WORLD, &Num_Proc);
   error = MPI_Comm_rank(MPI_COMM_WORLD, &ProcID);
 
+#ifdef GOMA_ENABLE_AZTEC
   /*
    * Setup a default Proc_config so we can use utility routines
    * from Aztec
    */
 
   AZ_set_proc_config(Proc_Config, MPI_COMM_WORLD);
+#endif
 
   /* set the output limit flag if need be */
 
