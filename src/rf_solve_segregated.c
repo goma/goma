@@ -2497,7 +2497,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
           }
         }
 
-      }    /*  if(converged && success_dt) */
+      } /*  if(converged && success_dt) */
       else /* not converged or unsuccessful time step */
       {
         /* Set bit TRUE in next line to enable retries for failed first
@@ -2575,7 +2575,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
         break;
       }
     } /* end of time step loop */
-  }   /* end of if steady else transient */
+  } /* end of if steady else transient */
 free_and_clear:
 
   if (timestep_subcycle) {

@@ -775,7 +775,7 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
           lec->R[LEC_R_INDEX(peqn, ii)] += mass + advection + porous + diffusion + source;
 
         } /* end of if (active_dof) */
-      }   /* end of for i=0,ei[pg->imtrx]->dof statement */
+      } /* end of for i=0,ei[pg->imtrx]->dof statement */
     }
   }
 
@@ -1377,7 +1377,7 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
             }
           }
         } /* end of if(active_dof) */
-      }   /* end_of for(i=0,ei[pg->imtrx]->dof[eqn])*/
+      } /* end_of for(i=0,ei[pg->imtrx]->dof[eqn])*/
     }
   }
 

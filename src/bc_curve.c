@@ -495,7 +495,7 @@ int apply_integrated_curve_bc(
                   ieqn = MAX_PROB_VAR + BC_Types[bc_input_id].species_eq;
                 if (goma_automatic_rotations.automatic_rotations &&
                     (BC_Types[bc_input_id].desc->rotate != NO_ROT)) {
-                  ieqn = equation_index_auto_rotate(NULL, I, eqn, p, ldof_eqn, NULL);
+                  ieqn = equation_index_auto_rotate(NULL, I, eqn, p, NULL);
                 }
                 lec->R[LEC_R_INDEX(ieqn, ldof_eqn)] += weight * fv->edge_det * func[p];
 
@@ -543,18 +543,18 @@ int apply_integrated_curve_bc(
                                 weight * fv->edge_det * d_func[p][MAX_VARIABLE_TYPES + w][j];
                           }
                         } /* end of loop over species */
-                      }   /* end of if MASS_FRACTION */
-                    }     /* end of variable exists and condition is sensitive to it */
-                  }       /* end of loop over variable types */
-                }         /* end of NEWTON */
-              }           /* if (ldof_eqn >= 0) */
-            }             /* end of if (Res_BC != NULL) - i.e. apply residual at this node */
-          }               /* end of loop over equations that this condition applies to */
-        }                 /* end for (i=0; i< num_nodes_on_side; i++) */
+                      } /* end of if MASS_FRACTION */
+                    } /* end of variable exists and condition is sensitive to it */
+                  } /* end of loop over variable types */
+                } /* end of NEWTON */
+              } /* if (ldof_eqn >= 0) */
+            } /* end of if (Res_BC != NULL) - i.e. apply residual at this node */
+          } /* end of loop over equations that this condition applies to */
+        } /* end for (i=0; i< num_nodes_on_side; i++) */
 
       } /*End (if INT) (CAPILLARY and KINEMATIC and VELO_NORMAL and VELO_TANGENT . . .) */
-    }   /*(end for ibc) */
-  }     /*End for ip = 1,...*/
+    } /*(end for ibc) */
+  } /*End for ip = 1,...*/
 
   return (status);
 } /* end of routine apply_integrated_curve_bc */
@@ -1027,7 +1027,7 @@ int apply_point_colloc_edge_bc(
                 ieqn = MAX_PROB_VAR + BC_Types[bc_input_id].species_eq;
               if (goma_automatic_rotations.automatic_rotations &&
                   (BC_Types[bc_input_id].desc->rotate != NO_ROT)) {
-                ieqn = equation_index_auto_rotate(NULL, I, eqn, p, ldof_eqn, NULL);
+                ieqn = equation_index_auto_rotate(NULL, I, eqn, p, NULL);
               }
               lec->R[LEC_R_INDEX(ieqn, ldof_eqn)] += BIG_PENALTY * func[p];
 
@@ -1062,21 +1062,21 @@ int apply_point_colloc_edge_bc(
                               BIG_PENALTY * d_func[p][MAX_VARIABLE_TYPES + w][j];
                         }
                       } /* end of loop over species */
-                    }   /* end of if MASS_FRACTION */
-                  }     /* end of variable exists and condition is sensitive to it */
-                }       /* end of loop over variable types */
-              }         /* end of NEWTON */
+                    } /* end of if MASS_FRACTION */
+                  } /* end of variable exists and condition is sensitive to it */
+                } /* end of loop over variable types */
+              } /* end of NEWTON */
             }
 
           } /* END of if (Res_BC != NULL), i.e. (index_eqn != -1) */
-        }   /* END of if COLLOCATE */
-            /*****************************************************************************/
-      }     /* END for (ibc = 0; (int) elem_side_bc->BC_input_id[ibc] != ...*/
-            /*****************************************************************************/
-    }       /* END if (I < num_total_nodes) 				      */
-            /*****************************************************************************/
-  }         /* END for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) */
-            /*****************************************************************************/
+        } /* END of if COLLOCATE */
+        /*****************************************************************************/
+      } /* END for (ibc = 0; (int) elem_side_bc->BC_input_id[ibc] != ...*/
+      /*****************************************************************************/
+    } /* END if (I < num_total_nodes) 				      */
+    /*****************************************************************************/
+  } /* END for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) */
+  /*****************************************************************************/
   return (status);
 } /* end of routine apply_collocated_edge_bc */
 /*****************************************************************************/

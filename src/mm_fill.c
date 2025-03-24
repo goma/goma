@@ -3209,7 +3209,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   if (pde[R_MOMENTUM1] && goma_automatic_rotations.automatic_rotations) {
     /* determine if rotation is needed */
@@ -3236,7 +3236,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
   if (pde[R_MESH1] && goma_automatic_rotations.automatic_rotations) {
     /* determine if rotation is needed */
     for (i = 0; i < num_local_nodes; i++) {
@@ -3262,7 +3262,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   /******************************************************************************/
   /*                              BLOCK 9                                       */
@@ -3286,6 +3286,40 @@ Revised:         Summer 1998, SY Tam (UNM)
      * contributions) now, before we get into the heavy duty boundary
      * condition stuff
      */
+
+    // This is a special case for strong_bc_replace, if we have this we need
+    // to zero the previous contributions so we can apply the strong BC's
+    // We do this in a loop before because some BC's like GD conditions
+    // take multiple BC's to affect the residual
+    if (upd->strong_bc_replace) {
+      elem_side_bc = first_elem_side_BC_array[ielem];
+      do { /* begining of do while construct */
+        /* which loops over the sides of this element that have boundary
+           conditions */
+
+        /*
+         *  Set flags for subroutines to call for each boundary condition
+         *  on this side
+         */
+        int call_int = 0;
+        int call_col = 0;
+        int call_nedelec = 0.;
+        for (int ibc = 0; (bc_input_id = (int)elem_side_bc->BC_input_id[ibc]) != -1; ibc++) {
+          int bct = BC_Types[bc_input_id].desc->method;
+          if (bct == STRONG_INT_SURF)
+            call_int = 1;
+          if (bct == STRONG_INT_NEDELEC)
+            call_nedelec = 1;
+          if (bct == COLLOCATE_SURF)
+            call_col = 1;
+        }
+
+        if (call_int || call_col || call_nedelec) {
+          err = zero_strong_resid_side(lec, elem_side_bc);
+        }
+      } while ((elem_side_bc = elem_side_bc->next_side_bc) != NULL);
+    }
+
     elem_side_bc = first_elem_side_BC_array[ielem];
 
     /*****************************************************************************/
@@ -3312,9 +3346,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         if (bct == CONTACT_SURF)
           call_contact = 1;
       }
-      if (upd->strong_bc_replace && (call_int || call_col || call_nedelec)) {
-        err = zero_strong_resid_side(lec, elem_side_bc);
-      }
+
       /*
        * Major change here 6/10/98 to accomodate frontal solver.  Here the
        * FLUID_SOLID/SOLID_FLUID BCs actually use local element contribution
@@ -4739,7 +4771,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   if (pde[R_MOMENTUM1] && goma_automatic_rotations.automatic_rotations) {
     int id_mom; /* local temporary things */
@@ -4765,7 +4797,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
         }
       }
     } /* end of loop over nodes */
-  }   /* end of if Num_ROT > 0 */
+  } /* end of if Num_ROT > 0 */
 
   /******************************************************************************/
   /*                              BLOCK 9                                       */

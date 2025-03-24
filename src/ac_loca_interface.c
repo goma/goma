@@ -1312,7 +1312,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
         }
       }
     } /* End of "passdown.method != LOCA_LSA_ONLY" block */
-  }   /* End of print block */
+  } /* End of print block */
 
   passdown.theta = tran->theta;
 

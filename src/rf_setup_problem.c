@@ -1046,7 +1046,7 @@ void bc_matrl_index(Exo_DB *exo)
           }
         }
       } /* End of side set loop */
-    }   /* if SS */
+    } /* if SS */
     /*
      * Node Sets
      */
@@ -1105,7 +1105,7 @@ void bc_matrl_index(Exo_DB *exo)
           }
         }
       } /* End of side set loop */
-    }   /* if NS */
+    } /* if NS */
 
     /*
      *  Ok, we have obtained statistics on the side and node sets

@@ -462,8 +462,8 @@ void init_shell_element_blocks(const Exo_DB *exo) {
         }
         DSPRINTF("\n");
       } /* se */
-    }   /* bindex */
-  }     /* si */
+    } /* bindex */
+  } /* si */
 
   safe_free((void *)friends_count);
 

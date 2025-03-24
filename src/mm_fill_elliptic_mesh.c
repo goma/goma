@@ -232,8 +232,8 @@ int assemble_elliptic_mesh(void) {
         }
 
       } /* end of loop over equations i  */
-    }   /* end of loop over equation directions a */
-  }     /* end of if jacobian */
+    } /* end of loop over equation directions a */
+  } /* end of if jacobian */
 
   return (status);
 }

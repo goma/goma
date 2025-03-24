@@ -87,7 +87,7 @@ struct Node_Type {           /* Flags indicating the type of the node.*/
   unsigned int Border : 1;   /* TRUE if node is a BORDER node.        */
   unsigned int External : 1; /* TRUE if node is an EXTERNAL node.     */
   unsigned int Owned : 1;    /* TRUE if node is OWNED (i.e., INTERNAL */
-};                           /* or BORDER.)                           */
+}; /* or BORDER.)                           */
 
 struct UMI_list {
   int *List;

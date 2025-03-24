@@ -2310,8 +2310,8 @@ static void create_element_particle_info_maps(void) {
               element_particle_info[elem_id].owner_local_element_id[side_id] = msg[1];
               msg_tag++;
             } /* if unknown reference ... */
-          }   /* for side_id ... */
-      }       /* for elem_id ... */
+          } /* for side_id ... */
+      } /* for elem_id ... */
       if (output) {
         fprintf(fp, "Proc %d sending termination ticket.\n", ProcID);
         fclose(fp);
@@ -2429,7 +2429,7 @@ static void create_element_particle_info_maps(void) {
                 if (node_compares[node_id] != msg[node_id + 1])
                   match_found = 0;
             } /* for side_id ... */
-          }   /* for elem_id ... */
+          } /* for elem_id ... */
           if (match_found) {
             elem_id--;
             if (output) {
@@ -2450,9 +2450,9 @@ static void create_element_particle_info_maps(void) {
           }
           msg_tag++;
         } /* msg[0] indicates node matching */
-      }   /* while(not terminated) */
-    }     /* proc_id != ProcID */
-  }       /* for i = 0 ... Num_Proc-1 */
+      } /* while(not terminated) */
+    } /* proc_id != ProcID */
+  } /* for i = 0 ... Num_Proc-1 */
   free(msg);
   if (output)
     fclose(fp2);
@@ -2616,9 +2616,9 @@ static void generate_source_particles(const dbl tt, /* parameter to vary time in
               create_a_particle(&p, elem_id);
             }
           } /* for k ... static_exo->ss_num_sides[j] */
-        }   /* SS_id == static_exo->ss_id[j] */
-    }       /* PBC_Type == PBC_SOURCE || PBC_FREESTREAM_SOURCE */
-  }         /* i = ... Particle_Number_PBCs */
+        } /* SS_id == static_exo->ss_id[j] */
+    } /* PBC_Type == PBC_SOURCE || PBC_FREESTREAM_SOURCE */
+  } /* i = ... Particle_Number_PBCs */
 }
 
 /* This routine will initialize the parameters in a sane way to the

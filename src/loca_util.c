@@ -425,7 +425,7 @@ void sort_by_real(int nconv, int ncv, int ldv, double *d, double *v) {
           tv[l + ldv] = v[m + ldv];
         }
       } /* End of eigenvector loop */
-    }   /* End of if (!skip) */
+    } /* End of if (!skip) */
 
     /* If this is the second of a complex eigenpair, just reset skip_next */
     else {

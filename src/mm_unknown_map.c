@@ -431,10 +431,10 @@ void setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
              *  below is just informational.
              */
           } /* Loop over variables list */
-        }   /* Loop over matrices */
-      }     /* Loop over local nodes in an element */
-    }       /* loop over elements in element blocks */
-  }         /* loop over materials */
+        } /* Loop over matrices */
+      } /* Loop over local nodes in an element */
+    } /* loop over elements in element blocks */
+  } /* loop over materials */
 
   /*
    *  Loop though nodes this time calculating the real nodal_vars
@@ -1025,7 +1025,7 @@ void set_unknown_map(Exo_DB *exo, Dpi *dpi)
       } else {
         gdof = gcount;
         i1 = i + 1; /* convert 0-based internal node numbering */
-      }             /* to 1-based node numbering of BLOT, etc. */
+      } /* to 1-based node numbering of BLOT, etc. */
 
       /*
        * Load up the coordinates of the node into a handy label

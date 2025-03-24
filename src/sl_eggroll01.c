@@ -519,8 +519,8 @@ l02:
         ev_e[ip] = ev_e[i];
         i++;
       } /* complex case */
-    }   /* for(i = 0; i < (*ev_n); i++) */
-  }     /* if(raw_residual == 1) */
+    } /* for(i = 0; i < (*ev_n); i++) */
+  } /* if(raw_residual == 1) */
 
   /* Re-order eigenvalues and eigenvectors - increasing modulus
    */
