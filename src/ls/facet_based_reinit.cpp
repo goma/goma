@@ -369,6 +369,9 @@ void facet_based_reinitialization_3D(
       for (int ln = 0; ln < dofs; ln++) {
         int gnn = exo->node_list[iconnect + ln];
         ls_values[ln] = x[Index_Solution(gnn, ls->var, 0, 0, -2, pg->imtrx)];
+        // if (std::abs(ls_values[ln]) < 1e-3) {
+        //   level_set_nodes.insert(gnn);
+        // }
       }
 
       double first_val = std::copysign(1.0, ls_values[0]);
@@ -542,9 +545,9 @@ void facet_based_reinitialization_3D(
   file.close();
   // For each node we will compute the distance to the closest facet
   for (int node = 0; node < num_total_nodes; node++) {
-    //if (level_set_nodes.find(node) != level_set_nodes.end()) {
-    //  continue;
-    //}
+    if (level_set_nodes.find(node) != level_set_nodes.end()) {
+     continue;
+    }
     int index_ls = Index_Solution(node, ls->var, 0, 0, -2, pg->imtrx);
     if (index_ls != -1) {
       Point<3> p({Coor[0][node], Coor[1][node], Coor[2][node]});

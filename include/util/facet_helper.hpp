@@ -187,6 +187,11 @@ public:
 
   Point<3> closest_point(const Point<dim> &p) const {
     Point<3> normal = cross(p1 - p0, p2 - p0);
+    double length = std::sqrt(squared_length(normal));
+    if (length < 1e-15) { // degenerate case where p0 is the same as p1 or p2 
+      Line<dim> l(p1, p2);
+      return l.closest_point(p);
+    }
     normal = normal * (1.0 / std::sqrt(squared_length(normal)));
 
     double t = dot_product(normal, p0) - dot_product(normal, p);
@@ -228,11 +233,13 @@ public:
       min_distance = distance2;
       closest = closest2;
     }
+
+    return closest;
   }
 
   double distance(const Point<dim> &p) const override {
-    // auto closest = closest_point(p);
-    return std::sqrt(squared_length(p0 - p));
+    auto closest = closest_point(p);
+    return std::sqrt(squared_length(closest - p));
 
     // prepare data    
     // Point<3> v21 = p1 - p0; Point<3> v1 = p - p0;
