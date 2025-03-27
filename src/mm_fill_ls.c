@@ -38,6 +38,7 @@
 #include "exodusII.h"
 #include "linalg/sparse_matrix.h"
 #include "load_field_variables.h"
+#include "ls/facet_based_reinit.h"
 #include "mm_as_alloc.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_fill.h"
@@ -532,20 +533,22 @@ huygens_renormalization ( double *x,
     /* this call cleanses the LS field of "droplets" that surround exactly one
      * node */
 
-    purge_spurious_LS(x, exo, num_total_nodes);
+    if (ls->Renorm_Method != FACET_BASED) {
+      purge_spurious_LS(x, exo, num_total_nodes);
 
-    list = create_surf_list();
-    isosurf = create_surf(LS_SURF_ISOSURFACE);
-    s = (struct LS_Surf_Iso_Data *)isosurf->data;
-    s->isovar = ls->var;
-    if (ls->Initial_LS_Displacement != 0.) {
-      s->isoval = ls->Initial_LS_Displacement;
-      ls->Initial_LS_Displacement = 0.;
-    } else {
-      s->isoval = 0.;
+      list = create_surf_list();
+      isosurf = create_surf(LS_SURF_ISOSURFACE);
+      s = (struct LS_Surf_Iso_Data *)isosurf->data;
+      s->isovar = ls->var;
+      if (ls->Initial_LS_Displacement != 0.) {
+        s->isoval = ls->Initial_LS_Displacement;
+        ls->Initial_LS_Displacement = 0.;
+      } else {
+        s->isoval = 0.;
+      }
+
+      append_surf(list, isosurf);
     }
-
-    append_surf(list, isosurf);
 
     if (ls->Renorm_Method == HUYGENS) {
       surf_based_initialization(x, NULL, NULL, exo, num_total_nodes, list, time, 0., 0.);
@@ -558,6 +561,8 @@ huygens_renormalization ( double *x,
     } else if (ls->Renorm_Method == SMOLIANSKI_ONLY) {
       Hrenorm_smolianksi_only(exo, cx, dpi, x, list, num_total_nodes, num_ls_unkns, num_total_unkns,
                               time);
+    } else if (ls->Renorm_Method == FACET_BASED) {
+      facet_based_reinitialization(x, exo, cx, dpi, num_total_nodes, time);
     } else {
       GOMA_EH(GOMA_ERROR, "You shouldn't actually be here. \n");
     }
@@ -2576,8 +2581,8 @@ static int Hrenorm_constrain(Exo_DB *exo,
 #ifdef PARALLEL
       if (Num_Proc > 1)
         external = ext_dof[k];
-        /* when accumulating the dot products it is important not to add the
-         * external dofs */
+      /* when accumulating the dot products it is important not to add the
+       * external dofs */
 #endif
 
       if (!external) {
