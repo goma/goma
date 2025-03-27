@@ -817,12 +817,13 @@ set(GOMA_USER_SOURCES
 
 set(GOMA_UTIL_INCLUDES
     include/bc/rotate_util.h include/mm_eh.h include/util/goma_normal.h
-    include/util/facet_helper.hpp
-    include/util/aprepro_helper.h include/util/distance_helpers.h)
+    include/util/facet_helper.hpp include/util/aprepro_helper.h
+    include/util/distance_helpers.h)
 
-set(GOMA_UTIL_SOURCES src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c
-src/util/facet_helper.cpp
-                      src/util/aprepro_helper.cpp src/util/distance_helpers.cpp)
+set(GOMA_UTIL_SOURCES
+    src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c
+    src/util/facet_helper.cpp src/util/aprepro_helper.cpp
+    src/util/distance_helpers.cpp)
 
 set(GDS_INCLUDES include/gds/gds_vector.h)
 
@@ -1003,7 +1004,7 @@ foreach(d ${GOMA_COMPILE_DEFINITIONS})
   message(STATUS "${d}")
 endforeach()
 message("\n")
-   message(STATUS "Exodus include dirs:" ${SEACASExodus_INCLUDE_DIRS})
+message(STATUS "Exodus include dirs:" ${SEACASExodus_INCLUDE_DIRS})
 
 set(GOMA_TPL_INCLUDES
     ${GOMA_TPL_INCLUDES}
@@ -1070,7 +1071,8 @@ if(ENABLE_WARNINGS)
 endif()
 
 add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
-target_include_directories(goma PUBLIC include)
+target_include_directories(
+  goma PUBLIC include ${PROJECT_SOURCE_DIR}/tpls/nanoflann/include)
 target_include_directories(goma SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_directories(goma PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
 target_link_libraries(goma PUBLIC ${GOMA_TPL_LIBRARIES} gds)

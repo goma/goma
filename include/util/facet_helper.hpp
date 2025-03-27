@@ -43,6 +43,7 @@ public:
 
   double operator[](int i) const { return data[i]; }
   double &operator[](int i) { return data[i]; }
+  std::array<double, dim> get_data() const { return data; }
 };
 
 template <int dim> constexpr Point<dim> operator-(const Point<dim> &a, const Point<dim> &b) {
@@ -104,14 +105,16 @@ template <int dim> class Facet {
   // virtual function for distance
 public:
   virtual double distance(const Point<dim> &p) const = 0;
+  virtual Point<dim> centroid(void) const = 0;
 };
 
 template <int dim> class Line : public Facet<dim> {
 public:
   const Point<dim> p0, p1;
+  const Point<dim> midpoint;
 
   Line(const Point<dim> &p0, const Point<dim> &p1)
-      : p0(p0), p1(p1) {}
+      : p0(p0), p1(p1), midpoint(0.5*(p0 + p1)){}
 
   Point<dim> closest_point(const Point<dim> &p) const {
     Point<dim> v = p1 - p0;
@@ -138,6 +141,10 @@ public:
     }
 
     return closest_point;
+  }
+  
+  Point<dim> centroid(void) const override {
+    return midpoint;
   }
 
   double distance(const Point<dim> &p) const override {
@@ -181,9 +188,10 @@ constexpr double sign(double x) {
 template <int dim> class Triangle : public Facet<dim> {
 public:
   const Point<dim> p0, p1, p2;
+  const Point<dim> centroid_;
 
   Triangle(const Point<dim> &p0, const Point<dim> &p1, const Point<dim> &p2)
-      : p0(p0), p1(p1), p2(p2) {}
+      : p0(p0), p1(p1), p2(p2), centroid_((1.0/3.0) * (p0 + p1 + p2)){}
 
   Point<3> closest_point(const Point<dim> &p) const {
     Point<3> normal = cross(p1 - p0, p2 - p0);
@@ -237,48 +245,13 @@ public:
     return closest;
   }
 
+  Point<dim> centroid(void) const override {
+    return centroid_;
+  }
+
   double distance(const Point<dim> &p) const override {
     auto closest = closest_point(p);
     return std::sqrt(squared_length(closest - p));
-
-    // prepare data    
-    // Point<3> v21 = p1 - p0; Point<3> v1 = p - p0;
-    // Point<3> v32 = p2 - p1; Point<3> v2 = p - p1;
-    // Point<3> v13 = p0 - p2; Point<3> v3 = p - p2;
-
-    // double lv32 = squared_length(v32);
-    // double lv13 = squared_length(v13);
-    // double lv21 = squared_length(v21);
-    // if (lv32 < 1e-15) {
-    //   Line<dim> l(p0,p1);
-    //   return l.distance(p);
-    // }
-
-    // if (lv13 < 1e-15) {
-    //   Line<dim> l(p1,p2);
-    //   return l.distance(p);
-    // }
-
-    // if (lv21 < 1e-15) {
-    //   Line<dim> l(p2,p0);
-    //   return l.distance(p);
-    // }
-
-    // Point<3> nor = cross( v21, v13 );
-
-    // return sqrt( // inside/outside test    
-    //              (sign(dot_product(cross(v21,nor),v1)) + 
-    //               sign(dot_product(cross(v32,nor),v2)) + 
-    //               sign(dot_product(cross(v13,nor),v3))<2.0) 
-    //               ?
-    //               // 3 edges    
-    //               std::min( std::min( 
-    //               squared_length(v21*std::clamp(dot_product(v21,v1)/squared_length(v21),0.0,1.0)-v1), 
-    //               squared_length(v32*std::clamp(dot_product(v32,v2)/squared_length(v32),0.0,1.0)-v2) ), 
-    //               squared_length(v13*std::clamp(dot_product(v13,v3)/squared_length(v13),0.0,1.0)-v3) )
-    //               :
-    //               // 1 face    
-    //               dot_product(nor,p1)*dot_product(nor,p1)/squared_length(nor) );
   }
 
 };

@@ -12,11 +12,13 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <ios>
 #include <iostream>
 #include <mpi.h>
+#include <nanoflann.hpp>
 #include <numeric>
 #include <tuple>
 #include <unordered_set>
@@ -326,6 +328,49 @@ void interp_quad_dofs(std::vector<double> &ls_values) {
   ls_values[8] = 0.25 * (ls_values[0] + ls_values[1] + ls_values[2] + ls_values[3]);
 }
 
+template <int pdim> struct PointCloud {
+  std::vector<Point<pdim>> pts;
+
+  // Must return the number of data points
+  inline size_t kdtree_get_point_count() const { return pts.size(); }
+
+  // Returns the dim'th component of the idx'th point in the class:
+  // Since this is inlined and the "dim" argument is typically an immediate
+  // value, the
+  //  "if/else's" are actually solved at compile time.
+  inline double kdtree_get_pt(const size_t idx, const size_t dim) const {
+    if (dim == 0)
+      return pts[idx][0];
+    else if (dim == 1)
+      return pts[idx][1];
+    else {
+      if (pdim == 3)
+        return pts[idx][2];
+      else
+        return 0.0;
+    }
+  }
+
+  // Optional bounding-box computation: return false to default to a standard
+  // bbox computation loop.
+  //   Return true if the BBOX was already computed by the class and returned
+  //   in "bb" so it can be avoided to redo it again. Look at bb.size() to
+  //   find out the expected dimensionality (e.g. 2 or 3 for point clouds)
+  template <class BBOX> bool kdtree_get_bbox(BBOX & /* bb */) const { return false; }
+};
+
+void generate_point_cloud(PointCloud<3> &pc, std::vector<Triangle<3>> &facets) {
+  for (auto &facet : facets) {
+    pc.pts.push_back(facet.centroid());
+  }
+}
+
+void generate_point_cloud(PointCloud<2> &pc, std::vector<Line<2>> &facets) {
+  for (auto &facet : facets) {
+    pc.pts.push_back(facet.centroid());
+  }
+}
+
 void facet_based_reinitialization_3D(
     double *x, Exo_DB *exo, Comm_Ex *cx, Dpi *dpi, int num_total_nodes, double time) {
   using goma::distance_tools::Triangle;
@@ -483,11 +528,8 @@ void facet_based_reinitialization_3D(
       }
     }
   }
-  
+
   timer.print_elapsed_and_reset("Facet computation time:");
-
-
-
 
   // If the level set interface exists on that element we will compute facets for that element.
 
@@ -523,30 +565,42 @@ void facet_based_reinitialization_3D(
   facets.clear();
   facets.reserve(all_facets.size() / 9);
   for (size_t i = 0; i < all_facets.size() / 9; i++) {
-    facets.push_back(Triangle<3>(Point<3>({all_facets[i * 9], all_facets[i * 9 + 1], all_facets[i * 9 + 2]}),
-                                 Point<3>({all_facets[i * 9 + 3], all_facets[i * 9 + 4], all_facets[i * 9 + 5]}),
-                                 Point<3>({all_facets[i * 9 + 6], all_facets[i * 9 + 7], all_facets[i * 9 + 8]})));
+    facets.push_back(Triangle<3>(
+        Point<3>({all_facets[i * 9], all_facets[i * 9 + 1], all_facets[i * 9 + 2]}),
+        Point<3>({all_facets[i * 9 + 3], all_facets[i * 9 + 4], all_facets[i * 9 + 5]}),
+        Point<3>({all_facets[i * 9 + 6], all_facets[i * 9 + 7], all_facets[i * 9 + 8]})));
   }
 
   std::cout << "            Number of facets: " << facets.size() << "\n";
   timer.print_elapsed_and_reset("Facet communication time:");
 
   // print facets to csv
-  std::ofstream file("facets.csv");
-  file << "x0,y0,z0\n";
-  for (size_t i = 0; i < facets.size(); i++) {
-    auto p0 = facets[i].p0;
-    auto p1 = facets[i].p1;
-    auto p2 = facets[i].p2;
-    file << p0[0] << "," << p0[1] << "," << p0[2] << "\n"
-         << p1[0] << "," << p1[1] << "," << p1[2] << "\n"
-         << p2[0] << "," << p2[1] << "," << p2[2] << "\n";
-  }
-  file.close();
+  // std::ofstream file("facets.csv");
+  // file << "x0,y0,z0\n";
+  // for (size_t i = 0; i < facets.size(); i++) {
+  //   auto p0 = facets[i].p0;
+  //   auto p1 = facets[i].p1;
+  //   auto p2 = facets[i].p2;
+  //   file << p0[0] << "," << p0[1] << "," << p0[2] << "\n"
+  //        << p1[0] << "," << p1[1] << "," << p1[2] << "\n"
+  //        << p2[0] << "," << p2[1] << "," << p2[2] << "\n";
+  // }
+  // file.close();
   // For each node we will compute the distance to the closest facet
+
+  PointCloud<3> pc;
+  generate_point_cloud(pc, facets);
+
+  using my_kd_tree_t =
+      nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, PointCloud<3>>,
+                                          PointCloud<3>, 3 /* dim */
+                                          >;
+
+  my_kd_tree_t index(3, pc, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+
   for (int node = 0; node < num_total_nodes; node++) {
     if (level_set_nodes.find(node) != level_set_nodes.end()) {
-     continue;
+      continue;
     }
     int index_ls = Index_Solution(node, ls->var, 0, 0, -2, pg->imtrx);
     if (index_ls != -1) {
@@ -556,7 +610,7 @@ void facet_based_reinitialization_3D(
         if (index_dx != -1) {
           p[0] += x[index_dx];
         }
-        int index_dy = Index_Solution(node,MESH_DISPLACEMENT2, 0, 0, -2, pg->imtrx);
+        int index_dy = Index_Solution(node, MESH_DISPLACEMENT2, 0, 0, -2, pg->imtrx);
         if (index_dx != -1) {
           p[1] += x[index_dy];
         }
@@ -566,9 +620,20 @@ void facet_based_reinitialization_3D(
         }
       }
 
+      const int num_results = 5;
+      std::vector<size_t> ret_index(num_results);
+      std::vector<double> out_dist_sqr(num_results);
+      nanoflann::KNNResultSet<double> resultSet(num_results);
+      resultSet.init(&ret_index[0], &out_dist_sqr[0]);
+
+      double query_pt[3] = {p[0], p[1], p[2]};
+      index.findNeighbors(resultSet, query_pt, nanoflann::SearchParams());
+
       double min_distance = std::numeric_limits<double>::max();
-      for (size_t i = 0; i < facets.size(); i++) {
-        double distance = facets[i].distance(p);
+      // for (size_t i = 0; i < facets.size(); i++) {
+      for (size_t i = 0; i < resultSet.size(); i++) {
+        int index = ret_index[i];
+        double distance = facets[index].distance(p);
         min_distance = std::min(min_distance, distance);
       }
 
@@ -781,6 +846,15 @@ void facet_based_reinitialization_2D(
             << "\n";
 
   timer.print_elapsed_and_reset("Facet MPI communication");
+  PointCloud<2> pc;
+  generate_point_cloud(pc, facets);
+
+  using my_kd_tree_t =
+      nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, PointCloud<2>>,
+                                          PointCloud<2>, 2 /* dim */
+                                          >;
+
+  my_kd_tree_t index(2, pc, nanoflann::KDTreeSingleIndexAdaptorParams(10));
 
   // For each node we will compute the distance to the closest facet
   for (int node = 0; node < num_total_nodes; node++) {
@@ -792,20 +866,30 @@ void facet_based_reinitialization_2D(
         if (index_dx != -1) {
           p[0] += x[index_dx];
         }
-        int index_dy = Index_Solution(node,MESH_DISPLACEMENT2, 0, 0, -2, pg->imtrx);
+        int index_dy = Index_Solution(node, MESH_DISPLACEMENT2, 0, 0, -2, pg->imtrx);
         if (index_dx != -1) {
           p[1] += x[index_dy];
         }
       }
 
-      double min_distance = std::numeric_limits<double>::max();
-      for (size_t i = 0; i < facets.size(); i++) {
-        double distance = facets[i].distance(p);
-        min_distance = std::min(min_distance, distance);
-      }
-
       // std::cout << "Node " << node << p[0] << " " << p[1] << " " << " distance: " << min_distance
       // << "\n";
+      const int num_results = 5;
+      std::vector<size_t> ret_index(num_results);
+      std::vector<double> out_dist_sqr(num_results);
+      nanoflann::KNNResultSet<double> resultSet(num_results);
+      resultSet.init(&ret_index[0], &out_dist_sqr[0]);
+
+      double query_pt[2] = {p[0], p[1]};
+      index.findNeighbors(resultSet, query_pt, nanoflann::SearchParams());
+
+      double min_distance = std::numeric_limits<double>::max();
+      // for (size_t i = 0; i < facets.size(); i++) {
+      for (size_t i = 0; i < resultSet.size(); i++) {
+        int index = ret_index[i];
+        double distance = facets[index].distance(p);
+        min_distance = std::min(min_distance, distance);
+      }
 
       x[index_ls] = std::copysign(min_distance, x[index_ls]);
     }

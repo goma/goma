@@ -1,13 +1,13 @@
 #include "facet_helper.hpp"
-#include <iostream>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <iostream>
 
 const double test_atol = 1e-12;
 const double test_rtol = 1e-5;
 
-#define REQUIRE_TOL(a, b)                                                      \
-  REQUIRE_THAT(a, Catch::Matchers::WithinRel(b, test_rtol) ||                  \
+#define REQUIRE_TOL(a, b)                                     \
+  REQUIRE_THAT(a, Catch::Matchers::WithinRel(b, test_rtol) || \
                       Catch::Matchers::WithinAbs(b, test_atol))
 
 TEST_CASE("point math", "[Point]") {
@@ -101,7 +101,7 @@ TEST_CASE("line from triangle", "[Line]") {
   REQUIRE_TOL(l2.p1[1], 0.5);
 
   // shift towards p1
-    values = {0, 0.75, 1};
+  values = {0, 0.75, 1};
   auto f3 = create_facet_from_triangle(p0, p1, p2, values, 0.75);
 
   std::cout << f3.value() << std::endl;

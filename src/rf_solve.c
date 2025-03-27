@@ -2272,7 +2272,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           case HUYGENS:
           case HUYGENS_C:
           case HUYGENS_MASS_ITER:
-            case FACET_BASED:
+          case FACET_BASED:
             Renorm_Now =
                 (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) || ls_adc_event == TRUE;
 
