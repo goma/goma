@@ -574,19 +574,6 @@ void facet_based_reinitialization_3D(
   std::cout << "            Number of facets: " << facets.size() << "\n";
   timer.print_elapsed_and_reset("Facet communication time:");
 
-  // print facets to csv
-  // std::ofstream file("facets.csv");
-  // file << "x0,y0,z0\n";
-  // for (size_t i = 0; i < facets.size(); i++) {
-  //   auto p0 = facets[i].p0;
-  //   auto p1 = facets[i].p1;
-  //   auto p2 = facets[i].p2;
-  //   file << p0[0] << "," << p0[1] << "," << p0[2] << "\n"
-  //        << p1[0] << "," << p1[1] << "," << p1[2] << "\n"
-  //        << p2[0] << "," << p2[1] << "," << p2[2] << "\n";
-  // }
-  // file.close();
-  // For each node we will compute the distance to the closest facet
 
   PointCloud<3> pc;
   generate_point_cloud(pc, facets);
@@ -713,7 +700,7 @@ void facet_based_reinitialization_2D(
         auto [p1, p2, p3] = triangles[i];
         auto [v1, v2, v3] = triangle_nodes[i];
         std::array<double, 3> values = {ls_values[v1], ls_values[v2], ls_values[v3]};
-        auto facet = create_facet_from_triangle(p1, p2, p3, values, 0.0);
+        auto facet = create_facet_from_triangle<2>(p1, p2, p3, values, 0.0);
 
         if (facet.has_value()) {
           local_facets.push_back(facet.value());
@@ -724,7 +711,7 @@ void facet_based_reinitialization_2D(
         auto [p1, p2, p3, p4] = quads[i];
         auto [v1, v2, v3, v4] = quad_nodes[i];
         std::array<double, 4> values = {ls_values[v1], ls_values[v2], ls_values[v3], ls_values[v4]};
-        auto facet_list = create_facet_from_quad(p1, p2, p3, p4, values, 0.0);
+        auto facet_list = create_facet_from_quad<2>(p1, p2, p3, p4, values, 0.0);
 
         for (auto &facet : facet_list) {
           local_facets.push_back(facet);
