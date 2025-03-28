@@ -529,7 +529,7 @@ void facet_based_reinitialization_3D(
     }
   }
 
-  timer.print_elapsed_and_reset("Facet computation time:");
+  timer.print_elapsed_and_reset("        Facet computation time:");
 
   // If the level set interface exists on that element we will compute facets for that element.
 
@@ -571,8 +571,7 @@ void facet_based_reinitialization_3D(
         Point<3>({all_facets[i * 9 + 6], all_facets[i * 9 + 7], all_facets[i * 9 + 8]})));
   }
 
-  std::cout << "            Number of facets: " << facets.size() << "\n";
-  timer.print_elapsed_and_reset("Facet communication time:");
+  timer.print_elapsed_and_reset("       Facet communication time:");
 
   PointCloud<3> pc;
   generate_point_cloud(pc, facets);
@@ -630,7 +629,7 @@ void facet_based_reinitialization_3D(
     }
   }
 
-  timer.print_elapsed("Reinitialization time:");
+  timer.print_elapsed("        Reinitialization time:");
 }
 
 void facet_based_reinitialization_2D(
@@ -828,8 +827,6 @@ void facet_based_reinitialization_2D(
     facets.push_back(Line<2>({all_facets[i * 4], all_facets[i * 4 + 1]},
                              {all_facets[i * 4 + 2], all_facets[i * 4 + 3]}));
   }
-  std::cout << "            Number of facets: " << "ProcID " << ProcID << " " << facets.size()
-            << "\n";
 
   timer.print_elapsed_and_reset("Facet MPI communication");
   PointCloud<2> pc;
