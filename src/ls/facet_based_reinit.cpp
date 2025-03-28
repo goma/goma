@@ -529,7 +529,7 @@ void facet_based_reinitialization_3D(
     }
   }
 
-  timer.print_elapsed_and_reset("        Facet computation time:");
+  timer.print_elapsed_and_reset("           Facet computation time:");
 
   // If the level set interface exists on that element we will compute facets for that element.
 
@@ -571,7 +571,7 @@ void facet_based_reinitialization_3D(
         Point<3>({all_facets[i * 9 + 6], all_facets[i * 9 + 7], all_facets[i * 9 + 8]})));
   }
 
-  timer.print_elapsed_and_reset("       Facet communication time:");
+  timer.print_elapsed_and_reset("          Facet communication time:");
 
   PointCloud<3> pc;
   generate_point_cloud(pc, facets);
@@ -629,7 +629,7 @@ void facet_based_reinitialization_3D(
     }
   }
 
-  timer.print_elapsed("        Reinitialization time:");
+  timer.print_elapsed("           Reinitialization time:");
 }
 
 void facet_based_reinitialization_2D(
