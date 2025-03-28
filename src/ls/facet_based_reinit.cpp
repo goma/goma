@@ -574,7 +574,6 @@ void facet_based_reinitialization_3D(
   std::cout << "            Number of facets: " << facets.size() << "\n";
   timer.print_elapsed_and_reset("Facet communication time:");
 
-
   PointCloud<3> pc;
   generate_point_cloud(pc, facets);
 
