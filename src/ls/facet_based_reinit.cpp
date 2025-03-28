@@ -883,7 +883,8 @@ void facet_based_reinitialization_2D(
 
 extern "C" void facet_based_reinitialization(
     double *x, Exo_DB *exo, Comm_Ex *cx, Dpi *dpi, int num_total_nodes, double time) {
-  std::cout << "  Facet based initialization\n";
+  if (ProcID == 0)
+    std::cout << "Facet based reinitialization\n";
   if (exo->num_dim == 2) {
     facet_based_reinitialization_2D(x, exo, cx, dpi, num_total_nodes, time);
   } else if (exo->num_dim == 3) {
