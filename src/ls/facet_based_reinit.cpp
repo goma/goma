@@ -605,7 +605,7 @@ void facet_based_reinitialization_3D(
         }
       }
 
-      const int num_results = 5;
+      const int num_results = 15;
       std::vector<size_t> ret_index(num_results);
       std::vector<double> out_dist_sqr(num_results);
       nanoflann::KNNResultSet<double> resultSet(num_results);
@@ -857,7 +857,7 @@ void facet_based_reinitialization_2D(
 
       // std::cout << "Node " << node << p[0] << " " << p[1] << " " << " distance: " << min_distance
       // << "\n";
-      const int num_results = 5;
+      const int num_results = 15;
       std::vector<size_t> ret_index(num_results);
       std::vector<double> out_dist_sqr(num_results);
       nanoflann::KNNResultSet<double> resultSet(num_results);
