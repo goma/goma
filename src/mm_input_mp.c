@@ -4881,6 +4881,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     if (pd_glob[mn]->e[imtrx][R_POR_POROSITY]) {
       have_por_porosity = 1;
     }
+    if (pd_glob[mn]->e[imtrx][R_POR_SINK_MASS]) {
+      have_por_sink_mass = 1;
+    }
     if (pd_glob[mn]->e[imtrx][R_POR_ENERGY]) {
       have_por_energy = 1;
     }
