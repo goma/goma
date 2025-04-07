@@ -416,7 +416,7 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
 
       lec->R[LEC_R_INDEX(peqn, i)] += mass + adv + src + diff;
     } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
-  }   /* end of if assemble residual */
+  } /* end of if assemble residual */
 
   /*
    * Jacobian terms...
@@ -529,7 +529,7 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
 
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + adv + src + diff;
         } /* End of loop over j */
-      }   /* End of if the variable is active */
+      } /* End of if the variable is active */
 
       /* Sensitivity w.r.t. velocity */
       for (b = 0; b < VIM; b++) {
@@ -568,8 +568,8 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += adv + src;
 
           } /* End of loop over j */
-        }   /* End of if the variale is active */
-      }     /* End of loop over velocity components */
+        } /* End of if the variale is active */
+      } /* End of loop over velocity components */
 
       /* Sensistivity w.r.t. mesh */
       for (b = pd->Num_Dim; b < pd->Num_Dim; b++) {
@@ -658,7 +658,7 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
       }
 
     } /* End of loop over i */
-  }   /* End of if assemble Jacobian */
+  } /* End of if assemble Jacobian */
   return (status);
 }
 
@@ -1008,7 +1008,7 @@ int assemble_k_omega_sst_modified(dbl time_value, /* current time */
 
       lec->R[LEC_R_INDEX(peqn, i)] -= mass + adv + src + diff;
     } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
-  }   /* end of if assemble residual */
+  } /* end of if assemble residual */
 
   /*
    * Jacobian terms...

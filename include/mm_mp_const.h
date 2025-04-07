@@ -339,6 +339,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 
 #define FLUIDITY_THIXOTROPIC_VISCOSITY 55
 
+#define HERSCHEL_BULKLEY_PAPANASTASIOU 56 /* Herschel_bulkley model - power-law + yield stress */
+
 /*
  *  Heat source modeling
  *
@@ -631,6 +633,13 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 /* Level set interface interpolation */
 #define LSI_INTERP_LINEAR 20001
 #define LSI_INTERP_LOG    20002
+
+/* Regularization models */
+#define REGULARIZATION_EPSILON               4
+#define REGULARIZATION_PAPANASTASIOU         5
+#define REGULARIZATION_PAPANASTASIOU_EPSILON 6
+#define REGULARIZATION_YIELD_ONLY_EPSILON    7
+
 /*
 
    CONSTANTS FOR MATERIAL PROPERTY TAGS

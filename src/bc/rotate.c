@@ -513,7 +513,7 @@ void rotate_res_jac_mesh(int irow_index,           /* Elemental stiffness matrix
           lec->J[LEC_J_INDEX(peq, pvar, irow_index, n)] = rotated_jacobian_scalar[ldir][n];
         }
       } /* end of loop over nodes */
-    }   /* end of if variable */
+    } /* end of if variable */
 
     /* mesh wrt. temperature */
     var = TEMPERATURE;
@@ -538,7 +538,7 @@ void rotate_res_jac_mesh(int irow_index,           /* Elemental stiffness matrix
           lec->J[LEC_J_INDEX(peq, pvar, irow_index, n)] = rotated_jacobian_scalar[ldir][n];
         }
       } /* end of loop over nodes */
-    }   /* end of if variable */
+    } /* end of if variable */
 
     /* mesh wrt. velocity */
     for (jvar = 0; jvar < ielem_surf_dim + 1; jvar++) {
@@ -564,7 +564,7 @@ void rotate_res_jac_mesh(int irow_index,           /* Elemental stiffness matrix
             lec->J[LEC_J_INDEX(peq, pvar, irow_index, n)] = rotated_jacobian_vector[ldir][jvar][n];
           }
         } /* end of loop over nodes */
-      }   /* end of if variable */
+      } /* end of if variable */
 
     } /* end of loop over jvar direction */
 
@@ -594,8 +594,8 @@ void rotate_res_jac_mesh(int irow_index,           /* Elemental stiffness matrix
                 rotated_jacobian_conc[ldir][w][n];
           }
         } /* end of loop over nodes */
-      }   /* end of loop over concentration */
-    }     /* end of if variable */
+      } /* end of loop over concentration */
+    } /* end of if variable */
 
   } /* end of if Newton */
 
@@ -1429,8 +1429,8 @@ void rotate_momentum_eqn(int id,           /* Elemental stiffness matrix row ind
           }
 
         } /* end of loop over nodes */
-      }   /* end of if variable */
-    }     /* end of loop over jvar direction */
+      } /* end of if variable */
+    } /* end of loop over jvar direction */
 
     /* reinject back into lec-J for global assembly */
     for (kdir = 0; kdir < dim; kdir++) {
@@ -1470,7 +1470,7 @@ void rotate_momentum_eqn(int id,           /* Elemental stiffness matrix row ind
           }
 
         } /* end of loop over nodes */
-      }   /* end of loop over species */
+      } /* end of loop over species */
 
       /* reinject d_mesh/d_mass back into lec-J for global assembly */
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
@@ -1740,7 +1740,7 @@ void rotate_res_jac_mom(int irow_index,           /* Elemental stiffness matrix 
           lec->J[LEC_J_INDEX(peq, pvar, irow_index, n)] = rotated_jacobian_scalar[ldir][n];
         }
       } /* end of loop over nodes */
-    }   /* end of if variable */
+    } /* end of if variable */
     var = POLYMER_STRESS11;
     if (pd->v[pg->imtrx][var]) {
       for (int mode = 0; mode < vn->modes; mode++) {
@@ -1825,7 +1825,7 @@ void rotate_res_jac_mom(int irow_index,           /* Elemental stiffness matrix 
           lec->J[LEC_J_INDEX(peq, pvar, irow_index, n)] = rotated_jacobian_scalar[ldir][n];
         }
       } /* end of loop over nodes */
-    }   /* end of if variable */
+    } /* end of if variable */
 
     /* momentum wrt. temperature */
     var = FILL;
@@ -1849,7 +1849,7 @@ void rotate_res_jac_mom(int irow_index,           /* Elemental stiffness matrix 
           lec->J[LEC_J_INDEX(peq, pvar, irow_index, n)] = rotated_jacobian_scalar[ldir][n];
         }
       } /* end of loop over nodes */
-    }   /* end of if variable */
+    } /* end of if variable */
 
     /* momentum wrt. velocity */
     for (jvar = 0; jvar < ielem_surf_dim + 1; jvar++) {
@@ -1876,8 +1876,8 @@ void rotate_res_jac_mom(int irow_index,           /* Elemental stiffness matrix 
           }
 
         } /* end of loop over nodes */
-      }   /* end of if variable */
-    }     /* end of loop over jvar direction */
+      } /* end of if variable */
+    } /* end of loop over jvar direction */
 
     /* momentum wrt. species concentration */
     var = MASS_FRACTION;
@@ -2267,11 +2267,11 @@ void calculate_all_rotation_vectors(Exo_DB *exo, /* the mesh */
               }
             }
           } /* end of nodal rotation check */
-        }   /* end of loop over local nodes, k */
-      }     /* end of loop over side elements, i */
+        } /* end of loop over local nodes, k */
+      } /* end of loop over side elements, i */
 
     } /* end of quick escape */
-  }   /* end of loop over rotation conditions, irc */
+  } /* end of loop over rotation conditions, irc */
 
   /* ADJUST magnitude for multiple vectors */
   /* loop over nodes */

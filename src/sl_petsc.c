@@ -128,7 +128,7 @@ static goma_error get_pressure_velocity_is(PetscMatrixData *matrix_data,
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }   /* END for (ieb loop) */
+  } /* END for (ieb loop) */
 
   *vel_n = index_vel;
   *pres_n = index_pres;
@@ -207,7 +207,7 @@ static goma_error get_pressure_velocity_is(PetscMatrixData *matrix_data,
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }   /* END for (ieb loop) */
+  } /* END for (ieb loop) */
   GOMA_ASSERT(index_vel == *vel_n);
   GOMA_ASSERT(index_pres == *pres_n);
   qsort(*vel_is, index_vel, sizeof(PetscInt), pint_compare);
@@ -276,7 +276,7 @@ goma_error count_pressure_nodes(PetscMatrixData *matrix_data,
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }   /* END for (ieb loop) */
+  } /* END for (ieb loop) */
 
   *local_nodes = index;
 
@@ -374,7 +374,7 @@ static goma_error initialize_petsc_pressure_matrix(PetscMatrixData *matrix_data,
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }   /* END for (ieb loop) */
+  } /* END for (ieb loop) */
 
   if (Num_Proc == 1) {
     MatSeqAIJSetPreallocation(matrix_data->SchurS, 0, d_nnz);
@@ -528,8 +528,8 @@ static goma_error set_pcd_matrices(PetscMatrixData *matrix_data,
           }
         }
       } /* END  for (ip = 0; ip < ip_total; ip++)                      */
-    }   /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }     /* END for (ieb loop) */
+    } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
+  } /* END for (ieb loop) */
 
   PetscInt n_ss_rows = 0;
   for (int ss_idx = 0; ss_idx < matrix_data->pcd_ss_remove_n; ss_idx++) {
@@ -768,8 +768,8 @@ static goma_error set_petsc_pressure_matrix(PetscMatrixData *matrix_data,
           }
         }
       } /* END  for (ip = 0; ip < ip_total; ip++)                      */
-    }   /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }     /* END for (ieb loop) */
+    } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
+  } /* END for (ieb loop) */
 
   return GOMA_SUCCESS;
 }
@@ -868,7 +868,7 @@ static goma_error initialize_petsc_post_proc_matrix(Exo_DB *exo,
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }   /* END for (ieb loop) */
+  } /* END for (ieb loop) */
 
   if (Num_Proc == 1) {
     MatSeqAIJSetPreallocation(matrix_data->mat, 0, d_nnz);
@@ -977,8 +977,8 @@ static goma_error initialize_petsc_post_proc_matrix(Exo_DB *exo,
           }
         }
       } /* END  for (ip = 0; ip < ip_total; ip++)                      */
-    }   /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }     /* END for (ieb loop) */
+    } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
+  } /* END for (ieb loop) */
 
   free(d_nnz);
   free(o_nnz);

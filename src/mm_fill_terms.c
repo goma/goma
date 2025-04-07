@@ -1022,8 +1022,8 @@ int assemble_mesh(double time,
         }
 
       } /* end of loop over equations i  */
-    }   /* end of loop over equation directions a */
-  }     /* end of if jacobian */
+    } /* end of loop over equation directions a */
+  } /* end of if jacobian */
 
   return (status);
 }
@@ -10569,7 +10569,7 @@ int assemble_momentum_path_dependence(dbl time, /* currentt time step */
           }
 
         } /*end if (active_dofs) */
-      }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
   }
   return (status);

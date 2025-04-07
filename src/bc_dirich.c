@@ -139,7 +139,7 @@ int put_dirichlet_in_matrix(double x[], const int num_total_nodes)
                   lec->R[LEC_R_INDEX(eqn, ldof_eqn)] = DIRICHLET_PENALTY * (x[ieqn] - V_set);
                 }
               } /* end of DX_NOTHING test  */
-                // Add for F_DIODE_BC   }
+              // Add for F_DIODE_BC   }
             }
           }
           offset++;

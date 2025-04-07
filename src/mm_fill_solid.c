@@ -245,7 +245,7 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
       }
 #endif
 
-    }      /* end of if Assemble_Jacobian */
+    } /* end of if Assemble_Jacobian */
   } else { /* Lagrangian Mesh!! */
     /* Use Coordinates of Main Problem */
     for (p = 0; p < VIM; p++) {
@@ -269,7 +269,7 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
         }
       }
     } /* end of Assemble_Jacobian */
-  }   /* end of if Arbitrary or Lagrangian */
+  } /* end of if Arbitrary or Lagrangian */
 
   /*******************************************************************************/
   /* calculate basic Cauchy-Green strain tensor (grad_d + grad_d_transpose -
@@ -3714,7 +3714,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
       }
 
     } /* end of if Jacobian */
-  }   /* end of if LAGRANGIAN */
+  } /* end of if LAGRANGIAN */
 
   return (0);
 } /* end of mesh_stress_tensor()*/
@@ -4646,7 +4646,7 @@ int get_F_vp(double F_vp[DIM][DIM],
         }
       }
     } /* end of if F_vp_flag loop */
-  }   /* end of Jacobian Assembly */
+  } /* end of Jacobian Assembly */
 
   return (F_vp_flag);
 } /* end of  get_F_vp */

@@ -170,8 +170,6 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
                 n_dof[MESH_DISPLACEMENT1], dof_map);
 
-        Inn(grad_phi_j, grad_II_phi_j);
-
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           d_func[0][var][j] += LubAux->dq_dp2[ii] * phi_j * bound_normal[ii];
           for (jj = 0; jj < pd->Num_Dim; jj++) {
@@ -180,6 +178,33 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         }
       }
     }
+
+    var = SHELL_SHEAR_TOP;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        /* Load basis functions (j) */
+        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                n_dof[MESH_DISPLACEMENT1], dof_map);
+
+        for (ii = 0; ii < pd->Num_Dim; ii++) {
+          d_func[0][var][j] += LubAux->dq_dshrw[ii] * phi_j * bound_normal[ii];
+        }
+      }
+    }
+
+    var = SHELL_TEMPERATURE;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        /* Load basis functions (j) */
+        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                n_dof[MESH_DISPLACEMENT1], dof_map);
+
+        for (ii = 0; ii < pd->Num_Dim; ii++) {
+          d_func[0][var][j] += LubAux->dq_dT[ii] * phi_j * bound_normal[ii];
+        }
+      }
+    }
+
     /*
      * J_lubp_DMX
      */
@@ -195,6 +220,7 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
           jk = dof_map[j];
 
           /* Load basis functions (j) */
@@ -229,6 +255,7 @@ void shell_n_dot_curv_bc(double func[DIM],
                          double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                          const double theta_deg,
                          const int ibc_flag,         /* NOBC flag from bc input  */
+                         const double penalty,       /* Penalty parameter */
                          const int bc_id,            /* BC_Name */
                          const double time,          /* current time */
                          const double dt,            /* current time step size */
@@ -491,7 +518,7 @@ void shell_n_dot_curv_bc(double func[DIM],
           }
         }
       } // End of loop over DOFs (j)
-    }   // End of FILL assembly
+    } // End of FILL assembly
     /*** SHELL_LUB_CURV ***/
     var = SHELL_LUB_CURV;
     if (pd->v[pg->imtrx][var] && extra_diff_term) {
@@ -612,7 +639,7 @@ void shell_conc_ls_bc(double func[DIM],
           d_func[0][var][j] += (conc_liq - conc_gas) * lsi->d_H_dF[j];
         }
       } // End of loop over DOFs (j)
-    }   // End of FILL assembly
+    } // End of FILL assembly
     var = MASS_FRACTION;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {

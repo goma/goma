@@ -289,8 +289,8 @@ void initial_guess_stress_to_log_conf(double *x, int num_total_nodes) {
         x[s_idx[1][1]] = log_s[1][1];
 
       } /* Loop over nodes */
-    }   /* Loop over modes */
-  }     /* Loop over materials */
+    } /* Loop over modes */
+  } /* Loop over materials */
 }
 
 void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
@@ -1678,7 +1678,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               DPRINTF(stdout, "\n\t\t Exodus file read initialization for phase function fields");
               break;
             } /* end of switch(ls->Init_Method ) */
-          }   /* end of i<pfd->num_phase_funcs */
+          } /* end of i<pfd->num_phase_funcs */
 
           ls = ls_save; /* OK, used the level set routines now be nice and point
                            ls back to where you found it */

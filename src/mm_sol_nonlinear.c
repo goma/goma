@@ -1955,7 +1955,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     */
 
     if (inewton && (Resid_Norm_stack[2] > 0) && (Resid_Norm_stack[2] != 1) &&
-        (Resid_Norm_stack[1] > 0) && (Resid_Norm_stack[1] != 1) &&
+        (Resid_Norm_stack[1] > 0) && (Resid_Norm_stack[1] != 1) && (Soln_Norm_stack[2] > 0) &&
+        (Soln_Norm_stack[1] != 1) &&
         (inewton <= 1 || ((Resid_Norm_stack[0] > 0) && (Resid_Norm_stack[0] != 1)))) {
 #if 1
       if (inewton <= 1) {
@@ -1982,6 +1983,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     }
     if (nAC && inewton && (AC_Resid_Norm_stack[2] > 0) && (AC_Resid_Norm_stack[2] != 1) &&
         (AC_Resid_Norm_stack[1] > 0) && (AC_Resid_Norm_stack[0] != 1) &&
+        (AC_Soln_Norm_stack[2] > 0) && (AC_Soln_Norm_stack[1] != 1) &&
         (inewton <= 1 || ((AC_Resid_Norm_stack[0] > 0) && (AC_Resid_Norm_stack[0] != 1)))) {
 #if 1
       if (inewton <= 1 && DOUBLE_NONZERO(log10(AC_Resid_Norm_stack[1]))) {
@@ -2641,7 +2643,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     inewton++;
     af->Sat_hyst_reevaluate = FALSE; /*only want this true
                                        for first iteration*/
-  }                                  /* End of loop over newton iterations */
+  } /* End of loop over newton iterations */
 
   /**********************************************************************/
   /**********************************************************************
