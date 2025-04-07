@@ -30,7 +30,9 @@
 #endif
 
 #ifdef PARALLEL
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #endif
 extern void handle_ieee(void);
 

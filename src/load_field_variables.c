@@ -11,10 +11,11 @@
 * This software is distributed under the GNU General Public License.      *
 * See LICENSE file.                                                       *
 \************************************************************************/
+#include <string.h>
 
-#include "load_field_variables.h"
 #include "bc_colloc.h"
 #include "el_geom.h"
+#include "load_field_variables.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_fill_ptrs.h"
