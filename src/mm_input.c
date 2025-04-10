@@ -5998,6 +5998,9 @@ void rd_solver_specs(FILE *ifp, char *input) {
   } else if (strcmp(Matrix_Solver, "amesos") == 0) {
     Linear_Solver = AMESOS;
     is_Solver_Serial = FALSE;
+  } else if (strcmp(Matrix_Solver, "mumps") == 0) {
+    Linear_Solver = MUMPS;
+    is_Solver_Serial = FALSE;
   } else if (strcmp(Matrix_Solver, "amesos2") == 0) {
     Linear_Solver = AMESOS2;
     is_Solver_Serial = FALSE;
