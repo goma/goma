@@ -177,6 +177,7 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
       mumps->ICNTL(18) = 3;
       mumps->ICNTL(21) = 1;
     }
+    mumps->ICNTL(4) = 1;
     // mumps->CNTL(1) = -1;
     // mumps->ICNTL(14) = 20;
     // mumps->ICNTL(23) = 0;
@@ -207,6 +208,7 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
       mumps->ICNTL(20) = 11;
     }
 
+    mumps->ICNTL(4) = 1;
     mumps->job = JOB_FACTSYMBOLIC;
     dmumps_c(mumps);
   }
@@ -226,6 +228,7 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
     mumps->ICNTL(20) = 11;
     mumps->ICNTL(20) = 10;
   }
+  mumps->ICNTL(4) = 1;
   mumps->job = JOB_FACTNUMERIC;
   dmumps_c(mumps);
 
@@ -242,6 +245,7 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
     if (ProcID == 0)
       mumps->rhs = malloc(sizeof(double) * mumps_data->N_global);
   }
+  mumps->ICNTL(4) = 1;
   mumps->job = JOB_SOLVE;
   dmumps_c(mumps);
 

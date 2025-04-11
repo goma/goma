@@ -1432,9 +1432,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     case MUMPS:
 
       if ((strcmp(Matrix_Format, "msr") != 0)) {
-        GOMA_EH(GOMA_ERROR,
-                " Sorry, only MSR matrix format is currently supported with "
-                "the MUMPS solver\n");
+        GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with "
+                            "the MUMPS solver\n");
       }
       mumps_solve(ams, delta_x, resid_vector);
       strcpy(stringer, " 1 ");
