@@ -47,6 +47,24 @@ struct MUMPS_data {
   int *row_counts;
 };
 
+void free_solver_data(struct GomaLinearSolverData *data) {
+  if (data->SolverData != NULL) {
+    struct MUMPS_data *mumps_data = (struct MUMPS_data *)data->SolverData;
+    if (mumps_data != NULL) {
+      free(mumps_data->irhs_loc);
+      free(mumps_data->irn);
+      free(mumps_data->jcn);
+      free(mumps_data->val);
+      free(mumps_data->rhs);
+      free(mumps_data->colgids);
+      free(mumps_data->row_offsets);
+      free(mumps_data->row_counts);
+    }
+    free(data->SolverData);
+    data->SolverData = NULL;
+  }
+}
+
 void msr_to_triplet(struct GomaLinearSolverData *data, dbl *rhs) {
   struct MUMPS_data *mumps_data = (struct MUMPS_data *)data->SolverData;
 
@@ -139,12 +157,13 @@ void copy_rhs_and_jac(struct GomaLinearSolverData *data, dbl *rhs) {
   }
 }
 
-void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *rhs) {
+void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
   if (data->SolverData == NULL) {
 
     struct MUMPS_data *mumps_data = calloc(1, sizeof(struct MUMPS_data));
     DMUMPS_STRUC_C *mumps = &mumps_data->mumps;
     data->SolverData = (void *)mumps_data;
+    data->DestroySolverData = free_solver_data;
 
     mumps->comm_fortran = USE_COMM_WORLD;
     mumps->job = JOB_INIT;
@@ -164,7 +183,7 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *rhs) {
 
     mumps->job = JOB_INIT;
     dmumps_c(mumps);
-    msr_to_triplet(data, rhs);
+    msr_to_triplet(data, b);
     if (Num_Proc == 1) {
       mumps->n = mumps_data->N;
       mumps->nnz = mumps_data->nnz;
@@ -194,7 +213,7 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *rhs) {
   struct MUMPS_data *mumps_data = (struct MUMPS_data *)data->SolverData;
   DMUMPS_STRUC_C *mumps = &mumps_data->mumps;
 
-  copy_rhs_and_jac(data, rhs);
+  copy_rhs_and_jac(data, b);
 
   if (Num_Proc == 1) {
     mumps->nrhs = 1;
@@ -222,21 +241,17 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *rhs) {
     mumps->ICNTL(20) = 10;
     if (ProcID == 0)
       mumps->rhs = malloc(sizeof(double) * mumps_data->N_global);
-    // mumps->nsol_loc = mumps_data->N;
-    // mumps->lsol_loc = 0;
-    // mumps->isol_loc = malloc(sizeof(int) * mumps_data->N);
-    // mumps->sol_loc = malloc(sizeof(double) * mumps_data->N);
   }
   mumps->job = JOB_SOLVE;
   dmumps_c(mumps);
 
   // copy solution back to rhs
+  double *rhs;
   if (Num_Proc == 1) {
     for (int i = 0; i < mumps_data->N; i++) {
       x[i] = mumps->rhs[i];
     }
   } else {
-    double *rhs;
     if (ProcID == 0) {
       rhs = mumps->rhs;
     } else {
@@ -246,6 +261,13 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *rhs) {
                  mumps_data->N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     for (int i = 0; i < mumps_data->N; i++) {
       x[i] = rhs[i];
+    }
+  }
+  if (Num_Proc != 1) {
+    if (ProcID == 0) {
+      free(mumps->rhs);
+    } else {
+      free(rhs);
     }
   }
 }
