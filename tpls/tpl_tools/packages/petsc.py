@@ -4,7 +4,7 @@ import os
 
 class Package(packages.AutotoolsPackage):
     def __init__(self):
-        self.name = "petsc"
+        self.name = "petsc-debug"
         self.version = "3.22.3"
         self.sha256 = "88c0d465a3bd688cb17ebf06a17c06d6e9cc457fa6b9643d217389424e6bd795"
         self.filename = "petsc-" + self.version + ".tar.gz"
@@ -26,7 +26,7 @@ class Package(packages.AutotoolsPackage):
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
-        builder.env["PETSC_ARCH"] = "arch-c-opt"
+        builder.env["PETSC_ARCH"] = "arch-c-debug"
         builder.env["PETSC_DIR"] = os.path.join(
             builder._extract_dir, builder._extracted_folder
         )
@@ -49,7 +49,7 @@ class Package(packages.AutotoolsPackage):
             configure_options.append("--with-shared-libraries=1")
         else:
             configure_options.append("--with-shared-libraries=0")
-        configure_options.append("--with-debugging=0")
+        configure_options.append("--with-debugging=1")
         configure_options.append("--download-hypre")
         configure_options.append("--download-strumpack")
         configure_options.append("--with-scalapack=1")
@@ -71,9 +71,9 @@ class Package(packages.AutotoolsPackage):
         configure_options.append("--with-lapack-lib=" + builder.env["LAPACK_LIBRARIES"])
         configure_options.append("--with-mumps=1")
         configure_options.append("--with-mumps-dir=" + builder.env["MUMPS_DIR"])
-        configure_options.append("COPTFLAGS=-O3")
-        configure_options.append("CXXOPTFLAGS=-O3")
-        configure_options.append("FOPTFLAGS=-O3")
+        configure_options.append("COPTFLAGS=-g -O0")
+        configure_options.append("CXXOPTFLAGS=-g -O0")
+        configure_options.append("FOPTFLAGS=-g -O0")
         builder.run_command(configure_options)
 
     def register(self, builder):
