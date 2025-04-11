@@ -6169,10 +6169,8 @@ void rd_solver_specs(FILE *ifp, char *input) {
   if (Linear_Solver == MUMPS) {
     // have to figure out which ones we actually want to be setable
     const int num_icntl = 27;
-    const int readable_parameters[27] = {
-      4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-      20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 58
-    };
+    const int readable_parameters[27] = {4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
+                                         18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 58};
     for (int i = 0; i < num_icntl; i++) {
       int param = readable_parameters[i];
       snprintf(search_string, 1024, "MUMPS ICNTL %d", param);
@@ -6180,21 +6178,19 @@ void rd_solver_specs(FILE *ifp, char *input) {
       if (iread == 1) {
         read_string(ifp, input, '\n');
         strip(input);
-        int count = sscanf(input, "%d", &upd->solver_info->icntl[param-1]);
+        int count = sscanf(input, "%d", &upd->solver_info->icntl[param - 1]);
         if (count == 1) {
           snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", search_string,
-                   upd->solver_info->icntl[param-1]);
+                   upd->solver_info->icntl[param - 1]);
           ECHO(echo_string, echo_file);
-          upd->solver_info->icntl_user_set[param-1] = 1;
+          upd->solver_info->icntl_user_set[param - 1] = 1;
         } else if (count != 1) {
           GOMA_EH(GOMA_ERROR, "Error reading MUMPS ICNTL %d", param);
         }
       }
     }
     const int num_cntl = 6;
-    const int readable_parameters_cntl[6] = {
-      1,2,3,4,5,7
-    };
+    const int readable_parameters_cntl[6] = {1, 2, 3, 4, 5, 7};
     for (int i = 0; i < num_cntl; i++) {
       int param = readable_parameters_cntl[i];
       snprintf(search_string, 1024, "MUMPS CNTL %d", param);
@@ -6202,18 +6198,17 @@ void rd_solver_specs(FILE *ifp, char *input) {
       if (iread == 1) {
         read_string(ifp, input, '\n');
         strip(input);
-        int count = sscanf(input, "%lf", &upd->solver_info->cntl[param-1]);
+        int count = sscanf(input, "%lf", &upd->solver_info->cntl[param - 1]);
         if (count == 1) {
           snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %lf", search_string,
-                   upd->solver_info->cntl[param-1]);
+                   upd->solver_info->cntl[param - 1]);
           ECHO(echo_string, echo_file);
-          upd->solver_info->cntl_user_set[param-1] = 1;
+          upd->solver_info->cntl_user_set[param - 1] = 1;
         } else if (count != 1) {
           GOMA_EH(GOMA_ERROR, "Error reading MUMPS ICNTL %d", param);
         }
       }
     }
-
   }
 
   strcpy(search_string, "Preconditioner");

@@ -148,6 +148,7 @@
 #include "sl_auxutil.h"
 #include "sl_lu.h"
 #include "sl_matrix_util.h"
+#include "sl_mumps.h"
 #include "sl_umf.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
@@ -1611,6 +1612,15 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
     strcpy(stringer, " 1 ");
     break;
 
+  case MUMPS:
+    if (strcmp(Matrix_Format, "msr") != 0) {
+      GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with the MUMPS "
+                          "solver\n");
+    }
+    error = mumps_solve(ams, x, xr);
+    strcpy(stringer, " 1 ");
+    break;
+
   case MA28:
     /*
      * sl_ma28 keeps interntal static variables to determine whether
@@ -2347,6 +2357,18 @@ void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double to
     strcpy(stringer, " 1 ");
     break;
 
+  case MUMPS: {
+    if (strcmp(Matrix_Format, "msr") != 0) {
+      GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with the MUMPS "
+                          "solver\n");
+    }
+    int err = mumps_solve(ams, y, x);
+    if (err != GOMA_SUCCESS) {
+      strcpy(stringer, " 0 ");
+    } else {
+      strcpy(stringer, " 1 ");
+    }
+  } break;
   case AZTEC:
 
     /* Set option of preconditioner reuse */

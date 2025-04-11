@@ -823,7 +823,6 @@ typedef struct turbulent_information {
   double k_inf;
 } turbulent_information;
 
-
 typedef struct solver_information {
   // mumps specific
   int icntl[60]; /* MUMPS control parameters */
@@ -831,7 +830,6 @@ typedef struct solver_information {
   double cntl[15]; /* MUMPS control parameters */
   int cntl_user_set[15];
 } solver_information;
-
 
 /*
  * This contains information that is uniformaly relevant
