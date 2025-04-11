@@ -1435,7 +1435,11 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with "
                             "the MUMPS solver\n");
       }
-      mumps_solve(ams, delta_x, resid_vector);
+      err = mumps_solve(ams, delta_x, resid_vector);
+      if (err != GOMA_SUCCESS) {
+        return_value = -1;
+        goto free_and_clear;
+      }
       strcpy(stringer, " 1 ");
       break;
     case AMESOS2:

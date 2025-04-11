@@ -15,13 +15,14 @@
 #include "sl_util_structs.h"
 #include "std.h"
 
-#define JOB_END          -2
-#define JOB_INIT         -1
-#define JOB_NULL         0
-#define JOB_FACTSYMBOLIC 1
-#define JOB_FACTNUMERIC  2
-#define JOB_SOLVE        3
-#define USE_COMM_WORLD   -987654
+#define JOB_END                     -2
+#define JOB_INIT                    -1
+#define JOB_NULL                    0
+#define JOB_ANALYSIS                1
+#define JOB_FACTORIZATION           2
+#define JOB_SOLVE                   3
+#define JOB_FACTORIZATION_AND_SOLVE 5
+#define USE_COMM_WORLD              -987654
 
 // C to Fortran macros for MUMPS
 #define ICNTL(I)  icntl[(I) - 1]
@@ -157,7 +158,53 @@ void copy_rhs_and_jac(struct GomaLinearSolverData *data, dbl *rhs) {
   }
 }
 
-void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
+static goma_error check_mumps_error(DMUMPS_STRUC_C *mumps) {
+  if (mumps->infog[0] < 0) {
+    if (mumps->icntl[4] == 0) {
+      if (ProcID == 0) {
+        fprintf(stderr, "\nMUMPS Errors:\n");
+        fprintf(stderr, "INFOG[1]: %d\n", mumps->infog[0]);
+        fprintf(stderr, "INFOG[2]: %d\n", mumps->infog[1]);
+      }
+      fflush(stderr);
+      MPI_Barrier(MPI_COMM_WORLD);
+      if (mumps->info[0] < 0) {
+        fprintf(stderr, "P%d INFO[1]: %d\n", ProcID, mumps->info[0]);
+        fprintf(stderr, "P%d INFO[2]: %d\n", ProcID, mumps->info[1]);
+      }
+    }
+    return GOMA_ERROR;
+  }
+  return GOMA_SUCCESS;
+}
+
+static void set_icntl_and_cntl(DMUMPS_STRUC_C *mumps) {
+  // Goma defaults
+  mumps->ICNTL(4) = 0;
+  if (Num_Proc == 1) {
+    mumps->ICNTL(7) = 7;
+    mumps->ICNTL(18) = 0;
+  } else {
+    mumps->ICNTL(18) = 3;
+    mumps->ICNTL(20) = 11;
+    mumps->ICNTL(21) = 0;
+  }
+
+  // User defined options
+  for (int i = 0; i < 60; i++) {
+    if (upd->solver_info->icntl_user_set[i]) {
+      mumps->icntl[i] = upd->solver_info->icntl[i];
+    }
+  }
+  for (int i = 0; i < 15; i++) {
+    if (upd->solver_info->cntl_user_set[i]) {
+      mumps->cntl[i] = upd->solver_info->cntl[i];
+    }
+  }
+}
+
+goma_error mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
+  goma_error err;
   if (data->SolverData == NULL) {
 
     struct MUMPS_data *mumps_data = calloc(1, sizeof(struct MUMPS_data));
@@ -170,20 +217,16 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
     mumps->par = 1;
     mumps->sym = 0;
 
-    if (Num_Proc == 1) {
-      mumps->ICNTL(18) = 0;
-      mumps->ICNTL(7) = 7;
-    } else {
-      mumps->ICNTL(18) = 3;
-      mumps->ICNTL(21) = 1;
-    }
-    mumps->ICNTL(4) = 1;
-    // mumps->CNTL(1) = -1;
-    // mumps->ICNTL(14) = 20;
-    // mumps->ICNTL(23) = 0;
+    set_icntl_and_cntl(mumps);
 
     mumps->job = JOB_INIT;
     dmumps_c(mumps);
+    err = check_mumps_error(mumps);
+    if (err != GOMA_SUCCESS) {
+      free_solver_data(data);
+      return err;
+    }
+
     msr_to_triplet(data, b);
     if (Num_Proc == 1) {
       mumps->n = mumps_data->N;
@@ -192,8 +235,6 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
       mumps->jcn = mumps_data->jcn;
       mumps->a = mumps_data->val;
       mumps->rhs = mumps_data->rhs;
-      mumps->ICNTL(18) = 0;
-      mumps->ICNTL(7) = 7;
     } else {
       mumps->n = mumps_data->N_global;
       mumps->nnz_loc = mumps_data->nnz;
@@ -201,16 +242,16 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
       mumps->irn_loc = mumps_data->irn;
       mumps->jcn_loc = mumps_data->jcn;
       mumps->a_loc = mumps_data->val;
-      mumps->ICNTL(18) = 3;
-      mumps->ICNTL(21) = 1;
-      mumps->ICNTL(18) = 3;
-      mumps->ICNTL(21) = 0;
-      mumps->ICNTL(20) = 11;
     }
 
-    mumps->ICNTL(4) = 1;
-    mumps->job = JOB_FACTSYMBOLIC;
+    set_icntl_and_cntl(mumps);
+    mumps->job = JOB_ANALYSIS;
     dmumps_c(mumps);
+    err = check_mumps_error(mumps);
+    if (err != GOMA_SUCCESS) {
+      free_solver_data(data);
+      return err;
+    }
   }
   struct MUMPS_data *mumps_data = (struct MUMPS_data *)data->SolverData;
   DMUMPS_STRUC_C *mumps = &mumps_data->mumps;
@@ -223,14 +264,7 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
     mumps->nloc_rhs = mumps_data->N;
     mumps->irhs_loc = mumps_data->irhs_loc;
     mumps->lrhs_loc = mumps_data->N;
-    mumps->ICNTL(18) = 3;
-    mumps->ICNTL(21) = 0;
-    mumps->ICNTL(20) = 11;
-    mumps->ICNTL(20) = 10;
   }
-  mumps->ICNTL(4) = 1;
-  mumps->job = JOB_FACTNUMERIC;
-  dmumps_c(mumps);
 
   if (Num_Proc != 1) {
     mumps->nrhs = 1;
@@ -239,15 +273,16 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
     mumps->irhs_loc = mumps_data->irhs_loc;
     mumps->lrhs_loc = mumps_data->N;
 
-    mumps->ICNTL(18) = 3;
-    mumps->ICNTL(21) = 0;
-    mumps->ICNTL(20) = 10;
     if (ProcID == 0)
       mumps->rhs = malloc(sizeof(double) * mumps_data->N_global);
   }
-  mumps->ICNTL(4) = 1;
-  mumps->job = JOB_SOLVE;
+  mumps->job = JOB_FACTORIZATION_AND_SOLVE;
+  set_icntl_and_cntl(mumps);
   dmumps_c(mumps);
+  err = check_mumps_error(mumps);
+  if (err != GOMA_SUCCESS) {
+    return err;
+  }
 
   // copy solution back to rhs
   double *rhs;
@@ -274,6 +309,7 @@ void mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
       free(rhs);
     }
   }
+  return GOMA_SUCCESS;
 }
 
 #endif // GOMA_ENABLE_MUMPS

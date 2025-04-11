@@ -194,6 +194,7 @@ void raven_landing(void) {
    */
 
   upd->turbulent_info = calloc(1, sizeof(turbulent_information));
+  upd->solver_info = calloc(1, sizeof(solver_information));
 
   /*
    * Instead of communicating all efv, just this bit, the remainder in
@@ -1035,6 +1036,10 @@ void noahs_ark(void) {
   ddd_add_member(n, &(upd->turbulent_info->num_side_sets), 1, MPI_INT);
   ddd_add_member(n, &(upd->turbulent_info->k_inf), 1, MPI_DOUBLE);
   ddd_add_member(n, &(upd->turbulent_info->omega_inf), 1, MPI_DOUBLE);
+  ddd_add_member(n, &(upd->solver_info->icntl), 60, MPI_INT);
+  ddd_add_member(n, &(upd->solver_info->icntl_user_set), 60, MPI_INT);
+  ddd_add_member(n, &(upd->solver_info->cntl), 7, MPI_DOUBLE);
+  ddd_add_member(n, &(upd->solver_info->cntl_user_set), 7, MPI_INT);
 
   for (i = 0; i < upd->Num_Mat; i++) {
     int imtrx;
