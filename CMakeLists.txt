@@ -355,6 +355,19 @@ if(ENABLE_PETSC AND PETSC_FOUND)
   list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_PETSC)
 endif()
 
+option(ENABLE_MUMPS "ENABLE_MUMPS" ON)
+if (ENABLE_MUMPS)
+  find_package(MUMPS)
+  if(MUMPS_FOUND)
+    message(STATUS "Using MUMPS ${MUMPS_LIBRARIES}")
+    set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${MUMPS_LIBRARIES})
+    set(GOMA_TPL_INCLUDES ${GOMA_TPL_INCLUDES} ${MUMPS_INCLUDES})
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_MUMPS)
+  else()
+    message(STATUS "MUMPS library not found")
+  endif()
+endif()
+
 # UMFPACK in trilinos
 list(FIND Trilinos_TPL_LIST UMFPACK trilinos_package_index)
 option(ENABLE_UMFPACK "ENABLE_UMFPACK" ON)
@@ -614,6 +627,7 @@ set(GOMA_INCLUDES
     include/sl_petsc_complex.h
     include/sl_matrix_util.h
     include/sl_stratimikos_interface.h
+    include/sl_mumps.h
     include/sl_umf.h
     include/sl_util.h
     include/sl_util_structs.h
@@ -780,6 +794,7 @@ set(GOMA_SOURCES
     src/sl_matrix_util.c
     src/sl_squash.c
     src/sl_stratimikos_interface.cpp
+    src/sl_mumps.c
     src/sl_umf.c
     src/sl_util.c
     src/wr_dpi.c

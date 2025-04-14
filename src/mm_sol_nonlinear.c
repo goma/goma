@@ -20,6 +20,7 @@
 #include "linalg/sparse_matrix.h"
 #include "mm_eh.h"
 #include "mm_mp_const.h"
+#include "sl_mumps.h"
 #include "sl_util_structs.h"
 #include <az_aztec_defs.h>
 
@@ -1428,6 +1429,19 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       amesos_solve(Amesos_Package, ams, delta_x, resid_vector, 1, pg->imtrx);
       strcpy(stringer, " 1 ");
       break;
+    case MUMPS:
+
+      if ((strcmp(Matrix_Format, "msr") != 0)) {
+        GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with "
+                            "the MUMPS solver\n");
+      }
+      err = mumps_solve(ams, delta_x, resid_vector);
+      if (err != GOMA_SUCCESS) {
+        return_value = -1;
+        goto free_and_clear;
+      }
+      strcpy(stringer, " 1 ");
+      break;
     case AMESOS2:
 
       if (ams->GomaMatrixData != NULL) {
@@ -1588,6 +1602,19 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           }
           amesos_solve(Amesos_Package, ams, &wAC[iAC][0], &bAC[iAC][0], 0, pg->imtrx);
           strcpy(stringer_AC, " 1 ");
+          break;
+
+        case MUMPS:
+          if ((strcmp(Matrix_Format, "msr") != 0)) {
+            GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with "
+                                "the MUMPS solver\n");
+          }
+          err = mumps_solve(ams, &wAC[iAC][0], &bAC[iAC][0]);
+          strcpy(stringer_AC, " 1 ");
+          if (err != GOMA_SUCCESS) {
+            return_value = -1;
+            goto free_and_clear;
+          }
           break;
 
         case AZTEC:
@@ -3604,6 +3631,18 @@ static int soln_sens(double lambda,  /*  parameter */
                           "the Amesos solver suite\n");
     }
     amesos_solve(Amesos_Package, ams, x_sens, resid_vector_sens, 0, pg->imtrx);
+    strcpy(stringer, " 1 ");
+    break;
+  case MUMPS:
+
+    if ((strcmp(Matrix_Format, "msr") != 0)) {
+      GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with "
+                          "the MUMPS solver\n");
+    }
+    err = mumps_solve(ams, x_sens, resid_vector_sens);
+    if (err != GOMA_SUCCESS) {
+      strcpy(stringer, "0");
+    }
     strcpy(stringer, " 1 ");
     break;
   case AMESOS2:
