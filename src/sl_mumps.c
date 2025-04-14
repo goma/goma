@@ -1,3 +1,6 @@
+#ifdef GOMA_ENABLE_MUMPS
+
+#include <stdlib.h>
 #include "ac_conti.h"
 #include "dp_comm.h"
 #include "mm_as.h"
@@ -5,10 +8,6 @@
 #include "rf_mp.h"
 #include "rf_solve.h"
 #include <mpi.h>
-#ifdef GOMA_ENABLE_MUMPS
-
-#include <stdlib.h>
-
 #include "dmumps_c.h"
 #include "mm_eh.h"
 #include "sl_mumps.h"
@@ -331,6 +330,15 @@ goma_error mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
   }
 
   return GOMA_SUCCESS;
+}
+
+#else
+
+#include "sl_mumps.h"
+#include "mm_eh.h"
+goma_error mumps_solve(struct GomaLinearSolverData *data, dbl *x, dbl *b) {
+  GOMA_EH(GOMA_ERROR, "MUMPS Solver is not enabled");
+  return GOMA_ERROR;
 }
 
 #endif // GOMA_ENABLE_MUMPS
