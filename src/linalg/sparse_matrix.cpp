@@ -80,8 +80,10 @@ extern "C" goma_error GomaSparseMatrix_SetProblemGraph(
   int add_var = 0;
   NODE_INFO_STRUCT *nodeCol;
   NODAL_VARS_STRUCT *nv, *nvCol;
-  int inode_varType[MaxVarPerNode], inode_matID[MaxVarPerNode];
-  int inter_node_varType[MaxVarPerNode], inter_node_matID[MaxVarPerNode];
+  std::vector<int> inode_varType(MaxVarPerNode);
+  std::vector<int> inode_matID(MaxVarPerNode);
+  std::vector<int> inter_node_varType(MaxVarPerNode);
+  std::vector<int> inter_node_matID(MaxVarPerNode);
   int nnz = 0;
 
   GomaGlobalOrdinal NumMyRows = num_internal_dofs + num_boundary_dofs;
@@ -128,7 +130,7 @@ extern "C" goma_error GomaSparseMatrix_SetProblemGraph(
      * Fill the vector list which points to the unknowns defined at this
      * node...
      */
-    row_num_unknowns = fill_variable_vector(inode, inode_varType, inode_matID);
+    row_num_unknowns = fill_variable_vector(inode, inode_varType.data(), inode_matID.data());
     /*
      * Do a check against the number of unknowns at this
      * node stored in the global array
@@ -160,7 +162,7 @@ extern "C" goma_error GomaSparseMatrix_SetProblemGraph(
          * fill the vector list which points to the unknowns
          * defined at this interaction node
          */
-        col_num_unknowns = fill_variable_vector(inter_node, inter_node_varType, inter_node_matID);
+        col_num_unknowns = fill_variable_vector(inter_node, inter_node_varType.data(), inter_node_matID.data());
         if (col_num_unknowns != nvCol->Num_Unknowns) {
           GOMA_EH(GOMA_ERROR, "Inconsistency counting unknowns.");
         }
