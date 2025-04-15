@@ -77,7 +77,7 @@ void shape_to_triangle(int itype,
   switch (shape) {
   case TRIANGLE:
     triangles.push_back(
-        std::make_tuple(Point<2>(1.0, 0.0), Point<2>(0.0, 0.0), Point<2>(0.0, 1.0)));
+        std::make_tuple(Point<2>(1.0, 0.0), Point<2>(0.0, 1.0), Point<2>(0.0, 0.0)));
     order.push_back({0, 1, 2});
     break;
   case QUADRILATERAL:
@@ -584,7 +584,7 @@ void facet_based_reinitialization_3D(
   my_kd_tree_t index(3, pc, nanoflann::KDTreeSingleIndexAdaptorParams(10));
 
   for (int node = 0; node < num_total_nodes; node++) {
-    if (level_set_nodes.find(node) != level_set_nodes.end()) {
+    if (ls->Huygens_Freeze_Nodes && level_set_nodes.find(node) != level_set_nodes.end()) {
       continue;
     }
     int index_ls = Index_Solution(node, ls->var, 0, 0, -2, pg->imtrx);
@@ -647,6 +647,7 @@ void facet_based_reinitialization_2D(
 
   BasicTimer timer;
   timer.start();
+  std::unordered_set<int> level_set_nodes;
 
   for (int elem_block = 0; elem_block < exo->num_elem_blocks; elem_block++) {
     int mn = Matilda[elem_block];
@@ -750,6 +751,7 @@ void facet_based_reinitialization_2D(
 
                   int I = exo->node_list[iconnect + ln];
 
+                  level_set_nodes.insert(I);
                   dbl phi_j =
                       newshape(xi, ei[pg->imtrx]->ielem_type, PSI, ln, ei[pg->imtrx]->ielem_shape,
                                pd->i[pd->mi[ShapeVar]][ShapeVar], j);
@@ -761,7 +763,7 @@ void facet_based_reinitialization_2D(
                   int ln = ei[pd->mi[ShapeVar]]->dof_list[ShapeVar][j];
 
                   int I = exo->node_list[iconnect + ln];
-
+                  level_set_nodes.insert(I);
                   dbl phi_j =
                       newshape(xi, ei[pg->imtrx]->ielem_type, PSI, ln, ei[pg->imtrx]->ielem_shape,
                                pd->i[pd->mi[ShapeVar]][ShapeVar], j);
@@ -841,6 +843,9 @@ void facet_based_reinitialization_2D(
 
   // For each node we will compute the distance to the closest facet
   for (int node = 0; node < num_total_nodes; node++) {
+    if (ls->Huygens_Freeze_Nodes && level_set_nodes.find(node) != level_set_nodes.end()) {
+      continue;
+    }
     int index_ls = Index_Solution(node, ls->var, 0, 0, -2, pg->imtrx);
     if (index_ls != -1) {
       Point<2> p = {Coor[0][node], Coor[1][node]};
