@@ -8916,10 +8916,10 @@ int get_convection_velocity(
         break;
       }
       if (volsolid < 0) {
-        double volso = 1.0;
-        for (w = 0; w < pd->Num_Species_Eqn; w++) {
-          volso -= fv->c[w] * mp->specific_volume[w];
-        }
+        // double volso = 1.0;
+        // for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        //   volso -= fv->c[w] * mp->specific_volume[w];
+        // }
         GOMA_WH(-1, "negative nonvolatile volume fraction %g %g", volsolid, fv->c[0]);
       }
 
