@@ -6164,8 +6164,10 @@ double ls_modulate_property(double p1,
     level_set_property(p_minus, p_plus, width, &p, dpdF);
   else if (interp_method == LSI_INTERP_LOG)
     level_set_property_log(p_minus, p_plus, width, &p, dpdF);
-  else
+  else {
     GOMA_EH(-1, "Unknown level set interface interpolation method");
+    return 0.0;
+  }
 
   if (ls->Elem_Sign == -1) {
     *factor = pm_plus;
