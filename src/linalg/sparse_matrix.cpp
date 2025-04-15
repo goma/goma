@@ -162,7 +162,8 @@ extern "C" goma_error GomaSparseMatrix_SetProblemGraph(
          * fill the vector list which points to the unknowns
          * defined at this interaction node
          */
-        col_num_unknowns = fill_variable_vector(inter_node, inter_node_varType.data(), inter_node_matID.data());
+        col_num_unknowns =
+            fill_variable_vector(inter_node, inter_node_varType.data(), inter_node_matID.data());
         if (col_num_unknowns != nvCol->Num_Unknowns) {
           GOMA_EH(GOMA_ERROR, "Inconsistency counting unknowns.");
         }
