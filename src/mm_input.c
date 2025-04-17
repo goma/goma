@@ -2247,6 +2247,9 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       } else if (strcmp(input, "Huygens") == 0) {
         ls->Renorm_Method = HUYGENS;
         strcat(echo_string, "Huygens");
+      } else if (strcmp(input, "Facet_Based") == 0) {
+        ls->Renorm_Method = FACET_BASED;
+        strcat(echo_string, "Facet_Based");
       } else if (strcmp(input, "Huygens_Constrained") == 0) {
 
         ls->Renorm_Method = HUYGENS_C;
