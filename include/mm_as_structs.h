@@ -823,13 +823,20 @@ typedef struct turbulent_information {
   double k_inf;
 } turbulent_information;
 
+typedef struct solver_information {
+  // mumps specific
+  int icntl[60]; /* MUMPS control parameters */
+  int icntl_user_set[60];
+  double cntl[15]; /* MUMPS control parameters */
+  int cntl_user_set[15];
+} solver_information;
+
 /*
  * This contains information that is uniformaly relevant
  * to all portions of the problem without regard to
  * block id or material number
  *
  */
-
 struct Uniform_Problem_Description {
   int Total_Num_Matrices; /* Total number of problem graphs to be solved */
 
@@ -919,6 +926,7 @@ struct Uniform_Problem_Description {
   int disable_supg_tau_sensitivities;
   int supg_lagged_tau;
   dbl Residual_Relative_Tol[MAX_NUM_MATRICES];
+  solver_information *solver_info;
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/

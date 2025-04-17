@@ -22,6 +22,8 @@ report by Schunk, et al. (2002) for an overview and further usage tips.
    solver_specifications/solution_algorithm
    solver_specifications/matrix_storage_format
    solver_specifications/stratimikos_file
+   solver_specifications/mumps_icntl.rst
+   solver_specifications/mumps_cntl.rst
    solver_specifications/preconditioner
    solver_specifications/matrix_subdomain_solver
    solver_specifications/matrix_scaling

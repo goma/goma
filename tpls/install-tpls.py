@@ -123,6 +123,13 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.set_defaults(write_dynamic_library_path=False)
+    parser.add_argument(
+        "--install-complex-petsc",
+        help="Install a complex version of petsc alongside the regular",
+        dest="petsc_complex",
+        action="store_true",
+    )
+    parser.set_defaults(petsc_complex=False)
 
     for p in packages:
         pm = importlib.import_module("tpl_tools." + ".".join(["packages", p]))
@@ -134,6 +141,10 @@ if __name__ == "__main__":
         )
 
     args = parser.parse_args()
+
+    if not args.petsc_complex:
+        packages.remove("petsc_complex")
+
     if not args.enable_parmetis:
         print("ParMETIS has been disabled ")
         print("\tDisabling ParMETIS")
