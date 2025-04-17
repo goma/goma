@@ -1144,9 +1144,9 @@ int assemble_fill(double tt,
 
                 dbl d_wt_func = 0;
                 for (int a = 0; a < dim; a++) {
-                  d_wt_func += supg_terms.supg_tau * fv->v[a] *
-                                   bf[eqn]->d_grad_phi_dmesh[i][a][b][j] +
-                               supg_terms.d_supg_tau_dX[b][j] * fv->v[a] * bf[eqn]->grad_phi[i][a];
+                  d_wt_func +=
+                      supg_terms.supg_tau * fv->v[a] * bf[eqn]->d_grad_phi_dmesh[i][a][b][j] +
+                      supg_terms.d_supg_tau_dX[b][j] * fv->v[a] * bf[eqn]->grad_phi[i][a];
                 }
                 mass = fv_dot->F * d_wt_func;
                 advection = 0;

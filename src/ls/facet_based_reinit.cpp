@@ -162,6 +162,20 @@ void shape_to_quad(int itype,
     break;
   }
 }
+const std::array<std::array<double, 3>, 4> tet_points = {{
+    {0.0, 0.0, 0.0},
+    {1.0, 0.0, 0.0},
+    {
+        0.0,
+        1.0,
+        0.0,
+    },
+    {
+        0.0,
+        0.0,
+        1.0,
+    },
+}};
 
 const std::array<std::array<double, 3>, 27> hex_points = {{{-1.0, -1.0, -1.0},
                                                            {1.0, -1.0, -1.0},
@@ -320,6 +334,29 @@ void shape_to_hex(int itype,
   }
 }
 
+void shape_to_tet(int itype,
+                  std::vector<std::array<Point<3>, 4>> &tets,
+                  std::vector<std::array<int, 4>> &order,
+                  int dofs) {
+  int shape = type2shape(itype);
+  switch (shape) {
+  case TETRAHEDRON:
+    // probably need to add special case for QUADRATIC tets
+    if (dofs == 4 || dofs == 8) {
+      tets.push_back({Point<3>(tet_points[0]), Point<3>(tet_points[1]), Point<3>(tet_points[2]),
+                      Point<3>(tet_points[3])});
+
+      order.push_back({0, 1, 2, 3});
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unsupported dofs %d for element type %d", dofs, itype);
+    }
+    break;
+  default:
+    GOMA_EH(GOMA_ERROR, "Unsupported element type %d", itype);
+    break;
+  }
+}
+
 void interp_quad_dofs(std::vector<double> &ls_values) {
   ls_values[4] = 0.5 * (ls_values[0] + ls_values[1]);
   ls_values[5] = 0.5 * (ls_values[1] + ls_values[2]);
@@ -383,6 +420,8 @@ void facet_based_reinitialization_3D(
 
   std::vector<std::array<Point<3>, 8>> hexes;
   std::vector<std::array<int, 8>> hex_nodes;
+  std::vector<std::array<Point<3>, 4>> tets;
+  std::vector<std::array<int, 4>> tet_nodes;
 
   std::unordered_set<int> level_set_nodes;
   for (int elem_block = 0; elem_block < exo->num_elem_blocks; elem_block++) {
@@ -400,6 +439,9 @@ void facet_based_reinitialization_3D(
     switch (shape) {
     case HEXAHEDRON:
       shape_to_hex(etype, hexes, hex_nodes, dofs);
+      break;
+    case TETRAHEDRON:
+      shape_to_tet(etype, tets, tet_nodes, dofs);
       break;
     default:
       GOMA_EH(GOMA_ERROR, "Unsupported element type %d", etype);
@@ -436,6 +478,17 @@ void facet_based_reinitialization_3D(
             values[j] = ls_values[hex_nodes[i][j]];
           }
           auto facet_list = create_facet_from_hex(hexes[i], values, 0.0);
+
+          for (auto &facet : facet_list) {
+            local_facets.push_back(facet);
+          }
+        }
+        for (size_t i = 0; i < tets.size(); i++) {
+          std::array<double, 4> values;
+          for (int j = 0; j < 4; j++) {
+            values[j] = ls_values[tet_nodes[i][j]];
+          }
+          auto facet_list = create_facet_from_tet(tets[i], values, 0.0);
 
           for (auto &facet : facet_list) {
             local_facets.push_back(facet);

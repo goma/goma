@@ -391,7 +391,11 @@ std::vector<Line<dim>> create_facet_from_quad(const Point<dim> &p0,
   return result;
 }
 
-std::vector<Triangle<3>> create_facet_from_hex(const std::array<Point<3>, 8> &points,
+std::vector<Triangle<3>> create_facet_from_tet(const std::array<Point<3>, 4> &points,
+                                               const std::array<double, 4> &values,
+                                               double isoval);
+
+  std::vector<Triangle<3>> create_facet_from_hex(const std::array<Point<3>, 8> &points,
                                                const std::array<double, 8> &values,
                                                double isoval);
 } // namespace distance_tools

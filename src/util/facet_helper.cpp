@@ -4,6 +4,107 @@
 
 namespace goma {
 namespace distance_tools {
+std::vector<Triangle<3>> create_facet_from_tet(const std::array<Point<3>, 4> &points,
+                                               const std::array<double, 4> &values,
+                                               double isoval) {
+
+  using namespace goma::marching_cubes;
+
+  // We have 16 cases for the TET
+  int cond = 0;
+  if (values[0] < isoval)
+    cond |= 1;
+  if (values[1] < isoval)
+    cond |= 2;
+  if (values[2] < isoval)
+    cond |= 4;
+  if (values[3] < isoval)
+    cond |= 8;
+
+  std::vector<Triangle<3>> result;
+
+  switch (cond) {
+  case 0b0001:
+  case 0b1110:
+    // triangle on links [0,1] [0,2] [0.3]
+    result.push_back(
+        Triangle<3>(linear_interp(points[0], points[1], values[0], values[1], isoval),
+                    linear_interp(points[0], points[2], values[0], values[2], isoval),
+                    linear_interp(points[0], points[3], values[0], values[3], isoval)));
+    break;
+  case 0b0010:
+  case 0b1101:
+    // triangle on links [0,1] [1,3] [1.2]
+    result.push_back(
+        Triangle<3>(linear_interp(points[0], points[1], values[0], values[1], isoval),
+                    linear_interp(points[1], points[3], values[1], values[3], isoval),
+                    linear_interp(points[1], points[2], values[1], values[2], isoval)));
+    break;
+  case 0b0100:
+  case 0b1011:
+    // triangle on links [0,2] [1,2] [2,3]
+    result.push_back(
+        Triangle<3>(linear_interp(points[0], points[2], values[0], values[2], isoval),
+                    linear_interp(points[1], points[2], values[1], values[2], isoval),
+                    linear_interp(points[2], points[3], values[2], values[3], isoval)));
+
+    break;
+  case 0b1000:
+  case 0b0111:
+    // triangle on links [0,3] [1,3] [2,3]
+    result.push_back(
+        Triangle<3>(linear_interp(points[0], points[3], values[0], values[3], isoval),
+                    linear_interp(points[1], points[3], values[1], values[3], isoval),
+                    linear_interp(points[2], points[3], values[2], values[3], isoval)));
+    break;
+  case 0b0011:
+  case 0b1100:
+    // triangle on links [0,2] [0,3] [1,2]
+    result.push_back(
+        Triangle<3>(linear_interp(points[0], points[2], values[0], values[2], isoval),
+                    linear_interp(points[0], points[3], values[0], values[3], isoval),
+                    linear_interp(points[1], points[2], values[1], values[2], isoval)));
+    // triangle on links [0,3] [1,2] [1,3]
+    result.push_back(
+        Triangle<3>(linear_interp(points[0], points[3], values[0], values[3], isoval),
+                    linear_interp(points[1], points[2], values[1], values[2], isoval),
+                    linear_interp(points[1], points[3], values[1], values[3], isoval)));
+    break;
+  case 0b0110:
+  case 0b1001:
+    // triangle on links [0,1] [0,2] [2,3]
+    result.push_back(
+        Triangle<3>(linear_interp(points[0], points[1], values[0], values[1], isoval),
+                    linear_interp(points[0], points[2], values[0], values[2], isoval),
+                    linear_interp(points[2], points[3], values[2], values[3], isoval)));
+    // triangle on links [0,1] [1,3] [2,3]
+    result.push_back(
+        Triangle<3>(linear_interp(points[0], points[1], values[0], values[1], isoval),
+                    linear_interp(points[1], points[3], values[1], values[3], isoval),
+                    linear_interp(points[2], points[3], values[2], values[3], isoval)));
+    break;
+  case 0b1010:
+  case 0b0101:
+    // triangle on links [0,1] [0,3] [2,3]
+    result.push_back(
+        Triangle<3>(linear_interp(points[0], points[1], values[0], values[1], isoval),
+                    linear_interp(points[0], points[3], values[0], values[3], isoval),
+                    linear_interp(points[2], points[3], values[2], values[3], isoval)));
+    // triangle on links [0,1] [1,2] [2,3]
+    result.push_back(
+        Triangle<3>(linear_interp(points[0], points[1], values[0], values[1], isoval),
+                    linear_interp(points[1], points[2], values[1], values[2], isoval),
+                    linear_interp(points[2], points[3], values[2], values[3], isoval)));
+    break;
+  case 0b0000:
+  case 0b1111:
+  default:
+    break;
+  }
+
+  return result;
+}
+
 std::vector<Triangle<3>> create_facet_from_hex(const std::array<Point<3>, 8> &points,
                                                const std::array<double, 8> &values,
                                                double isoval) {
