@@ -7062,7 +7062,7 @@ static void divide_shape_fcn_tree(NTREE *parent, int max_level) {
     switch (parent->dim) {
     case 3:
       xi_m[2] = (parent->xi[0][2] + parent->xi[4][2]) / 2.0;
-      /* fall through */
+      FALLTHROUGH;
     case 2:
       xi_m[0] = (parent->xi[0][0] + parent->xi[1][0]) / 2.0;
       xi_m[1] = (parent->xi[1][1] + parent->xi[2][1]) / 2.0;
@@ -7290,6 +7290,7 @@ static void gather_subtree_coords(NTREE *tree, double *xi_m, double (*sub_xi)[DI
       sub_xi[i][1] = t;
       sub_xi[i][2] = u;
     }
+    break;
   default:
     break;
   }

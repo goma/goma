@@ -972,7 +972,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
       if (sscanf(third_string, "%d", &ExoTimePlane) != 1) {
         GOMA_EH(GOMA_ERROR, "Time plane for read_exoII_file option is undecipherable");
       }
-      // Fall through
+      FALLTHROUGH;
     case 2:
       Guess_Flag = 6;
       strcpy(ExoAuxFile, second_string);
@@ -4213,7 +4213,7 @@ void rd_track_specs(FILE *ifp, char *input) {
                 cpcc[iCC].End_CC_Value =
                     cpcc[iCC].coeff_0 +
                     cpcc[iCC].coeff_1 * pow(EndParameterValue, cpcc[iCC].coeff_2);
-                /* fall through */
+                FALLTHROUGH;
               default:
                 DPRINTF(stderr, "%s:\tCC[%d] flag must be 0, 1, or 2\n", yo, iCC + 1);
                 exit(-1);
@@ -13464,7 +13464,7 @@ void rd_table_data(FILE *ifp, char *input, struct Data_Table *table, char *endli
   switch (table_dim) {
   case 3:
     table->t3 = (double *)smalloc(sizeof(double) * Num_Pnts);
-    /* fall through */
+    FALLTHROUGH;
   case 2:
   case 1:
     table->t2 = (double *)smalloc(sizeof(double) * Num_Pnts);
