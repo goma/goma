@@ -100,10 +100,11 @@ static void inject_nodal_vec(double[],        /* sol_vec - full dof vector for t
                              const int,       /* matID - material index to scatter to      */
                              const double[]); /* nodal_vec - condensed node based vector   */
 
-static void inject_elem_vec(double[],          /* sol_vec - full dof vector for this proc   */
-                            const int,         /* var_no - VELOCITY1, etc.                  */
-                            const int,         /* k - species index                         */
-                            const int,         /* idof - dof #                              */
+static void inject_elem_vec(double[],  /* sol_vec - full dof vector for this proc   */
+                            const int, /* var_no - VELOCITY1, etc.                  */
+                            const int, /* k - species index                         */
+                            const int, /* idof - dof #                              */
+                            const int,
                             const int,         /* matID - material index to scatter to      */
                             const double[],    /* nodal_vec - condensed node based vector   */
                             const Exo_DB *exo, /* exodus database */
@@ -2641,20 +2642,32 @@ int rd_vectors_from_exoII(double u[],
               matrl = mp_glob[mn];
             }
             if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P0)) {
-              int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
-              if (eb_index != -1 && exo->base_mesh->eb_num_elems[eb_index] > 0) {
-                error = rd_exoII_ev(u, var, mn, matrl, elem_var_names,
-                                    exo->base_mesh->eb_num_elems[eb_index], num_elem_vars, exoid,
-                                    time_step, 0, exo);
+              // element variables we need to loop through the element blocks as we can have repeats
+              // of the same material in different element blocks
+              for (int eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
+                if (mn != Matilda[eb_index]) {
+                  continue;
+                }
+                if (exo->base_mesh->eb_num_elems[eb_index] > 0) {
+                  error = rd_exoII_ev(u, var, mn, eb_index, matrl, elem_var_names,
+                                      exo->base_mesh->eb_num_elems[eb_index], num_elem_vars, exoid,
+                                      time_step, 0, exo);
+                }
               }
             } else if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P1)) {
-              int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
-              if (eb_index != -1 && exo->base_mesh->eb_num_elems[eb_index] > 0) {
-                int dof = getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1);
-                for (int i = 0; i < dof; i++) {
-                  error = rd_exoII_ev(u, var, mn, matrl, elem_var_names,
-                                      exo->base_mesh->eb_num_elems[eb_index], num_elem_vars, exoid,
-                                      time_step, i, exo);
+              // element variables we need to loop through the element blocks as we can have repeats
+              // of the same material in different element blocks
+              for (int eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
+                if (mn != Matilda[eb_index]) {
+                  continue;
+                }
+                if (exo->base_mesh->eb_num_elems[eb_index] > 0) {
+                  int dof = getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1);
+                  for (int i = 0; i < dof; i++) {
+                    error = rd_exoII_ev(u, var, mn, eb_index, matrl, elem_var_names,
+                                        exo->base_mesh->eb_num_elems[eb_index], num_elem_vars,
+                                        exoid, time_step, i, exo);
+                  }
                 }
               }
             } else {
@@ -2950,6 +2963,7 @@ int rd_exoII_nv(double *u,
 int rd_exoII_ev(double *u,
                 int varType,
                 int mn,
+                int element_block,
                 MATRL_PROP_STRUCT *matrl,
                 char **elem_var_names,
                 int num_elems_block,
@@ -2984,11 +2998,13 @@ int rd_exoII_ev(double *u,
     variable =
         alloc_dbl_1(num_elems_block, 0.0); // This should be at for number of elements in a block.
     status = vdex;
-    DPRINTF(stdout, "Element variable %s for material %d found in exoII database - reading.\n",
-            exo_var_name, mn + 1);
-    error = ex_get_var(exoII_id, time_step, EX_ELEM_BLOCK, vdex, mn + 1, num_elems_block, variable);
+    DPRINTF(stdout,
+            "Element variable %s for material %d block %d found in exoII database - reading.\n",
+            exo_var_name, mn + 1, element_block + 1);
+    error = ex_get_var(exoII_id, time_step, EX_ELEM_BLOCK, vdex, element_block + 1, num_elems_block,
+                       variable);
     GOMA_EH(error, "ex_get_var element");
-    inject_elem_vec(u, varType, 0, spec, mn, variable, exo, num_elems_block);
+    inject_elem_vec(u, varType, 0, spec, element_block, mn, variable, exo, num_elems_block);
     safer_free((void **)&variable);
   }
   return status;
@@ -3233,6 +3249,7 @@ static void inject_elem_vec(double sol_vec[],
                             const int varType,
                             const int k,
                             const int idof,
+                            const int eb_index,
                             const int matID,
                             const double elem_vec[],
                             const Exo_DB *exo,
@@ -3294,7 +3311,6 @@ static void inject_elem_vec(double sol_vec[],
   int e_start, e_end, ielem, ielem_type, num_local_nodes;
   int iconnect_ptr, i, I, index;
   int found_quantity;
-  int eb_index = in_list(matID, 0, exo->num_elem_blocks, Matilda);
   GOMA_EH(eb_index, "Trying to read unknown material element block index inject_elem_vec");
   e_start = exo->eb_ptr[eb_index];
   e_end = exo->eb_ptr[eb_index + 1];
