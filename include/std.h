@@ -542,6 +542,14 @@ extern int zero_detJ_global;
 #endif
 #endif
 
+#ifndef FALLTHROUGH
+#if defined(__GNUC__) && __GNUC__ >= 7 || defined(__clang__) && __clang_major__ >= 12
+#define FALLTHROUGH __attribute__((fallthrough))
+#else
+#define FALLTHROUGH ((void)0)
+#endif
+#endif
+
 #ifndef MAYBE_UNUSED
 #define MAYBE_UNUSED UNUSED
 #endif

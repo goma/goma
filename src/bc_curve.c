@@ -786,7 +786,7 @@ int apply_point_colloc_edge_bc(
               if (elem_edge_bc->shared) {
                 GOMA_EH(GOMA_ERROR, "CA_EDGE_CURVE cannot be used with shared edges.");
               }
-              /* fall through */
+              FALLTHROUGH;
             case CA_EDGE_BC:
               /*
                * need surface vectors

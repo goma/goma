@@ -2474,8 +2474,8 @@ static void handle_surface_interaction(particle_t *p, dbl *x, dbl *xi, int PBC_i
   switch (PBC->type) {
   case PBC_IMPERMEABLE:
     fprintf(stderr, "PARTICLE ACTUALLY REACHED IMPERMEABLE BOUNDARY\n");
-    /* fall through */ /* And follow through to be deleted "normally". */
-    /* fall through */
+    /* And follow through to be deleted "normally". */
+    FALLTHROUGH;
   case PBC_OUTFLOW:
   case PBC_SOURCE:            /* this is not quite right, but oh well... */
   case PBC_FREESTREAM_SOURCE: /* this is not quite right, but oh well... */

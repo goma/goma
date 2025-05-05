@@ -55,10 +55,10 @@ static void put_coordinates(int exoid, Exo_DB *monolith, bool *node_indicator, i
       switch (monolith->num_dim) {
       case 3:
         z_coords[proc_offset] = monolith->z_coord[i];
-      // fall through
+        FALLTHROUGH;
       case 2:
         y_coords[proc_offset] = monolith->y_coord[i];
-      // fall through
+        FALLTHROUGH;
       case 1:
         x_coords[proc_offset] = monolith->x_coord[i];
         break;
