@@ -51,6 +51,15 @@ struct AD_Field_Variables {
   ADType turb_omega;
   ADType turb_omega_dot;
   ADType grad_turb_omega[DIM];
+  ADType sh_sat_1;
+  ADType sh_sat_1_dot;
+  ADType grad_sh_sat_1[DIM];
+  ADType sh_sat_2;
+  ADType sh_sat_2_dot;
+  ADType grad_sh_sat_2[DIM];
+  ADType sh_sat_3;
+  ADType sh_sat_3_dot;
+  ADType grad_sh_sat_3[DIM];
   int total_ad_variables;
   int ielem;
   int offset[V_LAST];
