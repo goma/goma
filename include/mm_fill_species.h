@@ -429,7 +429,6 @@ EXTERN void current_NI_surf_bc /* mm_fill_species.c - RSL 5/28/02 */
      dbl,    /* dt - current value of the time step       */
      dbl);   /* tt - parameter to vary time integration   */
 
-
 void mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
                          dbl d_mass_flux[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC],
                          double activity[MAX_CONC],
@@ -442,7 +441,7 @@ void mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
                          double d_mtc[MAX_VARIABLE_TYPES + MAX_CONC],
                          double Y_c,     /* bulk concentration 	                     */
                          double alpha_v, /* alpha van laar act. coeff. model      */
-                         double beta_v);  /* beta van laar act. coeff. model       */
+                         double beta_v); /* beta van laar act. coeff. model       */
 
 EXTERN void mtc_chilton_coburn              /* mm_fill_species.c                         */
     (double *,                              /* mtc                                 */
