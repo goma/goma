@@ -23,9 +23,10 @@
 
 # Tells the TPL builder which C compiler to use, choices are [intel, gnu, user]
 #CC_NAME="user"
+# if using GCC >= 10 uncomment:
+# export GCC_EXTRA_FFLAGS="-fallow-argument-mismatch"
 
 # if CC_NAME="user" the following variables must be specified manually
-
 SYSTEM_COMPILER_BASE=/usr
 SYSTEM_CC=$SYSTEM_COMPILER_BASE/bin/gcc
 SYSTEM_CXX=$SYSTEM_COMPILER_BASE/bin/g++
@@ -48,10 +49,10 @@ ARCHIVER=ar
 
 # if mpi is built by the script these get reset later.
 MPI_C_COMPILER="mpicc" 
-MPI_CXX_COMPILER="mpiCC"
-# mpif90 and mpif77 are depricated in favor of just mpifort.
-MPI_F90_COMPILER="mpifort"
-MPI_F77_COMPILER="mpifort"
+MPI_CXX_COMPILER="mpicxx"
+# mpif90 and mpif77 are depricated in favor of just mpif90.
+MPI_F90_COMPILER="mpif90"
+MPI_F77_COMPILER="mpif77"
 MPI_RUNNER="mpirun"
 FORTRAN_LIBS="-lgfortran"
 
@@ -165,6 +166,12 @@ else
 fi
 
 
+echo "There is a new TPL build script in goma/tpls/ called install-tpls.py"
+echo "Please transition to using that script."
+echo "This script will be removed in a future release."
+continue_check
+
+
 if [ "$PRINT_MENU" == "false" ]; then
     if which mpiicc &> /dev/null; then
         MPI_NAME="intel"
@@ -232,119 +239,166 @@ fi
 echo "Start Goma Build" >> $BUILD_LOG
 echo "Start Goma Compile" >> $COMPILE_LOG
 
-HDF5_VERSION="1.12.1"
-HDF5_MD5="442469fbf43626006346e679c22cf10a"
+HDF5_VERSION="1.12.2"
+HDF5_MD5="4f4c87981ee5e3db12975f0904b634e2"
 
-NETCDF_VERSION="c-4.8.0"
-NETCDF_MD5="a1e31625e2f270aa8044578d7320962c"
+NETCDF_VERSION="c-4.9.0"
+NETCDF_VERSION_ONLY="4.9.0"
+NETCDF_MD5="26cfd1b2e32d511bd82477803976365d"
 
-TRILINOS_VERSION="13.0.0"
-TRILINOS_VERSION_DASH="13-0-0"
-TRILINOS_MD5="f0e9d7de4eb55598c5338b56bdc80df9"
+PNETCDF_VERSION="1.13.0"
+PNETCDF_MD5="31b94d39462b1f1f2293f735c9819bf2"
+PNETCDF_URL="https://parallel-netcdf.github.io/Release/pnetcdf-$PNETCDF_VERSION.tar.gz"
 
-MUMPS_VERSION="5.4.1"
-MUMPS_MD5="93be789bf9c6c341a78c16038da3241b"
+TRILINOS_VERSION="15.1.0"
+TRILINOS_VERSION_DASH="15-1-0"
+TRILINOS_MD5="79237697af4fc42eaaf70f23104a8e12"
 
-OPENMPI_VERSION="4.1.1"
-OPENMPI_MD5="9aa7cb64a8b1a773cac719e700d5bb2a"
+MUMPS_VERSION="5.6.2"
+MUMPS_URL="https://graal.ens-lyon.fr/MUMPS/MUMPS_$MUMPS_VERSION.tar.gz"
+MUMPS_MD5="adc38b6cca34dfcc8f7036b7d39cf260"
+
+OPENMPI_VERSION="4.1.6"
+OPENMPI_MD5="c9b1c974cfc23c77c0fbdb965cd58a1c"
 OPENMPI_ARCHIVE_URL="https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-$OPENMPI_VERSION.tar.bz2"
 OPENMPI_EXTRA_CONFIGURE_FLAGS=""
 
-CMAKE_VERSION="3.21.1"
-CMAKE_MD5="1d8d33628f1c56b0c3cda67abddbea91"
+CMAKE_VERSION="3.24.2"
+CMAKE_MD5="f6f79ec66c91bbc075757a70205128ca"
 
-SUITESPARSE_VERSION="5.10.1"
-SUITESPARSE_MD5="68bb912f3cf3d2b01f30ebafef690302"
+#SUITESPARSE_VERSION="7.7.0"
+#SUITESPARSE_MD5="e659373ed5e9b961d2fcb6d67d250783"
+SUITESPARSE_VERSION="5.13.0"
+SUITESPARSE_MD5="e9e7bc594b77ae4b58d943cdc286d679"
 
 MATIO_VERSION="1.5.21"
 MATIO_MD5="afeb5d21b234699fd5b9dc4564afe1ca"
 
-SCALAPACK_VERSION="2.1.0"
-SCALAPACK_MD5="3b239ef80353c67354a0a62d54946fa8"
+SCALAPACK_VERSION="0234af94c6578c53ac4c19f2925eb6e5c4ad6f0f"
+SCALAPACK_MD5="221dab094055b73fa7bed645c426548c"
 
-LAPACK_VERSION="3.10.0"
-LAPACK_MD5="d70fc27a8bdebe00481c97c728184f09"
+LAPACK_VERSION="3.8.0"
+LAPACK_MD5="96591affdbf58c450d45c1daa540dbd2"
 
-ARCHIVE_NAMES=("arpack96.tar.gz" \
-"patch.tar.gz" \
+PETSC_VERSION="3.20.2"
+PETSC_MD5="1e170a5f096433ca21aa643c80c749eb"
+
+OMEGA_H_VERSION="9.34.13"
+OMEGA_H_MD5="b6eee23870bb21b58f9bbf0f640bf12a"
+
+SUPERLU_DIST_VERSION="7.2.0"
+SUPERLU_DIST_MD5="10d20b97012e5ae89a6cc69b768f61b7"
+
+OPENBLAS_VERSION="0.3.21"
+OPENBLAS_MD5="ffb6120e2309a2280471716301824805"
+OPENBLAS_URL="https://github.com/xianyi/OpenBLAS/releases/download/v$OPENBLAS_VERSION/OpenBLAS-$OPENBLAS_VERSION.tar.gz"
+
+ARPACK_NG_VERSION="3.8.0"
+ARPACK_NG_MD5="bb4cf448f2480a0ffe5517d579f980c3"
+ARPACK_NG_URL="https://github.com/opencollab/arpack-ng/archive/refs/tags/$ARPACK_NG_VERSION.tar.gz"
+
+METIS_VERSION="5.1.0-p10"
+METIS_MD5="82e3b09d577580747fbcada30d9b4228"
+METIS_EXTRACT_NAME="petsc-pkg-metis-c8d2dc1e751e"
+
+PARMETIS_VERSION="4.0.3-p8"
+PARMETIS_MD5="5549747a1a653f1e1909d40fff52ddb9"
+PARMETIS_EXTRACT_NAME="petsc-pkg-parmetis-5777d7ec2084"
+
+ARCHIVE_NAMES=("arpack-ng-$ARPACK_NG_VERSION.tar.gz" \
 "hdf5-${HDF5_VERSION}.tar.bz2" \
+"pnetcdf-$PNETCDF_VERSION.tar.gz" \
 "netcdf-${NETCDF_VERSION}.tar.gz" \
-"parmetis-4.0.3.tar.gz" \
+"metis-$METIS_VERSION.tar.gz" \
+"parmetis-$PARMETIS_VERSION.tar.gz" \
 "sparse.tar.gz" \
-"superlu_dist-5.1.3.tar.gz" \
-"y12m.tar.gz" \
+"superlu_dist-$SUPERLU_DIST_VERSION.tar.gz" \
 "Trilinos-trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
 "MUMPS_$MUMPS_VERSION.tar.gz" \
 "SuiteSparse-$SUITESPARSE_VERSION.tar.gz" \
-"matio-$MATIO_VERSION.tar.gz")
+"matio-$MATIO_VERSION.tar.gz"  \
+"petsc-$PETSC_VERSION.tar.gz" \
+"omega_h-v$OMEGA_H_VERSION.tar.gz")
 
 #y12m archive is skipped because it stores the number of downloads in the header
 
 #meaning each y12m tar has a unique MD5SUM.
-ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
-"14830d758f195f272b8594a493501fa2" \
+ARCHIVE_MD5SUMS=("$ARPACK_NG_MD5" \
 "${HDF5_MD5}" \
+"$PNETCDF_MD5" \
 "${NETCDF_MD5}" \
-"f69c479586bf6bb7aff6a9bc0c739628" \
+"$METIS_MD5" \
+"$PARMETIS_MD5" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
-"fdee368cba0e95cb0143b6d47915e7a1" \
-"SKIP" \
+"$SUPERLU_DIST_MD5" \
 $TRILINOS_MD5 \
 $MUMPS_MD5 \
 "$SUITESPARSE_MD5" \
-"$MATIO_MD5")
+"$MATIO_MD5" \
+"$PETSC_MD5" \
+"$OMEGA_H_MD5")
 
-ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
-"http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
+ARCHIVE_URLS=("$ARPACK_NG_URL" \
 "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.bz2" \
-"https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-${NETCDF_VERSION}.tar.gz" \
-"http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
+"$PNETCDF_URL" \
+"https://downloads.unidata.ucar.edu/netcdf-c/${NETCDF_VERSION_ONLY}/netcdf-${NETCDF_VERSION}.tar.gz" \
+"https://bitbucket.org/petsc/pkg-metis/get/v$METIS_VERSION.tar.gz" \
+"https://bitbucket.org/petsc/pkg-parmetis/get/v$PARMETIS_VERSION.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
-"http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v5.1.3" \
-"http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz\\&filename=y12m%2Fy12m.f" \
+"http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v$SUPERLU_DIST_VERSION" \
 "https://github.com/trilinos/Trilinos/archive/trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
-"http://mumps.enseeiht.fr/MUMPS_$MUMPS_VERSION.tar.gz" \
+"$MUMPS_URL" \
 "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/refs/tags/v$SUITESPARSE_VERSION.tar.gz" \
-"https://github.com/tbeu/matio/releases/download/v$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz")
+"https://github.com/tbeu/matio/releases/download/v$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz" \
+"https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-$PETSC_VERSION.tar.gz" \
+"https://github.com/sandialabs/omega_h/archive/refs/tags/v$OMEGA_H_VERSION.tar.gz")
 
 # You can't call the ARPACK patch ARPACK or it will think it is already extracted
 # When in reality it isn't
-ARCHIVE_DIR_NAMES=("ARPACK" \
-"FAKE_DIR_FOR_ARPACK_PATCH" \
+ARCHIVE_DIR_NAMES=("arpack-ng-${ARPACK_NG_VERSION}" \
 "hdf5-${HDF5_VERSION}" \
+"pnetcdf-$PNETCDF_VERSION" \
 "netcdf-${NETCDF_VERSION}" \
-"parmetis-4.0.3" \
+"metis-$METIS_VERSION" \
+"parmetis-$PARMETIS_VERSION" \
 "sparse" \
-"superlu_dist-5.1.3" \
-"y12m" \
+"superlu_dist-$SUPERLU_DIST_VERSION" \
 "Trilinos-trilinos-release-$TRILINOS_VERSION_DASH" \
 "MUMPS_$MUMPS_VERSION" \
 "SuiteSparse-$SUITESPARSE_VERSION" \
-"matio-$MATIO_VERSION")
+"matio-$MATIO_VERSION" \
+"petsc-$PETSC_VERSION" \
+"omega_h-$OMEGA_H_VERSION")
 
-ARCHIVE_HOMEPAGES=("http://www.caam.rice.edu/software/ARPACK/" \
+ARCHIVE_HOMEPAGES=("https://github.com/opencollab/arpack-ng/" \
 "https://www.hdfgroup.org/" \
+"https://parallel-netcdf.github.io/" \
 "https://www.unidata.ucar.edu/software/netcdf/" \
+"http://glaros.dtc.umn.edu/gkhome/metis/metis/overview" \
 "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview" \
 "http://sparse.sourceforge.net/" \
 "https://github.com/xiaoyeli/superlu_dist" \
-"http://doi.org/10.1007/3-540-10874-2" \
 "https://trilinos.org/" \
 "http://mumps.enseeiht.fr/" \
 "http://faculty.cse.tamu.edu/davis/suitesparse.html" \
-"https://sourceforge.net/projects/matio/")
+"https://sourceforge.net/projects/matio/" \
+"https://petsc.org" \
+"https://github.com/sandialabs/omega_h/")
 
-ARCHIVE_REAL_NAMES=("ARPACK96" \
+ARCHIVE_REAL_NAMES=("arpack-ng" \
 "HDF5" \
+"PNetCDF" \
 "NetCDF" \
-"Metis" \
+"METIS" \
+"ParMETIS" \
 "Sparse" \
 "SuperLU_DIST" \
-"y12m" \
 "Trilinos" \
 "MUMPS" \
 "SuiteSparse-$SUITESPARSE_VERSION" \
-"MATIO")
+"MATIO" \
+"PETSc" \
+"Omega_h")
 
 if [[ "$MPI_BASE_DIR" == "BUILD" ]]; then
     ARCHIVE_NAMES+=("openmpi-$OPENMPI_VERSION.tar.bz2")
@@ -368,7 +422,7 @@ fi
 
 if command -v cmake; then
     cmake_vers=$(cmake --version |grep "version" | awk '{print $NF}')
-    if [[ "$cmake_vers" = $(echo -e "$cmake_vers\n3.17.1\n" | sort -V |tail -n1) ]]; then
+    if [[ "$cmake_vers" = $(echo -e "$cmake_vers\n3.23.0\n" | sort -V |tail -n1) ]]; then
 	build_cmake="false"
     else
 	build_cmake="true"
@@ -416,7 +470,6 @@ function setMPIvars() {
 }
 
 function setCompilerVars() {
-    export GCC_EXTRA_FFLAGS=""
     if [[ "$CC_NAME" == "intel" ]]; then
         #Special flag only needed by intel compiler because reasons? No really why does GCC not need -fopenmp?
         export COMPILER_FLAG_MPI="-qopenmp"
@@ -424,8 +477,8 @@ function setCompilerVars() {
         if [ "$MPI_NAME" == "open" ]; then
             export MPI_C_COMPILER="mpicc"
             export MPI_CXX_COMPILER="mpic++"
-            export MPI_F90_COMPILER="mpifort"
-            export MPI_F77_COMPILER="mpifort"
+            export MPI_F90_COMPILER="mpif90"
+            export MPI_F77_COMPILER="mpif77"
         else
             export MPI_C_COMPILER="mpiicc"
             export MPI_CXX_COMPILER="mpiicpc"
@@ -442,21 +495,22 @@ function setCompilerVars() {
         export f90="ifort"
         EXTRA_CXX_FLAGS=""
         export FORTRAN_LIBS="-L$INTEL_PARALLEL_STUDIO_ROOT/lib/intel64 -lifcore"
+        export GCC_EXTRA_FFLAGS=""
     elif [[ "$CC_NAME" == "gnu" ]]; then
         GCC_VERSION=$(gcc --version | grep ^gcc | sed 's/^.* //g')
         if [[ "$GCC_VERSION" = $(echo -e "$GCC_VERSION\n10.0.0\n" | sort -V |tail -n1) ]]; then
             export GCC_EXTRA_FFLAGS="-fallow-argument-mismatch"
         fi
         export MPI_C_COMPILER="mpicc"
-        export MPI_CXX_COMPILER="mpiCC"
+        export MPI_CXX_COMPILER="mpicxx"
         # mpif90 and mpif77 are depricated in favor of just mpifort.
         if [ "$MPI_NAME" == "intel" ]; then
             # Intel calls their mpi fortran compiler mpifc (for some reason
             export MPI_F90_COMPILER="mpifc"
             export MPI_F77_COMPILER="mpifc"
         else
-            export MPI_F90_COMPILER="mpifort"
-            export MPI_F77_COMPILER="mpifort"
+            export MPI_F90_COMPILER="mpif90"
+            export MPI_F77_COMPILER="mpif77"
         fi
         export MPI_RUNNER="mpirun"
         export FORTRAN_LIBS="-lgfortran"
@@ -469,7 +523,7 @@ function setCompilerVars() {
         export LINKER="ld"
         export ARCHIVER="ar"
     elif [[ "$CC_NAME" == "user" ]]; then
-	echo "MPI_C_COMPILER=$MPI_C_COMPILER"
+	    echo "MPI_C_COMPILER=$MPI_C_COMPILER"
         echo "MPI_CXX_COMPILER=$MPI_CXX_COMPILER"
         echo "MPI_F90_COMPILER=$MPI_F90_COMPILER"
         echo "MPI_F77_COMPILER=$MPI_F77_COMPILER"
@@ -531,9 +585,9 @@ function setMathVars {
                 export SCALAPACK_LIBRARY_NAME="scalapack"
                 export SCALAPACK_LIBRARY_NAME_ARG="-L${SCALAPACK_LIBRARY_DIR} -lscalapack"
                 SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/include"
-                ARCHIVE_NAMES+=("scalapack-$SCALAPACK_VERSION.tgz")
+                ARCHIVE_NAMES+=("$SCALAPACK_VERSION.tar.gz")
                 ARCHIVE_MD5SUMS+=("$SCALAPACK_MD5")
-                ARCHIVE_URLS+=("http://www.netlib.org/scalapack/scalapack-$SCALAPACK_VERSION.tgz")
+                ARCHIVE_URLS+=("https://github.com/Reference-ScaLAPACK/scalapack/archive/$SCALAPACK_VERSION.tar.gz")
                 ARCHIVE_DIR_NAMES+=("scalapack-$SCALAPACK_VERSION")
                 ARCHIVE_HOMEPAGES+=("http://www.netlib.org/scalapack/")
                 ARCHIVE_REAL_NAMES+=("ScaLAPACK")
@@ -552,11 +606,11 @@ function setMathVars {
         USING_MKLS="OFF"
         #Add packages that otherwise come preinstalled in intel compiler.
         ARCHIVE_NAMES+=("lapack-$LAPACK_VERSION.tar.gz" \
-        "scalapack-$SCALAPACK_VERSION.tgz")
+        "$SCALAPACK_VERSION.tar.gz")
         ARCHIVE_MD5SUMS+=("$LAPACK_MD5" \
         "$SCALAPACK_MD5" )
         ARCHIVE_URLS+=("https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v$LAPACK_VERSION.tar.gz" \
-        "http://www.netlib.org/scalapack/scalapack-$SCALAPACK_VERSION.tgz" )
+        "https://github.com/Reference-ScaLAPACK/scalapack/archive/$SCALAPACK_VERSION.tar.gz" )
         ARCHIVE_DIR_NAMES+=("lapack-$LAPACK_VERSION" \
         "scalapack-$SCALAPACK_VERSION" )
         ARCHIVE_HOMEPAGES+=("http://www.netlib.org/lapack/" \
@@ -578,6 +632,40 @@ function setMathVars {
         SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/include"
         # Alternative to the intel "blas_flags" variable
         NON_INTEL_BLAS_LIBRARY="${BLAS_LIBRARY_DIR}/libblas.a"
+        NON_INTEL_LAPACK_LIBRARY="${LAPACK_LIBRARY_DIR}/liblapack.a"
+        NON_INTEL_BLAS_LINK="-L${BLAS_LIBRARY_DIR} -l${BLAS_LIBRARY_NAME} ${FORTRAN_LIBS}"
+        SUITESPARSE_NON_INTEL_LAPACK_LINK="${LAPACK_LIBRARY_NAME_ARG} ${FORTRAN_LIBS}"
+    elif [[ "$MATH_LIBRARIES" == "openblas" ]]; then
+        USING_MKLS="OFF"
+        #Add packages that otherwise come preinstalled in intel compiler.
+        ARCHIVE_NAMES+=("OpenBLAS-$OPENBLAS_VERSION.tar.gz" \
+        "$SCALAPACK_VERSION.tar.gz")
+        ARCHIVE_MD5SUMS+=("$OPENBLAS_MD5" \
+        "$SCALAPACK_MD5" )
+        ARCHIVE_URLS+=("$OPENBLAS_URL" \
+        "https://github.com/Reference-ScaLAPACK/scalapack/archive/$SCALAPACK_VERSION.tar.gz" )
+        ARCHIVE_DIR_NAMES+=("OpenBLAS-$OPENBLAS_VERSION" \
+        "scalapack-$SCALAPACK_VERSION" )
+        ARCHIVE_HOMEPAGES+=("https://github.com/xianyi/OpenBLAS/" \
+        "http://www.netlib.org/scalapack/")
+        ARCHIVE_REAL_NAMES+=("OpenBLAS" \
+        "ScaLAPACK")
+
+        LAPACK_DIR="${GOMA_LIB}/OpenBLAS-$OPENBLAS_VERSION"
+        LAPACK_LIBRARY_DIR="$LAPACK_DIR/lib"
+        LAPACK_LIBRARY_NAME_ARG="-L${LAPACK_LIBRARY_DIR} -lopenblas"
+        LAPACK_LIBRARY_NAME="openblas"
+        BLAS_LIBRARY_DIR="${LAPACK_LIBRARY_DIR}"
+        BLAS_LIBRARY_NAME_ARG="-L${BLAS_LIBRARY_DIR} -lopenblas"
+        BLAS_LIBRARY_NAME="openblas"
+        BLACS_LIBRARY_NAME="scalapack"
+        SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/lib"
+        SCALAPACK_LIBRARY_NAME="scalapack"
+        SCALAPACK_LIBRARY_NAME_ARG="-L${SCALAPACK_LIBRARY_DIR} -lscalapack"
+        SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/include"
+        # Alternative to the intel "blas_flags" variable
+        NON_INTEL_BLAS_LIBRARY="${BLAS_LIBRARY_DIR}/libopenblas.a"
+        NON_INTEL_LAPACK_LIBRARY="${LAPACK_LIBRARY_DIR}/libopenblas.a"
         NON_INTEL_BLAS_LINK="-L${BLAS_LIBRARY_DIR} -l${BLAS_LIBRARY_NAME} ${FORTRAN_LIBS}"
         SUITESPARSE_NON_INTEL_LAPACK_LINK="${LAPACK_LIBRARY_NAME_ARG} ${FORTRAN_LIBS}"
 
@@ -610,9 +698,9 @@ function setMathVars {
         SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/include"
         export NON_INTEL_BLAS_LIBRARY="${BLAS_LIBRARY_DIR}/lib${BLAS_LIBRARY_NAME}.a"
         export NON_INTEL_BLAS_LINK="-L${BLAS_LIBRARY_DIR} -l${BLAS_LIBRARY_NAME} ${FORTRAN_LIBS}"
-        ARCHIVE_NAMES+=("scalapack-$SCALAPACK_VERSION.tgz")
+        ARCHIVE_NAMES+=("$SCALAPACK_VERSION.tar.gz")
         ARCHIVE_MD5SUMS+=("$SCALAPACK_MD5" )
-        ARCHIVE_URLS+=("http://www.netlib.org/scalapack/scalapack-$SCALAPACK_VERSION.tgz" )
+        ARCHIVE_URLS+=("https://github.com/Reference-ScaLAPACK/scalapack/archive/$SCALAPACK_VERSION.tar.gz" )
         ARCHIVE_DIR_NAMES+=("scalapack-$SCALAPACK_VERSION" )
         ARCHIVE_HOMEPAGES+=("http://www.netlib.org/scalapack/")
         ARCHIVE_REAL_NAMES+=("ScaLAPACK")
@@ -917,9 +1005,36 @@ else
         exit 1
     fi
 fi
-cd $GOMA_LIB
 
-#netcdf
+# PNetCDF
+cd $GOMA_LIB
+if [ -e pnetcdf-${PNETCDF_VERSION}/lib/libpnetcdf.a ]
+then
+    log_echo "PNetCDF already built."
+else
+    if ! [ -e pnetcdf-${NETCDF_VERSION}/.goma-extracted ]
+    then
+    mv pnetcdf-${PNETCDF_VERSION} tmpdir
+    mkdir pnetcdf-${PNETCDF_VERSION}
+    mv tmpdir pnetcdf-${PNETCDF_VERSION}/src
+    touch pnetcdf-${PNETCDF_VERSION}/.goma-extracted
+    fi
+    cd pnetcdf-${PNETCDF_VERSION}/src
+    CC=${MPI_C_COMPILER} CXX=${MPI_CXX_COMPILER} FC=${MPI_F90_COMPILER} ./configure --disable-fortran --enable-shared=off --disable-cxx --prefix=$GOMA_LIB/pnetcdf-${PNETCDF_VERSION} 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make install 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/pnetcdf-${PNETCDF_VERSION}/lib/libpnetcdf.a ]
+    then
+        log_echo "Built PNetCDF $PNETCDF_VERSION"
+    else
+        log_echo "Failed to build PNetCDF $PNETCDF_VERSION"
+        exit 1
+    fi
+fi
+
+
+# NetCDF
+cd $GOMA_LIB
 if [ -e netcdf-${NETCDF_VERSION}/lib/libnetcdf.a ]
 then
     log_echo "netcdf already built"
@@ -932,17 +1047,19 @@ else
 	touch netcdf-${NETCDF_VERSION}/.goma-extracted
     fi
     cd $GOMA_LIB/netcdf-${NETCDF_VERSION}/src
-    export CPPFLAGS=-I$GOMA_LIB/hdf5-${HDF5_VERSION}/include
+    export CPPFLAGS="-I$GOMA_LIB/hdf5-${HDF5_VERSION}/include -I$GOMA_LIB/pnetcdf-${PNETCDF_VERSION}/include"
+    export LDFLAGS="-L${GOMA_LIB}/hdf5-${HDF5_VERSION}/lib -L${GOMA_LIB}/pnetcdf-${PNETCDF_VERSION}/lib" 
     log_echo $CPPFLAGS
     log_echo $LDFLAGS
 
-    CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-${HDF5_VERSION}/include" \
+    CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-${HDF5_VERSION}/include -I${GOMA_LIB}/pnetcdf-${PNETCDF_VERSION}/include" \
       CPP="${MPI_C_COMPILER} -E" \
-      CPPFLAGS="-I${GOMA_LIB}/hdf5-${HDF5_VERSION}/include" \
-      LDFLAGS="-L${GOMA_LIB}/hdf5-${HDF5_VERSION}/lib" \
+      CPPFLAGS="-I${GOMA_LIB}/hdf5-${HDF5_VERSION}/include -I${GOMA_LIB}/pnetcdf-${PNETCDF_VERSION}/include" \
+      LDFLAGS="-L${GOMA_LIB}/hdf5-${HDF5_VERSION}/lib -L${GOMA_LIB}/pnetcdf-${PNETCDF_VERSION}/lib" \
       ./configure \
       --prefix=$GOMA_LIB/netcdf-${NETCDF_VERSION} \
       --enable-shared=off \
+      --enable-pnetcdf \
       --disable-dap 2>&1 | tee -a $COMPILE_LOG
 
     make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
@@ -954,10 +1071,10 @@ else
         log_echo "Failed to build NetCDF $NETCDF_VERSION"
         exit 1
     fi
-    cd ../..
 fi
 
 #parmetis patch
+cd $GOMA_LIB
 read -d '' PARMETIS_PATCH << "EOF"
 55c55,58
 <     CONFIG_FLAGS += -DCMAKE_C_COMPILER=$(cc)
@@ -975,32 +1092,41 @@ read -d '' PARMETIS_PATCH << "EOF"
 >     CONFIG_FLAGS += -DCMAKE_CXX_FLAGS="$(cxxflags)"
 EOF
 
-#make parMetis
+#make Metis
 cd $GOMA_LIB
-if [ -e parmetis-4.0.3/lib/libparmetis.a ]
+if [ -e metis-$METIS_VERSION/lib/libmetis.a ]
 then
-    log_echo "ParMetis already Built"
+    log_echo "Metis already Built"
 else
-    if [ ! -e parmetis-4.0.3/src/Makefile ]; then
-        mv parmetis-4.0.3 tmpdir
-        mkdir parmetis-4.0.3
-        mv tmpdir parmetis-4.0.3/src
-    fi
-    cd parmetis-4.0.3/src
-    log_echo "$PARMETIS_PATCH" > parmetis_make.patch
-    patch -f Makefile < parmetis_make.patch
-    log_echo "make config parmetis?"
-    make config cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI} prefix=$GOMA_LIB/parmetis-4.0.3 2>&1 | tee -a $COMPILE_LOG
+    cd $METIS_EXTRACT_NAME
+    mkdir build
+    cd build
+    CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake .. -DGKLIB_PATH=../GKlib -DSHARED=0  -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/metis-$METIS_VERSION | tee -a $COMPILE_LOG
     make 2>&1 | tee -a $COMPILE_LOG
     make install 2>&1 | tee -a $COMPILE_LOG
     cd ..
-    if [ -d include ]; then
-	cp src/metis/include/metis.h include
+    if [ -e $GOMA_LIB/metis-$METIS_VERSION/lib/libmetis.a ]
+    then
+        log_echo "Built Metis $METIS_VERSION"
+    else
+        log_echo "Failed to build Metis $METIS_VERSION"
+        exit 1
     fi
-    if [ -d lib ]; then
-	cp src/build/Linux-x86_64/libmetis/libmetis.a lib/
-    fi
-    if [ -e $GOMA_LIB/parmetis-4.0.3/lib/libparmetis.a ]
+fi
+#make parMetis
+cd $GOMA_LIB
+if [ -e parmetis-$PARMETIS_VERSION/lib/libparmetis.a ]
+then
+    log_echo "ParMetis already Built"
+else
+    cd $PARMETIS_EXTRACT_NAME
+    mkdir build
+    cd build
+    CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake .. -DGKLIB_PATH=../headers -DMETIS_PATH=$GOMA_LIB/metis-$METIS_VERSION -DSHARED=0 -DMPI_INCLUDE_PATH=$MPI_BASE_DIR/include -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/parmetis-$PARMETIS_VERSION | tee -a $COMPILE_LOG
+    make 2>&1 | tee -a $COMPILE_LOG
+    make install 2>&1 | tee -a $COMPILE_LOG
+    cd ..
+    if [ -e $GOMA_LIB/parmetis-$PARMETIS_VERSION/lib/libparmetis.a ]
     then
         log_echo "Built ParMetis 4.0.3"
     else
@@ -1011,96 +1137,54 @@ fi
 
 
 #make ARPACK
-cd $GOMA_LIB/ARPACK
-if [ -e lib/libarpack.a ]
-then
-    log_echo "ARPACK already built"
-else
-    cat > ARmake.patch << EOF
-28c28
-< home = \$(HOME)/ARPACK
----
-> home = $GOMA_LIB/ARPACK
-35c35
-< PLAT = SUN4
----
-> PLAT = x86_64
-104,105c104,105
-< FC      = f77
-< FFLAGS	= -O -cg89
----
-> FC      = $MPI_F77_COMPILER
-> FFLAGS	= -O $BLAS_FLAGS $GCC_EXTRA_FFLAGS
-115c115
-< MAKE    = /bin/make
----
-> MAKE    = make
-EOF
-
-    patch ARmake.inc < ARmake.patch
-    # Documentation says this should always be needed but in reality only intel MKL requires it.
-    cat > UTIL/second.f.patch << EOF
-24c24
-<       EXTERNAL           ETIME
----
-> *     EXTERNAL           ETIME
-EOF
-    patch UTIL/second.f < UTIL/second.f.patch
-    make all 2>&1 | tee -a $COMPILE_LOG
-    mkdir lib
-    cp libarpack_x86_64.a lib/libarpack.a
-    if [ -e $GOMA_LIB/ARPACK/lib/libarpack.a ]
-    then
-        log_echo "Built ARPACK"
-    else
-        log_echo "Failed to build ARPACK"
-        exit 1
-    fi
-fi
-
-#make SuperLU
-cd $GOMA_LIB/superlu_dist-5.1.3
-if [ -e lib/libsuperludist.a ]
-then
-    log_echo "SuperLU_DIST already built"
-else
-    cat > make.inc << EOF
-SuperLUroot     =  $GOMA_LIB/superlu_dist-5.1.3
-DSUPERLULIB     = $GOMA_LIB/superlu_dist-5.1.3/lib/libsuperludist.a
-
-# BLASDEF       = -DUSE_VENDOR_BLAS
-
-LIBS            = $GOMA_LIB/superlu_dist-5.1.3/lib/libsuperludist.a $NON_INTEL_BLAS_LIBRARY $GOMA_LIB/parmetis-4.0.3/lib/libparmetis.a $GOMA_LIB/parmetis-4.0.3/lib/libmetis.a ${FORTRAN_LIBS}
-
+#cd $GOMA_LIB/ARPACK
+#if [ -e lib/libarpack.a ]
+#then
+#    log_echo "ARPACK already built"
+#else
+#    cat > ARmake.patch << EOF
+#28c28
+#< home = \$(HOME)/ARPACK
+#---
+#> home = $GOMA_LIB/ARPACK
+#35c35
+#< PLAT = SUN4
+#---
+#> PLAT = x86_64
+#104,105c104,105
+#< FC      = f77
+#< FFLAGS	= -O -cg89
+#---
+#> FC      = $MPI_F77_COMPILER
+#> FFLAGS	= -O $BLAS_FLAGS $GCC_EXTRA_FFLAGS
+#115c115
+#< MAKE    = /bin/make
+#---
+#> MAKE    = make
+#EOF
 #
-#  The archiver and the flag(s) to use when building archive (library)
-#  If your system has no ranlib, set RANLIB = echo.
-#
-ARCH         = /usr/bin/ar
-ARCHFLAGS    = cr
-RANLIB       = /usr/bin/ranlib
+#    patch ARmake.inc < ARmake.patch
+#    # Documentation says this should always be needed but in reality only intel MKL requires it.
+#    cat > UTIL/second.f.patch << EOF
+#24c24
+#<       EXTERNAL           ETIME
+#---
+#> *     EXTERNAL           ETIME
+#EOF
+#    patch UTIL/second.f < UTIL/second.f.patch
+#    make all 2>&1 | tee -a $COMPILE_LOG
+#    mkdir lib
+#    cp libarpack_x86_64.a lib/libarpack.a
+#    if [ -e $GOMA_LIB/ARPACK/lib/libarpack.a ]
+#    then
+#        log_echo "Built ARPACK"
+#    else
+#        log_echo "Failed to build ARPACK"
+#        exit 1
+#    fi
+#fi
 
-CC           = $MPI_C_COMPILER
-CFLAGS       = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DDEBUGlevel=0 -DPRNTlevel=0 -std=c99 -g -I$GOMA_LIB/parmetis-4.0.3/include
-CDEFS = -DAdd_
-# CFLAGS       += -D
-# CFLAGS       +=
-NOOPTS       = -O0
-FORTRAN      = $MPI_F90_COMPILER
-
-LOADER       = $MPI_CXX_COMPILER $BLAS_FLAGS
-LOADOPTS     = -Wl,-rpath,$GOMA_LIB/superlu_dist-5.1.3/lib
-EOF
-    mkdir -p lib
-    make 2>&1 | tee -a $COMPILE_LOG
-    if [ -e $GOMA_LIB/superlu_dist-5.1.3/lib/libsuperludist.a ]
-    then
-        log_echo "Built SuperLU_DIST 5.1.3"
-    else
-        log_echo "Failed to build SuperLU_DIST 5.1.3"
-        exit 1
-    fi
-fi
+cd $GOMA_LIB
 
 if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     #make lapack/blas
@@ -1114,7 +1198,7 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
 	mv $tempdir $LAPACK_DIR/src
 	mkdir $LAPACK_DIR/src/build
         cd $LAPACK_DIR/src/build
-        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=$LAPACK_DIR $LAPACK_DIR/src 2>&1 | tee -a $COMPILE_LOG
+        CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=$LAPACK_DIR $LAPACK_DIR/src 2>&1 | tee -a $COMPILE_LOG
 	make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
 	make install 2>&1 | tee -a $COMPILE_LOG
 	cd $GOMA_LIB
@@ -1129,6 +1213,214 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     export LD_LIBRARY_PATH="${LAPACK_LIBRARY_DIR}:$LD_LIBRARY_PATH"
 fi
 
+if [[ "$MATH_LIBRARIES" == "openblas" ]]; then
+    #make lapack/blas
+    if [ -e $LAPACK_DIR/lib/libopenblas.a ]
+    then
+        log_echo "OpenBLAS already built"
+    else
+        tempdir=$(mktemp -u -p $GOMA_LIB)
+        mv $LAPACK_DIR $tempdir
+	mkdir $LAPACK_DIR
+	mv $tempdir $LAPACK_DIR/src
+        cd $LAPACK_DIR/src
+        CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER make USE_THREAD=0 USE_OPENMP=0 NO_SHARED=1 2>&1 | tee -a $COMPILE_LOG
+	make PREFIX=$LAPACK_DIR USE_THREAD=0 USE_OPENMP=0 NO_SHARED=1 install 2>&1 | tee -a $COMPILE_LOG
+	cd $GOMA_LIB
+        if [ -e $LAPACK_LIBRARY_DIR/libopenblas.a ]
+        then
+            log_echo "Built OpenBLAS"
+        else
+            log_echo "Failed to build OpenBLAS"
+            exit 1
+        fi
+    fi
+    export LD_LIBRARY_PATH="${LAPACK_LIBRARY_DIR}:$LD_LIBRARY_PATH"
+fi
+
+
+
+#make arpack
+if [ -e arpack-ng-$ARPACK_NG_VERSION/lib/libarpack.a ]
+then
+    log_echo "Arpack-ng already built"
+else
+    tempdir=$(mktemp -u -p $GOMA_LIB)
+    mv arpack-ng-$ARPACK_NG_VERSION $tempdir
+    mkdir arpack-ng-$ARPACK_NG_VERSION
+    mv $tempdir arpack-ng-$ARPACK_NG_VERSION/src
+    cd arpack-ng-$ARPACK_NG_VERSION/src/
+cat << "EOF" > arpack-cmake.patch
+--- CMakeLists.txt      2020-12-07 03:40:45.000000000 -0700
++++ CMakeLists.txt-blasfix      2023-01-23 12:27:17.893954624 -0700
+@@ -58,7 +58,7 @@
+     foreach(l ${${list_name}})
+         get_filename_component(lwe ${l} NAME_WE)
+         add_executable(${lwe} ${arpackexample_DIR}/${l} ${examples_EXTRA_SRCS})
+-       target_link_libraries(${lwe} arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++       target_link_libraries(${lwe} arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+         add_test(NAME "${lwe}_ex" COMMAND ${lwe} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+     endforeach()
+ endfunction(examples)
+@@ -306,8 +306,8 @@
+ # use -DBUILD_SHARED_LIBS=ON|OFF to control static/shared
+ add_library(arpack ${arpackutil_STAT_SRCS} ${arpacksrc_STAT_SRCS} ${arpacksrc_ICB})
+
+-target_link_libraries(arpack BLAS::BLAS)
+ target_link_libraries(arpack LAPACK::LAPACK ${EXTRA_LDFLAGS})
++target_link_libraries(arpack BLAS::BLAS)
+ set_target_properties(arpack PROPERTIES OUTPUT_NAME arpack${LIBSUFFIX})
+ set_target_properties(arpack PROPERTIES VERSION 2.1.0)
+ set_target_properties(arpack PROPERTIES SOVERSION 2)
+@@ -529,7 +529,7 @@
+
+ add_executable(dnsimp_test TESTS/dnsimp.f TESTS/mmio.f TESTS/debug.h)
+ set_target_properties( dnsimp_test PROPERTIES OUTPUT_NAME  dnsimp )
+-target_link_libraries(dnsimp_test arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++target_link_libraries(dnsimp_test arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+ add_custom_command(TARGET dnsimp_test POST_BUILD
+   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/TESTS/testA.mtx testA.mtx
+ )
+@@ -537,39 +537,39 @@
+
+ if (NOT ICB)
+     add_executable(bug_1315_single TESTS/bug_1315_single.c)
+-    target_link_libraries(bug_1315_single arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++    target_link_libraries(bug_1315_single arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+     add_test(bug_1315_single_tst ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/bug_1315_single)
+
+     add_executable(bug_1315_double TESTS/bug_1315_double.c)
+-    target_link_libraries(bug_1315_double arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++    target_link_libraries(bug_1315_double arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+     add_test(bug_1315_double_tst ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/bug_1315_double)
+ endif()
+
+ add_executable(bug_1323 TESTS/bug_1323.f)
+-target_link_libraries(bug_1323 arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++target_link_libraries(bug_1323 arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+ add_test(bug_1323_tst ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/bug_1323)
+
+ add_executable(bug_58_double TESTS/bug_58_double.f)
+-target_link_libraries(bug_58_double arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++target_link_libraries(bug_58_double arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+ add_test(bug_58_double_tst ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/bug_58_double)
+
+ add_executable(bug_79_double_complex TESTS/bug_79_double_complex.f)
+-target_link_libraries(bug_79_double_complex arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++target_link_libraries(bug_79_double_complex arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+ add_test(bug_79_double_complex_tst ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/bug_79_double_complex)
+
+ add_executable(bug_142 TESTS/bug_142.f)
+-target_link_libraries(bug_142 arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++target_link_libraries(bug_142 arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+ add_test(bug_142_tst ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/bug_142)
+
+ add_executable(bug_142_gen TESTS/bug_142_gen.f)
+-target_link_libraries(bug_142_gen arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++target_link_libraries(bug_142_gen arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+ add_test(bug_142_gen_tst ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/bug_142_gen)
+
+ if(MPI)
+   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/PARPACK/TESTS/MPI)
+
+   add_executable(issue46 PARPACK/TESTS/MPI/issue46.f)
+-  target_link_libraries(issue46 parpack arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++  target_link_libraries(issue46 parpack arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+   add_test(issue46_tst ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/issue46)
+ endif()
+
+@@ -578,12 +578,12 @@
+
+   add_executable(icb_arpack_c TESTS/icb_arpack_c.c)
+   target_include_directories(icb_arpack_c PUBLIC ${PROJECT_SOURCE_DIR}/ICB) # Get arpack.h
+-  target_link_libraries(icb_arpack_c arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++  target_link_libraries(icb_arpack_c arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+   add_test(icb_arpack_c_tst ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/icb_arpack_c)
+
+   add_executable(icb_arpack_cpp TESTS/icb_arpack_cpp.cpp)
+   target_include_directories(icb_arpack_cpp PUBLIC ${PROJECT_SOURCE_DIR}/ICB) # Get arpack.hpp
+-  target_link_libraries(icb_arpack_cpp arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++  target_link_libraries(icb_arpack_cpp arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+   add_test(icb_arpack_cpp_tst ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/icb_arpack_cpp)
+
+   if (ICBEXMM)
+@@ -591,7 +591,7 @@
+
+     add_executable(arpackmm EXAMPLES/MATRIX_MARKET/arpackmm.cpp)
+     target_include_directories(arpackmm PUBLIC ${PROJECT_SOURCE_DIR}/ICB ${EIGEN3_INCLUDE_DIR}) # Get arpack.h + eigen
+-    target_link_libraries(arpackmm arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS})
++    target_link_libraries(arpackmm arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS})
+     configure_file(EXAMPLES/MATRIX_MARKET/As.mtx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/As.mtx)
+     configure_file(EXAMPLES/MATRIX_MARKET/An.mtx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/An.mtx)
+     configure_file(EXAMPLES/MATRIX_MARKET/Az.mtx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Az.mtx)
+@@ -606,7 +606,7 @@
+     target_compile_definitions(pyarpack PRIVATE PY_MAJOR_VERSION="3")
+     set(pyarpack_HDR ${PROJECT_SOURCE_DIR}/ICB ${PROJECT_SOURCE_DIR}/EXAMPLES/MATRIX_MARKET ${PROJECT_SOURCE_DIR}/EXAMPLES/PYARPACK)
+     target_include_directories(pyarpack PUBLIC ${pyarpack_HDR} ${EIGEN3_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
+-    target_link_libraries(pyarpack BLAS::BLAS LAPACK::LAPACK ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
++    target_link_libraries(pyarpack LAPACK::LAPACK BLAS::BLAS ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+     install(TARGETS pyarpack
+             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyarpack
+             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/pyarpack)
+@@ -662,12 +662,12 @@
+
+     add_executable(icb_parpack_c PARPACK/TESTS/MPI/icb_parpack_c.c)
+     target_include_directories(icb_parpack_c PUBLIC ${PROJECT_SOURCE_DIR}/ICB MPI::MPI_C) # Get parpack.h mpi.h
+-    target_link_libraries(icb_parpack_c parpack arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS} MPI::MPI_C)
++    target_link_libraries(icb_parpack_c parpack arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS} MPI::MPI_C)
+     add_test(icb_parpack_c_tst mpirun -n 2 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/icb_parpack_c)
+
+     add_executable(icb_parpack_cpp PARPACK/TESTS/MPI/icb_parpack_cpp.cpp)
+     target_include_directories(icb_parpack_cpp PUBLIC ${PROJECT_SOURCE_DIR}/ICB MPI::MPI_CXX) # Get parpack.hpp mpi.h
+-    target_link_libraries(icb_parpack_cpp parpack arpack BLAS::BLAS LAPACK::LAPACK ${EXTRA_LDFLAGS} MPI::MPI_CXX)
++    target_link_libraries(icb_parpack_cpp parpack arpack LAPACK::LAPACK BLAS::BLAS ${EXTRA_LDFLAGS} MPI::MPI_CXX)
+     add_test(icb_parpack_cpp_tst mpirun -n 2 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/icb_parpack_cpp)
+   endif()
+ endif()
+EOF
+    patch CMakeLists.txt arpack-cmake.patch
+    mkdir build
+    cd build
+    CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBLAS_LIBRARIES=$NON_INTEL_BLAS_LIBRARY -DLAPACK_LIBRARIES="$NON_INTEL_LAPACK_LIBRARY" $GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION/src -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION -DBUILD_SHARED_LIBS=OFF 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make install 2>&1 | tee -a $COMPILE_LOG
+    cd $GOMA_LIB
+    if [ -e $GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION/lib/libarpack.a ]
+    then
+        log_echo "Built Arpack-NG"
+    else
+        log_echo "Failed to build arpack-ng"
+        exit 1
+    fi
+fi
+ export LD_LIBRARY_PATH="arpack-ng-${ARPACK_NG_VERSION}:$LD_LIBRARY_PATH"
+
+#make SuperLU
+cd $GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION
+if [ -e lib64/libsuperlu_dist.a ] || [ -e lib/libsuperlu_dist.a ]
+then
+    log_echo "SuperLU_DIST already built"
+else
+    mkdir -p build
+    CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake -B build -DTPL_BLAS_LIBRARIES="${NON_INTEL_BLAS_LINK}" \
+      -DTPL_PARMETIS_LIBRARIES="$GOMA_LIB/parmetis-$PARMETIS_VERSION/lib/libparmetis.a;$GOMA_LIB/metis-$METIS_VERSION/lib/libmetis.a" \
+      -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION \
+      -Denable_openmp:BOOL=FALSE \
+      -DTPL_PARMETIS_INCLUDE_DIRS="$GOMA_LIB/parmetis-$PARMETIS_VERSION/include;$GOMA_LIB/metis-$METIS_VERSION/include" 2>&1 | tee -a $COMPILE_LOG
+    make -C build 2>&1 | tee -a $COMPILE_LOG
+    make -C build install 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION/lib/libsuperlu_dist.a ] || [ -e $GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION/lib64/libsuperlu_dist.a ]
+    then
+        log_echo "Built SuperLU_DIST $SUPERLU_DIST_VERSION"
+    else
+        log_echo "Failed to build SuperLU_DIST $SUPERLU_DIST_VERSION"
+        exit 1
+    fi
+fi
+SUPERLU_LIBDIR="lib64"
+if [ -e $GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION/lib/libsuperlu_dist.a ]; then
+  SUPERLU_LIBDIR="lib"
+fi
 #make sparse
 cd $GOMA_LIB/sparse
 if [ -e lib/libsparse.a ]
@@ -1152,7 +1444,7 @@ fi
 
 #make SuiteSparse
 cd $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION
-if [ -e UMFPACK/Lib/libumfpack.a ]
+if [ -e $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/lib/libumfpack.a ]
 then
     log_echo "SuiteSparse is already built"
 else
@@ -1160,31 +1452,42 @@ else
 
     log_echo ${MPI_C_COMPILER}
     if [ -z "${BLAS_FLAGS}" ]; then
-        make config AUTOCC="no" CC="${MPI_C_COMPILER}" \
+	targets=(SuiteSparse_config AMD BTF CAMD CCOLAMD COLAMD CHOLMOD CXSparse LDL KLU UMFPACK RBio SPQR)
+	make CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER}" \
              CXX="${MPI_CXX_COMPILER}" \
              BLAS="$NON_INTEL_BLAS_LINK" \
              LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
-             AR="${ARCHIVER}" 2>&1 | tee -a $COMPILE_LOG
-        make AUTOCC="no" CC="${MPI_C_COMPILER}" \
-             CXX="${MPI_CXX_COMPILER}" \
-             BLAS="$NON_INTEL_BLAS_LINK" \
-             LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
-             JOBS="$MAKE_JOBS" \
-             AR="${ARCHIVER}" 2>&1 | tee -a $COMPILE_LOG
+	     MY_METIS_LIB="-L$GOMA_LIB/metis-$METIS_VERSION/lib -lmetis" \
+	     MY_METIS_INC="$GOMA_LIB/metis-$METIS_VERSION/include" \
+	     AR="${ARCHIVER}" -C SuiteSparse_config library config 2>&1 | tee -a $COMPILE_LOG
+	for target in "${targets[@]}"; do
+	    make CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER}" \
+                 CXX="${MPI_CXX_COMPILER}" \
+                 BLAS="$NON_INTEL_BLAS_LINK" \
+                 LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
+	         MY_METIS_LIB="-L$GOMA_LIB/metis-$METIS_VERSION/lib -lmetis" \
+	         MY_METIS_INC="$GOMA_LIB/metis-$METIS_VERSION/include" \
+	         AR="${ARCHIVER}" -C $target library 2>&1 | tee -a $COMPILE_LOG
+	    make CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER}" \
+                 CXX="${MPI_CXX_COMPILER}" \
+                 BLAS="$NON_INTEL_BLAS_LINK" \
+                 LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
+	         MY_METIS_LIB="-L$GOMA_LIB/metis-$METIS_VERSION/lib -lmetis" \
+	         MY_METIS_INC="$GOMA_LIB/metis-$METIS_VERSION/include" \
+	         AR="${ARCHIVER}" -C $target install 2>&1 | tee -a $COMPILE_LOG
+        done
     else
-        make config AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
+        make config CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
              CXX="${MPI_CXX_COMPILER} ${COMPILER_FLAG_MPI}" \
              JOBS="$MAKE_JOBS" \
              AR="${ARCHIVER}" BLAS_FLAGS="${BLAS_FLAGS}" 2>&1 | tee -a $COMPILE_LOG
-        make AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
+        make CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
              CXX="${MPI_CXX_COMPILER} ${COMPILER_FLAG_MPI}" \
              JOBS="$MAKE_JOBS" \
              AR="${ARCHIVER}" BLAS_FLAGS="${BLAS_FLAGS}" 2>&1 | tee -a $COMPILE_LOG
     fi
-    cd ${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION/UMFPACK/Include
-    ln -s ../../SuiteSparse_config/SuiteSparse_config.h UFconfig.h
-    ln -s ../../SuiteSparse_config/SuiteSparse_config.h SuiteSparse_config.h
-    if [ -e $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/UMFPACK/Lib/libumfpack.a ]
+    find . -name '*.a' -exec cp "{}" $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/lib \;
+    if [ -e $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/lib/libumfpack.a ]
     then
         log_echo "Built SuiteSparse $SUITESPARSE_VERSION"
     else
@@ -1195,48 +1498,6 @@ fi
 # Otherwise Goma dynamically links to UMFPACK when intel is sourced and disabled
 export LD_LIBRARY_PATH="${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION/UMFPACK/Lib:$LD_LIBRARY_PATH"
 
-#make y12m
-cd $GOMA_LIB/y12m
-if [ -e liby12m.a ]
-then
-    log_echo "y12m already built"
-else
-# The y12m we use does not include a makefile, so this is a simple one for compiling a static library.
-
-cat > makefile << EOF
-LIB=y12m
-FFLAGS=-O
-FC=$MPI_F77_COMPILER
-OBJ = \
-	y12m.o  \
-	y12mae.o    \
-	y12maf.o    \
-	y12mbe.o    \
-	y12mbf.o    \
-	y12mce.o    \
-	y12mcf.o    \
-	y12mde.o    \
-	y12mdf.o    \
-	y12mfe.o    \
-	y12mge.o    \
-	y12mhe.o    \
-	y12cck.o
-lib\$(LIB).a:	\$(OBJ)
-	ar ru lib\$(LIB).a \$?
-	ranlib lib\$(LIB).a
-EOF
-
-    make 2>&1 | tee -a $COMPILE_LOG
-    if [ -e $GOMA_LIB/y12m/liby12m.a ]
-    then
-        log_echo "Built y12m"
-    else
-        log_echo "Failed to build y12m"
-        exit 1
-    fi
-fi
-
-
 if [[ "$MATH_LIBRARIES" == "intel" ]] && [[ ! "$SCALAPACK_LIBRARY_NAME" = "scalapack" ]]; then
     log_echo "Not building scalapack because intel MKL used"
 else
@@ -1244,17 +1505,20 @@ else
     if [ -f $GOMA_LIB/scalapack-$SCALAPACK_VERSION/lib/libscalapack.a ]; then
         log_echo "scalapack already built"
     else
-        mv $GOMA_LIB/scalapack-$SCALAPACK_VERSION src-scalapack
-        mkdir $GOMA_LIB/scalapack-$SCALAPACK_VERSION
-        mv src-scalapack $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src
+        if [ ! -d " $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src" ]; then
+            mv $GOMA_LIB/scalapack-$SCALAPACK_VERSION src-scalapack
+            mkdir $GOMA_LIB/scalapack-$SCALAPACK_VERSION
+            mv src-scalapack $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src
+        fi
         cd $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/scalapack-$SCALAPACK_VERSION -DBUILD_SHARED=OFF -DCMAKE_C_COMPILER=$MPI_C_COMPILER -DCMAKE_CXX_COMPILER=$MPI_CXX_COMPILER -DCMAKE_Fortran_Compiler=$MPI_F90_COMPILER -DCMAKE_Fortran_FLAGS="$GCC_EXTRA_FFLAGS"
-        2>&1 | tee -a $COMPILE_LOG
-        make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
-        make install 2>&1 | tee -a $COMPILE_LOG
+        mkdir -p $GOMA_LIB/scalapack-$SCALAPACK_VERSION/lib
         mkdir -p $GOMA_LIB/scalapack-$SCALAPACK_VERSION/include
+        CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake -DCMAKE_BUILD_TYPE=Release \
+         -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBLAS_LIBRARIES=$NON_INTEL_BLAS_LIBRARY \
+         -DLAPACK_LIBRARIES="$NON_INTEL_LAPACK_LIBRARY" -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/scalapack-$SCALAPACK_VERSION \
+         -B build 2>&1 | tee -a $COMPILE_LOG
+        cmake --build build -j $MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+        cmake --install build 2>&1 | tee -a $COMPILE_LOG
         cd $GOMA_LIB
         if [ -f $GOMA_LIB/scalapack-$SCALAPACK_VERSION/lib/libscalapack.a ]; then
             log_echo "Build scalapack $SCALAPACK_VERSION"
@@ -1284,9 +1548,9 @@ LPORDDIR = \$(topdir)/PORD/lib/
 IPORD    = -I\$(topdir)/PORD/include/
 LPORD    = -L\$(LPORDDIR) -lpord
 
-LMETISDIR = $GOMA_LIB/parmetis-4.0.3
-IMETIS    = -I\$(LMETISDIR)/include
-LMETIS    = -L\$(LMETISDIR)/lib -lparmetis -lmetis
+LMETISDIR = $GOMA_LIB/parmetis-$PARMETIS_VERSION
+IMETIS    = -I\$(LMETISDIR)/include -I$GOMA_LIB/metis-$METIS_VERSION/include
+LMETIS    = -L\$(LMETISDIR)/lib -lparmetis -L$GOMA_LIB/metis-$METIS_VERSION/lib -lmetis
 
 ORDERINGSF = -Dparmetis -Dpord
 ORDERINGSC  = \$(ORDERINGSF)
@@ -1341,7 +1605,9 @@ EOF
         log_echo -e $("$MUMPS_MAKE_PATCH") > examples/Makefile.patch
         patch -f examples/Makefile < examples/Makefile.patch
     fi
-    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS prerequisites 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS all 2>&1 | tee -a $COMPILE_LOG
+
     if [ -e $GOMA_LIB/MUMPS_$MUMPS_VERSION/lib/libdmumps.a ]
     then
         log_echo "Built MUMPS $MUMPS_VERSION"
@@ -1351,10 +1617,30 @@ EOF
     fi
 fi
 
+if [ -e $GOMA_LIB/Omega_h/lib/libomega_h.a ]; then
+    log_echo "Omega_h is already built!"
+else
+    cd $GOMA_LIB/omega_h-$OMEGA_H_VERSION
+    CC=mpicc CXX=mpicxx cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/Omega_h -DBUILD_SHARED_LIBS=OFF -DOmega_h_USE_MPI=ON 2>&1 | tee -a $COMPILE_LOG
+    cmake --build build -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make -C build install 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/Omega_h/lib/libomega_h.a ]; then
+        log_echo "Omega_h built!"
+    else
+        log_echo "Failed to build Omega_H $OMEGA_H_VERSION"
+        exit 1
+    fi
+    cd $GOMA_LIB
+fi
+
 #make trilinos
+
+
+
+cd $GOMA_LIB
+
 rm -rf $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
 mkdir $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
-cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
 
 rm -f CMakeCache.txt
 
@@ -1367,6 +1653,7 @@ TRILINOS_INSTALL=$GOMA_LIB/trilinos-$TRILINOS_VERSION
 if [ -e $TRILINOS_INSTALL/bin/aprepro ]; then
     log_echo "Trilinos is already built!"
 else
+cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
     cmake \
 -D CMAKE_AR=/usr/bin/ar \
 -D CMAKE_RANLIB=/usr/bin/ranlib \
@@ -1379,7 +1666,6 @@ else
 -D TPL_ENABLE_Boost:BOOL=OFF \
 -D Trilinos_ENABLE_Triutils:BOOL=ON \
 -D Trilinos_ENABLE_SEACAS:BOOL=ON \
--D Trilinos_ENABLE_Amesos:BOOL=ON \
 -D Trilinos_ENABLE_Epetra:BOOL=ON \
 -D Trilinos_ENABLE_Xpetra:BOOL=ON \
 -D Trilinos_ENABLE_Ifpack:BOOL=ON \
@@ -1388,10 +1674,15 @@ else
 -D Trilinos_ENABLE_ML:BOOL=ON \
 -D Trilinos_ENABLE_MueLu:BOOL=ON \
 -D Trilinos_ENABLE_AztecOO:BOOL=ON \
+-D Trilinos_ENABLE_Belos:BOOL=ON \
+-D Trilinos_ENABLE_Amesos2:BOOL=ON \
+-D Trilinos_ENABLE_Sacado:BOOL=ON \
+-D Trilinos_ENABLE_Tpetra:BOOL=ON \
 -D Trilinos_ENABLE_Stratimikos:BOOL=ON \
 -D Trilinos_ENABLE_Teko:BOOL=ON \
--D Trilinos_ENABLE_Amesos2:BOOL=ON \
 -D Trilinos_ENABLE_Belos:BOOL=ON \
+-D Trilinos_ENABLE_Amesos2:BOOL=ON \
+-D Trilinos_ENABLE_Sacado:BOOL=ON \
 -D Trilinos_ENABLE_EpetraExt:BOOL=ON \
 -D Trilinos_ENABLE_Thyra:BOOL=ON \
 -D Trilinos_ENABLE_ThyraTpetraAdapters:BOOL=ON \
@@ -1404,9 +1695,10 @@ else
       -D TPL_HDF5_INCLUDE_DIRS:PATH="$GOMA_LIB/hdf5-${HDF5_VERSION}/include" \
       -D HDF5_LIBRARY_DIRS:PATH="$GOMA_LIB/hdf5-${HDF5_VERSION}/lib" \
       -D HDF5_LIBRARY_NAMES:STRING="hdf5_hl;hdf5;z;dl" \
-      -D Netcdf_LIBRARY_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/lib" \
+      -D Netcdf_LIBRARY_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/lib;$GOMA_LIB/pnetcdf-${PNETCDF_VERSION}/lib" \
       -D TPL_ENABLE_Netcdf:BOOL=ON \
-      -D TPL_Netcdf_INCLUDE_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/include" \
+      -D TPL_Netcdf_INCLUDE_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/include;$GOMA_LIB/pnetcdf-${PNETCDF_VERSION}/include" \
+      -D Netcdf_LIBRARY_NAMES:STRING="netcdf;pnetcdf" \
       -D Matio_LIBRARY_DIRS:PATH=$GOMA_LIB/matio-$MATIO_VERSION/lib \
       -D Matio_INCLUDE_DIRS:PATH=$GOMA_LIB/matio-$MATIO_VERSION/include \
 -D TPL_ENABLE_MPI:BOOL=ON \
@@ -1430,21 +1722,18 @@ else
   -D AMD_LIBRARY_DIRS:PATH="$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/AMD/Lib;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/SuiteSparse_config" \
   -D AMD_INCLUDE_DIRS:PATH="$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/AMD/Include;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/SuiteSparse_config" \
 -D TPL_ENABLE_SuperLUDist:BOOL=ON \
-  -D SuperLUDist_LIBRARY_NAMES:STRING="superludist" \
-  -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/superlu_dist-5.1.3/lib \
-  -D SuperLUDist_INCLUDE_DIRS:PATH=$GOMA_LIB/superlu_dist-5.1.3/SRC \
+  -D SuperLUDist_LIBRARY_NAMES:STRING="superlu_dist" \
+  -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION/$SUPERLU_LIBDIR \
+  -D SuperLUDist_INCLUDE_DIRS:PATH=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION/include \
 -D TPL_ENABLE_ParMETIS:BOOL=ON \
-  -D ParMETIS_LIBRARY_DIRS:PATH=$GOMA_LIB/parmetis-4.0.3/lib \
-  -D ParMETIS_INCLUDE_DIRS:PATH=$GOMA_LIB/parmetis-4.0.3/include \
-  -D TPL_ParMETIS_INCLUDE_DIRS:PATH=$GOMA_LIB/parmetis-4.0.3/include \
-  -D TPL_ENABLE_y12m:BOOL=ON \
-  -D y12m_LIBRARY_NAMES:STRING="y12m" \
-  -D y12m_LIBRARY_DIRS:PATH=$GOMA_LIB/y12m \
+  -D ParMETIS_LIBRARY_DIRS:PATH="$GOMA_LIB/parmetis-$PARMETIS_VERSION/lib;$GOMA_LIB/metis-$METIS_VERSION/lib" \
+  -D TPL_ParMETIS_INCLUDE_DIRS:PATH="$GOMA_LIB/parmetis-$PARMETIS_VERSION/include;$GOMA_LIB/metis-$METIS_VERSION/include" \
 -D TPL_ENABLE_MUMPS:BOOL=ON \
   -D MUMPS_LIBRARY_NAMES:STRING="dmumps;mumps_common;pord;$BLACS_LIBRARY_NAME" \
   -D MUMPS_LIBRARY_DIRS:PATH="$GOMA_LIB/MUMPS_$MUMPS_VERSION/lib;$GOMA_LIB/MUMPS_$MUMPS_VERSION/PORD/lib;$SCALAPACK_LIBRARY_DIR" \
   -D MUMPS_INCLUDE_DIRS:PATH="$GOMA_LIB/MUMPS_$MUMPS_VERSION/include;$GOMA_LIB/MUMPS_$MUMPS_VERSION/PORD/include" \
   -D CMAKE_CXX_FLAGS:STRING="-DMUMPS_5_0 $BLAS_FLAGS $COMPILER_FLAG_MPI" \
+  -D CMAKE_Fortran_FLAGS:STRING="$GCC_EXTRA_FFLAGS" \
   -D Amesos_ENABLE_SCALAPACK:BOOL=ON \
   -D SCALAPACK_INCLUDE_DIRS:FILEPATH="${SCALAPACK_INCLUDE_DIR}" \
   -D SCALAPACK_LIBRARY_DIRS:FILEPATH="${SCALAPACK_LIBRARY_DIR}" \
@@ -1459,8 +1748,11 @@ else
 -D Amesos_ENABLE_KLU:BOOL=ON \
 -D Amesos_ENABLE_UMFPACK:BOOL=ON \
 -D Amesos_ENABLE_MUMPS:BOOL=ON \
+-D Tpetra_INST_INT_INT:BOOL=ON \
 $EXTRA_ARGS \
 $GOMA_LIB/Trilinos-trilinos-release-$TRILINOS_VERSION_DASH 2>&1 | tee -a $COMPILE_LOG
+# can set LONG LONG but only one is valid
+# -D Tpetra_INST_INT_LONG_LONG:BOOL=ON \
 
     make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
     make install 2>&1 | tee -a $COMPILE_LOG
@@ -1470,4 +1762,153 @@ $GOMA_LIB/Trilinos-trilinos-release-$TRILINOS_VERSION_DASH 2>&1 | tee -a $COMPIL
         log_echo "Failed to build Trilinos $TRILINOS_VERSION"
         exit 1
     fi
+fi
+
+cd $GOMA_LIB/petsc-$PETSC_VERSION
+export PETSC_DIR=$GOMA_LIB/petsc-$PETSC_VERSION
+export PETSC_ARCH=arch-linux-c-opt
+
+if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+    log_echo "PETSc is already built!"
+else
+    ./configure --with-shared-libraries=0 --with-cc=$(which mpicc) --with-cxx=$(which mpicxx) --with-fc=$(which mpif90) --with-debugging=0 COPTFLAGS='-O3' CXXOPTFLAGS='-O3' FOPTFLAGS='-O3' --download-strumpack --download-hypre --with-scalapack=1 --with-scalapack-dir=$(readlink --canonicalize-missing "${SCALAPACK_LIBRARY_DIR}/..") --with-superlu_dist=1 --with-superlu_dist-dir=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION --with-metis=1 --with-metis-dir=$GOMA_LIB/metis-$METIS_VERSION --with-parmetis=1 --with-parmetis-dir=$GOMA_LIB/parmetis-$PARMETIS_VERSION --with-blas-lib=${NON_INTEL_BLAS_LIBRARY} --with-lapack-lib=${NON_INTEL_LAPACK_LIBRARY} --with-mumps=1 --with-mumps-dir="$GOMA_LIB/MUMPS_$MUMPS_VERSION"  2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS all 2>&1 | tee -a $COMPILE_LOG
+    make check 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+        log_echo "PETSc built!"
+    else
+        log_echo "Failed to build PETSc $PETSC_VERSION"
+        exit 1
+    fi
+fi
+
+if [ -n "$BUILD_PETSC_COMPLEX" ]; then
+
+export PETSC_ARCH=arch-linux-c-debug-complex
+if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+    log_echo "PETSc is already built!"
+else
+    ./configure --with-shared-libraries=0 --with-cc=$(which mpicc) --with-cxx=$(which mpicxx) --with-fc=$(which mpif90) --with-debugging=1 --download-hypre --with-scalapack=1 --with-scalapack-dir=$(readlink --canonicalize-missing "${SCALAPACK_LIBRARY_DIR}/..") --with-superlu_dist=1 --with-superlu_dist-dir=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION --with-metis=1 --with-metis-dir=$GOMA_LIB/parmetis-4.0.3 --with-parmetis=1 --with-parmetis-dir=$GOMA_LIB/parmetis-4.0.3 --with-blas-lib=${NON_INTEL_BLAS_LIBRARY} --with-lapack-lib=${NON_INTEL_LAPACK_LIBRARY} --with-mumps=1 --with-mumps-dir="$GOMA_LIB/MUMPS_$MUMPS_VERSION" --with-scalar-type=complex 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS all 2>&1 | tee -a $COMPILE_LOG
+    make check 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+        log_echo "PETSc built!"
+    else
+        log_echo "Failed to build PETSc $PETSC_VERSION"
+        exit 1
+    fi
+fi
+
+export PETSC_ARCH=arch-linux-c-opt-complex
+if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+    log_echo "PETSc is already built!"
+else
+    ./configure --with-shared-libraries=0 --with-cc=$(which mpicc) --with-cxx=$(which mpicxx) --with-fc=$(which mpif90) --with-debugging=0 COPTFLAGS='-O3' CXXOPTFLAGS='-O3' FOPTFLAGS='-O3' --download-hypre --with-scalapack=1 --with-scalapack-dir=$(readlink --canonicalize-missing "${SCALAPACK_LIBRARY_DIR}/..") --with-superlu_dist=1 --with-superlu_dist-dir=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION --with-metis=1 --with-metis-dir=$GOMA_LIB/parmetis-4.0.3 --with-parmetis=1 --with-parmetis-dir=$GOMA_LIB/parmetis-4.0.3 --with-blas-lib=${NON_INTEL_BLAS_LIBRARY} --with-lapack-lib=${NON_INTEL_LAPACK_LIBRARY} --with-mumps=1 --with-mumps-dir="$GOMA_LIB/MUMPS_$MUMPS_VERSION" --with-scalar-type=complex 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS all 2>&1 | tee -a $COMPILE_LOG
+    make check 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+        log_echo "PETSc built!"
+    else
+        log_echo "Failed to build PETSc $PETSC_VERSION"
+        exit 1
+    fi
+fi
+
+fi
+
+# Generate a config file for bash
+cd $GOMA_LIB
+export PETSC_ARCH=arch-linux-c-opt
+cat > config.sh <<EOF
+export CMAKE_PREFIX_PATH=$TRILINOS_INSTALL:${GOMA_LIB}/Omega_h:\$CMAKE_PREFIX_PATH
+export PATH=$TRILINOS_INSTALL/bin:\$PATH
+export PATH=${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin:\$PATH
+export METISDIR=${GOMA_LIB}/metis-$METIS_VERSION
+export UMFPACK_DIR=${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+export ARPACKDIR=${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
+export SPARSEDIR=${GOMA_LIB}/sparse
+export PETSC_DIR=${PETSC_DIR}
+export PETSC_ARCH=${PETSC_ARCH}
+EOF
+
+cat > config.fish <<EOF
+set -x CMAKE_PREFIX_PATH $TRILINOS_INSTALL ${GOMA_LIB}/Omega_h \$CMAKE_PREFIX_PATH
+set -x PATH $TRILINOS_INSTALL/bin \$PATH
+set -x PATH ${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin \$PATH
+set -x METISDIR ${GOMA_LIB}/metis-$METIS_VERSION
+set -x UMFPACK_DIR ${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+set -x ARPACKDIR ${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
+set -x SPARSEDIR ${GOMA_LIB}/sparse
+set -x PETSC_DIR ${PETSC_DIR}
+set -x PETSC_ARCH ${PETSC_ARCH}
+EOF
+
+if [ -n "$BUILD_PETSC_COMPLEX" ]; then
+cd $GOMA_LIB
+export PETSC_ARCH=arch-linux-c-opt-complex
+cat > config-complex.sh <<EOF
+export CMAKE_PREFIX_PATH=$TRILINOS_INSTALL:${GOMA_LIB}/Omega_h:\$CMAKE_PREFIX_PATH
+export PATH=$TRILINOS_INSTALL/bin:\$PATH
+export PATH=${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin:\$PATH
+export METISDIR=${GOMA_LIB}/metis-$METIS_VERSION
+export UMFPACK_DIR=${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+export ARPACKDIR=${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
+export SPARSEDIR=${GOMA_LIB}/sparse
+export PETSC_DIR=${PETSC_DIR}
+export PETSC_ARCH=${PETSC_ARCH}
+EOF
+
+cat > config-complex.fish <<EOF
+set -x CMAKE_PREFIX_PATH $TRILINOS_INSTALL ${GOMA_LIB}/Omega_h \$CMAKE_PREFIX_PATH
+set -x PATH $TRILINOS_INSTALL/bin \$PATH
+set -x PATH ${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin \$PATH
+set -x METISDIR ${GOMA_LIB}/metis-$METIS_VERSION
+set -x UMFPACK_DIR ${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+set -x ARPACKDIR ${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
+set -x SPARSEDIR ${GOMA_LIB}/sparse
+set -x PETSC_DIR ${PETSC_DIR}
+set -x PETSC_ARCH ${PETSC_ARCH}
+EOF
+
+cd $GOMA_LIB
+export PETSC_ARCH=arch-linux-c-opt-debug-complex
+cat > config-debug-complex.sh <<EOF
+export CMAKE_PREFIX_PATH=$TRILINOS_INSTALL:${GOMA_LIB}/Omega_h:\$CMAKE_PREFIX_PATH
+export PATH=$TRILINOS_INSTALL/bin:\$PATH
+export PATH=${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin:\$PATH
+export METISDIR=${GOMA_LIB}/metis-$METIS_VERSION
+export UMFPACK_DIR=${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+export ARPACKDIR=${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
+export SPARSEDIR=${GOMA_LIB}/sparse
+export PETSC_DIR=${PETSC_DIR}
+export PETSC_ARCH=${PETSC_ARCH}
+EOF
+
+cat > config-debug-complex.fish <<EOF
+set -x CMAKE_PREFIX_PATH $TRILINOS_INSTALL ${GOMA_LIB}/Omega_h \$CMAKE_PREFIX_PATH
+set -x PATH $TRILINOS_INSTALL/bin \$PATH
+set -x PATH ${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin \$PATH
+set -x METISDIR ${GOMA_LIB}/metis-$METIS_VERSION
+set -x UMFPACK_DIR ${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+set -x ARPACKDIR ${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
+set -x SPARSEDIR ${GOMA_LIB}/sparse
+set -x PETSC_DIR ${PETSC_DIR}
+set -x PETSC_ARCH ${PETSC_ARCH}
+EOF
+fi
+
+
+if [ "$build_cmake" == "true" ] ; then
+    echo "export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION-linux-x86_64/bin:\$PATH" >> config.sh
+    echo "set -x PATH $GOMA_LIB/cmake-$CMAKE_VERSION-linux-x86_64/bin \$PATH" >> config.fish
+fi
+
+log_echo
+log_echo "An example bash configuration file has been written to $GOMA_LIB/config.sh"
+log_echo
+log_echo "Activate with $ source $GOMA_LIB/config.sh"
+if [ -n "$BUILD_PETSC_COMPLEX" ]; then
+log_echo "An example bash configuration file has been written to $GOMA_LIB/config-complex.sh"
+log_echo
+log_echo "Activate with $ source $GOMA_LIB/config-complex.sh"
 fi

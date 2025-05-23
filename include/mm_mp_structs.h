@@ -2,14 +2,16 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
- 
+
 /*
  *$Id: mm_mp_structs.h,v 5.20 2010-07-30 21:14:52 prschun Exp $
  */
@@ -35,131 +37,141 @@
  * junction.)
  *
  * The possibility of functional dependence of material properties on not just
- * other variables, but on the spatial gradients of those variables (eg., 
+ * other variables, but on the spatial gradients of those variables (eg.,
  * viscosity = function of rate of strain tensor) requires some thought to
  * implementation so that mesh derivatives can be performed as easily as
  * possible.
- * 
- * Most of these are currently set up with material properties depending 
+ *
+ * Most of these are currently set up with material properties depending
  * only on each variable type - not including multiplicity of concentration
  * which is easily added by adding a new dimension [MAX_CONC]
  */
 
-#ifndef _MM_MP_STRUCTS_H
-#define _MM_MP_STRUCTS_H
+#ifndef GOMA_MM_MP_STRUCTS_H
+#define GOMA_MM_MP_STRUCTS_H
 
+#include "mm_as_structs.h"
 #include "mm_elem_block_structs.h"
+#include "rf_fem_const.h"
 
 /*
  * New size variables provide hints to interprocessor communications as to
  * how big each of the "u_...." variables really is.
  */
 
-#ifndef _CK_NAME_DEF
-#define _CK_NAME_DEF
-typedef char CK_NAME[64];       /* Typedefs for common names used for naming
-                                   domains and species */
+#ifndef GOMA_CK_NAME_DEF
+#define GOMA_CK_NAME_DEF
+typedef char CK_NAME[64]; /* Typedefs for common names used for naming
+                             domains and species */
 typedef char CK_NAME_STR[64];
 #endif
 
+struct Material_Properties {
+  int MatID;                        /* Material ID number for this material. This is
+                                     * >= 0, and consistent across all processors,
+                                     * unique, and equal to the index into the global
+                                     * array of Material property structures */
+  char Material_Name[MAX_MATLNAME]; /* Character string name for the material */
+  int Num_Matrl_Elem_Blk;           /* Number of element blocks comprising this
+                                     * material                                     */
 
-struct Material_Properties
-{
-  int MatID;               /* Material ID number for this material. This is
-			    * >= 0, and consistent across all processors,
-			    * unique, and equal to the index into the global
-			    * array of Material property structures */
-  char Material_Name[MAX_MATLNAME];   /* Character string name for the material */
-  int Num_Matrl_Elem_Blk;  /* Number of element blocks comprising this 
-                            * material                                     */
-			      
   int *Matrl_Elem_Blk_Ids; /* Malloced list of element block ids comprising
-			    * this material
-			    * Length = Num_Matrl_Elem_Blk */
+                            * this material
+                            * Length = Num_Matrl_Elem_Blk */
 
-  int DefaultDatabase;     /* Default place to look for physical property data
-			    *      GOMA_MAT = 0 = Default
-			    *      CHEMKIN_MAT = 1: Look up all property data
-			    *                       in the chemkin data bases
-			    */ 
-  int Num_Species;         /* Number of species defined for this material */
-  int Num_Species_Eqn;     /* Number of species equations solved for in this
-			    * material: NOTE: this is usually one less than
-			    * the total number of species in the material due
-			    * to the implicit imposition of the sum MF = 1
-			    * constraint                                    */
+  int DefaultDatabase; /* Default place to look for physical property data
+                        *      GOMA_MAT = 0 = Default
+                        *      CHEMKIN_MAT = 1: Look up all property data
+                        *                       in the chemkin data bases
+                        */
+  int Num_Species;     /* Number of species defined for this material */
+  int Num_Species_Eqn; /* Number of species equations solved for in this
+                        * material: NOTE: this is usually one less than
+                        * the total number of species in the material due
+                        * to the implicit imposition of the sum MF = 1
+                        * constraint                                    */
   int Dropped_Last_Species_Eqn;
-                           /* True if the last species equation and only
-                            * the last species equn has been dropped from
-                            * equation system */
-  int NonDiluteFormulation;/* If this flag is set, then there are additional
-		            * species, whose concentrations are determined
-			    * by the sum MF = 1 constraint, and/or by the
-			    * equation of state, or by a volumetric
-			    * Dirichlet condition.
-			    */
-  char **Species_Names;    /* Pointer to a vector of species names for the
-			    * current material */
-  int PhaseID[MAX_CONC];   /* Phase Identification for all of the species in
-			    * the current material domain. If there is just
-			    * one phase in the domain, then this vector will
-			    * be identically zero. */
-  int Species_Var_Type;    /* Species Variable type for the species defined
-                            * in this material.
-                            * Possible values are SPECIES_MOLE_FRACTION,
-                            * SPECIES_MASS_FRACTION, SPECIES_CONCENTRATION,
-			    * SPECIES_CAP_PRESSURE, etc.
-			    * The acceptable values are listed
-			    * in rf_fem_const.h. This variable influences all
-			    * aspects of the species conservation equation,
-                            * as well as the names that are put into
-                            * the output files.
-			    * The value of this entry will also determine
-			    * the prefix associated with the name in the
-			    * exodus file. */
+  /* True if the last species equation and only
+   * the last species equn has been dropped from
+   * equation system */
+  int NonDiluteFormulation; /* If this flag is set, then there are additional
+                             * species, whose concentrations are determined
+                             * by the sum MF = 1 constraint, and/or by the
+                             * equation of state, or by a volumetric
+                             * Dirichlet condition.
+                             */
+  char **Species_Names;     /* Pointer to a vector of species names for the
+                             * current material */
+  int PhaseID[MAX_CONC];    /* Phase Identification for all of the species in
+                             * the current material domain. If there is just
+                             * one phase in the domain, then this vector will
+                             * be identically zero. */
+  int Species_Var_Type;     /* Species Variable type for the species defined
+                             * in this material.
+                             * Possible values are SPECIES_MOLE_FRACTION,
+                             * SPECIES_MASS_FRACTION, SPECIES_CONCENTRATION,
+                             * SPECIES_CAP_PRESSURE, etc.
+                             * The acceptable values are listed
+                             * in rf_fem_const.h. This variable influences all
+                             * aspects of the species conservation equation,
+                             * as well as the names that are put into
+                             * the output files.
+                             * The value of this entry will also determine
+                             * the prefix associated with the name in the
+                             * exodus file. */
   double StateVector[MAX_VARIABLE_TYPES];
-                           /* This is the state vector for calculation of 
-                            * physical properties of the material.
-                            * Note: a state vector usually includes
-                            *   specification of the Temperature, Pressure,
-                            *   and species concentrations, and anything
-                            *   else that would nail down the current
-                            *   thermodynamic state of the system at a 
-                            *   point. 
-                            * -> Note, the species unknowns are put into
-                            *    the SPECIES_UNK_0 slots in this vector.
-                            */
-  int StateVector_speciesVT;/* Current Species variable types for the
-                            * species unknown in the state vector. Note
-                            * these may be different than the Species_Var_Type
-                            * field also in this structure.
-                            */
+  /* This is the state vector for calculation of
+   * physical properties of the material.
+   * Note: a state vector usually includes
+   *   specification of the Temperature, Pressure,
+   *   and species concentrations, and anything
+   *   else that would nail down the current
+   *   thermodynamic state of the system at a
+   *   point.
+   * -> Note, the species unknowns are put into
+   *    the SPECIES_UNK_0 slots in this vector.
+   */
+  int StateVector_speciesVT; /* Current Species variable types for the
+                              * species unknown in the state vector. Note
+                              * these may be different than the Species_Var_Type
+                              * field also in this structure.
+                              */
   int Volumetric_Dirichlet_Cond[MAX_CONC];
-                           /* Flag for each species in the material to
-                            * indicate whether the degree of freedom is really
-			    * an algebraic constraint dictated by the sum MF=1
-			    * constraint or by the equation of state,
-			    * (a value of  TRUE), or whether it is a normal
-			    * degree of freedom  whose equation involves
-			    * advection, diffusion,  and reaction, etc
-			    * (FALSE).
-			    */
-  int Num_Porous_Eqn;      /* Number of porous media eqns solved for in this
-			    * material
-                            */
-  int Porous_Eqn[MAX_PMV]; /* array containing the porous media equations
-                            * active in this material
-                            */
-  char **Porous_Names;     /* Pointer to a vector of porous phase names for the
-			    * current material */
+  /* Flag for each species in the material to
+   * indicate whether the degree of freedom is really
+   * an algebraic constraint dictated by the sum MF=1
+   * constraint or by the equation of state,
+   * (a value of  TRUE), or whether it is a normal
+   * degree of freedom  whose equation involves
+   * advection, diffusion,  and reaction, etc
+   * (FALSE).
+   */
+  int Num_Porous_Eqn; /* Number of porous media eqns solved for in this
+                       * material
+                       */
 
-  dbl thermal_conductivity;	/* Yeah, you could make this a tensor... */
+  int Num_Porous_Shell_Eqn; /* Number of porous media shell eqns solved for in this
+                             * material
+                             */
+
+  int Porous_Eqn[MAX_PMV];             /* array containing the porous media equations
+                                        * active in this material
+                                        */
+  int Porous_Shell_Eqn[MAX_POR_SHELL]; /* array containing the porous shell equations
+                                        * active in this material
+                                        */
+
+  char **Porous_Names; /* Pointer to a vector of porous phase names for the
+                        * current material */
+
+  dbl thermal_conductivity; /* Yeah, you could make this a tensor... */
   dbl d_thermal_conductivity[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_thermal_conductivity;
   dbl *u_thermal_conductivity;
   int ConductivityModel;
   int thermal_conductivity_tableid;
   int Ewt_funcModel;
+  int Energy_Div_Term;
   dbl Ewt_func;
   int Rst_funcModel;
   dbl Rst_func;
@@ -167,15 +179,15 @@ struct Material_Properties
   dbl Rst_func_supg;
   int thermal_cond_external_field;
 
-  dbl electrical_conductivity;	/* Yeah, you could make this a tensor... */
+  dbl electrical_conductivity; /* Yeah, you could make this a tensor... */
   dbl d_electrical_conductivity[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_electrical_conductivity;
   dbl *u_electrical_conductivity;
   int Elec_ConductivityModel;
   int elec_cond_external_field;
 
-
   dbl permittivity;
+  dbl permittivity_imag;
   dbl d_permittivity[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_permittivity;
   dbl *u_permittivity;
@@ -186,7 +198,7 @@ struct Material_Properties
   int len_u_elect_surf_diffusivity;
   dbl *u_elect_surf_diffusivity;
   int Elect_Surf_DiffusivityModel;
- 
+
   dbl magnetic_permeability;
   dbl d_magnetic_permeability[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_magnetic_permeability;
@@ -198,23 +210,23 @@ struct Material_Properties
   int len_u_shell_user_par;
   dbl *u_shell_user_par;
   int Shell_User_ParModel;
- 
+
   dbl acoustic_impedance;
   dbl d_acoustic_impedance[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_acoustic_impedance;
   dbl *u_acoustic_impedance;
   int Acoustic_ImpedanceModel;
   int acoustic_impedance_tableid;
- 
-  dbl wave_number;            /* Acoustic Wave Number */
+
+  dbl wave_number; /* Acoustic Wave Number */
   dbl d_wave_number[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_wave_number;
   dbl *u_wave_number;
-  int wave_numberModel;	     /* CONSTANT */
+  int wave_numberModel; /* CONSTANT */
   int wave_number_tableid;
 
-  dbl acoustic_ksquared_sign;     /* Sign of wavenumber squared -- captures imaginary wavenumbers */
-  int Ksquared_SignModel;	     /* CONSTANT */
+  dbl acoustic_ksquared_sign; /* Sign of wavenumber squared -- captures imaginary wavenumbers */
+  int Ksquared_SignModel;     /* CONSTANT */
 
   dbl acoustic_absorption;
   dbl d_acoustic_absorption[MAX_VARIABLE_TYPES + MAX_CONC];
@@ -222,30 +234,30 @@ struct Material_Properties
   dbl *u_acoustic_absorption;
   int Acoustic_AbsorptionModel;
   int acoustic_absorption_tableid;
- 
+
   dbl refractive_index;
   dbl d_refractive_index[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_refractive_index;
   dbl *u_refractive_index;
   int Refractive_IndexModel;
   int refractive_index_tableid;
- 
+
   dbl light_absorption;
   dbl d_light_absorption[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_light_absorption;
   dbl *u_light_absorption;
   int Light_AbsorptionModel;
   int light_absorption_tableid;
- 
+
   dbl extinction_index;
   dbl d_extinction_index[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_extinction_index;
   dbl *u_extinction_index;
   int Extinction_IndexModel;
   int extinction_index_tableid;
- 
-  int VoltageFormulation;   /* Used to select k for potential equation
-                             * Permittivity or conductivity (default) */
+
+  int VoltageFormulation; /* Used to select k for potential equation
+                           * Permittivity or conductivity (default) */
 
   //! Viscosity of the phase, usually evaluated at the gauss point
   dbl viscosity;
@@ -255,8 +267,8 @@ struct Material_Properties
   dbl d_viscosity[MAX_VARIABLE_TYPES + MAX_CONC];
 
   //! Second derivatives of the viscosity wrt the independent unknowns in the
-  //! problem   
-  dbl d2_viscosity[MAX_VARIABLE_TYPES + MAX_CONC + 1];  
+  //! problem
+  dbl d2_viscosity[MAX_VARIABLE_TYPES + MAX_CONC + 1];
 
   int ViscosityModel;
   int viscosity_tableid;
@@ -266,11 +278,11 @@ struct Material_Properties
   dbl *u_dilationalViscosity;
   dbl dilationalViscosityRatio;
   dbl d_dilationalViscosityRatio[MAX_VARIABLE_TYPES + MAX_CONC];
-
+  dbl dilationalViscosityMultiplier;
   //! Volume fraction of Gas for multiphase material models
   //!  (Currently there is one model, foam)
   dbl volumeFractionGas;
-  //! Derivative of the volume fraction of gas wrt the independent 
+  //! Derivative of the volume fraction of gas wrt the independent
   //! unknowns in the problem
   dbl d_volumeFractionGas[MAX_VARIABLE_TYPES + MAX_CONC];
 
@@ -278,8 +290,14 @@ struct Material_Properties
   int DilationalViscosityModel;
   int dilationalViscosity_tableid;
 
+  /* Integer for wall distance external field index */
+  int dist_wall_ext_field_index;
+
   int Mwt_funcModel;
   dbl Mwt_func;
+
+  int SAwt_funcModel;
+  dbl SAwt_func;
 
   dbl surface_tension;
   int len_u_surface_tension;
@@ -309,32 +327,63 @@ struct Material_Properties
                                    * of the density wrt the state variables */
   int SBM_Length_enabled;
 
-  int DensityModel;                             /* Model type: for types, see mm_mp_const.h  */
-  int len_u_density;                            /* Constants for user-defined density model*/
-  dbl *u_density;                               /* Constants for user-defined density model*/
-    /*
-     * HKM Note: d_density is now superfluous and will be eliminated eventually
-     */
+  int DensityModel;  /* Model type: for types, see mm_mp_const.h  */
+  int len_u_density; /* Constants for user-defined density model*/
+  dbl *u_density;    /* Constants for user-defined density model*/
+  /*
+   * HKM Note: d_density is now superfluous and will be eliminated eventually
+   */
   dbl d_density[MAX_VARIABLE_TYPES + MAX_CONC]; /* Note this includes the thermal */
                                                 /* expansion coefficient, beta */
                                                 /* = d(density)/d(temperature) */
-    /*
-     * HKM Note: d_rho_dT and d_rho_dC contain duplicate information to
-     *           DensityJac and will be either eliminated or changed to
-     *           a form without the MDE dimension.
-     */
+  /*
+   * HKM Note: d_rho_dT and d_rho_dC contain duplicate information to
+   *           DensityJac and will be either eliminated or changed to
+   *           a form without the MDE dimension.
+   */
   dbl d_rho_dT[MDE];
   dbl d_rho_dC[MAX_CONC][MDE];
 
+  int PBE_BA_Type;
 
   int Spwt_funcModel;
   dbl Spwt_func;
 
+  int SpSSPG_funcModel;
+  dbl SpSSPG_func;
+
+  int SpYZbeta_funcModel;
+  dbl SpYZbeta_func;
+  dbl SpYZbeta_value;
+
+  int Momentwt_funcModel;
+  dbl Momentwt_func;
+
+  int MomentTime_funcModel;
+  dbl MomentTime_func;
+
+  int MomentSSPG_funcModel;
+  dbl MomentSSPG_func;
+
+  int MomentShock_funcModel;
+  dbl MomentShock_func;
+  dbl MomentShock_Ref[MAX_MOMENTS];
+
+  int MomentDiffusivityModel;
+  dbl MomentDiffusivity;
+
+  int MomentSecondLevelSetDiffusivityModel;
+  dbl MomentSecondLevelSetDiffusivity;
+
+  int MomentLevelSetDiffusionOnly;
+
   dbl diffusivity[MAX_CONC];
   int DiffusivityModel[MAX_CONC];
   int diffusivity_tableid[MAX_CONC];
-  int SpeciesTimeIntegration[MAX_CONC];         /* STANDARD or TAYLOR_GALERKIN */
-  int FreeVolSolvent[MAX_CONC];	/* Solvent identity array for multi-C FV*/
+  double SpeciesSecondLevelSetDiffusivity[MAX_CONC];
+  int SpeciesOnlyDiffusion[MAX_CONC];   /* STANDARD or TAYLOR_GALERKIN */
+  int SpeciesTimeIntegration[MAX_CONC]; /* STANDARD or TAYLOR_GALERKIN */
+  int FreeVolSolvent[MAX_CONC];         /* Solvent identity array for multi-C FV*/
   int len_u_diffusivity[MAX_CONC];
   dbl *u_diffusivity[MAX_CONC];
   dbl d_diffusivity[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
@@ -343,14 +392,14 @@ struct Material_Properties
   dbl loadfv[MAX_CONC][15];
   dbl d_diffusivity_gf[MAX_CONC][MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
 
-/* Property parameters needed for the Stefan-Maxwell flux model; KSC: 7/98, 2/99, 2/02;
-   Molecular weight is used in VL_POLY; ACS 8/98 */
+  /* Property parameters needed for the Stefan-Maxwell flux model; KSC: 7/98, 2/99, 2/02;
+     Molecular weight is used in VL_POLY; ACS 8/98 */
   dbl diffusivity_Stefan_Maxwell[MAX_CONC][MAX_CONC];
   dbl u_diffusivity_Stefan_Maxwell[MAX_CONC][MAX_CONC][3]; /* KSC, 9/04 */
   dbl reaction_rate;
   int ReactionRateModel;
-  int len_u_reaction_rate;                             /* Constants for user-defined reaction-rate model*/
-  dbl *u_reaction_rate;                                /* Constants for user-defined reaction-rate model*/
+  int len_u_reaction_rate; /* Constants for user-defined reaction-rate model*/
+  dbl *u_reaction_rate;    /* Constants for user-defined reaction-rate model*/
   dbl d_reaction_rate[MAX_VARIABLE_TYPES + MAX_CONC];
   dbl emissivity[MAX_CONC];
   int EmissivityModel[MAX_CONC];
@@ -363,8 +412,8 @@ struct Material_Properties
   dbl d_charge_number[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
   dbl solution_temperature;
   int SolutionTemperatureModel;
-  int len_u_solution_temperature;              /* Constants for user-defined solution temperature model*/
-  dbl *u_solution_temperature;                 /* Constants for user-defined solution temperature model*/
+  int len_u_solution_temperature; /* Constants for user-defined solution temperature model*/
+  dbl *u_solution_temperature;    /* Constants for user-defined solution temperature model*/
   dbl d_solution_temperature[MAX_VARIABLE_TYPES + MAX_CONC];
   dbl electrolyte_temperature;
   dbl electrolyte_conductivity;
@@ -380,41 +429,41 @@ struct Material_Properties
   dbl *u_interfacial_area;
   dbl d_interfacial_area[MAX_VARIABLE_TYPES + MAX_CONC];
 
-/* diffusivitives for each term  of HYDRO Model */
+  /* diffusivitives for each term  of HYDRO Model */
 
-  int GamDiffType[MAX_CONC]  ;
-  int MuDiffType[MAX_CONC]  ;
-  int GravDiffType[MAX_CONC]  ;
-  int SBM_Type[MAX_CONC]  ;
-  int FickDiffType[MAX_CONC]  ;
-  int CurvDiffType[MAX_CONC]  ;
-  int QTensorDiffType[MAX_CONC] ;
-  int NSCoeffType[MAX_CONC] ;
-  int len_u_gadiffusivity[MAX_CONC];            /*this is currently defined for MPI*/
-  int len_u_mdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/
+  int GamDiffType[MAX_CONC];
+  int MuDiffType[MAX_CONC];
+  int GravDiffType[MAX_CONC];
+  int SBM_Type[MAX_CONC];
+  int FickDiffType[MAX_CONC];
+  int CurvDiffType[MAX_CONC];
+  int QTensorDiffType[MAX_CONC];
+  int NSCoeffType[MAX_CONC];
+  int len_u_gadiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
+  int len_u_mdiffusivity[MAX_CONC];  /*this is currently defined for MPI*/
   int len_u_fdiffusivity[MAX_CONC];
-  int len_u_gdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/
-  int len_SBM_Lengths2[MAX_CONC];             /*this is currently defined for MPI*/
-  int len_u_cdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/
-  int len_u_qdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/
-  int len_u_nscoeff[MAX_CONC] ;
+  int len_u_gdiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
+  int len_SBM_Lengths2[MAX_CONC];   /*this is currently defined for MPI*/
+  int len_u_cdiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
+  int len_u_qdiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
+  int len_u_nscoeff[MAX_CONC];
 
-  dbl gam_diffusivity[MAX_CONC] ;               /* Kc from shear-gradient term */
-  dbl *u_gadiffusivity[MAX_CONC] ;
-  dbl mu_diffusivity[MAX_CONC] ;                /* Kmu from viscosity-gradient term */
-  dbl *u_mdiffusivity[MAX_CONC] ;
-  dbl f_diffusivity[MAX_CONC] ;                 /* normal Fickian diffusion term */
-  dbl *u_fdiffusivity[MAX_CONC] ;
-  dbl g_diffusivity[MAX_CONC] ;                 /* hindered settling function */
-  dbl SBM_Lengths[MAX_CONC] ;                 /* hindered settling function */
-  dbl NSCoeff[MAX_CONC] ;
-  dbl *u_nscoeff[MAX_CONC] ;
-  dbl *u_gdiffusivity[MAX_CONC] ;               /*this is currently defined for MPI*/
-  dbl *SBM_Lengths2[MAX_CONC] ;               /*this is currently defined for MPI*/
-  dbl cur_diffusivity[MAX_CONC] ;              /* curvature induced migration term */
-  dbl *u_cdiffusivity[MAX_CONC] ;
-  dbl q_diffusivity[MAX_CONC][DIM] ;	/* Q tensor diffusion components. */
-  dbl *u_qdiffusivity[MAX_CONC] ;
+  dbl gam_diffusivity[MAX_CONC]; /* Kc from shear-gradient term */
+  dbl *u_gadiffusivity[MAX_CONC];
+  dbl mu_diffusivity[MAX_CONC]; /* Kmu from viscosity-gradient term */
+  dbl *u_mdiffusivity[MAX_CONC];
+  dbl f_diffusivity[MAX_CONC]; /* normal Fickian diffusion term */
+  dbl *u_fdiffusivity[MAX_CONC];
+  dbl g_diffusivity[MAX_CONC]; /* hindered settling function */
+  dbl SBM_Lengths[MAX_CONC];   /* hindered settling function */
+  dbl NSCoeff[MAX_CONC];
+  dbl *u_nscoeff[MAX_CONC];
+  dbl *u_gdiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
+  dbl *SBM_Lengths2[MAX_CONC];   /*this is currently defined for MPI*/
+  dbl cur_diffusivity[MAX_CONC]; /* curvature induced migration term */
+  dbl *u_cdiffusivity[MAX_CONC];
+  dbl q_diffusivity[MAX_CONC][DIM]; /* Q tensor diffusion components. */
+  dbl *u_qdiffusivity[MAX_CONC];
 
   /* Parameters for Ryan's Qtensor model */
   int QtensorExtensionPModel;
@@ -435,7 +484,6 @@ struct Material_Properties
   dbl reference_concn[MAX_CONC];
   dbl *u_reference_concn[MAX_CONC];
   int len_u_reference_concn[MAX_CONC];
-
 
   int AdvectiveScalingModel[MAX_CONC];
   dbl AdvectiveScaling[MAX_CONC];
@@ -484,30 +532,31 @@ struct Material_Properties
   int PorousMediaType;
   int CapStress;
 
-  int i_ys;			/* species number of species eqn */
+  int i_ys; /* species number of species eqn */
 
   dbl porosity;
   int PorosityModel;
-  int len_u_porosity;                           /* Constants for user-defined porosity model*/
-  dbl *u_porosity;                              /* Constants for user-defined porosity model*/
+  int len_u_porosity; /* Constants for user-defined porosity model*/
+  dbl *u_porosity;    /* Constants for user-defined porosity model*/
   dbl d_porosity[MAX_VARIABLE_TYPES + MAX_CONC + MAX_PMV];
   int porosity_external_field_index;
 
-  dbl porous_compressibility;		/* Porous (rock) compressibility */
-  dbl initial_porosity;			/* Initializes the external field */
-  int PorousCompressibilityModel;	/* when this is set to "CONST_INIT" */
+  dbl porous_compressibility;     /* Porous (rock) compressibility */
+  dbl initial_porosity;           /* Initializes the external field */
+  int PorousCompressibilityModel; /* when this is set to "CONST_INIT" */
   int len_u_porous_compressibility;
   dbl *u_porous_compressibility;
 
-  dbl matrix_density;           /* density of the solid material of a porous medium       */
+  dbl matrix_density; /* density of the solid material of a porous medium       */
   int PorousMatrixDensityModel;
   dbl d_matrix_density[MAX_VARIABLE_TYPES + MAX_CONC + MAX_PMV];
 
-  dbl specific_heat;            /* specific heat of the solid material of a porous medium */
+  dbl specific_heat; /* specific heat of the solid material of a porous medium */
   int PorousSpecificHeatModel;
   dbl d_specific_heat[MAX_VARIABLE_TYPES + MAX_CONC + MAX_PMV];
 
   dbl permeability;
+  dbl permeability_imag;
   dbl perm_tensor[DIM][DIM];
   int PermeabilityModel;
   dbl d_permeability[MAX_VARIABLE_TYPES + MAX_CONC + MAX_PMV];
@@ -543,31 +592,40 @@ struct Material_Properties
   int len_u_saturation;
   dbl *u_saturation;
   dbl d_saturation[MAX_VARIABLE_TYPES + MAX_CONC + MAX_PMV];
-  dbl d_d_saturation[MAX_VARIABLE_TYPES+MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
+  dbl d_d_saturation[MAX_VARIABLE_TYPES + MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
   int saturation_tableid;
   int SAT_external_field_index;
 
-    /*
-     *  Porous_wt_funcModel: This is where you specify standard weighting 
-     *                       or SUPG. The wt_func should normally always be
-     *                       equal to 1, because 1 corresponds to the theoretical
-     *                       amount of compensating artificial diffusivity
-     *                       that makes up for the lack of actual diffusivity
-     *                       in Galerkin's weighting as you get to high
-     *                       peclet numbers.
-     */
+  dbl cap_pres;
+  int CapPresModel;
+  int len_u_cap_pres;
+  dbl *u_cap_pres;
+  dbl d_cap_pres[MAX_VARIABLE_TYPES + MAX_CONC];
+  dbl d_d_cap_pres[MAX_VARIABLE_TYPES + MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
+  int cap_pres_tableid;
+  int cap_pres_external_field_index;
+
+  /*
+   *  Porous_wt_funcModel: This is where you specify standard weighting
+   *                       or SUPG. The wt_func should normally always be
+   *                       equal to 1, because 1 corresponds to the theoretical
+   *                       amount of compensating artificial diffusivity
+   *                       that makes up for the lack of actual diffusivity
+   *                       in Galerkin's weighting as you get to high
+   *                       peclet numbers.
+   */
   int Porous_wt_funcModel;
   dbl Porous_wt_func;
 
-    /*
-     *  Porous_Mass_Lump:  If true mass lumping of the porous media 
-     *                     inventory terms is carried out. 
-     */
+  /*
+   *  Porous_Mass_Lump:  If true mass lumping of the porous media
+   *                     inventory terms is carried out.
+   */
   int Porous_Mass_Lump;
 
   dbl porous_diffusivity[MAX_PMV];
   int PorousDiffusivityModel[MAX_PMV];
-  int PorousTimeIntegration[MAX_PMV];         /* STANDARD or TAYLOR_GALERKIN */
+  int PorousTimeIntegration[MAX_PMV]; /* STANDARD or TAYLOR_GALERKIN */
 
   int len_u_porous_diffusivity[MAX_PMV];
   dbl *u_porous_diffusivity[MAX_PMV];
@@ -605,20 +663,27 @@ struct Material_Properties
   int len_u_porous_vol_expansion[MAX_PMV];
   dbl *u_porous_vol_expansion[MAX_PMV];
 
-  dbl porous_molecular_weight[MAX_PMV]; 
+  dbl porous_molecular_weight[MAX_PMV];
   int PorousMolecularWeightModel[MAX_PMV];
   dbl d_porous_molecular_weight[MAX_PMV][MAX_VARIABLE_TYPES + MAX_CONC];
+
+  int moment_growth_model;
+  dbl moment_growth_scale;
+  dbl moment_growth_reference_pressure;
+
+  int moment_coalescence_model;
+  dbl moment_coalescence_scale;
 
   /*
    * Source terms...
    */
 
   dbl momentum_source[DIM];
-  dbl d_momentum_source[DIM][MAX_VARIABLE_TYPES  + MAX_CONC];
+  dbl d_momentum_source[DIM][MAX_VARIABLE_TYPES + MAX_CONC];
   int MomentumSourceModel;
   int len_u_momentum_source;
   dbl *u_momentum_source;
-  
+
   dbl heat_source;
   dbl d_heat_source[MAX_VARIABLE_TYPES + MAX_CONC];
   int HeatSourceModel;
@@ -630,7 +695,8 @@ struct Material_Properties
   int SpeciesSourceModel[MAX_CONC];
   int len_u_species_source[MAX_CONC];
   dbl *u_species_source[MAX_CONC];
-  dbl Jac_Species_Source[MAX_CONC * MAX_CONC];  
+  dbl Jac_Species_Source[MAX_CONC * MAX_CONC];
+  int species_source_external_field_index;
 
   dbl species_vol_expansion[MAX_CONC];
   dbl d_species_vol_expansion[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
@@ -657,6 +723,12 @@ struct Material_Properties
   int CurrentSourceModel;
   int len_u_current_source;
   dbl *u_current_source;
+
+  dbl moment_source;
+  dbl d_moment_source[MAX_VARIABLE_TYPES + MAX_CONC];
+  int MomentSourceModel;
+  int len_u_moment_source;
+  dbl *u_moment_source;
 
   dbl heightU;
   dbl d_heightU[MAX_VARIABLE_TYPES + MAX_CONC];
@@ -699,6 +771,29 @@ struct Material_Properties
   int DcaLFunctionModel;
 
   int FSIModel;
+  int LubIntegrationModel;
+  int LubInt_NGP;
+  dbl Lub_gpts[MAX_LUB_NGP];
+  dbl Lub_wts[MAX_LUB_NGP];
+  dbl LubInt_PL;
+
+  int Lub_Curv_NormalModel;
+  int Lub_Curv_DiffModel;
+  double Lub_Curv_Diff;
+  int Lub_Curv_RelaxModel;
+  double Lub_Curv_Relax;
+  int Lub_Kwt_funcModel;
+  double Lub_Kwt_func;
+  int Lub_Curv_MassLump;
+  int Lub_Curv_Modulation;
+  int Lub_LS_Interpolation;
+  int Lub_Curv_Combine;
+  int Lub_Isotropic_Curv_Diffusion;
+
+  int Lub_Heat_XferModel;
+  double Lub_Heat_Xfer;
+  int Lub_Heat_TambModel;
+  double Lub_Heat_Tamb;
 
   int TurbulentLubricationModel;
 
@@ -736,40 +831,40 @@ struct Material_Properties
   int len_u_DiffCoeff_function_constants;
   dbl *u_DiffCoeff_function_constants;
   int DiffCoeffModel;
-  
+
   dbl PorousShellClosedPorosity;
   dbl d_PorousShellClosedPorosity[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_PorousShellClosedPorosity_function_constants;
   dbl *u_PorousShellClosedPorosity_function_constants;
   int PorousShellClosedPorosityModel;
   int por_shell_closed_porosity_ext_field_index;
-  
+
   dbl PorousShellClosedHeight;
   dbl d_PorousShellClosedHeight[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_PorousShellClosedHeight_function_constants;
   dbl *u_PorousShellClosedHeight_function_constants;
   int PorousShellClosedHeightModel;
   int por_shell_closed_height_ext_field_index;
-  
+
   dbl PorousShellClosedRadius;
   dbl d_PorousShellClosedRadius[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_PorousShellClosedRadius_function_constants;
   dbl *u_PorousShellClosedRadius_function_constants;
   int PorousShellClosedRadiusModel;
   int por_shell_closed_radius_ext_field_index;
-  
+
   dbl PorousShellClosedP0;
   dbl d_PorousShellClosedP0[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_PorousShellClosedP0_function_constants;
   dbl *u_PorousShellClosedP0_function_constants;
   int PorousShellClosedP0Model;
-  
+
   dbl PorousShellPatm;
   dbl d_PorousShellPatm[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_PorousShellPatm_function_constants;
   dbl *u_PorousShellPatm_function_constants;
   int PorousShellPatmModel;
-  
+
   dbl PorousShellPref;
   dbl d_PorousShellPref[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_PorousShellPref_function_constants;
@@ -788,24 +883,75 @@ struct Material_Properties
   int len_u_PorousShellInitPorePres_function_constants;
   dbl *u_PorousShellInitPorePres_function_constants;
   int PorousShellInitPorePresModel;
-  
+
   dbl PorousShellDiffusivity;
   dbl d_PorousShellDiffusivity[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_PorousShellDiffusivity_function_constants;
   dbl *u_PorousShellDiffusivity_function_constants;
   int PorousShellDiffusivityModel;
-  
+
   dbl PorousShellRT;
   dbl d_PorousShellRT[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_PorousShellRT_function_constants;
   dbl *u_PorousShellRT_function_constants;
   int PorousShellRTModel;
-  
+
   dbl PorousShellHenry;
   dbl d_PorousShellHenry[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_PorousShellHenry_function_constants;
   dbl *u_PorousShellHenry_function_constants;
   int PorousShellHenryModel;
+
+  dbl PorousShellPorosity[MAX_POR_SHELL];
+  dbl d_PorousShellPorosity[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellPorosity[MAX_POR_SHELL];
+  dbl *u_PorousShellPorosity[MAX_POR_SHELL];
+  int PorousShellPorosityModel[MAX_POR_SHELL];
+  int por_shell_porosity_ext_field_index[MAX_POR_SHELL];
+
+  dbl PorousShellHeight[MAX_POR_SHELL];
+  dbl d_PorousShellHeight[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellHeight[MAX_POR_SHELL];
+  dbl *u_PorousShellHeight[MAX_POR_SHELL];
+  int PorousShellHeightModel[MAX_POR_SHELL];
+  int por_shell_height_ext_field_index[MAX_POR_SHELL];
+
+  dbl PorousShellPermeability[MAX_POR_SHELL];
+  dbl PorousShellPermTensor[MAX_POR_SHELL][DIM][DIM];
+  dbl d_PorousShellPermeability[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellPermeability[MAX_POR_SHELL];
+  dbl *u_PorousShellPermeability[MAX_POR_SHELL];
+  int PorousShellPermeabilityModel[MAX_POR_SHELL];
+  int por_shell_permeability_ext_field_index[MAX_POR_SHELL];
+
+  dbl PorousShellCrossPermeability[MAX_POR_SHELL];
+  dbl d_PorousShellCrossPermeability[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellCrossPermeability[MAX_POR_SHELL];
+  dbl *u_PorousShellCrossPermeability[MAX_POR_SHELL];
+  int PorousShellCrossPermeabilityModel[MAX_POR_SHELL];
+  int por_shell_cross_permeability_ext_field_index[MAX_POR_SHELL];
+
+  dbl PorousShellRelPerm[MAX_POR_SHELL];
+  dbl d_PorousShellRelPerm[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellRelPerm[MAX_POR_SHELL];
+  dbl *u_PorousShellRelPerm[MAX_POR_SHELL];
+  int PorousShellRelPermModel[MAX_POR_SHELL];
+  int por_shell_rel_perm_ext_field_index[MAX_POR_SHELL];
+
+  dbl PorousShellCapPres[MAX_POR_SHELL];
+  dbl d_PorousShellCapPres[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellCapPres[MAX_POR_SHELL];
+  dbl *u_PorousShellCapPres[MAX_POR_SHELL];
+  int PorousShellCapPresModel[MAX_POR_SHELL];
+  int por_shell_cap_pres_ext_field_index[MAX_POR_SHELL];
+  int por_shell_cap_pres_hyst_num_switch_ext_field_index[MAX_POR_SHELL];
+  int por_shell_cap_pres_hyst_curve_type_ext_field_index[MAX_POR_SHELL];
+
+  // EM incident wave, mix between boundary condition / source / problem property
+  int IncidentWaveModel;
+  dbl incident_wave;
+  int len_u_incident_wave;
+  dbl *u_incident_wave;
 
   /*
    * Boundary conditions...(these quantities and the geometric surface
@@ -814,11 +960,10 @@ struct Material_Properties
    */
 
   dbl reference[MAX_VARIABLE_TYPES]; /* Mostly for reference temperature for */
-				     /* Boussinesq term, but conceivably also */
-				     /* extended to concentration, and other */
-				     /* variables, too. */
+                                     /* Boussinesq term, but conceivably also */
+                                     /* extended to concentration, and other */
+                                     /* variables, too. */
   int ReferenceModel[MAX_VARIABLE_TYPES];
-
 
   dbl melting_point_liquidus;
   dbl d_melting_point_liquidus[MAX_VARIABLE_TYPES + MAX_CONC];
@@ -856,7 +1001,6 @@ struct Material_Properties
 
   dbl geometry_parameters[MAX_GEOMETRY_PARMS]; /* defined in rf_fem_const.h */
 
- 
   //! FlowingLiquid Viscosity -> Used in the Brinkman Equation
   //  -> also reused in some situations for the FOAM_EPOXY model to hold
   //     the pure liquid phase viscosity and its derivatives.
@@ -923,34 +1067,32 @@ struct Material_Properties
 
   int table_index;
 
-  
   struct Data_Table *table;
 
   struct Second_LS_Phase_Properties *mp2nd;
 };
 
-
 //! Structure containing all of the physical constants related to viscosity
 /*!
- *   Generalized Newtonian Models: 
+ *   Generalized Newtonian Models:
  *   Newtonian, Power Law, Carreau, Bingham,  Carreau_wlf
  *   or Carreau_Suspension etc
  *
  *  This structure is allocated for every material. For each material
  *  there are MAX_MODES numbers of these structures.
  */
-struct Generalized_Newtonian
-{
-  //! Integer describing the viscosity model 
+struct Generalized_Newtonian {
+  //! Integer describing the viscosity model
   /*!
-   *   Generalized Newtonian Models: 
+   *   Generalized Newtonian Models:
    *   Newtonian, Power Law, Carreau, Bingham,  Carreau_wlf
    *   or Carreau_Suspension etc
    */
   int ConstitutiveEquation;
 
   dbl mu0;
-  int mu0Model;	
+  int mu0Model;
+  dbl pos_ls_mup;
   int len_u_mu0;
   dbl *u_mu0;
   dbl nexp;
@@ -962,7 +1104,7 @@ struct Generalized_Newtonian
   int len_u_muinf;
   dbl *u_muinf;
   dbl lam;
-  int lamModel;	
+  int lamModel;
   int len_u_lam;
   dbl *u_lam;
   dbl aexp;
@@ -972,7 +1114,7 @@ struct Generalized_Newtonian
   dbl atexp;
   int atexpModel;
   int len_u_atexp;
-  dbl *u_atexp;	
+  dbl *u_atexp;
   /* CARREAU_WLF viscosity model  */
   dbl wlfc2;
   int wlfc2Model;
@@ -983,10 +1125,13 @@ struct Generalized_Newtonian
   dbl tau_y;
   int len_u_tau_y;
   dbl *u_tau_y;
-  int tau_yModel;	
+  int tau_yModel;
   dbl fexp;
-  int fexpModel;	
- /* these are for SUSPENSION/FILLED_EPOXY models */
+  int fexpModel;
+  dbl epsilon;
+  int epsilonModel;
+  int regularizationModel;
+  /* these are for SUSPENSION/FILLED_EPOXY models */
   dbl maxpack;
   int maxpackModel;
   int sus_species_no;
@@ -1008,7 +1153,7 @@ struct Generalized_Newtonian
   dbl diff;
   //! Model for the dilational viscosity
   int DilViscModel;
-  //! This is the constant used for the dilational viscosity 
+  //! This is the constant used for the dilational viscosity
   dbl DilVisc0;
   dbl thixo_factor;
   int thixoModel;
@@ -1016,69 +1161,119 @@ struct Generalized_Newtonian
   dbl *u_thixo_factor;
 };
 typedef struct Generalized_Newtonian GEN_NEWT_STRUCT;
+typedef struct PolymerTimeConstants {
+  //! Integer describing the polymer time constant model
+  /*!
+   *   Constant, Power Law, Carreau, Bingham,  Carreau_wlf
+   *   or Carreau_Suspension etc
+   */
+  int ConstitutiveEquation;
 
-struct Viscoelastic_Constitutive
-{
+  dbl lambda0;
+  int lambda0Model;
+  dbl pos_ls_lambda;
+  dbl nexp;
+  int nexpModel;
+  dbl lambdainf;
+  int lambdainfModel;
+  dbl carreau_lambda;
+  int carreau_lambdaModel;
+  dbl aexp;
+  int aexpModel;
+  dbl atexp;
+  int atexpModel;
+} POLYMER_TIME_CONST_STRUCT;
+
+struct Positive_LS_Viscoelastic_Properties {
+
+  double alpha; /* This is the Geisekus mobility parameter */
+
+  double xi; /* This is the PTT upper convected / lower convected weight parameter */
+
+  double eps; /* This is the PTT elongational parameter */
+};
+
+struct Viscoelastic_Constitutive {
   /* this struct contains the polymer viscosity
-   * if it is shearthinning etc or NEWTONIAN 
+   * if it is shearthinning etc or NEWTONIAN
    */
   GEN_NEWT_STRUCT *gn;
+  POLYMER_TIME_CONST_STRUCT *time_const_st;
 
-  dbl time_const;            /* relaxation constant */
-  int time_constModel;	     /* this is either CONSTANT or POWERLAW or CARREAU */
-                             /* The same model must be used for the viscosity! */
-  dbl alpha;                 /* This is the Geisekus mobility parameter */
-  int alphaModel;	 
+  dbl alpha; /* This is the Geisekus mobility parameter */
+  int alphaModel;
 
-  dbl xi;                    /* This is the PTT upper convected / lower convected weight parameter */
+  dbl xi; /* This is the PTT upper convected / lower convected weight parameter */
   int xiModel;
 
-  dbl eps;                   /* This is the PTT elongational parameter */
+  dbl eps; /* This is the PTT elongational parameter */
   int epsModel;
+
+  // Rolie Poly
+  dbl stretch_time;
+  int stretchModel;
+
+  dbl CCR_coefficient;
+  int CCR_coefficientModel;
+
+  dbl polymer_exponent;
+  int polymer_exponentModel;
+
+  dbl maximum_stretch_ratio;
+  int maximum_stretch_ratioModel;
+
+  // FENE
+  dbl extensibility;
+  int extensibilityModel;
+
+  // level set
+  struct Positive_LS_Viscoelastic_Properties pos_ls;
+  dbl muJeffreys; /* 2nd viscosity used in modified Jeffreys model */
+  int muJeffreysModel;
 };
-typedef struct  Viscoelastic_Constitutive VISC_CONST_STRUCT;
-   
-struct Viscoelastic_Nonmodal
-{
- /* 
-  * Viscoelastic Constitutive Equation: 
-  * with proper coefficient choices it can become:
-  * Giesekus Model
-  * Maxwell Model
-  * Oldroyd-B Model
-  * White-Metzner Model
-  * Leonov Model
-  */
+typedef struct Viscoelastic_Constitutive VISC_CONST_STRUCT;
+
+struct Viscoelastic_Nonmodal {
+  /*
+   * Viscoelastic Constitutive Equation:
+   * with proper coefficient choices it can become:
+   * Giesekus Model
+   * Maxwell Model
+   * Oldroyd-B Model
+   * White-Metzner Model
+   * Leonov Model
+   */
   int ConstitutiveEquation;
   dbl wt_func;
   int wt_funcModel;
+  dbl shockcapture;
+  int shockcaptureModel;
 
-/* This is the adaptive viscosity scaling. If if it zero
- * we get the standard formulation, if nonzero we get
- * numerical viscosity that may stabilize the stress equations
- */
-  dbl eps;  
+  int ptt_type;
+  /* This is the adaptive viscosity scaling. If if it zero
+   * we get the standard formulation, if nonzero we get
+   * numerical viscosity that may stabilize the stress equations
+   */
+  dbl eps;
 
-  int evssModel;             /* this is to choose the EVSS model - either
-				Fortin's or Rajagopalans */
+  int evssModel; /* this is to choose the EVSS model - either
+                    Fortin's or Rajagopalans */
   int modes;
 
-  int   dg_J_model;
+  int dg_J_model;
 
-  dbl   *dg_J_model_wt;
-  int   len_dg_J_model_wt;	/* Sigh...everyone forgets to do this... */
-  
+  dbl *dg_J_model_wt;
+  int len_dg_J_model_wt; /* Sigh...everyone forgets to do this... */
+
   int shiftModel;
   dbl *shift;
-  int len_shift;		/*  time constant temperature shift */
+  int len_shift; /*  time constant temperature shift */
 };
 
-
-struct Elastic_Constitutive
-{
- /* 
-  * Constants used in the Elasticity consitutive Equations
-  */
+struct Elastic_Constitutive {
+  /*
+   * Constants used in the Elasticity consitutive Equations
+   */
   int ConstitutiveEquation;
 
   dbl lame_mu;
@@ -1086,7 +1281,10 @@ struct Elastic_Constitutive
   int len_u_mu;
   dbl *u_mu;
   dbl d_lame_mu[MAX_VARIABLE_TYPES + MAX_CONC];
+  int *u_mu_ns;
+  int len_u_mu_ns;
   int lame_mu_tableid;
+  double *multi_contact_line_distances;
 
   dbl lame_lambda;
   int lame_lambda_model;
@@ -1122,41 +1320,47 @@ struct Elastic_Constitutive
   dbl Strss_fr_sol_vol_frac;
 
   dbl v_mesh_sfs[DIM];
-  int v_mesh_sfs_model;		/* Looks as if this ought to be an int - pas */
+  int v_mesh_sfs_model; /* Looks as if this ought to be an int - pas */
   int len_u_v_mesh_sfs;
   dbl *u_v_mesh_sfs;
-  
-   dbl thermal_expansion;	/*  thermo-elasticity properties   */
-   int thermal_expansion_model;
-   int len_u_thermal_expansion;
-   dbl *u_thermal_expansion;
-   dbl solid_reference_temp;
-   int solid_reference_temp_model;
-  
-   dbl solid_viscosity;		/*  viscoelastic solid viscosity   */
-   int solid_viscosity_model;
-   int len_u_solid_viscosity;
-   dbl *u_solid_viscosity;
-   dbl solid_dil_viscosity;		/*  viscoelastic solid dilational viscosity   */
-   int solid_dil_viscosity_model;
+
+  dbl thermal_expansion; /*  thermo-elasticity properties   */
+  int thermal_expansion_model;
+  int len_u_thermal_expansion;
+  dbl *u_thermal_expansion;
+  int thermal_expansion_tableid;
+  dbl solid_reference_temp;
+  int solid_reference_temp_model;
+
+  dbl solid_viscosity; /*  viscoelastic solid viscosity   */
+  int solid_viscosity_model;
+  int len_u_solid_viscosity;
+  dbl *u_solid_viscosity;
+  dbl solid_dil_viscosity; /*  viscoelastic solid dilational viscosity   */
+  int solid_dil_viscosity_model;
+  int len_u_solid_dil_viscosity;
+  dbl *u_solid_dil_viscosity;
+  dbl solid_retardation; /*  viscoelastic solid retardation time   */
+  int solid_retard_model;
+  int len_u_solid_retardation;
+  dbl *u_solid_retardation;
 };
 
 typedef struct Elastic_Constitutive ELASTIC_CONST_STRUCT;
 
-struct Viscoplastic_Constitutive
-{
- /*
-  * Constants used in the Viscoplasticity consitutive Equations
-  */
+struct Viscoplastic_Constitutive {
+  /*
+   * Constants used in the Viscoplasticity consitutive Equations
+   */
   int ConstitutiveEquation;
 
-  int update_flag;     /*This is a flag for updating and advancing the
-			*time integrals in the EVP hyperelastic formulation.
-			*We have no other place to put this flag unless we
-			*want to pass it into the depths of assemble_mesh. Because
-			*it is only used there, I saw it not necessary to cludder
-			*matrix fill arg list, and I made it global.   
-			*/
+  int update_flag; /*This is a flag for updating and advancing the
+                    *time integrals in the EVP hyperelastic formulation.
+                    *We have no other place to put this flag unless we
+                    *want to pass it into the depths of assemble_mesh. Because
+                    *it is only used there, I saw it not necessary to cludder
+                    *matrix fill arg list, and I made it global.
+                    */
 
   dbl plastic_mu;
   int plastic_mu_model;
@@ -1171,120 +1375,131 @@ struct Viscoplastic_Constitutive
   dbl d_yield[MAX_VARIABLE_TYPES + MAX_CONC];
 
   /*
-   * This part of this struct is used to allocate, transport, and deallocate 
+   * This part of this struct is used to allocate, transport, and deallocate
    * the global arrays
    * required for elastoviscoplastic models.  Those models, because of their Lagrangian
    * hyperelastic nature require a time integral along material paths.  The only
    * way to track those time integrals is to advanced these kinematic tensors globally,
    * i.e., they can not be in an element-by-element structure.  These babies can get
-   * pretty big so they won't be allocated unless you are doing an EVP model 
+   * pretty big so they won't be allocated unless you are doing an EVP model
    */
 
-  dbl ****F_vp_glob;          /*viscoplastic deformation gradient = I + int(D_vp)dt */
+  dbl ****F_vp_glob; /*viscoplastic deformation gradient = I + int(D_vp)dt */
   dbl ****F_vp_old_glob;
-  dbl ****TT_glob;            /*Plastic potential stress */
+  dbl ****TT_glob; /*Plastic potential stress */
   dbl ****TT_old_glob;
-  dbl ******dTT_dx_glob;            /*Stress sensitivities */
+  dbl ******dTT_dx_glob; /*Stress sensitivities */
   dbl ******dTT_dx_old_glob;
-  dbl ******dTT_dc_glob;            /*Stress sensitivities */
+  dbl ******dTT_dc_glob; /*Stress sensitivities */
   dbl ******dTT_dc_old_glob;
-
 };
-
 
 /*
  * This is where this belongs.
  */
 
-struct  Variable_Initialization
-{
+struct Variable_Initialization {
   int var;
   int ktype;
   double init_val;
   double init_val_min;
   double init_val_max;
-  double init_val_minus;   /* Value in negative LS phase */
-  double init_val_plus;    /* Value in positive LS phase */
-  int slave_block;         /* this is set TRUE in order that this initialization value
-							  is not applied to nodes that are shared with adjacent blocks */
+  double init_val_minus; /* Value in negative LS phase */
+  double init_val_plus;  /* Value in positive LS phase */
+  int slave_block;       /* this is set TRUE in order that this initialization value
+                           is not applied to nodes that are shared with adjacent blocks */
+  int len_u_pars;
+  double *u_pars;
 };
 
-
-struct Second_LS_Phase_Properties
-{
+struct Second_LS_Phase_Properties {
   int ViscosityModel;
   dbl viscosity;
   int viscositymask[2];
+  int viscosity_lsi_interp_method;
   dbl viscosity_phase[MAX_PHASE_FUNC];
 
   int DensityModel;
   dbl density;
   int densitymask[2];
+  int density_lsi_interp_method;
   dbl density_phase[MAX_PHASE_FUNC];
 
   int HeatCapacityModel;
   dbl heatcapacity;
   int heatcapacitymask[2];
+  int heatcapacity_lsi_interp_method;
   dbl heatcapacity_phase[MAX_PHASE_FUNC];
-  
+
   int ThermalConductivityModel;
   dbl thermalconductivity;
   int thermalconductivitymask[2];
+  int thermalconductivity_lsi_interp_method;
   dbl thermalconductivity_phase[MAX_PHASE_FUNC];
 
   int MomentumSourceModel;
   dbl momentumsource[DIM];
   int momentumsourcemask[2];
+  int momentumsource_lsi_interp_method;
   dbl momentumsource_phase[MAX_PHASE_FUNC][DIM];
-  
+
   int HeatSourceModel;
   dbl heatsource;
   int heatsourcemask[2];
+  int heatsource_lsi_interp_method;
   dbl heatsource_phase[MAX_PHASE_FUNC];
 
   int AcousticImpedanceModel;
   dbl acousticimpedance;
   int acousticimpedancemask[2];
+  int acousticimpedance_lsi_interp_method;
   dbl acousticimpedance_phase[MAX_PHASE_FUNC];
 
   int wavenumberModel;
   dbl wavenumber;
   int wavenumbermask[2];
+  int wavenumber_lsi_interp_method;
   dbl wavenumber_phase[MAX_PHASE_FUNC];
 
   int AcousticAbsorptionModel;
   dbl acousticabsorption;
   int acousticabsorptionmask[2];
+  int acousticabsorption_lsi_interp_method;
   dbl acousticabsorption_phase[MAX_PHASE_FUNC];
-  
+
   int RefractiveIndexModel;
   dbl refractiveindex;
   int refractiveindexmask[2];
+  int refractiveindex_lsi_interp_method;
   dbl refractiveindex_phase[MAX_PHASE_FUNC];
 
   int LightAbsorptionModel;
   dbl lightabsorption;
   int lightabsorptionmask[2];
+  int lightabsorption_lsi_interp_method;
   dbl lightabsorption_phase[MAX_PHASE_FUNC];
-  
+
   int ExtinctionIndexModel;
   dbl extinctionindex;
   int extinctionindexmask[2];
+  int extinctionindex_lsi_interp_method;
   dbl extinctionindex_phase[MAX_PHASE_FUNC];
 
   int SpeciesSourceModel[MAX_CONC];
   dbl speciessource[MAX_CONC];
-  int speciessourcemask[2][MAX_CONC];;
+  int speciessourcemask[2][MAX_CONC];
+  int speciessource_lsi_interp_method[MAX_CONC];
   dbl speciessource_phase[MAX_PHASE_FUNC][MAX_CONC];
+  int use_species_source_width[MAX_CONC];
+  dbl species_source_width[MAX_CONC];
 
   int FlowingLiquidViscosityModel;
   dbl FlowingLiquid_viscosity;
   int FlowingLiquid_viscositymask[2];
+  int FlowingLiquid_viscosity_lsi_interp_method;
   dbl FlowingLiquid_viscosity_phase[MAX_PHASE_FUNC];
-
 };
 
-typedef struct Second_LS_Phase_Properties SECOND_LS_PHASE_PROP_STRUCT; 
-
+typedef struct Second_LS_Phase_Properties SECOND_LS_PHASE_PROP_STRUCT;
 
 #endif

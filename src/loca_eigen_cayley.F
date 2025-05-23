@@ -2,12 +2,14 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
-* This software is distributed under the GNU General Public License.	  *
+* This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
 
 #ifndef ARSCND_NAME
@@ -599,11 +601,11 @@ c
             kp(4) = nconv
             call ivout (logfil, 4, kp, ndigit, 
      &                  '_naup2: NEV, NP, NUMCNV, NCONV are')
-            call dvout (logfil, kplusp, ritzr, ndigit,
+            call dvout (logfil, kplusp, [ritzr], ndigit,
      &           '_naup2: Real part of the eigenvalues of H')
-            call dvout (logfil, kplusp, ritzi, ndigit,
+            call dvout (logfil, kplusp, [ritzi], ndigit,
      &           '_naup2: Imaginary part of the eigenvalues of H')
-            call dvout (logfil, kplusp, bounds, ndigit, 
+            call dvout (logfil, kplusp, [bounds], ndigit, 
      &          '_naup2: Ritz estimates of the current NCV Ritz values')
          end if
 c
@@ -3355,7 +3357,7 @@ c
          iter = iter + 1
 c
          if (msglvl .gt. 0) then
-            call pivout (comm, logfil, 1, iter, ndigit, 
+            call pivout (comm, logfil, 1, [iter], ndigit, 
      &           '_naup2: **** Start of major iteration number ****')
          end if
 c 
@@ -3368,9 +3370,9 @@ c
          np  = kplusp - nev
 c
          if (msglvl .gt. 1) then
-            call pivout (comm, logfil, 1, nev, ndigit, 
+            call pivout (comm, logfil, 1, [nev], ndigit, 
      &     '_naup2: The length of the current Arnoldi factorization')
-            call pivout (comm, logfil, 1, np, ndigit, 
+            call pivout (comm, logfil, 1, [np], ndigit, 
      &           '_naup2: Extend the Arnoldi factorization by')
          end if
 c
@@ -3402,7 +3404,7 @@ c
          update = .false.
 c
          if (msglvl .gt. 1) then
-            call pdvout (comm, logfil, 1, rnorm, ndigit, 
+            call pdvout (comm, logfil, 1, [rnorm], ndigit, 
      &           '_naup2: Corresponding B-norm of the residual')
          end if
 c 
@@ -3663,7 +3665,7 @@ c
          end if              
 c     
          if (msglvl .gt. 0) then
-            call pivout (comm, logfil, 1, nconv, ndigit, 
+            call pivout (comm, logfil, 1, [nconv], ndigit, 
      &           '_naup2: no. of "converged" Ritz values at this iter.')
             if (msglvl .gt. 1) then
                kp(1) = nev
@@ -3729,7 +3731,7 @@ c
          end if
 c
          if (msglvl .gt. 2) then 
-            call pivout (comm, logfil, 1, np, ndigit, 
+            call pivout (comm, logfil, 1, [np], ndigit, 
      &                  '_naup2: The number of shifts to apply ')
             call pdvout (comm, logfil, np, ritzr, ndigit,
      &                  '_naup2: Real part of the shifts')
@@ -3803,7 +3805,7 @@ c
          cnorm = .false.
 c
          if (msglvl .gt. 2) then
-            call pdvout (comm, logfil, 1, rnorm, ndigit, 
+            call pdvout (comm, logfil, 1, [rnorm], ndigit, 
      &      '_naup2: B-norm of residual for compressed factorization')
             call pdmout (comm, logfil, nev, nev, h, ldh, ndigit,
      &        '_naup2: Compressed upper Hessenberg matrix H')
@@ -4577,9 +4579,9 @@ c
       if (info .lt. 0) go to 9000
       if (info .eq. 2) info = 3
       if (msglvl .gt. 0) then
-         call pivout (comm, logfil, 1, mxiter, ndigit,
+         call pivout (comm, logfil, 1, [mxiter], ndigit,
      &               '_naupd: Number of update iterations taken')
-         call pivout (comm, logfil, 1, np, ndigit,
+         call pivout (comm, logfil, 1, [np], ndigit,
      &               '_naupd: Number of wanted "converged" Ritz values')
          call pdvout (comm, logfil, np, workl(ritzr), ndigit, 
      &               '_naupd: Real part of the final Ritz values')
@@ -5247,7 +5249,7 @@ c
          end if
 c
          if (msglvl .gt. 2) then
-            call pdvout(comm, logfil, 1, thres, ndigit,
+            call pdvout(comm, logfil, 1, [thres], ndigit,
      &           '_neupc: Threshold eigenvalue used for re-ordering')
          end if
 c
@@ -5327,9 +5329,9 @@ c
  25      continue
 c
          if (msglvl .gt. 2) then
-             call pivout(comm, logfil, 1, ktrord, ndigit,
+             call pivout(comm, logfil, 1, [ktrord], ndigit,
      &            '_neupd: Number of specified eigenvalues')
-             call pivout(comm, logfil, 1, nconv, ndigit,
+             call pivout(comm, logfil, 1, [nconv], ndigit,
      &            '_neupd: Number of "converged" eigenvalues')
          end if
 c

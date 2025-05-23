@@ -2,32 +2,35 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
- 
 
-#ifndef _RF_PRE_PROC_H
-#define _RF_PRE_PROC_H
+#ifndef GOMA_RF_PRE_PROC_H
+#define GOMA_RF_PRE_PROC_H
 
+#include "ac_particles.h"
+#include "exo_struct.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RF_PRE_PROC_C
+#ifdef GOMA_RF_PRE_PROC_C
 #define EXTERN
 #
 #endif
 
-#ifndef _RF_PRE_PROC_C
+#ifndef GOMA_RF_PRE_PROC_C
 #define EXTERN extern
 #endif
 
-EXTERN void pre_process		/* rf_pre_proc.c */
-PROTO((Exo_DB *exo));
+EXTERN void pre_process /* rf_pre_proc.c */
+    (Exo_DB *exo);
 
-#endif /* _RF_PRE_PROC_H */
+#endif /* GOMA_RF_PRE_PROC_H */

@@ -2,27 +2,20 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
 
-/* 
+/*
  * sl_squash -- auxiliary routine squashes out zeroes in the sparse matrix...
  *		the a[] and ija[] vectors are trimmed down to size
  */
-
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: sl_squash.c,v 5.1 2007-09-18 18:53:48 prschun Exp $";
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include "std.h"
-#include "mm_eh.h"
 
 /* static int first_time; */
 
@@ -62,7 +55,7 @@ squash ( int N,
 
   if ( tol < 0 )
     {
-      EH(-1, "Zero threshhold must be >= 0.");
+      GOMA_EH(GOMA_ERROR, "Zero threshhold must be >= 0.");
     }
 
   a_new   = (dbl *)calloc(M, sizeof(dbl));
@@ -70,7 +63,7 @@ squash ( int N,
 
   if ( a_new == NULL || ija_new == NULL )
     {
-      EH(-1, "Problem allocating atmp.");
+      GOMA_EH(GOMA_ERROR, "Problem allocating atmp.");
     }
 
   /*
@@ -119,7 +112,7 @@ squash ( int N,
 	  if ( ija_new[r] == ija_new[r+1] )
 	    {	  
 	      fprintf(stderr, "row = %d\n", r );
-	      EH(-1, "Zero diagonal has no nonzero off-diagonals");
+	      GOMA_EH(GOMA_ERROR, "Zero diagonal has no nonzero off-diagonals");
 	    }
 	}
     }

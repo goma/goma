@@ -2,27 +2,32 @@
  * This file released under MIT license
  * */
 
+#include "el_elm.h"
 #include "mm_shell_bc.h"
 #include "shell_tfmp_struct.h"
 
-#ifndef _SHELL_TFMP_UTIL
-#define _SHELL_TFMP_UTIL
+#ifndef GOMA_SHELL_TFMP_UTIL
+#define GOMA_SHELL_TFMP_UTIL
 
+#ifdef EXTERN
+#undef EXTERN
+#endif
+#ifdef GOMA_SHELL_TFMP_UTIL_C
+#define EXTERN extern
+#else
+#define EXTERN
+#endif
 
-//Still Experimental
-enum clipping_kind{none, continuity, restorative, constant_sat, var_swap};
+// Still Experimental
+enum clipping_kind { none, continuity, restorative, constant_sat, var_swap };
 
-// Make global variables (really? - eesh!)
-EXTERN enum clipping_kind my_clipping_kind;
+extern enum clipping_kind my_clipping_kind;
 
 // load_viscosity_model(&mu_l, &mu_g)
 // OUTPUTS:
 //  mu_l = constant liquid viscosity
 //  mu_g = constant gas viscosity
-EXTERN void load_tfmp_viscosity_model
-(double*,
-       double*
-);
+EXTERN void load_tfmp_viscosity_model(double *, double *);
 
 // load_gas_density_model(&Patm, &rho_g, &drho_g_dP)
 // OUTPUTS:
@@ -30,27 +35,18 @@ EXTERN void load_tfmp_viscosity_model
 //              ideal gas model)
 //  rho_g     = computed gas density
 //  drho_g_dP = partial wrt pressure
-EXTERN void load_gas_density_model
-PROTO((double*,
-       double*,
-       double*
-));
+EXTERN void load_gas_density_model(double *, double *, double *);
 
 // load_molecular_diffusion_model(S, &D, &Krd, &dKrd_dS)
 // OUTPUTS:
-//  D       = Diffusivity 
+//  D       = Diffusivity
 //  Krd     = molecular diffusion correction factor
 //  dKrd_dS = partial wrt to saturation
 // INPUTS:
 //  S       = saturation
-EXTERN void load_molecular_diffusion_model
-PROTO((double,
-       double*,
-       double*,
-       double*
-));
+EXTERN void load_molecular_diffusion_model(double, double *, double *, double *);
 
-// load_relative_permeability_model(S, &Krl, &dKrl_dS, 
+// load_relative_permeability_model(S, &Krl, &dKrl_dS,
 //                                  &Krg, &dKrg_dS)
 // OUTPUTS:
 //  Krl     = liquid relative permeability
@@ -59,13 +55,7 @@ PROTO((double,
 //  dKrg_dS = partial wrt saturation
 // INPUTS:
 //  S       = saturation
-EXTERN void load_relative_permeability_model
-PROTO((double,
-       double*,
-       double*,
-       double*,
-       double*
-));
+EXTERN void load_relative_permeability_model(double, double *, double *, double *, double *);
 
 // load_gas_dissolution_model(h, Patm, &J, &dJ_dP, &dJ_dS,
 //                            &dJ_dh)
@@ -77,14 +67,7 @@ PROTO((double,
 // INPUTS:
 //  h     = gap thickness
 //  Patm  = atmospheric pressure
-EXTERN void load_gas_dissolution_model
-PROTO((double,
-       double,
-       double*,
-       double*,
-       double*,
-       double*
-));
+EXTERN void load_gas_dissolution_model(double, double, double *, double *, double *, double *);
 
 // load_displacement_coupling_model(tt, delta_t, &h,
 //                                  &dh_dtime, gradII_h,
@@ -100,7 +83,7 @@ PROTO((double,
 //  gradII_h          = gap thickness gradient
 //  dh_dmesh          = partial wrt to mesh motion
 //  dh_dnormal        = partial wrt the normal
-//  d2h_dtime_dmesh   = 2nd partial wrt to time and 
+//  d2h_dtime_dmesh   = 2nd partial wrt to time and
 //                      mesh motion
 //  d2h_dtime_dnormal = 2nd partial wrt to time and
 //                      the normal
@@ -117,67 +100,56 @@ PROTO((double,
 //                      dispalcement and shell basis
 //                      function gradient sensitivity
 //                      wrt to mesh displacement
-EXTERN void load_displacement_coupling_model
-PROTO((double,
-       double,
-       double*,
-       double*,
-       double*,             // gradII_h
-       double[][MDE],       // dh_dmesh
-       double[][MDE],       // dh_dnormal
-       double[][MDE],       // d2h_dtime_dmesh
-       double[][MDE],       // d2h_dtime_dnormal
-       double[][DIM][MDE],  // d_gradIIh_dmesh
-       double[][DIM][MDE],  // d_gradIIh_dnormal
-       int*,
-       int*
-));
+EXTERN void load_displacement_coupling_model(double,
+                                             double,
+                                             double *,
+                                             double *,
+                                             double *,           // gradII_h
+                                             double[][MDE],      // dh_dmesh
+                                             double[][MDE],      // dh_dnormal
+                                             double[][MDE],      // d2h_dtime_dmesh
+                                             double[][MDE],      // d2h_dtime_dnormal
+                                             double[][DIM][MDE], // d_gradIIh_dmesh
+                                             double[][DIM][MDE], // d_gradIIh_dnormal
+                                             int *,
+                                             int *);
 
-EXTERN void h0_minus_ndotd
-PROTO((double,
-       double,
-       double*,
-       double*,
-       double*,             // gradII_h
-       double[][MDE],       // dh_dmesh
-       double[][MDE],       // dh_dnormal
-       double[][MDE],       // d2h_dtime_dmesh
-       double[][MDE],       // d2h_dtime_dnormal
-       double[][DIM][MDE],  // d_gradIIh_dmesh
-       double[][DIM][MDE],  // d_gradIIh_dnormal
-       int*,
-       int*
-));
+EXTERN void h0_minus_ndotd(double,
+                           double,
+                           double *,
+                           double *,
+                           double *,           // gradII_h
+                           double[][MDE],      // dh_dmesh
+                           double[][MDE],      // dh_dnormal
+                           double[][MDE],      // d2h_dtime_dmesh
+                           double[][MDE],      // d2h_dtime_dnormal
+                           double[][DIM][MDE], // d_gradIIh_dmesh
+                           double[][DIM][MDE], // d_gradIIh_dnormal
+                           int *,
+                           int *);
 
-EXTERN void rmesh_minus_rroller
-PROTO((double,
-       double,
-       double*,
-       double*,
-       double*,             // gradII_h
-       double[][MDE],       // dh_dmesh
-       double[][MDE],       // dh_dnormal
-       double[][MDE],       // d2h_dtime_dmesh
-       double[][MDE],       // d2h_dtime_dnormal
-       double[][DIM][MDE],  // d_gradIIh_dmesh
-       double[][DIM][MDE],  // d_gradIIh_dnormal
-       int*,
-       int*
-));
+EXTERN void rmesh_minus_rroller(double,
+                                double,
+                                double *,
+                                double *,
+                                double *,           // gradII_h
+                                double[][MDE],      // dh_dmesh
+                                double[][MDE],      // dh_dnormal
+                                double[][MDE],      // d2h_dtime_dmesh
+                                double[][MDE],      // d2h_dtime_dnormal
+                                double[][DIM][MDE], // d_gradIIh_dmesh
+                                double[][DIM][MDE], // d_gradIIh_dnormal
+                                int *,
+                                int *);
 
-EXTERN void dpos_dcsi
-PROTO((double[], double[][DIM][MDE]));
+EXTERN void dpos_dcsi(double[], double[][DIM][MDE]);
 
-EXTERN double dxdcsi
-PROTO((double*, int));
+EXTERN double dxdcsi(double *, int);
 
-EXTERN void detJ_2d_bar
-PROTO((double*, double[][MDE]));
+EXTERN void detJ_2d_bar(double *, double[][MDE]);
 
-EXTERN void load_gap_model
-PROTO((GAP_STRUCT*));
+EXTERN void load_gap_model(GAP_STRUCT *);
 
-EXTERN void load_roller_normal_into_fv
-PROTO(());
+EXTERN void load_roller_normal_into_fv(void);
 
-#endif // _SHELL_TFMP_UTIL
+#endif // GOMA_SHELL_TFMP_UTIL

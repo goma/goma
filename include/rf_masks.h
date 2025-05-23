@@ -2,24 +2,25 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
- 
 
 /*
  *$Id: rf_masks.h,v 5.1 2007-09-18 18:53:46 prschun Exp $
  */
 
-#ifndef _RF_MASKS_H
-#define _RF_MASKS_H
+#ifndef GOMA_RF_MASKS_H
+#define GOMA_RF_MASKS_H
 
 #ifndef MAX_TOTAL_BCS_POWER
-#define MAX_TOTAL_BCS_POWER  8
+#define MAX_TOTAL_BCS_POWER 8
 #endif
 
 /*
@@ -53,29 +54,29 @@
    P  |  1  |   1   |   0   |   1  |    1  |  1  |   1   |   0    |   0   |   1  |
       |-----|-------|-------|------|-------|-----|-------|--------|-------|------|
 
-	 1 - Implies this type of variable (row) interacts with this type of
-	     variable (column)
-	 0 - Implies no interaction
-	 
-	 Note: A row with all zeros implies that this equation(s) is not being
-	       solved.
+         1 - Implies this type of variable (row) interacts with this type of
+             variable (column)
+         0 - Implies no interaction
+
+         Note: A row with all zeros implies that this equation(s) is not being
+               solved.
 
 
-	Variable Types:
-		U1, U2, U3           - Three components of velocity
-		T                    - Temperature
-		Y                    - Mass fractions   (there can be more than one)
-		D1, D2, D3           - Three components of mesh displacement
-		D1_RS, D2_RS, D3_RS  - Three components of mesh displacement
-		S                    - Surface unknowns (there can be more than one)
-		P                    - Pressure
+        Variable Types:
+                U1, U2, U3           - Three components of velocity
+                T                    - Temperature
+                Y                    - Mass fractions   (there can be more than one)
+                D1, D2, D3           - Three components of mesh displacement
+                D1_RS, D2_RS, D3_RS  - Three components of mesh displacement
+                S                    - Surface unknowns (there can be more than one)
+                P                    - Pressure
       */
 
 /*
  * Inter_Mask is Defined in mm_unknown_map.c
  */
 
-extern int Inter_Mask[MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES];
-extern int Ignore_Deps[MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES];
+extern int Inter_Mask[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES];
+extern int Ignore_Deps[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES];
 
 #endif

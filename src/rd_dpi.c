@@ -2,1219 +2,686 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
- 
+
 /* rd_dpi.c -- routines for reading distributed processing information
- *
- * Notes:
- *	    [1] The information is in netCDF format.
- *
- *	    [2] Typically, this augments EXODUS II finite element data.
- *		
- *	    [3] Try to use netCDF names identical to the names of the
- *              structure elements defined in "dpi.h"
- *
- *	    [4] Read in arrays in one shot instead of an element at
- *		a time.
- *
- *	    [5] Allocate space as needed to hold the information. Use
- *		free_dpi() to release memory that was dynamically allocated
- *              here.
- *
- *	    [6] Two routes through code - netCDF 3, as originally intended
- *              and netCDF 2 as demanded by exigencies of working with
- *		EXODUS II
- *
- *	    [7] Assume basic skeleton space for the Dpi structure has been
- *              allocated. However, individual arrays, etc, will have space
- *              allocated for them in this routine.
- *
- *	    [8] In the future, a flag might indicate that "globally similar"
- *		information is to be read or not read. Such a capability
- *		would permit processor 0 to read the globally similar
- *		information. MPI could be used to broadcast it to every other
- *		processor and the read step could be trimmed to read only
- *		that information that is unique to that processor. Note
- *		that some globally similar information resides in the
- *		EXODUS II portion of the data as well. My impression is that
- *		startup and latency issues are more important than message
- *		length issues. If substantial savings in I/O time justifies
- *		the expenditure in programming complexity, then a conditional
- *		switch could be inserted to enable the reading of purelylocal
- *		or globally-similar data.
- *		
- *	    [9] Updated per the new Dpi format used by brk/fix.
- *
- * Created: 1997/07/10 15:39 MDT pasacki@sandia.gov
- *
- * Revised: 1997/07/21 09:45 MDT pasacki@sandia.gov
- *
- * Revised: 1998/12/16 14:21 MST pasacki@sandia.gov
+ * Uses Nemesis structure from SEACAS
  */
 
-#define _RD_DPI_C
+#define GOMA_RD_DPI_C
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
+#include <mpi.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef STDC_HEADERS
 #include <stdlib.h>
 #endif
 
+#include <el_elm_info.h>
 #include <string.h>
 
-#ifndef lint
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: rd_dpi.c,v 5.2 2008-05-08 21:18:21 hkmoffa Exp $";
-#endif
-#endif
-
-#define NO_NETCDF_2
-
-/* for pure netCDF 3 - but still not yet. */
-
-
-#include "netcdf.h"
-
-/*
- * Sigh, if you need to run netCDF 2 then here's some definitions to tide
- * you over until netCDF 3 is working for EXODUS II...
- *
- * I had trouble linking EXODUS II with netcdf 3 as of June 1997, in that
- * execution started complaining about nonexistent global variables(?)
- *
- * Hence, the netCDF 3 implementation is usually off for backward compatibility
- * with EXODUS II.
- *
- * Perhaps later it will work better.
- *
- * 1998/07/23 10:24 MDT pasacki@sandia.gov - "Maybe now that EXODUS II v3.00
- * is out the netCDF 3 stuff will work well! Nope! It leans heavily on
- * backward compatability mode. Thus we're hosed and must rely on backward
- * compatibility mode indefinitely."
- *
- */
-
-/*
- * I like these symbols as more lucid indicators of which netCDF we are
- * using...
- */
-
-
-
-#ifdef  NO_NETCDF_2
-#define NETCDF_3
-#endif
-
-#ifndef NO_NETCDF_2
-#define NETCDF_2
-#endif
-
-#ifndef NC_MAX_VAR_DIMS
-#define NC_MAX_VAR_DIMS		MAX_VAR_DIMS    
-#endif
-
-#ifndef NC_MAX_NAME
-#define NC_MAX_NAME		MAX_NC_NAME
-#endif
-
-/*
- * Might need some NO_NETCDF_2 definitions here ...
- */
-
-#include "std.h"
-#include "rf_allo.h"
-#include "rf_io_const.h"	/* to know MAX_FNL */
-#include "mm_eh.h"
-#include "exo_struct.h"
+#include "dp_ghost.h"
 #include "dpi.h"
-#include "rf_fem.h"		/* want First_Unknown for uni_dpi() */
-#include "rf_mp.h"		/* to know ProcID */
+#include "exo_struct.h"
+#include "exodusII.h"
+#include "mm_eh.h"
 #include "rd_dpi.h"
-
-#include "goma.h"
-
-static int get_variable_call_count = 0;
-
-/*
- * Prototypes of functions defined here and needed only here.
- */
-
-static void get_variable(const int netcdf_unit,
-                         const nc_type netcdf_type,
-                         const int num_dimensions,
-                         const int dimension_val_1,
-                         const int dimension_val_2,
-                         const int variable_identifier,
-                         void *variable_address);
-
-/**********************************************************************/
-/**********************************************************************/
-/**********************************************************************/
-
-int
-rd_dpi(Dpi *d,
-       char *fn,
-       const int verbosity)
-{
-  int err, len, status = 0, u;
-  struct Shadow_Identifiers si;
-  zeroStructures(&si, 1);
-
-#ifdef NETCDF_3			/* only since those code chunks are the only
-				 * ones using more extensive error reporting
-				 * for now. If you need them, unprotect `em. */
-#endif
-
-  /*
-   * From the C interface guide, the basic calling sequence is given
-   * for reading dimensions and variables from a netCDF dataset for the
-   * case
-   *
-   *       when the names of the dimensions and variables are known
-   *
-   * NETCDF 3:
-   *
-   * nc_open();
-   * nc_inq_dimid();
-   * nc_inq_varid();
-   * nc_get_att();
-   * nc_get_var();
-   * nc_close();
-   *
-   * NETCDF 2:
-   *
-   * ncopen();
-   * ncdimid();
-   * ncvarid();
-   * ncattget();
-   * ncvarget();
-   * ncclose();
-   *
-   */
-
-  /*
-   * 1. Open the file.
-   */
-
-#ifdef NETCDF_3
-  err = nc_open(fn, NC_NOWRITE, &u);
-  if ( err != NC_NOERR )
-    {
-      EH(-1, "nc_open() problem.");
-    }
-#endif
-#ifdef NETCDF_2
-  err = ncopen(fn, NC_NOWRITE);
-  EH(err, "ncopen() problem.");
-  u   = err;
-#endif
-
-  /*
-   *  Alternative method: set ncopts to zero to stop fatal exits from
-   *  netcdf
-   */
-  //ncopts = 0;
-
-  /*
-   * 2. Get dimension identifiers.
-   *
-   * These are determined from their names which are defined in dpi.h. 
-   *
-   * These integer dimension IDs, if read properly from the open file, 
-   * are stuck into the Shadow Identifiers si structure for later use.
-   * Briefly, the "TRUE" and "FALSE" arguments you see refer to whether
-   * it is critical that this particular dimension exist in the database.
-   * Often, a FALSE flag is desirable for objects of zero length that
-   * do not exist in this case.
-   */
-
-  getdid(u, DIM_LEN_EB_NUM_PRIVATE_ELEMS,     FALSE,
-	 &si.len_eb_num_private_elems);
-  getdid(u, DIM_LEN_ELEM_VAR_TAB_GLOBAL,      FALSE,
-	 &si.len_elem_var_tab_global);
-  getdid(u, DIM_LEN_ELEM_ELEM_LIST,	      TRUE,
-	 &si.len_elem_elem_list);
-  getdid(u, DIM_LEN_NODE_DESCRIPTION,         TRUE,
-	 &si.len_node_description);
-
-  getdid(u, DIM_LEN_NS_NODE_LIST,             FALSE,
-	 &si.len_ns_node_list);
-  getdid(u, DIM_LEN_NS_DISTFACT_LIST,         FALSE,
-	 &si.len_ns_distfact_list);
-  getdid(u, DIM_LEN_SS_ELEM_LIST,             FALSE,
-	 &si.len_ss_elem_list);
-  getdid(u, DIM_LEN_SS_DISTFACT_LIST,         FALSE,
-	 &si.len_ss_distfact_list);
-  getdid(u, DIM_LEN_STRING,                   TRUE,
-	 &si.len_string);
-
-  getdid(u, DIM_LEN_PTR_SET_MEMBERSHIP,       TRUE,
-	 &si.len_ptr_set_membership);
-  getdid(u, DIM_LEN_SET_MEMBERSHIP,           TRUE,
-	 &si.len_set_membership);
-  getdid(u, DIM_NUM_ELEM_BLOCKS,              FALSE,
-	 &si.num_elem_blocks);
-  getdid(u, DIM_NUM_ELEM_BLOCKS_GLOBAL,       FALSE,
-	 &si.num_elem_blocks_global);
-
-  getdid(u, DIM_NUM_ELEMS,		      TRUE,
-	 &si.num_elems);
-
-  getdid(u, DIM_NUM_GLOBAL_NODE_DESCRIPTIONS, TRUE,
-	 &si.num_global_node_descriptions);
-  getdid(u, DIM_NUM_NEIGHBORS,                FALSE,
-	 &si.num_neighbors);
-  getdid(u, DIM_NUM_NODE_SETS,                FALSE,
-	 &si.num_node_sets);
-  getdid(u, DIM_NUM_NODE_SETS_GLOBAL,         FALSE,
-	 &si.num_node_sets_global);
-
-  getdid(u, DIM_NUM_NODES,                    TRUE,
-	 &si.num_nodes);
-
-  getdid(u, DIM_NUM_PROPS_EB,                FALSE,
-	 &si.num_props_eb);
-  getdid(u, DIM_NUM_PROPS_NS,                FALSE,
-	 &si.num_props_ns);
-  getdid(u, DIM_NUM_PROPS_SS,                FALSE,
-	 &si.num_props_ss);
-
-  getdid(u, DIM_NUM_SIDE_SETS,                FALSE,
-	 &si.num_side_sets);
-  getdid(u, DIM_NUM_SIDE_SETS_GLOBAL,         FALSE,
-	 &si.num_side_sets_global);
-  getdid(u, DIM_NUM_UNIVERSE_NODES,           TRUE,
-	 &si.num_universe_nodes);
-
-  getdid(u, DIM_LEN_SS_BLOCK_INDEX_GLOBAL, FALSE,
-         &si.len_ss_block_list_global);
-
-  getdid(u, DIM_LEN_SS_BLOCK_LIST_GLOBAL, FALSE,
-         &si.len_ss_block_list_global);
-
-  /*
-   * 3. Using the dimension IDs, inquire of the dimension values. Load
-   *    those values into the DP array.
-   *
-   *    These dimension values are important so that we know how much
-   *    space to allocate to hold array variables below...
-   *
-   * getdim(netcdf_unit, dimension_id, address of the answer);
-   */
-  getdim(u, si.len_eb_num_private_elems,     &d->len_eb_num_private_elems);
-  getdim(u, si.len_elem_var_tab_global,      &d->len_elem_var_tab_global);
-  getdim(u, si.len_elem_elem_list,           &d->len_elem_elem_list);
-  getdim(u, si.len_node_description,         &d->len_node_description);
-  getdim(u, si.len_ns_node_list,             &d->len_ns_node_list);
-  getdim(u, si.len_ns_distfact_list,         &d->len_ns_distfact_list);
-  getdim(u, si.len_ss_elem_list,             &d->len_ss_elem_list);
-  getdim(u, si.len_ss_distfact_list,         &d->len_ss_distfact_list);
-  getdim(u, si.len_string,		     &d->len_string);
-
-  getdim(u, si.len_ptr_set_membership,       &d->len_ptr_set_membership);
-  getdim(u, si.len_set_membership,           &d->len_set_membership);
-  getdim(u, si.num_elem_blocks,              &d->num_elem_blocks);
-  getdim(u, si.num_elem_blocks_global,	     &d->num_elem_blocks_global);
-
-  getdim(u, si.num_elems,		     &d->num_elems);
-
-  getdim(u, si.num_global_node_descriptions, &d->num_global_node_descriptions);
-  getdim(u, si.num_neighbors,                &d->num_neighbors);
-  getdim(u, si.num_node_sets,                &d->num_node_sets);
-  getdim(u, si.num_node_sets_global,         &d->num_node_sets_global);
-
-  getdim(u, si.num_nodes,		     &d->num_nodes);
-
-  getdim(u, si.num_props_eb,                 &d->num_props_eb);
-  getdim(u, si.num_props_ns,                 &d->num_props_ns);
-  getdim(u, si.num_props_ss,                 &d->num_props_ss);
-
-
-  getdim(u, si.num_side_sets,                &d->num_side_sets);
-  getdim(u, si.num_side_sets_global,         &d->num_side_sets_global);
-  getdim(u, si.num_universe_nodes,           &d->num_universe_nodes);
-
-  // I don't really want a variable in dpi struct for this but from what I see
-  // netcdf expects dimensions to be defined in the netcdf file
-  int len_ss_block_list_global = 0;
-  getdim(u, si.len_ss_block_list_global, &len_ss_block_list_global);
-
-#ifdef DEBUG
-  fprintf(stderr, "Processor %d has d->num_side_sets = %d\n", ProcID,
-	  d->num_side_sets);
-  fprintf(stderr, "Processor %d has d->num_elem_blocks = %d\n", ProcID,
-	  d->num_elem_blocks);
-  fprintf(stderr, "Processor %d has d->num_side_sets_global = %d\n", ProcID,
-	  d->num_side_sets_global);
-#endif  
-
-  /*
-   * 4. Get variable identifiers from netCDF.
-   *
-   *    The Booleans are set only roughly based on what "ought" to exist.
-   *    If you deem looser or tighter criteria, then by all means change
-   *    them to suit your needs.
-   */
-
-  getvid(u, VAR_EB_ELEM_TYPE_GLOBAL,       FALSE, /* New! */
-	 &si.eb_elem_type_global);
-  getvid(u, VAR_EB_ID_GLOBAL,              FALSE,
-	 &si.eb_id_global);
-  getvid(u, VAR_EB_INDEX_GLOBAL,           FALSE,
-	 &si.eb_index_global);
-  getvid(u, VAR_EB_NUM_ATTR_GLOBAL,        FALSE, /* New! */
-	 &si.eb_num_attr_global);
-  getvid(u, VAR_EB_NUM_ELEMS_GLOBAL,       FALSE,
-	 &si.eb_num_elems_global);
-  getvid(u, VAR_EB_NUM_NODES_PER_ELEM_GLOBAL, FALSE, /* New! */
-	 &si.eb_num_nodes_per_elem_global);
-  getvid(u, VAR_EB_NUM_PRIVATE_ELEMS,      FALSE,
-	 &si.eb_num_private_elems);
-  getvid(u, VAR_EB_PROP_GLOBAL,		   FALSE,
-	 &si.eb_prop_global);
-
-  getvid(u, VAR_ELEM_INDEX_GLOBAL,	   TRUE, /* New! */
-	 &si.elem_index_global);
-
-  getvid(u, VAR_ELEM_OWNER,		   TRUE, /* New! */
-	 &si.elem_owner);
-  getvid(u, VAR_ELEM_ELEM_LIST_GLOBAL,	   TRUE, /* New! */
-	 &si.elem_elem_list_global);
-  getvid(u, VAR_ELEM_ELEM_TWST_GLOBAL,	   TRUE, /* New! */
-	 &si.elem_elem_twst_global);
-  getvid(u, VAR_ELEM_ELEM_FACE_GLOBAL,	   TRUE, /* New! */
-	 &si.elem_elem_face_global);
-  getvid(u, VAR_ELEM_ELEM_PROC_GLOBAL,	   TRUE, /* New! */
-	 &si.elem_elem_proc_global);
-
-  getvid(u, VAR_ELEM_VAR_TAB_GLOBAL,	   FALSE, /* New! */
-	 &si.elem_var_tab_global);
-  getvid(u, VAR_GLOBAL_NODE_DESCRIPTION,   TRUE,
-	 &si.global_node_description);
-  getvid(u, VAR_MY_NAME,                   TRUE,
-	 &si.my_name);
-  getvid(u, VAR_NEIGHBOR,                  FALSE,
-	 &si.neighbor);
-  
-  getvid(u, VAR_NODE_INDEX_GLOBAL,	   TRUE, /* New! */
-	 &si.node_index_global);
-
-  getvid(u, VAR_NS_DISTFACT_INDEX_GLOBAL,  FALSE, /* New! */
-	 &si.ns_distfact_index_global);
-  getvid(u, VAR_NS_DISTFACT_LEN_GLOBAL,  FALSE, /* New! */
-	 &si.ns_distfact_len_global);
-  getvid(u, VAR_NS_DISTFACT_LIST_INDEX_GLOBAL,  FALSE, /* New! */
-	 &si.ns_distfact_list_index_global);
-
-  getvid(u, VAR_NS_ID_GLOBAL,              FALSE,
-	 &si.ns_id_global);
-  getvid(u, VAR_NS_INDEX_GLOBAL,           FALSE,
-	 &si.ns_index_global);
-
-  getvid(u, VAR_NS_NODE_INDEX_GLOBAL,      FALSE, /* New! */
-	 &si.ns_node_index_global);
-  getvid(u, VAR_NS_NODE_LEN_GLOBAL,        FALSE, /* New! */
-	 &si.ns_node_len_global);
-  getvid(u, VAR_NS_NODE_LIST_INDEX_GLOBAL,  FALSE, /* New! */
-	 &si.ns_node_list_index_global);
-
-
-  getvid(u, VAR_NS_NUM_DISTFACTS_GLOBAL,   FALSE,
-	 &si.ns_num_distfacts_global);
-  getvid(u, VAR_NS_NUM_NODES_GLOBAL,       FALSE,
-	 &si.ns_num_nodes_global);
-
-  getvid(u, VAR_NS_PROP_GLOBAL,       FALSE,
-	 &si.ns_prop_global);
-
-  getvid(u, VAR_NUM_BOUNDARY_NODES,        TRUE,
-	 &si.num_boundary_nodes);
-  getvid(u, VAR_NUM_DOFS_GLOBAL,           TRUE,
-	 &si.num_dofs_global);
-  getvid(u, VAR_NUM_ELEMS_GLOBAL,          TRUE,
-	 &si.num_elems_global);
-  getvid(u, VAR_NUM_EXTERNAL_NODES,        TRUE,
-	 &si.num_external_nodes);
-  getvid(u, VAR_NUM_INTERNAL_NODES,        TRUE,
-	 &si.num_internal_nodes);
-  getvid(u, VAR_NUM_NODES_GLOBAL,          TRUE,
-	 &si.num_nodes_global);
-  getvid(u, VAR_PTR_SET_MEMBERSHIP,        TRUE,
-	 &si.ptr_set_membership);
-  getvid(u, VAR_SET_MEMBERSHIP,            TRUE,
-	 &si.set_membership);
-
-  getvid(u, VAR_SS_DISTFACT_INDEX_GLOBAL,    FALSE, /* New! */
-	 &si.ss_distfact_index_global);
-
-  getvid(u, VAR_SS_DISTFACT_LEN_GLOBAL,    FALSE, /* New! */
-	 &si.ss_distfact_len_global);
-  getvid(u, VAR_SS_DISTFACT_LIST_INDEX_GLOBAL,    FALSE, /* New! */
-	 &si.ss_distfact_list_index_global);
-
-  getvid(u, VAR_SS_ELEM_INDEX_GLOBAL,    FALSE, /* New! */
-	 &si.ss_elem_index_global);
-
-  getvid(u, VAR_SS_ELEM_LEN_GLOBAL,    FALSE, /* New! */
-	 &si.ss_elem_len_global);
-  getvid(u, VAR_SS_ELEM_LIST_INDEX_GLOBAL,    FALSE, /* New! */
-	 &si.ss_elem_list_index_global);
-
-  getvid(u, VAR_SS_NODE_LEN_GLOBAL,    FALSE, /* New! */
-	 &si.ss_node_len_global);
-
-  getvid(u, VAR_SS_ID_GLOBAL,              FALSE,
-	 &si.ss_id_global);
-  getvid(u, VAR_SS_INDEX_GLOBAL,           FALSE,
-	 &si.ss_index_global);
-  getvid(u, VAR_SS_NUM_DISTFACTS_GLOBAL,   FALSE,
-	 &si.ss_num_distfacts_global);
-  getvid(u, VAR_SS_NUM_SIDES_GLOBAL,       FALSE,
-	 &si.ss_num_sides_global);
-
-  getvid(u, VAR_SS_PROP_GLOBAL,       FALSE,
-	 &si.ss_prop_global);
-
-  getvid(u, VAR_UNDEFINED_BASIC_EQNVAR_ID, TRUE,
-	 &si.undefined_basic_eqnvar_id);
-
-  getvid(u, VAR_SS_INTERNAL_GLOBAL, FALSE,
-         &si.ss_internal_global);
-
-  getvid(u, VAR_SS_BLOCK_INDEX_GLOBAL, FALSE,
-         &si.ss_block_index_global);
-
-  getvid(u, VAR_SS_BLOCK_LIST_GLOBAL, FALSE,
-         &si.ss_block_list_global);
-
-  /*
-   * 5. Allocate space to hold array variables.
-   *
-   *    a. Should verify that these dimensions are reasonable
-   *       numbers 0 < dimval < humongous
-   *
-   *    b. Simple scalar variables are not allocated here - they got
-   *       their space when *d became meaningful.
-   */
-
-  /*
-   * HKM -> This is over the number of elements. Can we
-   *        eliminate the need for these large arrays ?
-   */
-  len = d->num_elems;
-  if ( len > 0 )
-    {
-      d->elem_index_global = alloc_int_1(len, INT_NOINIT);
-      d->elem_owner        = alloc_int_1(len, INT_NOINIT);
-    }
-
-  len = d->len_elem_elem_list;
-  if ( len > 0 )
-    {
-      d->elem_elem_list_global = alloc_int_1(len, INT_NOINIT);
-      d->elem_elem_twst_global = alloc_int_1(len, INT_NOINIT);
-      d->elem_elem_face_global = alloc_int_1(len, INT_NOINIT);
-      d->elem_elem_proc_global = alloc_int_1(len, INT_NOINIT);
-    }
-
-  len = d->num_elem_blocks_global;
-  if ( len > 0 )
-    {
-      d->eb_id_global                 = alloc_int_1(len, INT_NOINIT);
-      d->eb_num_attr_global           = alloc_int_1(len, INT_NOINIT);
-      d->eb_num_elems_global          = alloc_int_1(len, INT_NOINIT);
-      d->eb_num_nodes_per_elem_global = alloc_int_1(len, INT_NOINIT);
-      d->eb_elem_type_global =
-	  alloc_VecFixedStrings(len, (MAX_STR_LENGTH+1));
-    }
-
-  len = d->num_props_eb;
-  if (len > 0)		/* Props are special ID is implicit. */
-    {
-      d->eb_prop_global = alloc_int_2(len, d->num_elem_blocks_global, -1);
-    }
-
-  if (d->num_props_ns > 1)	/* Props are special, ID is implicit. */
-    {
-      d->ns_prop_global =
-	  alloc_int_2(d->num_props_ns, d->num_node_sets_global, -1);
-    }
-
-  if (d->num_props_ss > 1)	/* Props are special, ID is implicit. */
-    {
-      d->ss_prop_global =
-	  alloc_int_2(d->num_props_ss, d->num_side_sets_global, -1);
-    }
-
-  len = d->num_elem_blocks;
-  if ( len > 0 )
-    {
-      d->eb_index_global      = alloc_int_1(len, INT_NOINIT);
-      d->eb_num_private_elems = alloc_int_1(len, INT_NOINIT);
-    }
-
-  len = d->len_elem_var_tab_global;
-  if ( len > 0 )
-    {
-      d->elem_var_tab_global = alloc_int_1(len, 0);
-    }
-
-  if (d->num_global_node_descriptions > 0)
-    {
-      d->global_node_description =
-	  alloc_int_2(d->num_global_node_descriptions,
-		      d->len_node_description, INT_NOINIT);
-      //(int **) smalloc(d->num_global_node_descriptions*sizeof(int *));
-    }
-
-  len = d->num_nodes;
-  if ( len > 0 )
-    {
-      d->node_index_global = alloc_int_1(len, INT_NOINIT);
-    }
-
-  if ( d->num_neighbors > 0 )
-    {
-      d->neighbor =  alloc_int_1(d->num_neighbors, INT_NOINIT);
-    }
-
-
-  len = d->num_node_sets_global;
-  if ( len > 0 )
-    {
-      d->ns_id_global             = alloc_int_1(len, INT_NOINIT);
-      d->ns_num_distfacts_global  = alloc_int_1(len, INT_NOINIT);
-      d->ns_num_nodes_global      = alloc_int_1(len, INT_NOINIT);
-      d->ns_node_index_global     = alloc_int_1(len, INT_NOINIT);
-      d->ns_distfact_index_global = alloc_int_1(len, INT_NOINIT);
-    }
-
-  if (d->num_node_sets > 0)
-    {
-      d->ns_index_global =  alloc_int_1(d->num_node_sets, INT_NOINIT);
-    }
-
-  if ( d->len_ns_node_list > 0 )
-    {
-      d->ns_node_list_index_global = 
-	  alloc_int_1(d->len_ns_node_list, INT_NOINIT);
-    }
-
-  if ( d->len_ns_distfact_list > 0 )
-    {
-      d->ns_distfact_list_index_global =
-	  alloc_int_1(d->len_ns_distfact_list, INT_NOINIT);
-    }
-
-  if ( d->len_ptr_set_membership > 0 )
-    {
-      d->ptr_set_membership =
-	  alloc_int_1(d->len_ptr_set_membership, INT_NOINIT);
-    }
-
-  if ( d->len_set_membership > 0 )
-    {
-      d->set_membership =
-	  alloc_int_1(d->len_set_membership, INT_NOINIT);
-    }
-
-  len = d->num_side_sets_global;
-  if ( len > 0 )
-    {
-      d->ss_distfact_index_global = alloc_int_1(len, INT_NOINIT);
-      d->ss_elem_index_global     = alloc_int_1(len, INT_NOINIT);
-      d->ss_id_global             = alloc_int_1(len, INT_NOINIT);
-      d->ss_num_distfacts_global  = alloc_int_1(len, INT_NOINIT);
-      d->ss_num_sides_global      = alloc_int_1(len, INT_NOINIT);
-      d->ss_internal_global       = alloc_int_1(len, INT_NOINIT);
-      d->ss_block_index_global    = alloc_int_1(len+1, INT_NOINIT);
-    }
-
-  if ( d->len_ss_elem_list > 0 )
-    {
-      d->ss_elem_list_index_global = 
-	  alloc_int_1(d->len_ss_elem_list, INT_NOINIT);
-    }
-
-  if (d->len_ss_distfact_list > 0)
-    {
-      d->ss_distfact_list_index_global = 
-	 alloc_int_1(d->len_ss_distfact_list, INT_NOINIT);
-    }
-
-  if (d->num_side_sets > 0)
-    {
-      d->ss_index_global = alloc_int_1(d->num_side_sets, INT_NOINIT);
-    }
-
-  if (len_ss_block_list_global > 0) {
-    d->ss_block_list_global = alloc_int_1(len_ss_block_list_global, INT_NOINIT);
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_mp.h"
+#include "std.h"
+
+// Helper for exodus return values
+#define CHECK_EX_ERROR(err, format, ...)                              \
+  do {                                                                \
+    if (err < 0) {                                                    \
+      goma_eh(GOMA_ERROR, __FILE__, __LINE__, format, ##__VA_ARGS__); \
+    }                                                                 \
+  } while (0)
+
+int rd_dpi(Exo_DB *exo, Dpi *d, char *fn, bool parallel_call) {
+  init_dpi_struct(d);
+  float version = -4.98; /* initialize. ex_open() changes this. */
+  int comp_wordsize = sizeof(dbl);
+  int io_wordsize = 0;
+  int exoid = ex_open(fn, EX_READ, &comp_wordsize, &io_wordsize, &version);
+  CHECK_EX_ERROR(exoid, "ex_open");
+  int ex_error;
+
+  ex_error = ex_get_init_global(exoid, &d->num_nodes_global, &d->num_elems_global,
+                                &d->num_elem_blocks_global, &d->num_node_sets_global,
+                                &d->num_side_sets_global);
+
+  CHECK_EX_ERROR(ex_error, "ex_get_init_global");
+
+  // Node Set Global
+  d->ns_id_global = alloc_int_1(d->num_node_sets_global, 0);
+  d->num_ns_global_node_counts = alloc_int_1(d->num_node_sets_global, 0);
+  d->num_ns_global_df_counts = alloc_int_1(d->num_node_sets_global, 0);
+  ex_error = ex_get_ns_param_global(exoid, d->ns_id_global, d->num_ns_global_node_counts,
+                                    d->num_ns_global_df_counts);
+  CHECK_EX_ERROR(ex_error, "ex_get_ns_param_global");
+  // Side Set Global
+  d->ss_id_global = alloc_int_1(d->num_side_sets_global, 0);
+  d->num_ss_global_side_counts = alloc_int_1(d->num_side_sets_global, 0);
+  d->num_ss_global_df_counts = alloc_int_1(d->num_side_sets_global, 0);
+  ex_error = ex_get_ss_param_global(exoid, d->ss_id_global, d->num_ss_global_side_counts,
+                                    d->num_ss_global_df_counts);
+
+  CHECK_EX_ERROR(ex_error, "ex_get_ss_param_global");
+  // Block Global
+  d->global_elem_block_ids = alloc_int_1(d->num_elem_blocks_global, 0);
+  d->global_elem_block_counts = alloc_int_1(d->num_elem_blocks_global, 0);
+  ex_error = ex_get_eb_info_global(exoid, d->global_elem_block_ids, d->global_elem_block_counts);
+  CHECK_EX_ERROR(ex_error, "ex_get_eb_info_global");
+
+  // Nemesis Info
+  d->rank = ProcID;
+  ex_error = ex_get_init_info(exoid, &d->num_proc, &d->num_proc_in_file, &d->ftype);
+  CHECK_EX_ERROR(ex_error, "ex_get_init_info");
+  if (d->num_proc != Num_Proc) {
+    GOMA_EH(GOMA_ERROR, "Nemesis mesh error num_proc != number of mpi processes");
+  }
+  if (d->num_proc_in_file != 1) {
+    GOMA_EH(GOMA_ERROR, "Nemesis mesh error expected num_proc_in_file == 1");
+  }
+  if (d->num_proc != Num_Proc) {
+    GOMA_EH(GOMA_ERROR, "Nemesis mesh error num_proc != number of mpi processes");
+  }
+  if (d->ftype != 'p') {
+    GOMA_EH(GOMA_ERROR, "Nemesis mesh error ftype expected 'p'");
+  }
+  // global indices
+  d->node_index_global = alloc_int_1(exo->num_nodes, 0);
+  d->elem_index_global = alloc_int_1(exo->num_elems, 0);
+  ex_error = ex_get_id_map(exoid, EX_NODE_MAP, d->node_index_global);
+  CHECK_EX_ERROR(ex_error, "ex_get_id_map EX_NODE_MAP");
+  ex_error = ex_get_id_map(exoid, EX_ELEM_MAP, d->elem_index_global);
+  CHECK_EX_ERROR(ex_error, "ex_get_id_map EX_ELEM_MAP");
+
+  // set base mesh  global indices
+  exo->base_mesh->node_map = alloc_int_1(exo->num_nodes, 0);
+  exo->base_mesh->elem_map = alloc_int_1(exo->num_elems, 0);
+  memcpy(exo->base_mesh->node_map, d->node_index_global, sizeof(int) * exo->num_nodes);
+  memcpy(exo->base_mesh->elem_map, d->elem_index_global, sizeof(int) * exo->num_elems);
+
+  // Load Balance Information
+  ex_error = ex_get_loadbal_param(
+      exoid, &d->num_internal_nodes, &d->num_boundary_nodes, &d->num_external_nodes,
+      &d->num_internal_elems, &d->num_border_elems, &d->num_node_cmaps, &d->num_elem_cmaps, ProcID);
+  CHECK_EX_ERROR(ex_error, "ex_get_loadbal_param");
+
+  d->base_internal_nodes = d->num_internal_nodes;
+  d->base_boundary_nodes = d->num_boundary_nodes;
+  d->base_external_nodes = d->num_external_nodes;
+  d->base_internal_elems = d->num_internal_elems;
+  d->base_border_elems = d->num_border_elems;
+
+  d->proc_node_internal = alloc_int_1(d->num_internal_nodes, 0);
+  if (d->num_boundary_nodes > 0) {
+    d->proc_node_boundary = alloc_int_1(d->num_boundary_nodes, 0);
+  }
+  if (d->num_external_nodes > 0) {
+    d->proc_node_external = alloc_int_1(d->num_external_nodes, 0);
   }
 
-  /*
-   * 6. Get variables - this is messy. Netcdf 3 wants a different routine
-   *    for each type. NetCDF 2 wants to know all the dimensions!
-   */
+  ex_error = ex_get_processor_node_maps(exoid, d->proc_node_internal, d->proc_node_boundary,
+                                        d->proc_node_external, ProcID);
+  CHECK_EX_ERROR(ex_error, "ex_get_processor_node_maps");
 
-  get_variable(u, NC_CHAR, 2,
-               d->num_elem_blocks_global, d->len_string,
-               si.eb_elem_type_global, &(d->eb_elem_type_global[0][0]));
+  d->node_cmap_ids = alloc_int_1(d->num_node_cmaps, 0);
+  d->node_cmap_node_counts = alloc_int_1(d->num_node_cmaps, 0);
+  if (d->num_elem_cmaps > 0) {
+    d->elem_cmap_ids = alloc_int_1(d->num_elem_cmaps, 0);
+    d->elem_cmap_elem_counts = alloc_int_1(d->num_elem_cmaps, 0);
+  }
 
-  get_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks_global,	-1, 
-	       si.eb_id_global,			d->eb_id_global);
+  ex_error = ex_get_cmap_params(exoid, d->node_cmap_ids, d->node_cmap_node_counts, d->elem_cmap_ids,
+                                d->elem_cmap_elem_counts, ProcID);
+  CHECK_EX_ERROR(ex_error, "ex_get_cmake_params");
 
-  get_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks,		-1, 
-	       si.eb_index_global,		d->eb_index_global);
+  d->node_map_node_ids = calloc(d->num_node_cmaps, sizeof(int *));
+  d->node_map_proc_ids = calloc(d->num_node_cmaps, sizeof(int *));
 
-  get_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks_global,	-1, 
-	       si.eb_num_attr_global,		d->eb_num_attr_global);
+  for (int i = 0; i < d->num_node_cmaps; i++) {
+    d->node_map_node_ids[i] = alloc_int_1(d->node_cmap_node_counts[i], 0);
+    d->node_map_proc_ids[i] = alloc_int_1(d->node_cmap_node_counts[i], 0);
+    ex_error = ex_get_node_cmap(exoid, d->node_cmap_ids[i], d->node_map_node_ids[i],
+                                d->node_map_proc_ids[i], ProcID);
+    CHECK_EX_ERROR(ex_error, "ex_get_node_cmap %d", i);
+  }
 
-  get_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks_global,	-1, 
-	       si.eb_num_elems_global,		d->eb_num_elems_global);
+  if (d->num_elem_cmaps > 0) {
+    d->elem_cmap_elem_ids = calloc(d->num_elem_cmaps, sizeof(int *));
+    d->elem_cmap_side_ids = calloc(d->num_elem_cmaps, sizeof(int *));
+    d->elem_cmap_proc_ids = calloc(d->num_elem_cmaps, sizeof(int *));
+  }
 
-  get_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks_global,	-1, 
-	       si.eb_num_nodes_per_elem_global,	
-	       d->eb_num_nodes_per_elem_global);
+  for (int i = 0; i < d->num_elem_cmaps; i++) {
+    d->elem_cmap_elem_ids[i] = alloc_int_1(d->elem_cmap_elem_counts[i], 0);
+    d->elem_cmap_side_ids[i] = alloc_int_1(d->elem_cmap_elem_counts[i], 0);
+    d->elem_cmap_proc_ids[i] = alloc_int_1(d->elem_cmap_elem_counts[i], 0);
+    ex_error = ex_get_elem_cmap(exoid, d->elem_cmap_ids[i], d->elem_cmap_elem_ids[i],
+                                d->elem_cmap_side_ids[i], d->elem_cmap_proc_ids[i], ProcID);
+    CHECK_EX_ERROR(ex_error, "ex_get_elem_cmap %d", i);
+  }
 
-  get_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks,		-1, 
-	       si.eb_num_private_elems,		d->eb_num_private_elems);
+  // Setup old dpi information
 
-  if ( d->num_props_eb > 1 )
-    {
-      get_variable(u, NC_INT, 2,
-		   d->num_props_eb,		d->num_elem_blocks_global,
-		   si.eb_prop_global,		&(d->eb_prop_global[0][0]));
+  d->eb_id_global = calloc(d->num_elem_blocks_global, sizeof(int));
+  int *eb_num_nodes_local = calloc(d->num_elem_blocks_global, sizeof(int));
+  d->eb_num_nodes_per_elem_global = calloc(d->num_elem_blocks_global, sizeof(int));
+  for (int i = 0; i < exo->num_elem_blocks; i++) {
+    for (int j = 0; j < d->num_elem_blocks_global; j++) {
+      if (d->global_elem_block_ids[j] == exo->eb_id[i]) {
+        eb_num_nodes_local[j] = exo->eb_num_nodes_per_elem[i];
+        d->eb_id_global[i] = d->global_elem_block_ids[j];
+      }
+    }
+  }
+
+  d->ss_index_global = malloc(sizeof(int) * exo->num_side_sets);
+  for (int i = 0; i < exo->num_side_sets; i++) {
+    for (int j = 0; j < d->num_side_sets_global; j++) {
+      if (exo->ss_id[i] == d->ss_id_global[j]) {
+        d->ss_index_global[i] = j;
+      }
+    }
+  }
+
+  int *local_ss_internal = NULL;
+  int *global_ss_internal = NULL;
+  d->ss_internal_global = NULL;
+
+  if (d->num_side_sets_global > 0) {
+    if (parallel_call) {
+      local_ss_internal = find_ss_internal_boundary(exo);
+      global_ss_internal = calloc(d->num_side_sets_global, sizeof(int));
+      d->ss_internal_global = calloc(d->num_side_sets_global, sizeof(int));
+
+      for (int i = 0; i < exo->num_side_sets; i++) {
+        int global_ss_index = d->ss_index_global[i];
+        global_ss_internal[global_ss_index] = local_ss_internal[i];
+      }
+
+      d->ss_block_index_global = calloc(d->num_side_sets_global + 1, sizeof(int));
+      d->ss_block_list_global =
+          calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
+      int *ss_block_count_proc =
+          calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
+      int *ss_block_count_global =
+          calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
+
+      for (int ss_id = 0; ss_id < exo->num_side_sets; ss_id++) {
+        for (int elem_index = exo->ss_elem_index[ss_id];
+             elem_index < (exo->ss_elem_index[ss_id] + exo->ss_num_sides[ss_id]); elem_index++) {
+          int elem = exo->ss_elem_list[elem_index];
+          int block = find_elemblock_index(elem, exo);
+          if (block == -1) {
+            GOMA_EH(GOMA_ERROR, "Element block not found ss_block_list");
+          }
+          for (int j = 0; j < d->num_elem_blocks_global; j++) {
+            if (d->eb_id_global[j] == exo->eb_id[block]) {
+              ss_block_count_proc[ss_id * d->num_elem_blocks_global + j] = 1;
+            }
+          }
+        }
+      }
+
+      MPI_Allreduce(ss_block_count_proc, ss_block_count_global,
+                    d->num_elem_blocks_global * d->num_side_sets_global, MPI_INT, MPI_MAX,
+                    MPI_COMM_WORLD);
+
+      int ss_block_index = 0;
+      for (int ss_id = 0; ss_id < d->num_side_sets_global; ss_id++) {
+        int ss_start = ss_block_index;
+        for (int j = 0; j < d->num_elem_blocks_global; j++) {
+          int offset = ss_id * d->num_elem_blocks_global + j;
+          if (ss_block_count_global[offset] > 0) {
+            d->ss_block_list_global[ss_block_index] = j;
+            ss_block_index++;
+          }
+        }
+        d->ss_block_index_global[ss_id] = ss_start;
+        d->ss_block_index_global[ss_id + 1] = ss_block_index;
+      }
+
+      free(ss_block_count_proc);
+      free(ss_block_count_global);
+    }
+  }
+  d->elem_owner = alloc_int_1(exo->num_elems, ProcID);
+
+  if (parallel_call) {
+    const int num_mpi_async = 2;
+    MPI_Request request_array[2];
+
+    MPI_Iallreduce(eb_num_nodes_local, d->eb_num_nodes_per_elem_global, d->num_elem_blocks_global,
+                   MPI_INT, MPI_MAX, MPI_COMM_WORLD, &(request_array[0]));
+
+    MPI_Iallreduce(global_ss_internal, d->ss_internal_global, d->num_side_sets_global, MPI_INT,
+                   MPI_MAX, MPI_COMM_WORLD, &(request_array[1]));
+
+    MPI_Waitall(num_mpi_async, request_array, MPI_STATUSES_IGNORE);
+
+    free(local_ss_internal);
+    free(global_ss_internal);
+
+    int min_external;
+    MPI_Allreduce(&d->num_external_nodes, &min_external, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    if (min_external > 0) {
+      GOMA_EH(-1, "Found > 0 external nodes, use element decomposition");
+    }
+  }
+  free(eb_num_nodes_local);
+  ex_error = ex_close(exoid);
+  CHECK_EX_ERROR(ex_error, "ex_close");
+
+  d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
+
+  // zero_base maps
+  for (int i = 0; i < exo->base_mesh->num_nodes; i++) {
+    exo->base_mesh->node_map[i]--;
+  }
+  for (int i = 0; i < exo->base_mesh->num_elems; i++) {
+    exo->base_mesh->elem_map[i]--;
+  }
+  zero_dpi(d);
+
+  // setup node owners
+  if (parallel_call) {
+    d->num_neighbors = d->num_node_cmaps;
+    d->neighbor = alloc_int_1(d->num_neighbors, -1);
+    d->node_owner = alloc_int_1(exo->num_nodes, ProcID);
+    d->num_node_recv = alloc_int_1(d->num_neighbors, 0);
+    d->num_node_send = alloc_int_1(d->num_neighbors, 0);
+    for (int i = 0; i < d->num_node_cmaps; i++) {
+      int neighbor = d->node_map_proc_ids[i][0];
+      for (int j = 0; j < d->node_cmap_node_counts[i]; j++) {
+        if (neighbor != d->node_map_proc_ids[i][j]) {
+          GOMA_EH(GOMA_ERROR, "Unexpected proc id in node map proc ids");
+        }
+        if (neighbor < d->node_owner[d->node_map_node_ids[i][j]]) {
+          d->node_owner[d->node_map_node_ids[i][j]] = neighbor;
+          d->num_node_recv[i]++;
+        }
+      }
+      d->neighbor[i] = neighbor;
     }
 
-  if (d->len_elem_var_tab_global > 0)
-    {
-      get_variable(u, NC_INT, 1,
-                   d->len_elem_var_tab_global, -1,
-                   si.elem_var_tab_global, d->elem_var_tab_global);
+    int elem_offset = 0;
+    for (int i = 0; i < exo->num_elem_blocks; i++) {
+      for (int j = 0; j < exo->eb_num_elems[i]; j++) {
+        int min_proc = ProcID;
+        int nnode_per_elem = exo->eb_num_nodes_per_elem[i];
+        for (int k = 0; k < nnode_per_elem; k++) {
+          int local_node = exo->eb_conn[i][j * nnode_per_elem + k];
+          int proc = d->node_owner[local_node];
+          if (proc < min_proc) {
+            min_proc = proc;
+          }
+        }
+        d->elem_owner[elem_offset] = min_proc;
+        elem_offset++;
+      }
     }
 
-  if ( d->num_elems > 0 )
-    {
-      get_variable(u, NC_INT, 1, 
-		   d->num_elems,	 -1, 
-		   si.elem_index_global, d->elem_index_global);
+    goma_error err = generate_ghost_elems(exo, d);
+    GOMA_EH(err, "generate_ghost_elements");
 
-      get_variable(u, NC_INT, 1, 
-		   d->num_elems,	 -1, 
-		   si.elem_owner, d->elem_owner);
+    int *num_send_nodes = alloc_int_1(d->num_neighbors, 0);
+    int **global_send_nodes = malloc(sizeof(int *) * d->num_neighbors);
+    int *num_recv_nodes = alloc_int_1(d->num_neighbors, 0);
+    int **global_recv_nodes = malloc(sizeof(int *) * d->num_neighbors);
+
+    MPI_Request *requests = calloc(2 * d->num_neighbors, sizeof(MPI_Request));
+
+    for (int i = 0; i < d->num_neighbors; i++) {
+      MPI_Irecv(&num_send_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD,
+                &requests[d->num_neighbors + i]);
+      // printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 206);
+    }
+    for (int i = 0; i < d->num_neighbors; i++) {
+      num_recv_nodes[i] = 0;
+      for (int j = 0; j < d->num_external_nodes; j++) {
+        if (d->node_owner[d->num_internal_nodes + d->num_boundary_nodes + j] == d->neighbor[i]) {
+          num_recv_nodes[i] += 1;
+        }
+      }
+      MPI_Isend(&num_recv_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD, &requests[i]);
+      // printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 206);
     }
 
-  get_variable(u, NC_INT, 2, 
-	       d->num_global_node_descriptions,	d->len_node_description, 
-	       si.global_node_description,&(d->global_node_description[0][0]));
+    MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);
 
-  get_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.my_name,		&(d->my_name));
-
-  get_variable(u, NC_INT, 1, 
-	       d->num_neighbors,	-1, 
-	       si.neighbor,		d->neighbor);
-
-  if ( d->num_nodes > 0 )
-    {
-      get_variable(u, NC_INT, 1, 
-		   d->num_nodes,	 -1, 
-		   si.node_index_global, d->node_index_global);
+    for (int i = 0; i < d->num_neighbors; i++) {
+      global_send_nodes[i] = malloc(sizeof(int) * num_send_nodes[i]);
+      MPI_Irecv(global_send_nodes[i], num_send_nodes[i], MPI_INT, d->neighbor[i], 207,
+                MPI_COMM_WORLD, &requests[d->num_neighbors + i]);
+      // printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 207);
     }
 
-  get_variable(u, NC_INT, 0, 
-	       -1, 	-1, 
-	       si.ns_distfact_len_global, &(d->ns_distfact_len_global));
-
-  get_variable(u, NC_INT, 0, 
-	       -1, 	-1, 
-	       si.ns_node_len_global, &(d->ns_node_len_global));
-
-  if (d->num_node_sets_global > 0)
-    {
-      get_variable(u, NC_INT, 1,
-		   d->num_node_sets_global,	-1,
-		   si.ns_id_global,		d->ns_id_global);
-
-      get_variable(u, NC_INT, 1,
-		   d->num_node_sets_global,		-1,
-		   si.ns_distfact_index_global,	d->ns_distfact_index_global);
-
-      get_variable(u, NC_INT, 1,
-		   d->num_node_sets_global,		-1,
-		   si.ns_node_index_global,	d->ns_node_index_global);
-
-      get_variable(u, NC_INT, 1,
-		   d->num_node_sets_global,		-1,
-		   si.ns_num_distfacts_global,	d->ns_num_distfacts_global);
-
-      get_variable(u, NC_INT, 1,
-		   d->num_node_sets_global,	-1,
-		   si.ns_num_nodes_global,	d->ns_num_nodes_global);
+    for (int i = 0; i < d->num_neighbors; i++) {
+      global_recv_nodes[i] = malloc(sizeof(int) * num_recv_nodes[i]);
+      int recv_index = 0;
+      for (int j = 0; j < d->num_external_nodes; j++) {
+        int local_node = d->num_internal_nodes + d->num_boundary_nodes + j;
+        if (d->node_owner[local_node] == d->neighbor[i]) {
+          global_recv_nodes[i][recv_index++] = d->node_index_global[local_node];
+        }
+      }
+      MPI_Isend(global_recv_nodes[i], num_recv_nodes[i], MPI_INT, d->neighbor[i], 207,
+                MPI_COMM_WORLD, &requests[i]);
+      // printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 207);
     }
 
-  if (d->num_node_sets > 0)
-    {
-      get_variable(u, NC_INT, 1,
-		   d->num_node_sets,	-1,
-		   si.ns_index_global,	d->ns_index_global);
+    MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);
+    free(requests);
+
+    // verify we have the send nodes
+    for (int i = 0; i < d->num_neighbors; i++) {
+      for (int j = 0; j < num_send_nodes[i]; j++) {
+        int exists = in_list(global_send_nodes[i][j], d->num_internal_nodes,
+                             d->num_internal_nodes + d->num_boundary_nodes, d->node_index_global);
+        if (exists == -1) {
+          GOMA_EH(GOMA_ERROR, "Required node to communicate doesn't exist in border nodes");
+        }
+      }
     }
 
-  if (d->len_ns_distfact_list > 0)
-    {
-      get_variable(u, NC_INT, 1,
-		   d->len_ns_distfact_list,	-1,
-		   si.ns_distfact_list_index_global,
-		   d->ns_distfact_list_index_global);
+#ifdef DEBUG_MPI
+
+    int *global_owners_min = alloc_int_1(d->num_nodes_global, Num_Proc + 1);
+    int *global_owners_max = alloc_int_1(d->num_nodes_global, -1);
+    int *all_global_owners_min = alloc_int_1(d->num_nodes_global, Num_Proc + 1);
+    int *all_global_owners_max = alloc_int_1(d->num_nodes_global, -1);
+    for (int i = 0; i < exo->num_nodes; i++) {
+      int gindex = d->node_index_global[i];
+      int owner = d->node_owner[i];
+      global_owners_max[gindex] = owner;
+      global_owners_min[gindex] = owner;
     }
 
+    MPI_Allreduce(global_owners_min, all_global_owners_min, d->num_nodes_global, MPI_INT, MPI_MIN,
+                  MPI_COMM_WORLD);
+    MPI_Allreduce(global_owners_max, all_global_owners_max, d->num_nodes_global, MPI_INT, MPI_MAX,
+                  MPI_COMM_WORLD);
 
-  if (d->len_ns_node_list > 0)
-    {
-      get_variable(u, NC_INT, 1,
-		   d->len_ns_node_list,	-1,
-		   si.ns_node_list_index_global,
-		   d->ns_node_list_index_global);
+    for (int i = 0; i < d->num_nodes_global; i++) {
+      if (all_global_owners_min[i] != all_global_owners_max[i]) {
+        GOMA_EH(GOMA_ERROR, "Inconsistent node owners");
+      }
     }
+    free(global_owners_min);
+    free(global_owners_max);
+    free(all_global_owners_max);
+    free(all_global_owners_min);
 
-
-
-  if ( d->num_props_ns > 1 )
-    {
-      get_variable(u, NC_INT, 2,
-		   d->num_props_ns,		d->num_node_sets_global,
-		   si.ns_prop_global,		&(d->ns_prop_global[0][0]));
-    }
-
-  get_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_boundary_nodes,	&(d->num_boundary_nodes));
-
-  get_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_dofs_global,	&(d->num_dofs_global));
-
-  get_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_elems_global,	&(d->num_elems_global));
-
-  get_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_external_nodes,	&(d->num_external_nodes));
-
-  get_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_internal_nodes,	&(d->num_internal_nodes));
-
-  get_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_nodes_global,	&(d->num_nodes_global));
-
-  get_variable(u, NC_INT, 1, 
-	       d->len_ptr_set_membership,	-1, 
-	       si.ptr_set_membership,	d->ptr_set_membership);
-
-  get_variable(u, NC_INT, 1, 
-	       d->len_set_membership,	-1, 
-	       si.set_membership,	d->set_membership);
-
-
-  get_variable(u, NC_INT, 0, -1, -1, 
-	       si.ss_distfact_len_global, &(d->ss_distfact_len_global));
-
-  if (d->len_ss_distfact_list > 0)
-    {
-      get_variable(u, NC_INT, 1, d->len_ss_distfact_list, -1,
-		   si.ss_distfact_list_index_global,
-		   d->ss_distfact_list_index_global);
-    }
-
-
-  get_variable(u, NC_INT, 0, -1, -1, 
-	       si.ss_elem_len_global, &(d->ss_elem_len_global));
-
-  if (d->len_ss_elem_list > 0)
-    {
-      get_variable(u, NC_INT, 1, d->len_ss_elem_list, -1,
-		   si.ss_elem_list_index_global, d->ss_elem_list_index_global);
-    }
-
-  if (d->num_side_sets > 0)
-    {
-      get_variable(u, NC_INT, 1,
-		   d->num_side_sets,	-1,
-		   si.ss_index_global,	d->ss_index_global);
-    }
-
-  if (d->num_side_sets_global > 0)
-    {
-      get_variable(u, NC_INT, 1, d->num_side_sets_global, -1,
-		   si.ss_distfact_index_global, d->ss_distfact_index_global);
-
-      get_variable(u, NC_INT, 1, d->num_side_sets_global, -1,
-		   si.ss_elem_index_global, d->ss_elem_index_global);
-
-      get_variable(u, NC_INT, 1,
-		   d->num_side_sets_global,	-1,
-		   si.ss_id_global,		d->ss_id_global);
-
-      get_variable(u, NC_INT, 1,
-		   d->num_side_sets_global,		-1,
-		   si.ss_num_distfacts_global,	d->ss_num_distfacts_global);
-
-      get_variable(u, NC_INT, 1,
-		   d->num_side_sets_global,		-1,
-		   si.ss_num_sides_global,		d->ss_num_sides_global);
-    }
-
-  if ( d->len_elem_elem_list > 0 )
-    {
-      get_variable(u, NC_INT, 1, 
-		   d->len_elem_elem_list,	-1, 
-		   si.elem_elem_list_global,	d->elem_elem_list_global);
-      
-      get_variable(u, NC_INT, 1, 
-		   d->len_elem_elem_list,	-1, 
-		   si.elem_elem_twst_global,	d->elem_elem_twst_global);
-      
-      get_variable(u, NC_INT, 1, 
-		   d->len_elem_elem_list,	-1, 
-		   si.elem_elem_face_global,	d->elem_elem_face_global);
-      
-      get_variable(u, NC_INT, 1, 
-		   d->len_elem_elem_list,	-1, 
-		   si.elem_elem_proc_global,	d->elem_elem_proc_global);
-    }
-
-  if ( d->num_props_ss > 1 )
-    {
-      get_variable(u, NC_INT, 2,
-		   d->num_props_ss,		d->num_side_sets_global,
-		   si.ss_prop_global,		&(d->ss_prop_global[0][0]));
-    }
-
-  get_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.undefined_basic_eqnvar_id, &(d->undefined_basic_eqnvar_id));
-
-  if (d->num_side_sets_global > 0)
-    {
-      get_variable(u, NC_INT, 1,
-                   d->num_side_sets_global, -1,
-                   si.ss_internal_global, d->ss_internal_global);
-
-      get_variable(u, NC_INT, 1,
-                   d->num_side_sets_global + 1, -1,
-                   si.ss_block_index_global, d->ss_block_index_global);
-
-      get_variable(u, NC_INT, 1,
-                   len_ss_block_list_global, -1,
-                   si.ss_block_list_global, d->ss_block_list_global);
-    }
-    /*
-   * 7. Close up.
-   */
-
-#ifdef NETCDF_3
-  err = nc_close(u);
-  if ( err != NC_NOERR )
-    {
-      EH(-1, "nc_close() problem.");
-    }
 #endif
-#ifdef NETCDF_2
-  err = ncclose(u);
-  EH(err, "ncclose()");
-#endif
 
-  /*
-   * 8. Calculate a few utility combinations
-   */
+    // reorder external nodes
+    int *new_external_node_order = alloc_int_1(d->num_external_nodes, 0);
+    int *old_to_new_external_node_order = alloc_int_1(d->num_external_nodes, 0);
+    int *old_node_owner = alloc_int_1(d->num_external_nodes, 0);
+    int new_index = 0;
+    int offset = d->num_internal_nodes + d->num_boundary_nodes;
+    for (int j = 0; j < d->num_neighbors; j++) {
+      int neighbor = d->neighbor[j];
+      for (int i = 0; i < d->num_external_nodes; i++) {
+        old_node_owner[i] = d->node_owner[i + offset];
+        if (d->node_owner[d->num_internal_nodes + d->num_boundary_nodes + i] == neighbor) {
+          new_external_node_order[new_index] = i;
+          old_to_new_external_node_order[i] = new_index;
+          new_index++;
+        }
+      }
+    }
+    if (new_index != d->num_external_nodes) {
+      GOMA_EH(GOMA_ERROR, "incorrect new ordering %d != %d", new_index, d->num_external_nodes);
+    }
 
-  d->num_owned_nodes = d->num_internal_nodes + d->num_boundary_nodes;
+    // node index global
+    int *old_global_indices = alloc_int_1(d->num_external_nodes, 0);
+    for (int i = 0; i < d->num_external_nodes; i++) {
+      old_global_indices[i] =
+          d->node_index_global[d->num_internal_nodes + d->num_boundary_nodes + i];
+    }
+    for (int i = 0; i < d->num_external_nodes; i++) {
+      d->node_index_global[d->num_internal_nodes + d->num_boundary_nodes + i] =
+          old_global_indices[new_external_node_order[i]];
+    }
+    free(old_global_indices);
+    double *x_old = alloc_dbl_1(d->num_external_nodes, 0);
+    double *y_old = alloc_dbl_1(d->num_external_nodes, 0);
+    double *z_old = alloc_dbl_1(d->num_external_nodes, 0);
+    for (int i = 0; i < d->num_external_nodes; i++) {
+      x_old[i] = exo->x_coord[offset + i];
+      if (exo->num_dim > 1) {
+        y_old[i] = exo->y_coord[offset + i];
+      }
+      if (exo->num_dim > 2) {
+        z_old[i] = exo->z_coord[offset + i];
+      }
+    }
+    for (int i = 0; i < d->num_external_nodes; i++) {
+      exo->x_coord[offset + i] = x_old[new_external_node_order[i]];
+      if (exo->num_dim > 1) {
+        exo->y_coord[offset + i] = y_old[new_external_node_order[i]];
+      }
+      if (exo->num_dim > 2) {
+        exo->z_coord[offset + i] = z_old[new_external_node_order[i]];
+      }
+    }
+    free(x_old);
+    free(y_old);
+    free(z_old);
 
-  return(status);
+    // conn
+    for (int block = 0; block < exo->num_elem_blocks; block++) {
+      int num_nodes_per_blk = exo->eb_num_nodes_per_elem[block] * exo->eb_num_elems[block];
+      for (int i = 0; i < num_nodes_per_blk; i++) {
+        if (exo->eb_conn[block][i] >= offset) {
+          exo->eb_conn[block][i] =
+              old_to_new_external_node_order[exo->eb_conn[block][i] - offset] + offset;
+        }
+      }
+    }
+
+    // ns
+    for (int j = 0; j < exo->ns_node_len; j++) {
+      if (exo->ns_node_list[j] >= offset) {
+        exo->ns_node_list[j] =
+            old_to_new_external_node_order[exo->ns_node_list[j] - offset] + offset;
+      }
+    }
+
+    // ss
+    for (int ins = 0; ins < exo->num_side_sets; ins++) {
+      for (int side_index = 0; side_index < exo->ss_num_sides[ins]; side_index++) {
+        for (int lni = exo->ss_node_side_index[ins][side_index];
+             lni < exo->ss_node_side_index[ins][side_index + 1]; lni++) {
+          int inode = exo->ss_node_list[ins][lni];
+          if (inode >= offset) {
+            exo->ss_node_list[ins][lni] = old_to_new_external_node_order[inode - offset] + offset;
+          }
+        }
+      }
+    }
+
+    // update node owners
+    for (int i = 0; i < d->num_external_nodes; i++) {
+      d->node_owner[offset + old_to_new_external_node_order[i]] = old_node_owner[i];
+    }
+
+    // setup indexing from ghosted mesh to base mesh
+    setup_ghost_to_base(exo, d);
+    d->num_owned_nodes = d->num_internal_nodes + d->num_boundary_nodes;
+    d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
+
+    free(new_external_node_order);
+    free(old_to_new_external_node_order);
+    free(old_node_owner);
+    free(num_send_nodes);
+    free(num_recv_nodes);
+    for (int i = 0; i < d->num_neighbors; i++) {
+      free(global_send_nodes[i]);
+      free(global_recv_nodes[i]);
+    }
+    free(global_send_nodes);
+    free(global_recv_nodes);
+  }
+
+  d->goma_dpi_data = false;
+  // read ns and ss consistency data
+  int ncid;
+  int err = nc_open(fn, NC_NOWRITE | NC_SHARE, &ncid);
+  if (err)
+    GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+  int nc_ns_id;
+  size_t nc_ns_len;
+  bool goma_ns_found = true;
+  err = nc_inq_dimid(ncid, GOMA_NC_DIM_LEN_NS_NODE_LIST, &nc_ns_id);
+  if (err != NC_NOERR) {
+    goma_ns_found = false;
+  }
+
+  int nc_ss_id;
+  size_t nc_ss_len;
+  bool goma_ss_found = true;
+  err = nc_inq_dimid(ncid, GOMA_NC_DIM_LEN_SS_ELEM_LIST, &nc_ss_id);
+  if (err != NC_NOERR) {
+    goma_ss_found = false;
+  }
+
+  d->global_ns_node_len = 0;
+  if (goma_ns_found) {
+    err = nc_inq_dimlen(ncid, nc_ns_id, &nc_ns_len);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+    int nc_node_list;
+    err = nc_inq_varid(ncid, GOMA_NC_VAR_NS_NODE_LIST, &nc_node_list);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+    d->goma_dpi_data = true;
+    d->global_ns_node_len = nc_ns_len;
+    d->global_ns_nodes = calloc(nc_ns_len, sizeof(int));
+    err = nc_get_var(ncid, nc_node_list, d->global_ns_nodes);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+  }
+
+  d->global_ss_elem_len = 0;
+  if (goma_ss_found) {
+    err = nc_inq_dimlen(ncid, nc_ss_id, &nc_ss_len);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+    int nc_elem_list;
+    int nc_side_list;
+    err = nc_inq_varid(ncid, GOMA_NC_VAR_SS_ELEM_LIST, &nc_elem_list);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+    err = nc_inq_varid(ncid, GOMA_NC_VAR_SS_SIDE_LIST, &nc_side_list);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+    d->goma_dpi_data = true;
+    d->global_ss_elem_len = nc_ss_len;
+    d->global_ss_elems = calloc(nc_ss_len, sizeof(int));
+    d->global_ss_sides = calloc(nc_ss_len, sizeof(int));
+    err = nc_get_var(ncid, nc_elem_list, d->global_ss_elems);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+    err = nc_get_var(ncid, nc_side_list, d->global_ss_sides);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+  }
+
+  err = nc_close(ncid);
+  if (err)
+    GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+  return 0;
 }
+int zero_dpi(Dpi *d) {
+  for (int i = 0; i < d->num_universe_nodes; i++) {
+    d->node_index_global[i] -= 1;
+  }
 
+  for (int i = 0; i < (d->num_internal_elems + d->num_border_elems); i++) {
+    d->elem_index_global[i] -= 1;
+  }
 
-/*
- * getdid() - get netCDF dimension identifiers
- *
- * Given the open unit and the string name of the dimension, load into the
- * input address the dimension identifier.
- *
- * Note: Intended to be netCDF 2 and netCDF 3 bi-compliant.
- *
- * Problem - some named dimensions might have zero length and not be recorded.
- * Need to account for this.
- *
- * 1997/08/23 09:24 MDT pasacki@sandia.gov
- * 1998/07/23 13:03 MDT pasacki@sandia.gov
- */
-
-void
-getdid(int netcdf_unit,			/* should already be open	(in) */
-       char *string_name,		/* eg, "num_side_sets"          (in) */
-       int hard_error_interpretation,	/* Boolean for ghosty dims      (in) */
-       int *dimension_identifier_address) /*				(out)*/
-{
-  int err;
-  char err_msg[MAX_CHAR_ERR_MSG];  
-
-#ifdef NETCDF_3  
-  err  = nc_inq_dimid(netcdf_unit, string_name, dimension_identifier_address);
-
-  /* Handle ghosty dims later */
-  if (err != NC_NOERR)
-    {
-      *dimension_identifier_address = -1;
+  for (int cmap = 0; cmap < d->num_node_cmaps; cmap++) {
+    for (int node = 0; node < d->node_cmap_node_counts[cmap]; node++) {
+      d->node_map_node_ids[cmap][node] -= 1;
     }
+  }
 
-  /*
-   * Assume an error means this quanitity is not found here. That's OK for
-   * some things, but not others.
-   */
-  if ( err != NC_NOERR && hard_error_interpretation )
-    {
-      sprintf(err_msg, "nc_inq_dimid() on %s id=%d", 
-	      string_name, 
-	      *dimension_identifier_address);
-      EH(-1, err_msg);
-    }
-#endif
-
-#ifdef NETCDF_2
-  err  = ncdimid(netcdf_unit, string_name);
-  if ( err == -1 && hard_error_interpretation )
-    {
-
-      sprintf(err_msg, "ncdimid() on %s rtn %d", string_name, err);
-      EH(err, err_msg);
-    }
-  *dimension_identifier_address = err;
-#endif  
-
-#ifdef DEBUG
-  fprintf(stderr, "P_%d dim id is %d for %s\n", ProcID, 
-	  *dimension_identifier_address, string_name);
-#endif  
-
-  return;
+  return GOMA_SUCCESS;
 }
+int one_dpi(Dpi *d) {
+  for (int i = 0; i < d->num_universe_nodes; i++) {
+    d->node_index_global[i] += 1;
+  }
 
-/*
- * getvid() - get netCDF variable identifiers
- *
- * Given the open unit and the string name of the variable, load into the
- * input address the variable identifier.
- *
- * The Boolean tells whether this particular variable better be there or
- * if it is OK for the variable not to exist in the file. Nonexistence is
- * permissible under some circumstances. Some EXODUS II files might well
- * not have any sidesets or any nodesets, for example.
- *
- * Note: Intended to be netCDF 2 and netCDF 3 bi-compliant.
- *
- * 1997/08/23 09:25 MDT pasacki@sandia.gov
- *
- * Revised: 1998/07/27 10:44 MDT pasacki@sandia.gov
- */
+  for (int i = 0; i < (d->num_internal_elems + d->num_border_elems); i++) {
+    d->elem_index_global[i] += 1;
+  }
 
-void
-getvid(int netcdf_unit,		         /* open netCDF unit identifier (in) */
-       char *string_name,	         /* Name of the variable        (in) */
-       int hard_error_interpretation,	 /* Boolean for ghosty vars     (in) */
-       int *variable_identifier_address) /* integer id of variable     (out) */
-{
-  int err;
-  char err_msg[MAX_CHAR_ERR_MSG];  
-
-#ifdef NETCDF_3  
-  err  = nc_inq_varid(netcdf_unit, string_name, variable_identifier_address);
-  if ( err != NC_NOERR && hard_error_interpretation )
-    {
-      sprintf(err_msg, "nc_inq_varid() on %s id=%d", 
-		   string_name, 
-		   *variable_identifier_address);
-      EH(-1, err_msg);
+  for (int cmap = 0; cmap < d->num_node_cmaps; cmap++) {
+    for (int node = 0; node < d->node_cmap_node_counts[cmap]; node++) {
+      d->node_map_node_ids[cmap][node] += 1;
     }
-#endif
+  }
 
-#ifdef NETCDF_2
-  err  = ncvarid(netcdf_unit, string_name);
-  if ( err == -1 && hard_error_interpretation )
-    {
-      sprintf(err_msg, "ncvarid() on %s rtn %d", string_name, err);
-      EH(err, err_msg);
-    }
-  *variable_identifier_address = err;
-#endif  
-
-#ifdef DEBUG
-  fprintf(stderr, "P_%d var id is %d for %s\n", ProcID, 
-	  *variable_identifier_address, string_name);
-#endif  
-
-  return;
+  return GOMA_SUCCESS;
 }
-
-/*
- * getdim() - get netCDF dimension
- *
- * Given the open unit and the dimension ID of the dimension, load into the
- * input address the value of the dimension.
- *
- * Note: Intended to be netCDF 2 and netCDF 3 bi-compliant.
- *
- * 1997/08/23 09:26 MDT pasacki@sandia.gov
- */
-
-void
-getdim(int netcdf_unit,
-       int dimension_id,
-       int *where)
-{
-  int err;
-#ifdef NETCDF_3
-  size_t swhere;
-#endif
-#ifdef NETCDF_2
-  long swhere;
-  char junk[MAX_CHAR_ERR_MSG];
-#endif
-  char err_msg[MAX_CHAR_ERR_MSG];  
-  
-  /*
-   * If the earlier attempt to find the dimension ID failed due to
-   * nonexistence of a noncritical chunk, then we need a means of gracefully
-   * getting the heck out of here and setting things most appropriately.
-   * Here, let's guess that the value of a nonexistent dimension is zero.
-   */
-
-  if ( dimension_id == -1 )
-    {
-      *where = 0;
-    }
-  else
-    {
-#ifdef NETCDF_3  
-      err  = nc_inq_dimlen(netcdf_unit, dimension_id, &swhere);
-      if ( err != NC_NOERR )
-	{
-	  sprintf(err_msg, "nc_inq_dimlen() on did=%d", dimension_id);
-	  EH(-1, err_msg);
-	}
-      *where = (int) swhere;
-#endif
-
-#ifdef NETCDF_2
-      err  = ncdiminq(netcdf_unit, dimension_id, junk, &swhere);
-      sprintf(err_msg, "ncdiminq() on did %d rtns %d", dimension_id, 
-	      err);
-      EH(err, err_msg);
-      *where = (int) swhere;
-#endif  
-    }
-
-  return;
-}
-/*********************************************************************/
-/*********************************************************************/
-/*********************************************************************/
 /* uni_dpi() -- setup distributed processing information for one processor
  *
  * When the problem is not partitioned, we need to set some acceptable
  * defaults.
- *
- * Created: 1997/08/27 16:16 MDT pasacki@sandia.gov
- *
- * Revised: 1997/08/28 10:05 MDT pasacki@sandia.gov
  */
-
-void
-uni_dpi(Dpi *dpi, 
-	Exo_DB *exo)
-{
+void uni_dpi(Dpi *dpi, Exo_DB *exo) {
   int i;
   int len;
+  dpi->num_elems = exo->num_elems;
 
-  dpi->num_elems                     = exo->num_elems;
-  
-  /*
-   * These defaults for the element decomposition information might
-   * be rather uninformative and not useful. However, to usefully reflect
-   * information in exo->, we'd need to already have some of the elem_elem
-   * connectivity information ready right now.
-   */
-
-  if (exo->elem_elem_conn_exists)
-    {
-      dpi->len_elem_elem_list            = exo->elem_elem_pntr[exo->num_elems];
-      dpi->elem_elem_list_global         = exo->elem_elem_list;
-      dpi->elem_elem_twst_global         = exo->elem_elem_twst;
-      dpi->elem_elem_face_global         = exo->elem_elem_face;
-    }
-  else
-    {
-      dpi->len_elem_elem_list            = 0;
-      dpi->elem_elem_list_global         = NULL;
-      dpi->elem_elem_twst_global         = NULL;
-      dpi->elem_elem_face_global         = NULL;
-    }
+  if (exo->elem_elem_conn_exists) {
+    dpi->elem_elem_list_global = exo->elem_elem_list;
+  } else {
+    dpi->elem_elem_list_global = NULL;
+  }
 
   len = dpi->num_elems;
   dpi->elem_owner = alloc_int_1(len, ProcID);
 
+  dpi->num_elems_global = exo->num_elems;
 
-  dpi->num_elems_global              = exo->num_elems;
+  dpi->num_elem_blocks_global = exo->num_elem_blocks;
+  dpi->num_neighbors = 0;
+  dpi->num_node_sets_global = exo->num_node_sets;
+  dpi->num_side_sets_global = exo->num_side_sets;
 
-  /*
-   * Set default values for dimension identifiers.
-   */
-
-  dpi->len_eb_num_private_elems      = exo->num_elem_blocks;
-  dpi->len_node_description          = 1;
-
-  /*
-   * You need an upper and lower bound to point to even 1 setmembership entry.
-   */
-
-  dpi->len_ptr_set_membership        = 2;
-  dpi->len_set_membership            = 1;
-
-  dpi->num_elem_blocks               = exo->num_elem_blocks;
-  dpi->num_elem_blocks_global        = exo->num_elem_blocks;
-  dpi->num_global_node_descriptions  = 1;
-  dpi->num_neighbors                 = 0;
-  dpi->num_node_sets                 = exo->num_node_sets;
-  dpi->num_node_sets_global          = exo->num_node_sets;
-  dpi->num_side_sets                 = exo->num_side_sets;
-  dpi->num_side_sets_global          = exo->num_side_sets;
-
-  dpi->num_elems_global              = exo->num_elems;
-  dpi->num_internal_nodes	     = exo->num_nodes;
-  dpi->num_boundary_nodes            = 0;
-  dpi->num_external_nodes            = 0;
-  dpi->num_owned_nodes               = exo->num_nodes;
-  dpi->num_universe_nodes            = exo->num_nodes;
-  dpi->num_nodes_global              = exo->num_nodes;
+  dpi->num_elems_global = exo->num_elems;
+  dpi->num_internal_nodes = exo->num_nodes;
+  dpi->num_boundary_nodes = 0;
+  dpi->num_external_nodes = 0;
+  dpi->num_owned_nodes = exo->num_nodes;
+  dpi->num_universe_nodes = exo->num_nodes;
+  dpi->num_nodes_global = exo->num_nodes;
 
   /*
    * Note! This aliasing of these pointers into the exo structure has
@@ -1222,7 +689,7 @@ uni_dpi(Dpi *dpi,
    *
    *	(+) it's very easy to do
    *	(+) it makes more economic use of memory
-   *	(-) it makes it too easy to free_dpi() and nuke your 
+   *	(-) it makes it too easy to free_dpi() and nuke your
    *        EXODUS information
    *
    * We'll just do it for now!
@@ -1230,93 +697,64 @@ uni_dpi(Dpi *dpi,
 
   len = dpi->num_elems;
   dpi->elem_index_global = alloc_int_1(len, INT_NOINIT);
-  for ( i=0; i<len; i++)
-    {
-      dpi->elem_index_global[i] = i;
-    }
+  for (i = 0; i < len; i++) {
+    dpi->elem_index_global[i] = i;
+  }
 
   len = dpi->num_universe_nodes;
-  dpi->node_index_global = alloc_int_1(len, INT_NOINIT); 
-  for ( i=0; i<len; i++)
-    {
-      dpi->node_index_global[i] = i;
-    }
+  dpi->node_index_global = alloc_int_1(len, INT_NOINIT);
+  for (i = 0; i < len; i++) {
+    dpi->node_index_global[i] = i;
+  }
+  dpi->ss_index_global = alloc_int_1(len, INT_NOINIT);
+  for (i = 0; i < exo->num_side_sets; i++) {
+    dpi->ss_index_global[i] = i;
+  }
 
   dpi->eb_id_global = exo->eb_id;
 
-  len = dpi->num_elem_blocks;
-  dpi->eb_index_global = alloc_int_1(len, INT_NOINIT);
-  for (i = 0; i < len; i++) {
-    dpi->eb_index_global[i] = i;
-  }
-
-
   dpi->eb_num_nodes_per_elem_global = exo->eb_num_nodes_per_elem;
 
-  dpi->eb_num_elems_global  = exo->eb_num_elems;
+  dpi->neighbor = alloc_int_1(1, ProcID);
 
-  dpi->eb_num_private_elems = exo->eb_num_elems;
+  dpi->ns_id_global = exo->ns_id;
 
-  len = dpi->num_global_node_descriptions;
-  if (len > 0) {
-    dpi->global_node_description = 
-	alloc_int_2(len, dpi->len_node_description, INT_NOINIT);
-  }
-
-  dpi->neighbor                = alloc_int_1(1, ProcID);
-
-  dpi->ns_id_global            = exo->ns_id;
-
-  if (dpi->num_node_sets > 0) {
-    dpi->ns_index_global = alloc_int_1(dpi->num_node_sets, INT_NOINIT);
-    for (i = 0; i < dpi->num_node_sets; i++) {
-      dpi->ns_index_global[i] = i;
-    }
-  }
-
-  dpi->ns_num_distfacts_global = exo->ns_num_distfacts;
-
-  dpi->ns_num_nodes_global     = exo->ns_num_nodes;
-
-  if ( dpi->len_ptr_set_membership > 0 ) {
-    dpi->ptr_set_membership = 
-	alloc_int_1(dpi->len_ptr_set_membership, INT_NOINIT);
-  }
-
-  if ( dpi->len_set_membership > 0 ) {
-    dpi->set_membership =
-	alloc_int_1(dpi->len_set_membership, INT_NOINIT);
-  }
-
-  dpi->set_membership[0]       = -1;
-  dpi->ptr_set_membership[0]   = 0;
-  dpi->ptr_set_membership[1]   = 1;
-
-  dpi->ss_id_global            = exo->ss_id;
-
-  if (dpi->num_side_sets > 0) {
-    dpi->ss_index_global = alloc_int_1(dpi->num_side_sets, INT_NOINIT);
-    for (i = 0; i < dpi->num_side_sets; i++) {
-      dpi->ss_index_global[i] = i;
-    }
-  }
-
-  dpi->ss_num_distfacts_global = exo->ss_num_distfacts;
-
-  dpi->ss_num_sides_global     = exo->ss_num_sides;
+  dpi->ss_id_global = exo->ss_id;
 
   dpi->ss_internal_global = find_ss_internal_boundary(exo);
+
+  // base mesh settings that can't be setup until dpi
+  exo->base_mesh->node_map = malloc(sizeof(int) * exo->num_nodes);
+  exo->base_mesh->elem_map = malloc(sizeof(int) * exo->num_elems);
+  memcpy(exo->base_mesh->node_map, dpi->node_index_global, sizeof(int) * exo->num_nodes);
+  memcpy(exo->base_mesh->elem_map, dpi->elem_index_global, sizeof(int) * exo->num_elems);
+
+  exo->ghost_node_to_base = malloc(sizeof(int) * exo->num_nodes);
+  for (int i = 0; i < exo->num_nodes; i++) {
+    exo->ghost_node_to_base[i] = i;
+  }
+  exo->eb_ghost_elem_to_base = malloc(sizeof(int *) * exo->num_elem_blocks);
+  for (int i = 0; i < exo->num_elem_blocks; i++) {
+    if (exo->eb_num_elems[i] > 0) {
+      exo->eb_ghost_elem_to_base[i] = malloc(sizeof(int) * exo->eb_num_elems[i]);
+      for (int j = 0; j < exo->eb_num_elems[i]; j++) {
+        exo->eb_ghost_elem_to_base[i][j] = j;
+      }
+    } else {
+      exo->eb_ghost_elem_to_base[i] = NULL;
+    }
+  }
 
   return;
 }
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
-/* free_dpi() -- free internal dynamically allocated memory in a 
+/* free_dpi() -- free internal dynamically allocated memory in a
  *               Dpi struct
  *
- * During rd_dpi(), various arrays are allocated. To cleanly 
- * free up this  memory, this routine can be used. Typically, 
+ * During rd_dpi(), various arrays are allocated. To cleanly
+ * free up this  memory, this routine can be used. Typically,
  * if dpi is a (Dpi *), then
  *
  *	free_dpi(dpi);
@@ -1327,67 +765,82 @@ uni_dpi(Dpi *dpi,
  * Created: 1997/08/23 15:50 MDT pasacki@sandia.gov
  */
 
-void
-free_dpi(Dpi *d)
-{
-  safer_free((void **) &(d->elem_index_global));
-  safer_free((void **) &(d->elem_owner));
+void free_dpi(Dpi *d) {
+  free(d->ns_id_global);
+  free(d->num_ns_global_node_counts);
+  free(d->num_ns_global_df_counts);
+  free(d->ss_id_global);
+  free(d->num_ss_global_side_counts);
+  free(d->num_ss_global_df_counts);
+  free(d->global_elem_block_ids);
+  free(d->global_elem_block_counts);
+  free(d->node_index_global);
+  free(d->elem_index_global);
+  free(d->proc_elem_internal);
+  if (d->num_border_elems > 0) {
+    free(d->proc_elem_border);
+  }
+  free(d->proc_node_internal);
+  if (d->num_boundary_nodes > 0) {
+    free(d->proc_node_boundary);
+  }
+  if (d->num_external_nodes > 0) {
+    free(d->proc_node_external);
+  }
+  free(d->node_cmap_ids);
+  free(d->node_cmap_node_counts);
+  if (d->num_elem_cmaps > 0) {
+    free(d->elem_cmap_ids);
+    free(d->elem_cmap_elem_counts);
+  }
 
-  safer_free((void **) &(d->elem_elem_list_global));
-  safer_free((void **) &(d->elem_elem_twst_global));
-  safer_free((void **) &(d->elem_elem_face_global));
-  safer_free((void **) &(d->elem_elem_proc_global));
+  for (int i = 0; i < d->num_node_cmaps; i++) {
+    free(d->node_map_node_ids[i]);
+    free(d->node_map_proc_ids[i]);
+  }
+  free(d->node_map_node_ids);
+  free(d->node_map_proc_ids);
 
-  safer_free((void **) &(d->eb_id_global));
-  safer_free((void **) &(d->eb_num_attr_global));
-  safer_free((void **) &(d->eb_num_elems_global));
-  safer_free((void **) &(d->eb_num_nodes_per_elem_global));
-  safer_free((void **) &(d->eb_elem_type_global));
+  for (int i = 0; i < d->num_elem_cmaps; i++) {
+    free(d->elem_cmap_elem_ids[i]);
+    free(d->elem_cmap_side_ids[i]);
+    free(d->elem_cmap_proc_ids[i]);
+  }
 
-  safer_free((void **) &(d->eb_prop_global));
-  safer_free((void **) &(d->ns_prop_global));
-  safer_free((void **) &(d->ss_prop_global));
-  safer_free((void **) &(d->eb_index_global)); 
-  safer_free((void **) &(d->eb_num_private_elems));
+  if (d->num_elem_cmaps > 0) {
+    free(d->elem_cmap_elem_ids);
+    free(d->elem_cmap_side_ids);
+    free(d->elem_cmap_proc_ids);
+  }
 
-  safer_free((void **) &(d->elem_var_tab_global));
-  safer_free((void **) &(d->global_node_description));
-  safer_free((void **) &(d->node_index_global));
-  safer_free((void **) &(d->neighbor));
+  free(d->eb_id_global);
+  free(d->eb_num_nodes_per_elem_global);
+  free(d->ss_index_global);
 
-  safer_free((void **) &(d->ns_id_global));
-  safer_free((void **) &(d->ns_num_distfacts_global));
-  safer_free((void **) &(d->ns_num_nodes_global));
-  safer_free((void **) &(d->ns_node_index_global));
-  safer_free((void **) &(d->ns_distfact_index_global));
-
-  safer_free((void **) &(d->ns_index_global));
-  safer_free((void **) &(d->ns_node_list_index_global));
-  safer_free((void **) &(d->ns_distfact_list_index_global));
-
-  safer_free((void **) &(d->ptr_set_membership));
-  safer_free((void **) &(d->set_membership));
-
-  safer_free((void **) &(d->ss_distfact_index_global));
-  safer_free((void **) &(d->ss_elem_index_global));
-  safer_free((void **) &(d->ss_id_global));
-  safer_free((void **) &(d->ss_num_distfacts_global));
-  safer_free((void **) &(d->ss_num_sides_global));
-
-  safer_free((void **) &(d->ss_elem_list_index_global));
-  safer_free((void **) &(d->ss_distfact_list_index_global));
-  safer_free((void **) &(d->ss_index_global));
-
-  safer_free((void **) &(d->ss_block_index_global));
-  safer_free((void **) &(d->ss_block_list_global));
   free(d->ss_internal_global);
 
-  return;
+  if (d->num_side_sets_global > 0) {
+    free(d->ss_block_index_global);
+    free(d->ss_block_list_global);
+  }
+
+  free(d->elem_owner);
+  free(d->neighbor);
+  free(d->node_owner);
+  free(d->num_node_recv);
+  free(d->num_node_send);
+  free(d->exodus_to_omega_h_node);
+
+  if (d->goma_dpi_data) {
+    free(d->global_ns_nodes);
+    free(d->global_ss_elems);
+    free(d->global_ss_sides);
+  }
 }
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
-/* free_dpi_uni() -- free internal dynamically allocated memory in 
+/* free_dpi_uni() -- free internal dynamically allocated memory in
  *                   Dpi SERIAL!
  *
  * During rd_dpi(), various arrays are allocated. To cleanly free up this
@@ -1399,169 +852,30 @@ free_dpi(Dpi *d)
  * would accomplish the desired effect.
  *
  * !!!! IMPORTANT - DANGEROUS PROGRAMMING NOTE !!!!!
- * For serial processing, not all of the pieces of Dpi have been 
- * allocated and some are merely aliases to parts of the exodus ii 
+ * For serial processing, not all of the pieces of Dpi have been
+ * allocated and some are merely aliases to parts of the exodus ii
  * database. To avoid munging that data, just free up what was
  * allocated in uni_dpi.
  *
  * Created: 1997/09/11 10:43 MDT pasacki@sandia.gov
  */
 
-void
-free_dpi_uni(Dpi *d)
-{
-  safer_free((void **) &(d->elem_owner));
-  safer_free((void **) &(d->elem_index_global));
-  safer_free((void **) &(d->node_index_global));
-  safer_free((void **) &(d->eb_index_global));
-  safer_free((void **) &(d->global_node_description));
-  safer_free((void **) &(d->neighbor));
-  safer_free((void **) &(d->ns_index_global));
-  safer_free((void **) &(d->ptr_set_membership));
-  safer_free((void **) &(d->set_membership));
-  safer_free((void **) &(d->ss_index_global));
+void free_dpi_uni(Dpi *d) {
+  safer_free((void **)&(d->elem_owner));
+  safer_free((void **)&(d->elem_index_global));
+  safer_free((void **)&(d->node_index_global));
+  safer_free((void **)&(d->neighbor));
+  safer_free((void **)&(d->ss_index_global));
   free(d->ss_internal_global);
-  return;
-}
-
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-/*
- * get_variable() -- provide interface to read netCDF vars via rev2 & rev3
- *
- * Created: 1998/08/21 09:59 MDT pasacki@sandia.gov
- *
- * Revised:
- */
-static void
-get_variable(const int netcdf_unit,
-             const nc_type netcdf_type,
-             const int num_dimensions,
-             const int dimension_val_1,
-             const int dimension_val_2,
-             const int variable_identifier,
-             void *variable_address)
-{
-  int err = 0;
-#ifndef NO_NETCDF_2
-  int i;
-  long count[NC_MAX_VAR_DIMS];
-  long start[NC_MAX_VAR_DIMS];
-#endif
-  char err_msg[MAX_CHAR_ERR_MSG];
-
-  get_variable_call_count++;
-
-  /*
-   * If a variable was really defined properly and doesn't have a valid
-   * identifier, then don't even try to get it.
-   */
-
-  if ( variable_identifier < 0 )
-    {
-      return;
-    }
-
-#ifdef NO_NETCDF_2		/* pure netCDF 3 calls... */
-  switch ( netcdf_type )
-    {
-    case NC_INT:
-      err = nc_get_var_int(netcdf_unit, variable_identifier, variable_address);
-      if ( err != NC_NOERR )
-        {
-          sprintf(err_msg, "nc_get_var_int() varid=%d",
-                  variable_identifier);
-        }
-      break;
-
-    case NC_CHAR:
-      err = nc_get_var_text(netcdf_unit, variable_identifier,
-                            variable_address);
-      if ( err != NC_NOERR )
-        {
-          sprintf(err_msg, "nc_get_var_text() varid=%d",
-                  variable_identifier);
-        }
-      break;
-
-    case NC_DOUBLE:
-      err = nc_get_var_double(netcdf_unit, variable_identifier,
-                              variable_address);
-      if ( err != NC_NOERR )
-        {
-          sprintf(err_msg, "nc_get_var_double() varid=%d",
-                  variable_identifier);
-        }
-        break;
-
-    default:
-      EH(-1, "Specified netCDF data type unrecognized or unimplemented.");
-      break;
-    }
-#endif
-
-  if (err != NC_NOERR)
-    {
-      EH(-1, err_msg);
-    }
-
-#ifndef NO_NETCDF_2		/* backward compatibility mode to netcdf2 */
-
-  if ( num_dimensions < 0 || num_dimensions > 2 )
-    {
-      sprintf(err_msg, "Bad or too large dimension value %d",
-              num_dimensions);
-      EH(-1, err_msg);
-    }
-
-  for ( i=0; i<num_dimensions; i++)
-    {
-      count[i] = 1;
-      start[i] = 0;
-    }
-
-  if ( num_dimensions > 0 )
-    {
-      if ( dimension_val_1 < 1 )
-        {
-          EH(-1, "Bad dimension specification.");
-        }
-      count[0] = dimension_val_1;
-    }
-
-  if ( num_dimensions > 1 )
-    {
-      if ( dimension_val_2 < 1 )
-        {
-          EH(-1, "Bad dimension specification.");
-        }
-      count[1] = dimension_val_2;
-    }
-
-  err = ncvarget(netcdf_unit, variable_identifier, start, count,
-                 variable_address);
-  if ( err < 0 )
-    {
-      sprintf(err_msg,
-              "get_variable (%d call), varid %d (%d dim %d,%d)\n",
-              get_variable_call_count,
-              variable_identifier, num_dimensions,
-              dimension_val_1, dimension_val_2);
-      EH(err, err_msg);
-    }
-
-#endif
 
   return;
 }
-
 
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
 /* init_dpi_struct() -- initialize some defaults
- * 
+ *
  * This is meant to be called right after allocation, to help setup some
  * reasonable defaults to describe an empty data structure. Call it a poor
  * man's constructor.
@@ -1571,25 +885,11 @@ get_variable(const int netcdf_unit,
  * Revised:
  */
 
-void
-init_dpi_struct(Dpi *d)
-{
-  if ( d == NULL )
-    {
-      EH(-1, "Empty structure to initialize?");
-    }
-  /*
-   * Initialize the entire structure to zeroes and NULL's
-   */
+void init_dpi_struct(Dpi *d) {
+  if (d == NULL) {
+    GOMA_EH(GOMA_ERROR, "Empty structure to initialize?");
+  }
   memset((void *)d, 0, sizeof(Dpi));
-
-  /*
-   * Initialize anything else that isn't zero.
-   */
-
-  d->undefined_basic_eqnvar_id    = UNDEFINED_EQNVARID;
-  d->len_node_description         = LEN_NODE_DESCRIPTION;
-
   return;
 }
 /************************************************************************/
@@ -1600,21 +900,18 @@ init_dpi_struct(Dpi *d)
  *
  * Notes: Avert aliasing problems by allocating full-fledged arrays for dpi
  *        that won't disappear if the monolith does.
- * 
+ *
  * Created: 1999/08/24 11:44 MDT pasacki@sandia.gov
  */
 
-void 
-exo_dpi_clone(Exo_DB *exo, 
-	      Dpi *dpi)
-{
+void exo_dpi_clone(Exo_DB *exo, Dpi *dpi) {
   int len;
 
-  dpi->num_nodes_global         = exo->num_nodes;
-  dpi->num_elems_global         = exo->num_elems;
-  dpi->num_elem_blocks_global   = exo->num_elem_blocks;
-  dpi->num_node_sets_global     = exo->num_node_sets;
-  dpi->num_side_sets_global     = exo->num_side_sets;
+  dpi->num_nodes_global = exo->num_nodes;
+  dpi->num_elems_global = exo->num_elems;
+  dpi->num_elem_blocks_global = exo->num_elem_blocks;
+  dpi->num_node_sets_global = exo->num_node_sets;
+  dpi->num_side_sets_global = exo->num_side_sets;
 
   /*
    * Allocate and fill arrays for element blocks...
@@ -1622,11 +919,8 @@ exo_dpi_clone(Exo_DB *exo,
 
   len = dpi->num_elem_blocks_global * sizeof(int);
 
-  dpi->eb_id_global             = smalloc(len);
+  dpi->eb_id_global = smalloc(len);
   memcpy(dpi->eb_id_global, exo->eb_id, len);
-
-  dpi->eb_num_elems_global      = smalloc(len);
-  memcpy(dpi->eb_num_elems_global, exo->eb_num_elems, len);
 
   /*
    * Allocate and fill arrays for node sets...
@@ -1634,28 +928,16 @@ exo_dpi_clone(Exo_DB *exo,
 
   len = dpi->num_node_sets_global * sizeof(int);
 
-  dpi->ns_id_global             = smalloc(len);
+  dpi->ns_id_global = smalloc(len);
   memcpy(dpi->ns_id_global, exo->ns_id, len);
-
-  dpi->ns_num_nodes_global      = smalloc(len);
-  memcpy(dpi->ns_num_nodes_global, exo->ns_num_nodes, len);
-
-  dpi->ns_num_distfacts_global  = smalloc(len);
-  memcpy(dpi->ns_num_distfacts_global, exo->ns_num_distfacts, len);
 
   /*
    * Allocate and fill arrays for side sets...
    */
   len = dpi->num_side_sets_global * sizeof(int);
-  
-  dpi->ss_id_global             = smalloc(len);
+
+  dpi->ss_id_global = smalloc(len);
   memcpy(dpi->ss_id_global, exo->ss_id, len);
-
-  dpi->ss_num_sides_global      = smalloc(len);
-  memcpy(dpi->ss_num_sides_global, exo->ss_num_sides, len);
-
-  dpi->ss_num_distfacts_global  = smalloc(len);
-  memcpy(dpi->ss_num_distfacts_global, exo->ss_num_distfacts, len);
 
   return;
 }

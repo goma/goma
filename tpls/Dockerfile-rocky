@@ -1,0 +1,33 @@
+FROM rockylinux:8.9
+
+RUN dnf update -y
+RUN dnf install -y git patch gcc-toolset-13 m4 make bzip2 tar zlib-devel openssl-devel pkgconfig python3-devel findutils
+
+RUN git clone https://github.com/goma/goma /opt/goma
+
+RUN . /opt/rh/gcc-toolset-13/enable && \
+    PYTHONUNBUFFERED=1 /opt/goma/tpls/install-tpls.py --cc=gcc --cxx=g++ --fc=gfortran --download-dir=/tmp/downloads -j 32 --extract-dir=/tmp/extract /opt/goma-libs
+
+RUN rm -r /opt/goma
+RUN rm -r /tmp/downloads
+RUN rm -r /tmp/extract
+RUN rm -r /opt/goma-libs/logs
+
+RUN { \
+      echo '#!/usr/bin/env bash' \
+      && echo ". /opt/rh/gcc-toolset-13/enable" \
+      && echo ". /opt/goma-libs/config.sh" \
+      && echo 'exec "$@"'; \
+    } > /entrypoint.sh \
+&& chmod a+x /entrypoint.sh
+
+ENV OMPI_MCA_btl "^vader"
+ENV OMPI_MCA_btl_base_warn_component_unuse "0"
+ENV OMPI_ALLOW_RUN_AS_ROOT 1
+ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM 1
+WORKDIR /opt/workdir
+
+ENTRYPOINT [ "/entrypoint.sh" ]
+CMD [ "/bin/bash" ]
+
+

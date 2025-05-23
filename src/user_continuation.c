@@ -2,54 +2,28 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
- 
-
-#ifdef USE_RCSID
-static const char rcsid[] = "$Id: user_continuation.c,v 5.3 2008-03-22 00:55:51 hkmoffa Exp $";
-#endif
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 
 /* GOMA include files */
 
-#include "std.h"
-#include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
-#include "el_elm.h"
-#include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
+#include "ac_update_parameter.h"
+#include "dp_types.h"
+#include "dpi.h"
+#include "exo_struct.h"
 #include "mm_as.h"
-
-#include "mm_mp.h"
-#include "mm_mp_structs.h"
-#include "mm_mp_const.h"
-
+#include "mm_as_structs.h"
 #include "mm_eh.h"
-#include "mm_flux.h"
+#include "std.h"
 
-#include "mm_flux.h"
-
-#define _USER_AC_C
-#include "goma.h"
+#define GOMA_USER_AC_C
 #include "user_continuation.h"
 
 #define BC 1
@@ -57,9 +31,13 @@ static const char rcsid[] = "$Id: user_continuation.c,v 5.3 2008-03-22 00:55:51 
 #define AC 3
 #define UM 4
 
-void
-update_user_parameter(double lambda, double *x, double *xdot, double *x_AC,
-                      Comm_Ex *cx, Exo_DB *exo, Dpi *dpi)
+void update_user_parameter(double lambda MAYBE_UNUSED,
+                           double *x MAYBE_UNUSED,
+                           double *xdot MAYBE_UNUSED,
+                           double *x_AC MAYBE_UNUSED,
+                           Comm_Ex *cx MAYBE_UNUSED,
+                           Exo_DB *exo MAYBE_UNUSED,
+                           Dpi *dpi MAYBE_UNUSED)
 /************************************************************************
  *                                                                      *
  *    Created by Ed Wilkes 11/28/2001					*
@@ -216,43 +194,40 @@ update_user_parameter(double lambda, double *x, double *xdot, double *x_AC,
 
 /* Actual function begins here */
 {
- // static int first_cp = 1;
- // int first_tp = -1;
- // int n = 0;
- // int Type, BCID, DFID, MTID, MPID, MDID;
- // double value;
-/* Declare any additional variables here */
+  // static int first_cp = 1;
+  // int first_tp = -1;
+  // int n = 0;
+  // int Type, BCID, DFID, MTID, MPID, MDID;
+  // double value;
+  /* Declare any additional variables here */
 
+  /* If using this function, comment out this line. */
+  GOMA_EH(GOMA_ERROR, "No user continuation conditions entered!");
 
-/* If using this function, comment out this line. */
-  EH(-1, "No user continuation conditions entered!");
+  /* Evaluate any intermediate quantities and/or assign constants here */
 
+  /* Enter each continuation condition in sequence in this space */
 
-/* Evaluate any intermediate quantities and/or assign constants here */
+  /* ID's */
 
+  /* Value */
 
-/* Enter each continuation condition in sequence in this space */
+  /* Update call - copy from example */
 
-
-/* ID's */
-
-
-/* Value */
-
-
-/* Update call - copy from example */
-
-
-/* Done */
- // first_cp = 0;
+  /* Done */
+  // first_cp = 0;
   return;
 
 } /* END of routine update_user_parameter */
 /****************************************************************************/
 
-void
-update_user_TP_parameter(double lambda, double *x, double *xdot,
-                         double *x_AC, Comm_Ex *cx, Exo_DB *exo, Dpi *dpi)
+void update_user_TP_parameter(double lambda MAYBE_UNUSED,
+                              double *x MAYBE_UNUSED,
+                              double *xdot MAYBE_UNUSED,
+                              double *x_AC MAYBE_UNUSED,
+                              Comm_Ex *cx MAYBE_UNUSED,
+                              Exo_DB *exo MAYBE_UNUSED,
+                              Dpi *dpi MAYBE_UNUSED)
 /*
  * This function handles updates to the second (TP) parameter
  * when LOCA bifurcation tracking algorithms (turning point,
@@ -268,46 +243,47 @@ update_user_TP_parameter(double lambda, double *x, double *xdot,
  */
 
 {
-/* Actual function begins here (refer to previous example) */
-  //static int first_tp = 1;
-  // int first_cp = -1;
-  // int n = 0;
-  // int Type, BCID, DFID, MTID, MPID, MDID;
-  // double value;
-/* Declare any additional variables here */
+  /* Actual function begins here (refer to previous example) */
+  // static int first_tp = 1;
+  //  int first_cp = -1;
+  //  int n = 0;
+  //  int Type, BCID, DFID, MTID, MPID, MDID;
+  //  double value;
+  /* Declare any additional variables here */
 
+  /* If using this function, comment out this line. */
+  GOMA_EH(GOMA_ERROR, "No user TP continuation conditions entered!");
 
-/* If using this function, comment out this line. */
-  EH(-1, "No user TP continuation conditions entered!");
+  /* Evaluate any intermediate quantities and/or assign constants here */
 
+  /* Enter each continuation condition in sequence in this space */
 
-/* Evaluate any intermediate quantities and/or assign constants here */
+  /* ID's */
 
+  /* Value */
 
-/* Enter each continuation condition in sequence in this space */
+  /* Update call - copy from example */
 
-
-/* ID's */
-
-
-/* Value */
-
-
-/* Update call - copy from example */
-
-
-/* Done */
-  //first_tp = 0;
+  /* Done */
+  // first_tp = 0;
   return;
 
 } /* END of routine update_user_TP_parameter */
 /****************************************************************************/
 
-
-int
-do_user_update(int n, int first_cp, int first_tp,
-               int Type, int BCID, int DFID, int MTID, int MPID, int MDID,
-               double value, Comm_Ex *cx, Exo_DB *exo, Dpi *dpi)
+int do_user_update(int n,
+                   int first_cp,
+                   int first_tp,
+                   int Type,
+                   int BCID,
+                   int DFID,
+                   int MTID,
+                   int MPID,
+                   int MDID,
+                   double value,
+                   Comm_Ex *cx,
+                   Exo_DB *exo,
+                   Dpi *dpi)
 /*
  * This function calls the appropriate parameter update function
  * for each user-defined continuation condition type and saves
@@ -315,112 +291,92 @@ do_user_update(int n, int first_cp, int first_tp,
  * the ID's are also saved. The incremented function counter is returned.
  */
 {
-  int param_type = -1;    /* 1 = first (CP), 2 = second (TP) */
+  int param_type = -1; /* 1 = first (CP), 2 = second (TP) */
 
-/* Determine which parameter is being updated */
-  if (first_cp >= 0 && first_tp == -1)
-    {
-      param_type = 1;
-    }
-  else if (first_tp >= 0 && first_cp == -1)
-    {
-      param_type = 2;
-    }
-  else
-    {
-      EH(-1, "User parameter type settings inconsistent!");
-    }
+  /* Determine which parameter is being updated */
+  if (first_cp >= 0 && first_tp == -1) {
+    param_type = 1;
+  } else if (first_tp >= 0 && first_cp == -1) {
+    param_type = 2;
+  } else {
+    GOMA_EH(GOMA_ERROR, "User parameter type settings inconsistent!");
+  }
 
-/* Store new and old values */
-  if (param_type == 1)
-    {
-      cpuc[n].old_value = cpuc[n].value;
-      cpuc[n].value = value;
-    }
-  else if (param_type == 2)
-    {
-      tpuc[n].old_value = tpuc[n].value;
-      tpuc[n].value = value;
-    }
+  /* Store new and old values */
+  if (param_type == 1) {
+    cpuc[n].old_value = cpuc[n].value;
+    cpuc[n].value = value;
+  } else if (param_type == 2) {
+    tpuc[n].old_value = tpuc[n].value;
+    tpuc[n].value = value;
+  }
 
-/* Call the appropriate update function */
+  /* Call the appropriate update function */
   switch (Type) {
-    case BC:
-      update_BC_parameter(value, BCID, DFID, cx, exo, dpi);
+  case BC:
+    update_BC_parameter(value, BCID, DFID, cx, exo, dpi);
 
-/* Store ID info on first call */
-      if (first_cp == 1)
-        {
-          cpuc[n].Type = 1;
-          cpuc[n].BCID = BCID;
-          cpuc[n].DFID = DFID;
-        }
-      else if (first_tp == 1)
-        {
-          tpuc[n].Type = 1;
-          tpuc[n].BCID = BCID;
-          tpuc[n].DFID = DFID;
-        }
-      break;
-
-    case MT:
-      update_MT_parameter(value, MTID-1, MPID, MDID, cx, exo, dpi);
-
-/* Store ID info on first call */
-      if (first_cp == 1)
-        {
-          cpuc[n].Type = 2;
-          cpuc[n].MTID = MTID-1;
-          cpuc[n].MPID = MPID;
-        }
-      else if (first_tp == 1)
-        {
-          tpuc[n].Type = 2;
-          tpuc[n].MTID = MTID-1;
-          tpuc[n].MPID = MPID;
-        }
-      break;
-
-    case AC:
-      update_AC_parameter(value, BCID, DFID, cx, exo, dpi);
-
-/* Store ID info on first call */
-      if (first_cp == 1)
-        {
-          cpuc[n].Type = 3;
-          cpuc[n].BCID = BCID;
-          cpuc[n].DFID = DFID;
-        }
-      else if (first_tp == 1)
-        {
-          tpuc[n].Type = 3;
-          tpuc[n].BCID = BCID;
-          tpuc[n].DFID = DFID;
-        }
-      break;
-
-    case UM:
-      update_UM_parameter(value, MTID-1, MPID, MDID, cx, exo, dpi);
-
-/* Store ID info on first call */
-      if (first_cp == 1)
-        {
-          cpuc[n].Type = 4;
-          cpuc[n].MTID = MTID-1;
-          cpuc[n].MPID = MPID;
-          cpuc[n].MDID = MDID;
-        }
-      else if (first_tp == 1)
-        {
-          tpuc[n].Type = 4;
-          tpuc[n].MTID = MTID-1;
-          tpuc[n].MPID = MPID;
-          tpuc[n].MDID = MDID;
-        }
-      break;
+    /* Store ID info on first call */
+    if (first_cp == 1) {
+      cpuc[n].Type = 1;
+      cpuc[n].BCID = BCID;
+      cpuc[n].DFID = DFID;
+    } else if (first_tp == 1) {
+      tpuc[n].Type = 1;
+      tpuc[n].BCID = BCID;
+      tpuc[n].DFID = DFID;
     }
+    break;
 
-/* Update counter and return */
+  case MT:
+    update_MT_parameter(value, MTID - 1, MPID, MDID, cx, exo, dpi);
+
+    /* Store ID info on first call */
+    if (first_cp == 1) {
+      cpuc[n].Type = 2;
+      cpuc[n].MTID = MTID - 1;
+      cpuc[n].MPID = MPID;
+    } else if (first_tp == 1) {
+      tpuc[n].Type = 2;
+      tpuc[n].MTID = MTID - 1;
+      tpuc[n].MPID = MPID;
+    }
+    break;
+
+  case AC:
+    update_AC_parameter(value, BCID, DFID, cx, exo, dpi);
+
+    /* Store ID info on first call */
+    if (first_cp == 1) {
+      cpuc[n].Type = 3;
+      cpuc[n].BCID = BCID;
+      cpuc[n].DFID = DFID;
+    } else if (first_tp == 1) {
+      tpuc[n].Type = 3;
+      tpuc[n].BCID = BCID;
+      tpuc[n].DFID = DFID;
+    }
+    break;
+
+  case UM:
+    update_UM_parameter(value, MTID - 1, MPID, MDID, cx, exo, dpi);
+
+    /* Store ID info on first call */
+    if (first_cp == 1) {
+      cpuc[n].Type = 4;
+      cpuc[n].MTID = MTID - 1;
+      cpuc[n].MPID = MPID;
+      cpuc[n].MDID = MDID;
+    } else if (first_tp == 1) {
+      tpuc[n].Type = 4;
+      tpuc[n].MTID = MTID - 1;
+      tpuc[n].MPID = MPID;
+      tpuc[n].MDID = MDID;
+    }
+    break;
+  }
+
+  /* Update counter and return */
   n++;
   return n;
 }

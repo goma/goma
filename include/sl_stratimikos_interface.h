@@ -5,8 +5,23 @@
 extern "C" {
 #endif
 
-int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
-    double *b_, int *iterations, char *stratimikos_file);
+#include "mm_as_structs.h"
+#include "rf_fem_const.h"
+#include "rf_io_const.h"
+
+int stratimikos_solve_tpetra(struct GomaLinearSolverData *ams,
+                             double *x_,
+                             double *b_,
+                             int *iterations,
+                             char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
+                             int imtrx);
+
+int stratimikos_solve(struct GomaLinearSolverData *ams,
+                      double *x_,
+                      double *b_,
+                      int *iterations,
+                      char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT],
+                      int imtrx);
 
 #ifdef __cplusplus
 } // end of extern "C"

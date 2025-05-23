@@ -2,14 +2,15 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
- 
 
 /*
  *$Id: rf_fill_const.h,v 5.1 2007-09-18 18:53:46 prschun Exp $
@@ -171,48 +172,44 @@
  *
  */
 
-#ifndef _RF_FILL_CONST_H
-#define _RF_FILL_CONST_H
+#ifndef GOMA_RF_FILL_CONST_H
+#define GOMA_RF_FILL_CONST_H
 
 #ifndef EXTERN
 #define EXTERN extern
 #endif
 
-double
-calc_surf_det
-   PROTO (( int,                      /* ielem  */
-            int,                      /* iconnect_ptr */
-            int,                      /* nodes_per_elem  */
-            int,                      /* ielem_surf_dim  */
-            int,                      /* id_side  */
-            int,                      /* num_nodes_on_side */
-            int [] ));                /* local_elem_node_id [] */
+double calc_surf_det(int,    /* ielem  */
+                     int,    /* iconnect_ptr */
+                     int,    /* nodes_per_elem  */
+                     int,    /* ielem_surf_dim  */
+                     int,    /* id_side  */
+                     int,    /* num_nodes_on_side */
+                     int[]); /* local_elem_node_id [] */
 
-void
-fill_surf_shape
-   PROTO (( int,      /* num_local_nodes, number of nodes in this element   */
-            int,      /* ielem_surf_dim, physical dimension of element surface */
-            int,       /* ielem_type, type-code for this element              */
-            double [], /* phi[], vector of shape functions for this element   */
-            double [][MAX_PDIM],  /* grad_phi_L[MDE][MAX_PDIM],
-                                   Gradients of shape functions for this element.
-				   Note, this function refers to coordinates 
-				   alpha and beta (if 3D), i.e., the
-				   coordinates of the surface parameterization
-				   and NOT the local element coordinates.     */
-            double,           /* alpha   current integration point            */
-            double,           /* beta    coordinates of the surface
-			                   alpha is used for 2D and 3D
-			                   beta  is used only for 3D	      */
-            int,              /* id_side,  identity of element side           */
-            int,              /* num_nodes_on_side, number of nodes on element side */
-            int [] ));        /* local_elem_node_id[], vector containing id's
-                                   of local element nodes on the current side */
+void fill_surf_shape(int,                /* num_local_nodes, number of nodes in this element   */
+                     int,                /* ielem_surf_dim, physical dimension of element surface */
+                     int,                /* ielem_type, type-code for this element              */
+                     double[],           /* phi[], vector of shape functions for this element   */
+                     double[][MAX_PDIM], /* grad_phi_L[MDE][MAX_PDIM],
+                                          Gradients of shape functions for this element.
+                                          Note, this function refers to coordinates
+                                          alpha and beta (if 3D), i.e., the
+                                          coordinates of the surface parameterization
+                                          and NOT the local element coordinates.     */
+                     double,             /* alpha   current integration point            */
+                     double,             /* beta    coordinates of the surface
+                                                      alpha is used for 2D and 3D
+                                                      beta  is used only for 3D	      */
+                     int,                /* id_side,  identity of element side           */
+                     int,                /* num_nodes_on_side, number of nodes on element side */
+                     int[]);             /* local_elem_node_id[], vector containing id's
+                                               of local element nodes on the current side */
 
 #if 0
 void
 alloc_sparse_arrays
-   PROTO (( int **,           /* **ija, column pointer array                  */
+   ( int **,           /* **ija, column pointer array                  */
             double **,        /* **a, nonzero array                           */
             double **,        /* **a_old, nonzero array                           */
             int,              /* Fill, flag to allocate space for either the
@@ -220,31 +217,28 @@ alloc_sparse_arrays
             int [],		/* node_to_fill[]                             */
 	    Exo_DB *,		/* exo - ptr to whole mesh data */
 
-	    Dpi *));		/* dpi - distr proc info */
+	    Dpi *);		/* dpi - distr proc info */
 #endif
 #if 0
 void
 set_diag_to_one
-   PROTO (( int,              /* I, Global node number                        */
+   ( int,              /* I, Global node number                        */
             int,              /* var_type, identity of equation on the global node  */
             int,              /* var_type_subindex, subindex of variable type var_type */
-            struct Aztec_Linear_Solver_System * ));     /* a[],  nonzero array                          */
+            struct Aztec_Linear_Solver_System * );     /* a[],  nonzero array                          */
 #endif
 
 /*************** PROTOTYPE FUNCTIONS FOR  rf_fill_terms.c ********************/
 
-
-double
-Ysurf_quad
-   PROTO (( double [],                      /* x[]  */
-            double [],                      /* phi[MDE]  */
-            struct elem_side_bc_struct *,   /* *elem_side_bc  */
-            int   ));                       /* w  */
+double Ysurf_quad(double[],                     /* x[]  */
+                  double[],                     /* phi[MDE]  */
+                  struct elem_side_bc_struct *, /* *elem_side_bc  */
+                  int);                         /* w  */
 
 #if 0 /* old */
 void 
 fvelo_tangential_bc
-   PROTO (( double *,         /* *func,   */
+   ( double *,         /* *func,   */
             double [][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                               /*  d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE] */
             double [],        /* x[]  */
@@ -255,7 +249,7 @@ fvelo_tangential_bc
             double *,         /* *xsurf  */
             double *,         /* *x_dot  */
             double,           /* tt  */
-            double  ));       /* dt  */
+            double  );       /* dt  */
 #endif
 
 #endif

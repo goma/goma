@@ -2,14 +2,16 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
-// 
+//
 /*
  * $Id: ac_particles.h,v 5.1 2007-09-18 18:53:40 prschun Exp $
  */
@@ -18,31 +20,39 @@
  * Copyright (C) 2001 Sandia National Laboratories
  */
 
-#ifndef _AC_PARTICLES_H
-#define _AC_PARTICLES_H
+#ifndef GOMA_AC_PARTICLES_H
+#define GOMA_AC_PARTICLES_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _AC_PARTICLES_C
+#ifdef GOMA_AC_PARTICLES_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _AC_PARTICLES_C
+#include <stdio.h>
+
+#include "ac_stability_util.h"
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "std.h"
+#include "stdio.h"
+
+#ifndef GOMA_AC_PARTICLES_C
 #define EXTERN extern
 #endif
 
-#define MAX_DATA_REAL_VALUES                 3
-#define MAX_DATA_INT_VALUES                  1
-#define MAX_PBC_REAL_VALUES                  5
-#define MAX_PBC_INT_VALUES                   5
-#define MAX_DOMAIN_REAL_VALUES               6
-#define MAX_PARTICLE_MODEL_DATA_VALUES       7
+#define MAX_DATA_REAL_VALUES                3
+#define MAX_DATA_INT_VALUES                 1
+#define MAX_PBC_REAL_VALUES                 5
+#define MAX_PBC_INT_VALUES                  5
+#define MAX_DOMAIN_REAL_VALUES              6
+#define MAX_PARTICLE_MODEL_DATA_VALUES      7
 #define MAX_PBC_STRING_DATA_LENGTH          80
 #define MAX_PARTICLE_OUTPUT_VARIABLE_LENGTH 12
 #define MAX_PARTICLE_FILENAME_LENGTH        80
-#define MAX_PARTICLE_STRING_LENGTH         255
+#define MAX_PARTICLE_STRING_LENGTH          255
 
 #define XI_BOUNDARY_TOLERANCE0 1.0e-8
 #define XI_BOUNDARY_TOLERANCE1 1.0e-12
@@ -59,19 +69,29 @@
 /*
 #define dump(ec, p, ...) dump_fcn(__FILE__, __LINE__, ec, p, __VA_ARGS__)
 */
-#define dump1(ec, p, x1) dump_fcn(__FILE__, __LINE__, ec, p, x1)
-#define dump2(ec, p, x1,x2) dump_fcn(__FILE__, __LINE__, ec, p, x1,x2)
-#define dump3(ec, p, x1,x2,x3) dump_fcn(__FILE__, __LINE__, ec, p, x1,x2,x3)
-#define dump4(ec, p, x1,x2,x3,x4) dump_fcn(__FILE__, __LINE__, ec, p, x1,x2,x3,x4)
-#define dump10(ec, p, x1,x2,x3,x4,x5,x6,x7,x8,x9,x10) dump_fcn(__FILE__, __LINE__, ec, p, x1,x2,x3,x4,x5,x6,x7,x8,x9,x10)
-#define dump20(ec, p, x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,x17,x18,x19,x20) dump_fcn(__FILE__, __LINE__, ec, p, x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,x17,x18,x19,x20)
+#define dump1(ec, p, x1)             dump_fcn(__FILE__, __LINE__, ec, p, x1)
+#define dump2(ec, p, x1, x2)         dump_fcn(__FILE__, __LINE__, ec, p, x1, x2)
+#define dump3(ec, p, x1, x2, x3)     dump_fcn(__FILE__, __LINE__, ec, p, x1, x2, x3)
+#define dump4(ec, p, x1, x2, x3, x4) dump_fcn(__FILE__, __LINE__, ec, p, x1, x2, x3, x4)
+#define dump10(ec, p, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) \
+  dump_fcn(__FILE__, __LINE__, ec, p, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10)
+#define dump20(ec, p, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17,  \
+               x18, x19, x20)                                                                      \
+  dump_fcn(__FILE__, __LINE__, ec, p, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, \
+           x15, x16, x17, x18, x19, x20)
 
-enum Particle_Model_t { NO_PARTICLE_MODEL,
-			TRACER_EXPLICIT, TRACER_IMPLICIT,
-			INERTIAL_TRACER_EXPLICIT, INERTIAL_TRACER_IMPLICIT,
-			SWIMMER_EXPLICIT, SWIMMER_IMPLICIT,
-                        CHARGED_TRACER_EXPLICIT, CHARGED_TRACER_IMPLICIT,
-			DIELECTROPHORETIC_TRACER_IMPLICIT};
+enum Particle_Model_t {
+  NO_PARTICLE_MODEL,
+  TRACER_EXPLICIT,
+  TRACER_IMPLICIT,
+  INERTIAL_TRACER_EXPLICIT,
+  INERTIAL_TRACER_IMPLICIT,
+  SWIMMER_EXPLICIT,
+  SWIMMER_IMPLICIT,
+  CHARGED_TRACER_EXPLICIT,
+  CHARGED_TRACER_IMPLICIT,
+  DIELECTROPHORETIC_TRACER_IMPLICIT
+};
 
 enum Particle_Output_Format_t { FLAT_TEXT, TECPLOT };
 
@@ -122,8 +142,10 @@ typedef struct p_t {
 typedef struct {
   int *PBC_side_id;
 #ifdef PARALLEL
-  int *owner_local_element_id;  /* On other side of face on processor boundary, what's the owner's local element id? */
-  int *ghost_proc;		/* What processors and their local element id's do these particles need to be sent to? */
+  int *owner_local_element_id; /* On other side of face on processor boundary, what's the owner's
+                                  local element id? */
+  int *ghost_proc; /* What processors and their local element id's do these particles need to be
+                      sent to? */
   int *ghost_local_elem_id;
   int num_ghost_target_elems;
 #endif
@@ -170,31 +192,22 @@ extern dbl Particle_Move_Domain_Reals[MAX_DOMAIN_REAL_VALUES];
 
 extern dbl xi_boundary_tolerances[3];
 
-
 extern int Particle_Number_PBCs;
 extern PBC_t *PBCs;
 
-EXTERN void initialize_particles
-PROTO((const Exo_DB *,
-       dbl * const,
-       dbl * const,
-       dbl * const,
-       dbl * const,
-       dbl * const));
+EXTERN void
+initialize_particles(const Exo_DB *, dbl *const, dbl *const, dbl *const, dbl *const, dbl *const);
 
-EXTERN int compute_particles
-PROTO((const Exo_DB *,
-       dbl * const,
-       dbl * const,
-       dbl * const,
-       dbl * const,
-       dbl * const,
-       const dbl,
-       const dbl,
-       const int));
+EXTERN int compute_particles(const Exo_DB *,
+                             dbl *const,
+                             dbl *const,
+                             dbl *const,
+                             dbl *const,
+                             dbl *const,
+                             const dbl,
+                             const dbl,
+                             const int);
 
-EXTERN void rd_particle_specs	/* mm_input_particles.c */
-PROTO((FILE *,
-       char *));
-#endif /* _AC_PARTICLES_H */
-
+EXTERN void rd_particle_specs /* mm_input_particles.c */
+    (FILE *, char *);
+#endif /* GOMA_AC_PARTICLES_H */

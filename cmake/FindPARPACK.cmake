@@ -1,0 +1,11 @@
+
+find_library(
+  PARPACK_LIBRARIES
+  NAMES parpack
+  HINTS ${ARPACK_PREFIX}/ARPACK/lib ${ARPACK_PREFIX}/ARPACK
+        ${ARPACK_PREFIX}/lib ${ARPACK_PREFIX} $ENV{ARPACKDIR} $ENV{ARPACKD_DIR}
+        $ENV{ARPACKDIR}/lib $ENV{ARPACK_DIR}/lib ${LIB_INSTALL_DIR}
+  PATH_SUFFIXES lib)
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(PARPACK DEFAULT_MSG PARPACK_LIBRARIES)
