@@ -3102,7 +3102,7 @@ int Free_Vol_Theory_Diffusivity(int species_no, /* current species number*/
 
   case SPECIES_MOLE_FRACTION:
   default:
-    EH(-1, "Undefined Species formulation in FREE_VOL_DIFFUSIVITY\n");
+    GOMA_EH(GOMA_ERROR, "Undefined Species formulation in FREE_VOL_DIFFUSIVITY\n");
     break;
   }
 
@@ -3160,13 +3160,13 @@ int Free_Vol_Theory_Diffusivity(int species_no, /* current species number*/
     break;
 
   default:
-    EH(-1, "Invalid Free Volume model number.");
+    GOMA_EH(-1, "Invalid Free Volume model number.");
     break;
 
   } /* end of switch(fv_model_number) */
 
   if (af->Assemble_Jacobian) {
-    if (pd->v[TEMPERATURE]) {
+    if (pd->v[pg->imtrx][TEMPERATURE]) {
 
       if (fv_model_number != 4) {
         dDdT = mp->diffusivity[0] * ((C[0] * V_1s + C[1] * x_si * V_2s) / pow(V_fh_gamma, 2.0)) *
@@ -3192,7 +3192,7 @@ int Free_Vol_Theory_Diffusivity(int species_no, /* current species number*/
       }
     }
 
-    if (pd->v[MASS_FRACTION]) {
+    if (pd->v[pg->imtrx][MASS_FRACTION]) {
       /* FOR NOW ONLY ALLOW 2 COMPONENT SYSTEMS, I.E. 1 SPECIES EQUATION) */
 #if 0
 	  d_vol_frac_1_dC[0] = ((C[0]*V_10 + C[1]*V_20)*V_10 - C[0]*V_10*(V_10-V_20))
@@ -3347,7 +3347,7 @@ int sediment_compress_diffusivity(int species_no, /* current species number*/
     break;
 
   default:
-    EH(-1, "That Material Species Type is not supported");
+    GOMA_EH(-1, "That Material Species Type is not supported");
     break;
   }
 
@@ -3469,7 +3469,7 @@ int Bruggemann_diffusivity(int species_no, /* current species number*/
     break;
 
   default:
-    EH(-1, "That Material Species Type is not supported");
+    GOMA_EH(-1, "That Material Species Type is not supported");
     break;
   }
 
@@ -3648,7 +3648,7 @@ int Bruggemann_free_volume_diffusivity(int species_no, /* current species number
     domega_solv_dc_solv = mp->molar_volume[species_no] * mp->molecular_weight[species_no];
     break;
   default:
-    EH(-1, "That Material Species Type is not supported");
+    GOMA_EH(-1, "That Material Species Type is not supported");
     break;
   }
 
@@ -3825,7 +3825,7 @@ int hydro_sediment_flux(struct Species_Conservation_Terms *st, int w)
       break;
 
     default:
-      EH(-1, "That Material Species Type is not supported");
+      GOMA_EH(GOMA_ERROR, "That Material Species Type is not supported");
       break;
     }
     if (phi_part > 0.0) {
@@ -3854,7 +3854,7 @@ int hydro_sediment_flux(struct Species_Conservation_Terms *st, int w)
    *  Get diffusivity and Jacobian dependence on the diffusivity
    */
   if (Diffusivity())
-    EH(-1, "Error in Diffusivity.");
+    GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
   /*
    *  Add in rho or C depending upon species variable type
@@ -3876,11 +3876,11 @@ int hydro_sediment_flux(struct Species_Conservation_Terms *st, int w)
     for (a = 0; a < VIM; a++) {
       for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
         tmp = -coeff_rho * st->grad_Y[w][a] * mp->d_diffusivity[w][MAX_VARIABLE_TYPES + w1];
-        for (j = 0; j < ei->dof[var]; j++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           st->d_diff_flux_dc[w][a][w1][j] = tmp * phi_ptr[j];
         }
       }
-      for (j = 0; j < ei->dof[var]; j++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         st->d_diff_flux_dc[w][a][w][j] -= rhoD * bf[var]->grad_phi[j][a];
         st->d_diff_flux_dc[w][a][w][j] += dflux_settling_dC[a] * phi_ptr[j];
       }
@@ -3889,9 +3889,9 @@ int hydro_sediment_flux(struct Species_Conservation_Terms *st, int w)
     /* Sensitivity w.r.t. mesh displacement */
     for (q = 0; q < pd->Num_Dim; q++) {
       var = MESH_DISPLACEMENT1 + q;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         for (a = 0; a < VIM; a++) {
-          for (j = 0; j < ei->dof[var]; j++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             st->d_diff_flux_dmesh[w][a][q][j] = -rhoD * fv->d_grad_c_dmesh[a][w][q][j];
           }
         }
@@ -3903,7 +3903,7 @@ int hydro_sediment_flux(struct Species_Conservation_Terms *st, int w)
     phi_ptr = bf[var]->phi;
     for (a = 0; a < VIM; a++) {
       tmp = -coeff_rho * mp->d_diffusivity[w][var] * st->grad_Y[w][a];
-      for (j = 0; j < ei->dof[var]; j++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         st->d_diff_flux_dT[w][a][j] = tmp * phi_ptr[j];
       }
     }
@@ -4111,7 +4111,7 @@ int Generalized_FV_Diffusivity(int species_no) /* current species number*/
   case SPECIES_MOLE_FRACTION:
   case SPECIES_VOL_FRACTION:
   default:
-    EH(-1, "Undefined Species formulation in Generalized_FV_Diffusivity\n");
+    GOMA_EH(GOMA_ERROR, "Undefined Species formulation in Generalized_FV_Diffusivity\n");
     break;
   }
 
@@ -4172,7 +4172,7 @@ int Generalized_FV_Diffusivity(int species_no) /* current species number*/
     }
   }
   if (af->Assemble_Jacobian) {
-    if (pd->v[TEMPERATURE]) {
+    if (pd->v[pg->imtrx][TEMPERATURE]) {
       mp->d_diffusivity[species_no][TEMPERATURE] = 0.;
       /* As of 1/19/22, d_Dp_dT is assuming E_divR[i] = 0 Chance Parrish */
       d_Dp_dT[w2] = numerator[w2] / V_fh_gamma / V_fh_gamma * Dp[w2] * d_Vfh_dT;
@@ -4203,7 +4203,7 @@ int Generalized_FV_Diffusivity(int species_no) /* current species number*/
       }
     }
 
-    if (pd->v[MASS_FRACTION]) {
+    if (pd->v[pg->imtrx][MASS_FRACTION]) {
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
         d_Vfh_dc[w] = 0;
         for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {

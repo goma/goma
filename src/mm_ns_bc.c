@@ -15201,7 +15201,7 @@ void qrad_surf(double func[DIM],
     case SPECIES_MOLE_FRACTION:
     case SPECIES_VOL_FRACTION:
     default:
-      EH(-1, "Undefined Species formulation in Generalized_FV_Diffusivity\n");
+      GOMA_EH(-1, "Undefined Species formulation in Generalized_FV_Diffusivity\n");
       break;
     }
 

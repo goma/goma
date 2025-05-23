@@ -1279,7 +1279,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
           BC_Types[ibc].BC_Data_Int[2] = FLORY;
         } else if (!strcmp(input, "FLORY_CC")) {
           BC_Types[ibc].BC_Data_Int[2] = FLORY_CC;
-        } else if (!strcmp(input, "VLAR") {
+        } else if (!strcmp(input, "VLAR")) {
           BC_Types[ibc].BC_Data_Int[2] = VLAR;
         } else {
           GOMA_EH(GOMA_ERROR, "I don't recognize your YFLUX_EQUIL Keyword!");
