@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "bc/rotate_coordinates.h"
 #include "bc_contact.h"
 #include "dp_utils.h"
 #include "dpi.h"
@@ -45,6 +46,8 @@
 #include "mm_post_def.h"
 #include "rd_mesh.h"
 #include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "rf_io.h"
@@ -2007,7 +2010,7 @@ int load_bf_grad(void)
           }
         }
       } /* end of if v */
-    }   /* end of basis function loop. */
+    } /* end of basis function loop. */
   }
 
   return (status);
@@ -5454,4 +5457,103 @@ void vector_shape_function(Dpi *dpi,
     }
   } break;
   }
+}
+
+goma_error zero_strong_resid_side(struct Local_Element_Contributions *lec,
+                                  struct elem_side_bc_struct *elem_side_bc) {
+
+  int bc_input_id;
+  for (int ibc = 0; (bc_input_id = (int)elem_side_bc->BC_input_id[ibc]) != -1; ibc++) {
+    /*
+     *  Create a couple of pointers to cut down on the
+     *  amount of indirect addressing
+     */
+    BOUNDARY_CONDITION_STRUCT *bc = BC_Types + bc_input_id;
+    struct BC_descriptions *bc_desc = bc->desc;
+    int n_modes;
+    int stress_bc = 0;
+    if (bc_desc->equation == R_STRESS11) {
+      n_modes = vn->modes;
+      stress_bc = 1;
+    } else {
+      n_modes = 1;
+    }
+
+    if (!((bc_desc->method == STRONG_INT_SURF) || (bc_desc->method == COLLOCATE_SURF) ||
+          (bc_desc->method == STRONG_INT_NEDELEC))) {
+      continue;
+    }
+
+    for (int i = 0; i < elem_side_bc->num_nodes_on_side; i++) {
+
+      /* Find the local element node number for the current node */
+      int id = (int)elem_side_bc->local_elem_node_id[i];
+
+      int I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + id];
+      if (goma_automatic_rotations.automatic_rotations && (bc->desc->rotate != NO_ROT)) {
+        dbl xi[DIM];
+        int ielem_type = ei[pg->imtrx]->ielem_type;
+        find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
+
+        goma_error err = load_basis_functions(xi, bfd);
+        GOMA_EH(err, "problem from load_basis_functions");
+
+        err = beer_belly();
+        GOMA_EH(err, "beer_belly");
+        int ielem = ei[pg->imtrx]->ielem;
+        int iconnect_ptr = ei[pg->imtrx]->iconnect_ptr;
+        int num_local_nodes = ei[pg->imtrx]->num_local_nodes;
+        int ielem_dim = ei[pg->imtrx]->ielem_dim;
+
+        /* calculate the shape functions and their gradients */
+
+        /* calculate the determinant of the surface jacobian  and the normal to
+         * the surface all at one time */
+        surface_determinant_and_normal(
+            ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
+            (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
+      }
+      for (int mode = 0; mode < n_modes; mode++) {
+        /*
+         * Boundary condition may actually be a vector of
+         * bc's. Loop over that vector here.
+         */
+        for (int p = 0; p < bc_desc->vector; p++) {
+
+          int matID_apply;
+          int index_eq;
+          int eqn;
+          VARIABLE_DESCRIPTION_STRUCT *vd;
+          if (bc->BC_Name == LUB_KINEMATIC_BC) {
+            index_eq = bc_eqn_index(id, I, bc_input_id, map_mat_index(bc->BC_Data_Int[0]), p, &eqn,
+                                    &matID_apply, &vd);
+          } else if (stress_bc) {
+            index_eq = bc_eqn_index_stress(id, I, bc_input_id, ei[pg->imtrx]->mn, p, mode, &eqn,
+                                           &matID_apply, &vd);
+          } else {
+            index_eq =
+                bc_eqn_index(id, I, bc_input_id, ei[pg->imtrx]->mn, p, &eqn, &matID_apply, &vd);
+          }
+          int ldof_eqn;
+          if (index_eq >= 0) {
+            int ieqn = upd->ep[pg->imtrx][eqn];
+            if (goma_automatic_rotations.automatic_rotations && (bc->desc->rotate != NO_ROT)) {
+              ieqn = equation_index_auto_rotate(elem_side_bc, I, eqn, p, bc);
+            }
+            /*
+             * Obtain the first local variable degree of freedom
+             * at the current node, whether or not it actually an
+             * interpolating degree of freedom
+             */
+            ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
+            lec->R[LEC_R_INDEX(ieqn, ldof_eqn)] = 0.0;
+            if (af->Assemble_Jacobian)
+              zero_lec_row(lec->J, ieqn, ldof_eqn);
+          }
+        }
+      }
+    }
+  }
+
+  return GOMA_SUCCESS;
 }

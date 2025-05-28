@@ -54,6 +54,7 @@
 #include "mm_post_def.h"
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
+#include "polymer_time_const.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
@@ -218,6 +219,8 @@ int assemble_stress(dbl tt, /* parameter to vary time integration from
   dbl mup;
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
 
   dbl d_mup_dv_pj;
   dbl d_mup_dmesh_pj;
@@ -393,11 +396,7 @@ int assemble_stress(dbl tt, /* parameter to vary time integration from
     alpha = ve[mode]->alpha;
 
     /* get time constant */
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    }
+    lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
 
     /* get tensor dot products for future use */
 
@@ -1245,7 +1244,6 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
   dbl elasticMod = 0; /* elastic modulus -- needed for the modified Jeffreys model */
   dbl lambda =
       0; /* lambda1 + lambda2 -- this is just lambda1 unless using the modified Jeffreys model */
-  dbl d_lambda_dF[MDE];
   double xi;
   double d_xi_dF[MDE];
   dbl ucwt, lcwt; /* Upper convected derviative weight, Lower convected derivative weight */
@@ -1312,6 +1310,9 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
   dbl mup;
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
 
   SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
   SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
@@ -1572,17 +1573,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
     }
 
     /* get time constant */
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    } else if (ls != NULL && ve[mode]->time_constModel == VE_LEVEL_SET) {
-      double pos_lambda = ve[mode]->pos_ls.time_const;
-      double neg_lambda = ve[mode]->time_const;
-      double width = ls->Length_Scale;
-      err = level_set_property(neg_lambda, pos_lambda, width, &lambda, d_lambda_dF);
-      GOMA_EH(err, "level_set_property() failed for polymer time constant.");
-    }
+    lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
 
     xi = 0;
     if (ve[mode]->xiModel == CONSTANT) {
@@ -1811,10 +1802,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                   phi_j = bf[var]->phi[j];
 
                   mass = 0.;
-                  dbl d_lambda_dT = 0;
-                  if (jeffreysEnabled) {
-                    d_lambda_dT = d_mup->T[j] / elasticMod;
-                  }
+                  dbl d_lambda_dT = d_lam->T[j];
 
                   if (pd->TimeIntegration != STEADY) {
                     if (pd->e[pg->imtrx][eqn] & T_MASS) {
@@ -1879,7 +1867,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
                     d_mup_dv_pj = d_mup->v[p][j];
-                    dbl d_lambda_dv_pj = 0.;
+                    dbl d_lambda_dv_pj = d_lam->v[p][j];
                     if (jeffreysEnabled) {
                       d_lambda_dv_pj = d_mup_dv_pj / elasticMod;
                     }
@@ -1901,10 +1889,8 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
 
                         mass *=
                             pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * at * lambda * det_J * wt * h3;
-                        if (jeffreysEnabled) {
-                          mass += s_dot[a][b] * wt_func * pd->etm[pg->imtrx][eqn][(LOG2_MASS)] *
-                                  at * d_lambda_dv_pj * det_J * wt * h3;
-                        }
+                        mass += s_dot[a][b] * wt_func * pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * at *
+                                d_lambda_dv_pj * det_J * wt * h3;
                       }
                     }
 
@@ -2011,7 +1997,8 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                       source_a = 0.;
                       if (DOUBLE_NONZERO(alpha)) {
                         source_a = -s_dot_s[a][b] / (mup * mup);
-                        source_a *= wt_func * saramitoCoeff * alpha * lambda * d_mup_dv_pj;
+                        source_a *= wt_func * saramitoCoeff * alpha *
+                                    (d_lambda_dv_pj * mup + lambda * d_mup_dv_pj);
                       }
 
                       source_b = 0.;
@@ -2439,7 +2426,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                     if (pd->e[pg->imtrx][eqn] & T_MASS) {
 
                       mass = s_dot[a][b];
-                      mass *= d_lambda_dF[j];
+                      mass *= d_lam->F[j];
                       mass *= wt_func * at * det_J * wt;
                       mass *= h3;
                       mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
@@ -2449,7 +2436,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                   advection = 0.;
 
                   if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-                    if (d_lambda_dF[j] != 0.) {
+                    if (d_lam->F[j] != 0.) {
 
                       advection += v_dot_del_s[a][b] - x_dot_del_s[a][b];
                       if (ucwt != 0.)
@@ -2457,7 +2444,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                       if (lcwt != 0.)
                         advection += lcwt * (s_dot_gt[a][b] + g_dot_s[a][b]);
 
-                      advection *= d_lambda_dF[j];
+                      advection *= d_lam->F[j];
                       advection *= wt_func * at * det_J * wt * h3;
                       advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                     }
@@ -2481,7 +2468,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                       // product rule + exponential
                       source += Z *
                                 ((lambda * trace * d_eps_dF[j] * invmup) +
-                                 (d_lambda_dF[j] * trace * eps * invmup) -
+                                 (d_lam->F[j] * trace * eps * invmup) -
                                  (lambda * trace * eps * d_mup->F[j] * invmup * invmup)) *
                                 s[a][b];
                     }
@@ -2492,7 +2479,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                     if (alpha != 0.) {
                       source += s_dot_s[a][b] *
                                 (-alpha * lambda * d_mup->F[j] * invmup * invmup +
-                                 d_alpha_dF[j] * lambda * invmup + alpha * d_lambda_dF[j] * invmup);
+                                 d_alpha_dF[j] * lambda * invmup + alpha * d_lam->F[j] * invmup);
                     }
 
                     source *= wt_func * det_J * h3 * wt;
@@ -2602,7 +2589,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
         }
       }
     } /* End Assemble Jacobian */
-  }   /* End loop over modes */
+  } /* End loop over modes */
 
   return (status);
 }
@@ -2643,11 +2630,6 @@ int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data) {
   dbl d_grad_s_dmesh[DIM][DIM][DIM][DIM][MDE];
   dbl gt[DIM][DIM];
 
-  // Polymer viscosity
-  dbl mup;
-  VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
-  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-
   // Temperature shift
   dbl at = 0.0;
   dbl wlf_denom;
@@ -2656,6 +2638,8 @@ int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data) {
   dbl alpha;
   dbl lambda = 0;
   dbl d_lambda;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
   dbl eps;
   dbl Z = 1.0;
 
@@ -2773,18 +2757,11 @@ int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data) {
     // Load up constants and some pointers
     load_modal_pointers(mode, tt, dt, s, s_dot, grad_s, d_grad_s_dmesh);
 
-    // Polymer viscosity
-    mup = viscosity(ve[mode]->gn, gamma, d_mup);
-
     // Giesekus mobility parameter
     alpha = ve[mode]->alpha;
 
     // Polymer time constant
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    }
+    lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
 
     dbl xi = 0;
     if (ve[mode]->xiModel == CONSTANT) {
@@ -3080,10 +3057,10 @@ int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data) {
               lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][eqn], i)] +=
                   mass + advection + diffusion + source;
             } // i loop
-          }   // if a<=b
-        }     // b loop
-      }       // a loop
-    }         // if Residual
+          } // if a<=b
+        } // b loop
+      } // a loop
+    } // if Residual
   }
   return (status);
 }
@@ -3126,6 +3103,8 @@ int assemble_stress_log_conf_transient(dbl tt, dbl dt, PG_DATA *pg_data) {
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
 
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
   // Temperature shift
   dbl at = 0.0;
   dbl wlf_denom;
@@ -3257,11 +3236,7 @@ int assemble_stress_log_conf_transient(dbl tt, dbl dt, PG_DATA *pg_data) {
     alpha = ve[mode]->alpha;
 
     // Polymer time constant
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    }
+    lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
 
 #ifdef ANALEIG_PLEASE
     analytical_exp_s(fv_old->S[mode], exp_s, eig_values, R1, NULL);
@@ -3435,10 +3410,10 @@ int assemble_stress_log_conf_transient(dbl tt, dbl dt, PG_DATA *pg_data) {
               }
               lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][eqn], i)] += mass + advection + source;
             } // i loop
-          }   // if a<=b
-        }     // b loop
-      }       // a loop
-    }         // if Residual
+          } // if a<=b
+        } // b loop
+      } // a loop
+    } // if Residual
     if (af->Assemble_Jacobian) {
       for (a = 0; a < VIM; a++) {
         for (b = 0; b < VIM; b++) {
@@ -3498,10 +3473,10 @@ int assemble_stress_log_conf_transient(dbl tt, dbl dt, PG_DATA *pg_data) {
                 }
               }
             } // i loop
-          }   // if a<=b
-        }     // b loop
-      }       // a loop
-    }         // if Residual
+          } // if a<=b
+        } // b loop
+      } // a loop
+    } // if Residual
   }
   return (status);
 }
@@ -3752,7 +3727,7 @@ int assemble_stress_level_set(dbl tt,           /* parameter to vary time integr
 
     /* hardwire shear modulus for now */
     /* Gmod = 1000000.; */
-    Gmod = mup / ve[mode]->time_const;
+    Gmod = mup / ve[mode]->time_const_st->lambda0;
 
     /* get tensor dot products for future use */
     (void)tensor_dot(s, g, s_dot_g, VIM);
@@ -5261,11 +5236,11 @@ int assemble_surface_stress(Exo_DB *exo, /* ptr to basic exodus ii mesh informat
               }
               }
             } /* end check for right element */
-          }   /* end loop over sides of ins */
-        }     /*close if loop for BC_ID check */
-      }       /*close loop over all side sets */
-    }         /* end if loop over tables */
-  }           /* end loop over all bc's */
+          } /* end loop over sides of ins */
+        } /*close if loop for BC_ID check */
+      } /*close loop over all side sets */
+    } /* end if loop over tables */
+  } /* end loop over all bc's */
 
   num_zeros = 0;
 
@@ -5461,7 +5436,7 @@ int assemble_surface_stress(Exo_DB *exo, /* ptr to basic exodus ii mesh informat
                     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
                       phi_i = bf[eqn]->phi[i];
 
-                      rhs = phi_i * wt * fv->sdet * ve[mode]->time_const * vdotn *
+                      rhs = phi_i * wt * fv->sdet * ve[mode]->time_const_st->lambda0 * vdotn *
                             (s[a][b] - s_n[mode][a][b]);
 
                       lec->R[LEC_R_INDEX(peqn, i)] -= rhs;
@@ -5492,7 +5467,8 @@ int assemble_surface_stress(Exo_DB *exo, /* ptr to basic exodus ii mesh informat
                       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                         phi_j = bf[var]->phi[j];
 
-                        advection = wt * fv->sdet * vdotn * ve[mode]->time_const * phi_j * phi_i;
+                        advection = wt * fv->sdet * vdotn * ve[mode]->time_const_st->lambda0 *
+                                    phi_j * phi_i;
 
                         /* Work better without this?????, see PRS concern above
                            Or is this a correction ???*/
@@ -5500,8 +5476,8 @@ int assemble_surface_stress(Exo_DB *exo, /* ptr to basic exodus ii mesh informat
 
                         advection = 0;
                         if (vn->dg_J_model == FULL_DG && found_it) {
-                          advection =
-                              wt * fv->sdet * vdotn * ve[mode]->time_const * phi_v[j] * phi_i;
+                          advection = wt * fv->sdet * vdotn * ve[mode]->time_const_st->lambda0 *
+                                      phi_v[j] * phi_i;
 
                           if (Linear_Solver != FRONT) {
                             *J_S_S_v[mode][a][b][i][a][b][j] += advection;
@@ -5526,8 +5502,9 @@ int assemble_surface_stress(Exo_DB *exo, /* ptr to basic exodus ii mesh informat
                           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                             phi_j = bf[var]->phi[j];
 
-                            advection = phi_i * wt * fv->sdet * ve[mode]->time_const * phi_j *
-                                        fv->snormal[p] * alpha * (s[a][b] - s_n[mode][a][b]);
+                            advection = phi_i * wt * fv->sdet * ve[mode]->time_const_st->lambda0 *
+                                        phi_j * fv->snormal[p] * alpha *
+                                        (s[a][b] - s_n[mode][a][b]);
 
                             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] -= advection;
                           }
@@ -5552,8 +5529,8 @@ int assemble_surface_stress(Exo_DB *exo, /* ptr to basic exodus ii mesh informat
 
                             advection += fv->dsurfdet_dx[p][j] * vdotn;
 
-                            advection *=
-                                phi_i * wt * ve[mode]->time_const * (s[a][b] - s_n[mode][a][b]);
+                            advection *= phi_i * wt * ve[mode]->time_const_st->lambda0 *
+                                         (s[a][b] - s_n[mode][a][b]);
 
                             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] -= advection;
                           }
@@ -5875,7 +5852,7 @@ int neighbor_stress_table(Exo_DB *exo, /* ptr to basic exodus ii mesh informatio
         }
       }
     } /* close mode loop*/
-  }   /* close ip loop */
+  } /* close ip loop */
 
   status = 1;
   return (status);
@@ -6029,8 +6006,8 @@ void load_neighbor_pointers(Exo_DB *exo,
         }
       }
     }
-  } else if (strcmp(Matrix_Format, "epetra") == 0) {
-    GOMA_EH(GOMA_ERROR, "load_neighbor_pointers unsupported by epetra");
+  } else {
+    GOMA_EH(GOMA_ERROR, "load_neighbor_pointers unsupported by %s", Matrix_Format);
   }
 }
 /***************************************************************************/
@@ -7342,6 +7319,7 @@ int sqrt_conf_source(int mode,
   }
 
   switch (vn->ConstitutiveEquation) {
+  case WHITE_METZNER:
   case OLDROYDB: {
     for (int ii = 0; ii < VIM; ii++) {
       for (int jj = 0; jj < VIM; jj++) {
@@ -7427,6 +7405,70 @@ int sqrt_conf_source(int mode,
       }
     }
   } break;
+  case GIESEKUS: {
+    double d_alpha_dF[MDE];
+    double alpha = 0;
+    /* get Geisekus mobility parameter */
+    if (ve[mode]->alphaModel == CONSTANT) {
+      alpha = ve[mode]->alpha;
+    } else if (ls != NULL && ve[mode]->alphaModel == VE_LEVEL_SET) {
+      double pos_alpha = ve[mode]->pos_ls.alpha;
+      double neg_alpha = ve[mode]->alpha;
+      double width = ls->Length_Scale;
+      goma_error err = level_set_property(neg_alpha, pos_alpha, width, &alpha, d_alpha_dF);
+      GOMA_EH(err, "level_set_property() failed for mobility parameter.");
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown mobility parameter model");
+    }
+
+    dbl bdotb[DIM][DIM];
+    tensor_dot(b, b, bdotb, VIM);
+    dbl bdotbdotb[DIM][DIM];
+    tensor_dot(b, bdotb, bdotbdotb, VIM);
+
+    for (int ii = 0; ii < VIM; ii++) {
+      for (int jj = 0; jj < VIM; jj++) {
+        source_term[ii][jj] =
+            // (I + alpha * (C - I)) * (C - I)
+            // ((C-I) + alpha * (C - I)^2)
+            // ((C-I) + alpha * (C . C - 2 C + I . I))
+            // ((C-I) + alpha * (C . C - 2 C + I))
+            // 0.5 b^-1 ((b . b-I) + alpha * (b . b . b . b - 2 b . b + I))
+            // 0.5 ((b - b^-1) + alpha * (b . b . b - 2 b + b^-1))
+            0.5 * (((b[ii][jj] - binv[ii][jj])) +
+                   (alpha * (bdotbdotb[ii][jj] - 2.0 * b[ii][jj] + binv[ii][jj])));
+      }
+    }
+    if (af->Assemble_Jacobian) {
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              dbl db[DIM][DIM] = {{0.}};
+              db[p][q] = 1.0;
+              db[q][p] = 1.0;
+
+              dbl dbdotb[DIM][DIM];
+              dbl bdotdb[DIM][DIM];
+
+              tensor_dot(b, db, bdotdb, VIM);
+              tensor_dot(db, b, dbdotb, VIM);
+              dbl dbdotbdotb[DIM][DIM];
+              dbl bdotdbdotb[DIM][DIM];
+              dbl bdotbdotdb[DIM][DIM];
+              tensor_dot(b, bdotdb, bdotbdotdb, VIM);
+              tensor_dot(b, dbdotb, bdotdbdotb, VIM);
+              tensor_dot(dbdotb, b, dbdotbdotb, VIM);
+              d_source_term_db[ii][jj][p][q] =
+                  0.5 * (((db[ii][jj] - d_binv_db[ii][jj][p][q])) +
+                         (alpha * (bdotbdotdb[ii][jj] + bdotdbdotb[ii][jj] + dbdotbdotb[ii][jj] -
+                                   2.0 * db[ii][jj] + d_binv_db[ii][jj][p][q])));
+            }
+          }
+        }
+      }
+    }
+  } break;
   default:
     GOMA_EH(GOMA_ERROR, "Unknown Constitutive equation form for SQRT_CONF");
     break;
@@ -7467,7 +7509,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   int err;
   dbl alpha = 0;  /* This is the Geisekus mobility parameter */
   dbl lambda = 0; /* polymer relaxation constant */
-  dbl d_lambda_dF[MDE];
   double xi;
   double d_xi_dF[MDE];
   dbl eps = 0; /* This is the PTT elongation parameter */
@@ -7512,17 +7553,15 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   dbl d_grad_b_dmesh[DIM][DIM][DIM][DIM]
                     [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
 
-  dbl g[DIM][DIM];  /* velocity gradient tensor */
-  dbl gt[DIM][DIM]; /* transpose of velocity gradient tensor */
+  dbl g[DIM][DIM]; /* velocity gradient tensor */
 
   /* dot product tensors */
 
   dbl b_dot_g[DIM][DIM];
 
   /* polymer viscosity and derivatives */
-  dbl mup;
-  VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
-  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
 
   const bool saramitoEnabled =
       (vn->ConstitutiveEquation == SARAMITO_OLDROYDB || vn->ConstitutiveEquation == SARAMITO_PTT ||
@@ -7629,10 +7668,8 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
     for (int b = 0; b < VIM; b++) {
       if (evss_gradv) {
         g[a][b] = fv->grad_v[a][b];
-        gt[a][b] = fv->grad_v[b][a];
       } else {
         g[a][b] = fv->G[a][b];
-        gt[b][a] = g[a][b];
       }
     }
   }
@@ -7703,9 +7740,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
       }
     }
 
-    /* get polymer viscosity */
-    mup = viscosity(ve[mode]->gn, gamma, d_mup);
-
     if (saramitoEnabled == TRUE) {
       GOMA_EH(GOMA_ERROR, "Saramito not enabled sqrt");
     }
@@ -7725,17 +7759,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
     }
 
     /* get time constant */
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    } else if (ls != NULL && ve[mode]->time_constModel == VE_LEVEL_SET) {
-      double pos_lambda = ve[mode]->pos_ls.time_const;
-      double neg_lambda = ve[mode]->time_const;
-      double width = ls->Length_Scale;
-      err = level_set_property(neg_lambda, pos_lambda, width, &lambda, d_lambda_dF);
-      GOMA_EH(err, "level_set_property() failed for polymer time constant.");
-    }
+    lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
 
     xi = 0;
     if (ve[mode]->xiModel == CONSTANT) {
@@ -7992,19 +8016,20 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
                     if (pd->TimeIntegration != STEADY) {
                       if (pd->e[pg->imtrx][eqn] & T_MASS) {
+                        dbl mass_a = 0;
                         if (supg != 0.) {
-                          mass = supg * supg_terms.supg_tau * phi_j * bf[eqn]->grad_phi[i][p];
+                          mass_a = supg * supg_terms.supg_tau * phi_j * bf[eqn]->grad_phi[i][p];
 
                           for (w = 0; w < dim; w++) {
-                            mass += supg * supg_terms.d_supg_tau_dv[p][j] * v[w] *
-                                    bf[eqn]->grad_phi[i][w];
+                            mass_a += supg * supg_terms.d_supg_tau_dv[p][j] * v[w] *
+                                      bf[eqn]->grad_phi[i][w];
                           }
 
-                          mass *= b_dot[ii][jj];
+                          mass_a *= lambda * b_dot[ii][jj];
                         }
-
-                        mass *=
-                            pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * at * lambda * det_J * wt * h3;
+                        dbl mass_b = d_lam->v[p][j] * b_dot[ii][jj];
+                        mass = mass_a + mass_b;
+                        mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * at * det_J * wt * h3;
                       }
                     }
 
@@ -8030,9 +8055,13 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                           advection_b *= R_advection;
                         }
 
-                        advection_c = 0.;
-                        advection = advection_a + advection_b + advection_c;
-                        advection *= at * lambda * det_J * wt * h3;
+                        advection_c = v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
+                        advection_c -= b_dot_g[ii][jj];
+                        advection_c -= a_dot_b[ii][jj];
+                        advection_c *= wt_func;
+                        advection =
+                            lambda * (advection_a + advection_b) + d_lam->v[p][j] * advection_c;
+                        advection *= at * det_J * wt * h3;
                         advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                       }
                     }
@@ -8123,10 +8152,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                     source = 0.;
 
                     if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-                      source_a = -at * d_mup->C[w][j] * (g[ii][jj] + gt[ii][jj]);
-
-                      source_b = 0.;
-                      source = source_a + source_b;
+                      source = 0;
                       source *= wt_func * det_J * wt * h3;
                       source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                     }
@@ -8491,7 +8517,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                     if (pd->e[pg->imtrx][eqn] & T_MASS) {
 
                       mass = b_dot[ii][jj];
-                      mass *= d_lambda_dF[j];
+                      mass *= d_lam->F[j];
                       mass *= wt_func * at * det_J * wt;
                       mass *= h3;
                       mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
@@ -8501,10 +8527,10 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                   advection = 0.;
 
                   if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-                    if (d_lambda_dF[j] != 0.) {
+                    if (d_lam->F[j] != 0.) {
 
                       advection += R_advection;
-                      advection *= d_lambda_dF[j];
+                      advection *= d_lam->F[j];
                       advection *= wt_func * at * det_J * wt * h3;
                       advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                     }
@@ -8701,7 +8727,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
         }
       }
     } /* End Assemble Jacobian */
-  }   /* End loop over modes */
+  } /* End loop over modes */
 
   return (status);
 }
@@ -8797,7 +8823,7 @@ int conf_source(int mode,
       trace += c[i][i];
     }
 
-    dbl tau_D = ve[mode]->time_const;
+    dbl tau_D = ve[mode]->time_const_st->lambda0;
     dbl tau_R = ve[mode]->stretch_time;
     dbl beta = ve[mode]->CCR_coefficient;
     dbl n = ve[mode]->polymer_exponent;
@@ -8906,7 +8932,6 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
   int err;
   dbl alpha = 0;  /* This is the Geisekus mobility parameter */
   dbl lambda = 0; /* polymer relaxation constant */
-  dbl d_lambda_dF[MDE];
   double xi;
   double d_xi_dF[MDE];
   dbl ucwt, lcwt; /* Upper convected derviative weight, Lower convected derivative weight */
@@ -8967,6 +8992,8 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
   dbl mup;
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
 
   SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
   SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
@@ -9184,17 +9211,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
     }
 
     /* get time constant */
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    } else if (ls != NULL && ve[mode]->time_constModel == VE_LEVEL_SET) {
-      double pos_lambda = ve[mode]->pos_ls.time_const;
-      double neg_lambda = ve[mode]->time_const;
-      double width = ls->Length_Scale;
-      err = level_set_property(neg_lambda, pos_lambda, width, &lambda, d_lambda_dF);
-      GOMA_EH(err, "level_set_property() failed for polymer time constant.");
-    }
+    lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
 
     xi = 0;
     if (ve[mode]->xiModel == CONSTANT) {
@@ -9805,7 +9822,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                     if (pd->e[pg->imtrx][eqn] & T_MASS) {
 
                       mass = s_dot[a][b];
-                      mass *= d_lambda_dF[j];
+                      mass *= d_lam->F[j];
                       mass *= wt_func * at * det_J * wt;
                       mass *= h3;
                       mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
@@ -9815,7 +9832,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                   advection = 0.;
 
                   if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-                    if (d_lambda_dF[j] != 0.) {
+                    if (d_lam->F[j] != 0.) {
 
                       advection += v_dot_del_s[a][b] - x_dot_del_s[a][b];
                       if (ucwt != 0.)
@@ -9823,7 +9840,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                       if (lcwt != 0.)
                         advection += lcwt * (s_dot_gt[a][b] + g_dot_s[a][b]);
 
-                      advection *= d_lambda_dF[j];
+                      advection *= d_lam->F[j];
                       advection *= wt_func * at * det_J * wt * h3;
                       advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                     }
@@ -9847,7 +9864,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                       // product rule + exponential
                       source += Z *
                                 ((lambda * trace * d_eps_dF[j] * invmup) +
-                                 (d_lambda_dF[j] * trace * eps * invmup) -
+                                 (d_lam->F[j] * trace * eps * invmup) -
                                  (lambda * trace * eps * d_mup->F[j] * invmup * invmup)) *
                                 s[a][b];
                     }
@@ -9858,7 +9875,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                     if (alpha != 0.) {
                       source += s_dot_s[a][b] *
                                 (-alpha * lambda * d_mup->F[j] * invmup * invmup +
-                                 d_alpha_dF[j] * lambda * invmup + alpha * d_lambda_dF[j] * invmup);
+                                 d_alpha_dF[j] * lambda * invmup + alpha * d_lam->F[j] * invmup);
                     }
 
                     source *= wt_func * det_J * h3 * wt;
@@ -9948,7 +9965,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
         }
       }
     } /* End Assemble Jacobian */
-  }   /* End loop over modes */
+  } /* End loop over modes */
 
   return (status);
 }

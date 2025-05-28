@@ -425,7 +425,7 @@ int ns_data_print(pp_Data *p,
           iprint = 1;
         } else if (strncasecmp(qtity_str, "lub_height", 10) == 0) {
           dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime;
-          dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+          dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
           int *n_dof = NULL;
           int dof_map[MDE];
           if (!exo->node_elem_conn_exists) {
@@ -463,7 +463,7 @@ int ns_data_print(pp_Data *p,
 
           /* Lubrication height from model */
           H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX,
-                                    &dH_U_dp, &dH_U_ddh, time_value, time_step_size);
+                                    &dH_U_dp, &dH_U_ddh, dH_dF, time_value, time_step_size);
           ordinate = H;
           iprint = 1;
         } else if (strncasecmp(qtity_str, "external_field", 14) == 0) {

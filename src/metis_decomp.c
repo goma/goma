@@ -455,12 +455,12 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
   int *partitions = malloc(sizeof(int) * monolith->num_elems);
   idx_t n_parts = Num_Proc;
 
-  if (Decompose_Type == 1 || (Decompose_Type == 0 && n_parts < 8)) {
+  if (Decompose_Type == 1 || Decompose_Type == 0) {
     DPRINTF(stdout, "\nInternal METIS decomposition using Recursive Bisection.\n\n");
     METIS_PartGraphRecursive(&monolith->num_elems, &n_con, elem_adj_pntr, elem_adj_list, vwgt, NULL,
                              NULL, &n_parts, NULL, NULL, options, &edgecut, partitions);
 
-  } else if (Decompose_Type == 2 || (Decompose_Type == 0 && n_parts >= 8)) {
+  } else if (Decompose_Type == 2) {
     DPRINTF(stdout, "\nInternal METIS decomposition using KWAY.\n\n");
     METIS_PartGraphKway(&monolith->num_elems, &n_con, elem_adj_pntr, elem_adj_list, vwgt, NULL,
                         NULL, &n_parts, NULL, NULL, options, &edgecut, partitions);
@@ -810,7 +810,7 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
     int num_time_steps = ex_inquire_int(exoid, EX_INQ_TIME);
 
     if (num_time_steps > 0) {
-      dbl *times = calloc(sizeof(dbl), num_time_steps);
+      dbl *times = calloc(num_time_steps, sizeof(dbl));
       int err = ex_get_all_times(exoid, times);
       CHECK_EX_ERROR(err, "ex_get_get_all_times");
 

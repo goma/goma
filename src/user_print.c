@@ -23,6 +23,8 @@
  * "$Id: user_print.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
  */
 
+#include "mm_eh.h"
+#include "std.h"
 #include "usr_print.h"
 
 /*
@@ -33,11 +35,11 @@ static char	ufn[] = "u_out.d"; * name of user output data file *
 FILE	*uf;			* file pointer for this user data *
 */
 /*ARGSUSED*/
-int usr_print(double *t, /* time value */
-              double dt, /* time step size */
-              double *x, /* solution vector */
-              double **post_proc_vect,
-              int var) /* variable of post_proc_vect */
+int usr_print(double *t MAYBE_UNUSED, /* time value */
+              double dt MAYBE_UNUSED, /* time step size */
+              double *x MAYBE_UNUSED, /* solution vector */
+              double **post_proc_vect MAYBE_UNUSED,
+              int var MAYBE_UNUSED) /* variable of post_proc_vect */
 {
   /*  static int status = 0; */
   int retn = 0;
@@ -50,7 +52,7 @@ int usr_print(double *t, /* time value */
    * Safety catch line -- comment out the line below if you can verify this
    * routine does what you want.
    */
-  /* GOMA_EH(GOMA_ERROR, "No usr_print defined."); */
+  // GOMA_EH(GOMA_ERROR, "No usr_print defined.");
 
   /*
   if ( first_call )

@@ -431,10 +431,10 @@ void setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
              *  below is just informational.
              */
           } /* Loop over variables list */
-        }   /* Loop over matrices */
-      }     /* Loop over local nodes in an element */
-    }       /* loop over elements in element blocks */
-  }         /* loop over materials */
+        } /* Loop over matrices */
+      } /* Loop over local nodes in an element */
+    } /* loop over elements in element blocks */
+  } /* loop over materials */
 
   /*
    *  Loop though nodes this time calculating the real nodal_vars
@@ -1025,7 +1025,7 @@ void set_unknown_map(Exo_DB *exo, Dpi *dpi)
       } else {
         gdof = gcount;
         i1 = i + 1; /* convert 0-based internal node numbering */
-      }             /* to 1-based node numbering of BLOT, etc. */
+      } /* to 1-based node numbering of BLOT, etc. */
 
       /*
        * Load up the coordinates of the node into a handy label
@@ -1585,6 +1585,12 @@ static void set_interaction_masks(Exo_DB *exo)
           eqn_var_mask[imtrx][e][v] = 1;
 
         v = EDDY_NU;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = TURB_K;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = TURB_OMEGA;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
 
@@ -2495,6 +2501,12 @@ static void set_interaction_masks(Exo_DB *exo)
         v = EDDY_NU;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
+        v = TURB_K;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = TURB_OMEGA;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
         break;
 
       case R_STRESS11:
@@ -3193,6 +3205,64 @@ static void set_interaction_masks(Exo_DB *exo)
           eqn_var_mask[imtrx][e][v] = 1;
 
         break;
+      case R_TURB_K:
+        v = TURB_K;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = TURB_OMEGA;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
+        v = MESH_DISPLACEMENT1;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = MESH_DISPLACEMENT2;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = MESH_DISPLACEMENT3;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
+        v = VELOCITY1;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = VELOCITY2;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = VELOCITY3;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
+        break;
+      case R_TURB_OMEGA:
+        v = TURB_OMEGA;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = TURB_K;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
+        v = MESH_DISPLACEMENT1;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = MESH_DISPLACEMENT2;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = MESH_DISPLACEMENT3;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
+        v = VELOCITY1;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = VELOCITY2;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = VELOCITY3;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
+        break;
 
       case R_ACOUS_PREAL:
       case R_ACOUS_PIMAG:
@@ -3767,6 +3837,9 @@ static void set_interaction_masks(Exo_DB *exo)
         v = FILL;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
+        v = LUBP;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
         break;
 
       case R_SHELL_LUB_CURV_2:
@@ -3783,6 +3856,9 @@ static void set_interaction_masks(Exo_DB *exo)
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         v = PHASE1;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = LUBP;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;

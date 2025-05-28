@@ -3,25 +3,21 @@ spack:
   - cmake
   - sparse
   - catch2
-  - openmpi
+  - openmpi@4.1.6
   - arpack-ng
   - metis~int64
   - parmetis~int64
   - hypre~int64
+  - strumpack+scotch~openmp~slate
   - mumps~openmp+metis+parmetis
-  - trilinos@13.4.0+amesos+amesos2+aztec+belos+boost~chaco+epetra+epetraext~exodus+explicit_template_instantiation+fortran+hdf5~hypre+ifpack+ml+mpi+muelu+mumps+shared+stratimikos+suite-sparse+superlu-dist+teko+tpetra+zoltan+zoltan2
-    build_type=Release gotype=long_long
+  - trilinos@15.1.1+amesos+amesos2+aztec+belos+boost~chaco+epetra+epetraext~exodus+explicit_template_instantiation+fortran+hdf5~hypre+ifpack+ml+mpi+muelu+mumps+shared+stratimikos+suite-sparse+superlu-dist+teko+tpetra+piro+nox+tempus+shards+intrepid2+zoltan2+sacado+intrepid+isorropia+strumpack   build_type=Release
+    gotype=long_long
   - omega-h build_type=Release
-  - petsc~X~batch~cgns~complex~cuda~debug+double~exodusii~fftw~giflib+hdf5~hwloc+hypre~int64~jpeg~knl~libpng~libyaml~memkind+metis~mkl-pardiso~moab~mpfr+mpi+mumps~openmp+p4est+ptscotch~random123~rocm~saws+shared+suite-sparse~superlu-dist~trilinos
-  - seacas+applications
-  view:
-    default:
-      root: .spack-env/view
-      exclude:
-      - python
-      - sqlite
-      - ncurses
-      - openssl
-      link_type: symlink
+  - petsc~X~batch~cgns~complex~cuda~debug+double~exodusii~fftw~giflib+hdf5~hwloc+hypre~int64~jpeg~knl~libpng~libyaml~memkind+metis~mkl-pardiso~moab~mpfr+mpi+mumps~openmp~p4est+ptscotch~random123~rocm~saws+shared~suite-sparse~superlu-dist~trilinos+strumpack
+  - seacas
   concretizer:
     unify: true
+  packages:
+    all:
+      providers:
+        mpi: [openmpi]

@@ -41,7 +41,6 @@
 #endif
 
 #include "az_aztec.h"
-#include "sl_epetra_interface.h"
 
 /*
  * NUM_ALSS - Number of Aztec Linear Solver Systems. Here we have one.
@@ -50,20 +49,6 @@
 
 #define JAC      0
 #define NUM_ALSS 1
-
-struct Matrix_Data {
-  struct GomaLinearSolverData *ams;
-  double *x;       /* Solution vector */
-  double *x_old;   /* Solution vector , previous last time step */
-  double *x_older; /* Solution vector , previous prev time step */
-  double *x_oldest;
-  double *xdot;     /* xdot of current solution                  */
-  double *xdot_old; /* xdot_old of current solution              */
-  double *xdot_older;
-  double *x_update;     /* last update vector */
-  double *resid_vector; /* Residual vector */
-  double *scale;
-};
 
 struct GomaLinearSolverData {
   int proc_config[AZ_PROC_SIZE];
@@ -124,10 +109,24 @@ struct GomaLinearSolverData {
 
   int solveSetup;
 
-  C_Epetra_RowMatrix_t *RowMatrix; /* This is a Epetra_RowMatrix object */
-  int *GlobalIDs;                  /* Pointer to global ids of DOFs (only available with epetra) */
-
   void *PetscMatrixData;
+  void *GomaMatrixData;
+  void *SolverData;
+  void (*DestroySolverData)(struct GomaLinearSolverData *ams);
 };
 
+struct Matrix_Data {
+  struct GomaLinearSolverData *ams;
+  double *x;       /* Solution vector */
+  double *x_prev;  /* Solution vector */
+  double *x_old;   /* Solution vector , previous last time step */
+  double *x_older; /* Solution vector , previous prev time step */
+  double *x_oldest;
+  double *xdot;     /* xdot of current solution                  */
+  double *xdot_old; /* xdot_old of current solution              */
+  double *xdot_older;
+  double *x_update;     /* last update vector */
+  double *resid_vector; /* Residual vector */
+  double *scale;
+};
 #endif

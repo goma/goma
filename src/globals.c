@@ -13,6 +13,7 @@
 \************************************************************************/
 /* File containing the many of Goma's global variables, moved for -fno-common */
 
+#include "ac_particles.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "rf_node_const.h"
@@ -202,9 +203,13 @@ String_line Matrix_Absolute_Threshold; /* Trilinos 2 */
 
 String_line Amesos_Package;
 
+String_line Amesos2_Package;
+
 String_line AztecOO_Solver;
 
 String_line Stratimikos_File[MAX_NUM_MATRICES];
+
+String_line Amesos2_File[MAX_NUM_MATRICES];
 
 /*
  * A new Aztec 2.0 option. There are more and difft options and our
@@ -223,6 +228,7 @@ int LOCA_UMF_ID;  /* UMFPACK SYSTEM ID */
 int Max_Newton_Steps;  /* Maximum number of Newton steps to take.     */
 int Guess_Flag;        /* Indicates the type of initial guess         */
 int Conformation_Flag; /* Indicates mapping from stress to log-conformation tensor */
+int Print3DBCDup;
 
 double damp_factor;
 double damp_factor1; /* Relaxation factor for Newton iteration */
@@ -238,6 +244,8 @@ double var_damp[MAX_VARIABLE_TYPES]; /* variable specific damp factors */
 int Newt_Jacobian_Reformation_stride; /*Stride for reformation of jacobian for
                                    modified newton scheme               */
 int Time_Jacobian_Reformation_stride;
+int Newton_Line_Search_Type;
+double Line_Search_Minimum_Damping;
 int modified_newton;               /*boolean flag for modified Newton */
 int save_old_A;                    /*boolean flag for saving old A matrix
                                     for resolve reasons with AZTEC.   There
@@ -251,6 +259,7 @@ double modified_newt_norm_tol;     /* tolerance for jacobian reformation
 double Epsilon[MAX_NUM_MATRICES][3]; /* Used for determining stopping criteria.     */
 int Solver_Output_Format;            /* Bitmap for Solver Output Format     */
 int Output_Variable_Stats;           /* Toggle for Variable Stats Output    */
+int Output_Variable_Regression;      /* Toggle for Variable Regression    */
 
 int NZeros; /* Number of nonzeros in this procs matrix     */
 
@@ -296,3 +305,46 @@ struct Boundary_Condition *BC_Types;
 struct Rotation_Specs *ROT_Types;
 
 NODE_INFO_STRUCT **Nodes = NULL;
+
+struct elem_side_bc_struct ***First_Elem_Side_BC_Array;
+struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
+
+/* Global variables extern declared in ac_particles.h. */
+int Particle_Dynamics;                /* global toggle indicating particles are present. */
+enum Particle_Model_t Particle_Model; /* What flavor of particle<->continuum stuff... */
+dbl Particle_Model_Data[MAX_PARTICLE_MODEL_DATA_VALUES]; /* Real values for this model. */
+int Particle_Number;                                     /* number of discrete particles. */
+particle_filename_s Particle_Restart_Filename;           /* restart filename */
+int Particle_Output_Stride;    /* How often to output particle information. */
+dbl Particle_Output_Time_Step; /* Output every these units. */
+int Particle_Max_Time_Steps;   /* max number of particle time steps if steady solution. */
+enum Particle_Output_Format_t Particle_Output_Format; /* What kind of output file? */
+int Particle_Full_Output_Stride;                   /* > 0 => full output every that many steps. */
+particle_filename_s Particle_Full_Output_Filename; /* where to put them. */
+int Particle_Number_Sample_Types;                  /* How many datasets to output? */
+int *Particle_Number_Samples_Existing;             /* How many are tagged for each sample type?*/
+int *Particle_Number_Samples;          /* How many particles to output for dataset #n? */
+int *Particle_Number_Output_Variables; /* How many output vars for each sample. */
+particle_variable_s *
+    *Particle_Output_Variables; /* List of variable indices to output for dataset #n */
+particle_filename_s *Particle_Filename_Template; /* Template of where to put the data... */
+
+dbl Particle_Density;         /* Density of particle in problem units */
+dbl Particle_Radius;          /* Radius of particle in problem units. */
+dbl Particle_Ratio;           /* Real/computational particle ratio. */
+int Particle_Show_Debug_Info; /* Show particle debug info. */
+enum Particle_Domain_t Particle_Creation_Domain;
+enum Particle_Domain_t Particle_Move_Domain;
+particle_filename_s Particle_Creation_Domain_Filename;
+particle_s Particle_Creation_Domain_Name;
+particle_filename_s Particle_Move_Domain_Filename;
+particle_s Particle_Move_Domain_Name;
+dbl Particle_Creation_Domain_Reals[MAX_DOMAIN_REAL_VALUES];
+dbl Particle_Move_Domain_Reals[MAX_DOMAIN_REAL_VALUES];
+dbl xi_boundary_tolerances[3] = {XI_BOUNDARY_TOLERANCE0, XI_BOUNDARY_TOLERANCE1,
+                                 XI_BOUNDARY_TOLERANCE2};
+
+int Particle_Number_PBCs; /* Number of particle-related sideset BC's. */
+PBC_t *PBCs;              /* Particle boundary condition structures. */
+
+element_particle_info_t *element_particle_info;

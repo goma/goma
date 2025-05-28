@@ -24,6 +24,7 @@ However, some combinations or specifications do not make much sense, e.g., a cyl
    problem_description/matrix
    problem_description/disable_time_step_control
    problem_description/normalized_residual_tolerance
+   problem_description/residual_relative_tolerance
    problem_description/number_of_eq
    problem_description/energy
    problem_description/momentum

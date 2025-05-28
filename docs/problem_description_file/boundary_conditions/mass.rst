@@ -53,3 +53,5 @@ concentration (volume, mass, molar) and several discussions on or references to 
 .. include:: /problem_description_file/boundary_conditions/mass/is_equil_pseudorxn.rst
 
 .. include:: /problem_description_file/boundary_conditions/mass/surface_charge.rst
+
+.. include:: /problem_description_file/boundary_conditions/mass/fluidity_equilibrium.rst

@@ -34,6 +34,7 @@
 #include "el_geom.h"
 #include "el_quality.h"
 #include "exo_struct.h"
+#include "linalg/sparse_matrix.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_augc_util.h"
@@ -56,6 +57,7 @@
 #include "rf_io.h"
 #include "rf_io_const.h"
 #include "rf_io_structs.h"
+#include "rf_masks.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
 #include "rf_solve.h"
@@ -547,7 +549,21 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
   pg->matrices[pg->imtrx].resid_vector = resid_vector;
 
   /* Allocate sparse matrix */
-  if (strcmp(Matrix_Format, "msr") == 0) {
+  if ((strcmp(Matrix_Format, "tpetra") == 0) || (strcmp(Matrix_Format, "epetra") == 0)) {
+    err = check_compatible_solver();
+    GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
+    check_parallel_error("Matrix format / Solver incompatibility");
+    GomaSparseMatrix goma_matrix;
+    goma_error err = GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
+    GOMA_EH(err, "GomaSparseMatrix_CreateFromFormat");
+    int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
+    err = GomaSparseMatrix_SetProblemGraph(
+        goma_matrix, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx],
+        num_external_dofs[pg->imtrx], local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
+        dpi, cx, pg->imtrx, Debug_Flag, ams[JAC]);
+    GOMA_EH(err, "GomaSparseMatrix_SetProblemGraph");
+    ams[JAC]->GomaMatrixData = goma_matrix;
+  } else if (strcmp(Matrix_Format, "msr") == 0) {
     log_msg("alloc_MSR_sparse_arrays...");
     alloc_MSR_sparse_arrays(&ija, &a, &a_old, 0, node_to_fill, exo, dpi);
     /*
@@ -678,7 +694,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
   good_mesh = element_quality(exo, x, ams[0]->proc_config);
 
   if (Output_Variable_Stats) {
-    err = variable_stats(x, path1);
+    err = variable_stats(x, path1, Output_Variable_Regression);
     GOMA_EH(err, "Problem with variable_stats!");
     if (ProcID == 0)
       fflush(stdout);
@@ -870,7 +886,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
             evol_local = augc[iAC].evol;
 #ifdef PARALLEL
             if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
-                                 augc[iAC].Type == AC_ANGLE)) {
+                                 augc[iAC].Type == AC_ANGLE || augc[iAC].Type == AC_POSITION_MT)) {
               MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
               evol_local = evol_global;
             }
@@ -884,7 +900,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
             } else if (augc[iAC].Type == AC_VOLUME) {
               DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                       augc[iAC].VOLID, evol_local, x_AC[iAC]);
-            } else if (augc[iAC].Type == AC_POSITION) {
+            } else if (augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_POSITION_MT) {
               DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                       augc[iAC].VOLID, evol_local, x_AC[iAC]);
             } else if (augc[iAC].Type == AC_ANGLE) {
@@ -1102,7 +1118,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
       }
     }
     if (Output_Variable_Stats) {
-      err = variable_stats(x, path1);
+      err = variable_stats(x, path1, Output_Variable_Regression);
       GOMA_EH(err, "Problem with variable_stats!");
       if (ProcID == 0)
         fflush(stdout);
@@ -1307,6 +1323,13 @@ free_and_clear:
     safer_free((void **)&cpcc);
 
   safer_free((void **)&rd);
+  for (int i = 0; i < num_total_nodes; i++) {
+    free(Local_Offset[0][i]);
+    free(Dolphin[0][i]);
+  }
+  free(Dolphin[0]);
+  free(Local_Offset[0]);
+
   safer_free((void **)&Local_Offset);
   safer_free((void **)&Dolphin);
 

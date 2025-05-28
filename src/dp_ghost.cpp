@@ -16,7 +16,6 @@
 #include <cstdio>
 #include <cstring>
 #include <exodusII.h>
-#include <ext/alloc_traits.h>
 #include <iterator>
 #include <memory>
 #include <mpi.h>
@@ -27,7 +26,6 @@
 #include <vector>
 
 // not needed except to avoid including as a C file
-#include "sl_epetra_interface.h"
 
 #include "dp_ghost.h"
 

@@ -34,7 +34,8 @@
  *    user_mat_init                       rf_util.c/
  *    ------------             ---------               --------------
  *************************/
-double user_surf_object(int *int_params, dbl *param, dbl *r) {
+double
+user_surf_object(int *int_params MAYBE_UNUSED, dbl *param MAYBE_UNUSED, dbl *r MAYBE_UNUSED) {
   double distance = 0;
   static int warning = 0;
 
@@ -62,8 +63,8 @@ double user_mat_init(const int var,
                      const double init_value,
                      const double p[],
                      const double xpt[],
-                     const int mn,
-                     const double var_vals[]) {
+                     const int mn MAYBE_UNUSED,
+                     const double var_vals[] MAYBE_UNUSED) {
 
   double value = 0;
   /* Set this to a nonzero value if using this routine */
@@ -153,15 +154,7 @@ double user_mat_init(const int var,
     value = fmin(T_amb - (T_amb - T_init) * (sum + sum1), T_init);
     value = fmax(value, T_amb);
   } else if (var >= MESH_DISPLACEMENT1 && var <= MESH_DISPLACEMENT3) {
-    double alpha;
-    int dir;
-    alpha = p[DIM + 1];
-    dir = var - MESH_DISPLACEMENT1;
-    if (dir == 0) {
-      value = alpha * (xpt[dir] - 125.0);
-    } else {
-      value = alpha * xpt[dir];
-    }
+    value = init_value + p[0] * xpt[0] + p[1] * xpt[1] + p[2] * xpt[2];
 
   } else {
     GOMA_EH(GOMA_ERROR, "Not a supported usermat initialization condition ");
@@ -174,7 +167,7 @@ int user_initialize(const int var,
                     const double init_value,
                     const double p[],
                     const double xpt[],
-                    const double var_vals[]) {
+                    const double var_vals[] MAYBE_UNUSED) {
 
   double value = 0;
   int i, var_somewhere, idv, mn;

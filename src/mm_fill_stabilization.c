@@ -16,11 +16,29 @@
 #include "mm_mp_structs.h"
 #include "mm_qtensor_model.h"
 #include "mm_viscosity.h"
+#include "polymer_time_const.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "rf_solver.h"
 #include "std.h"
 #include "user_mp.h"
+
+bool is_evss_f_model(int model) {
+  switch (model) {
+  case EVSS_F:
+  case EVSS_GRADV:
+  case LOG_CONF:
+  case LOG_CONF_GRADV:
+  case LOG_CONF_TRANSIENT:
+  case LOG_CONF_TRANSIENT_GRADV:
+  case CONF:
+  case SQRT_CONF:
+    return true;
+
+  default:
+    return false;
+  }
+}
 
 static dbl yzbeta1(dbl scale,
                    int dim,
@@ -48,10 +66,10 @@ void get_metric_tensor(dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DI
 
   switch (element_type) {
   case LINEAR_TRI:
-    adjustment[0][0] = (invroot3)*2;
+    adjustment[0][0] = (invroot3) * 2;
     adjustment[0][1] = (invroot3) * -1;
     adjustment[1][0] = (invroot3) * -1;
-    adjustment[1][1] = (invroot3)*2;
+    adjustment[1][1] = (invroot3) * 2;
     break;
   case LINEAR_TET:
     adjustment[0][0] = tetscale * 2;
@@ -97,10 +115,10 @@ void get_metric_tensor_deriv(dbl B[DIM][DIM],
 
   switch (element_type) {
   case LINEAR_TRI:
-    adjustment[0][0] = (invroot3)*2;
+    adjustment[0][0] = (invroot3) * 2;
     adjustment[0][1] = (invroot3) * -1;
     adjustment[1][0] = (invroot3) * -1;
-    adjustment[1][1] = (invroot3)*2;
+    adjustment[1][1] = (invroot3) * 2;
     break;
   case LINEAR_TET:
     adjustment[0][0] = tetscale * 2;
@@ -148,10 +166,25 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
+  VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
+  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+
+  int lagged_tau = upd->supg_lagged_tau;
+  int ignore_tau_sens = upd->disable_supg_tau_sensitivities;
+
+  if (lagged_tau && pd->TimeIntegration != TRANSIENT) {
+    GOMA_EH(GOMA_ERROR,
+            "SUPG Lagged Tau specified but we are steady state, currently only lagged between "
+            "timesteps.");
+  }
 
   if (pspg_scale) {
     dbl rho = density(d_rho, dt);
-    inv_rho = 1.0 / rho;
+    if (rho > 0) {
+      inv_rho = 1.0 / rho;
+    } else {
+      inv_rho = 1.0;
+    }
   }
 
   int interp_eqn = VELOCITY1;
@@ -160,18 +193,96 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
   dbl v_d_gv = 0;
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
-      v_d_gv += fabs(fv->v[i] * G[i][j] * fv->v[j]);
+      if (lagged_tau) {
+        v_d_gv += fabs(fv_old->v[i] * G[i][j] * fv_old->v[j]);
+      } else {
+        v_d_gv += fabs(fv->v[i] * G[i][j] * fv->v[j]);
+      }
     }
   }
 
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
-      gamma[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
+      if (lagged_tau) {
+        gamma[i][j] = fv_old->grad_v[i][j] + fv_old->grad_v[j][i];
+      } else {
+        gamma[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
+      }
     }
   }
 
   mu = viscosity(gn, gamma, d_mu);
+  dbl mup = 0.0;
+  if (pd->gv[POLYMER_STRESS11] && is_evss_f_model(vn->evssModel)) {
+    for (int mode = 0; mode < vn->modes; mode++) {
+      /* get polymer viscosity */
+      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+      mu += mup;
 
+      int var = VELOCITY1;
+      int a, j;
+      if (pd->v[pg->imtrx][var]) {
+        for (a = 0; a < WIM; a++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mu->v[a][j] += d_mup->v[a][j];
+          }
+        }
+      }
+
+      var = MESH_DISPLACEMENT1;
+      if (pd->v[pg->imtrx][var]) {
+        for (a = 0; a < dim; a++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mu->X[a][j] += d_mup->X[a][j];
+          }
+        }
+      }
+
+      var = TEMPERATURE;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mu->T[j] += d_mup->T[j];
+        }
+      }
+
+      var = BOND_EVOLUTION;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mu->nn[j] += d_mup->nn[j];
+        }
+      }
+
+      var = RESTIME;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mu->degrade[j] += d_mup->degrade[j];
+        }
+      }
+
+      var = FILL;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mu->F[j] += d_mup->F[j];
+        }
+      }
+
+      var = PRESSURE;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mu->P[j] += d_mup->P[j];
+        }
+      }
+
+      var = MASS_FRACTION;
+      if (pd->v[pg->imtrx][var]) {
+        for (int w = 0; w < pd->Num_Species_Eqn; w++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mu->C[w][j] += d_mup->C[w][j];
+          }
+        }
+      }
+    } // for mode
+  }
   dbl coeff = (12.0 * mu * mu);
   dbl diff_g_g = 0;
   for (int i = 0; i < dim; i++) {
@@ -181,13 +292,15 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
   }
 
   dbl d_v_d_gv[DIM][MDE];
-  for (int a = 0; a < dim; a++) {
-    for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
-      d_v_d_gv[a][k] = 0.0;
-      for (int i = 0; i < dim; i++) {
-        for (int j = 0; j < dim; j++) {
-          d_v_d_gv[a][k] += delta(a, i) * bf[VELOCITY1 + a]->phi[k] * G[i][j] * fv->v[j] +
-                            delta(a, j) * fv->v[i] * G[i][j] * bf[VELOCITY1 + a]->phi[k];
+  if (!lagged_tau && !ignore_tau_sens) {
+    for (int a = 0; a < dim; a++) {
+      for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
+        d_v_d_gv[a][k] = 0.0;
+        for (int i = 0; i < dim; i++) {
+          for (int j = 0; j < dim; j++) {
+            d_v_d_gv[a][k] += delta(a, i) * bf[VELOCITY1 + a]->phi[k] * G[i][j] * fv->v[j] +
+                              delta(a, j) * fv->v[i] * G[i][j] * bf[VELOCITY1 + a]->phi[k];
+          }
         }
       }
     }
@@ -201,36 +314,51 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
 
   dbl d_diff_g_g_dmu = 2.0 * diff_g_g / mu;
   dbl supg_tau_cubed = tau_terms->tau * tau_terms->tau * tau_terms->tau;
+  if (lagged_tau || ignore_tau_sens) {
+    supg_tau_cubed = 0; // this will remove the majority of the sensitivites.
+  }
 
   for (int a = 0; a < dim; a++) {
     for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
-      tau_terms->d_tau_dv[a][k] =
-          inv_rho * -0.5 * (d_v_d_gv[a][k] + (d_diff_g_g_dmu * d_mu->v[a][k])) * supg_tau_cubed;
+      if (lagged_tau || ignore_tau_sens) {
+        tau_terms->d_tau_dv[a][k] = 0;
+      } else {
+        tau_terms->d_tau_dv[a][k] =
+            inv_rho * -0.5 * (d_v_d_gv[a][k] + (d_diff_g_g_dmu * d_mu->v[a][k])) * supg_tau_cubed;
+      }
     }
   }
 
   if (pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
-    dbl dG[DIM][DIM][DIM][MDE];
-    get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim,
-                            MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
-    for (int a = 0; a < dim; a++) {
-      for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; k++) {
-        dbl v_d_gv_dx = 0;
-        for (int i = 0; i < dim; i++) {
-          for (int j = 0; j < dim; j++) {
-            v_d_gv_dx += fv->v[i] * dG[i][j][a][k] * fv->v[j];
-          }
+    if (lagged_tau || ignore_tau_sens) {
+      for (int a = 0; a < dim; a++) {
+        for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; k++) {
+          tau_terms->d_tau_dX[a][k] = 0;
         }
+      }
+    } else {
+      dbl dG[DIM][DIM][DIM][MDE];
+      get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim,
+                              MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
+      for (int a = 0; a < dim; a++) {
+        for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; k++) {
+          dbl v_d_gv_dx = 0;
+          for (int i = 0; i < dim; i++) {
+            for (int j = 0; j < dim; j++) {
+              v_d_gv_dx += fv->v[i] * dG[i][j][a][k] * fv->v[j];
+            }
+          }
 
-        dbl diff_g_g_dx = 0;
-        for (int i = 0; i < dim; i++) {
-          for (int j = 0; j < dim; j++) {
-            diff_g_g_dx += 2 * coeff * dG[i][j][a][k] * G[i][j];
+          dbl diff_g_g_dx = 0;
+          for (int i = 0; i < dim; i++) {
+            for (int j = 0; j < dim; j++) {
+              diff_g_g_dx += 2 * coeff * dG[i][j][a][k] * G[i][j];
+            }
           }
+          tau_terms->d_tau_dX[a][k] =
+              inv_rho * -0.5 * (v_d_gv_dx + diff_g_g_dx + 0 * d_mu->X[a][k] * d_diff_g_g_dmu) *
+              supg_tau_cubed;
         }
-        tau_terms->d_tau_dX[a][k] = inv_rho * -0.5 *
-                                    (v_d_gv_dx + diff_g_g_dx + d_mu->X[a][k] * d_diff_g_g_dmu) *
-                                    supg_tau_cubed;
       }
     }
   }
@@ -260,6 +388,18 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
           inv_rho * -0.5 * (d_mu->eddy_nu[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }
+  if (pd->e[pg->imtrx][TURB_K]) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[TURB_K]; k++) {
+      tau_terms->d_tau_dturb_k[k] =
+          inv_rho * -0.5 * (d_mu->turb_k[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+    }
+  }
+  if (pd->e[pg->imtrx][TURB_OMEGA]) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[TURB_OMEGA]; k++) {
+      tau_terms->d_tau_dturb_omega[k] =
+          inv_rho * -0.5 * (d_mu->turb_omega[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+    }
+  }
   if (pd->e[pg->imtrx][MASS_FRACTION]) {
     for (int w = 0; w < pd->Num_Species_Eqn; w++) {
       for (int k = 0; k < ei[pg->imtrx]->dof[MASS_FRACTION]; k++) {
@@ -271,14 +411,25 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
 }
 
 void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn) {
+
+  int supg_lagged_tau = upd->supg_lagged_tau;
+  int supd_disable_sens = upd->disable_supg_tau_sensitivities;
   dbl G[DIM][DIM];
+
+  if (supg_lagged_tau && pd->TimeIntegration != TRANSIENT) {
+    GOMA_EH(GOMA_ERROR, "SUPG Lagged Tau but not a transient problem.");
+  }
 
   get_metric_tensor(bf[interp_eqn]->B, dim, ei[pg->imtrx]->ielem_type, G);
 
   dbl v_d_gv = 0;
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
-      v_d_gv += fabs(fv->v[i] * G[i][j] * fv->v[j]);
+      if (supg_lagged_tau) {
+        v_d_gv += fabs(fv_old->v[i] * G[i][j] * fv_old->v[j]);
+      } else {
+        v_d_gv += fabs(fv->v[i] * G[i][j] * fv->v[j]);
+      }
     }
   }
 
@@ -294,10 +445,12 @@ void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, i
   for (int a = 0; a < dim; a++) {
     for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
       d_v_d_gv[a][k] = 0.0;
-      for (int i = 0; i < dim; i++) {
-        for (int j = 0; j < dim; j++) {
-          d_v_d_gv[a][k] += delta(a, i) * bf[VELOCITY1 + a]->phi[k] * G[i][j] * fv->v[j] +
-                            delta(a, j) * fv->v[i] * G[i][j] * bf[VELOCITY1 + a]->phi[k];
+      if (!supg_lagged_tau && !supd_disable_sens) {
+        for (int i = 0; i < dim; i++) {
+          for (int j = 0; j < dim; j++) {
+            d_v_d_gv[a][k] += delta(a, i) * bf[VELOCITY1 + a]->phi[k] * G[i][j] * fv->v[j] +
+                              delta(a, j) * fv->v[i] * G[i][j] * bf[VELOCITY1 + a]->phi[k];
+          }
         }
       }
     }
@@ -317,27 +470,36 @@ void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, i
   }
 
   if (pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
-    dbl dG[DIM][DIM][DIM][MDE];
-    get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim,
-                            MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
+    if (!supg_lagged_tau && !supd_disable_sens) {
+      dbl dG[DIM][DIM][DIM][MDE];
+      get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim,
+                              MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
+      for (int a = 0; a < dim; a++) {
+        for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; k++) {
+          dbl v_d_gv_dx = 0;
+          for (int i = 0; i < dim; i++) {
+            for (int j = 0; j < dim; j++) {
+              v_d_gv_dx += fv->v[i] * dG[i][j][a][k] * fv->v[j];
+            }
+          }
+
+          dbl diff_g_g_dx = 0;
+          for (int i = 0; i < dim; i++) {
+            for (int j = 0; j < dim; j++) {
+              diff_g_g_dx += 2 * dG[i][j][a][k] * G[i][j];
+            }
+          }
+          diff_g_g_dx *= 9 * diffusivity * diffusivity;
+          supg_terms->d_supg_tau_dX[a][k] = -0.5 * (v_d_gv_dx + diff_g_g_dx) *
+                                            supg_terms->supg_tau * supg_terms->supg_tau *
+                                            supg_terms->supg_tau;
+        }
+      }
+    }
+  } else {
     for (int a = 0; a < dim; a++) {
       for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; k++) {
-        dbl v_d_gv_dx = 0;
-        for (int i = 0; i < dim; i++) {
-          for (int j = 0; j < dim; j++) {
-            v_d_gv_dx += fv->v[i] * dG[i][j][a][k] * fv->v[j];
-          }
-        }
-
-        dbl diff_g_g_dx = 0;
-        for (int i = 0; i < dim; i++) {
-          for (int j = 0; j < dim; j++) {
-            diff_g_g_dx += 2 * dG[i][j][a][k] * G[i][j];
-          }
-        }
-        diff_g_g_dx *= 9 * diffusivity * diffusivity;
-        supg_terms->d_supg_tau_dX[a][k] = -0.5 * (v_d_gv_dx + diff_g_g_dx) * supg_terms->supg_tau *
-                                          supg_terms->supg_tau * supg_terms->supg_tau;
+        supg_terms->d_supg_tau_dX[a][k] = 0;
       }
     }
   }
@@ -976,11 +1138,8 @@ int calc_pspg(dbl pspg[DIM],
     if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
         vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
       for (mode = 0; mode < vn->modes; mode++) {
-        dbl lambda = 0.0;
-        if (ve[mode]->time_constModel == CONSTANT) {
-          lambda = ve[mode]->time_const;
-        }
         dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
+        dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
         int dofs = ei[upd->matrix_index[v_s[mode][0][0]]]->dof[v_s[mode][0][0]];
         dbl grad_S[DIM][DIM][DIM] = {{{0.0}}};
         dbl s[MDE][DIM][DIM];

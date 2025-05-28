@@ -162,6 +162,7 @@ void write_solution_segregated(char output_file[],
                                double *gv,
                                struct Results_Description **rd,
                                double **gvec,
+                               double ****gvec_elem,
                                int *nprint,
                                dbl delta_t,
                                dbl theta,
@@ -235,6 +236,38 @@ void write_solution_segregated(char output_file[],
           wr_nodal_result_exo(exo, output_file, gvec[pg->imtrx], offset + i_post + 1, *nprint + 1,
                               time_value);
         }
+      }
+    }
+  }
+
+  /* Now element quantities */
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    for (i = 0; i < rd[pg->imtrx]->nev; i++) {
+      bool is_P1 = FALSE;
+      int dof = 0;
+      for (int eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
+        int mn = Matilda[eb_index];
+        if (exo->eb_num_elems[eb_index] > 0) {
+          if (pd_glob[mn]->i[upd->matrix_index[rd[pg->imtrx]->evtype[i]]]
+                            [rd[pg->imtrx]->evtype[i]] == I_P1) {
+            dof = MAX(getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1), dof);
+            is_P1 = TRUE;
+          }
+        }
+      }
+      if (is_P1) {
+        for (int k = 0; k < dof; k++) {
+          extract_elem_vec(x[pg->imtrx], i, rd[pg->imtrx]->evtype[i], gvec_elem[pg->imtrx], exo, k);
+          step = (*nprint) + 1;
+          wr_elem_result_exo(exo, output_file, gvec_elem[pg->imtrx], i, step, time_value,
+                             rd[pg->imtrx]);
+          i++;
+        }
+      } else {
+        extract_elem_vec(x[pg->imtrx], i, rd[pg->imtrx]->evtype[i], gvec_elem[pg->imtrx], exo, 0);
+        step = (*nprint) + 1;
+        wr_elem_result_exo(exo, output_file, gvec_elem[pg->imtrx], i, step, time_value,
+                           rd[pg->imtrx]);
       }
     }
   }

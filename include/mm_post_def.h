@@ -70,6 +70,7 @@
 #define ACOUSTIC_INTENSITY       351
 #define LS_DCA                   361
 #define SHELL_VOLUME_FLUX        30
+#define SHELL_FORCE_NORMAL       3131
 #define FORCE_X_POS              371
 #define FORCE_Y_POS              372
 #define FORCE_Z_POS              373
@@ -135,6 +136,8 @@
 #define I_POROUS_LIQUID_INV_2     49
 #define I_POROUS_LIQUID_INV_3     50
 #define I_EM_ABSORB_CROSS_SECTION 51
+#define I_HEAT_ENERGY_NEG         52
+#define I_HEAT_ENERGY_POS         53
 #ifdef GOMA_MM_POST_PROC_C
 struct Post_Processing_Flux_Names {
   char *name; /* flux string */
@@ -146,7 +149,7 @@ typedef struct Post_Processing_Flux_Names FLUX_NAME_STRUCT;
 extern FLUX_NAME_STRUCT pp_flux_names[];
 extern int Num_Flux_Names;
 
-struct Post_Processing_Flux_Names pp_flux_names[50] = {
+struct Post_Processing_Flux_Names pp_flux_names[51] = {
     {"FORCE_NORMAL", FORCE_NORMAL},
     {"FORCE_TANGENT1", FORCE_TANGENT1},
     {"FORCE_TANGENT2", FORCE_TANGENT2},
@@ -155,6 +158,7 @@ struct Post_Processing_Flux_Names pp_flux_names[50] = {
     {"FORCE_Z", FORCE_Z},
     {"VOLUME_FLUX", VOLUME_FLUX},
     {"SHELL_VOLUME_FLUX", SHELL_VOLUME_FLUX},
+    {"SHELL_FORCE_NORMAL", SHELL_FORCE_NORMAL},
     {"SPECIES_FLUX", SPECIES_FLUX},
     {"HEAT_FLUX", HEAT_FLUX},
     {"TORQUE", TORQUE},
@@ -261,7 +265,9 @@ VOL_NAME_STRUCT pp_vol_names[] = {{"VOLUME", I_VOLUME},
                                   {"LAMB_MAG", I_LAMB_MAG},
                                   {"HELICITY", I_HELICITY},
                                   {"Q_FCN", I_Q_FCN},
-                                  {"ABSORPTION_CROSS_SECTION", I_EM_ABSORB_CROSS_SECTION}};
+                                  {"ABSORPTION_CROSS_SECTION", I_EM_ABSORB_CROSS_SECTION},
+                                  {"HEAT_ENERGY_NEG", I_HEAT_ENERGY_NEG},
+                                  {"HEAT_ENERGY_POS", I_HEAT_ENERGY_POS}};
 
 int Num_Vol_Names = sizeof(pp_vol_names) / sizeof(VOL_NAME_STRUCT);
 
@@ -677,6 +683,7 @@ extern int SARAMITO_YIELD;
 extern int STRESS_NORM;
 extern int SPECIES_SOURCES; /* Species sources */
 extern int VISCOUS_STRESS;  /* Viscous stress */
+extern int PP_VELOCITY_GRADIENTS;
 extern int VISCOUS_STRESS_NORM;
 extern int VISCOUS_VON_MISES_STRESS;
 extern int EM_CONTOURS;
@@ -687,6 +694,9 @@ extern int FIRST_STRAINRATE_INVAR;
 extern int SEC_STRAINRATE_INVAR;
 extern int THIRD_STRAINRATE_INVAR;
 extern int WALL_DISTANCE;
+extern int CONTACT_DISTANCE;
+extern int PP_FLUID_STRESS;
+extern int LUB_CONVECTION; /* Convection forces in Lubrication */
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

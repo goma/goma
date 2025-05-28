@@ -919,7 +919,7 @@ void foam_pbe_ba_gas_source(struct Species_Conservation_Terms *st,
   if (err)
     return;
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  MGR = calloc(1, sizeof(struct moment_growth_rate));
   err = get_moment_growth_rate_term(MGR);
 
   double source = 0;
@@ -967,7 +967,7 @@ void foam_pbe_ba_liquid_source(struct Species_Conservation_Terms *st,
   if (err)
     return;
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  MGR = calloc(1, sizeof(struct moment_growth_rate));
   err = get_moment_growth_rate_term(MGR);
 
   double source = 0;
@@ -1018,7 +1018,7 @@ void foam_pbe_co2_gas_source(struct Species_Conservation_Terms *st,
   if (err)
     return;
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  MGR = calloc(1, sizeof(struct moment_growth_rate));
   err = get_moment_growth_rate_term(MGR);
 
   double source = 0;
@@ -1068,7 +1068,7 @@ void foam_pbe_co2_liquid_source(struct Species_Conservation_Terms *st,
   if (err)
     return;
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  MGR = calloc(1, sizeof(struct moment_growth_rate));
   err = get_moment_growth_rate_term(MGR);
 
   double source = 0;
@@ -1471,7 +1471,7 @@ int moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource) {
     if (err)
       return err;
 
-    MGR = calloc(sizeof(struct moment_growth_rate), 1);
+    MGR = calloc(1, sizeof(struct moment_growth_rate));
     if (H > PBE_FP_SMALL) {
       err = get_moment_growth_rate_term(MGR);
     }
@@ -1543,7 +1543,7 @@ int moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource) {
       H = 1 - lsi->H;
     }
     int err = 0;
-    MGR = calloc(sizeof(struct moment_growth_rate), 1);
+    MGR = calloc(1, sizeof(struct moment_growth_rate));
     err = get_moment_growth_rate_term(MGR);
 
     if (err) {
@@ -1569,7 +1569,7 @@ int moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource) {
       H = 1 - lsi->H;
     }
     int err = 0;
-    MGR = calloc(sizeof(struct moment_growth_rate), 1);
+    MGR = calloc(1, sizeof(struct moment_growth_rate));
     err = get_moment_growth_rate_term(MGR);
 
     if (err) {
@@ -2223,7 +2223,7 @@ int assemble_moments(double time, /* present time value */
     return (status);
   }
 
-  d_msource = calloc(sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT), 1);
+  d_msource = calloc(1, sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT));
   moment_source(msource, d_msource);
 
   wt = fv->wt; /* Gauss point weight. */
@@ -2248,6 +2248,9 @@ int assemble_moments(double time, /* present time value */
   supg = 0.0;
   if (mp->Momentwt_funcModel == SUPG) {
     supg = mp->Momentwt_func;
+    if (mp->MomentTime_funcModel == TAYLOR_GALERKIN) {
+      GOMA_EH(GOMA_ERROR, "Taylor-Galerkin and SUPG can't both be enabled, assemble_moments");
+    }
   }
   supg_tau = 0.0;
 
@@ -2404,11 +2407,48 @@ int assemble_moments(double time, /* present time value */
 
         advection = 0.;
         if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-          for (p = 0; p < VIM; p++) {
-            advection += vconv[p] * fv->grad_moment[mom][p];
+          if (mp->MomentTime_funcModel == TAYLOR_GALERKIN) {
+            dbl c_new = 0;
+            dbl c_old = 0;
+            if (tt == 0.0) {
+              c_new = 3. / 2.;
+              c_old = -1. / 2.;
+            } else if (tt == 0.5) {
+              c_new = 1. / 2.;
+              c_old = 1. / 2.;
+            }
+
+            dbl taylor_flux_wt = 0;
+            //             for (a = 0; a < VIM; a++) {
+            //   st->taylor_flux_wt[j] += conv[a] * bf[eqn]->grad_phi[j][a];
+            // }
+            for (int p = 0; p < VIM; p++) {
+              taylor_flux_wt += vconv[p] * bf[eqn]->grad_phi[i][p];
+            }
+
+            dbl advection_a = 0;
+            for (p = 0; p < VIM; p++) {
+              // st->conv_flux
+              advection_a += (c_new * vconv[p] + c_old * vconv_old[p]) * fv->grad_moment[mom][p];
+            }
+            advection_a *= wt_func;
+
+            dbl advection_b = 0;
+            for (p = 0; p < VIM; p++) {
+              // st->taylor_flux
+              advection_b += vconv[p] * fv->grad_moment[mom][p];
+            }
+            advection_b *= taylor_flux_wt * dt / 2;
+            advection = advection_a + advection_b;
+
+          } else {
+            for (p = 0; p < VIM; p++) {
+              advection += vconv[p] * fv->grad_moment[mom][p];
+            }
+            advection *= wt_func;
           }
 
-          advection *= -wt_func * det_J * wt;
+          advection *= -det_J * wt;
           advection *= h3;
           advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
         }
@@ -2542,10 +2582,47 @@ int assemble_moments(double time, /* present time value */
               advection = 0.;
               if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
                 if (mom == b) {
-                  for (p = 0; p < VIM; p++) {
-                    advection += vconv[p] * grad_phi_j[p];
+                  if (mp->MomentTime_funcModel == TAYLOR_GALERKIN) {
+                    dbl c_new = 0;
+                    dbl c_old = 0;
+                    if (tt == 0.0) {
+                      c_new = 3. / 2.;
+                      c_old = -1. / 2.;
+                    } else if (tt == 0.5) {
+                      c_new = 1. / 2.;
+                      c_old = 1. / 2.;
+                    }
+
+                    dbl taylor_flux_wt = 0;
+                    //             for (a = 0; a < VIM; a++) {
+                    //   st->taylor_flux_wt[j] += conv[a] * bf[eqn]->grad_phi[j][a];
+                    // }
+                    for (int p = 0; p < VIM; p++) {
+                      taylor_flux_wt += vconv[p] * bf[eqn]->grad_phi[i][p];
+                    }
+
+                    dbl advection_a = 0;
+                    for (p = 0; p < VIM; p++) {
+                      // st->conv_flux
+                      advection_a += (c_new * vconv[p] + c_old * vconv_old[p]) * grad_phi_j[p];
+                    }
+                    advection_a *= wt_func;
+
+                    dbl advection_b = 0;
+                    for (p = 0; p < VIM; p++) {
+                      // st->taylor_flux
+                      advection_b += vconv[p] * grad_phi_j[p];
+                    }
+                    advection_b *= taylor_flux_wt * dt / 2;
+                    advection = advection_a + advection_b;
+
+                  } else {
+                    for (p = 0; p < VIM; p++) {
+                      advection += vconv[p] * grad_phi_j[p];
+                    }
+                    advection *= wt_func;
                   }
-                  advection *= -wt_func * det_J * wt;
+                  advection *= -det_J * wt;
                   advection *= h3;
                   advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                 }
@@ -2610,7 +2687,49 @@ int assemble_moments(double time, /* present time value */
               advection = 0.;
               advection_a = 0.;
               if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-                advection_a += wt_func * d_vconv->v[b][b][j] * fv->grad_moment[mom][b];
+                if (mp->MomentTime_funcModel == TAYLOR_GALERKIN) {
+                  dbl c_new = 0;
+                  if (tt == 0.0) {
+                    c_new = 3. / 2.;
+                  } else if (tt == 0.5) {
+                    c_new = 1. / 2.;
+                  }
+
+                  dbl taylor_flux_wt = 0;
+                  dbl d_taylor_flux_wt = 0;
+                  //             for (a = 0; a < VIM; a++) {
+                  //   st->taylor_flux_wt[j] += conv[a] * bf[eqn]->grad_phi[j][a];
+                  // }
+                  for (int p = 0; p < VIM; p++) {
+                    taylor_flux_wt += vconv[p] * bf[eqn]->grad_phi[i][p];
+                    d_taylor_flux_wt += d_vconv->v[p][b][j] * bf[eqn]->grad_phi[i][p];
+                  }
+
+                  dbl advection_a = 0;
+                  for (p = 0; p < VIM; p++) {
+                    // st->conv_flux
+                    advection_a += (c_new * d_vconv->v[p][b][j]) * fv->grad_moment[mom][p];
+                  }
+                  advection_a *= wt_func;
+
+                  dbl advection_b = 0;
+                  dbl advection_c = 0;
+                  for (p = 0; p < VIM; p++) {
+                    // st->taylor_flux
+                    // F = v dot grad M * W
+                    // dF = dv dot grad M * W + v dot grad M * dW
+                    advection_b += d_vconv->v[p][b][j] * fv->grad_moment[mom][p];
+                    advection_c += vconv[p] * fv->grad_moment[mom][p];
+                  }
+                  advection_b *= taylor_flux_wt * dt / 2;
+                  advection_c *= d_taylor_flux_wt * dt / 2;
+                  advection = advection_a + advection_b + advection_c;
+
+                } else {
+                  for (int p = 0; p < VIM; p++) {
+                    advection_a += wt_func * d_vconv->v[p][b][j] * fv->grad_moment[mom][p];
+                  }
+                }
                 advection_a *= -det_J * wt;
                 advection_a *= h3;
                 advection_a *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
@@ -2732,48 +2851,100 @@ int assemble_moments(double time, /* present time value */
                  *
                  */
 
-                advection_a = 0.;
-                for (p = 0; p < dim; p++) {
-                  advection_a += vconv[p] * fv->d_grad_moment_dmesh[mom][p][b][j];
-                }
-                advection_a *= -wt_func * h3 * det_J * wt;
-
-                advection_b = 0.;
-                for (p = 0; p < dim; p++) {
-                  advection_b += vconv[p] * fv->grad_moment[mom][p];
-                }
-                advection_b *= -wt_func * h3 * d_det_J_dmeshbj * wt;
-
-                advection_c = 0.;
-                if (pd->TimeIntegration != STEADY) {
-                  if (pd->e[pg->imtrx][eqn] & T_MASS) {
-                    for (p = 0; p < dim; p++) {
-                      advection_c += d_vconv->X[p][b][j] * fv->grad_moment[mom][p];
-                    }
-                    advection_c *= -wt_func * h3 * det_J * wt;
+                if (mp->MomentTime_funcModel == TAYLOR_GALERKIN) {
+                  dbl c_new = 0;
+                  dbl c_old = 0;
+                  if (tt == 0.0) {
+                    c_new = 3. / 2.;
+                    c_old = -1. / 2.;
+                  } else if (tt == 0.5) {
+                    c_new = 1. / 2.;
+                    c_old = 1. / 2.;
                   }
-                }
 
-                advection_d = 0.;
-                for (p = 0; p < dim; p++) {
-                  advection_d += vconv[p] * fv->grad_moment[mom][p];
-                }
-                advection_d *= -wt_func * dh3dmesh_bj * det_J * wt;
+                  dbl taylor_flux_wt = 0;
+                  dbl d_taylor_flux_wt = 0;
+                  //             for (a = 0; a < VIM; a++) {
+                  //   st->taylor_flux_wt[j] += conv[a] * bf[eqn]->grad_phi[j][a];
+                  // }
+                  for (int p = 0; p < VIM; p++) {
+                    taylor_flux_wt += vconv[p] * bf[eqn]->grad_phi[i][p];
+                    d_taylor_flux_wt += d_vconv->X[p][b][j] * bf[eqn]->grad_phi[i][p] +
+                                        vconv[p] * bf[eqn]->d_grad_phi_dmesh[i][p][b][j];
+                  }
 
-                advection_e = 0.;
-                if (supg != 0.) {
-                  d_wt_func = 0.;
-                  for (p = 0; p < dim; p++) {
-                    d_wt_func +=
-                        supg * (h_elem_inv * fv->v[p] * bf[eqn]->d_grad_phi_dmesh[i][p][b][j] +
-                                h_elem_inv_deriv * fv->v[p] * grad_phi_i[p]);
+                  dbl advection_a = 0;
+                  dbl advection_d = 0;
+                  for (p = 0; p < VIM; p++) {
+                    // st->conv_flux
+                    advection_a += (c_new * d_vconv->X[p][b][j]) * fv->grad_moment[mom][p] +
+                                   (c_new * vconv[p] + c_old * vconv_old[p]) *
+                                       fv->d_grad_moment_dmesh[mom][p][b][j];
+                    advection_d +=
+                        (c_new * vconv[p] + c_old * vconv_old[p]) * fv->grad_moment[mom][p];
+                  }
+                  advection_a *= wt_func;
+                  advection_d *= wt_func;
 
+                  dbl advection_b = 0;
+                  dbl advection_c = 0;
+                  dbl advection_e = 0;
+                  for (p = 0; p < VIM; p++) {
+                    // st->taylor_flux
+                    advection_b += d_vconv->X[p][b][j] * fv->grad_moment[mom][p] +
+                                   vconv[p] * fv->d_grad_moment_dmesh[mom][p][b][j];
+                    advection_c += vconv[p] * fv->grad_moment[mom][p];
                     advection_e += vconv[p] * fv->grad_moment[mom][p];
                   }
-                  advection_e *= -d_wt_func * h3 * det_J * wt;
-                }
+                  advection_b *= taylor_flux_wt * dt / 2;
+                  advection_c *= d_taylor_flux_wt * dt / 2;
+                  advection = -(advection_a + advection_b + advection_c) * wt * h3 * det_J +
+                              -(advection_e + advection_d) * wt *
+                                  (dh3dmesh_bj * det_J + h3 * d_det_J_dmeshbj);
+                } else {
+                  advection_a = 0.;
+                  for (p = 0; p < dim; p++) {
+                    advection_a += vconv[p] * fv->d_grad_moment_dmesh[mom][p][b][j];
+                  }
+                  advection_a *= -wt_func * h3 * det_J * wt;
 
-                advection = advection_a + advection_b + advection_c + advection_d + advection_e;
+                  advection_b = 0.;
+                  for (p = 0; p < dim; p++) {
+                    advection_b += vconv[p] * fv->grad_moment[mom][p];
+                  }
+                  advection_b *= -wt_func * h3 * d_det_J_dmeshbj * wt;
+
+                  advection_c = 0.;
+                  if (pd->TimeIntegration != STEADY) {
+                    if (pd->e[pg->imtrx][eqn] & T_MASS) {
+                      for (p = 0; p < dim; p++) {
+                        advection_c += d_vconv->X[p][b][j] * fv->grad_moment[mom][p];
+                      }
+                      advection_c *= -wt_func * h3 * det_J * wt;
+                    }
+                  }
+
+                  advection_d = 0.;
+                  for (p = 0; p < dim; p++) {
+                    advection_d += vconv[p] * fv->grad_moment[mom][p];
+                  }
+                  advection_d *= -wt_func * dh3dmesh_bj * det_J * wt;
+
+                  advection_e = 0.;
+                  if (supg != 0.) {
+                    d_wt_func = 0.;
+                    for (p = 0; p < dim; p++) {
+                      d_wt_func +=
+                          supg * (h_elem_inv * fv->v[p] * bf[eqn]->d_grad_phi_dmesh[i][p][b][j] +
+                                  h_elem_inv_deriv * fv->v[p] * grad_phi_i[p]);
+
+                      advection_e += vconv[p] * fv->grad_moment[mom][p];
+                    }
+                    advection_e *= -d_wt_func * h3 * det_J * wt;
+                  }
+
+                  advection = advection_a + advection_b + advection_c + advection_d + advection_e;
+                }
 
                 advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
               }

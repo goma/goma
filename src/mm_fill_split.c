@@ -124,7 +124,7 @@ int assemble_ustar(dbl time_value, /* current time */
 
           lec->R[LEC_R_INDEX(peqn, ii)] += resid + adv + pres + diff + source;
         } /*end if (active_dofs) */
-      }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
   }
 
@@ -368,7 +368,7 @@ int assemble_continuity_segregated(dbl time_value, /* current time */
 #endif /* DEBUG_MOMENTUM_RES */
 
       } /*end if (active_dofs) */
-    }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+    } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
   }
 
   /*
@@ -469,7 +469,7 @@ int assemble_momentum_segregated(dbl time, /* current time */
 #endif /* DEBUG_MOMENTUM_RES */
 
         } /*end if (active_dofs) */
-      }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
   }
 

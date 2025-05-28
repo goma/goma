@@ -805,8 +805,8 @@ int assemble_real_solid(double time_value, double tt, double dt) {
         }
 
       } /* end of loop over equations i  */
-    }   /* end of loop over equation directions a */
-  }     /* end of if jacobian */
+    } /* end of loop over equation directions a */
+  } /* end of if jacobian */
 
   return (status);
 }
@@ -1967,41 +1967,41 @@ void f_kinematic_displacement_bc(double func[DIM],
     }
 #endif
 
-  if (af->Assemble_Jacobian) {
+    if (af->Assemble_Jacobian) {
+      for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
+        for (p = 0; p < pd->Num_Dim; p++) {
+          var = MESH_DISPLACEMENT1 + p;
+          if (pd->v[pg->imtrx][var]) {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              phi_j = bf[var]->phi[j];
+              d_func[0][var][j] += ((fv->d[kdir] - base_displacement[kdir]) -
+                                    (fv->d_rs[kdir] - base_displacement_rs[kdir])) *
+                                       fv->dsnormal_dx[kdir][p][j] +
+                                   (delta(kdir, p) - dns_dX[kdir][p]) * phi_j * fv->snormal[kdir];
+            }
+          }
+        }
+
+        for (p = 0; p < pd->Num_Dim; p++) {
+          var = SOLID_DISPLACEMENT1 + p;
+          if (pd->v[pg->imtrx][var]) {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              phi_j = bf[var]->phi[j];
+              d_func[0][var][j] -= (delta(kdir, p) + dns_drs[kdir][p]) * phi_j * fv->snormal[kdir];
+            }
+          }
+        }
+      }
+    } /* end of if Assemble_Jacobian */
+
+    /* Calculate the residual contribution	*/
+
     for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
-      for (p = 0; p < pd->Num_Dim; p++) {
-        var = MESH_DISPLACEMENT1 + p;
-        if (pd->v[pg->imtrx][var]) {
-          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            phi_j = bf[var]->phi[j];
-            d_func[0][var][j] += ((fv->d[kdir] - base_displacement[kdir]) -
-                                  (fv->d_rs[kdir] - base_displacement_rs[kdir])) *
-                                     fv->dsnormal_dx[kdir][p][j] +
-                                 (delta(kdir, p) - dns_dX[kdir][p]) * phi_j * fv->snormal[kdir];
-          }
-        }
-      }
-
-      for (p = 0; p < pd->Num_Dim; p++) {
-        var = SOLID_DISPLACEMENT1 + p;
-        if (pd->v[pg->imtrx][var]) {
-          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            phi_j = bf[var]->phi[j];
-            d_func[0][var][j] -= (delta(kdir, p) + dns_drs[kdir][p]) * phi_j * fv->snormal[kdir];
-          }
-        }
-      }
+      *func += ((fv->d[kdir] - base_displacement[kdir]) -
+                (fv->d_rs[kdir] - base_displacement_rs[kdir])) *
+               fv->snormal[kdir];
     }
-  } /* end of if Assemble_Jacobian */
-
-  /* Calculate the residual contribution	*/
-
-  for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
-    *func +=
-        ((fv->d[kdir] - base_displacement[kdir]) - (fv->d_rs[kdir] - base_displacement_rs[kdir])) *
-        fv->snormal[kdir];
   }
-}
 
 } /* END of routine f_kinematic_displacement_bc  */
 

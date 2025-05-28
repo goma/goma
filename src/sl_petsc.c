@@ -128,7 +128,7 @@ static goma_error get_pressure_velocity_is(PetscMatrixData *matrix_data,
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }   /* END for (ieb loop) */
+  } /* END for (ieb loop) */
 
   *vel_n = index_vel;
   *pres_n = index_pres;
@@ -207,7 +207,7 @@ static goma_error get_pressure_velocity_is(PetscMatrixData *matrix_data,
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }   /* END for (ieb loop) */
+  } /* END for (ieb loop) */
   GOMA_ASSERT(index_vel == *vel_n);
   GOMA_ASSERT(index_pres == *pres_n);
   qsort(*vel_is, index_vel, sizeof(PetscInt), pint_compare);
@@ -276,7 +276,7 @@ goma_error count_pressure_nodes(PetscMatrixData *matrix_data,
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }   /* END for (ieb loop) */
+  } /* END for (ieb loop) */
 
   *local_nodes = index;
 
@@ -374,7 +374,7 @@ static goma_error initialize_petsc_pressure_matrix(PetscMatrixData *matrix_data,
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }   /* END for (ieb loop) */
+  } /* END for (ieb loop) */
 
   if (Num_Proc == 1) {
     MatSeqAIJSetPreallocation(matrix_data->SchurS, 0, d_nnz);
@@ -528,8 +528,8 @@ static goma_error set_pcd_matrices(PetscMatrixData *matrix_data,
           }
         }
       } /* END  for (ip = 0; ip < ip_total; ip++)                      */
-    }   /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }     /* END for (ieb loop) */
+    } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
+  } /* END for (ieb loop) */
 
   PetscInt n_ss_rows = 0;
   for (int ss_idx = 0; ss_idx < matrix_data->pcd_ss_remove_n; ss_idx++) {
@@ -741,6 +741,10 @@ static goma_error set_petsc_pressure_matrix(PetscMatrixData *matrix_data,
           }
         }
         double mu = viscosity(gn, gamma, NULL);
+        for (int mode = 0; mode < vn->modes; mode++) {
+          dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
+          mu += mup;
+        }
         double invmu = (1.0 / mu);
         int eqn = PRESSURE;
         for (int i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
@@ -764,8 +768,8 @@ static goma_error set_petsc_pressure_matrix(PetscMatrixData *matrix_data,
           }
         }
       } /* END  for (ip = 0; ip < ip_total; ip++)                      */
-    }   /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }     /* END for (ieb loop) */
+    } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
+  } /* END for (ieb loop) */
 
   return GOMA_SUCCESS;
 }
@@ -864,7 +868,7 @@ static goma_error initialize_petsc_post_proc_matrix(Exo_DB *exo,
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }   /* END for (ieb loop) */
+  } /* END for (ieb loop) */
 
   if (Num_Proc == 1) {
     MatSeqAIJSetPreallocation(matrix_data->mat, 0, d_nnz);
@@ -973,8 +977,8 @@ static goma_error initialize_petsc_post_proc_matrix(Exo_DB *exo,
           }
         }
       } /* END  for (ip = 0; ip < ip_total; ip++)                      */
-    }   /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }     /* END for (ieb loop) */
+    } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
+  } /* END for (ieb loop) */
 
   free(d_nnz);
   free(o_nnz);
@@ -1301,18 +1305,18 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
 
   PetscInt pcd_ns_remove_n = 0;
   PetscBool pcd_ns_remove_n_set;
-  PetscOptionsGetInt(NULL, NULL, "-pcd_ns_remove_n", &pcd_ns_remove_n, &pcd_ns_remove_n_set);
+  PetscOptionsGetInt(NULL, NULL, "-user_pcd_ns_remove_n", &pcd_ns_remove_n, &pcd_ns_remove_n_set);
 
   PetscInt pcd_ss_remove_n = 0;
   PetscBool pcd_ss_remove_n_set;
-  PetscOptionsGetInt(NULL, NULL, "-pcd_ss_remove_n", &pcd_ss_remove_n, &pcd_ss_remove_n_set);
+  PetscOptionsGetInt(NULL, NULL, "-user_pcd_ss_remove_n", &pcd_ss_remove_n, &pcd_ss_remove_n_set);
 
   PetscBool pcd_ns_remove_set;
   PetscInt *pcd_ns_remove = NULL;
   PetscInt pcd_ns_found = pcd_ns_remove_n;
   if (pcd_ns_remove_n_set) {
     PetscMalloc1(pcd_ns_remove_n, &pcd_ns_remove);
-    PetscOptionsGetIntArray(NULL, NULL, "-pcd_ns_remove", pcd_ns_remove, &pcd_ns_found,
+    PetscOptionsGetIntArray(NULL, NULL, "-user_pcd_ns_remove", pcd_ns_remove, &pcd_ns_found,
                             &pcd_ns_remove_set);
   }
 
@@ -1321,7 +1325,7 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
   PetscInt pcd_ss_found = pcd_ss_remove_n;
   if (pcd_ss_remove_n_set) {
     PetscMalloc1(pcd_ss_remove_n, &pcd_ss_remove);
-    PetscOptionsGetIntArray(NULL, NULL, "-pcd_ss_remove", pcd_ss_remove, &pcd_ss_found,
+    PetscOptionsGetIntArray(NULL, NULL, "-user_pcd_ss_remove", pcd_ss_remove, &pcd_ss_found,
                             &pcd_ss_remove_set);
   }
 
@@ -1420,21 +1424,21 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
     PCFieldSplitSetIS(pc, "u", ufields);
     PCFieldSplitSetIS(pc, "p", pfields);
 
-    // if (pd_glob[0]->Num_Dim == 3) {
-    //   PC pc;
-    //   const PetscInt ufields[] = {0, 1, 2}, pfields[] = {3};
-    //   KSPGetPC(matrix_data->ksp, &pc);
-    //   PCFieldSplitSetBlockSize(pc, 4);
-    //   PCFieldSplitSetFields(pc, "u", 3, ufields, ufields);
-    //   PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
-    // } else if (pd_glob[0]->Num_Dim == 2) {
-    //   PC pc;
-    //   const PetscInt ufields[] = {0, 1}, pfields[] = {3};
-    //   KSPGetPC(matrix_data->ksp, &pc);
-    //   PCFieldSplitSetBlockSize(pc, 3);
-    //   PCFieldSplitSetFields(pc, "u", 2, ufields, ufields);
-    //   PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
-    // }
+    //  if (pd_glob[0]->Num_Dim == 3) {
+    //    PC pc;
+    //    const PetscInt ufields[] = {0, 1, 2}, pfields[] = {3};
+    //    KSPGetPC(matrix_data->ksp, &pc);
+    //    PCFieldSplitSetBlockSize(pc, 4);
+    //    PCFieldSplitSetFields(pc, "u", 3, ufields, ufields);
+    //    PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
+    //  } else if (pd_glob[0]->Num_Dim == 2) {
+    //    PC pc;
+    //    const PetscInt ufields[] = {0, 1}, pfields[] = {3};
+    //    KSPGetPC(matrix_data->ksp, &pc);
+    //    PCFieldSplitSetBlockSize(pc, 3);
+    //    PCFieldSplitSetFields(pc, "u", 2, ufields, ufields);
+    //    PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
+    //  }
 
     PetscInt local_pressure_nodes = 0, global_pressure_nodes = 0;
     if ((user_schur_set && user_schur) || (user_pcd_set && user_pcd)) {
@@ -1487,6 +1491,7 @@ void petsc_load_lec(int ielem, struct GomaLinearSolverData *ams, double resid_ve
   struct Element_Indices *ei_ptr;
 
   PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
+  matrix_data->mat_entries_set = PETSC_TRUE;
   for (e = V_FIRST; e < V_LAST; e++) {
     pe = upd->ep[pg->imtrx][e];
     if (pe != -1) {
@@ -1698,11 +1703,23 @@ goma_error petsc_scale_matrix(struct GomaLinearSolverData *ams, double *b_, doub
   return GOMA_SUCCESS;
 }
 
+int petsc_zero_mat(struct GomaLinearSolverData *ams) {
+  PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
+  if (matrix_data->mat_entries_set) {
+    MatAssemblyBegin(matrix_data->mat, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(matrix_data->mat, MAT_FINAL_ASSEMBLY);
+    matrix_data->mat_entries_set = PETSC_FALSE;
+  }
+  MatZeroEntries(matrix_data->mat);
+  return 0;
+}
+
 // vim: expandtab sw=2 ts=8
 int petsc_solve(struct GomaLinearSolverData *ams, double *x_, double *b_, int *its) {
   PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
   MatAssemblyBegin(matrix_data->mat, MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(matrix_data->mat, MAT_FINAL_ASSEMBLY);
+  matrix_data->mat_entries_set = PETSC_FALSE;
   if (matrix_data->user_schur) {
     MatZeroEntries(matrix_data->SchurS);
     set_petsc_pressure_matrix(matrix_data, EXO_ptr, DPI_ptr, pg->matrices[pg->imtrx].x,
@@ -1752,7 +1769,6 @@ int petsc_solve(struct GomaLinearSolverData *ams, double *x_, double *b_, int *i
   *its = pits;
   VecGetValues(matrix_data->update, num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx],
                matrix_data->local_to_global, x_);
-  MatZeroEntries(matrix_data->mat);
   return 0;
 }
 

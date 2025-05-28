@@ -32,6 +32,7 @@
 
 #include "ac_stability.h"
 #include "ac_stability_util.h"
+#include "ad_turbulence.h"
 #include "bc_colloc.h"
 #include "bc_contact.h"
 #include "dpi.h"
@@ -633,6 +634,7 @@ int apply_contact_bc(double x[],              /* Solution vector for the current
               /*
                * For strong conditions weight the function by BIG_PENALTY
                */
+
               if (BC_Types[bc_input_id].desc->method == STRONG_INT_SURF) {
                 weight *= BIG_PENALTY;
               }
@@ -831,17 +833,17 @@ int apply_contact_bc(double x[],              /* Solution vector for the current
                         lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] += jac;
                       }
                     } /* end of variable exists and BC is sensitive to it */
-                  }   /* end of var loop over variable types */
+                  } /* end of var loop over variable types */
 
                 } /* end of NEWTON */
               }
             } /* end of if (Res_BC != NULL) - i.e. apply residual at this node */
-          }   /* end of loop over equations that this condition applies to */
-        }     /* end for (i=0; i< num_nodes_on_side; i++) */
+          } /* end of loop over equations that this condition applies to */
+        } /* end for (i=0; i< num_nodes_on_side; i++) */
 
       } /*End (if INT) (CAPILLARY and KINEMATIC and VELO_NORMAL and VELO_TANGENT . . .) */
-    }   /*(end for ibc) */
-  }     /*End for ip = 1,...*/
+    } /*(end for ibc) */
+  } /*End for ip = 1,...*/
 
   return (status);
 } /* END of routine apply_contact_bc */
@@ -2483,6 +2485,13 @@ void setup_shop_at_point(int ielem, double *xi, const Exo_DB *exo)
   err = load_fv_grads();
   GOMA_EH(err, "load_fv_grads");
 
+  if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
+    fill_ad_field_variables();
+#else
+    GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
+  }
   /*
    *  Just as in the main element assembly, we ensure that the current element
    *  actually has mesh equations associated with it before calculation

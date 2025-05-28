@@ -40,6 +40,7 @@
 #include "el_elm_info.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "linalg/sparse_matrix.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_augc_util.h"
@@ -60,6 +61,7 @@
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
 #include "mpi.h"
+#include "polymer_time_const.h"
 #include "rd_exo.h"
 #include "rd_mesh.h"
 #include "rf_allo.h"
@@ -70,14 +72,13 @@
 #include "rf_io.h"
 #include "rf_io_const.h"
 #include "rf_io_structs.h"
+#include "rf_masks.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
 #include "rf_solve_segregated.h"
 #include "rf_solver.h"
 #include "rf_util.h"
 #include "sl_auxutil.h"
-#include "sl_epetra_interface.h"
-#include "sl_epetra_util.h"
 #include "sl_matrix_util.h"
 #include "sl_petsc.h"
 #include "sl_petsc_complex.h"
@@ -100,8 +101,8 @@
  * Global variables defined in this file.
  */
 
-struct elem_side_bc_struct ***First_Elem_Side_BC_Array;
-struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
+extern struct elem_side_bc_struct ***First_Elem_Side_BC_Array;
+extern struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
 
 #define ROUND_TO_ONE 0.9999999
 
@@ -133,6 +134,18 @@ extern FSUB_TYPE dsyev_(char *JOBZ,
                         int len_jobz,
                         int len_uplo);
 
+extern FSUB_TYPE dsysv_(char *JOBZ,
+                        int *N,
+                        int *N_RHS,
+                        double *A,
+                        int *LDA,
+                        int *PVT,
+                        double *B,
+                        int *LDB,
+                        double *WORK,
+                        int *LWORK,
+                        int *INFO,
+                        int len_jobz);
 // C = A X B
 void slow_square_dgemm(
     int transpose_b, int N, double A[DIM][DIM], double B[DIM][DIM], double C[DIM][DIM]) {
@@ -176,8 +189,6 @@ void initial_guess_stress_to_log_conf(double *x, int num_total_nodes) {
   double WORK[LWORK];
   double A[DIM * DIM];
   dbl gamma_dot[DIM][DIM];
-  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
-  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mu_struct;
 
   int mode, mn;
   double lambda = 0;
@@ -202,16 +213,8 @@ void initial_guess_stress_to_log_conf(double *x, int num_total_nodes) {
           }
         }
 
-        mup = viscosity(ve[mode]->gn, gamma_dot, d_mup);
-
-        if (ve[mode]->time_constModel == CONSTANT) {
-          lambda = ve[mode]->time_const;
-        } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-          lambda = mup / ve[mode]->time_const;
-        } else {
-          GOMA_EH(GOMA_ERROR,
-                  "Unknown model for Polymer Time Constant in initial guess log conf to stress");
-        }
+        mup = viscosity(ve[mode]->gn, gamma_dot, NULL);
+        lambda = polymer_time_const(ve[mode]->time_const_st, gamma_dot, NULL);
 
         // skip node if stress variables not found
         if (s_idx[0][0] == -1 || s_idx[0][1] == -1 || s_idx[1][1] == -1)
@@ -280,8 +283,8 @@ void initial_guess_stress_to_log_conf(double *x, int num_total_nodes) {
         x[s_idx[1][1]] = log_s[1][1];
 
       } /* Loop over nodes */
-    }   /* Loop over modes */
-  }     /* Loop over materials */
+    } /* Loop over modes */
+  } /* Loop over materials */
 }
 
 void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
@@ -715,14 +718,21 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
   /* Allocate sparse matrix */
 
-  if (strcmp(Matrix_Format, "epetra") == 0) {
+  ams[JAC]->GomaMatrixData = NULL;
+  if ((strcmp(Matrix_Format, "tpetra") == 0) || (strcmp(Matrix_Format, "epetra") == 0)) {
     err = check_compatible_solver();
-    GOMA_EH(err,
-            "Incompatible matrix solver for epetra, epetra supports amesos and aztecoo solvers.");
+    GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
     check_parallel_error("Matrix format / Solver incompatibility");
-    ams[JAC]->RowMatrix =
-        EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
-    EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
+    GomaSparseMatrix goma_matrix;
+    goma_error err = GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
+    GOMA_EH(err, "GomaSparseMatrix_CreateFromFormat");
+    int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
+    err = GomaSparseMatrix_SetProblemGraph(
+        goma_matrix, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx],
+        num_external_dofs[pg->imtrx], local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
+        dpi, cx[pg->imtrx], pg->imtrx, Debug_Flag, ams[JAC]);
+    GOMA_EH(err, "GomaSparseMatrix_SetProblemGraph");
+    ams[JAC]->GomaMatrixData = goma_matrix;
 #ifdef GOMA_ENABLE_PETSC
 #if PETSC_USE_COMPLEX
   } else if (strcmp(Matrix_Format, "petsc_complex") == 0) {
@@ -784,8 +794,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
     ams[JAC]->nnz = ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] - 1;
     ams[JAC]->nnz_plus = ija[num_universe_dofs[pg->imtrx]];
-
-    ams[JAC]->RowMatrix = NULL;
 
   } else if (strcmp(Matrix_Format, "vbr") == 0) {
     log_msg("alloc_VBR_sparse_arrays...");
@@ -908,7 +916,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   dcopy1(nAC, x_AC, &(gv[5]));
 
   if (Output_Variable_Stats) {
-    err = variable_stats(x, timeValueRead);
+    err = variable_stats(x, timeValueRead, FALSE);
     GOMA_EH(err, "Problem with variable_stats!");
     if (ProcID == 0)
       fflush(stdout);
@@ -993,7 +1001,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         evol_local = augc[iAC].evol;
 #ifdef PARALLEL
         if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
-                             augc[iAC].Type == AC_ANGLE)) {
+                             augc[iAC].Type == AC_ANGLE || augc[iAC].Type == AC_POSITION_MT)) {
           MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
           evol_local = evol_global;
         }
@@ -1005,7 +1013,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         } else if (augc[iAC].Type == AC_VOLUME) {
           DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                   augc[iAC].VOLID, evol_local, x_AC[iAC]);
-        } else if (augc[iAC].Type == AC_POSITION) {
+        } else if (augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_POSITION_MT) {
           DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e MT[%4d] Param=%10.6e\n",
                   augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_ANGLE) {
@@ -1067,7 +1075,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
                                  pp_volume[i]->num_params, NULL, x, xdot, delta_t, time1, 1);
       }
       if (Output_Variable_Stats) {
-        err = variable_stats(x, time1);
+        err = variable_stats(x, time1, Output_Variable_Regression);
         GOMA_EH(err, "Problem with variable_stats!");
         if (ProcID == 0)
           fflush(stdout);
@@ -1660,7 +1668,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               DPRINTF(stdout, "\n\t\t Exodus file read initialization for phase function fields");
               break;
             } /* end of switch(ls->Init_Method ) */
-          }   /* end of i<pfd->num_phase_funcs */
+          } /* end of i<pfd->num_phase_funcs */
 
           ls = ls_save; /* OK, used the level set routines now be nice and point
                            ls back to where you found it */
@@ -1727,7 +1735,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           exchange_dof(cx[0], dpi, tran->xdbl_dot, 0);
         }
       } else {
-        DPRINTF(stderr, "skipping predict_solution %d %d %g %d\n", n, nt, time1, nonconv_roll);
+        DPRINTF(stderr, "skipping predict_solution at time: %g %d\n", time1, nonconv_roll);
       }
 
 #ifdef LASER_RAYTRACE
@@ -1882,6 +1890,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
        */
       dcopy1(numProcUnknowns, x, x_save);
       dcopy1(numProcUnknowns, xdot, xdot_save);
+      tran->current_theta = theta;
       err = solve_nonlinear_problem(ams[JAC], x, delta_t, theta, x_old, x_older, xdot, xdot_old,
                                     resid_vector, x_update, scale, &converged, &nprint, tev,
                                     tev_post, gv, rd, gindex, p_gsize, gvec, gvec_elem, time1, exo,
@@ -1917,7 +1926,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
       if (!converged) {
         if (inewton < Max_Newton_Steps) {
-          DPRINTF(stderr, "copying x_save %g %d %d\n", time1, nonconv_roll, inewton);
+          DPRINTF(stderr, "copying x_save for time: %g %d\n", time1, nonconv_roll);
           dcopy1(numProcUnknowns, x_save, x);
           dcopy1(numProcUnknowns, xdot_save, xdot);
         } else if (!relax_bit) {
@@ -1944,6 +1953,31 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
        * and retry.
        */
       if (converged) {
+
+        if (upd->ep[pg->imtrx][TURB_K] >= 0 || upd->ep[pg->imtrx][TURB_OMEGA] >= 0) {
+          /*     Floor values to 0 */
+          int floored_values = 0;
+          for (int var = TURB_K; var <= TURB_OMEGA; var++) {
+            for (int mn = 0; mn < upd->Num_Mat; mn++) {
+              if (pd_glob[mn]->v[pg->imtrx][var]) {
+                for (i = 0; i < num_total_nodes; i++) {
+                  int j = Index_Solution(i, var, 0, 0, mn, pg->imtrx);
+
+                  if (j != -1 && x[j] < 0) {
+                    x[j] = 0.0;
+                    floored_values++;
+                  }
+                }
+              }
+            }
+          }
+
+          int global_floored = 0;
+          MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+          if (global_floored > 0)
+            P0PRINTF("Floored %d values\n", global_floored);
+        }
 
         delta_t_new = time_step_control(delta_t, delta_t_old, const_delta_t, x, x_pred, x_old, x_AC,
                                         x_AC_pred, eps, &success_dt, tran->use_var_norm);
@@ -2120,8 +2154,9 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             for (iAC = 0; iAC < nAC; iAC++) {
               evol_local = augc[iAC].evol;
 #ifdef PARALLEL
-              if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
-                                   augc[iAC].Type == AC_ANGLE)) {
+              if (Num_Proc > 1 &&
+                  (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
+                   augc[iAC].Type == AC_ANGLE || augc[iAC].Type == AC_POSITION_MT)) {
                 MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 evol_local = evol_global;
               }
@@ -2138,7 +2173,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               } else if (augc[iAC].Type == AC_FLUX) {
                 DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                         x_AC[iAC]);
-              } else if (augc[iAC].Type == AC_POSITION) {
+              } else if (augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_POSITION_MT) {
                 DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e MT[%4d] Param=%10.6e\n",
                         augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
               } else if (augc[iAC].Type == AC_ANGLE) {
@@ -2354,7 +2389,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         }
 
         if (Output_Variable_Stats) {
-          err = variable_stats(x, time);
+          if (time >= time_max) {
+            err = variable_stats(x, time, Output_Variable_Regression);
+          } else {
+            err = variable_stats(x, time, FALSE);
+          }
           GOMA_EH(err, "Problem with variable_stats!");
           if (ProcID == 0)
             fflush(stdout);
@@ -2480,8 +2519,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               DPRINTF(stdout, "  damping factor %g  \n", damp_factor1);
             }
           } else {
-            /*DPRINTF(stderr, "Not Looking Good..., Iter: %d Converged: %d Success_dt: %d \n",
-                    inewton, converged, success_dt); */
             DPRINTF(stderr, "\n\tlast time step failed, dt *= %g for next try!\n",
                     tran->time_step_decelerator);
 
@@ -2644,6 +2681,7 @@ free_and_clear:
     for (i = 0; i < MAX_NUMBER_MATLS; i++) {
       for (n = 0; n < MAX_MODES; n++) {
         safer_free((void **)&(ve_glob[i][n]->gn));
+        safer_free((void **)&(ve_glob[i][n]->time_const_st));
         safer_free((void **)&(ve_glob[i][n]));
       }
       safer_free((void **)&(vn_glob[i]));
@@ -2658,14 +2696,10 @@ free_and_clear:
   }
 
   if (last_call) {
-    if (strcmp(Matrix_Format, "epetra") == 0) {
-      EpetraDeleteRowMatrix(ams[JAC]->RowMatrix);
-      if (ams[JAC]->GlobalIDs != NULL) {
-        free(ams[JAC]->GlobalIDs);
-      }
-    }
+    GomaSparseMatrix goma_matrix = ams[JAC]->GomaMatrixData;
+    GomaSparseMatrix_Destroy(&goma_matrix);
 #ifdef GOMA_ENABLE_PETSC
-    else if (strcmp(Matrix_Format, "petsc") == 0) {
+    if (strcmp(Matrix_Format, "petsc") == 0) {
       err = goma_petsc_free_matrix(ams[JAC]);
       GOMA_EH(err, "free petsc matrix");
     }
@@ -3359,18 +3393,29 @@ int load_export_vars(const int nodes, dbl x[], dbl *x_pp)
 
 /*****************************************************************************/
 
-int variable_stats(double *x, const double time) {
+int variable_stats(double *x, const double time, const int coord_linear) {
   int i, var, idv, mn;
   double max[MAX_VARIABLE_TYPES], min[MAX_VARIABLE_TYPES];
-  double mean[MAX_VARIABLE_TYPES], sqr[MAX_VARIABLE_TYPES], std[MAX_VARIABLE_TYPES];
+  double sqr[MAX_VARIABLE_TYPES], mean[MAX_VARIABLE_TYPES];
   int ncp[MAX_VARIABLE_TYPES]; /* number of ea var contributing to norm */
   int var_somewhere;           /* boolean */
+  double crd_sum[DIM], crd_sqr[2 * DIM], crd_cross[DIM][MAX_VARIABLE_TYPES];
+  double fcn_sum[MAX_VARIABLE_TYPES], fcn_sqr[MAX_VARIABLE_TYPES];
+  int crd_ncp[DIM], fcn_ncp[MAX_VARIABLE_TYPES];
+  int pdim = pd->Num_Dim;
 #ifdef PARALLEL
   double max_buf[MAX_VARIABLE_TYPES];  /* accumulated over all procs */
   double min_buf[MAX_VARIABLE_TYPES];  /* accumulated over all procs */
   double mean_buf[MAX_VARIABLE_TYPES]; /* accumulated over all procs */
   double sqr_buf[MAX_VARIABLE_TYPES];  /* accumulated over all procs */
   int ncp_buf[MAX_VARIABLE_TYPES];
+  double crd_sum_buf[DIM];                       /* accumulated over all procs */
+  double crd_sqr_buf[2 * DIM];                   /* accumulated over all procs */
+  double crd_cross_buf[DIM][MAX_VARIABLE_TYPES]; /* accumulated over all procs */
+  double fcn_sum_buf[MAX_VARIABLE_TYPES];        /* accumulated over all procs */
+  double fcn_sqr_buf[MAX_VARIABLE_TYPES];        /* accumulated over all procs */
+  int crd_ncp_buf[MAX_VARIABLE_TYPES];
+  int fcn_ncp_buf[MAX_VARIABLE_TYPES];
 #endif
 
   memset(ncp, 0, sizeof(int) * MAX_VARIABLE_TYPES);
@@ -3378,6 +3423,15 @@ int variable_stats(double *x, const double time) {
   init_vec_value(mean, 0.0, MAX_VARIABLE_TYPES);
   init_vec_value(min, DBL_MAX, MAX_VARIABLE_TYPES);
   init_vec_value(max, -DBL_MAX, MAX_VARIABLE_TYPES);
+  if (coord_linear) {
+    memset(crd_ncp, 0, sizeof(int) * DIM);
+    memset(fcn_ncp, 0, sizeof(int) * MAX_VARIABLE_TYPES);
+    memset(crd_sum, 0.0, sizeof(double) * DIM);
+    memset(crd_sqr, 0.0, sizeof(double) * 2 * DIM);
+    memset(crd_cross, 0.0, sizeof(double) * DIM * MAX_VARIABLE_TYPES);
+    memset(fcn_sum, 0.0, sizeof(double) * MAX_VARIABLE_TYPES);
+    memset(fcn_sqr, 0.0, sizeof(double) * MAX_VARIABLE_TYPES);
+  }
 
   if (TimeIntegration == STEADY) {
     DPRINTF(stdout, "\nVariable Stats:  parm=%g \n", time);
@@ -3409,6 +3463,80 @@ int variable_stats(double *x, const double time) {
       }
     }
   }
+  if (coord_linear) {
+    int dir, dirj, dvar, idx;
+    double coord, coordj;
+    /*  Coordinate stuff first  */
+    for (i = 0; i < DPI_ptr->num_owned_nodes; i++) {
+      for (dir = 0; dir < pdim; dir++) {
+        var = MESH_DISPLACEMENT1 + dir;
+        if (upd->vp[pg->imtrx][var] > -1) {
+          idv = Index_Solution(i, var, 0, 0, -1, pg->imtrx);
+          coord = Coor[dir][i] + x[idv];
+        } else {
+          coord = Coor[dir][i];
+        }
+        crd_sum[dir] += coord;
+        crd_sqr[dir] += SQUARE(coord);
+        if (dir == (var - MESH_DISPLACEMENT1)) {
+          crd_ncp[dir]++;
+        }
+        for (dirj = dir + 1; dirj < pdim; dirj++) {
+          var = MESH_DISPLACEMENT1 + dirj;
+          if (upd->vp[pg->imtrx][var] > -1) {
+            idv = Index_Solution(i, var, 0, 0, -1, pg->imtrx);
+            coordj = Coor[dirj][i] + x[idv];
+          } else {
+            coordj = Coor[dirj][i];
+          }
+          crd_sqr[pdim + dir + dirj - 1] += coord * coordj;
+        }
+      }
+    }
+
+    for (i = 0; i < DPI_ptr->num_owned_nodes; i++) {
+      for (dir = 0; dir < pdim; dir++) {
+        dvar = MESH_DISPLACEMENT1 + dir;
+        if (upd->vp[pg->imtrx][dvar] > -1) {
+          idx = Index_Solution(i, dvar, 0, 0, -1, pg->imtrx);
+          coord = Coor[dir][i] + x[idx];
+          for (var = 0; var < MAX_VARIABLE_TYPES; var++) {
+            if (upd->vp[pg->imtrx][var] > -1) {
+              var_somewhere = FALSE;
+              for (mn = 0; mn < upd->Num_Mat; mn++) {
+                idv = Index_Solution(i, var, 0, 0, mn, pg->imtrx);
+                if (idv != -1) {
+                  var_somewhere = TRUE;
+                  break;
+                }
+              }
+              if (var_somewhere) {
+                crd_cross[dir][var] += coord * x[idv];
+              }
+            }
+          }
+        }
+      }
+
+      for (var = 0; var < MAX_VARIABLE_TYPES; var++) {
+        if (upd->vp[pg->imtrx][var] > -1) {
+          var_somewhere = FALSE;
+          for (mn = 0; mn < upd->Num_Mat; mn++) {
+            idv = Index_Solution(i, var, 0, 0, mn, pg->imtrx);
+            if (idv != -1) {
+              var_somewhere = TRUE;
+              break;
+            }
+          }
+          if (var_somewhere) {
+            fcn_sum[var] += x[idv];
+            fcn_sqr[var] += SQUARE(x[idv]);
+            fcn_ncp[var]++;
+          }
+        }
+      }
+    }
+  }
 /*
  * Find global quantities
  */
@@ -3422,6 +3550,35 @@ int variable_stats(double *x, const double time) {
   MPI_Reduce((void *)sqr, (void *)sqr_buf, MAX_VARIABLE_TYPES, MPI_DOUBLE, MPI_SUM, 0,
              MPI_COMM_WORLD);
   MPI_Reduce((void *)ncp, (void *)ncp_buf, MAX_VARIABLE_TYPES, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  if (coord_linear) {
+    int j;
+    MPI_Reduce((void *)crd_sum, (void *)crd_sum_buf, DIM, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce((void *)crd_sqr, (void *)crd_sqr_buf, 2 * DIM, MPI_DOUBLE, MPI_SUM, 0,
+               MPI_COMM_WORLD);
+    MPI_Reduce((void *)crd_cross, (void *)crd_cross_buf, DIM * MAX_VARIABLE_TYPES, MPI_DOUBLE,
+               MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce((void *)fcn_sum, (void *)fcn_sum_buf, MAX_VARIABLE_TYPES, MPI_DOUBLE, MPI_SUM, 0,
+               MPI_COMM_WORLD);
+    MPI_Reduce((void *)fcn_sqr, (void *)fcn_sqr_buf, MAX_VARIABLE_TYPES, MPI_DOUBLE, MPI_SUM, 0,
+               MPI_COMM_WORLD);
+    MPI_Reduce((void *)crd_ncp, (void *)crd_ncp_buf, DIM, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce((void *)fcn_ncp, (void *)fcn_ncp_buf, MAX_VARIABLE_TYPES, MPI_INT, MPI_SUM, 0,
+               MPI_COMM_WORLD);
+    for (i = 0; i < pdim; i++) {
+      crd_sum[i] = crd_sum_buf[i];
+      crd_sqr[i] = crd_sqr_buf[i];
+      crd_sqr[pdim + i] = crd_sqr_buf[pdim + i];
+      crd_ncp[i] = crd_ncp_buf[i];
+      for (j = 0; j < MAX_VARIABLE_TYPES; j++) {
+        crd_cross[i][j] = crd_cross_buf[i][j];
+      }
+    }
+    for (i = 0; i < MAX_VARIABLE_TYPES; i++) {
+      fcn_sum[i] = fcn_sum_buf[i];
+      fcn_sqr[i] = fcn_sqr_buf[i];
+      fcn_ncp[i] = fcn_ncp_buf[i];
+    }
+  }
 
   for (i = 0; i < MAX_VARIABLE_TYPES; i++) {
     max[i] = max_buf[i];
@@ -3433,16 +3590,153 @@ int variable_stats(double *x, const double time) {
 #endif
   if (ProcID == 0) {
     for (var = 0; var < MAX_VARIABLE_TYPES; var++) {
+      double std_arg = 0.;
       if (upd->vp[pg->imtrx][var] > -1) {
         mean[var] /= ncp[var];
-        std[var] = sqrt((sqr[var] - ncp[var] * SQUARE(mean[var])) / (ncp[var] - 1.));
+        std_arg = sqr[var] - ncp[var] * SQUARE(mean[var]);
+        if (std_arg > 0.) {
+          std_arg = sqrt(std_arg / (double)ncp[var]);
+        }
         DPRINTF(stdout, "%s \t%8g  %8g  %8g  %8g  %8d\n", Var_Name[var].name2, min[var], max[var],
-                mean[var], std[var], ncp[var]);
+                mean[var], std_arg, ncp[var]);
       }
     }
   }
   DPRINTF(stdout, "============================================================= \n");
+  if (ProcID == 0 && coord_linear) {
+    int dir, dirj, j, k;
+    double reg_A[4][4], reg_RHS[4][MAX_PROB_VAR];
+    int n_rhs, reg_N = 0, reg_order = 4;
+    double db_reg_N;
 
+    for (dir = 0; dir < pdim; dir++) {
+      reg_N = MAX(reg_N, crd_ncp[dir]);
+    }
+    db_reg_N = (double)reg_N;
+    n_rhs = 0; /* Since all processors collected, try some reduced arrays on Proc 1*/
+    for (var = 0; var < MAX_VARIABLE_TYPES; var++) {
+      if (fcn_ncp[var] == reg_N) {
+        reg_RHS[0][n_rhs] = fcn_sum[var];
+        for (dir = 0; dir < pdim; dir++) {
+          reg_RHS[dir + 1][n_rhs] = crd_cross[dir][var];
+        }
+        n_rhs++;
+      }
+    }
+
+    memset(reg_A, 0.0, sizeof(double) * 16);
+    reg_A[0][0] = db_reg_N;
+    for (dir = 0; dir < pdim; dir++) {
+      reg_A[dir + 1][dir + 1] = crd_sqr[dir];
+      reg_A[0][dir + 1] = crd_sum[dir];
+      reg_A[dir + 1][0] = crd_sum[dir];
+      for (dirj = dir + 1; dirj < pdim; dirj++) {
+        reg_A[dir + 1][dirj + 1] = crd_sqr[pdim + dir + dirj - 1];
+        reg_A[dirj + 1][dir + 1] = crd_sqr[pdim + dir + dirj - 1];
+      }
+    }
+    // linear solve for linear coordinate regression
+    // convert to column major
+    if (0) {
+      double reg_W[4], A[16], RHS[4 * MAX_PROB_VAR];
+      int reg_pvt[4], LDA = 4, info;
+      for (i = 0; i < reg_order; i++) {
+        for (j = 0; j < reg_order; j++) {
+          A[i * reg_order + j] = reg_A[j][i];
+        }
+      }
+      for (i = 0; i < n_rhs; i++) {
+        for (j = 0; j < reg_order; j++) {
+          RHS[i * reg_order + j] = reg_RHS[j][i];
+        }
+      }
+
+      dsysv_("U", &reg_order, &n_rhs, A, &LDA, reg_pvt, RHS, &LDA, reg_W, &LDA, &info, 1);
+      if (info > 0)
+        fprintf(stderr, "Linear matrix singular at row %d\n", info);
+      if (info < 0)
+        fprintf(stderr, "Illegal value for Linear matrix %d\n", info);
+      // transpose (revert to row major)
+      for (i = 0; i < reg_order; i++) {
+        for (j = 0; j < reg_order; j++) {
+          reg_A[i][j] = A[j * reg_order + i];
+        }
+      }
+      for (i = 0; i < reg_order; i++) {
+        for (j = 0; j < n_rhs; j++) {
+          reg_RHS[i][j] = RHS[j * n_rhs + i];
+        }
+      }
+    } else {
+      double pivot, sum;
+      /* Gauss Elimination - no pivoting */
+      for (i = 0; i < reg_order - 1; i++) {
+        for (j = i + 1; j < reg_order; j++) {
+          pivot = reg_A[j][i] / reg_A[i][i];
+          for (k = i + 1; k < reg_order; k++) {
+            reg_A[j][k] -= pivot * reg_A[i][k];
+          }
+          for (k = 0; k < n_rhs; k++) {
+            reg_RHS[j][k] -= pivot * reg_RHS[i][k];
+          }
+        }
+      }
+      for (k = 0; k < n_rhs; k++) {
+        reg_RHS[reg_order - 1][k] /= reg_A[reg_order - 1][reg_order - 1];
+        for (i = reg_order - 2; i >= 0; i--) {
+          sum = 0.;
+          for (j = i + 1; j < reg_order; j++) {
+            sum += reg_A[i][j] * reg_RHS[j][k];
+          }
+          reg_RHS[i][k] = (reg_RHS[i][k] - sum) / reg_A[i][i];
+        }
+      }
+    }
+
+    if (TimeIntegration == STEADY) {
+      DPRINTF(stdout, "\nLinear Regression:  parm=%g \n", time);
+    } else {
+      DPRINTF(stdout, "\nLinear Regression:  time=%g \n", time);
+    }
+    DPRINTF(stdout, "var  \tFcn = A + B*x + C*y + D*z  \tcorrelation \trmse\n");
+    DPRINTF(stdout, "=============================================================\n");
+    /* construct linear matrix solution */
+
+    n_rhs = 0;
+    for (var = 0; var < MAX_VARIABLE_TYPES; var++) {
+      if (upd->vp[pg->imtrx][var] > -1) {
+        double sigma_fcn, sum_lin, sigma_lin, sum_lin_sqr, cross_sum, rmse, corr;
+        /* correlation coefficient calculation  */
+        if (fcn_ncp[var] == reg_N) {
+          sigma_fcn = db_reg_N * fcn_sqr[var] - SQUARE(fcn_sum[var]);
+          sum_lin = db_reg_N * reg_RHS[0][n_rhs];
+          for (j = 0; j < pdim; j++) {
+            sum_lin += reg_RHS[j + 1][n_rhs] * crd_sum[j];
+          }
+          sum_lin_sqr = reg_RHS[0][n_rhs] * (2. * sum_lin - reg_RHS[0][n_rhs] * db_reg_N);
+          for (j = 0; j < pdim; j++) {
+            sum_lin_sqr += SQUARE(reg_RHS[j + 1][n_rhs]) * crd_sqr[j];
+            for (k = j + 1; k < pdim; k++) {
+              sum_lin_sqr +=
+                  2. * reg_RHS[j + 1][n_rhs] * reg_RHS[k + 1][n_rhs] * crd_sqr[pdim + j + k - 1];
+            }
+          }
+          sigma_lin = db_reg_N * sum_lin_sqr - SQUARE(sum_lin);
+          cross_sum = reg_RHS[0][n_rhs] * fcn_sum[var];
+          for (j = 0; j < pdim; j++) {
+            cross_sum += reg_RHS[j + 1][n_rhs] * crd_cross[j][var];
+          }
+          corr = (db_reg_N * cross_sum - fcn_sum[var] * sum_lin) / sqrt(sigma_fcn * sigma_lin);
+          rmse = sqrt((fcn_sqr[var] - 2. * cross_sum + sum_lin_sqr) / db_reg_N);
+          DPRINTF(stdout, "%s \t%7g  %7g  %7g  %7g  \t%g  \t%g\n", Var_Name[var].name2,
+                  reg_RHS[0][n_rhs], reg_RHS[1][n_rhs], reg_RHS[2][n_rhs], reg_RHS[3][n_rhs], corr,
+                  rmse);
+          n_rhs++;
+        }
+      }
+    }
+    DPRINTF(stdout, "=============================================================\n");
+  }
   return (1);
 }
 /*****************************************************************************/

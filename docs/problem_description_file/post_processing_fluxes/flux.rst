@@ -18,70 +18,83 @@ sets or different fluxes on the same side set. Cards with identical fluxes and i
 side sets could be used to output the flux calculations to different files. Definitions of
 the input parameters are:
 
-+-------------+------------------------------------------------------------------------+
-|{flux_type}  |A keyword that can have any one of the following values:                |
-|             |                                                                        |
-|             | * **FORCE_NORMAL**                                                     |
-|             | * **FORCE_TANGENT1**                                                   |
-|             | * **FORCE_TANGENT2**                                                   |
-|             | * **FORCE_X**                                                          |
-|             | * **FORCE_Y**                                                          |
-|             | * **FORCE_Z**                                                          |
-|             | * **VOLUME_FLUX**                                                      |
-|             | * **SPECIES_FLUX**                                                     |
-|             | * **HEAT_FLUX**                                                        |
-|             | * **TORQUE**                                                           |
-|             | * **AVERAGE_CONC**                                                     |
-|             | * **SURF_DISSIP**                                                      |
-|             | * **AREA**                                                             |
-|             | * **VOL_REVOLUTION**                                                   |
-|             | * **PORE_LIQ_FLUX**                                                    |
-|             | * **CHARGED_SPECIES_FLUX**                                             |
-|             | * **CURRENT_FICKIAN**                                                  |
-|             | * **CURRENT**                                                          |
-|             | * **ELEC_FORCE_NORMAL**                                                |
-|             | * **ELEC_FORCE_TANGENT1**                                              |
-|             | * **ELEC_FORCE_TANGENT2**                                              |
-|             | * **ELEC_FORCE_X**                                                     |
-|             | * **ELEC_FORCE_Y**                                                     |
-|             | * **ELEC_FORCE_Z**                                                     |
-|             | * **NET_SURF_CHARGE**                                                  |
-|             | * **ACOUSTIC_FLUX_NORMAL**                                             |
-|             | * **ACOUSTIC_FLUX_TANGENT1**                                           |
-|             | * **ACOUSTIC_FLUX_TANGENT2**                                           |
-|             | * **ACOUSTIC_FLUX_X**                                                  |
-|             | * **ACOUSTIC_FLUX_Y**                                                  |
-|             | * **ACOUSTIC_FLUX_Z**                                                  |
-|             |                                                                        |
-|             |For every request, the integral of the diffusive portion                |
-|             |followed by that of the convective portion over the                     |
-|             |requested boundary will be appended to the specified file. If           |
-|             |the convective flux is not applicable (i.e.for flux_types               |
-|             |**VOLUME_FLUX, TORQUE, AVERAGE_CONC** and                               |
-|             |**AREA**), the second quantity will be zero. In all cases the           |
-|             |area of the face (covered by the entire side set) and the time          |
-|             |value are also output.                                                  |
-+-------------+------------------------------------------------------------------------+
-|<bc_id>      |The boundary flag identifier, an integer associated with the            |
-|             |boundary location (side set in EXODUS II) in the problem                |
-|             |domain on which the integrated flux is desired.                         |
-+-------------+------------------------------------------------------------------------+
-|<blk_id>     |An integer that designates the mesh block (material) from               |
-|             |which the flux integral should be performed. This has                   |
-|             |implications on internal boundaries.                                    |
-+-------------+------------------------------------------------------------------------+
-|<species_id> |An integer that identifies the species number if an integrated          |
-|             |species flux is requested.                                              |
-+-------------+------------------------------------------------------------------------+
-|<file_name>  |A character string corresponding to a file name into which              |
-|             |these fluxes should be printed.                                         |
-+-------------+------------------------------------------------------------------------+
-|[profile]    |Inclusion of the optional string “profile’ to this card will            |
-|             |cause the coordinates (x,y,z), the diffusive integrand, and             |
-|             |the convective integrand at each integration point to be                |
-|             |printed to the file designated above. You can, for example,             |
-|             |print out a pressure distribution used to compute a force.              |
-+-------------+------------------------------------------------------------------------+
+{flux_type}  
+   A keyword that can have any one of the following values:                
+              * **FORCE_NORMAL**                                                     
+              * **FORCE_TANGENT1**                                                   
+              * **FORCE_TANGENT2**                                                   
+              * **FORCE_X**                                                          
+              * **FORCE_Y**                                                          
+              * **FORCE_Z**                                                          
+              * **VOLUME_FLUX**                                                      
+              * **SPECIES_FLUX**                                                     
+              * **HEAT_FLUX**                                                        
+              * **TORQUE**                                                           
+              * **AVERAGE_CONC**                                                     
+              * **SURF_DISSIP**                                                      
+              * **AREA**                                                             
+              * **VOL_REVOLUTION**                                                   
+              * **PORE_LIQ_FLUX**                                                    
+              * **CHARGED_SPECIES_FLUX**                                             
+              * **CURRENT_FICKIAN**                                                  
+              * **CURRENT**                                                          
+              * **ELEC_FORCE_NORMAL**                                                
+              * **ELEC_FORCE_TANGENT1**                                              
+              * **ELEC_FORCE_TANGENT2**                                              
+              * **ELEC_FORCE_X**                                                     
+              * **ELEC_FORCE_Y**                                                     
+              * **ELEC_FORCE_Z**                                                     
+              * **NET_SURF_CHARGE**                                                  
+              * **ACOUSTIC_FLUX_NORMAL**                                             
+              * **ACOUSTIC_FLUX_TANGENT1**                                           
+              * **ACOUSTIC_FLUX_TANGENT2**                                           
+              * **ACOUSTIC_FLUX_X**                                                  
+              * **ACOUSTIC_FLUX_Y**                                                  
+              * **ACOUSTIC_FLUX_Z**                                                  
+                                                                                     
+   For every request, the integral of the diffusive portion                
+   followed by that of the convective portion over the                     
+   requested boundary will be appended to the specified file. If           
+   the convective flux is not applicable (i.e.for flux_types               
+   **VOLUME_FLUX, TORQUE, AVERAGE_CONC** and                               
+   **AREA**), the second quantity will be zero. In all cases the           
+   area of the face (covered by the entire side set) and the time          
+   value are also output.                                                  
+
+<bc_id>      
+   The boundary flag identifier, an integer associated with the            
+   boundary location (side set in EXODUS II) in the problem                
+   domain on which the integrated flux is desired.                         
+
+<blk_id>     
+   An integer that designates the mesh block (material) from               
+   which the flux integral should be performed. This has                   
+   implications on internal boundaries.                                    
+
+<species_id> 
+   An integer that identifies the species number if an integrated          
+   species flux is requested.                                              
+
+<file_name>  
+   A character string corresponding to a file name into which              
+   these fluxes should be printed.                                         
+
+[profile [flag0] [flag1] [flag2] [flag3] [flag4]]    
+   Inclusion of the optional string "profile" to this card will            
+   cause the coordinates (x,y,z), the diffusive integrand, and
+   the convective integrand at each integration point to be
+   printed to the file designated above. You can, for example,
+   print out a pressure distribution used to compute a force.
+
+   profile on always prints: x y z coords, flux and flux_conv at position
+
+   flags are 0 or 1, 0 disabled, 1 enabled
+
+   - flag0: shear rate, viscosity
+   - flag1: mesh principal eigenvalues
+   - flag2: surface tension
+   - flag3: temperature pressure
+   - flag4: x-normal y-normal z-normal 
 
 ------------
 **Examples**

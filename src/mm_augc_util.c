@@ -128,7 +128,8 @@ void load_extra_unknownsAC(int iAC,     /* ID NUMBER OF AC'S */
   }
 
   if (augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_FLUX ||
-      augc[iAC].Type == AC_LS_VEL || augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_ANGLE) {
+      augc[iAC].Type == AC_LS_VEL || augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_ANGLE ||
+      augc[iAC].Type == AC_POSITION_MT) {
 
     ibc = augc[iAC].BCID;
     idf = augc[iAC].DFID;
@@ -391,7 +392,7 @@ void load_extra_unknownsAC(int iAC,     /* ID NUMBER OF AC'S */
     case TAGC_TIME_CONST5:
     case TAGC_TIME_CONST6:
     case TAGC_TIME_CONST7:
-      xa[iAC] = ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const;
+      xa[iAC] = ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const_st->lambda0;
       break;
 
     case TAGC_WT_FUNC:
@@ -948,8 +949,8 @@ void update_parameterAC(
             BC_Types[ibc_user].BC_Data_Float[idf_user] = lambda_user;
             break;
           } /*  switch loop */
-        }   /* if ibc_user  */
-      }     /* while ibc_user  */
+        } /* if ibc_user  */
+      } /* while ibc_user  */
 
       /*    now do AC floats if any  */
       ibc_user = 0;
@@ -965,7 +966,7 @@ void update_parameterAC(
           }
           augc[ibc_user].DataFlt[idf_user] = lambda_user;
         } /* if ibc_user  */
-      }   /* while ibc_user  */
+      } /* while ibc_user  */
       fclose(jfp);
 #else
       GOMA_EH(GOMA_ERROR, "aprepro must be run prior to running goma on this platform.");
@@ -1205,7 +1206,7 @@ void update_parameterAC(
     case TAGC_TIME_CONST5:
     case TAGC_TIME_CONST6:
     case TAGC_TIME_CONST7:
-      ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const = lambda;
+      ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const_st->lambda0 = lambda;
       break;
 
     case TAGC_WT_FUNC:
@@ -1962,7 +1963,7 @@ int std_aug_cond(int iAC,
     // Formulate and store the residual for the augmented condition
     gAC[iAC] = (inventory - augc[iAC].CONSTV);
 
-  } else if (augc[iAC].Type == AC_POSITION) {
+  } else if (augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_POSITION_MT) {
     inventory = getPositionAC(augc + iAC, cAC[iAC], mf_args->x, mf_args->exo);
 #ifdef PARALLEL
     if (Num_Proc > 1) {
@@ -2215,8 +2216,8 @@ void overlap_aug_cond(int ija[],
 
         jelem = ielem;
         jside = iside;
-      }                  /* END of "if (augc[jAC].Type == AC_OVERLAP)" */
-    }                    /* END of loop over augmenting conditions (jAC) */
+      } /* END of "if (augc[jAC].Type == AC_OVERLAP)" */
+    } /* END of loop over augmenting conditions (jAC) */
   } else if (ac_lm == 2) /* AC on fluid */
   {
     jelem = -1;
@@ -2251,7 +2252,7 @@ void overlap_aug_cond(int ija[],
         jelem = ielem;
         jside = iside;
       } /* END of "if (augc[jAC].Type == AC_OVERLAP)" */
-    }   /* END of loop over augmenting conditions (jAC) */
+    } /* END of loop over augmenting conditions (jAC) */
 
     /* Fill in terms on solid element block */
     e_start = exo->eb_ptr[ibs];
@@ -2459,7 +2460,7 @@ static int estimate_dAC_LSvel(
       update_parameterAC(jAC, mf_args->x, mf_args->xdot, x_AC, cx, mf_args->exo, mf_args->dpi);
 
     } /* end if augc[jAC] == AC_LS_VEL  */
-  }   /* end  for{jAC...  */
+  } /* end  for{jAC...  */
   return (TRUE);
 } /* End of routine estimate_dAC */
 #endif
@@ -2571,6 +2572,23 @@ static int estimate_dAC_ALC(
       }
       break;
 
+    case AC_POSITION:
+      // here you are supposed to calculate the residual at the + perturbation
+      // I believe this can be done for the position type ac by copying the structure above (line
+      // 1992) this should calculate the residual at the updated x
+
+      inventory = getPositionAC(augc + jAC, dAC[jAC], mf_args->x, mf_args->exo);
+#ifdef PARALLEL
+      if (Num_Proc > 1) {
+        MPI_Allreduce(&inventory, &global_inventory, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        inventory = global_inventory;
+      }
+#endif
+      // Formulate and store the perturbed residual for the augmented condition
+      // seems correct. -BW 04/18/2022 + WO 04/21/2023
+      res_p[jAC] = inventory - augc[jAC].CONSTV;
+      break;
+
     case AC_USERBC:
     case AC_USERMAT:
       load_extra_unknownsAC(jAC, x_AC, cx, mf_args->exo, mf_args->dpi);
@@ -2660,6 +2678,17 @@ static int estimate_dAC_ALC(
                                   *(mf_args->delta_t), *(mf_args->time), 0);
         res_m[jAC] = inventory - (-BC_Types[ibc].BC_Data_Float[idf]);
       }
+      break;
+    case AC_POSITION:
+      // just do it again
+      inventory = getPositionAC(augc + jAC, dAC[jAC], mf_args->x, mf_args->exo);
+#ifdef PARALLEL
+      if (Num_Proc > 1) {
+        MPI_Allreduce(&inventory, &global_inventory, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        inventory = global_inventory;
+      }
+#endif
+      res_m[jAC] = inventory - augc[jAC].CONSTV;
       break;
 
     case AC_USERBC:

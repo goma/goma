@@ -64,6 +64,11 @@ else()
   endif()
 endif()
 
+option(GOMA_MATRIX_GO_LONG_LONG OFF)
+if(GOMA_MATRIX_GO_LONG_LONG)
+  list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_MATRIX_GO_LONG_LONG)
+endif()
+
 option(ENABLE_CCACHE OFF)
 if(ENABLE_CCACHE)
   message(STATUS "Searching for ccache.")
@@ -108,6 +113,60 @@ if(${stratimikos_package_index} GREATER_EQUAL 0)
   endif()
 endif()
 
+list(FIND Trilinos_PACKAGE_LIST Sacado sacado_package_index)
+if(${sacado_package_index} GREATER_EQUAL 0)
+  option(ENABLE_SACADO "ENABLE_SACADO" ON)
+  if(ENABLE_SACADO)
+    message(STATUS "TRILINOS: Sacado found, enabling in Goma")
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_SACADO)
+  endif()
+endif()
+
+if(${Trilinos_VERSION} VERSION_LESS 14.0.0)
+  message(WARNING "Trilinos version less than 14.0.0, Tpetra not supported")
+else()
+  list(FIND Trilinos_PACKAGE_LIST Tpetra tpetra_package_index)
+  if(${tpetra_package_index} GREATER_EQUAL 0)
+    option(ENABLE_TPETRA "ENABLE_TPETRA" ON)
+    if((NOT ${HAVE_TPETRA_INST_INT_INT}) AND (NOT ${GOMA_MATRIX_GO_LONG_LONG}))
+      message(
+        WARNING
+          "Trilinos not built with Tpetra with int int, enable GOMA_MATRIX_GO_LONG_LONG (experimental), or rebuild Trilinos with Tpetra int int"
+      )
+      set(ENABLE_TPETRA OFF)
+    endif()
+    if(ENABLE_TPETRA)
+      option(GOMA_MATRIX_GO_LONG_LONG "GOMA_MATRIX_GO_LONG_LONG" OFF)
+      if(GOMA_MATRIX_GO_LONG_LONG)
+        message(
+          WARNING
+            "GOMA_MATRIX_GO_LONG_LONG is enabled, using long long for Tpetra this is experimental"
+        )
+        list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_MATRIX_GO_LONG_LONG)
+      endif()
+      message(STATUS "TRILINOS: Tpetra found, enabling in Goma")
+      list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TPETRA)
+      list(FIND Trilinos_PACKAGE_LIST Amesos2 amesos2_package_index)
+      if(${amesos2_package_index} GREATER_EQUAL 0)
+        option(ENABLE_AMESOS2 "ENABLE_AMESOS2" ON)
+        if(ENABLE_AMESOS2)
+          message(STATUS "TRILINOS: Amesos2 found, enabling in Goma")
+          list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_AMESOS2)
+        endif()
+      endif()
+    endif()
+  endif()
+endif()
+
+list(FIND Trilinos_PACKAGE_LIST Epetra epetra_package_index)
+if(${epetra_package_index} GREATER_EQUAL 0)
+  option(ENABLE_EPETRA "ENABLE_EPETRA" ON)
+  if(ENABLE_EPETRA)
+    message(STATUS "TRILINOS: Epetra found, enabling in Goma")
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_EPETRA)
+  endif()
+endif()
+
 # Exodus
 find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 message(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
@@ -127,7 +186,7 @@ if(ENABLE_PETSC)
   # PETSC search set root of location to find PETSc configuration
   set(PETSC_PATH $ENV{PETSC_DIR}/$ENV{PETSC_ARCH})
   set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig)
-
+  message("PETSc path for pkgconfig ${PETSC_PATH}/lib/pkgconfig")
   find_package(PkgConfig)
 
   if(PkgConfig_FOUND)
@@ -278,7 +337,7 @@ endif()
 
 option(ENABLE_OMEGA_H "ENABLE_OMEGA_H" ON)
 if(ENABLE_OMEGA_H)
-  find_package(Omega_h 9)
+  find_package(Omega_h)
   if(Omega_h_FOUND)
     set_target_properties(Omega_h::omega_h PROPERTIES INTERFACE_COMPILE_OPTIONS
                                                       "")
@@ -296,6 +355,19 @@ if(ENABLE_PETSC AND PETSC_FOUND)
   list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_PETSC)
 endif()
 
+option(ENABLE_MUMPS "ENABLE_MUMPS" ON)
+if (ENABLE_MUMPS)
+  find_package(MUMPS)
+  if(MUMPS_FOUND)
+    message(STATUS "Using MUMPS ${MUMPS_LIBRARIES}")
+    set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${MUMPS_LIBRARIES})
+    set(GOMA_TPL_INCLUDES ${GOMA_TPL_INCLUDES} ${MUMPS_INCLUDES})
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_MUMPS)
+  else()
+    message(STATUS "MUMPS library not found")
+  endif()
+endif()
+
 # UMFPACK in trilinos
 list(FIND Trilinos_TPL_LIST UMFPACK trilinos_package_index)
 option(ENABLE_UMFPACK "ENABLE_UMFPACK" ON)
@@ -310,7 +382,8 @@ if(ENABLE_UMFPACK)
       message(STATUS "UMFPACK library not found")
     endif()
     if(ENABLE_UMFPACK)
-      message(STATUS "UMFPACK found")
+      message(STATUS "UMFPACK enabled")
+      message(STATUS "${UMFPACK_LIBRARIES}")
       list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_UMFPACK)
       set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${UMFPACK_LIBRARIES})
       set(GOMA_TPL_INCLUDES ${GOMA_TPL_INCLUDES} ${UMFPACK_INCLUDES})
@@ -383,7 +456,6 @@ option_definition(PARALLEL ON)
 option_definition(FP_EXCEPT OFF)
 option_definition(ANALEIG_PLEASE OFF)
 option_definition(DO_NO_UNROLL OFF)
-option_definition(USERMAT_INITIALIZATION OFF)
 option_definition(ENABLE_LOGGING OFF)
 option_definition(ENABLE_KOMPLEX OFF)
 option_definition(PHASE_COUPLED_FILL OFF)
@@ -417,6 +489,9 @@ set(GOMA_INCLUDES
     include/ac_stability.h
     include/ac_stability_util.h
     include/ac_update_parameter.h
+    include/ad_turbulence.h
+    include/ad_momentum.h
+    include/ad_stress.h
     include/bc_colloc.h
     include/bc_contact.h
     include/bc_curve.h
@@ -440,6 +515,9 @@ set(GOMA_INCLUDES
     include/el_quality.h
     include/exo_conn.h
     include/exo_struct.h
+    include/linalg/sparse_matrix.h
+    include/linalg/sparse_matrix_tpetra.h
+    include/linalg/sparse_matrix_epetra.h
     include/load_field_variables.h
     include/loca_const.h
     include/loca_util_const.h
@@ -457,6 +535,7 @@ set(GOMA_INCLUDES
     include/mm_fill_aux.h
     include/mm_fill_common.h
     include/mm_fill_continuity.h
+    include/mm_fill_elliptic_mesh.h
     include/mm_fill_em.h
     include/mm_fill_energy.h
     include/mm_fill_fill.h
@@ -504,6 +583,8 @@ set(GOMA_INCLUDES
     include/mm_std_models_shell.h
     include/mm_unknown_map.h
     include/mm_viscosity.h
+    include/models/fluidity.h
+    include/polymer_time_const.h
     include/rd_dpi.h
     include/rd_exo.h
     include/base_mesh.h
@@ -535,18 +616,18 @@ set(GOMA_INCLUDES
     include/shell_tfmp_struct.h
     include/shell_tfmp_util.h
     include/sl_amesos_interface.h
+    include/sl_amesos2_interface.h
     include/sl_aux.h
     include/sl_auxutil.h
     include/sl_aztecoo_interface.h
     include/sl_eggroll_def.h
     include/sl_eggroll.h
-    include/sl_epetra_interface.h
-    include/sl_epetra_util.h
     include/sl_lu.h
     include/sl_petsc.h
     include/sl_petsc_complex.h
     include/sl_matrix_util.h
     include/sl_stratimikos_interface.h
+    include/sl_mumps.h
     include/sl_umf.h
     include/sl_util.h
     include/sl_util_structs.h
@@ -571,6 +652,9 @@ set(GOMA_SOURCES
     src/ac_stability.c
     src/ac_stability_util.c
     src/ac_update_parameter.c
+    src/ad_turbulence.cpp
+    src/ad_momentum.cpp
+    src/ad_stress.cpp
     src/bc_colloc.c
     src/bc_contact.c
     src/bc_curve.c
@@ -590,6 +674,9 @@ set(GOMA_SOURCES
     src/el_quality.c
     src/exo_conn.c
     src/globals.c
+    src/linalg/sparse_matrix.cpp
+    src/linalg/sparse_matrix_tpetra.cpp
+    src/linalg/sparse_matrix_epetra.cpp
     src/load_field_variables.c
     src/loca_bord.c
     src/loca_eigen_c2f.F
@@ -610,6 +697,7 @@ set(GOMA_SOURCES
     src/mm_fill.c
     src/mm_fill_common.c
     src/mm_fill_continuity.c
+    src/mm_fill_elliptic_mesh.c
     src/mm_fill_em.c
     src/mm_fill_energy.c
     src/mm_fill_fill.c
@@ -661,6 +749,8 @@ set(GOMA_SOURCES
     src/mm_std_models_shell.c
     src/mm_unknown_map.c
     src/mm_viscosity.c
+    src/models/fluidity.cpp
+    src/polymer_time_const.c
     src/rd_dpi.c
     src/rd_exo.c
     src/base_mesh.c
@@ -681,6 +771,7 @@ set(GOMA_SOURCES
     src/bc/rotate_coordinates.c
     src/shell_tfmp_util.c
     src/sl_amesos_interface.cpp
+    src/sl_amesos2_interface.cpp
     src/sl_aux.c
     src/sl_auxutil.c
     src/sl_aztecoo_interface.cpp
@@ -691,8 +782,6 @@ set(GOMA_SOURCES
     src/sl_eggroll05.c
     src/sl_eggrollutil.c
     src/sl_eggrollwrap.c
-    src/sl_epetra_interface.cpp
-    src/sl_epetra_util.cpp
     src/sl_leastsquares.cpp
     src/sl_lu.c
     src/sl_lu_fill.c
@@ -705,6 +794,7 @@ set(GOMA_SOURCES
     src/sl_matrix_util.c
     src/sl_squash.c
     src/sl_stratimikos_interface.cpp
+    src/sl_mumps.c
     src/sl_umf.c
     src/sl_util.c
     src/wr_dpi.c
@@ -945,15 +1035,18 @@ if(ENABLE_PETSC AND PETSC_FOUND)
                             ${PETSC_STATIC_LIBRARY_DIRS})
 endif()
 
+# if(${Trilinos_VERSION} VERSION_LESS 14.0.0)
+set(GOMA_TRILINOS_LIBRARIES ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES}
+                            ${Trilinos_EXTRA_LD_FLAGS})
+# else() set(GOMA_TRILINOS_LIBRARIES Trilinos::all_libs) endif()
+
 set(GOMA_TPL_LIBRARIES
     ${SEACASExodus_LIBRARIES}
     ${SEACASExodus_TPL_LIBRARIES}
     ${SEACASAprepro_lib_LIBRARIES}
     ${SEACASAprepro_lib_TPL_LIBRARIES}
     ${GOMA_TPL_LIBRARIES}
-    ${Trilinos_LIBRARIES}
-    ${Trilinos_TPL_LIBRARIES}
-    ${Trilinos_EXTRA_LD_FLAGS}
+    ${GOMA_TRILINOS_LIBRARIES}
     ${MPI_C_LIBRARIES}
     ${MPI_Fortran_LIBRARIES})
 if(ENABLE_PETSC AND PETSC_FOUND)
@@ -966,21 +1059,23 @@ set_source_files_properties(
   src/dp_ghost.cpp src/sl_epetra_util.cpp src/adapt/omega_h_interface.cpp
   PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 
+# Most people probably want this for use with Goma TPLs
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
 target_include_directories(goma_user SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_compile_definitions(goma_user PUBLIC ${GOMA_COMPILE_DEFINITIONS})
+target_link_libraries(goma_user PUBLIC ${GOMA_TPL_LIBRARIES})
 if(ENABLE_WARNINGS)
   target_compile_options(
     goma_user
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter
       -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter
       -Wimplicit-fallthrough>)
 endif()
 
@@ -1083,6 +1178,8 @@ if(ENABLE_WARNINGS)
       -Wimplicit-fallthrough>)
 endif()
 
+include(GNUInstallDirs)
+
 install(
   TARGETS goma_exe fix_exe
   LIBRARY DESTINATION lib
@@ -1093,6 +1190,7 @@ install(
 
 option(ENABLE_TESTING "ENABLE_TESTING" OFF)
 if(ENABLE_TESTING)
+  message(STATUS "Testing enabled.")
   enable_testing()
   add_subdirectory(tests)
 endif()

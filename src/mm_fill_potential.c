@@ -633,7 +633,7 @@ int assemble_potential(double time, /* present time value */
       lec->R[LEC_R_INDEX(peqn, i)] += diffusion + source;
 
     } /* end of loop over i */
-  }   /* end of Assemble_Residual */
+  } /* end of Assemble_Residual */
 
   /*
    * Jacobian terms...
@@ -905,10 +905,10 @@ transport of dilute charged species in electrolyte, KSC: 9/10/00; modified: 10/4
 
             lec->J[LEC_J_INDEX(peqn, MAX_PROB_VAR + w, i, j)] += diffusion + source;
           } /* end of loop over j */
-        }   /* end of loop over w */
-      }     /* end of var = MASS_FRACTION */
-    }       /* end of loop over i */
-  }         /* end of Assemble_Jacobian */
+        } /* end of loop over w */
+      } /* end of var = MASS_FRACTION */
+    } /* end of loop over i */
+  } /* end of Assemble_Jacobian */
 
   return (status);
 } /* end of assemble_potential */
@@ -1409,7 +1409,7 @@ int assemble_Enorm(void) {
 
       lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][R_ENORM], i)] += advection + source;
     } /* for i = 0 ... dof[R_ENORM] */
-  }   /* if(Assemble_Residual) */
+  } /* if(Assemble_Residual) */
 
   if (af->Assemble_Jacobian) {
     for (i = 0; i < ei[pg->imtrx]->dof[R_ENORM]; i++) {
@@ -1440,8 +1440,8 @@ int assemble_Enorm(void) {
 
         lec->J[LEC_J_INDEX(upd->ep[pg->imtrx][R_ENORM], upd->vp[pg->imtrx][ENORM], i, k)] += source;
       } /* for k = 0 ... dof[ENORM] */
-    }   /* for i = 0 ... dof[R_ENORM] */
-  }     /* if (Assemble_Jacobian) */
+    } /* for i = 0 ... dof[R_ENORM] */
+  } /* if (Assemble_Jacobian) */
   return 0;
 }
 

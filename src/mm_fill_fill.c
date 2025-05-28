@@ -23,7 +23,6 @@
 
 #include "ac_stability.h"
 #include "ac_stability_util.h"
-#include "az_aztec.h"
 #include "el_elm_info.h"
 #include "exo_struct.h"
 #include "load_field_variables.h"
@@ -32,7 +31,6 @@
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
 #include "mm_fill_stabilization.h"
-#include "mm_fill_terms.h"
 #include "mm_fill_util.h"
 #include "mm_qtensor_model.h"
 #include "mm_unknown_map.h"
@@ -336,7 +334,7 @@ int assemble_fill(double tt,
   }
 
   v_dot_DF = 0.0;
-  if (pd->TimeIntegration != STEADY && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+  if (pd->TimeIntegration != STEADY && pd->gv[MESH_DISPLACEMENT1]) {
     x_dot_old = fv_dot_old->x;
     for (a = 0; a < VIM; a++) {
       x_dot[a] = (1. + 2. * tt) * (xx[a] - x_old[a]) * dtinv - 2. * tt * x_dot_old[a];
@@ -1306,26 +1304,24 @@ int assemble_fill(double tt,
 
           case FILL_WEIGHT_TG: /* Taylor-Galerkin */
             for (a = 0; a < dim; a++) {
-              advection += 0.5 * LubAux->dv_avg_dp1[a][j] * grad_II_F[a] * phi_i * grad_II_phi_j[a];
-              advection += 0.5 * LubAux->dv_avg_dp2[a][j] * grad_II_F[a] * phi_i * phi_j;
-
-              advection += 0.5 * LubAux->dv_avg_dp1[a][j] * grad_II_phi_i[a] * grad_II_phi_j[a] *
-                           v_dot_DF * dt;
               advection +=
-                  0.5 * LubAux->dv_avg_dp2[a][j] * grad_II_phi_i[a] * phi_j * v_dot_DF * dt;
-
-              advection += 0.5 * LubAux->dv_avg_dp1[a][j] * grad_II_F[a] * grad_II_phi_j[a] *
-                           v_dot_Dphi[i] * dt;
-              advection +=
-                  0.5 * LubAux->dv_avg_dp2[a][j] * grad_II_F[a] * phi_j * v_dot_Dphi[i] * dt;
+                  0.5 * LubAux->dv_avg_dp2[a] * phi_j *
+                  (grad_II_F[a] * (phi_i + v_dot_Dphi[i] * dt) + grad_II_phi_i[a] * v_dot_DF * dt);
+              for (b = 0; b < dim; b++) {
+                advection += 0.5 * LubAux->dv_dgradp[a][b] * grad_II_phi_j[b] *
+                             (grad_II_F[a] * (phi_i + v_dot_Dphi[i] * dt) +
+                              grad_II_phi_i[a] * v_dot_DF * dt);
+              }
             }
 
             break;
 
           case FILL_WEIGHT_G: /* Plain ol' Galerkin */
             for (a = 0; a < dim; a++) {
-              advection += LubAux->dv_avg_dp1[a][j] * grad_II_F[a] * wfcn * grad_II_phi_j[a];
-              advection += LubAux->dv_avg_dp2[a][j] * grad_II_F[a] * wfcn * phi_j;
+              advection += LubAux->dv_avg_dp2[a] * grad_II_F[a] * wfcn * grad_II_phi_j[a];
+              for (b = 0; b < dim; b++) {
+                advection += LubAux->dv_dgradp[a][b] * grad_II_F[a] * wfcn * grad_II_phi_j[b];
+              }
             }
 
             break;
@@ -1361,17 +1357,16 @@ int assemble_fill(double tt,
           case FILL_WEIGHT_TG: /* Taylor-Galerkin */
             for (a = 0; a < dim; a++) {
 
-              advection += 0.5 * LubAux->dv_avg_dk[a][j] * grad_II_F[a] * phi_i * phi_j;
-              advection += 0.5 * LubAux->dv_avg_dk[a][j] * grad_II_phi_i[a] * phi_j * v_dot_DF * dt;
               advection +=
-                  0.5 * LubAux->dv_avg_dk[a][j] * grad_II_F[a] * phi_j * v_dot_Dphi[i] * dt;
+                  0.5 * LubAux->dv_avg_dk[a] * phi_j *
+                  (grad_II_F[a] * (phi_i + v_dot_Dphi[i] * dt) + grad_II_phi_i[a] * v_dot_DF * dt);
             }
 
             break;
 
           case FILL_WEIGHT_G: /* Plain ol' Galerkin */
             for (a = 0; a < dim; a++)
-              advection += LubAux->dv_avg_dk[a][j] * grad_II_F[a] * phi_i * phi_j;
+              advection += LubAux->dv_avg_dk[a] * grad_II_F[a] * phi_i * phi_j;
 
             break;
           }
@@ -1401,7 +1396,7 @@ int assemble_fill(double tt,
           mass = 0.0;
           advection = 0.0;
           for (a = 0; a < dim; a++)
-            advection += LubAux->dv_avg_ddh[a][j] * grad_F[a] * phi_i * phi_j;
+            advection += LubAux->dv_avg_ddh[a] * grad_F[a] * phi_i * phi_j;
 
           mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
           advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
@@ -3929,7 +3924,7 @@ int curvature_momentum_source(double f[DIM],
 
 int assemble_phase_function(double time_value, double tt, double dt, double xi[DIM], Exo_DB *exo) {
   int i, j;
-  int a, b, p;
+  int a, b, p, q;
   int eqn, var, peqn, pvar, ledof;
   int dim;
   int status = -1;
@@ -4273,7 +4268,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
               lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += tmp;
 
             } /* for ( j = 0 ... */
-          }   /* if ( pd->v[pg->imtrx][var] ) */
+          } /* if ( pd->v[pg->imtrx][var] ) */
           /* T */
 
           var = TEMPERATURE;
@@ -4303,7 +4298,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
               lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += tmp;
 
             } /* for ( j = 0 ... */
-          }   /* if ( pd->v[pg->imtrx][var] ) */
+          } /* if ( pd->v[pg->imtrx][var] ) */
 
           /*
            *   J_pf_v
@@ -4379,27 +4374,31 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
 
               case FILL_WEIGHT_TG:
                 for (p = 0; p < dim; p++) {
-                  advection +=
-                      0.5 * LubAux->dv_avg_dp1[p][j] * grad_II_pf[p] * grad_II_phi_j[p] * phi_i;
-                  advection += 0.5 * LubAux->dv_avg_dp2[p][j] * grad_II_pf[p] * phi_j * phi_i;
+                  advection += 0.5 * LubAux->dv_avg_dp2[p] * grad_II_pf[p] * phi_j * phi_i;
+                  for (q = 0; q < dim; q++) {
+                    advection +=
+                        0.5 * LubAux->dv_dgradp[p][q] * grad_II_pf[p] * grad_II_phi_j[q] * phi_i;
 
-                  advection += 0.5 * LubAux->dv_avg_dp1[p][j] * grad_II_phi_i[p] *
-                               grad_II_phi_j[p] * v_dot_grad_pf * dt * 0.5;
-                  advection += 0.5 * LubAux->dv_avg_dp1[p][j] * grad_II_phi_i[p] * phi_j *
-                               v_dot_grad_pf * dt * 0.5;
+                    advection += 0.5 * LubAux->dv_dgradp[p][q] * grad_II_phi_i[p] *
+                                 grad_II_phi_j[q] * v_dot_grad_pf * dt * 0.5;
+                    advection += 0.5 * LubAux->dv_dgradp[p][q] * grad_II_phi_i[p] * phi_j *
+                                 v_dot_grad_pf * dt * 0.5;
 
-                  advection += 0.5 * LubAux->dv_avg_dp1[p][j] * grad_II_pf[p] * grad_II_phi_j[p] *
-                               v_dot_Dphi[i] * dt * 0.5;
-                  advection += 0.5 * LubAux->dv_avg_dp1[p][j] * grad_II_pf[p] * phi_j *
-                               v_dot_Dphi[i] * dt * 0.5;
+                    advection += 0.5 * LubAux->dv_dgradp[p][q] * grad_II_pf[p] * grad_II_phi_j[q] *
+                                 v_dot_Dphi[i] * dt * 0.5;
+                    advection += 0.5 * LubAux->dv_dgradp[p][q] * grad_II_pf[p] * phi_j *
+                                 v_dot_Dphi[i] * dt * 0.5;
+                  }
                 }
 
                 break;
 
               case FILL_WEIGHT_G:
                 for (p = 0; p < dim; p++) {
-                  advection += LubAux->dv_avg_dp1[p][j] * grad_II_pf[p] * wfcn * grad_II_phi_j[p];
-                  advection += LubAux->dv_avg_dp2[p][j] * grad_II_pf[p] * wfcn * phi_j;
+                  advection += LubAux->dv_avg_dp2[p] * grad_II_pf[p] * wfcn * phi_j;
+                  for (q = 0; q < dim; q++) {
+                    advection += LubAux->dv_dgradp[p][q] * grad_II_pf[p] * wfcn * grad_II_phi_j[q];
+                  }
                 }
 
                 break;
@@ -4433,18 +4432,18 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
 
               case FILL_WEIGHT_TG:
                 for (p = 0; p < dim; p++) {
-                  advection += 0.5 * LubAux->dv_avg_dk[p][j] * grad_II_pf[p] * phi_i * phi_j;
-                  advection += 0.5 * LubAux->dv_avg_dk[p][j] * grad_II_phi_i[p] * phi_j *
+                  advection += 0.5 * LubAux->dv_avg_dk[p] * grad_II_pf[p] * phi_i * phi_j;
+                  advection += 0.5 * LubAux->dv_avg_dk[p] * grad_II_phi_i[p] * phi_j *
                                v_dot_grad_pf * dt * 0.5;
-                  advection += 0.5 * LubAux->dv_avg_dk[p][j] * grad_II_pf[p] * phi_j *
-                               v_dot_Dphi[i] * dt * 0.5;
+                  advection +=
+                      0.5 * LubAux->dv_avg_dk[p] * grad_II_pf[p] * phi_j * v_dot_Dphi[i] * dt * 0.5;
                 }
 
                 break;
 
               case FILL_WEIGHT_G:
                 for (p = 0; p < dim; p++)
-                  advection += LubAux->dv_avg_dk[p][j] * grad_II_pf[p] * phi_i * phi_j;
+                  advection += LubAux->dv_avg_dk[p] * grad_II_pf[p] * phi_i * phi_j;
 
                 break;
               }
@@ -4459,8 +4458,8 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
           } /* if: SHELL_LUB_CURV exisits */
 
         } /* if( active...) */
-      }   /* for(i : */
-    }     /* af->Jacobian */
+      } /* for(i : */
+    } /* af->Jacobian */
     ls = ls_old;
   }
 

@@ -14,10 +14,14 @@ user must heed the following warning:
    :maxdepth: 1
 
    source_terms/navier_stokes_source
+   source_terms/second_level_set_momentum_source
+   source_terms/lsi_momentum_source_interp.rst
    source_terms/solid_body_source
    source_terms/mass_source
    source_terms/heat_source
+   source_terms/lsi_heat_source_interp.rst
    source_terms/species_source
+   source_terms/lsi_species_source_interp.rst
    source_terms/current_source
    source_terms/moment_source
    source_terms/initialize

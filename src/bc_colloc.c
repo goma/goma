@@ -28,6 +28,7 @@
 
 #include "ac_stability.h"
 #include "ac_stability_util.h"
+#include "ad_turbulence.h"
 #include "bc/rotate_coordinates.h"
 #include "bc_colloc.h"
 #include "bc_integ.h"
@@ -124,7 +125,7 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
   double d_kfunc[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE];
   double time_intermediate = time_value - theta * delta_t;
   /* time at which bc's are evaluated */
-  const double penalty = BIG_PENALTY;
+  const double penalty = upd->strong_penalty;
   VARIABLE_DESCRIPTION_STRUCT *vd;
   int doFullJac = 0;
   double nwall[3];
@@ -181,6 +182,14 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
 
       err = load_bf_mesh_derivs();
       GOMA_EH(err, "load_bf_mesh_derivs");
+
+      if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
+        fill_ad_field_variables();
+#else
+        GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
+      }
 
       /* calculate the shape functions and their gradients */
 
@@ -362,6 +371,19 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
                               BC_Types[bc_input_id].BC_Data_Float[1],
                               BC_Types[bc_input_id].BC_Data_Float[2], mp_2);
             } break;
+
+            case SA_WALL_FUNC_BC:
+              memset(kfunc, 0, DIM * sizeof(double));
+              ad_sa_wall_func(kfunc, d_kfunc);
+              func = kfunc[0];
+              d_func[EDDY_NU] = 1.0;
+              break;
+            case OMEGA_WALL_FUNC_BC:
+              memset(kfunc, 0, DIM * sizeof(double));
+              ad_omega_wall_func(kfunc, d_kfunc);
+              func = kfunc[0];
+              d_func[TURB_OMEGA] = 1.0;
+              break;
 
             case PLANEX_BC:
             case PLANEY_BC:
@@ -726,7 +748,7 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
                 GOMA_EH(offset, "Error translating rotated equation to offset");
                 ieqn =
                     equation_index_auto_rotate(elem_side_bc, I, BC_Types[bc_input_id].desc->rotate,
-                                               offset, ldof_eqn, &(BC_Types[bc_input_id]));
+                                               offset, &(BC_Types[bc_input_id]));
                 GOMA_EH(ieqn, "Could not find index from auto rotate eqn");
               }
             }
@@ -825,20 +847,20 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
                           }
                         }
                       } /* end of loop over species */
-                    }   /* end of if MASS_FRACTION */
-                  }     /* end of variable exists and condition is sensitive to it */
-                }       /* end of loop over variable types */
-              }         /* end of NEWTON */
-            }           /* if (ldof_eqn != -1) */
-          }             /* END of if (Res_BC != NULL), i.e. (index_eqn != -1) */
-        }               /* END of if COLLOCATED BC */
+                    } /* end of if MASS_FRACTION */
+                  } /* end of variable exists and condition is sensitive to it */
+                } /* end of loop over variable types */
+              } /* end of NEWTON */
+            } /* if (ldof_eqn != -1) */
+          } /* END of if (Res_BC != NULL), i.e. (index_eqn != -1) */
+        } /* END of if COLLOCATED BC */
         /*****************************************************************************/
       } /* END for (ibc = 0; (int) elem_side_bc->BC_input_id[ibc] != ...*/
-        /*****************************************************************************/
-    }   /* END if (I < num_owned_nodes) 				      */
-        /*****************************************************************************/
-  }     /* END for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) */
-        /*****************************************************************************/
+      /*****************************************************************************/
+    } /* END if (I < num_owned_nodes) 				      */
+    /*****************************************************************************/
+  } /* END for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) */
+  /*****************************************************************************/
   return (status);
 } /* end of routine apply_point_colloc_bc() */
 /*****************************************************************************/
@@ -1858,7 +1880,7 @@ void f_vestress_parabola(const int var_flag,
 
   case GIESEKUS:
     alpha = ve_glob[mn][mode]->alpha;
-    lambda = ve_glob[mn][mode]->time_const;
+    lambda = ve_glob[mn][mode]->time_const_st->lambda0;
     Ws = at * lambda * fabs(srate);
     A_alpha = 8 * alpha * (1. - alpha);
     mup = viscosity(ve[mode]->gn, gamma, NULL);
@@ -1890,7 +1912,7 @@ void f_vestress_parabola(const int var_flag,
     }
     break;
   case OLDROYDB:
-    lambda = ve_glob[mn][mode]->time_const;
+    lambda = ve_glob[mn][mode]->time_const_st->lambda0;
     Ws = at * lambda * fabs(srate);
     mup = viscosity(ve[mode]->gn, gamma, NULL);
     switch (strs) {
@@ -2585,6 +2607,16 @@ int load_variable(double *x_var,       /* variable value */
   case EDDY_NU:
     *x_var = fv->eddy_nu;
     var = EDDY_NU;
+    *d_x_var = 1.;
+    break;
+  case TURB_K:
+    *x_var = fv->turb_k;
+    var = TURB_K;
+    *d_x_var = 1.;
+    break;
+  case TURB_OMEGA:
+    *x_var = fv->turb_omega;
+    var = TURB_OMEGA;
     *d_x_var = 1.;
     break;
   case LIGHT_INTP:
@@ -3505,6 +3537,42 @@ int bc_eqn_index(int id,          /* local node number                 */
    *    base upon a (normal, tang1, tang2) = ( x, y, z)
    *    mapping.
    */
+  if (goma_automatic_rotations.automatic_rotations) {
+    if (ieqn == R_MESH_NORMAL || ieqn == R_MOM_NORMAL) {
+      int best_dir = -1;
+      double dot_max = 0;
+      for (int dir = 0; dir < 3; dir++) {
+        double dot = 0;
+        for (int j = 0; j < 3; j++) {
+          dot += goma_automatic_rotations.rotation_nodes[I].rotated_coord[dir]->normal->data[j] *
+                 fv->snormal[j];
+        }
+        if (fabs(dot) > dot_max) {
+          best_dir = dir;
+          dot_max = fabs(dot);
+        }
+      }
+      if (ieqn == R_MESH_NORMAL) {
+        offset_j = get_nodal_unknown_offset(nv, R_MESH1 + best_dir, matID, 0, &vd2);
+        if (offset_j >= 0) {
+          node_offset = offset_j;
+          ieqn = R_MESH1 + best_dir;
+          vd = vd2;
+          i_calc = 0;
+        }
+      } else if (ieqn == R_MOM_NORMAL) {
+        offset_j = get_nodal_unknown_offset(nv, R_MESH1 + best_dir, matID, 0, &vd2);
+        if (offset_j >= 0) {
+          node_offset = offset_j;
+          ieqn = R_MOMENTUM1 + best_dir;
+          vd = vd2;
+          i_calc = 0;
+        }
+      } else {
+        GOMA_EH(GOMA_ERROR, "Not sure how we got here");
+      }
+    }
+  }
 
   if ((ieqn >= R_MESH_NORMAL) && (ieqn <= R_MESH_TANG2)) {
     ieqn = ieqn - R_MESH_NORMAL + R_MESH1;

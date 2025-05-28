@@ -407,7 +407,7 @@ int invert_isoparametric_map(int *current_ielem, /* initial element of search */
         }
 
       } /*  end of check left domain */
-    }   /*  end of switched elements */
+    } /*  end of switched elements */
 
     norm = 0.;
     for (a = 0; a < dim; a++)

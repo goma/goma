@@ -156,8 +156,8 @@ setup_fix_data(const char *mono_name, int num_procs, struct fix_data *fd, int *p
         strcpy(fd->eb_elem_type_global[i], "NULL");
       }
 
-      fd->ns_node_index_global = (int *)calloc(sizeof(int), dpin->num_node_sets_global + 1);
-      fd->ns_distfact_index_global = (int *)calloc(sizeof(int), dpin->num_node_sets_global + 1);
+      fd->ns_node_index_global = (int *)calloc(dpin->num_node_sets_global + 1, sizeof(int));
+      fd->ns_distfact_index_global = (int *)calloc(dpin->num_node_sets_global + 1, sizeof(int));
       fd->ns_node_index_global[0] = 0;
       fd->ns_distfact_index_global[0] = 0;
       for (int i = 0; i < dpin->num_node_sets_global; i++) {
@@ -166,8 +166,8 @@ setup_fix_data(const char *mono_name, int num_procs, struct fix_data *fd, int *p
         fd->ns_distfact_index_global[i + 1] =
             fd->ns_distfact_index_global[i] + dpin->num_ns_global_df_counts[i];
       }
-      fd->ss_elem_index_global = (int *)calloc(sizeof(int), dpin->num_side_sets_global + 1);
-      fd->ss_distfact_index_global = (int *)calloc(sizeof(int), dpin->num_side_sets_global + 1);
+      fd->ss_elem_index_global = (int *)calloc(dpin->num_side_sets_global + 1, sizeof(int));
+      fd->ss_distfact_index_global = (int *)calloc(dpin->num_side_sets_global + 1, sizeof(int));
       fd->ss_elem_index_global[0] = 0;
       fd->ss_distfact_index_global[0] = 0;
       for (int i = 0; i < dpin->num_side_sets_global; i++) {
@@ -177,7 +177,7 @@ setup_fix_data(const char *mono_name, int num_procs, struct fix_data *fd, int *p
             fd->ss_distfact_index_global[i] + dpin->num_ss_global_df_counts[i];
       }
 
-      fd->eb_num_nodes_per_elem = (int *)calloc(sizeof(int), dpin->num_elem_blocks_global);
+      fd->eb_num_nodes_per_elem = (int *)calloc(dpin->num_elem_blocks_global, sizeof(int));
       for (int i = 0; i < dpin->num_elem_blocks_global; i++) {
         fd->eb_num_nodes_per_elem[i] = 0;
       }

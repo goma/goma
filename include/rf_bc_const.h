@@ -708,6 +708,7 @@
 #define RAOULT                  24300000
 #define FLORY                   24700000
 #define FLORY_CC                24800000
+#define SHELL_CONC_LS_BC        24850000
 #define YREACT_BC               30000000
 
 /* Shear rate conditions */
@@ -800,12 +801,17 @@
 #define DOUBLE_RAD_BC              961123500
 #define FEATURE_ROLLON_BC          961223400
 #define ROLL_FLUID_BC              961124500
+#define SA_WALL_FUNC_BC            961124501
+#define OMEGA_WALL_FUNC_BC         961124502
+#define FLUIDITY_EQUILIBRIUM_BC    961124503
 #define TENSION_SHEET_BC           96210200
 #define MOVING_PLANE_BC            96110000
 #define MOVING_PLANE_ETCH_BC       96115000
 #define SM_PLANE_BC                961200000 /* Solid Model PLANE BC */
 #define MESH_CONSTRAINT_BC         961300000
 #define KINEMATIC_BC               962000000
+#define KINEMATIC_XI_BC            962000001
+#define KINEMATIC_ETA_BC           962000002
 #define LUB_KINEMATIC_BC           962050000
 #define KIN_LEAK_BC                962100000
 #define KIN_ELECTRODEPOSITION_BC   962200000 /* RSL 5/24/02 */
@@ -817,6 +823,7 @@
 #define CAPILLARY_TABLE_BC         963000007
 #define ELEC_TRACTION_BC           963000001 /* Include Maxwell Stress in CAPILLARY_BC */
 #define ELEC_TRACTION_SOLID_BC     963000003 /* Include Maxwell Stress in solid */
+#define SHEAR_STRESS_APPLIED_BC    963000009
 #define CAP_REPULSE_BC             963100000
 #define CAP_RECOIL_PRESS_BC        963110000
 #define CAP_REPULSE_ROLL_BC        963120000
@@ -900,7 +907,9 @@
 #define VELO_SLIP_FLUID_BC     964900000
 #define VELO_SLIP_ROT_FLUID_BC 964910000
 
-#define EDDY_NU_BC 966666666
+#define EDDY_NU_BC    966666666
+#define TURB_K_BC     966666667
+#define TURB_OMEGA_BC 966666668
 
 /* Structural Shells */
 #define SH_K_BC             970000000
@@ -982,6 +991,12 @@
 #define HEAT_OF_RXN_BC               47000024
 #define T_CONTACT_RESIS_BC           47000025
 #define T_CONTACT_RESIS_2_BC         47000026
+
+/*
+ELLIPTIC MESH
+*/
+#define ELLIPTIC_XI_REGULARIZATION_BC  77000001
+#define ELLIPTIC_ETA_REGULARIZATION_BC 77000002
 
 /*
  * HKM Chemkin boundary conditions along surfaces
@@ -1117,7 +1132,7 @@
 #define LUB_STATIC_BC            777000024
 #define LUB_PRESS_HYDROSTATIC_BC 777000025
 #define GRAD_LUBP_NOBC_BC        777000026
-#define SHELL_LUB_WALL_BC        777000027
+#define LUB_CURV_NOBC_BC         777000028
 
 #define SHELL_TFMP_PRES_BC           777000030
 #define SHELL_TFMP_SAT_BC            777000031

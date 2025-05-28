@@ -359,6 +359,9 @@ struct Material_Properties {
   int Momentwt_funcModel;
   dbl Momentwt_func;
 
+  int MomentTime_funcModel;
+  dbl MomentTime_func;
+
   int MomentSSPG_funcModel;
   dbl MomentSSPG_func;
 
@@ -764,6 +767,24 @@ struct Material_Properties {
   dbl Lub_wts[MAX_LUB_NGP];
   dbl LubInt_PL;
 
+  int Lub_Curv_NormalModel;
+  int Lub_Curv_DiffModel;
+  double Lub_Curv_Diff;
+  int Lub_Curv_RelaxModel;
+  double Lub_Curv_Relax;
+  int Lub_Kwt_funcModel;
+  double Lub_Kwt_func;
+  int Lub_Curv_MassLump;
+  int Lub_Curv_Modulation;
+  int Lub_LS_Interpolation;
+  int Lub_Curv_Combine;
+  int Lub_Isotropic_Curv_Diffusion;
+
+  int Lub_Heat_XferModel;
+  double Lub_Heat_Xfer;
+  int Lub_Heat_TambModel;
+  double Lub_Heat_Tamb;
+
   int TurbulentLubricationModel;
 
   dbl lubsource;
@@ -1099,6 +1120,7 @@ struct Generalized_Newtonian {
   int fexpModel;
   dbl epsilon;
   int epsilonModel;
+  int regularizationModel;
   /* these are for SUSPENSION/FILLED_EPOXY models */
   dbl maxpack;
   int maxpackModel;
@@ -1129,9 +1151,30 @@ struct Generalized_Newtonian {
   dbl *u_thixo_factor;
 };
 typedef struct Generalized_Newtonian GEN_NEWT_STRUCT;
+typedef struct PolymerTimeConstants {
+  //! Integer describing the polymer time constant model
+  /*!
+   *   Constant, Power Law, Carreau, Bingham,  Carreau_wlf
+   *   or Carreau_Suspension etc
+   */
+  int ConstitutiveEquation;
+
+  dbl lambda0;
+  int lambda0Model;
+  dbl pos_ls_lambda;
+  dbl nexp;
+  int nexpModel;
+  dbl lambdainf;
+  int lambdainfModel;
+  dbl carreau_lambda;
+  int carreau_lambdaModel;
+  dbl aexp;
+  int aexpModel;
+  dbl atexp;
+  int atexpModel;
+} POLYMER_TIME_CONST_STRUCT;
 
 struct Positive_LS_Viscoelastic_Properties {
-  double time_const; /* relaxation constant */
 
   double alpha; /* This is the Geisekus mobility parameter */
 
@@ -1145,11 +1188,9 @@ struct Viscoelastic_Constitutive {
    * if it is shearthinning etc or NEWTONIAN
    */
   GEN_NEWT_STRUCT *gn;
+  POLYMER_TIME_CONST_STRUCT *time_const_st;
 
-  dbl time_const;      /* relaxation constant */
-  int time_constModel; /* this is either CONSTANT or POWERLAW or CARREAU */
-                       /* The same model must be used for the viscosity! */
-  dbl alpha;           /* This is the Geisekus mobility parameter */
+  dbl alpha; /* This is the Geisekus mobility parameter */
   int alphaModel;
 
   dbl xi; /* This is the PTT upper convected / lower convected weight parameter */
@@ -1230,7 +1271,10 @@ struct Elastic_Constitutive {
   int len_u_mu;
   dbl *u_mu;
   dbl d_lame_mu[MAX_VARIABLE_TYPES + MAX_CONC];
+  int *u_mu_ns;
+  int len_u_mu_ns;
   int lame_mu_tableid;
+  double *multi_contact_line_distances;
 
   dbl lame_lambda;
   int lame_lambda_model;
@@ -1362,66 +1406,79 @@ struct Second_LS_Phase_Properties {
   int ViscosityModel;
   dbl viscosity;
   int viscositymask[2];
+  int viscosity_lsi_interp_method;
   dbl viscosity_phase[MAX_PHASE_FUNC];
 
   int DensityModel;
   dbl density;
   int densitymask[2];
+  int density_lsi_interp_method;
   dbl density_phase[MAX_PHASE_FUNC];
 
   int HeatCapacityModel;
   dbl heatcapacity;
   int heatcapacitymask[2];
+  int heatcapacity_lsi_interp_method;
   dbl heatcapacity_phase[MAX_PHASE_FUNC];
 
   int ThermalConductivityModel;
   dbl thermalconductivity;
   int thermalconductivitymask[2];
+  int thermalconductivity_lsi_interp_method;
   dbl thermalconductivity_phase[MAX_PHASE_FUNC];
 
   int MomentumSourceModel;
   dbl momentumsource[DIM];
   int momentumsourcemask[2];
+  int momentumsource_lsi_interp_method;
   dbl momentumsource_phase[MAX_PHASE_FUNC][DIM];
 
   int HeatSourceModel;
   dbl heatsource;
   int heatsourcemask[2];
+  int heatsource_lsi_interp_method;
   dbl heatsource_phase[MAX_PHASE_FUNC];
 
   int AcousticImpedanceModel;
   dbl acousticimpedance;
   int acousticimpedancemask[2];
+  int acousticimpedance_lsi_interp_method;
   dbl acousticimpedance_phase[MAX_PHASE_FUNC];
 
   int wavenumberModel;
   dbl wavenumber;
   int wavenumbermask[2];
+  int wavenumber_lsi_interp_method;
   dbl wavenumber_phase[MAX_PHASE_FUNC];
 
   int AcousticAbsorptionModel;
   dbl acousticabsorption;
   int acousticabsorptionmask[2];
+  int acousticabsorption_lsi_interp_method;
   dbl acousticabsorption_phase[MAX_PHASE_FUNC];
 
   int RefractiveIndexModel;
   dbl refractiveindex;
   int refractiveindexmask[2];
+  int refractiveindex_lsi_interp_method;
   dbl refractiveindex_phase[MAX_PHASE_FUNC];
 
   int LightAbsorptionModel;
   dbl lightabsorption;
   int lightabsorptionmask[2];
+  int lightabsorption_lsi_interp_method;
   dbl lightabsorption_phase[MAX_PHASE_FUNC];
 
   int ExtinctionIndexModel;
   dbl extinctionindex;
   int extinctionindexmask[2];
+  int extinctionindex_lsi_interp_method;
   dbl extinctionindex_phase[MAX_PHASE_FUNC];
 
   int SpeciesSourceModel[MAX_CONC];
   dbl speciessource[MAX_CONC];
   int speciessourcemask[2][MAX_CONC];
+  int speciessource_lsi_interp_method[MAX_CONC];
   dbl speciessource_phase[MAX_PHASE_FUNC][MAX_CONC];
   int use_species_source_width[MAX_CONC];
   dbl species_source_width[MAX_CONC];
@@ -1429,6 +1486,7 @@ struct Second_LS_Phase_Properties {
   int FlowingLiquidViscosityModel;
   dbl FlowingLiquid_viscosity;
   int FlowingLiquid_viscositymask[2];
+  int FlowingLiquid_viscosity_lsi_interp_method;
   dbl FlowingLiquid_viscosity_phase[MAX_PHASE_FUNC];
 };
 

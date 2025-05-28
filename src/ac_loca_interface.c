@@ -148,6 +148,7 @@
 #include "sl_auxutil.h"
 #include "sl_lu.h"
 #include "sl_matrix_util.h"
+#include "sl_mumps.h"
 #include "sl_umf.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
@@ -1312,7 +1313,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
         }
       }
     } /* End of "passdown.method != LOCA_LSA_ONLY" block */
-  }   /* End of print block */
+  } /* End of print block */
 
   passdown.theta = tran->theta;
 
@@ -1375,7 +1376,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
 #endif
           DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                   augc[iAC].VOLID, evol_local, passdown.x_AC[iAC]);
-        } else if (augc[iAC].Type == AC_POSITION) {
+        } else if (augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_POSITION_MT) {
           evol_local = augc[iAC].evol;
 #ifdef PARALLEL
           if (Num_Proc > 1) {
@@ -1383,7 +1384,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
           }
           evol_local = evol_global;
 #endif
-          DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+          DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%13.9e\n", augc[iAC].MTID,
                   augc[iAC].VOLID, evol_local, passdown.x_AC[iAC]);
         } else if (augc[iAC].Type == AC_FLUX) {
           DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
@@ -1608,6 +1609,15 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
                           "the Amesos solver suite\n");
     }
     amesos_solve(Amesos_Package, ams, x, xr, 1, pg->imtrx);
+    strcpy(stringer, " 1 ");
+    break;
+
+  case MUMPS:
+    if (strcmp(Matrix_Format, "msr") != 0) {
+      GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with the MUMPS "
+                          "solver\n");
+    }
+    error = mumps_solve(ams, x, xr);
     strcpy(stringer, " 1 ");
     break;
 
@@ -2347,6 +2357,18 @@ void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double to
     strcpy(stringer, " 1 ");
     break;
 
+  case MUMPS: {
+    if (strcmp(Matrix_Format, "msr") != 0) {
+      GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with the MUMPS "
+                          "solver\n");
+    }
+    int err = mumps_solve(ams, y, x);
+    if (err != GOMA_SUCCESS) {
+      strcpy(stringer, " 0 ");
+    } else {
+      strcpy(stringer, " 1 ");
+    }
+  } break;
   case AZTEC:
 
     /* Set option of preconditioner reuse */
