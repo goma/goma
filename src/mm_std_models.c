@@ -4199,14 +4199,13 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
   if (DOUBLE_NONZERO(Y[w]))
     d_lift_dc = lift_coeff / Y[w];
 
-  if( dist_lift < (1.e-6))
-    {
-      lift_coeff = 3. * mu0 * gammadot * 1.2 * Y[w] / (4. * M_PIE * pow(1.e-6,lift_pow));
-  if (DOUBLE_NONZERO(gammadot))
+  if (dist_lift < (1.e-6)) {
+    lift_coeff = 3. * mu0 * gammadot * 1.2 * Y[w] / (4. * M_PIE * pow(1.e-6, lift_pow));
+    if (DOUBLE_NONZERO(gammadot))
       d_lift_dgd = lift_coeff / gammadot;
-  if (DOUBLE_NONZERO(Y[w]))
+    if (DOUBLE_NONZERO(Y[w]))
       d_lift_dc = lift_coeff / Y[w];
-    }
+  }
 
   // if( Y[w] < 1.e-2 )
   //   {
