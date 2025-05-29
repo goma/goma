@@ -105,3 +105,8 @@ Options
                  configurations to run in parallel, so these are made
                  with one make job.
 
+	Skip build questions by running with USE_RECOMMENDED=1 environment variable
+	Example:
+
+		USE_RECOMMENDED=1 ./build-goma-dependencies.sh -j4 ~/goma_tpls
+

@@ -67,6 +67,7 @@
 #include "mm_ns_bc.h"
 #include "mm_qtensor_model.h"
 #include "mm_shell_bc.h"
+#include "models/fluidity.h"
 #include "rd_mesh.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
@@ -890,6 +891,14 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                         iconnect_ptr, xi, exo);
           break;
 
+        case SHEAR_STRESS_APPLIED_BC:
+          memset(cfunc, 0, MDE * DIM * sizeof(double));
+          memset(d_cfunc, 0, MDE * DIM * (MAX_VARIABLE_TYPES + MAX_CONC) * MDE * sizeof(double));
+
+          shear_stress_applied(func, d_func, elem_side_bc->id_side, bc->BC_Data_Float, elem_side_bc,
+                               iconnect_ptr, xi, exo);
+          break;
+
         case CAPILLARY_BC:
         case CAP_REPULSE_BC:
         case CAP_REPULSE_ROLL_BC:
@@ -1024,6 +1033,10 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           }
           break;
 
+        case FLUIDITY_EQUILIBRIUM_BC:
+          fluidity_equilibrium_surf(func, d_func, bc->species_eq, theta, delta_t);
+          break;
+
         case GRAD_LUB_PRESS_BC:
         case GRAD_LUBP_NOBC_BC:
           shell_n_dot_flow_bc_confined(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Float[1],
@@ -1034,20 +1047,23 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
               (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
           break;
 
-        case SHELL_LUB_WALL_BC:
-          shell_n_dot_flow_wall(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Float[1],
-                                time_value, delta_t, xi, exo);
+        case LUB_CURV_NOBC_BC:
+          shell_n_dot_curv_bc(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0],
+                              bc->BC_Data_Float[1], (int)bc->BC_Name, time_value, delta_t,
+                              pg_data->hsquared, xi, exo);
           surface_determinant_and_normal(
               ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
               (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
           break;
 
-        case LUB_CURV_NOBC_BC:
-          shell_n_dot_curv_bc(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0],
-                              (int)bc->BC_Name, time_value, delta_t, pg_data->hsquared, xi, exo);
-          surface_determinant_and_normal(
-              ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
-              (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
+        case SHELL_CONC_LS_BC:
+          if (ls != NULL && SS_Internal_Boundary[ss_index] == -1) {
+            shell_conc_ls_bc(func, d_func, bc->BC_Data_Int[0], bc->BC_Data_Float[0],
+                             bc->BC_Data_Float[1], (int)bc->BC_Name, time_value, delta_t, xi, exo);
+            surface_determinant_and_normal(
+                ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
+                (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
+          }
           break;
 
         case LUB_STATIC_BC:
@@ -1710,8 +1726,8 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                 if (Debug_Flag > 1)
                   GOMA_WH(-1, "Wall velocity bc not found\n");
               } /* switch bc */
-            }   /*  if BC_Types  */
-          }     /*  Num_BC loop  */
+            } /*  if BC_Types  */
+          } /*  Num_BC loop  */
           apply_blake_wetting_velocity_sic(
               func, d_func, delta_t, theta, (int)bc->BC_Name, elem_side_bc->id_side, ielem_type,
               BC_Types[bc_input_id].BC_Data_Float[3], BC_Types[bc_input_id].BC_Data_Float[0],
@@ -2067,9 +2083,8 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                   else if (bc_desc->i_apply == SINGLE_PHASE || pd->e[pg->imtrx][eqn]) {
                     if (bc->BC_Name == KINEMATIC_PETROV_BC ||
                         bc->BC_Name == VELO_NORMAL_LS_PETROV_BC ||
-                        bc->BC_Name == SHELL_LUB_WALL_BC ||
                         bc->BC_Name == KIN_DISPLACEMENT_PETROV_BC) {
-                      if (pd->Num_Dim != 2 && bc->BC_Name != SHELL_LUB_WALL_BC) {
+                      if (pd->Num_Dim != 2) {
                         GOMA_EH(
                             GOMA_ERROR,
                             "KINEMATIC_PETROV or KIN_DISPLACEMENT_PETROV not available in 3D yet");
@@ -2168,7 +2183,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                   ieqn = upd->ep[pg->imtrx][eqn];
                   if (goma_automatic_rotations.automatic_rotations &&
                       (bc->desc->rotate != NO_ROT)) {
-                    ieqn = equation_index_auto_rotate(elem_side_bc, I, eqn, p, ldof_eqn, bc);
+                    ieqn = equation_index_auto_rotate(elem_side_bc, I, eqn, p, bc);
                   }
                 }
 
@@ -2301,15 +2316,15 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                                     weight * fv->sdet * d_func[p][MAX_VARIABLE_TYPES + w][j];
                               }
                             } /* end of loop over species */
-                          }   /* end of if MASS_FRACTION */
-                        }     /* end of variable exists and BC is sensitive to it */
-                      }       /* end of var loop over variable types */
-                    }         /* End of loop over new way */
-                  }           /* end of NEWTON */
+                          } /* end of if MASS_FRACTION */
+                        } /* end of variable exists and BC is sensitive to it */
+                      } /* end of var loop over variable types */
+                    } /* End of loop over new way */
+                  } /* end of NEWTON */
                 }
               } /* end of if (Res_BC != NULL) - i.e. apply residual at this node */
-            }   /* end of loop over equations that this condition applies to */
-          }     /* end of if it is not a stress BC */
+            } /* end of loop over equations that this condition applies to */
+          } /* end of if it is not a stress BC */
 
           /* Stress BC is handled in different loop so that it is not too invasive to the
            * already overloaded loop */
@@ -2431,15 +2446,15 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                       }
                     }
                   } /* End of if assemble Jacobian */
-                }   /* end of if (Res_BC != NULL) - i.e. apply residual at this node */
-              }     /* End of loop over stress components */
-            }       /* End of loop over stress modes */
-          }         /* end of if it is a stress BC */
+                } /* end of if (Res_BC != NULL) - i.e. apply residual at this node */
+              } /* End of loop over stress components */
+            } /* End of loop over stress modes */
+          } /* end of if it is a stress BC */
 
         } /* end for (i=0; i< num_nodes_on_side; i++) */
-      }   /*End (if INT) (CAPILLARY and KINEMATIC and VELO_NORMAL and VELO_TANGENT . . .) */
-    }     /*(end for ibc) */
-  }       /*End for ip = 1,...*/
+      } /*End (if INT) (CAPILLARY and KINEMATIC and VELO_NORMAL and VELO_TANGENT . . .) */
+    } /*(end for ibc) */
+  } /*End for ip = 1,...*/
   return (status);
 }
 /* END of routine apply_integrated_bc */
@@ -2844,16 +2859,16 @@ int apply_nedelec_bc(double x[],            /* Solution vector for the current p
                               weight * fv->sdet * phi_e[p] * d_func[p][MAX_VARIABLE_TYPES + w][j];
                         }
                       } /* end of loop over species */
-                    }   /* end of if MASS_FRACTION */
-                  }     /* end of variable exists and BC is sensitive to it */
-                }       /* end of var loop over variable types */
-              }         /* end of NEWTON */
+                    } /* end of if MASS_FRACTION */
+                  } /* end of variable exists and BC is sensitive to it */
+                } /* end of var loop over variable types */
+              } /* end of NEWTON */
             }
           }
         } /* end of if (Res_BC != NULL) - i.e. apply residual at this node */
-      }   /* end for (i=0; i< num_nodes_on_side; i++) */
-    }     /*(end for ibc) */
-  }       /*End for ip = 1,...*/
+      } /* end for (i=0; i< num_nodes_on_side; i++) */
+    } /*(end for ibc) */
+  } /*End for ip = 1,...*/
   return (status);
 }
 
@@ -2861,7 +2876,6 @@ int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
                                int I,
                                int eqn,
                                int p,
-                               int ldof_eqn,
                                const BOUNDARY_CONDITION_STRUCT *bc) {
   int ieqn;
   if (!goma_automatic_rotations.automatic_rotations) {

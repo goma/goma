@@ -12,6 +12,7 @@ below.
 
    general_specifications/output_level
    general_specifications/debug
+   general_specifications/print_3d_bc_dup
    general_specifications/number_of_jacobian_file_dumps
    general_specifications/initial_guess
    general_specifications/initialize

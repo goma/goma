@@ -810,7 +810,7 @@ void extract_nodal_eb_vec(double sol_vec[],
         }
       }
     } /* END if (midside) */
-  }   /* END for (ielem = e_start; ielem < e_end; ielem++) */
+  } /* END for (ielem = e_start; ielem < e_end; ielem++) */
   return;
 }
 /********************** end of extract_nodal_eb_vec *****************************/

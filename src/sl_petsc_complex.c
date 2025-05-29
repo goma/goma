@@ -70,6 +70,17 @@ static int goma_real_from_imag(int eqn) {
   }
 }
 
+int petsc_zero_mat(struct GomaLinearSolverData *ams) {
+  PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
+  if (matrix_data->mat_entries_set) {
+    MatAssemblyBegin(matrix_data->mat, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(matrix_data->mat, MAT_FINAL_ASSEMBLY);
+    matrix_data->mat_entries_set = PETSC_FALSE;
+  }
+  MatZeroEntries(matrix_data->mat);
+  return 0;
+}
+
 static void create_complex_mapping(struct GomaLinearSolverData *ams,
                                    Exo_DB *exo,
                                    Dpi *dpi,
@@ -467,6 +478,7 @@ void petsc_load_lec_complex(int ielem, struct GomaLinearSolverData *ams, double 
   int je_new;
   struct Element_Indices *ei_ptr;
   PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
+  matrix_data->mat_entries_set = PETSC_TRUE;
   if (ielem == 0) {
 
     MatDestroy(&matrix_data->mat);
@@ -695,6 +707,7 @@ int petsc_solve_complex(struct GomaLinearSolverData *ams, double *x_, double *b_
   KSPSetOperators(matrix_data->ksp, matrix_data->mat, matrix_data->mat);
   MatAssemblyBegin(matrix_data->mat, MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(matrix_data->mat, MAT_FINAL_ASSEMBLY);
+  matrix_data->mat_entries_set = PETSC_FALSE;
   VecSet(matrix_data->residual, 0.0);
   VecSet(matrix_data->update, 0.0);
   for (int i = 0; i < matrix_data->local_dof; i++) {

@@ -16,6 +16,7 @@
  *$Id: rf_vars.c,v 5.1 2007-09-18 18:53:47 prschun Exp $
  */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -729,6 +730,10 @@ void assign_var_name(const int varType,
         sr = strlen(species_desc);
         sprintf(species_desc + sr, " for Material %d", matID);
       }
+    }
+    sr = strlen(species_name);
+    for (int c = 0; c < sr; c++) {
+      species_name[c] = toupper(species_name[c]);
     }
   }
 }

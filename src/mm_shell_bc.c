@@ -74,9 +74,9 @@
  *
  *  shell_n_dot_pflux_bc                 void
  *
- *  shell_n_dot_flow_wall                void
- *
  *  shell_n_dot_curv_bc                  void
+ *
+ *  shell_conc_ls_bc                  void
  *
  *
  ******************************************************************************/
@@ -170,8 +170,6 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
                 n_dof[MESH_DISPLACEMENT1], dof_map);
 
-        Inn(grad_phi_j, grad_II_phi_j);
-
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           d_func[0][var][j] += LubAux->dq_dp2[ii] * phi_j * bound_normal[ii];
           for (jj = 0; jj < pd->Num_Dim; jj++) {
@@ -180,6 +178,33 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         }
       }
     }
+
+    var = SHELL_SHEAR_TOP;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        /* Load basis functions (j) */
+        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                n_dof[MESH_DISPLACEMENT1], dof_map);
+
+        for (ii = 0; ii < pd->Num_Dim; ii++) {
+          d_func[0][var][j] += LubAux->dq_dshrw[ii] * phi_j * bound_normal[ii];
+        }
+      }
+    }
+
+    var = SHELL_TEMPERATURE;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        /* Load basis functions (j) */
+        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                n_dof[MESH_DISPLACEMENT1], dof_map);
+
+        for (ii = 0; ii < pd->Num_Dim; ii++) {
+          d_func[0][var][j] += LubAux->dq_dT[ii] * phi_j * bound_normal[ii];
+        }
+      }
+    }
+
     /*
      * J_lubp_DMX
      */
@@ -195,6 +220,7 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 
         /*** Loop over DOFs (j) ***/
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
           jk = dof_map[j];
 
           /* Load basis functions (j) */
@@ -229,6 +255,7 @@ void shell_n_dot_curv_bc(double func[DIM],
                          double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                          const double theta_deg,
                          const int ibc_flag,         /* NOBC flag from bc input  */
+                         const double penalty,       /* Penalty parameter */
                          const int bc_id,            /* BC_Name */
                          const double time,          /* current time */
                          const double dt,            /* current time step size */
@@ -275,6 +302,9 @@ void shell_n_dot_curv_bc(double func[DIM],
   double grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
   double grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
   double bound_normal[DIM], bound_dnormal_dx[DIM][DIM][MDE];
+  int curv_near;
+  double curvX, diffX = 1.0;
+  int extra_diff_term = TRUE;
 
   int eqn = R_SHELL_LUB_CURV;
   if (ei[pg->imtrx]->ielem_dim == 3)
@@ -374,13 +404,36 @@ void shell_n_dot_curv_bc(double func[DIM],
 
     /* Derivative of normal vector */
     for (jj = 0; jj < DIM; jj++) {
-      d_LSnormal_dF[ii][jj] = grad_II_phi_i[jj] * LSnormal_maginv;
-      d_LSnormal_dF[ii][jj] -= gradII_F[jj] * d_LSnormal_mag_dF[ii] * pow(LSnormal_maginv, 2);
+      d_LSnormal_dF[jj][ii] = grad_II_phi_i[jj] * LSnormal_maginv;
+      d_LSnormal_dF[jj][ii] -= gradII_F[jj] * d_LSnormal_mag_dF[ii] * pow(LSnormal_maginv, 2);
     }
   }
 
   /* Prepare weighting for artificial diffusion term */
-  const double K_diff = mp->Lub_Curv_Diff;
+  double K_diff = mp->Lub_Curv_Diff;
+  if (mp->Lub_Curv_Modulation) {
+    curvX = 0.;
+    curv_near = 0;
+    if (fabs(fv->F) < 2. * lsi->alpha) {
+      curv_near = 1;
+      if (lsi->near) {
+        curvX = 1.;
+      } else {
+        curvX = 2. - SGN(fv->F) * fv->F / lsi->alpha;
+      }
+    }
+    if (!mp->Lub_Isotropic_Curv_Diffusion)
+      K_diff *= curvX;
+  } else {
+    curvX = 1.;
+    curv_near = 1;
+  }
+
+  /* If we want anisotropic curvature diffusion -- i.e., want to constrain the
+     curvature field to the interface zone -- set the diffusion and curvature
+     multipliers to be equal to each other  */
+  if (!mp->Lub_Isotropic_Curv_Diffusion)
+    diffX = curvX;
 
   if (af->Assemble_LSA_Mass_Matrix) {
     return;
@@ -391,7 +444,7 @@ void shell_n_dot_curv_bc(double func[DIM],
      * J_Curv_DMX
      */
     var = MESH_DISPLACEMENT1;
-    if (pd->v[pg->imtrx][var] &&
+    if (pd->v[pg->imtrx][var] && lsi->near &&
         (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_MESH_UNDEF)) {
 
       /*** Loop over dimensions of mesh displacement ***/
@@ -412,11 +465,14 @@ void shell_n_dot_curv_bc(double func[DIM],
                 d_func[0][var][j] -= d_LSnormal_dmesh[ii][jj][jk] * bound_normal[ii];
                 d_func[0][var][j] -= LSnormal[ii] * bound_dnormal_dx[ii][jj][jk];
               }
+              d_func[0][var][j] *= curvX;
             }
-            for (ii = 0; ii < pd->Num_Dim; ii++) {
-              d_func[0][var][j] -= K_diff * hsquared[ii] *
-                                   (gradII_kappa[ii] * bound_dnormal_dx[ii][jj][jk] +
-                                    d_gradII_kappa_dmesh[ii][jj][j]);
+            if (extra_diff_term) {
+              for (ii = 0; ii < pd->Num_Dim; ii++) {
+                d_func[0][var][j] += diffX * K_diff * hsquared[ii] *
+                                     (gradII_kappa[ii] * bound_dnormal_dx[ii][jj][jk] +
+                                      d_gradII_kappa_dmesh[ii][jj][j]);
+              }
             }
           }
         }
@@ -427,21 +483,45 @@ void shell_n_dot_curv_bc(double func[DIM],
      */
     var = FILL;
     if (pd->v[pg->imtrx][var]) {
+      double div1 = 0.0, diff1 = 0.0;
+      if (curv_near || !mp->Lub_Curv_Modulation) {
+        for (ii = 0; ii < VIM; ii++) {
+          div1 += LSnormal[ii] * grad_II_phi_i[ii];
+          diff1 += hsquared[ii] * gradII_kappa[ii] * grad_II_phi_i[ii];
+        }
+        if (mp->Lub_Curv_Combine) {
+          div1 -= LubAux->op_curv * phi_i;
+        }
+      }
 
       /* Loop over DOFs (j) */
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->e[pg->imtrx][var]) {
+          if (curv_near && !mp->Lub_Isotropic_Curv_Diffusion && extra_diff_term) {
+            if (!lsi->near && mp->Lub_Curv_Modulation) {
+              d_func[0][var][j] += SGN(fv->F) / lsi->alpha * phi_j * diff1 * K_diff;
+            }
+          }
 
-        if (pd->e[pg->imtrx][var] && (ibc_flag != -1)) {
-          for (ii = 0; ii < pd->Num_Dim; ii++) {
-            d_func[0][var][j] -= d_LSnormal_dF[ii][j] * bound_normal[ii];
+          if (ibc_flag > -1) {
+            for (ii = 0; ii < pd->Num_Dim; ii++) {
+              d_func[0][var][j] -= curvX * d_LSnormal_dF[ii][j] * bound_normal[ii];
+            }
+            if (mp->Lub_Curv_Combine) {
+              d_func[0][var][j] += curvX * LubAux->dop_curv_df[j] * phi_i;
+            }
+            if (curv_near && !mp->Lub_Isotropic_Curv_Diffusion) {
+              if (!lsi->near && mp->Lub_Curv_Modulation) {
+                d_func[0][var][j] -= SGN(fv->F) / lsi->alpha * div1;
+              }
+            }
           }
         }
       } // End of loop over DOFs (j)
-    }   // End of FILL assembly
+    } // End of FILL assembly
     /*** SHELL_LUB_CURV ***/
     var = SHELL_LUB_CURV;
-    if (pd->v[pg->imtrx][var]) {
-
+    if (pd->v[pg->imtrx][var] && extra_diff_term) {
       /* Loop over DOFs (j) */
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         /* Prepare basis funcitons (j) */
@@ -450,7 +530,8 @@ void shell_n_dot_curv_bc(double func[DIM],
         Inn(grad_phi_j, grad_II_phi_j);
         if (pd->e[pg->imtrx][var]) {
           for (ii = 0; ii < pd->Num_Dim; ii++) {
-            d_func[0][var][j] -= K_diff * hsquared[ii] * bound_normal[ii] * grad_II_phi_j[ii];
+            d_func[0][var][j] +=
+                diffX * K_diff * hsquared[ii] * bound_normal[ii] * grad_II_phi_j[ii];
           }
         }
       }
@@ -459,44 +540,53 @@ void shell_n_dot_curv_bc(double func[DIM],
   } /* end of if Assemble_Jacobian */
 
   /* Calculate the residual contribution        */
-  if (ibc_flag == -1) {
-    func[0] -= cos(M_PIE * theta_deg / 180.);
-  } else {
-    for (ii = 0; ii < pd->Num_Dim; ii++) {
-      func[0] -= LSnormal[ii] * bound_normal[ii];
+  if (curv_near || !mp->Lub_Curv_Modulation) {
+    if (ibc_flag == -1) {
+      func[0] -= curvX * cos(M_PIE * theta_deg / 180.);
+    } else {
+      for (ii = 0; ii < pd->Num_Dim; ii++) {
+        func[0] -= curvX * LSnormal[ii] * bound_normal[ii];
+      }
     }
   }
   /* Diffusion boundary term */
-  for (ii = 0; ii < pd->Num_Dim; ii++) {
-    func[0] -= K_diff * hsquared[ii] * gradII_kappa[ii] * bound_normal[ii];
+  if (extra_diff_term) {
+    for (ii = 0; ii < pd->Num_Dim; ii++) {
+      func[0] += diffX * K_diff * hsquared[ii] * gradII_kappa[ii] * bound_normal[ii];
+    }
   }
 
   /* clean-up */
   safe_free((void *)n_dof);
 
-} /* END of routine shell_n_dot_flow_bc_confined  */
+} /* END of routine shell_n_dot_curv_bc  */
 /*****************************************************************************/
 /*****************************************************************************/
-void shell_n_dot_flow_wall(double func[DIM],
-                           double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                           const double pwr_index,    /* power-law for gap dependence */
-                           const double fudge_factor, /* self-explanatory */
-                           const double time,         /* current time */
-                           const double dt,           /* current time step size */
-                           double xi[DIM],            /* Local stu coordinates */
-                           const Exo_DB *exo)
-
+void shell_conc_ls_bc(double func[DIM],
+                      double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                      const int spec_id, /* Species number */
+                      const double conc_liq,
+                      const double conc_gas,
+                      const int bc_id,   /* BC_Name */
+                      const double time, /* current time */
+                      const double dt,   /* current time step size */
+                      double xi[DIM],    /* Local stu coordinates */
+                      const Exo_DB *exo)
 /***********************************************************************
  *
- * shell_n_dot_flow_wall():
+ * shell_conc_ls_bc():
  *
- *  Function which evaluates extra flow resistance due to a wall
+ *  Function which forces concentration to follow level set interface
+ *  This is a STRONG_INT, CROSS_PHASE condition
  *
- *  The boundary condition SHELL_LUB_WALL_BC employs this function.
+ *         func =   C[specied_id] - [H(F)*C_gas + (1-H(F))*C_liquid]
+ *
+ *  The boundary condition SHELL_CONC_LS employs this function.
  *
  * Input:
  *
- *  pwr_index     = specified on the bc card as the third float (optional)
+ *  conc_liq      = specified on the bc card as the first float
+ *  conc_gas      = specified on the bc card as the second float
  *
  * Output:
  *
@@ -507,36 +597,20 @@ void shell_n_dot_flow_wall(double func[DIM],
  *              degree of freedom, lvardof, corresponding to that
  *              variable type.
  *
- *   Author: Robert B. Secor    (01/04/2023)
+ *
+ *   Author: R. Secor    (11/11/2024)
  *
  ********************************************************************/
 {
-  int j, ii, jj, var, jk;
+  int j, var;
   int *n_dof = NULL;
   int dof_map[MDE];
-  double phi_j, wall_factor = 0.;
-  double grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
-  double bdy_tangent[DIM], bdy_dstangent_dx[DIM][DIM][MDE];
 
   if (ei[pg->imtrx]->ielem_dim == 3)
     return;
-  /* Save the boundary normal vector */
 
-  for (ii = 0; ii < pd->Num_Dim; ii++) {
-    bdy_tangent[ii] = fv->stangent[0][ii];
-    for (jj = 0; jj < pd->Num_Dim; jj++) {
-      for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
-        bdy_dstangent_dx[ii][jj][j] = fv->dstangent_dx[0][ii][jj][j];
-      }
-    }
-  }
-  /* Wall factor for power-law liquids, i.e., (Qtube/2R)/(Qslot/W) */
-  wall_factor =
-      -M_PIE * (2. + 1. / pwr_index) / (3. + 1. / pwr_index) / pow(2., 2. + 1 / pwr_index);
-  if (ls != NULL || pfd != NULL) {
-    wall_factor *= (1. - lsi->H) * fudge_factor;
-  } else {
-    wall_factor *= fudge_factor;
+  if (af->Assemble_LSA_Mass_Matrix) {
+    return;
   }
   /*
    * Prepare geometry
@@ -546,90 +620,39 @@ void shell_n_dot_flow_wall(double func[DIM],
 
   /* Calculate the flow rate and its sensitivties */
 
-  calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
+  /* Add contributions from level set side of boundary to flux */
 
-  if (af->Assemble_LSA_Mass_Matrix) {
-    return;
-  }
-
-  if (af->Assemble_Jacobian) {
-    var = LUBP;
-    if (pd->v[pg->imtrx][var]) {
-      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        /* Load basis functions (j) */
-        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                n_dof[MESH_DISPLACEMENT1], dof_map);
-
-        Inn(grad_phi_j, grad_II_phi_j);
-
-        for (ii = 0; ii < pd->Num_Dim; ii++) {
-          d_func[0][var][j] +=
-              wall_factor * LubAux->dq_dp2[ii] * phi_j * bdy_tangent[ii] / fv->sdet;
-          for (jj = 0; jj < pd->Num_Dim; jj++) {
-            d_func[0][var][j] += wall_factor * LubAux->dq_dgradp[ii][jj] * grad_II_phi_j[jj] *
-                                 bdy_tangent[ii] / fv->sdet;
-          }
-        }
-      }
-    }
-    /*
-     * J_lubp_DMX
-     */
-    var = MESH_DISPLACEMENT1;
-    if (pd->v[pg->imtrx][var] &&
-        (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
-         mp->FSIModel == FSI_MESH_UNDEF || mp->FSIModel == FSI_SHELL_ONLY_MESH ||
-         mp->FSIModel == FSI_SHELL_ONLY_UNDEF)) {
-
-      /*** Loop over dimensions of mesh displacement ***/
-      for (jj = 0; jj < pd->Num_Dim; jj++) {
-        var = MESH_DISPLACEMENT1 + jj;
-
-        /*** Loop over DOFs (j) ***/
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          jk = dof_map[j];
-
-          /* Load basis functions (j) */
-          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
-
-          if (pd->e[pg->imtrx][var]) {
-            for (ii = 0; ii < pd->Num_Dim; ii++) {
-              d_func[0][var][j] +=
-                  wall_factor * LubAux->dq_dx[ii][jj][j] * bdy_tangent[ii] / fv->sdet;
-              d_func[0][var][j] +=
-                  wall_factor * LubAux->q[ii] * bdy_dstangent_dx[ii][jj][jk] / fv->sdet;
-              d_func[0][var][j] += wall_factor * LubAux->q[ii] * bdy_tangent[ii] *
-                                   (-fv->dsurfdet_dx[jj][j] / SQUARE(fv->sdet));
-            }
-          }
-        }
-      }
-    }
-    /* Calculate F sensitivity */
-    var = FILL;
-    if (pd->v[pg->imtrx][var]) {
-      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        for (ii = 0; ii < pd->Num_Dim; ii++) {
-          d_func[0][var][j] +=
-              -lsi->d_H_dF[j] * wall_factor * LubAux->q[ii] * bdy_tangent[ii] / fv->sdet;
-        }
-      }
-    }
-
-  } /* end of if Assemble_Jacobian */
+  load_lsi_adjmatr(ls->Length_Scale);
 
   /* Calculate the residual contribution        */
-  func[0] = 0.0;
-  for (ii = 0; ii < pd->Num_Dim; ii++) {
-    func[0] += LubAux->q[ii] * bdy_tangent[ii];
-  }
-  func[0] *= wall_factor / fv->sdet;
+  func[0] += fv->c[spec_id];
+  func[0] -= conc_liq * (1. - lsi->H) + conc_gas * lsi->H;
 
+  if (af->Assemble_Jacobian) {
+    /*
+     * J_Conc_DF
+     */
+    var = FILL;
+    if (pd->v[pg->imtrx][var] && lsi->near) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->e[pg->imtrx][var]) {
+          d_func[0][var][j] += (conc_liq - conc_gas) * lsi->d_H_dF[j];
+        }
+      } // End of loop over DOFs (j)
+    } // End of FILL assembly
+    var = MASS_FRACTION;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (pd->e[pg->imtrx][var]) {
+          d_func[0][MAX_VARIABLE_TYPES + spec_id][j] += bf[var]->phi[j];
+        }
+      }
+    }
+  }
   /* clean-up */
   safe_free((void *)n_dof);
 
-} /* END of routine shell_n_dot_flow_wall  */
+} /* END of routine shell_n_dot_curv_bc  */
 /*****************************************************************************/
 /*****************************************************************************/
 

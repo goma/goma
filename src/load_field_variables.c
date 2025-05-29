@@ -821,6 +821,38 @@ int load_fv(void)
     stateVector[EDDY_NU] = fv->eddy_nu;
   }
 
+  if (pdgv[TURB_K]) {
+    v = TURB_K;
+    scalar_fv_fill(esp->turb_k, esp_dot->turb_k, esp_old->turb_k, bf[v]->phi,
+                   ei[upd->matrix_index[v]]->dof[v], &(fv->turb_k), &(fv_dot->turb_k),
+                   &(fv_old->turb_k));
+    stateVector[TURB_K] = fv->turb_k;
+  }
+
+  if (pdgv[TURB_OMEGA]) {
+    v = TURB_OMEGA;
+    scalar_fv_fill(esp->turb_omega, esp_dot->turb_omega, esp_old->turb_omega, bf[v]->phi,
+                   ei[upd->matrix_index[v]]->dof[v], &(fv->turb_omega), &(fv_dot->turb_omega),
+                   &(fv_old->turb_omega));
+    stateVector[TURB_OMEGA] = fv->turb_omega;
+  }
+
+  if (pdgv[TURB_K]) {
+    v = TURB_K;
+    scalar_fv_fill(esp->turb_k, esp_dot->turb_k, esp_old->turb_k, bf[v]->phi,
+                   ei[upd->matrix_index[v]]->dof[v], &(fv->turb_k), &(fv_dot->turb_k),
+                   &(fv_old->turb_k));
+    stateVector[TURB_K] = fv->turb_k;
+  }
+
+  if (pdgv[TURB_OMEGA]) {
+    v = TURB_OMEGA;
+    scalar_fv_fill(esp->turb_omega, esp_dot->turb_omega, esp_old->turb_omega, bf[v]->phi,
+                   ei[upd->matrix_index[v]]->dof[v], &(fv->turb_omega), &(fv_dot->turb_omega),
+                   &(fv_old->turb_omega));
+    stateVector[TURB_OMEGA] = fv->turb_omega;
+  }
+
   if (pdgv[LIGHT_INTP]) {
     v = LIGHT_INTP;
     scalar_fv_fill(esp->poynt[0], esp_dot->poynt[0], esp_old->poynt[0], bf[v]->phi,
@@ -1786,10 +1818,25 @@ int load_fv(void)
   if (upd->turbulent_info->use_internal_wall_distance) {
     fv->wall_distance = 0.;
     if (pdgv[pd->ShapeVar]) {
-      dofs = ei[pg->imtrx]->dof[pd->ShapeVar];
+      dofs = ei[upd->matrix_index[pd->ShapeVar]]->dof[pd->ShapeVar];
+      dofs = ei[upd->matrix_index[pd->ShapeVar]]->dof[pd->ShapeVar];
       for (i = 0; i < dofs; i++) {
         fv->wall_distance +=
-            upd->turbulent_info->wall_distances[ei[pg->imtrx]->gnn_list[pd->ShapeVar][i]] *
+            upd->turbulent_info
+                ->wall_distances[ei[upd->matrix_index[pd->ShapeVar]]->gnn_list[pd->ShapeVar][i]] *
+            bf[pd->ShapeVar]->phi[i];
+      }
+    }
+  }
+
+  fv->multi_contact_line_distance = 0;
+  if (elc_glob[ei[pg->imtrx]->mn]->multi_contact_line_distances != NULL) {
+    if (pdgv[pd->ShapeVar]) {
+      dofs = ei[pg->imtrx]->dof[pd->ShapeVar];
+      for (i = 0; i < dofs; i++) {
+        fv->multi_contact_line_distance +=
+            elc_glob[ei[pg->imtrx]->mn]
+                ->multi_contact_line_distances[ei[pg->imtrx]->gnn_list[pd->ShapeVar][i]] *
             bf[pd->ShapeVar]->phi[i];
       }
     }
@@ -3275,6 +3322,42 @@ int load_fv_grads(void)
   } else if (zero_unused_grads && upd->vp[pg->imtrx][EDDY_NU] == -1) {
     for (p = 0; p < VIM; p++) {
       fv->grad_eddy_nu[p] = 0.0;
+    }
+  }
+
+  if (pd->gv[TURB_K]) {
+    v = TURB_K;
+    bfn = bf[v];
+    dofs = ei[upd->matrix_index[v]]->dof[v];
+    for (p = 0; p < VIM; p++) {
+      fv->grad_turb_k[p] = 0.0;
+      fv_old->grad_turb_k[p] = 0.0;
+      for (i = 0; i < dofs; i++) {
+        fv->grad_turb_k[p] += *esp->turb_k[i] * bfn->grad_phi[i][p];
+        fv_old->grad_turb_k[p] += *esp_old->turb_k[i] * bfn->grad_phi[i][p];
+      }
+    }
+  } else if (zero_unused_grads && upd->vp[pg->imtrx][TURB_K] == -1) {
+    for (p = 0; p < VIM; p++) {
+      fv->grad_turb_k[p] = 0.0;
+    }
+  }
+
+  if (pd->gv[TURB_OMEGA]) {
+    v = TURB_OMEGA;
+    bfn = bf[v];
+    dofs = ei[upd->matrix_index[v]]->dof[v];
+    for (p = 0; p < VIM; p++) {
+      fv->grad_turb_omega[p] = 0.0;
+      fv_old->grad_turb_omega[p] = 0.0;
+      for (i = 0; i < dofs; i++) {
+        fv->grad_turb_omega[p] += *esp->turb_omega[i] * bfn->grad_phi[i][p];
+        fv_old->grad_turb_omega[p] += *esp_old->turb_omega[i] * bfn->grad_phi[i][p];
+      }
+    }
+  } else if (zero_unused_grads && upd->vp[pg->imtrx][TURB_OMEGA] == -1) {
+    for (p = 0; p < VIM; p++) {
+      fv->grad_turb_omega[p] = 0.0;
     }
   }
 
@@ -4977,6 +5060,120 @@ int load_fv_mesh_derivs(int okToZero)
   } else if (upd->vp[pg->imtrx][EDDY_NU] != -1) {
     siz = sizeof(double) * DIM * DIM * MDE;
     memset(&(fv->d_grad_eddy_nu_dmesh[0][0][0]), 0, siz);
+  }
+
+  if (pd->gv[TURB_K]) {
+    v = TURB_K;
+    bfv = bf[v];
+    vdofs = ei[upd->matrix_index[v]]->dof[v];
+#ifdef DO_NOT_UNROLL
+    siz = sizeof(double) * DIM * DIM * MDE;
+    memset(&(fv->d_grad_turb_k_dmesh[0][0][0]), 0, siz);
+    for (i = 0; i < vdofs; i++) {
+      T_i = *esp->turb_k[i];
+      for (p = 0; p < dimNonSym; p++) {
+        for (b = 0; b < dim; b++) {
+          for (j = 0; j < mdofs; j++) {
+            fv->d_grad_turb_k_dmesh[p][b][j] += T_i * bfv->d_grad_phi_dmesh[i][p][b][j];
+          }
+        }
+      }
+    }
+#else
+    for (j = 0; j < mdofs; j++) {
+      T_i = *esp->turb_k[0];
+
+      fv->d_grad_turb_k_dmesh[0][0][j] = T_i * bfv->d_grad_phi_dmesh[0][0][0][j];
+      fv->d_grad_turb_k_dmesh[1][1][j] = T_i * bfv->d_grad_phi_dmesh[0][1][1][j];
+      fv->d_grad_turb_k_dmesh[1][0][j] = T_i * bfv->d_grad_phi_dmesh[0][1][0][j];
+      fv->d_grad_turb_k_dmesh[0][1][j] = T_i * bfv->d_grad_phi_dmesh[0][0][1][j];
+
+      if (dimNonSym == 3) {
+        fv->d_grad_turb_k_dmesh[2][2][j] = T_i * bfv->d_grad_phi_dmesh[0][2][2][j];
+        fv->d_grad_turb_k_dmesh[2][0][j] = T_i * bfv->d_grad_phi_dmesh[0][2][0][j];
+        fv->d_grad_turb_k_dmesh[2][1][j] = T_i * bfv->d_grad_phi_dmesh[0][2][1][j];
+        fv->d_grad_turb_k_dmesh[0][2][j] = T_i * bfv->d_grad_phi_dmesh[0][0][2][j];
+        fv->d_grad_turb_k_dmesh[1][2][j] = T_i * bfv->d_grad_phi_dmesh[0][1][2][j];
+      }
+
+      for (i = 1; i < vdofs; i++) {
+        T_i = *esp->turb_k[i];
+
+        fv->d_grad_turb_k_dmesh[0][0][j] += T_i * bfv->d_grad_phi_dmesh[i][0][0][j];
+        fv->d_grad_turb_k_dmesh[1][1][j] += T_i * bfv->d_grad_phi_dmesh[i][1][1][j];
+        fv->d_grad_turb_k_dmesh[1][0][j] += T_i * bfv->d_grad_phi_dmesh[i][1][0][j];
+        fv->d_grad_turb_k_dmesh[0][1][j] += T_i * bfv->d_grad_phi_dmesh[i][0][1][j];
+
+        if (dimNonSym == 3) {
+          fv->d_grad_turb_k_dmesh[2][2][j] += T_i * bfv->d_grad_phi_dmesh[i][2][2][j];
+          fv->d_grad_turb_k_dmesh[2][0][j] += T_i * bfv->d_grad_phi_dmesh[i][2][0][j];
+          fv->d_grad_turb_k_dmesh[2][1][j] += T_i * bfv->d_grad_phi_dmesh[i][2][1][j];
+          fv->d_grad_turb_k_dmesh[0][2][j] += T_i * bfv->d_grad_phi_dmesh[i][0][2][j];
+          fv->d_grad_turb_k_dmesh[1][2][j] += T_i * bfv->d_grad_phi_dmesh[i][1][2][j];
+        }
+      }
+    }
+#endif
+  } else if (upd->vp[pg->imtrx][TURB_K] != -1) {
+    siz = sizeof(double) * DIM * DIM * MDE;
+    memset(&(fv->d_grad_turb_k_dmesh[0][0][0]), 0, siz);
+  }
+
+  if (pd->gv[TURB_OMEGA]) {
+    v = TURB_OMEGA;
+    bfv = bf[v];
+    vdofs = ei[upd->matrix_index[v]]->dof[v];
+#ifdef DO_NOT_UNROLL
+    siz = sizeof(double) * DIM * DIM * MDE;
+    memset(&(fv->d_grad_turb_omega_dmesh[0][0][0]), 0, siz);
+    for (i = 0; i < vdofs; i++) {
+      T_i = *esp->turb_omega[i];
+      for (p = 0; p < dimNonSym; p++) {
+        for (b = 0; b < dim; b++) {
+          for (j = 0; j < mdofs; j++) {
+            fv->d_grad_turb_omega_dmesh[p][b][j] += T_i * bfv->d_grad_phi_dmesh[i][p][b][j];
+          }
+        }
+      }
+    }
+#else
+    for (j = 0; j < mdofs; j++) {
+      T_i = *esp->turb_omega[0];
+
+      fv->d_grad_turb_omega_dmesh[0][0][j] = T_i * bfv->d_grad_phi_dmesh[0][0][0][j];
+      fv->d_grad_turb_omega_dmesh[1][1][j] = T_i * bfv->d_grad_phi_dmesh[0][1][1][j];
+      fv->d_grad_turb_omega_dmesh[1][0][j] = T_i * bfv->d_grad_phi_dmesh[0][1][0][j];
+      fv->d_grad_turb_omega_dmesh[0][1][j] = T_i * bfv->d_grad_phi_dmesh[0][0][1][j];
+
+      if (dimNonSym == 3) {
+        fv->d_grad_turb_omega_dmesh[2][2][j] = T_i * bfv->d_grad_phi_dmesh[0][2][2][j];
+        fv->d_grad_turb_omega_dmesh[2][0][j] = T_i * bfv->d_grad_phi_dmesh[0][2][0][j];
+        fv->d_grad_turb_omega_dmesh[2][1][j] = T_i * bfv->d_grad_phi_dmesh[0][2][1][j];
+        fv->d_grad_turb_omega_dmesh[0][2][j] = T_i * bfv->d_grad_phi_dmesh[0][0][2][j];
+        fv->d_grad_turb_omega_dmesh[1][2][j] = T_i * bfv->d_grad_phi_dmesh[0][1][2][j];
+      }
+
+      for (i = 1; i < vdofs; i++) {
+        T_i = *esp->turb_omega[i];
+
+        fv->d_grad_turb_omega_dmesh[0][0][j] += T_i * bfv->d_grad_phi_dmesh[i][0][0][j];
+        fv->d_grad_turb_omega_dmesh[1][1][j] += T_i * bfv->d_grad_phi_dmesh[i][1][1][j];
+        fv->d_grad_turb_omega_dmesh[1][0][j] += T_i * bfv->d_grad_phi_dmesh[i][1][0][j];
+        fv->d_grad_turb_omega_dmesh[0][1][j] += T_i * bfv->d_grad_phi_dmesh[i][0][1][j];
+
+        if (dimNonSym == 3) {
+          fv->d_grad_turb_omega_dmesh[2][2][j] += T_i * bfv->d_grad_phi_dmesh[i][2][2][j];
+          fv->d_grad_turb_omega_dmesh[2][0][j] += T_i * bfv->d_grad_phi_dmesh[i][2][0][j];
+          fv->d_grad_turb_omega_dmesh[2][1][j] += T_i * bfv->d_grad_phi_dmesh[i][2][1][j];
+          fv->d_grad_turb_omega_dmesh[0][2][j] += T_i * bfv->d_grad_phi_dmesh[i][0][2][j];
+          fv->d_grad_turb_omega_dmesh[1][2][j] += T_i * bfv->d_grad_phi_dmesh[i][1][2][j];
+        }
+      }
+    }
+#endif
+  } else if (upd->vp[pg->imtrx][TURB_OMEGA] != -1) {
+    siz = sizeof(double) * DIM * DIM * MDE;
+    memset(&(fv->d_grad_turb_omega_dmesh[0][0][0]), 0, siz);
   }
 
   if (pd->gv[LIGHT_INTP]) {

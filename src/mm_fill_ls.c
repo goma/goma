@@ -36,6 +36,7 @@
 #include "exo_conn.h"
 #include "exo_struct.h"
 #include "exodusII.h"
+#include "linalg/sparse_matrix.h"
 #include "load_field_variables.h"
 #include "mm_as_alloc.h"
 #include "mm_fill_aux.h"
@@ -89,7 +90,6 @@
 #include "sl_util.h"
 
 #define GOMA_MM_FILL_LS_C
-#include "sl_epetra_util.h"
 
 struct Extended_Shape_Fcn_Basics
     *xfem;             /* This is a global structure for the basic pieces needed for XFEM */
@@ -2926,10 +2926,18 @@ int print_ls_interface(
     case LS_SURF_POINT: {
       struct LS_Surf_Point_Data *s = (struct LS_Surf_Point_Data *)surf->data;
       double *p = s->x;
-      if (print_all_times) {
-        fprintf(outfile, "%g\t%g\t%g\t%d\n", time, p[0], p[1], 0);
+      if (exo->num_dim == 3) {
+        if (print_all_times) {
+          fprintf(outfile, "%g\t%g\t%g\t%g\t%d\n", time, p[0], p[1], p[2], 0);
+        } else {
+          fprintf(outfile, "%g\t%g\t%g\t%d\n", p[0], p[1], p[2], 0);
+        }
       } else {
-        fprintf(outfile, "%g\t%g\t%d\n", p[0], p[1], 0);
+        if (print_all_times) {
+          fprintf(outfile, "%g\t%g\t%g\t%d\n", time, p[0], p[1], 0);
+        } else {
+          fprintf(outfile, "%g\t%g\t%d\n", p[0], p[1], 0);
+        }
       }
     } break;
     case LS_SURF_FACET: {
@@ -3318,7 +3326,7 @@ static void find_intersections(struct LS_Surf_List *list, int isovar, double iso
 
     switch (pd->i[pg->imtrx][isovar]) {
 
-    case I_Q1: /* trilinear hex */
+    case I_Q1: /* Linear Tet */
     {
       int links[6][2] = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}};
 
@@ -3348,9 +3356,38 @@ static void find_intersections(struct LS_Surf_List *list, int isovar, double iso
         }
       }
     } break;
+    case I_Q2: { /* Quadratic Tet */
+      int links[27][2] = {{0, 4}, {4, 1}, {1, 5}, {5, 2}, {2, 6}, {6, 0}, {0, 7}, {7, 3}, {1, 8},
+                          {8, 3}, {2, 9}, {9, 3}, {4, 5}, {5, 6}, {6, 4}, {4, 8}, {8, 7}, {7, 4},
+                          {5, 8}, {8, 9}, {9, 5}, {6, 9}, {9, 7}, {7, 6}, {4, 9}, {5, 7}, {6, 8}};
+
+      for (link = 0; link < 27; link++) {
+        i = links[link][0];
+        j = links[link][1];
+        I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+        J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
+        find_nodal_stu(i, ei[pg->imtrx]->ielem_type, xi, xi + 1, xi + 2);
+        find_nodal_stu(j, ei[pg->imtrx]->ielem_type, yi, yi + 1, yi + 2);
+
+        if (find_link_intersection(xi, yi, isovar, isoval, NULL) == TRUE) {
+          /* check if crossing is on an edge with a ca condition */
+          inflection = FALSE; /* innocent till proven guilty */
+          if (ls->Contact_Inflection && point_on_ca_boundary(I, exo) &&
+              point_on_ca_boundary(J, exo))
+            inflection = TRUE;
+          map_local_coordinates(xi, x);
+          surf = create_surf_point(x, ei[pg->imtrx]->ielem, xi, inflection);
+          if (unique_surf(list, surf)) {
+            append_surf(list, surf);
+          } else {
+            safe_free(surf);
+          }
+        }
+      }
+    } break;
     default:
       GOMA_EH(GOMA_ERROR, "Huygens renormalization not implemented for this interpolation "
-                          "on TRIs");
+                          "on TETs");
       break;
     }
     break;
@@ -4653,6 +4690,74 @@ void load_xfem_for_elem(double x[], const Exo_DB *exo) {
 #endif
   }
 }
+
+/******************************************************************************
+ *
+ * level_set_property_log() : Calculate a general, scalar material property using
+ *                            the level set function. Instead of linearly interpolate
+ *                            material property (pp), it linearly interpolates log of pp
+ *
+ * Input
+ * -----
+ *   p0    = Material property for FILL < 0 ("minus" side)
+ *   p1    = Material property for FILL > 0 ("plus" side)
+ *
+ * Output
+ * ------
+ *   pp           = Material property at the current coordinate.
+ *   d_pp_dF[MDE] = Derivative of the material property w.r.t. the FILL
+ *                  variable. N.B. If d_pp_dF == NULL, this derivative
+ *                  is not calculated.
+ *
+ * Returns
+ * -------
+ *   0 = Success.
+ *  -1 = Failure.
+ *
+ ******************************************************************************/
+int level_set_property_log(
+    const double p0, const double p1, const double width, double *pp, double d_pp_dF[MDE]) {
+  int var, j;
+  int do_deriv;
+
+  /* See if we need to bother with derivatives. */
+  do_deriv = d_pp_dF != NULL;
+
+  /* Fetch the level set interfacial functions. */
+  load_lsi(width);
+
+  /* Calculate the material property. */
+  if (ls->Elem_Sign == -1)
+    *pp = p0;
+  else if (ls->Elem_Sign == 1)
+    *pp = p1;
+  else
+    *pp = pow(p0, 1.0 - lsi->H) * pow(p1, lsi->H);
+
+  if (ls->Elem_Sign != 0 && do_deriv) {
+    var = ls->var;
+    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+      d_pp_dF[j] = 0.;
+    }
+  }
+
+  /* Bail out if we don't need derivatives or if we're not in the mushy zone. */
+  if (!do_deriv || !lsi->near || ls->Elem_Sign != 0)
+    return (0);
+
+  load_lsi_derivs();
+
+  /* Calculate the deriviatives of the material property w.r.t. FILL. */
+  var = ls->var;
+  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+    /* Calculate the Jacobian terms. */
+    d_pp_dF[j] = pow(p0, 1.0 - lsi->H) * log(p0) * (-lsi->d_H_dF[j]) * pow(p1, lsi->H) +
+                 pow(p0, 1.0 - lsi->H) * pow(p1, lsi->H) * log(p1) * lsi->d_H_dF[j];
+  }
+
+  return (0);
+}
+/***********************************************************************/
 
 void load_xfem_for_stu(const double xi[]) {
   int i, F_elem_type = -1;
@@ -6048,20 +6153,36 @@ double ls_modulate_property(double p1,
                             double pm_minus,
                             double pm_plus,
                             double dpdF[MDE],
-                            double *factor) {
+                            double *factor,
+                            const int interp_method) {
   double p_plus, p_minus, p;
 
   p_minus = p1 * pm_plus + p2 * pm_minus;
   p_plus = p1 * pm_minus + p2 * pm_plus;
 
-  level_set_property(p_minus, p_plus, width, &p, dpdF);
+  if (interp_method == LSI_INTERP_LINEAR)
+    level_set_property(p_minus, p_plus, width, &p, dpdF);
+  else if (interp_method == LSI_INTERP_LOG)
+    level_set_property_log(p_minus, p_plus, width, &p, dpdF);
+  else {
+    GOMA_EH(-1, "Unknown level set interface interpolation method");
+    return 0.0;
+  }
 
-  if (ls->Elem_Sign == -1)
+  if (ls->Elem_Sign == -1) {
     *factor = pm_plus;
-  else if (ls->Elem_Sign == 1)
+  } else if (ls->Elem_Sign == 1) {
     *factor = pm_minus;
-  else
-    *factor = pm_plus * (1.0 - lsi->H) + pm_minus * lsi->H;
+  } else {
+    if (interp_method == LSI_INTERP_LINEAR) {
+      *factor = pm_plus * (1.0 - lsi->H) + pm_minus * lsi->H;
+    } else if (interp_method == LSI_INTERP_LOG) {
+      *factor = pm_minus * pow(p2, 1.0 - lsi->H) * lsi->H * pow(p1, lsi->H - 1.0) +
+                pm_plus * (1.0 - lsi->H) * pow(p1, -lsi->H) * pow(p2, lsi->H);
+    } else {
+      GOMA_EH(-1, "Unknown level set interface interpolation method");
+    }
+  }
 
   return (p);
 }
@@ -10590,7 +10711,7 @@ void check_xfem_contribution(
         }
       }
     }
-  } else if (strcmp(Matrix_Format, "epetra") == 0) {
+  } else if (ams->GomaMatrixData != NULL) {
     for (irow = 0; irow < N; irow++) {
       eqn = idv[pg->imtrx][irow][0];
       if (eqn == R_MASS || eqn == R_ENERGY) {
@@ -10599,8 +10720,8 @@ void check_xfem_contribution(
         eps = eps_standard;
       }
       if (fabs(xfem->active_vol[irow]) < eps * xfem->tot_vol[irow]) {
-
-        EpetraSetDiagonalOnly(ams, ams->GlobalIDs[irow]);
+        GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+        matrix->zero_global_row_set_diag(matrix, matrix->global_ids[irow]);
         resid[irow] = x[irow] - x_old_static[irow];
 
         if (FALSE && xfem->active_vol[irow] != 0.) /* debugging */

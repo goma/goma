@@ -40,6 +40,7 @@
 #include "el_elm_info.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "linalg/sparse_matrix.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_augc_util.h"
@@ -60,6 +61,7 @@
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
 #include "mpi.h"
+#include "polymer_time_const.h"
 #include "rd_exo.h"
 #include "rd_mesh.h"
 #include "rf_allo.h"
@@ -70,14 +72,13 @@
 #include "rf_io.h"
 #include "rf_io_const.h"
 #include "rf_io_structs.h"
+#include "rf_masks.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
 #include "rf_solve_segregated.h"
 #include "rf_solver.h"
 #include "rf_util.h"
 #include "sl_auxutil.h"
-#include "sl_epetra_interface.h"
-#include "sl_epetra_util.h"
 #include "sl_matrix_util.h"
 #include "sl_petsc.h"
 #include "sl_petsc_complex.h"
@@ -188,8 +189,6 @@ void initial_guess_stress_to_log_conf(double *x, int num_total_nodes) {
   double WORK[LWORK];
   double A[DIM * DIM];
   dbl gamma_dot[DIM][DIM];
-  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
-  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mu_struct;
 
   int mode, mn;
   double lambda = 0;
@@ -214,16 +213,8 @@ void initial_guess_stress_to_log_conf(double *x, int num_total_nodes) {
           }
         }
 
-        mup = viscosity(ve[mode]->gn, gamma_dot, d_mup);
-
-        if (ve[mode]->time_constModel == CONSTANT) {
-          lambda = ve[mode]->time_const;
-        } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-          lambda = mup / ve[mode]->time_const;
-        } else {
-          GOMA_EH(GOMA_ERROR,
-                  "Unknown model for Polymer Time Constant in initial guess log conf to stress");
-        }
+        mup = viscosity(ve[mode]->gn, gamma_dot, NULL);
+        lambda = polymer_time_const(ve[mode]->time_const_st, gamma_dot, NULL);
 
         // skip node if stress variables not found
         if (s_idx[0][0] == -1 || s_idx[0][1] == -1 || s_idx[1][1] == -1)
@@ -292,8 +283,8 @@ void initial_guess_stress_to_log_conf(double *x, int num_total_nodes) {
         x[s_idx[1][1]] = log_s[1][1];
 
       } /* Loop over nodes */
-    }   /* Loop over modes */
-  }     /* Loop over materials */
+    } /* Loop over modes */
+  } /* Loop over materials */
 }
 
 void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
@@ -727,14 +718,21 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
   /* Allocate sparse matrix */
 
-  if (strcmp(Matrix_Format, "epetra") == 0) {
+  ams[JAC]->GomaMatrixData = NULL;
+  if ((strcmp(Matrix_Format, "tpetra") == 0) || (strcmp(Matrix_Format, "epetra") == 0)) {
     err = check_compatible_solver();
-    GOMA_EH(err,
-            "Incompatible matrix solver for epetra, epetra supports amesos and aztecoo solvers.");
+    GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
     check_parallel_error("Matrix format / Solver incompatibility");
-    ams[JAC]->RowMatrix =
-        EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
-    EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
+    GomaSparseMatrix goma_matrix;
+    goma_error err = GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
+    GOMA_EH(err, "GomaSparseMatrix_CreateFromFormat");
+    int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
+    err = GomaSparseMatrix_SetProblemGraph(
+        goma_matrix, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx],
+        num_external_dofs[pg->imtrx], local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
+        dpi, cx[pg->imtrx], pg->imtrx, Debug_Flag, ams[JAC]);
+    GOMA_EH(err, "GomaSparseMatrix_SetProblemGraph");
+    ams[JAC]->GomaMatrixData = goma_matrix;
 #ifdef GOMA_ENABLE_PETSC
 #if PETSC_USE_COMPLEX
   } else if (strcmp(Matrix_Format, "petsc_complex") == 0) {
@@ -796,8 +794,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
     ams[JAC]->nnz = ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] - 1;
     ams[JAC]->nnz_plus = ija[num_universe_dofs[pg->imtrx]];
-
-    ams[JAC]->RowMatrix = NULL;
 
   } else if (strcmp(Matrix_Format, "vbr") == 0) {
     log_msg("alloc_VBR_sparse_arrays...");
@@ -1672,7 +1668,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               DPRINTF(stdout, "\n\t\t Exodus file read initialization for phase function fields");
               break;
             } /* end of switch(ls->Init_Method ) */
-          }   /* end of i<pfd->num_phase_funcs */
+          } /* end of i<pfd->num_phase_funcs */
 
           ls = ls_save; /* OK, used the level set routines now be nice and point
                            ls back to where you found it */
@@ -1894,6 +1890,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
        */
       dcopy1(numProcUnknowns, x, x_save);
       dcopy1(numProcUnknowns, xdot, xdot_save);
+      tran->current_theta = theta;
       err = solve_nonlinear_problem(ams[JAC], x, delta_t, theta, x_old, x_older, xdot, xdot_old,
                                     resid_vector, x_update, scale, &converged, &nprint, tev,
                                     tev_post, gv, rd, gindex, p_gsize, gvec, gvec_elem, time1, exo,
@@ -1956,6 +1953,31 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
        * and retry.
        */
       if (converged) {
+
+        if (upd->ep[pg->imtrx][TURB_K] >= 0 || upd->ep[pg->imtrx][TURB_OMEGA] >= 0) {
+          /*     Floor values to 0 */
+          int floored_values = 0;
+          for (int var = TURB_K; var <= TURB_OMEGA; var++) {
+            for (int mn = 0; mn < upd->Num_Mat; mn++) {
+              if (pd_glob[mn]->v[pg->imtrx][var]) {
+                for (i = 0; i < num_total_nodes; i++) {
+                  int j = Index_Solution(i, var, 0, 0, mn, pg->imtrx);
+
+                  if (j != -1 && x[j] < 0) {
+                    x[j] = 0.0;
+                    floored_values++;
+                  }
+                }
+              }
+            }
+          }
+
+          int global_floored = 0;
+          MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+          if (global_floored > 0)
+            P0PRINTF("Floored %d values\n", global_floored);
+        }
 
         delta_t_new = time_step_control(delta_t, delta_t_old, const_delta_t, x, x_pred, x_old, x_AC,
                                         x_AC_pred, eps, &success_dt, tran->use_var_norm);
@@ -2659,6 +2681,7 @@ free_and_clear:
     for (i = 0; i < MAX_NUMBER_MATLS; i++) {
       for (n = 0; n < MAX_MODES; n++) {
         safer_free((void **)&(ve_glob[i][n]->gn));
+        safer_free((void **)&(ve_glob[i][n]->time_const_st));
         safer_free((void **)&(ve_glob[i][n]));
       }
       safer_free((void **)&(vn_glob[i]));
@@ -2673,14 +2696,10 @@ free_and_clear:
   }
 
   if (last_call) {
-    if (strcmp(Matrix_Format, "epetra") == 0) {
-      EpetraDeleteRowMatrix(ams[JAC]->RowMatrix);
-      if (ams[JAC]->GlobalIDs != NULL) {
-        free(ams[JAC]->GlobalIDs);
-      }
-    }
+    GomaSparseMatrix goma_matrix = ams[JAC]->GomaMatrixData;
+    GomaSparseMatrix_Destroy(&goma_matrix);
 #ifdef GOMA_ENABLE_PETSC
-    else if (strcmp(Matrix_Format, "petsc") == 0) {
+    if (strcmp(Matrix_Format, "petsc") == 0) {
       err = goma_petsc_free_matrix(ams[JAC]);
       GOMA_EH(err, "free petsc matrix");
     }

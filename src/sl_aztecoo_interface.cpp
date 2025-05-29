@@ -11,6 +11,8 @@
 * This software is distributed under the GNU General Public License.      *
 * See LICENSE file.                                                       *
 \************************************************************************/
+#include "linalg/sparse_matrix.h"
+#include "linalg/sparse_matrix_epetra.h"
 #if defined(PARALLEL) && !defined(EPETRA_MPI)
 #define EPETRA_MPI
 #endif
@@ -49,6 +51,8 @@ extern "C" {
  * @param b_ residual vector
  */
 void aztecoo_solve_epetra(struct GomaLinearSolverData *ams, double *x_, double *b_) {
+  GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+  EpetraSparseMatrix *epetra_matrix = static_cast<EpetraSparseMatrix *>(matrix->data);
 
   /* Initialize MPI communications */
 #ifdef EPETRA_MPI
@@ -58,7 +62,7 @@ void aztecoo_solve_epetra(struct GomaLinearSolverData *ams, double *x_, double *
 #endif
 
   /* Define internal variables */
-  Epetra_RowMatrix *A = ams->RowMatrix;
+  Epetra_RowMatrix *A = epetra_matrix->matrix.get();
   Epetra_LinearProblem Problem;
 
   Epetra_Map map = A->RowMatrixRowMap();

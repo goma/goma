@@ -341,6 +341,8 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case LS_SOLID_FLUID_BC:
       overlap_bc = TRUE;
       /* fall through */
+    case SA_WALL_FUNC_BC:
+    case OMEGA_WALL_FUNC_BC:
     case PSPG_BC:
     case KIN_ELECTRODEPOSITION_BC:   /*  RSL 5/27/02  */
     case VNORM_ELECTRODEPOSITION_BC: /*  RSL 5/30/02  */
@@ -474,7 +476,6 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case FRICTION_RS_BC:
     case SHEAR_TO_SHELL_BC:
     case GRAD_LUB_PRESS_BC:
-    case SHELL_LUB_WALL_BC:
     case LUB_STATIC_BC:
     case SHELL_GRAD_FP_BC:
     case SHELL_GRAD_FH_BC:
@@ -504,14 +505,6 @@ void rd_bc_specs(FILE *ifp, char *input) {
         BC_Types[ibc].max_DFlt = 3;
         SPF(endofstring(echo_string), " %.4g %.4g", BC_Types[ibc].BC_Data_Float[1],
             BC_Types[ibc].BC_Data_Float[2]);
-      }
-      if (BC_Types[ibc].BC_Name == SHELL_LUB_WALL_BC) {
-        BC_Types[ibc].BC_Data_Float[1] = 1.;
-        if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[1]) != 1) {
-          sr = sprintf(err_msg, "%s: Expected 1 flt for %s.", yo, BC_Types[ibc].desc->name1);
-        }
-        BC_Types[ibc].max_DFlt = 2;
-        SPF(endofstring(echo_string), " %.4g ", BC_Types[ibc].BC_Data_Float[1]);
       }
 
       if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1) {
@@ -552,6 +545,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
         SPF(endofstring(echo_string), " %.4g %.4g %.4g", BC_Types[ibc].BC_Data_Float[1],
             BC_Types[ibc].BC_Data_Float[2], BC_Types[ibc].BC_Data_Float[3]);
       }
+
       break;
 
       /*
@@ -719,6 +713,8 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case EM_CONT_IMAG_BC:
     case SHELL_TFMP_SAT_BC:
     case EDDY_NU_BC:
+    case TURB_K_BC:
+    case TURB_OMEGA_BC:
 
       if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {
         sprintf(err_msg, "%s: Expected 1 flt for %s.", yo, BC_Types[ibc].desc->name1);
@@ -802,6 +798,15 @@ void rd_bc_specs(FILE *ifp, char *input) {
           BC_Types[ibc].BC_Data_Float[1], BC_Types[ibc].BC_Data_Float[2],
           BC_Types[ibc].BC_Data_Float[3]);
 
+      break;
+
+    case FLUIDITY_EQUILIBRIUM_BC:
+      if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1) {
+        sr = sprintf(err_msg, "%s: Expected 1 int for %s.", yo, BC_Types[ibc].desc->name1);
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_Data_Int[0]);
+      BC_Types[ibc].species_eq = BC_Types[ibc].BC_Data_Int[0];
       break;
 
       /* Fall through for all cases which requires two integer values
@@ -1270,7 +1275,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
         } else if (!strcmp(input, "GAS_DIFFUSION")) {
           BC_Types[ibc].BC_Data_Int[2] = GAS_DIFFUSION;
         } else if (!strcmp(input, "FULL")) {
-          BC_Types[ibc].BC_Data_Int[2] = FULL;
+          BC_Types[ibc].BC_Data_Int[2] = METAL_CORROSION_FULL;
         } else if (!strcmp(input, "ANNIHILATION_ELECTRONEUTRALITY")) {
           BC_Types[ibc].BC_Data_Int[2] = ANNIHILATION_ELECTRONEUTRALITY;
         } else if (!strcmp(input, "ANNIHILATION")) {
@@ -1386,6 +1391,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
        * Fall through for all cases which require eight floating point (used to be 7)
        * values as data input and one optional integer (BC_Data_int[0]).
        */
+    case SHEAR_STRESS_APPLIED_BC:
     case CAP_REPULSE_BC:
 
       if (fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", &BC_Types[ibc].BC_Data_Float[0],
@@ -1942,6 +1948,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
           BC_Types[ibc].BC_Name == KIN_DISPLACEMENT_PETROV_BC) {
         num_const = read_constants(ifp, &(BC_Types[ibc].u_BC), NO_SPECIES);
         BC_Types[ibc].len_u_BC = num_const;
+        BC_Types[ibc].max_DFlt = num_const;
 
         for (i = 0; i < num_const; i++)
           SPF(endofstring(echo_string), " %g", BC_Types[ibc].u_BC[i]);
@@ -1966,12 +1973,14 @@ void rd_bc_specs(FILE *ifp, char *input) {
       }
       SPF(endofstring(echo_string), " %d %.4g", BC_Types[ibc].BC_Data_Int[0],
           BC_Types[ibc].BC_Data_Float[0]);
+      BC_Types[ibc].max_DFlt = 1;
 
       if (BC_Types[ibc].BC_Name == DVZDR_ZERO_BC) {
         // specify the radial direction as the wall
         BC_Types[ibc].BC_Data_Float[1] = 0.0;
         BC_Types[ibc].BC_Data_Float[2] = 1.0;
         BC_Types[ibc].BC_Data_Float[3] = 0.0;
+        BC_Types[ibc].max_DFlt = 4;
       }
       break;
 
@@ -2016,6 +2025,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
 
       SPF(endofstring(echo_string), " %d %.4g", BC_Types[ibc].BC_Data_Int[0],
           BC_Types[ibc].BC_Data_Float[0]);
+      BC_Types[ibc].max_DFlt = 1;
 
       if (!strcmp(BC_Types[ibc].Set_Type, "NS")) {
         if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_relax) != 1) {
@@ -2146,6 +2156,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case YFLUX_NI_BC:
     case LS_YFLUX_BC:
     case CURRENT_NI_BC: /* RSL 3/9/01 */
+    case SHELL_CONC_LS_BC:
       if (fscanf(ifp, "%d %lf %lf", &BC_Types[ibc].BC_Data_Int[0], &BC_Types[ibc].BC_Data_Float[0],
                  &BC_Types[ibc].BC_Data_Float[1]) != 3) {
         sprintf(err_msg, "Expected 1 int, 2 flts for %s on %sID=%d\n", BC_Types[ibc].desc->name1,

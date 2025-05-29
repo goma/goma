@@ -379,11 +379,13 @@ int ls_modulate_dilviscosity(double *kappa1,
   int i, a, w, var;
 
   if (d_dilMu == NULL) {
-    *kappa1 = ls_modulate_property(*kappa1, kappa2, width, pm_minus, pm_plus, NULL, &factor);
+    *kappa1 = ls_modulate_property(*kappa1, kappa2, width, pm_minus, pm_plus, NULL, &factor,
+                                   LSI_INTERP_LINEAR);
     return (1);
   }
 
-  *kappa1 = ls_modulate_property(*kappa1, kappa2, width, pm_minus, pm_plus, d_dilMu->F, &factor);
+  *kappa1 = ls_modulate_property(*kappa1, kappa2, width, pm_minus, pm_plus, d_dilMu->F, &factor,
+                                 LSI_INTERP_LINEAR);
 
   d_dilMu->gd *= factor;
 

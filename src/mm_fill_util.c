@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "bc/rotate_coordinates.h"
 #include "bc_contact.h"
 #include "dp_utils.h"
 #include "dpi.h"
@@ -2009,7 +2010,7 @@ int load_bf_grad(void)
           }
         }
       } /* end of if v */
-    }   /* end of basis function loop. */
+    } /* end of basis function loop. */
   }
 
   return (status);
@@ -5489,6 +5490,29 @@ goma_error zero_strong_resid_side(struct Local_Element_Contributions *lec,
       int id = (int)elem_side_bc->local_elem_node_id[i];
 
       int I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + id];
+      if (goma_automatic_rotations.automatic_rotations && (bc->desc->rotate != NO_ROT)) {
+        dbl xi[DIM];
+        int ielem_type = ei[pg->imtrx]->ielem_type;
+        find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
+
+        goma_error err = load_basis_functions(xi, bfd);
+        GOMA_EH(err, "problem from load_basis_functions");
+
+        err = beer_belly();
+        GOMA_EH(err, "beer_belly");
+        int ielem = ei[pg->imtrx]->ielem;
+        int iconnect_ptr = ei[pg->imtrx]->iconnect_ptr;
+        int num_local_nodes = ei[pg->imtrx]->num_local_nodes;
+        int ielem_dim = ei[pg->imtrx]->ielem_dim;
+
+        /* calculate the shape functions and their gradients */
+
+        /* calculate the determinant of the surface jacobian  and the normal to
+         * the surface all at one time */
+        surface_determinant_and_normal(
+            ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
+            (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
+      }
       for (int mode = 0; mode < n_modes; mode++) {
         /*
          * Boundary condition may actually be a vector of
@@ -5513,6 +5537,9 @@ goma_error zero_strong_resid_side(struct Local_Element_Contributions *lec,
           int ldof_eqn;
           if (index_eq >= 0) {
             int ieqn = upd->ep[pg->imtrx][eqn];
+            if (goma_automatic_rotations.automatic_rotations && (bc->desc->rotate != NO_ROT)) {
+              ieqn = equation_index_auto_rotate(elem_side_bc, I, eqn, p, bc);
+            }
             /*
              * Obtain the first local variable degree of freedom
              * at the current node, whether or not it actually an

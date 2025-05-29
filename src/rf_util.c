@@ -100,10 +100,11 @@ static void inject_nodal_vec(double[],        /* sol_vec - full dof vector for t
                              const int,       /* matID - material index to scatter to      */
                              const double[]); /* nodal_vec - condensed node based vector   */
 
-static void inject_elem_vec(double[],          /* sol_vec - full dof vector for this proc   */
-                            const int,         /* var_no - VELOCITY1, etc.                  */
-                            const int,         /* k - species index                         */
-                            const int,         /* idof - dof #                              */
+static void inject_elem_vec(double[],  /* sol_vec - full dof vector for this proc   */
+                            const int, /* var_no - VELOCITY1, etc.                  */
+                            const int, /* k - species index                         */
+                            const int, /* idof - dof #                              */
+                            const int,
                             const int,         /* matID - material index to scatter to      */
                             const double[],    /* nodal_vec - condensed node based vector   */
                             const Exo_DB *exo, /* exodus database */
@@ -545,8 +546,10 @@ double time_step_control(const double delta_t,
   double delta_t_new = 0.0;
   double abs_eps = fabs(eps);
   double Err_norm;
-  double e_d, e_v, e_T, e_y, e_P, e_S, e_V, e_AC, e_qs;
-  double e_shk, e_sht, e_shd, e_shu, e_F, e_ap, e_extv, e_sh_lub, e_int, e_rheo;
+  double e_d, e_v, e_T, e_y, e_P, e_S, e_V, e_AC, e_qs = 0.;
+  double e_shk = 0., e_sht = 0., e_shd = 0., e_shu = 0., e_F, e_ap, e_extv, e_sh_lub = 0., e_int,
+         e_rheo = 0.;
+  int lub_present = 0, rheo_present = 0;
   double scaling;
   double ecp[MAX_VARIABLE_TYPES]; /* error in corrector-predictor for ea var */
   double *ecp_AC = NULL;
@@ -561,6 +564,35 @@ double time_step_control(const double delta_t,
 #else
   int bit_DM_scale = FALSE;
 #endif
+  int shell_eqns[9] = {SURF_CHARGE, SHELL_CURVATURE, SHELL_CURVATURE2, SHELL_TENSION, SHELL_X,
+                       SHELL_Y,     SHELL_USER,      SHELL_ANGLE1,     SHELL_ANGLE2};
+  int lub_eqns[24] = {LUBP,
+                      LUBP_2,
+                      SHELL_SAT_CLOSED,
+                      SHELL_PRESS_OPEN,
+                      SHELL_PRESS_OPEN_2,
+                      SHELL_SAT_1,
+                      SHELL_SAT_2,
+                      SHELL_SAT_3,
+                      SHELL_SAT_GASN,
+                      SHELL_LUB_CURV,
+                      SHELL_LUB_CURV_2,
+                      SHELL_DIFF_FLUX,
+                      SHELL_DIFF_CURVATURE,
+                      SHELL_LUBP,
+                      SHELL_FILMP,
+                      SHELL_FILMH,
+                      SHELL_PARTC,
+                      SHELL_TEMPERATURE,
+                      SHELL_DELTAH,
+                      SHELL_SHEAR_TOP,
+                      SHELL_SHEAR_BOT,
+                      SHELL_CROSS_SHEAR,
+                      TFMP_PRES,
+                      TFMP_SAT};
+  int rheo_eqns[9] = {SHELL_SURF_DIV_V, SHELL_SURF_CURV, SHELL_NORMAL1,
+                      SHELL_NORMAL2,    SHELL_NORMAL3,   N_DOT_CURL_V,
+                      GRAD_S_V_DOT_N1,  GRAD_S_V_DOT_N2, GRAD_S_V_DOT_N3};
 
   static const char yo[] = "time_step_control";
 
@@ -789,6 +821,50 @@ double time_step_control(const double delta_t,
     num_unknowns += ncp[SOLID_DISPLACEMENT3];
   }
 
+  if (use_var_norm[8]) /* LS equation is set with special card in Level Set section */
+  {
+    Err_norm += ecp[FILL];
+    num_unknowns += ncp[FILL];
+    Err_norm += ecp[PHASE1];
+    Err_norm += ecp[PHASE2];
+    Err_norm += ecp[PHASE3];
+    Err_norm += ecp[PHASE4];
+    Err_norm += ecp[PHASE5];
+    num_unknowns += ncp[PHASE1];
+    num_unknowns += ncp[PHASE2];
+    num_unknowns += ncp[PHASE3];
+    num_unknowns += ncp[PHASE4];
+    num_unknowns += ncp[PHASE5];
+  }
+
+  /** add in shell element components  */
+  if (use_var_norm[9]) {
+    for (i = 0; i < 9; i++) {
+      Err_norm += ecp[shell_eqns[i]];
+      num_unknowns += ncp[shell_eqns[i]];
+    }
+    e_qs = ecp[SURF_CHARGE];
+    e_shk = ecp[SHELL_CURVATURE] + ecp[SHELL_CURVATURE2];
+    e_sht = ecp[SHELL_TENSION];
+    e_shd = ecp[SHELL_X] + ecp[SHELL_Y];
+    e_shu = ecp[SHELL_USER];
+    for (i = 0; i < 24; i++) {
+      e_sh_lub += ecp[lub_eqns[i]];
+      num_unknowns += ncp[lub_eqns[i]];
+      if (ncp[lub_eqns[i]])
+        lub_present = 1;
+    }
+    Err_norm += e_sh_lub;
+    for (i = 0; i < 9; i++) {
+      e_rheo += ecp[rheo_eqns[i]];
+      num_unknowns += ncp[rheo_eqns[i]];
+      if (ncp[rheo_eqns[i]])
+        rheo_present = 1;
+    }
+    Err_norm += e_rheo;
+    Err_norm += ecp[SHELL_BDYVELO];
+    num_unknowns += ncp[SHELL_BDYVELO];
+  }
   if (nAC > 0) /* Don't we want to include the AC unknowns in time step control ? */
   {
     if (use_var_norm[9]) { /* answer -> not usually since they are often algebraic constraints */
@@ -798,108 +874,29 @@ double time_step_control(const double delta_t,
       num_unknowns += nAC;
     }
   }
-  /** add in shell element components  */
 
-  Err_norm += ecp[SURF_CHARGE];
-  Err_norm += ecp[SHELL_CURVATURE];
-  Err_norm += ecp[SHELL_CURVATURE2];
-  Err_norm += ecp[SHELL_TENSION];
-  Err_norm += ecp[SHELL_X];
-  Err_norm += ecp[SHELL_Y];
-  Err_norm += ecp[SHELL_USER];
+  /** add in extra stuff  */
   Err_norm += ecp[ACOUS_PREAL];
   Err_norm += ecp[ACOUS_PIMAG];
   Err_norm += ecp[ACOUS_REYN_STRESS];
-  Err_norm += ecp[SHELL_BDYVELO];
-  Err_norm += ecp[SHELL_LUBP];
-  Err_norm += ecp[SHELL_TEMPERATURE];
-  Err_norm += ecp[SHELL_DELTAH];
-  Err_norm += ecp[SHELL_FILMP];
-  Err_norm += ecp[SHELL_FILMH];
-  Err_norm += ecp[SHELL_PARTC];
   Err_norm += ecp[LIGHT_INTP];
   Err_norm += ecp[LIGHT_INTM];
   Err_norm += ecp[LIGHT_INTD];
   Err_norm += ecp[RESTIME];
   /*    Err_norm      += ecp[EXT_VELOCITY];  */
-  Err_norm += ecp[TFMP_PRES];
-  Err_norm += ecp[TFMP_SAT];
-  Err_norm += ecp[SHELL_SURF_DIV_V];
-  Err_norm += ecp[SHELL_SURF_CURV];
-  Err_norm += ecp[SHELL_NORMAL1];
-  Err_norm += ecp[SHELL_NORMAL2];
-  Err_norm += ecp[SHELL_NORMAL3];
-  Err_norm += ecp[N_DOT_CURL_V];
-  Err_norm += ecp[GRAD_S_V_DOT_N1];
-  Err_norm += ecp[GRAD_S_V_DOT_N2];
-  Err_norm += ecp[GRAD_S_V_DOT_N3];
+  Err_norm += ecp[TURB_K];
+  Err_norm += ecp[TURB_OMEGA];
 
-  num_unknowns += ncp[SURF_CHARGE];
-  num_unknowns += ncp[SHELL_CURVATURE];
-  num_unknowns += ncp[SHELL_CURVATURE2];
-  num_unknowns += ncp[SHELL_TENSION];
-  num_unknowns += ncp[SHELL_X];
-  num_unknowns += ncp[SHELL_Y];
-  num_unknowns += ncp[SHELL_USER];
   num_unknowns += ncp[ACOUS_PREAL];
   num_unknowns += ncp[ACOUS_PIMAG];
   num_unknowns += ncp[ACOUS_REYN_STRESS];
-  num_unknowns += ncp[SHELL_BDYVELO];
-  num_unknowns += ncp[SHELL_LUBP];
-  num_unknowns += ncp[SHELL_TEMPERATURE];
-  num_unknowns += ncp[SHELL_DELTAH];
-  num_unknowns += ncp[SHELL_FILMP];
-  num_unknowns += ncp[SHELL_FILMH];
-  num_unknowns += ncp[SHELL_PARTC];
   num_unknowns += ncp[LIGHT_INTP];
   num_unknowns += ncp[LIGHT_INTM];
   num_unknowns += ncp[LIGHT_INTD];
   num_unknowns += ncp[RESTIME];
   /*    num_unknowns += ncp[EXT_VELOCITY];  */
-  num_unknowns += ncp[TFMP_PRES];
-  num_unknowns += ncp[TFMP_SAT];
-  num_unknowns += ncp[SHELL_SURF_DIV_V];
-  num_unknowns += ncp[SHELL_SURF_CURV];
-  num_unknowns += ncp[SHELL_NORMAL1];
-  num_unknowns += ncp[SHELL_NORMAL2];
-  num_unknowns += ncp[SHELL_NORMAL3];
-  num_unknowns += ncp[N_DOT_CURL_V];
-  num_unknowns += ncp[GRAD_S_V_DOT_N1];
-  num_unknowns += ncp[GRAD_S_V_DOT_N2];
-  num_unknowns += ncp[GRAD_S_V_DOT_N3];
-
-  if (use_var_norm[8]) /* LS equation is set with special card in Level Set section */
-  {
-    Err_norm += ecp[FILL];
-    num_unknowns += ncp[FILL];
-    Err_norm += ecp[PHASE1];
-    num_unknowns += ncp[PHASE1];
-  }
-
-  if (use_var_norm[9]) {
-    Err_norm += ecp[LUBP];
-    Err_norm += ecp[LUBP_2];
-    Err_norm += ecp[SHELL_SAT_CLOSED];
-    Err_norm += ecp[SHELL_PRESS_OPEN];
-    Err_norm += ecp[SHELL_PRESS_OPEN_2];
-    Err_norm += ecp[SHELL_SAT_1];
-    Err_norm += ecp[SHELL_SAT_2];
-    Err_norm += ecp[SHELL_SAT_3];
-    Err_norm += ecp[SHELL_SAT_GASN];
-    Err_norm += ecp[SHELL_LUB_CURV];
-    Err_norm += ecp[SHELL_LUB_CURV_2];
-    num_unknowns += ncp[LUBP];
-    num_unknowns += ncp[LUBP_2];
-    num_unknowns += ncp[SHELL_SAT_CLOSED];
-    num_unknowns += ncp[SHELL_PRESS_OPEN];
-    num_unknowns += ncp[SHELL_PRESS_OPEN_2];
-    num_unknowns += ncp[SHELL_SAT_1];
-    num_unknowns += ncp[SHELL_SAT_2];
-    num_unknowns += ncp[SHELL_SAT_3];
-    num_unknowns += ncp[SHELL_SAT_GASN];
-    num_unknowns += ncp[SHELL_LUB_CURV];
-    num_unknowns += ncp[SHELL_LUB_CURV_2];
-  }
+  num_unknowns += ncp[TURB_K];
+  num_unknowns += ncp[TURB_OMEGA];
 
 #if 0 /* ------------------- maybe someday you'll want these, too... -----*/
   if (use_var_norm["index for shear rate equation"] ) {
@@ -954,23 +951,11 @@ double time_step_control(const double delta_t,
     e_AC += ecp_AC[i];
 
   e_V = ecp[VOLTAGE];
-  e_qs = ecp[SURF_CHARGE];
-  e_shk = ecp[SHELL_CURVATURE] + ecp[SHELL_CURVATURE2];
-  e_sht = ecp[SHELL_TENSION];
-  e_shd = ecp[SHELL_X] + ecp[SHELL_Y];
-  e_shu = ecp[SHELL_USER];
-  e_sh_lub = ecp[LUBP] + ecp[LUBP_2] + ecp[SHELL_FILMP] + ecp[SHELL_FILMH] + ecp[SHELL_PARTC] +
-             ecp[SHELL_SAT_CLOSED] + ecp[SHELL_SAT_GASN] + ecp[SHELL_TEMPERATURE] +
-             ecp[SHELL_DELTAH] + ecp[SHELL_LUB_CURV] + ecp[SHELL_LUB_CURV_2] +
-             ecp[SHELL_PRESS_OPEN] + ecp[SHELL_PRESS_OPEN_2] + ecp[SHELL_SAT_1] + ecp[SHELL_SAT_2] +
-             ecp[SHELL_SAT_3];
-  e_F = ecp[FILL] + ecp[PHASE1];
+  e_F = ecp[FILL] + ecp[PHASE1] + ecp[PHASE2] + ecp[PHASE3] + ecp[PHASE4] + ecp[PHASE5];
   e_ap = ecp[ACOUS_PREAL] + ecp[ACOUS_PIMAG] + ecp[ACOUS_REYN_STRESS];
   e_extv = ecp[EXT_VELOCITY];
   e_int = ecp[LIGHT_INTP] + ecp[LIGHT_INTM] + ecp[LIGHT_INTD] + ecp[RESTIME];
-  e_rheo = ecp[SHELL_SURF_DIV_V] + ecp[SHELL_SURF_CURV] + ecp[SHELL_NORMAL1] + ecp[SHELL_NORMAL2] +
-           ecp[SHELL_NORMAL3] + ecp[N_DOT_CURL_V] + ecp[GRAD_S_V_DOT_N1] + ecp[GRAD_S_V_DOT_N2] +
-           ecp[GRAD_S_V_DOT_N3];
+  double e_turb = ecp[TURB_K] + ecp[TURB_OMEGA] + ecp[EDDY_NU];
 
   e_d = sqrt(e_d * scaling);
   e_v = sqrt(e_v * scaling);
@@ -979,18 +964,21 @@ double time_step_control(const double delta_t,
   e_P = sqrt(e_P * scaling);
   e_S = sqrt(e_S * scaling);
   e_V = sqrt(e_V * scaling);
-  e_qs = sqrt(e_qs * scaling);
   e_AC = sqrt(e_AC * scaling);
-  e_shk = sqrt(e_shk * scaling);
-  e_sht = sqrt(e_sht * scaling);
-  e_shd = sqrt(e_shd * scaling);
-  e_shu = sqrt(e_shu * scaling);
   e_F = sqrt(e_F * scaling);
   e_ap = sqrt(e_ap * scaling);
   e_extv = sqrt(e_extv * scaling);
-  e_sh_lub = sqrt(e_sh_lub * scaling);
+  if (use_var_norm[9]) {
+    e_sh_lub = sqrt(e_sh_lub * scaling);
+    e_rheo = sqrt(e_rheo * scaling);
+    e_qs = sqrt(e_qs * scaling);
+    e_shk = sqrt(e_shk * scaling);
+    e_sht = sqrt(e_sht * scaling);
+    e_shd = sqrt(e_shd * scaling);
+    e_shu = sqrt(e_shu * scaling);
+  }
   e_int = sqrt(e_int * scaling);
-  e_rheo = sqrt(e_rheo * scaling);
+  e_turb = sqrt(e_turb * scaling);
 
   /*
    * Print out the breakdown of contributions as well as the user specified
@@ -1054,14 +1042,14 @@ double time_step_control(const double delta_t,
     if (ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]) {
       DPRINTF(stdout, ", %7.1e", e_int);
     }
-    if (ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] ||
-        ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] ||
-        ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2] ||
-        ncp[SHELL_SAT_1] || ncp[SHELL_SAT_2] || ncp[SHELL_SAT_3]) {
+    if (lub_present) {
       DPRINTF(stdout, ", %7.1e", e_sh_lub);
     }
-    if (ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1]) {
+    if (rheo_present) {
       DPRINTF(stdout, ", %7.1e", e_rheo);
+    }
+    if (ncp[TURB_K] || ncp[TURB_OMEGA] || ncp[EDDY_NU]) {
+      DPRINTF(stdout, ", %7.1e", e_turb);
     }
     if (nAC > 0) {
       DPRINTF(stdout, ", %7.1e", e_AC);
@@ -1116,16 +1104,17 @@ double time_step_control(const double delta_t,
     if (ncp[EXT_VELOCITY]) {
       DPRINTF(stdout, ", %7.1e", e_extv);
     }
+    if (ncp[TURB_K] || ncp[TURB_OMEGA] || ncp[EDDY_NU]) {
+      DPRINTF(stdout, ", %7.1e", e_turb);
+    }
+
     if (ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]) {
       DPRINTF(stdout, ", %7.1e", e_int);
     }
-    if (ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] ||
-        ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] ||
-        ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2] ||
-        ncp[SHELL_SAT_1] || ncp[SHELL_SAT_2] || ncp[SHELL_SAT_3]) {
+    if (lub_present) {
       DPRINTF(stdout, ", %7.1e", e_sh_lub);
     }
-    if (ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1]) {
+    if (rheo_present) {
       DPRINTF(stdout, ", %7.1e", e_rheo);
     }
     if (nAC > 0) {
@@ -1181,16 +1170,16 @@ double time_step_control(const double delta_t,
     if (ncp[EXT_VELOCITY]) {
       DPRINTF(stdout, ", %7.1e", e_extv);
     }
+    if (ncp[TURB_K] || ncp[TURB_OMEGA] || ncp[EDDY_NU]) {
+      DPRINTF(stdout, ", %7.1e", e_turb);
+    }
     if (ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]) {
       DPRINTF(stdout, ", %7.1e", e_int);
     }
-    if (ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] ||
-        ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] ||
-        ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2] ||
-        ncp[SHELL_SAT_1] || ncp[SHELL_SAT_2] || ncp[SHELL_SAT_3]) {
+    if (lub_present) {
       DPRINTF(stdout, ", %7.1e", e_sh_lub);
     }
-    if (ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1]) {
+    if (rheo_present) {
       DPRINTF(stdout, ", %7.1e", e_rheo);
     }
     if (nAC > 0) {
@@ -1249,14 +1238,14 @@ double time_step_control(const double delta_t,
   if (ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]) {
     DPRINTF(stdout, ", %1d INT", 1);
   }
-  if (ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] ||
-      ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] ||
-      ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2] || ncp[SHELL_SAT_1] || ncp[SHELL_SAT_2] ||
-      ncp[SHELL_SAT_3]) {
+  if (lub_present) {
     DPRINTF(stdout, ", %1d SHELL", 1);
   }
-  if (ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1]) {
+  if (rheo_present) {
     DPRINTF(stdout, ", %1d RHEO", 1);
+  }
+  if (ncp[TURB_K] || ncp[TURB_OMEGA] || ncp[EDDY_NU]) {
+    DPRINTF(stdout, ",   %1d TURB", 1);
   }
   if (nAC > 0) {
     DPRINTF(stdout, ",   %1d AC ", use_var_norm[9]);
@@ -1271,6 +1260,7 @@ double time_step_control(const double delta_t,
   log_msg("                 %1d  e_P = %g", use_var_norm[4], e_P);
   log_msg("                 %1d  e_S = %g", use_var_norm[5], e_S);
   log_msg("                 %1d  e_V = %g", use_var_norm[6], e_V);
+  log_msg("                 %1d  e_F = %g", use_var_norm[8], e_F);
   log_msg("                 %1d  e_sh_lub = %g", use_var_norm[9], e_sh_lub);
   if (nAC > 0)
     log_msg("                 %1d  e_AC = %g", use_var_norm[9], e_AC);
@@ -1541,7 +1531,7 @@ void init_vec(
     /* Some Special Cases */
 
     /* Structural shell variables */
-    if (upd->vp[pg->imtrx][SHELL_X] && upd->vp[pg->imtrx][SHELL_Y]) {
+    if (upd->vp[pg->imtrx][SHELL_X] >= 0 && upd->vp[pg->imtrx][SHELL_Y] >= 0) {
       init_structural_shell_coord(u);
     }
 
@@ -1912,9 +1902,9 @@ void init_vec(
               }
             }
           } /* end for j<Num_Var_Init_Mat[mn] */
-        }   /* end for n<num_nodes */
-      }     /* end for e_start=ielem<e_end */
-    }       /* end if (Num_Var_Init_Mat[mn] > 0 */
+        } /* end for n<num_nodes */
+      } /* end for e_start=ielem<e_end */
+    } /* end if (Num_Var_Init_Mat[mn] > 0 */
   }
   /*  safer_free((void **) &block_order);  */
   /*
@@ -2144,10 +2134,10 @@ void init_vec(
               }
             }
           } /* end for j<Num_Var_Init_Mat[mn] */
-        }   /* end for n<num_nodes */
-      }     /* end for e_start=ielem<e_end */
-    }       /* end if (Num_Var_Init_Mat[mn] > 0 */
-  }         /* end for element blocks */
+        } /* end for n<num_nodes */
+      } /* end for e_start=ielem<e_end */
+    } /* end if (Num_Var_Init_Mat[mn] > 0 */
+  } /* end for element blocks */
   safer_free((void **)&block_order);
 
   /*
@@ -2193,8 +2183,8 @@ void init_structural_shell_coord(double u[])
           u[dof] = Coor[comp][node];
         }
       } /* for: node(s) */
-    }   /* if: var in upd-> */
-  }     /* for: comp(onents) */
+    } /* if: var in upd-> */
+  } /* for: comp(onents) */
 
   return;
 
@@ -2652,20 +2642,32 @@ int rd_vectors_from_exoII(double u[],
               matrl = mp_glob[mn];
             }
             if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P0)) {
-              int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
-              if (eb_index != -1 && exo->base_mesh->eb_num_elems[eb_index] > 0) {
-                error = rd_exoII_ev(u, var, mn, matrl, elem_var_names,
-                                    exo->base_mesh->eb_num_elems[eb_index], num_elem_vars, exoid,
-                                    time_step, 0, exo);
+              // element variables we need to loop through the element blocks as we can have repeats
+              // of the same material in different element blocks
+              for (int eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
+                if (mn != Matilda[eb_index]) {
+                  continue;
+                }
+                if (exo->base_mesh->eb_num_elems[eb_index] > 0) {
+                  error = rd_exoII_ev(u, var, mn, eb_index, matrl, elem_var_names,
+                                      exo->base_mesh->eb_num_elems[eb_index], num_elem_vars, exoid,
+                                      time_step, 0, exo);
+                }
               }
             } else if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P1)) {
-              int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
-              if (eb_index != -1 && exo->base_mesh->eb_num_elems[eb_index] > 0) {
-                int dof = getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1);
-                for (int i = 0; i < dof; i++) {
-                  error = rd_exoII_ev(u, var, mn, matrl, elem_var_names,
-                                      exo->base_mesh->eb_num_elems[eb_index], num_elem_vars, exoid,
-                                      time_step, i, exo);
+              // element variables we need to loop through the element blocks as we can have repeats
+              // of the same material in different element blocks
+              for (int eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
+                if (mn != Matilda[eb_index]) {
+                  continue;
+                }
+                if (exo->base_mesh->eb_num_elems[eb_index] > 0) {
+                  int dof = getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1);
+                  for (int i = 0; i < dof; i++) {
+                    error = rd_exoII_ev(u, var, mn, eb_index, matrl, elem_var_names,
+                                        exo->base_mesh->eb_num_elems[eb_index], num_elem_vars,
+                                        exoid, time_step, i, exo);
+                  }
                 }
               }
             } else {
@@ -2961,6 +2963,7 @@ int rd_exoII_nv(double *u,
 int rd_exoII_ev(double *u,
                 int varType,
                 int mn,
+                int element_block,
                 MATRL_PROP_STRUCT *matrl,
                 char **elem_var_names,
                 int num_elems_block,
@@ -2995,11 +2998,13 @@ int rd_exoII_ev(double *u,
     variable =
         alloc_dbl_1(num_elems_block, 0.0); // This should be at for number of elements in a block.
     status = vdex;
-    DPRINTF(stdout, "Element variable %s for material %d found in exoII database - reading.\n",
-            exo_var_name, mn + 1);
-    error = ex_get_var(exoII_id, time_step, EX_ELEM_BLOCK, vdex, mn + 1, num_elems_block, variable);
+    DPRINTF(stdout,
+            "Element variable %s for material %d block %d found in exoII database - reading.\n",
+            exo_var_name, mn + 1, element_block + 1);
+    error = ex_get_var(exoII_id, time_step, EX_ELEM_BLOCK, vdex, element_block + 1, num_elems_block,
+                       variable);
     GOMA_EH(error, "ex_get_var element");
-    inject_elem_vec(u, varType, 0, spec, mn, variable, exo, num_elems_block);
+    inject_elem_vec(u, varType, 0, spec, element_block, mn, variable, exo, num_elems_block);
     safer_free((void **)&variable);
   }
   return status;
@@ -3244,6 +3249,7 @@ static void inject_elem_vec(double sol_vec[],
                             const int varType,
                             const int k,
                             const int idof,
+                            const int eb_index,
                             const int matID,
                             const double elem_vec[],
                             const Exo_DB *exo,
@@ -3305,7 +3311,6 @@ static void inject_elem_vec(double sol_vec[],
   int e_start, e_end, ielem, ielem_type, num_local_nodes;
   int iconnect_ptr, i, I, index;
   int found_quantity;
-  int eb_index = in_list(matID, 0, exo->num_elem_blocks, Matilda);
   GOMA_EH(eb_index, "Trying to read unknown material element block index inject_elem_vec");
   e_start = exo->eb_ptr[eb_index];
   e_end = exo->eb_ptr[eb_index + 1];

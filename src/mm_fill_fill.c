@@ -23,7 +23,6 @@
 
 #include "ac_stability.h"
 #include "ac_stability_util.h"
-#include "az_aztec.h"
 #include "el_elm_info.h"
 #include "exo_struct.h"
 #include "load_field_variables.h"
@@ -32,7 +31,6 @@
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
 #include "mm_fill_stabilization.h"
-#include "mm_fill_terms.h"
 #include "mm_fill_util.h"
 #include "mm_qtensor_model.h"
 #include "mm_unknown_map.h"
@@ -336,7 +334,7 @@ int assemble_fill(double tt,
   }
 
   v_dot_DF = 0.0;
-  if (pd->TimeIntegration != STEADY && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+  if (pd->TimeIntegration != STEADY && pd->gv[MESH_DISPLACEMENT1]) {
     x_dot_old = fv_dot_old->x;
     for (a = 0; a < VIM; a++) {
       x_dot[a] = (1. + 2. * tt) * (xx[a] - x_old[a]) * dtinv - 2. * tt * x_dot_old[a];
@@ -4270,7 +4268,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
               lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += tmp;
 
             } /* for ( j = 0 ... */
-          }   /* if ( pd->v[pg->imtrx][var] ) */
+          } /* if ( pd->v[pg->imtrx][var] ) */
           /* T */
 
           var = TEMPERATURE;
@@ -4300,7 +4298,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
               lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += tmp;
 
             } /* for ( j = 0 ... */
-          }   /* if ( pd->v[pg->imtrx][var] ) */
+          } /* if ( pd->v[pg->imtrx][var] ) */
 
           /*
            *   J_pf_v
@@ -4460,8 +4458,8 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
           } /* if: SHELL_LUB_CURV exisits */
 
         } /* if( active...) */
-      }   /* for(i : */
-    }     /* af->Jacobian */
+      } /* for(i : */
+    } /* af->Jacobian */
     ls = ls_old;
   }
 

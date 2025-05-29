@@ -1,7 +1,3 @@
-#include "load_field_variables.h"
-#include "mm_fill_energy.h"
-#include "mm_fill_ls_capillary_bcs.h"
-#include "mm_fill_terms.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,9 +5,8 @@
 
 /* GOMA include files */
 #define GOMA_MM_FILL_MOMENTUM_C
-#include "mm_fill_momentum.h"
-
 #include "ac_particles.h"
+#include "ad_turbulence.h"
 #include "az_aztec.h"
 #include "bc_colloc.h"
 #include "bc_contact.h"
@@ -20,6 +15,7 @@
 #include "el_elm_info.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "load_field_variables.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
@@ -27,8 +23,11 @@
 #include "mm_eh.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_common.h"
+#include "mm_fill_energy.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_ls_capillary_bcs.h"
+#include "mm_fill_momentum.h"
 #include "mm_fill_population.h"
 #include "mm_fill_ptrs.h"
 #include "mm_fill_rs.h"
@@ -37,6 +36,7 @@
 #include "mm_fill_species.h"
 #include "mm_fill_stabilization.h"
 #include "mm_fill_stress.h"
+#include "mm_fill_terms.h"
 #include "mm_fill_util.h"
 #include "mm_flux.h"
 #include "mm_mp.h"
@@ -49,6 +49,7 @@
 #include "mm_species.h"
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
+#include "polymer_time_const.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
@@ -664,7 +665,7 @@ int assemble_momentum(dbl time,       /* current time */
 #endif /* DEBUG_MOMENTUM_RES */
 
         } /*end if (active_dofs) */
-      }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
   }
 
@@ -1179,6 +1180,183 @@ int assemble_momentum(dbl time,       /* current time */
                 for (p = 0; p < VIM; p++) {
                   for (q = 0; q < VIM; q++) {
                     diffusion += grad_phi_i_e_a[p][q] * d_Pi->eddy_nu[q][p][j];
+                  }
+                }
+                diffusion *= -d_area;
+                diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+              }
+
+              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += mass + advection + diffusion + source;
+            }
+          }
+
+          if (pdv[TURB_K]) {
+            var = TURB_K;
+            pvar = upd->vp[pg->imtrx][var];
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              phi_j = bf[var]->phi[j];
+
+              mass = 0.;
+              advection = 0.;
+              source = 0.0;
+              if (supg != 0.) {
+                dbl d_wt_func = 0;
+                for (p = 0; p < dim; p++) {
+                  d_wt_func += supg * supg_terms.d_tau_dturb_k[j] * v[p] * bfm->grad_phi[i][p];
+                }
+                if (transient_run) {
+                  if (mass_on) {
+                    mass = v_dot[a] * rho;
+                    mass *= -d_wt_func * d_area;
+                    mass *= mass_etm;
+                  }
+
+                  if (porous_brinkman_on) {
+                    mass /= por;
+                  }
+
+                  if (particle_momentum_on) {
+                    mass *= ompvf;
+                  }
+                }
+
+                if (advection_on) {
+#ifdef DO_NO_UNROLL
+                  for (p = 0; p < WIM; p++) {
+                    advection += (v[p] - x_dot[p]) * grad_v[p][a];
+                  }
+#else
+                  advection += (v[0] - x_dot[0]) * grad_v[0][a];
+                  advection += (v[1] - x_dot[1]) * grad_v[1][a];
+                  if (WIM == 3)
+                    advection += (v[2] - x_dot[2]) * grad_v[2][a];
+#endif
+
+                  if (upd->PSPG_advection_correction) {
+                    advection -= pspg[0] * grad_v[0][a];
+                    advection -= pspg[1] * grad_v[1][a];
+                    if (WIM == 3)
+                      advection -= pspg[2] * grad_v[2][a];
+                  }
+
+                  advection *= rho;
+                  advection *= -d_wt_func * d_area;
+                  advection *= advection_etm;
+
+                  if (porous_brinkman_on) {
+                    por2 = por * por;
+                    advection /= por2;
+                  }
+
+                  if (particle_momentum_on) {
+                    advection *= ompvf;
+                  }
+                }
+
+                /*
+                 * Source term...
+                 */
+
+                if (source_on) {
+                  source += f[a];
+                  source *= d_wt_func * d_area;
+                  source *= source_etm;
+                }
+              }
+
+              diffusion = 0.;
+              if (diffusion_on) {
+                for (p = 0; p < VIM; p++) {
+                  for (q = 0; q < VIM; q++) {
+                    diffusion += grad_phi_i_e_a[p][q] * d_Pi->turb_k[q][p][j];
+                  }
+                }
+                diffusion *= -d_area;
+                diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+              }
+
+              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += mass + advection + diffusion + source;
+            }
+          }
+          if (pdv[TURB_OMEGA]) {
+            var = TURB_OMEGA;
+            pvar = upd->vp[pg->imtrx][var];
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              phi_j = bf[var]->phi[j];
+
+              mass = 0.;
+              advection = 0.;
+              source = 0.0;
+              if (supg != 0.) {
+                dbl d_wt_func = 0;
+                for (p = 0; p < dim; p++) {
+                  d_wt_func += supg * supg_terms.d_tau_dturb_omega[j] * v[p] * bfm->grad_phi[i][p];
+                }
+                if (transient_run) {
+                  if (mass_on) {
+                    mass = v_dot[a] * rho;
+                    mass *= -d_wt_func * d_area;
+                    mass *= mass_etm;
+                  }
+
+                  if (porous_brinkman_on) {
+                    mass /= por;
+                  }
+
+                  if (particle_momentum_on) {
+                    mass *= ompvf;
+                  }
+                }
+
+                if (advection_on) {
+#ifdef DO_NO_UNROLL
+                  for (p = 0; p < WIM; p++) {
+                    advection += (v[p] - x_dot[p]) * grad_v[p][a];
+                  }
+#else
+                  advection += (v[0] - x_dot[0]) * grad_v[0][a];
+                  advection += (v[1] - x_dot[1]) * grad_v[1][a];
+                  if (WIM == 3)
+                    advection += (v[2] - x_dot[2]) * grad_v[2][a];
+#endif
+
+                  if (upd->PSPG_advection_correction) {
+                    advection -= pspg[0] * grad_v[0][a];
+                    advection -= pspg[1] * grad_v[1][a];
+                    if (WIM == 3)
+                      advection -= pspg[2] * grad_v[2][a];
+                  }
+
+                  advection *= rho;
+                  advection *= -d_wt_func * d_area;
+                  advection *= advection_etm;
+
+                  if (porous_brinkman_on) {
+                    por2 = por * por;
+                    advection /= por2;
+                  }
+
+                  if (particle_momentum_on) {
+                    advection *= ompvf;
+                  }
+                }
+
+                /*
+                 * Source term...
+                 */
+
+                if (source_on) {
+                  source += f[a];
+                  source *= d_wt_func * d_area;
+                  source *= source_etm;
+                }
+              }
+
+              diffusion = 0.;
+              if (diffusion_on) {
+                for (p = 0; p < VIM; p++) {
+                  for (q = 0; q < VIM; q++) {
+                    diffusion += grad_phi_i_e_a[p][q] * d_Pi->turb_omega[q][p][j];
                   }
                 }
                 diffusion *= -d_area;
@@ -2285,7 +2463,7 @@ int assemble_momentum(dbl time,       /* current time */
             }
           }
         } /* end of if(active_dofs) */
-      }   /* end of for(i=ei[pg->imtrx]->dof*/
+      } /* end of for(i=ei[pg->imtrx]->dof*/
     }
   }
   safe_free((void *)n_dof);
@@ -2310,15 +2488,8 @@ void ve_polymer_stress(double gamma[DIM][DIM],
     dbl eig_values[DIM];
 
     for (int mode = 0; mode < vn->modes; mode++) {
-      VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
-      VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-      dbl mup = viscosity(ve[mode]->gn, gamma, d_mup);
-      dbl lambda = 0.0;
-      if (ve[mode]->time_constModel == CONSTANT) {
-        lambda = ve[mode]->time_const;
-      } else {
-        GOMA_EH(GOMA_ERROR, "Unknown polymer time constant model");
-      }
+      dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
+      dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
       if (vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
 #ifdef ANALEIG_PLEASE
         analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1, d_exp_s_ds[mode]);
@@ -2345,7 +2516,7 @@ void ve_polymer_stress(double gamma[DIM][DIM],
     for (int mode = 0; mode < vn->modes; mode++) {
       /* get polymer viscosity */
       dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
-      dbl lambda = ve[mode]->time_const;
+      dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
 
       dbl bdotb[DIM][DIM];
       dbl b[DIM][DIM];
@@ -2394,15 +2565,8 @@ void ve_polymer_stress(double gamma[DIM][DIM],
       default:
         break;
       }
-      VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
-      VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-      dbl mup = viscosity(ve[mode]->gn, gamma, d_mup);
-      dbl lambda = 0.0;
-      if (ve[mode]->time_constModel == CONSTANT) {
-        lambda = ve[mode]->time_const;
-      } else {
-        GOMA_EH(GOMA_ERROR, "Unknown polymer time constant model");
-      }
+      dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
+      dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
       for (int i = 0; i < VIM; i++) {
         for (int j = 0; j < VIM; j++) {
           stress[i][j] += mup * k / lambda * (fv->S[mode][i][j] - (double)delta(i, j));
@@ -2433,13 +2597,10 @@ void ve_polymer_stress(double gamma[DIM][DIM],
       for (int mode = 0; mode < vn->modes; mode++) {
         VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
         VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+        POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+        POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
         dbl mup = viscosity(ve[mode]->gn, gamma, d_mup);
-        dbl lambda = 0.0;
-        if (ve[mode]->time_constModel == CONSTANT) {
-          lambda = ve[mode]->time_const;
-        } else {
-          GOMA_EH(GOMA_ERROR, "Unknown polymer time constant model");
-        }
+        dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
         compute_d_exp_s_ds(fv->S[mode], exp_s, d_exp_s_ds);
 
         for (int p = 0; p < VIM; p++) {
@@ -2457,6 +2618,18 @@ void ve_polymer_stress(double gamma[DIM][DIM],
                     d_stress->S[p][q][mode][b][c][j] = 0;
                   }
                 }
+              }
+            }
+          }
+        }
+
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            for (int b = 0; b < WIM; b++) {
+              int var = VELOCITY1 + b;
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                d_stress->v[p][q][b][j] += d_mup->v[b][j] / lambda * exp_s[p][q] -
+                                           mup * d_lam->v[b][j] / (lambda * lambda) * exp_s[p][q];
               }
             }
           }
@@ -2482,9 +2655,13 @@ void ve_polymer_stress(double gamma[DIM][DIM],
 
     } break;
     case SQRT_CONF: {
+      VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
+      VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+      POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+      POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
       for (int mode = 0; mode < vn->modes; mode++) {
-        dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
-        dbl lambda = ve[mode]->time_const;
+        dbl mup = viscosity(ve[mode]->gn, gamma, d_mup);
+        dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
 
         dbl b[DIM][DIM];
         for (int ii = 0; ii < VIM; ii++) {
@@ -2495,6 +2672,9 @@ void ve_polymer_stress(double gamma[DIM][DIM],
             }
           }
         }
+        dbl bdotb[DIM][DIM];
+        tensor_dot(b, b, bdotb, VIM);
+
         for (int p = 0; p < VIM; p++) {
           for (int q = 0; q < VIM; q++) {
             for (int r = 0; r < VIM; r++) {
@@ -2520,6 +2700,19 @@ void ve_polymer_stress(double gamma[DIM][DIM],
                 for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                   d_stress->S[p][q][mode][r][c][j] = conf[p][q] * bf[var]->phi[j];
                 }
+              }
+            }
+          }
+        }
+
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            for (int b = 0; b < WIM; b++) {
+              int var = VELOCITY1 + b;
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                d_stress->v[p][q][b][j] +=
+                    -(d_mup->v[b][j] / lambda) * (delta(p, q) - bdotb[p][q]) +
+                    (d_lam->v[b][j] * mup / (lambda * lambda)) * (delta(p, q) - bdotb[p][q]);
               }
             }
           }
@@ -2575,13 +2768,10 @@ void ve_polymer_stress(double gamma[DIM][DIM],
         }
         VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
         VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+        POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+        POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
         dbl mup = viscosity(ve[mode]->gn, gamma, d_mup);
-        dbl lambda = 0.0;
-        if (ve[mode]->time_constModel == CONSTANT) {
-          lambda = ve[mode]->time_const;
-        } else {
-          GOMA_EH(GOMA_ERROR, "Unknown polymer time constant model");
-        }
+        dbl lambda = polymer_time_const(ve[mode]->time_const_st, gamma, d_lam);
         for (int a = 0; a < VIM; a++) {
           for (int b = 0; b < VIM; b++) {
             for (int p = 0; p < VIM; p++) {
@@ -2592,6 +2782,19 @@ void ve_polymer_stress(double gamma[DIM][DIM],
                       mup * k / lambda * delta(a, p) * delta(b, q) * bf[var]->phi[j] +
                       (mup * d_k[p][q] / lambda) * bf[var]->phi[j] * (fv->S[mode][a][b]);
                 }
+              }
+            }
+          }
+        }
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            for (int b = 0; b < WIM; b++) {
+              int var = VELOCITY1 + b;
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                d_stress->v[p][q][b][j] +=
+                    -(d_mup->v[b][j] * k / lambda) * (delta(p, q) - fv->S[mode][p][q]) +
+                    (d_lam->v[b][j] * k * mup / (lambda * lambda)) *
+                        (delta(p, q) - fv->S[mode][p][q]);
               }
             }
           }
@@ -2616,23 +2819,6 @@ void ve_polymer_stress(double gamma[DIM][DIM],
       }
     } break;
     }
-  }
-}
-
-static bool is_evss_f_model(int model) {
-  switch (model) {
-  case EVSS_F:
-  case EVSS_GRADV:
-  case LOG_CONF:
-  case LOG_CONF_GRADV:
-  case LOG_CONF_TRANSIENT:
-  case LOG_CONF_TRANSIENT_GRADV:
-  case CONF:
-  case SQRT_CONF:
-    return true;
-
-  default:
-    return false;
   }
 }
 
@@ -2911,6 +3097,28 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
       }
     }
 
+    var = TURB_K;
+    if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+      for (p = 0; p < VIM; p++) {
+        for (q = 0; q < VIM; q++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mu->turb_k[j] = mu_num * d_mu->turb_k[j];
+          }
+        }
+      }
+    }
+
+    var = TURB_OMEGA;
+    if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+      for (p = 0; p < VIM; p++) {
+        for (q = 0; q < VIM; q++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mu->turb_omega[j] = mu_num * d_mu->turb_omega[j];
+          }
+        }
+      }
+    }
+
     var = PRESSURE;
     if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -3022,7 +3230,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
         }
       }
     } // for mode
-  }   // if POLYMER_STRESS
+  } // if POLYMER_STRESS
 
   /*
    * Calculate the dilational viscosity, if necessary
@@ -3465,6 +3673,27 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
     }
   }
 
+  var = TURB_K;
+  if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_Pi->turb_k[p][q][j] = d_mu->turb_k[j] * gamma[p][q];
+        }
+      }
+    }
+  }
+  var = TURB_OMEGA;
+  if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_Pi->turb_omega[p][q][j] = d_mu->turb_omega[j] * gamma[p][q];
+        }
+      }
+    }
+  }
+
   var = PRESSURE;
   if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
     for (p = 0; p < VIM; p++) {
@@ -3782,12 +4011,13 @@ int momentum_source_term(dbl f[DIM], /* Body force. */
       ls = pfd->ls[0];
       ls_modulate_momentumsource(f, mp->mp2nd->momentumsource_phase[0], ls->Length_Scale,
                                  (double)mp->mp2nd->momentumsourcemask[0],
-                                 (double)mp->mp2nd->momentumsourcemask[1], df);
+                                 (double)mp->mp2nd->momentumsourcemask[1], df,
+                                 mp->mp2nd->momentumsource_lsi_interp_method);
       ls = ls_old;
     }
-    ls_modulate_momentumsource(f, mp->mp2nd->momentumsource, ls->Length_Scale,
-                               (double)mp->mp2nd->momentumsourcemask[0],
-                               (double)mp->mp2nd->momentumsourcemask[1], df);
+    ls_modulate_momentumsource(
+        f, mp->mp2nd->momentumsource, ls->Length_Scale, (double)mp->mp2nd->momentumsourcemask[0],
+        (double)mp->mp2nd->momentumsourcemask[1], df, mp->mp2nd->momentumsource_lsi_interp_method);
   }
 
   return (status);

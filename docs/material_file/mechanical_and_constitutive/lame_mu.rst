@@ -65,6 +65,24 @@ The details of each model option are given below:
 |                                                                                   | * <float3> - :math:`G_1`                                                                          |
 |                                                                                   | * <float3> - :math:`r_0`                                                                          |
 +-----------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
+|**MULTI_CONTACT_LINE** <float1> <float2> <float3> <ns1> ... <nsN>                  |The **MULTI_CONTACT_LINE** model is a based on the CONTACT_LINE model and allows multiple nodesets |
+|                                                                                   |                                                                                                   |
+|                                                                                   |.. figure:: /figures/361_goma_physics.png                                                          |
+|                                                                                   |   :align: center                                                                                  |
+|                                                                                   |   :width: 90%                                                                                     |
+|                                                                                   |                                                                                                   |
+|                                                                                   |*r* is the distance from the fixed point, :math:`r_0` is a decay length, :math:`G_0`is the modulus |
+|                                                                                   |far from the contact line, and :math:`G_0 + G_1` is the modulus at the contact line.               |
+|                                                                                   |                                                                                                   |
+|                                                                                   |The {float_list} contains four values for this model, where:                                       |
+|                                                                                   |                                                                                                   |
+|                                                                                   | * <float1> - :math:`G_0` (or :math:`\mu_0`)                                                       |
+|                                                                                   | * <float2> - :math:`G_1`                                                                          |
+|                                                                                   | * <float3> - :math:`r_0`                                                                          |
+|                                                                                   | * <ns1> - Node set number of points to calculate distance                                         |
+|                                                                                   | * <ns2> - Optional second node set number calculate distance                                      |
+|                                                                                   | * <nsN> - Optional N'th node set number calculate distance                                        |
++-----------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
 |**SHEAR_HARDEN** <float1> <float2>                                                 |The **SHEAR_HARDEN** model is:                                                                     |
 |                                                                                   |                                                                                                   |
 |                                                                                   |.. figure:: /figures/362_goma_physics.png                                                          |

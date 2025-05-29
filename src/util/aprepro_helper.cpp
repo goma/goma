@@ -68,6 +68,7 @@ extern "C" goma_error aprepro_parse_goma_augc(struct AC_Information *ac, double 
   SEAMS::Aprepro aprepro;
   std::string var = ac->AP_param;
   aprepro.add_variable(var, val, true);
+  aprepro.add_variable("AC_VALUE", ac->CONSTV, true);
   std::string filedata = ac->Aprepro_lib_string;
   auto result = aprepro.parse_string(filedata);
 

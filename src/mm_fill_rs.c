@@ -805,8 +805,8 @@ int assemble_real_solid(double time_value, double tt, double dt) {
         }
 
       } /* end of loop over equations i  */
-    }   /* end of loop over equation directions a */
-  }     /* end of if jacobian */
+    } /* end of loop over equation directions a */
+  } /* end of if jacobian */
 
   return (status);
 }

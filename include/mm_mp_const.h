@@ -335,6 +335,11 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 /* Turbulent viscosity models for Reynolds Averaged NS */
 #define TURBULENT_SA         52 /* Spallart Allmaras */
 #define TURBULENT_SA_DYNAMIC 53 /* Spallart Allmaras */
+#define TURBULENT_K_OMEGA    54
+
+#define FLUIDITY_THIXOTROPIC_VISCOSITY 55
+
+#define HERSCHEL_BULKLEY_PAPANASTASIOU 56 /* Herschel_bulkley model - power-law + yield stress */
 
 /*
  *  Heat source modeling
@@ -477,12 +482,13 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 
 /* Modulus parameters */
 /*#define POWER_LAW    4  - defined rf_fem_const.h*/
-#define CONTACT_LINE    5
-#define SHEAR_HARDEN    6
-#define EXPONENTIAL     7
-#define DENSE_POWER_LAW 8
-#define POISSON_RATIO   9
-#define SHRINKAGE       10
+#define CONTACT_LINE       5
+#define SHEAR_HARDEN       6
+#define EXPONENTIAL        7
+#define DENSE_POWER_LAW    8
+#define POISSON_RATIO      9
+#define SHRINKAGE          10
+#define MULTI_CONTACT_LINE 11
 
 /* Diffusion Constitutive equation parameters */
 #define FICKIAN                3
@@ -519,8 +525,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define HYDRODYNAMIC_QTENSOR_OLD 22
 #define FICKIAN_SHELL            23 /* Shell version of Fickian diffusion equation */
 /* surface tension laws */
-#define DILATION       3
-#define GIBBS_ISOTHERM 35
+#define DILATION        3
+#define GIBBS_ISOTHERM  35
+#define TIME_RAMP       353
+#define TIME_RAMP_SIGMA 354
 
 /* species only diffusion choices */
 #define DIFF_OFF      0
@@ -563,7 +571,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define SOLID_DIFFUSION_ELECTRONEUTRALITY        911
 #define SOLID_DIFFUSION                          912
 #define GAS_DIFFUSION                            913
-#define FULL                                     914
+#define METAL_CORROSION_FULL                     914
 #define ANNIHILATION_ELECTRONEUTRALITY           915
 #define ANNIHILATION                             916
 #define NET_CHARGE                               917 /* refer to F multiplied by sum of ci zi   */
@@ -580,6 +588,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 /* KOH etching models */
 #define ETCHING_KOH     935
 #define ETCHING_KOH_EXT 936
+
+#define FLUIDITY_THIXOTROPIC 937
 
 /* Special material-related height function models */
 #define CONSTANT_SPEED        1011
@@ -619,6 +629,16 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 
 /* Special function models for structured porous shells */
 #define MULTI_MODE 1014
+
+/* Level set interface interpolation */
+#define LSI_INTERP_LINEAR 20001
+#define LSI_INTERP_LOG    20002
+
+/* Regularization models */
+#define REGULARIZATION_EPSILON               4
+#define REGULARIZATION_PAPANASTASIOU         5
+#define REGULARIZATION_PAPANASTASIOU_EPSILON 6
+#define REGULARIZATION_YIELD_ONLY_EPSILON    7
 
 /*
 

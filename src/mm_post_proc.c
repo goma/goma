@@ -18,8 +18,10 @@
 
 /* Standard include files */
 
+#include "ad_turbulence.h"
 #include "load_field_variables.h"
 #include "mm_fill_em.h"
+#include "mm_fill_momentum.h"
 #include "rf_solve.h"
 #include <math.h>
 #include <stdio.h>
@@ -32,6 +34,8 @@
 #include "mm_post_proc.h"
 /* GOMA include files */
 #include "ac_particles.h"
+#include "ad_momentum.h"
+#include "ad_turbulence.h"
 #include "bc/rotate.h"
 #include "bc_contact.h"
 #include "density.h"
@@ -70,6 +74,7 @@
 #include "mm_std_models_shell.h"
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
+#include "polymer_time_const.h"
 #include "rd_mesh.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
@@ -335,6 +340,9 @@ int FIRST_STRAINRATE_INVAR = -1;
 int SEC_STRAINRATE_INVAR = -1;
 int THIRD_STRAINRATE_INVAR = -1;
 int WALL_DISTANCE = -1;
+int CONTACT_DISTANCE = -1;
+int PP_FLUID_STRESS = -1; /* Fluid Stress without Pressure contribution */
+int LUB_CONVECTION = -1;
 
 int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
                           * actually is */
@@ -721,9 +729,7 @@ static int calc_standard_fields(double **post_proc_vect,
           compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
           mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
-          if (ve[ve_mode]->time_constModel == CONSTANT) {
-            lambda = ve[ve_mode]->time_const;
-          }
+          lambda = polymer_time_const(ve[ve_mode]->time_const_st, gamma, NULL);
           for (a = 0; a < VIM; a++) {
             for (b = 0; b < VIM; b++) {
               ves[a][b] += mup / lambda * (exp_s[a][b] - (double)delta(a, b));
@@ -798,9 +804,7 @@ static int calc_standard_fields(double **post_proc_vect,
           compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
           mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
-          if (ve[ve_mode]->time_constModel == CONSTANT) {
-            lambda = ve[ve_mode]->time_const;
-          }
+          lambda = polymer_time_const(ve[ve_mode]->time_const_st, gamma, NULL);
           for (a = 0; a < VIM; a++) {
             for (b = 0; b < VIM; b++) {
               ves[a][b] += mup / lambda * (exp_s[a][b] - (double)delta(a, b));
@@ -889,9 +893,7 @@ static int calc_standard_fields(double **post_proc_vect,
           compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
           mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
-          if (ve[ve_mode]->time_constModel == CONSTANT) {
-            lambda = ve[ve_mode]->time_const;
-          }
+          lambda = polymer_time_const(ve[ve_mode]->time_const_st, gamma, NULL);
           for (a = 0; a < VIM; a++) {
             for (b = 0; b < VIM; b++) {
               ves[a][b] += mup / lambda * (exp_s[a][b] - (double)delta(a, b));
@@ -958,6 +960,50 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[DIV_TOTAL] = 1.0;
   }
 
+#if 1
+  if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    if (upd->AutoDiff) {
+      mu = ad_viscosity_wrap(gn);
+    } else {
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        }
+      }
+      mu = viscosity(gn, gamma, NULL);
+    }
+
+    if (pd->v[pg->imtrx][POLYMER_STRESS11]) {
+      /*  shift factor  */
+      if (pd->e[pg->imtrx][TEMPERATURE]) {
+        if (vn->shiftModel == CONSTANT) {
+          at = vn->shift[0];
+        } else if (vn->shiftModel == MODIFIED_WLF) {
+          wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
+          if (wlf_denom != 0.) {
+            at = exp(vn->shift[0] * (mp->reference[TEMPERATURE] - fv->T) / wlf_denom);
+          } else {
+            at = 1.;
+          }
+        }
+      } else {
+        at = 1.;
+      }
+      for (mode = 0; mode < vn->modes; mode++) {
+        /* get polymer viscosity */
+        if (upd->AutoDiff) {
+          mup = ad_viscosity_wrap(ve[mode]->gn);
+        } else {
+          mup = viscosity(ve[mode]->gn, gamma, NULL);
+        }
+        mu += at * mup;
+      }
+    }
+
+    local_post[PP_Viscosity] = mu;
+    local_lumped[PP_Viscosity] = 1.;
+  }
+#else
   if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (b = 0; b < VIM; b++) {
@@ -1010,6 +1056,7 @@ static int calc_standard_fields(double **post_proc_vect,
     local_post[PP_Viscosity] = mu;
     local_lumped[PP_Viscosity] = 1.;
   }
+#endif
 
   if (PP_Viscosity != -1 &&
       (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP] || pd->e[pg->imtrx][R_LUBP_2])) {
@@ -1029,6 +1076,8 @@ static int calc_standard_fields(double **post_proc_vect,
         calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
       }
       local_post[PP_Viscosity] = LubAux->mu_star;
+      /* Cleanup */
+      safe_free((void *)n_dof);
     } else {
       local_post[PP_Viscosity] = viscosity(gn, NULL, NULL);
     }
@@ -1152,19 +1201,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (POLYMER_TIME_CONST != -1 && pd->e[pg->imtrx][R_STRESS11]) {
     mode = 0;
-    double lambda = 0;
-    double mup = viscosity(ve[mode]->gn, gamma, NULL);
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    } else if (ls != NULL && ve[mode]->time_constModel == VE_LEVEL_SET) {
-      double pos_lambda = ve[mode]->pos_ls.time_const;
-      double neg_lambda = ve[mode]->time_const;
-      double width = ls->Length_Scale;
-      err = level_set_property(neg_lambda, pos_lambda, width, &lambda, NULL);
-      GOMA_EH(err, "level_set_property() failed for polymer time constant.");
-    }
+    double lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
     local_post[POLYMER_TIME_CONST] = lambda;
     local_lumped[POLYMER_TIME_CONST] = 1.;
   }
@@ -1252,8 +1289,10 @@ static int calc_standard_fields(double **post_proc_vect,
       } else {
         calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
       }
-      local_post[PP_Viscosity] = LubAux->srate;
+      local_post[MEAN_SHEAR] = LubAux->srate;
       local_lumped[MEAN_SHEAR] = 1.;
+      /* Cleanup */
+      safe_free((void *)n_dof);
     }
   }
 
@@ -1487,7 +1526,7 @@ static int calc_standard_fields(double **post_proc_vect,
   if (MOMENT_SOURCES != -1 && pd->v[pg->imtrx][MOMENT0]) {
     double msource[MAX_MOMENTS];
     MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource;
-    d_msource = calloc(sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT), 1);
+    d_msource = calloc(1, sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT));
     moment_source(msource, d_msource);
 
     for (int mom = 0; mom < MAX_MOMENTS; mom++) {
@@ -1606,6 +1645,11 @@ static int calc_standard_fields(double **post_proc_vect,
   if (WALL_DISTANCE != -1 && (pd->e[pg->imtrx][VELOCITY1] || pd->e[pg->imtrx][R_LUBP])) {
     local_post[WALL_DISTANCE] = fv->wall_distance;
     local_lumped[WALL_DISTANCE] = 1.;
+  }
+
+  if (CONTACT_DISTANCE != -1 && (pd->e[pg->imtrx][MESH_DISPLACEMENT1])) {
+    local_post[CONTACT_DISTANCE] = fv->multi_contact_line_distance;
+    local_lumped[CONTACT_DISTANCE] = 1.;
   }
 
   if (DIELECTROPHORETIC_FIELD != -1 && pd->e[pg->imtrx][R_ENORM]) {
@@ -2149,6 +2193,21 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[LIGHT_INTENSITY] = 1.0;
   } /* end of LIGHT_INTENSITY */
 
+  if (PP_FLUID_STRESS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+    dbl Pi[DIM][DIM];
+    fluid_stress(Pi, NULL);
+    for (a = 0; a < Num_Dim; a++) {
+      for (b = 0; b < Num_Dim; b++) {
+        local_post[PP_FLUID_STRESS + a * Num_Dim + b] = Pi[a][b] + fv->P * delta(a, b);
+        local_lumped[PP_FLUID_STRESS + a * Num_Dim + b] = 1.;
+      }
+    }
+    if (Num_Dim == 2 && VIM == 3) {
+      local_post[PP_FLUID_STRESS + 4] = Pi[2][2] + fv->P * delta(a, b);
+      local_lumped[PP_FLUID_STRESS + 4] = 1.;
+    }
+  }
+
   if (UNTRACKED_SPEC != -1 && pd->e[pg->imtrx][R_MASS]) {
     double density_tot = 0.;
     switch (mp->Species_Var_Type) {
@@ -2522,8 +2581,8 @@ static int calc_standard_fields(double **post_proc_vect,
 
     mu = viscosity(gn, gamma, NULL);
     // printf("%lf", mu);
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
+    for (a = 0; a < Num_Dim; a++) {
+      for (b = 0; b < Num_Dim; b++) {
         local_post[VISCOUS_STRESS + a * Num_Dim + b] = mu * gamma[a][b];
         local_lumped[VISCOUS_STRESS + a * Num_Dim + b] = 1.;
       }
@@ -2824,7 +2883,10 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[PRINCIPAL_REAL_STRESS + 2] = 1.;
   } /* end of PRINCIPAL_REAL_STRESS */
 
-  if (LUB_HEIGHT != -1 && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP] ||
+  if (LUB_HEIGHT != -1 && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_SAT_CLOSED] ||
+                           pd->e[pg->imtrx][R_SHELL_FILMP] || pd->e[pg->imtrx][R_SHELL_ENERGY] ||
+                           pd->e[pg->imtrx][R_SHELL_LUB_CURV] ||
+                           (pd->e[pg->imtrx][R_MASS] && pd->MassFluxModel == FICKIAN_SHELL) ||
                            pd->e[pg->imtrx][R_TFMP_MASS] || pd->e[pg->imtrx][R_TFMP_BOUND])) {
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
     double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh, dH_dF[MDE];
@@ -2836,7 +2898,9 @@ static int calc_standard_fields(double **post_proc_vect,
     n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
-    if (pd->e[pg->imtrx][R_LUBP]) {
+    if (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_SAT_CLOSED] ||
+        pd->e[pg->imtrx][R_SHELL_ENERGY] || pd->e[pg->imtrx][R_SHELL_LUB_CURV] ||
+        (pd->e[pg->imtrx][R_MASS] && pd->MassFluxModel == FICKIAN_SHELL)) {
       local_post[LUB_HEIGHT] =
           height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
                                 &dH_U_ddh, dH_dF, time, delta_t);
@@ -3068,6 +3132,29 @@ static int calc_standard_fields(double **post_proc_vect,
     safe_free((void *)n_dof);
 
   } /* end of LUB_FLUID_SOURCE */
+
+  if ((LUB_CONVECTION != -1) && pd->e[pg->imtrx][R_MOMENTUM1] &&
+      (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP])) {
+    int i, j;
+    double cvect[DIM];
+
+    /* Calculate convective forces  */
+    memset(cvect, 0.0, sizeof(double) * DIM);
+    for (i = 0; i < dim; i++) {
+      for (j = 0; j < VIM; j++) {
+        cvect[i] += mp->density * fv->v[j] * fv->grad_v[j][i];
+      }
+    }
+
+    /* Post velocities */
+    local_post[LUB_CONVECTION] = cvect[0];
+    local_lumped[LUB_CONVECTION] = 1.0;
+    local_post[LUB_CONVECTION + 1] = cvect[1];
+    local_lumped[LUB_CONVECTION + 1] = 1.0;
+    local_post[LUB_CONVECTION + 2] = cvect[2];
+    local_lumped[LUB_CONVECTION + 2] = 1.0;
+
+  } /* end of LUB_CONVECTION */
 
   if ((PP_LAME_MU != -1) && (pd->e[pg->imtrx][R_MESH1])) {
 
@@ -3397,9 +3484,6 @@ static int calc_standard_fields(double **post_proc_vect,
       (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF ||
        vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)) {
     index = 0;
-    VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
-    VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-    d_mup = NULL;
     double lambda;
     double R1[DIM][DIM];
     double eig_values[DIM];
@@ -3419,18 +3503,9 @@ static int calc_standard_fields(double **post_proc_vect,
         compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
 #endif
       }
-      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+      mup = viscosity(ve[mode]->gn, gamma, NULL);
       // Polymer time constant
-      lambda = 0.0;
-      if (ve[mode]->time_constModel == CONSTANT) {
-        lambda = ve[mode]->time_const;
-      }
-      /* Looks like these models are not working right now
-       *else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
-       * {
-       *   lambda = mup/ve[mode]->time_const;
-       * }
-       */
+      lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
       if (lambda == 0.0) {
         GOMA_EH(GOMA_ERROR, "The conformation tensor needs a non-zero polymer time constant.");
       }
@@ -3451,19 +3526,16 @@ static int calc_standard_fields(double **post_proc_vect,
               }
             }
           } // for b
-        }   // for a
+        } // for a
       }
     } // Loop over modes
   }
 
   if (CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] && (vn->evssModel == SQRT_CONF)) {
     index = 0;
-    VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
-    VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-    d_mup = NULL;
     double lambda;
     for (mode = 0; mode < vn->modes; mode++) {
-      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+      mup = viscosity(ve[mode]->gn, gamma, NULL);
 
       dbl b_dot_b[DIM][DIM];
       dbl cb[DIM][DIM];
@@ -3478,16 +3550,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
       tensor_dot(cb, cb, b_dot_b, VIM);
       // Polymer time constant
-      lambda = 0.0;
-      if (ve[mode]->time_constModel == CONSTANT) {
-        lambda = ve[mode]->time_const;
-      }
-      /* Looks like these models are not working right now
-       *else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
-       * {
-       *   lambda = mup/ve[mode]->time_const;
-       * }
-       */
+      lambda = polymer_time_const(ve[mode]->time_const_st, gamma, NULL);
       if (lambda == 0.0) {
         GOMA_EH(GOMA_ERROR, "The conformation tensor needs a non-zero polymer time constant.");
       }
@@ -3508,7 +3571,7 @@ static int calc_standard_fields(double **post_proc_vect,
               }
             }
           } // for b
-        }   // for a
+        } // for a
       }
     } // Loop over modes
   }
@@ -3825,6 +3888,14 @@ void post_process_average(double x[],            /* Solution vector for the curr
 
       err = load_fv_grads();
       GOMA_EH(err, "load_fv_grads");
+
+      if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
+        fill_ad_field_variables();
+#else
+        GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
+      }
 
       if (ei[pg->imtrx]->deforming_mesh &&
           (pd->e[pg->imtrx][R_MESH1] || pd->v[pg->imtrx][R_MESH1])) {
@@ -4735,8 +4806,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
                                    ip, ip_total, rd, &pm_terms, *time_ptr, exo, xi, &pg_data);
         GOMA_EH(err, "calc_standard_fields");
       } /* END  for (ip = 0; ip < ip_total; ip++)                      */
-    }   /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }     /* END for (ieb loop) */
+    } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
+  } /* END for (ieb loop) */
 
   /* Solve linear system for requested fields and put back in rhs vector*/
 
@@ -4932,8 +5003,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
             }
           }
         } /* end of node-point loop */
-      }   /* end of element loop on side-set */
-    }     /* end of SS loop */
+      } /* end of element loop on side-set */
+    } /* end of SS loop */
 
     safer_free((void **)&local_post);
     safer_free((void **)&local_lumped);
@@ -5127,7 +5198,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
                                      listndm[w]);
 
           } /* END of loop over components */
-        }   /* END of if(FLUXLINES) */
+        } /* END of if(FLUXLINES) */
 
         if (ENERGY_FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY]) {
           /* Go for it -- Calculate the stream function at the nodes of this element */
@@ -6190,7 +6261,7 @@ static int calc_zz_error_vel(double x[], /* Solution vector                     
                                det_gp_loc[k], max_terms, s_lhs, k, tau_gp_ptch);
 
       } /* End of treating worthy nodes with valid_elem_mask values */
-    }   /* End workhorse LHS loop over this patch */
+    } /* End workhorse LHS loop over this patch */
 
     /* Now loop over needed components in tau_lsp for node i_node,
        again over the elements in the patch this time filling the rhs
@@ -6492,7 +6563,7 @@ static int calc_zz_error_vel(double x[], /* Solution vector                     
       }
 
     } /* End of treating worthy elems with valid_elem_mask values */
-  }   /* End of real loop for element error integration over entire model */
+  } /* End of real loop for element error integration over entire model */
 
 #ifdef RRL_DEBUG
 #ifdef DBG_1
@@ -7815,6 +7886,8 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Second StrainRate Invariant", &SEC_STRAINRATE_INVAR);
   iread = look_for_post_proc(ifp, "Third StrainRate Invariant", &THIRD_STRAINRATE_INVAR);
   iread = look_for_post_proc(ifp, "Wall Distance", &WALL_DISTANCE);
+  iread = look_for_post_proc(ifp, "Contact Distance", &CONTACT_DISTANCE);
+  iread = look_for_post_proc(ifp, "Fluid Stress", &PP_FLUID_STRESS);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
@@ -7890,6 +7963,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "TFMP_liq_velo", &TFMP_LIQ_VELO);
   iread = look_for_post_proc(ifp, "TFMP_inverse_Peclet", &TFMP_INV_PECLET);
   iread = look_for_post_proc(ifp, "TFMP_Krg", &TFMP_KRG);
+  iread = look_for_post_proc(ifp, "Lubrication Convection", &LUB_CONVECTION);
 
   /* Report count of post-proc vars to be exported */
   /*
@@ -8730,7 +8804,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
       }
       strcpy(pp_data_sens[i]->data_filenm, second_string);
     } /*   data card count loop  */
-  }   /*   if data_sens conditions */
+  } /*   if data_sens conditions */
 
   /*
    *  SCHEDULE POST-PROCESSING PARTICLE TRACKING CALCULATIONS, IF NEEDED
@@ -9674,7 +9748,9 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     index_post++;
   }
 
-  if (MEAN_SHEAR != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+  if (MEAN_SHEAR != -1 &&
+      (Num_Var_In_Type[pg->imtrx][R_MOMENTUM1] || Num_Var_In_Type[pg->imtrx][R_LUBP] ||
+       Num_Var_In_Type[pg->imtrx][R_SHELL_FILMP])) {
     set_nv_tkud(rd, index, 0, 0, -2, "SHEAR", "[1]", "Mean shear rate", FALSE);
     index++;
     if (MEAN_SHEAR == 2) {
@@ -10112,6 +10188,16 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
       index_post_export++;
     }
     WALL_DISTANCE = index_post;
+    index_post++;
+  }
+  if (CONTACT_DISTANCE != -1 && (Num_Var_In_Type[pg->imtrx][R_MESH1])) {
+    set_nv_tkud(rd, index, 0, 0, -2, "CONTACT_DISTANCE", "[1]", "Contact distance", FALSE);
+    index++;
+    if (CONTACT_DISTANCE == 2) {
+      Export_XP_ID[index_post_export] = index_post;
+      index_post_export++;
+    }
+    CONTACT_DISTANCE = index_post;
     index_post++;
   }
 
@@ -10671,10 +10757,6 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
         }
       }
     }
-
-    if (Num_Dim > 2) {
-      GOMA_EH(GOMA_ERROR, "Log Conf Stress not implemented for 3D");
-    }
   }
 
   if (STRESS_NORM != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11]) {
@@ -10773,6 +10855,74 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
 
       if (VIM == 3) {
         set_nv_tkud(rd, index, 0, 0, -2, "VS33", "[1]", "Viscous stress zz", FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  }
+
+  if (PP_FLUID_STRESS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+    if (Num_Dim > 2) {
+      PP_FLUID_STRESS = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "FS11", "[1]", "Viscous stress xx", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "FS12", "[1]", "Viscous stress xy", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS13", "[1]", "Viscous stress xz", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS21", "[1]", "Viscous stress yx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS22", "[1]", "Viscous stress yy", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS23", "[1]", "Viscous stress yz", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS31", "[1]", "Viscous stress zx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS32", "[1]", "Viscous stress zy", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS33", "[1]", "Viscous stress zz", FALSE);
+      index++;
+      index_post++;
+
+    } else {
+      PP_FLUID_STRESS = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "FS11", "[1]", "Viscous stress xx", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "FS12", "[1]", "Viscous stress xy", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS21", "[1]", "Viscous stress yx", FALSE);
+
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "FS22", "[1]", "Viscous stress yy", FALSE);
+      index++;
+      index_post++;
+
+      if (VIM == 3) {
+        set_nv_tkud(rd, index, 0, 0, -2, "FS33", "[1]", "Viscous stress zz", FALSE);
         index++;
         index_post++;
       }
@@ -11559,6 +11709,29 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     index_post++;
   }
 
+  if (LUB_CONVECTION != -1 &&
+      (Num_Var_In_Type[pg->imtrx][R_LUBP] || Num_Var_In_Type[pg->imtrx][R_SHELL_FILMP])) {
+    if (LUB_CONVECTION == 2) {
+      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+    }
+    LUB_CONVECTION = index_post;
+    sprintf(nm, "LUB_CONV_X");
+    sprintf(ds, "Lubrication Convection x-component");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+    sprintf(nm, "LUB_CONV_Y");
+    sprintf(ds, "Lubrication Convection y-component");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+    sprintf(nm, "LUB_CONV_Z");
+    sprintf(ds, "Lubrication Convection z-component");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+  }
+
   if (SH_SAT_OPEN != -1 && Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_OPEN]) {
     if (SH_SAT_OPEN == 2) {
       GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
@@ -11889,7 +12062,8 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
           pd_glob[i]->i[pg->imtrx][var] == I_Q2_D || pd_glob[i]->i[pg->imtrx][var] == I_Q1_D ||
           pd_glob[i]->i[pg->imtrx][var] == I_SP || pd_glob[i]->i[pg->imtrx][var] == I_Q2_LSA ||
           pd_glob[i]->i[pg->imtrx][var] == I_Q2_D_LSA) {
-        if (vn_glob[i]->modes > 1) {
+        if (vn_glob[i]->modes > 1 && vn_glob[i]->evssModel != SQRT_CONF &&
+            vn_glob[i]->evssModel != LOG_CONF) {
           post_flag = 1;
         }
       }

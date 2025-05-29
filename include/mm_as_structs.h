@@ -35,6 +35,7 @@
 #include "mm_elem_block_structs.h"
 #include "mm_mp_const.h"
 #include "rf_bc_const.h"
+#include "rf_fem_const.h"
 #include "rf_io_const.h"
 #include "rf_vars_const.h"
 #include "sl_util_structs.h"
@@ -570,7 +571,9 @@ struct Element_Variable_Pointers {
   dbl *sh_sat_2[MDE];   /* Porous shell saturation layer 2 */
   dbl *sh_sat_3[MDE];   /* Porous shell saturation layer 3 */
 
-  dbl *eddy_nu[MDE]; /* Eddy viscosity for turbulent flow */
+  dbl *eddy_nu[MDE];    /* Eddy viscosity for turbulent flow */
+  dbl *turb_k[MDE];     /* Eddy viscosity for turbulent flow */
+  dbl *turb_omega[MDE]; /* Eddy viscosity for turbulent flow */
 };
 
 /*___________________________________________________________________________*/
@@ -698,7 +701,9 @@ struct Element_Stiffness_Pointers {
   dbl **sh_sat_2; /* Porous shell saturation layer 2 */
   dbl **sh_sat_3; /* Porous shell saturation layer 3 */
 
-  dbl **eddy_nu; /* Eddy viscosity for turbulent flow */
+  dbl **eddy_nu;    /* Eddy viscosity for turbulent flow */
+  dbl **turb_k;     /* Eddy viscosity for turbulent flow */
+  dbl **turb_omega; /* Eddy viscosity for turbulent flow */
 
   /*
    * These are for debugging purposes...
@@ -816,7 +821,17 @@ typedef struct turbulent_information {
   int num_side_sets;
   int num_node_sets;
   int use_internal_wall_distance;
+  double omega_inf;
+  double k_inf;
 } turbulent_information;
+
+typedef struct solver_information {
+  // mumps specific
+  int icntl[60]; /* MUMPS control parameters */
+  int icntl_user_set[60];
+  double cntl[15]; /* MUMPS control parameters */
+  int cntl_user_set[15];
+} solver_information;
 
 /*
  * This contains information that is uniformaly relevant
@@ -824,7 +839,6 @@ typedef struct turbulent_information {
  * block id or material number
  *
  */
-
 struct Uniform_Problem_Description {
   int Total_Num_Matrices; /* Total number of problem graphs to be solved */
 
@@ -908,6 +922,13 @@ struct Uniform_Problem_Description {
   turbulent_information *turbulent_info;
   int strong_bc_replace;
   dbl strong_penalty;
+  int AutoDiff;
+  int disable_pspg_tau_sensitivities;
+  int pspg_lagged_tau;
+  int disable_supg_tau_sensitivities;
+  int supg_lagged_tau;
+  dbl Residual_Relative_Tol[MAX_NUM_MATRICES];
+  solver_information *solver_info;
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/
@@ -1108,20 +1129,21 @@ struct Transient_Information {
   int step;
   int MaxSteadyStateSteps;
   int MaxTimeSteps;
-  int Fill_Weight_Fcn;                  /* Weight function to use on the transient fill equation
-                                         */
-  int Fill_Equation;                    /* Equation for fill-level set */
-  dbl Delta_t0;                         /* initial time step */
-  dbl Delta_t_min;                      /* minimum time step size */
-  dbl Delta_t_max;                      /* maximum time step size */
-  dbl time_step_decelerator;            /* factor used to make time step smaller when a
-                                           time step fails to converge */
-  dbl resolved_delta_t_min;             /* if dt < resolved_delta_t_min, accept any
-                                           converged soln  regardless of time step error */
-  dbl TimeMax;                          /* time at which to end integration */
-  dbl theta;                            /* time step parameter: theta = 0. => Backward Euler
-                                                                theta = 1. => Forward Euler
-                                                                theta = .5 => Crack-Nicholson  */
+  int Fill_Weight_Fcn;       /* Weight function to use on the transient fill equation
+                              */
+  int Fill_Equation;         /* Equation for fill-level set */
+  dbl Delta_t0;              /* initial time step */
+  dbl Delta_t_min;           /* minimum time step size */
+  dbl Delta_t_max;           /* maximum time step size */
+  dbl time_step_decelerator; /* factor used to make time step smaller when a
+                                time step fails to converge */
+  dbl resolved_delta_t_min;  /* if dt < resolved_delta_t_min, accept any
+                                converged soln  regardless of time step error */
+  dbl TimeMax;               /* time at which to end integration */
+  dbl theta;                 /* time step parameter: theta = 0. => Backward Euler
+                                                     theta = 1. => Forward Euler
+                                                     theta = .5 => Crack-Nicholson  */
+  dbl current_theta;
   dbl eps;                              /* time step error  */
   int use_var_norm[MAX_VARIABLE_TYPES]; /* Booleans used for time step
                                            truncation error control */
@@ -1161,6 +1183,8 @@ struct Transient_Information {
   int ale_adapt;
   int ale_adapt_freq;
   double ale_adapt_iso_size;
+  double relaxation[MAX_NUM_MATRICES];
+  double relaxation_tolerance[MAX_NUM_MATRICES];
 };
 
 struct Eigensolver_Info
@@ -1732,8 +1756,11 @@ struct Field_Variables {
   dbl sh_sat_2;   /* Porous shell saturation layer 2 */
   dbl sh_sat_3;   /* Porous shell saturation layer 3 */
 
-  dbl eddy_nu;       /* Eddy viscosity for turbulent flow */
-  dbl wall_distance; /* Distance to nearest wall */
+  dbl eddy_nu;                     /* Eddy viscosity for turbulent flow */
+  dbl turb_k;                      /* Eddy viscosity for turbulent flow */
+  dbl turb_omega;                  /* Eddy viscosity for turbulent flow */
+  dbl wall_distance;               /* Distance to nearest wall */
+  dbl multi_contact_line_distance; /* Distance to multi contact line points */
 
   /*
    * Grads of scalars...
@@ -1783,6 +1810,8 @@ struct Field_Variables {
   dbl grad_sh_sat_3[DIM];  /* Gradient of porous shell saturation layer 3 */
 
   dbl grad_eddy_nu[DIM];       /* Gradient of Eddy viscosity */
+  dbl grad_turb_k[DIM];        /* Gradient of Eddy viscosity */
+  dbl grad_turb_omega[DIM];    /* Gradient of Eddy viscosity */
   dbl grad_wall_distance[DIM]; /* Distance to nearest wall */
 
   /*
@@ -1973,6 +2002,8 @@ struct Field_Variables {
   dbl d_max_strain_dmesh[DIM][MDE];
   dbl d_cur_strain_dmesh[DIM][MDE];
   dbl d_grad_eddy_nu_dmesh[DIM][DIM][MDE];
+  dbl d_grad_turb_k_dmesh[DIM][DIM][MDE];
+  dbl d_grad_turb_omega_dmesh[DIM][DIM][MDE];
   dbl d_grad_restime_dmesh[DIM][DIM][MDE];
   /*
    * Values at surfaces for integrated boundary conditions
@@ -2126,7 +2157,9 @@ struct Diet_Field_Variables {
   dbl sh_sat_2;   /* Porous shell saturation layer 2 */
   dbl sh_sat_3;   /* Porous shell saturation layer 3 */
 
-  dbl eddy_nu; /* Eddy viscosity for turbulent flow */
+  dbl eddy_nu;    /* Eddy viscosity for turbulent flow */
+  dbl turb_k;     /* Eddy viscosity for turbulent flow */
+  dbl turb_omega; /* Eddy viscosity for turbulent flow */
 
   dbl grad_em_er[DIM][DIM]; /* EM wave Fields */
   dbl grad_em_ei[DIM][DIM]; /* EM wave Fields */
@@ -2155,7 +2188,9 @@ struct Diet_Field_Variables {
   dbl grad_tfmp_sat[DIM];  /* Gradient of the thin-film multi-phase lubrication saturation */
 
   dbl grad_n[DIM][DIM]; /* Normal to level set function OR shell normal */
-  dbl div_n;            /* Divergence of LS normal field */
+  dbl grad_turb_omega[DIM];
+  dbl grad_turb_k[DIM];
+  dbl div_n; /* Divergence of LS normal field */
 
   /* Material tensors used at old time values */
   dbl strain[DIM][DIM]; /* Strain tensor */
@@ -3037,6 +3072,8 @@ struct stress_dependence {
   double pf[DIM][DIM][MAX_PHASE_FUNC][MDE];
   double degrade[DIM][DIM][MDE];
   double eddy_nu[DIM][DIM][MDE];
+  double turb_k[DIM][DIM][MDE];
+  double turb_omega[DIM][DIM][MDE];
 };
 typedef struct stress_dependence STRESS_DEPENDENCE_STRUCT;
 
@@ -3086,8 +3123,18 @@ struct viscosity_dependence {
   double pf[MAX_PHASE_FUNC][MDE]; /* phase function */
   double degrade[MDE];            /* amount of degradation */
   double eddy_nu[MDE];            /* Turbulent viscosity */
+  double turb_k[MDE];             /* Turbulent k */
+  double turb_omega[MDE];         /* Turbulent omega */
+  double sh_t[MDE];               /* shell temperature */
 };
 typedef struct viscosity_dependence VISCOSITY_DEPENDENCE_STRUCT;
+typedef struct polymer_time_const_dependence {
+  double v[DIM][MDE]; /* velocity dependence. */
+  double X[DIM][MDE]; /* mesh dependence. */
+  double T[MDE];      /* temperature dependence. */
+  double F[MDE];      /* FILL dependence. */
+  double gd;          /* strain rate dependence */
+} POLYMER_TIME_CONST_DEPENDENCE_STRUCT;
 
 /* struct for d_saramito */
 struct saramito_coefficient_dependence {
@@ -3147,6 +3194,8 @@ struct pspg_dependence {
   double v[DIM][DIM][MDE]; /* velocity dependence. */
   double T[DIM][MDE];      /* temperature dependence. */
   double eddy_nu[DIM][MDE];
+  double turb_k[DIM][MDE];
+  double turb_omega[DIM][MDE];
   double P[DIM][MDE];           /* pressure dependence. */
   double C[DIM][MAX_CONC][MDE]; /* conc dependence. */
   double X[DIM][DIM][MDE];      /* mesh dependence. */
@@ -3187,12 +3236,16 @@ typedef struct Petrov_Galerkin_Data PG_DATA;
 struct Lubrication_Auxiliaries {
   double q[DIM];             /* Volumetric flow rate per unit width */
   double v_avg[DIM];         /* Average velocity, i.e. q divided by height */
+  double gradP[DIM];         /* Composite pressure gradient vector */
   double gradP_mag;          /* Magnitude of pressure gradient */
   double gradP_tangent[DIM]; /* Tangent vector of the pressure gradient */
   double gradP_normal[DIM];  /* Unit vector perpendicular to the pressure */
   double H;                  /* Lubrication Gap Height */
+  double H_cap;              /* Lubrication Gap Height unaffected by wall effects */
   double srate;              /* Lubrication Characteristic Shear Rate */
   double mu_star;            /* Lubrication Characteristic Viscosity */
+  double op_curv;            /* Lubrication Out-of-plane Curvature */
+  double visc_diss;          /* Lubrication Integrated Viscous Dissipation */
 
   double dgradP_mag_dP;          /* Pressure gradient magnitude sensitivities w.r.t.
                                     pressure */
@@ -3224,6 +3277,9 @@ struct Lubrication_Auxiliaries {
   double dq_dcross_shear[DIM][MDE]; /* Flow rate sensitivities w.r.t. cross
                                        stream shear stress */
   double dq_dgradp[DIM][DIM];       /* Flow rate sensitivities w.r.t. pressure gradient */
+  double dq_dT[DIM];                /* Flow rate sensitivities w.r.t. Temperature */
+  double dq_dshrw[DIM];             /* Flow rate sensitivities w.r.t. Wall shear rate */
+  double dq_dv[DIM][DIM][MDE];      /* Flow rate sensitivities w.r.t. velocities */
 
   double dv_avg_dh[DIM][MDE];           /* Average velocity sensitivities w.r.t. height */
   double dv_avg_dh1[DIM][MDE];          /* Average velocity sensitivities w.r.t. height */
@@ -3250,10 +3306,17 @@ struct Lubrication_Auxiliaries {
   double dv_avg_dcross_shear[DIM][MDE]; /* Average velocity sensitivities w.r.t.
                                            cross stream shear stress */
   double dv_dgradp[DIM][DIM];     /* Average velocity sensitivities w.r.t. pressure gradient */
+  double dv_avg_dT[DIM];          /* Average velosity sensitivities w.r.t. Temperature */
+  double dv_avg_dshrw[DIM];       /* Average velosity sensitivities w.r.t. Wall shear rate */
   double dH_dmesh[DIM][MDE];      /* lubrication gap sensitivities w.r.t. mesh */
   double dH_drealsolid[DIM][MDE]; /* lubrication gap sensitivities w.r.t. real
                                      solid */
-  double dH_dP[MDE];              /* lubrication gap sensitivities w.r.t. pressure */
+  double dH_dp;                   /* lubrication gap sensitivities w.r.t. pressure */
+  double dH_ddh;                  /* lubrication gap sensitivities w.r.t. added height */
+  double dop_curv_dx[DIM][MDE];   /* Out-of-plane Curvature sensitivities w.r.t. mesh deformation */
+  double dop_curv_df[MDE];        /* Out-of-plane Curvature sensitivities w.r.t. level set */
+  double dvisc_diss_dT; /* Lubrication Integrated Viscous Dissipation Sensitivity to Temperature */
+  double dvisc_diss_dpgrad; /* Lubrication Integrated Viscous Dissipation Sensitivity to Pgrad */
 };
 
 typedef struct Lubrication_Auxiliaries LUBRICATION_AUXILIARIES_STRUCT;

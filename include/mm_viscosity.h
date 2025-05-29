@@ -44,7 +44,7 @@ EXTERN double power_law_viscosity    /* mm_viscosity.c                    */
      dbl[DIM][DIM],                  /* gamma_dot - strain rate tensor    */
      VISCOSITY_DEPENDENCE_STRUCT *); /* d_mu - viscosity dependence       */
 
-EXTERN double herschel_buckley_viscosity /* mm_viscosity.c                    */
+EXTERN double herschel_bulkley_viscosity /* mm_viscosity.c                    */
     (GEN_NEWT_STRUCT *,                  /* gn_local                          */
      dbl[DIM][DIM],                      /* gamma_dot - strain rate tensor    */
      VISCOSITY_DEPENDENCE_STRUCT *);     /* d_mu - viscosity dependence       */
@@ -165,8 +165,8 @@ EXTERN int ls_modulate_viscosity(double *,                      /* Primary phase
                                  double pm_minus,               /* Negative phase viscosity mask */
                                  double pm_plus,                /* Positive phase viscosity mask */
                                  VISCOSITY_DEPENDENCE_STRUCT *, /* d_mu - viscosity dependence */
-                                 const int model); /* Viscosity Model - CONSTANT or RATIO*/
-
+                                 const int model,          /* Viscosity Model - CONSTANT or RATIO*/
+                                 const int interp_method); /* Level set interpolation method */
 EXTERN void copy_pF_to_F(int);
 
 EXTERN double flowing_liquid_viscosity /* mm_viscosity.c                            */

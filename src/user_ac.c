@@ -51,21 +51,21 @@
 */
 
 void user_aug_cond_residuals(int iAC,
-                             double *x,
-                             double *xdot,
-                             double delta_t,
-                             double time_value,
-                             double **x_sens_p,
+                             double *x MAYBE_UNUSED,
+                             double *xdot MAYBE_UNUSED,
+                             double delta_t MAYBE_UNUSED,
+                             double time_value MAYBE_UNUSED,
+                             double **x_sens_p MAYBE_UNUSED,
                              double *AC,
-                             int *have_bAC,
-                             int *have_cAC,
-                             int *have_dAC,
-                             double **bAC,
-                             double **cAC,
-                             double **dAC,
-                             Exo_DB *exo,
-                             Dpi *dpi,
-                             Comm_Ex *cx) {
+                             int *have_bAC MAYBE_UNUSED,
+                             int *have_cAC MAYBE_UNUSED,
+                             int *have_dAC MAYBE_UNUSED,
+                             double **bAC MAYBE_UNUSED,
+                             double **cAC MAYBE_UNUSED,
+                             double **dAC MAYBE_UNUSED,
+                             Exo_DB *exo MAYBE_UNUSED,
+                             Dpi *dpi MAYBE_UNUSED,
+                             Comm_Ex *cx MAYBE_UNUSED) {
   /*  dbl inventory, target; */
 
   /* Goma Users and Developers:
@@ -305,18 +305,18 @@ void user_aug_cond_residuals(int iAC,
  *  volume type 1, 2, and 3 VC conditions.
  */
 void user_aug_cond_volume_residuals(const int iAC,
-                                    const double *const x,
-                                    const double *const xdot,
-                                    const double delta_t,
-                                    const double time_value,
-                                    const double *const x_AC,
+                                    const double *const x MAYBE_UNUSED,
+                                    const double *const xdot MAYBE_UNUSED,
+                                    const double delta_t MAYBE_UNUSED,
+                                    const double time_value MAYBE_UNUSED,
+                                    const double *const x_AC MAYBE_UNUSED,
                                     double *const AC,
                                     double **const cAC,
                                     double **const dAC,
                                     const int numProcUnknowns,
-                                    const Exo_DB *const exo,
-                                    const Dpi *const dpi,
-                                    const Comm_Ex *const cx) {
+                                    const Exo_DB *const exo MAYBE_UNUSED,
+                                    const Dpi *const dpi MAYBE_UNUSED,
+                                    const Comm_Ex *const cx MAYBE_UNUSED) {
   /*********************************************************************/
   int i, jAC;
   double inventory, target;

@@ -20,11 +20,11 @@
 #include "az_aztec.h"
 #include "brkfix/fix.h"
 #include "dp_comm.h"
-#include "dp_types.h"
 #include "dp_utils.h"
 #include "dpi.h"
 #include "el_geom.h"
 #include "exo_struct.h"
+#include "linalg/sparse_matrix.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_augc_util.h"
@@ -50,16 +50,19 @@
 #include "rf_io.h"
 #include "rf_io_const.h"
 #include "rf_io_structs.h"
+#include "rf_masks.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
 #include "rf_solve.h"
 #include "rf_solver.h"
 #include "rf_util.h"
-#include "sl_epetra_interface.h"
-#include "sl_epetra_util.h"
 #include "sl_matrix_util.h"
 #include "sl_petsc.h"
+#ifdef GOMA_ENABLE_PETSC
+#if PETSC_USE_COMPLEX
 #include "sl_petsc_complex.h"
+#endif
+#endif
 #include "sl_util.h"
 #include "sl_util_structs.h"
 #include "std.h"
@@ -209,6 +212,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
   double **x_previous = NULL;
 
   double **x_pred = NULL;
+  double **x_prev = NULL;
 
   double **x_update = NULL;          /* update at last iteration          */
   double **resid_vector = NULL;      /* residual                          */
@@ -512,6 +516,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
     xdot_old = malloc(upd->Total_Num_Matrices * sizeof(double *));
     xdot_older = malloc(upd->Total_Num_Matrices * sizeof(double *));
     x_pred = malloc(upd->Total_Num_Matrices * sizeof(double *));
+    x_prev = malloc(upd->Total_Num_Matrices * sizeof(double *));
     delta_x = malloc(upd->Total_Num_Matrices * sizeof(double *));
     x_previous = malloc(upd->Total_Num_Matrices * sizeof(double *));
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
@@ -523,6 +528,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
       xdot_old[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       xdot_older[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       x_pred[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
+      x_prev[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       delta_x[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       x_previous[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
     }
@@ -552,16 +558,26 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
   a = malloc(upd->Total_Num_Matrices * sizeof(double *));
   a_old = malloc(upd->Total_Num_Matrices * sizeof(double *));
 
-  if (strcmp(Matrix_Format, "epetra") == 0) {
+  if ((strcmp(Matrix_Format, "tpetra") == 0) || (strcmp(Matrix_Format, "epetra") == 0)) {
     err = check_compatible_solver();
-    GOMA_EH(err, "Incompatible matrix solver for epetra, epetra supports amesos and "
-                 "aztecoo solvers.");
+    GOMA_EH(err, "Incompatible matrix solver for tpetra, tpetra supports stratimikos");
     check_parallel_error("Matrix format / Solver incompatibility");
+
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-      ams[pg->imtrx]->RowMatrix =
-          EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
-      EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
+      GomaSparseMatrix goma_matrix;
+      goma_error err = GomaSparseMatrix_CreateFromFormat(&goma_matrix, Matrix_Format);
+      GOMA_EH(err, "GomaSparseMatrix_CreateFromFormat");
+      int local_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
+      err = GomaSparseMatrix_SetProblemGraph(
+          goma_matrix, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx],
+          num_external_dofs[pg->imtrx], local_nodes, Nodes, MaxVarPerNode, Matilda, Inter_Mask, exo,
+          dpi, cx[pg->imtrx], pg->imtrx, Debug_Flag, ams[pg->imtrx]);
+      GOMA_EH(err, "GomaSparseMatrix_SetProblemGraph");
+      ams[pg->imtrx]->GomaMatrixData = goma_matrix;
+      ams[pg->imtrx]->npu = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
+      ams[pg->imtrx]->npu_plus = num_universe_dofs[pg->imtrx];
     }
+
 #ifdef GOMA_ENABLE_PETSC
 #if !(PETSC_USE_COMPLEX)
   } else if (strcmp(Matrix_Format, "petsc") == 0) {
@@ -664,7 +680,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
   double *global_x_AC = NULL;
 
   if (nAC > 0) {
-    global_x_AC = calloc(sizeof(double), nAC);
+    global_x_AC = calloc(nAC, sizeof(double));
   }
 
   /* Read initial values from exodus file */
@@ -691,7 +707,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
 
   totalnAC = nAC;
   matrix_augc = malloc(sizeof(struct AC_Information *) * upd->Total_Num_Matrices);
-  matrix_nAC = calloc(sizeof(int), upd->Total_Num_Matrices);
+  matrix_nAC = calloc(upd->Total_Num_Matrices, sizeof(int));
 
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
     matrix_nAC[pg->imtrx] = 0;
@@ -1005,7 +1021,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
           }
 
           write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot, xdot_old, tev_post,
-                                    gv, rd, gvec, &nprint, delta_t, theta, time1, NULL, exo, dpi);
+                                    gv, rd, gvec, gvec_elem, &nprint, delta_t, theta, time1, NULL,
+                                    exo, dpi);
 
           if (ProcID == 0) {
             printf("\n Steady state reached \n");
@@ -1336,7 +1353,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
 
     if (Write_Initial_Solution) {
       write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot, xdot_old, tev_post, gv,
-                                rd, gvec, &nprint, delta_t, theta, time1, NULL, exo, dpi);
+                                rd, gvec, gvec_elem, &nprint, delta_t, theta, time1, NULL, exo,
+                                dpi);
       nprint++;
     }
 
@@ -1362,6 +1380,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
 
       for (int subcycle = 0;
            subcycle < upd->SegregatedSubcycles || subcycle < renorm_subcycle_count; subcycle++) {
+
+        dbl relaxation_diff[MAX_NUM_MATRICES] = {0.0};
 
         for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
           /*
@@ -1414,6 +1434,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
               realloc_dbl_1(&x_pred[imtrx], numProcUnknowns[imtrx], 0);
               realloc_dbl_1(&gvec[imtrx], Num_Node, 0);
               realloc_dbl_1(&xdot_older[imtrx], numProcUnknowns[imtrx], 0);
+              realloc_dbl_1(&x_prev[imtrx], numProcUnknowns[imtrx], 0);
               memset(xdot[imtrx], 0, sizeof(double) * numProcUnknowns[imtrx]);
               memset(xdot_older[imtrx], 0, sizeof(double) * numProcUnknowns[imtrx]);
               memset(x_pred[imtrx], 0, sizeof(double) * numProcUnknowns[imtrx]);
@@ -1422,6 +1443,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
               memset(x_update[imtrx], 0,
                      sizeof(double) * (numProcUnknowns[imtrx] + numProcUnknowns[imtrx]));
               dcopy1(numProcUnknowns[imtrx], xdot[imtrx], xdot_old[imtrx]);
+              dcopy1(numProcUnknowns[pg->imtrx], x[imtrx], x_prev[imtrx]);
             }
             wr_result_prelim_exo_segregated(rd, exo, ExoFileOut, gvec_elem);
             pg->imtrx = 0;
@@ -1653,7 +1675,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
                 }
                 for (int i = 0; i < 4; i++) {
                   if (moment_floored[i]) {
-                    printf("moment %d floored", i + 1);
+                    printf("Proc %d moment %d floored\n", ProcID, i);
                   }
                 }
 
@@ -1662,6 +1684,31 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
                               MPI_COMM_WORLD);
 
                 P0PRINTF("Floored %d moment values\n", global_floored);
+              }
+              if (0 && (upd->ep[pg->imtrx][TURB_K] >= 0 || upd->ep[pg->imtrx][TURB_OMEGA] >= 0)) {
+                /*     Floor values to 0 */
+                int floored_values = 0;
+                for (int var = TURB_K; var <= TURB_K; var++) {
+                  for (int mn = 0; mn < upd->Num_Mat; mn++) {
+                    if (pd_glob[mn]->v[pg->imtrx][var]) {
+                      for (i = 0; i < num_total_nodes; i++) {
+                        int j = Index_Solution(i, var, 0, 0, mn, pg->imtrx);
+
+                        if (j != -1 && x[pg->imtrx][j] < 0) {
+                          pg->sub_step_solutions[pg->imtrx].x[j] = 0.0;
+                          floored_values++;
+                        }
+                      }
+                    }
+                  }
+                }
+
+                int global_floored = 0;
+                MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT, MPI_SUM,
+                              MPI_COMM_WORLD);
+
+                if (global_floored > 0)
+                  P0PRINTF("Floored %d values\n", global_floored);
               }
 
               sub_time += pg->sub_delta_t[pg->imtrx];
@@ -1874,38 +1921,26 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
                 rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx], gvec_elem[pg->imtrx], time1, exo, dpi,
                 cx[pg->imtrx], 0, &time_step_reform, 0, x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1,
                 NULL, NULL, NULL, NULL);
+
+            if (upd->SegregatedSubcycles > 1) {
+              // Relax the solution
+              P0PRINTF("Relaxing solution with %g\n", tran->relaxation[pg->imtrx]);
+              dbl sol_norm_diff = 0;
+              for (int i = 0; i < numProcUnknowns[pg->imtrx]; i++) {
+                dbl tmp = x[pg->imtrx][i] - x_prev[pg->imtrx][i];
+                sol_norm_diff += tmp * tmp;
+                x[pg->imtrx][i] =
+                    x_prev[pg->imtrx][i] +
+                    tran->relaxation[pg->imtrx] * (x[pg->imtrx][i] - x_prev[pg->imtrx][i]);
+              }
+              dbl global_diff;
+              MPI_Allreduce(&sol_norm_diff, &global_diff, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+              P0PRINTF("Relax diff current: %g target: %g\n", sqrt(global_diff),
+                       tran->relaxation_tolerance[pg->imtrx]);
+              relaxation_diff[pg->imtrx] = sqrt(global_diff);
+              dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_prev[pg->imtrx]);
+            }
           } // sub-time loop if else
-
-          if (pd_glob[0]->v[pg->imtrx][MOMENT0] || pd_glob[0]->v[pg->imtrx][MOMENT1] ||
-              pd_glob[0]->v[pg->imtrx][MOMENT2] || pd_glob[0]->v[pg->imtrx][MOMENT3]) {
-            /*     Floor values to 0 */
-            int floored_values = 0;
-            int moment_floored[4] = {0, 0, 0, 0};
-            for (int var = MOMENT0; var <= MOMENT3; var++) {
-              for (i = 0; i < num_total_nodes; i++) {
-                if (pd_glob[0]->v[pg->imtrx][var]) {
-                  int j = Index_Solution(i, var, 0, 0, -1, pg->imtrx);
-
-                  if (j != -1 && x[pg->imtrx][j] < 0) {
-                    x[pg->imtrx][j] = 0.0;
-                    floored_values++;
-                    moment_floored[var - MOMENT0] = 1;
-                  }
-                }
-              }
-            }
-
-            int global_floored = 0;
-            MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-            for (int i = 0; i < 4; i++) {
-              if (moment_floored[i]) {
-                printf("moment %d floored", i + 1);
-              }
-            }
-
-            P0PRINTF("Floored %d moment values\n", global_floored);
-          }
 
           /*
             err = solve_linear_segregated(ams[pg->imtrx], x[pg->imtrx],
@@ -1931,6 +1966,97 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
             for (i = 0; matrix_nAC[pg->imtrx] > 0 && i < matrix_nAC[pg->imtrx]; i++) {
               gv[5 + invACidx[pg->imtrx][i]] = x_AC[pg->imtrx][i];
             }
+            if (pd_glob[0]->v[pg->imtrx][MOMENT0] || pd_glob[0]->v[pg->imtrx][MOMENT1] ||
+                pd_glob[0]->v[pg->imtrx][MOMENT2] || pd_glob[0]->v[pg->imtrx][MOMENT3]) {
+              /*     Floor values to 0 */
+              int floored_values = 0;
+              int moment_floored[4] = {0, 0, 0, 0};
+              for (int var = MOMENT0; var <= MOMENT3; var++) {
+                for (i = 0; i < num_total_nodes; i++) {
+                  if (pd_glob[0]->v[pg->imtrx][var]) {
+                    int j = Index_Solution(i, var, 0, 0, -1, pg->imtrx);
+
+                    if (j != -1 && x[pg->imtrx][j] < 0) {
+                      x[pg->imtrx][j] = 0.0;
+                      floored_values++;
+                      moment_floored[var - MOMENT0] = 1;
+                    }
+                  }
+                }
+              }
+
+              int global_floored = 0;
+              MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+              for (int i = 0; i < 4; i++) {
+                if (moment_floored[i]) {
+                  printf("moment %d floored", i + 1);
+                }
+              }
+
+              P0PRINTF("Floored %d moment values\n", global_floored);
+            }
+            if ((upd->ep[pg->imtrx][TURB_K] >= 0 || upd->ep[pg->imtrx][TURB_OMEGA] >= 0)) {
+              /*     Floor values to 0 */
+              int floored_values = 0;
+              for (int var = TURB_K; var <= TURB_OMEGA; var++) {
+                for (int mn = 0; mn < upd->Num_Mat; mn++) {
+                  if (pd_glob[mn]->v[pg->imtrx][var]) {
+                    for (i = 0; i < num_total_nodes; i++) {
+                      int j = Index_Solution(i, var, 0, 0, mn, pg->imtrx);
+
+                      if (var == TURB_OMEGA) {
+                        if (j != -1 && x[pg->imtrx][j] < 200) {
+                          x[pg->imtrx][j] = 200;
+                          floored_values++;
+                        }
+                      } else if (j != -1 && x[pg->imtrx][j] < 0) {
+                        x[pg->imtrx][j] = 0;
+                        floored_values++;
+                      }
+                    }
+                  }
+                }
+              }
+
+              int global_floored = 0;
+              MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+              if (global_floored > 0)
+                P0PRINTF("Floored %d values\n", global_floored);
+            }
+            // if (upd->matrix_index[SHEAR_RATE] >= 0 && upd->ep[pg->imtrx][TURB_OMEGA] >= 0) {
+            //   int shear_rate_matrix = upd->matrix_index[SHEAR_RATE];
+            //   int limited_values = 0;
+            //   for (int var = TURB_OMEGA; var <= TURB_OMEGA; var++) {
+            //     for (int mn = 0; mn < upd->Num_Mat; mn++) {
+            //       if (pd_glob[mn]->v[pg->imtrx][var]) {
+            //         for (i = 0; i < num_total_nodes; i++) {
+            //           int j_shear_rate = Index_Solution(i, SHEAR_RATE, 0, 0, mn,
+            //           shear_rate_matrix); int j = Index_Solution(i, var, 0, 0, mn, pg->imtrx);
+
+            //           if (j_shear_rate != -1 && j != -1 && x[shear_rate_matrix][j_shear_rate] >
+            //           0) {
+            //             dbl omega = x[pg->imtrx][j];
+            //             dbl shear_rate = x[shear_rate_matrix][j_shear_rate];
+            //             if (omega < (5.0 / 9.0) * shear_rate) {
+            //               limited_values++;
+            //               // P0PRINTF("Floored %d values\n", floored_values)
+            //               x[pg->imtrx][j] = (5.0 / 9.0) * shear_rate;
+            //             }
+            //           }
+            //         }
+            //       }
+            //     }
+            //   }
+
+            //   int global_limited = 0;
+            //   MPI_Allreduce(&limited_values, &global_limited, 1, MPI_INT, MPI_SUM,
+            //   MPI_COMM_WORLD);
+
+            //   if (global_limited > 0)
+            //     P0PRINTF("Limited %d values\n", global_limited);
+            // }
 
             if (nAC > 0) {
               DPRINTF(stdout, "\n------------------------------\n");
@@ -2007,6 +2133,21 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
 
           if (!converged)
             goto finish_step;
+        }
+
+        // check if we have already converged
+        if (upd->SegregatedSubcycles > 1) {
+          int tolerance_met = TRUE;
+          for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+            if (relaxation_diff[pg->imtrx] > tran->relaxation_tolerance[pg->imtrx]) {
+              tolerance_met = FALSE;
+              break;
+            }
+          }
+          if (tolerance_met) {
+            P0PRINTF("Relaxation tolerance met\n");
+            goto finish_step;
+          }
         }
       } // subcycle loop
 
@@ -2149,7 +2290,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
         if (i_print) {
           if (Write_Intermediate_Solutions == 0) {
             write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot, xdot_old, tev_post,
-                                      gv, rd, gvec, &nprint, delta_t, theta, time1, NULL, exo, dpi);
+                                      gv, rd, gvec, gvec_elem, &nprint, delta_t, theta, time1, NULL,
+                                      exo, dpi);
             nprint++;
           }
 
@@ -2355,7 +2497,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
           }
         }
 
-      }    /*  if(converged && success_dt) */
+      } /*  if(converged && success_dt) */
       else /* not converged or unsuccessful time step */
       {
         /* Set bit TRUE in next line to enable retries for failed first
@@ -2433,7 +2575,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
         break;
       }
     } /* end of time step loop */
-  }   /* end of if steady else transient */
+  } /* end of if steady else transient */
 free_and_clear:
 
   if (timestep_subcycle) {

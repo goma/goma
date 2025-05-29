@@ -159,22 +159,6 @@ extern void ShellBF_2d_bar(int ev, // Equation or variable to fetch basis functi
 
 extern double shell_saturation_pressure_curve(double P, double *dSdP, double *dSdP_P);
 
-extern void calculate_lub_q_v_nonnewtonian(double time, double dt);
-
-extern void calculate_lub_q_v_nonnewtonian_sens(double mu,
-                                                double H,
-                                                double veloU[DIM],
-                                                double veloL[DIM],
-                                                double grad_II_P[DIM],
-                                                double phi_j,
-                                                double grad_phi_j[DIM],
-                                                double shear_top_plus,
-                                                double shear_top_minus,
-                                                double shear_bot_plus,
-                                                double shear_bot_minus,
-                                                double eps_top,
-                                                double eps_bot);
-
 extern int lub_viscosity_integrate(const double strs,
                                    const double H,
                                    double *flow_mag,
@@ -182,7 +166,9 @@ extern int lub_viscosity_integrate(const double strs,
                                    double *dq_dh,
                                    double *srate,
                                    double *pre_P,
-                                   double *mu_star);
+                                   double *mu_star,
+                                   double *dq_dT,
+                                   double *dq_dshrw);
 
 extern double
 lub_viscos_fcn(const struct Generalized_Newtonian *gn, const double gammadot, double *visd);
@@ -196,10 +182,8 @@ extern int lub2D_viscint_2D(const struct Generalized_Newtonian *gn_local,
                             const double rate0,
                             const double rate1,
                             const double Kconst,
-                            double *xint1,
-                            double *xint2,
-                            double *xint1dK,
-                            double *xint2dK,
+                            double xint[2],
+                            double xintdK[2],
                             const double tolerance);
 
 extern double lub2D_flowint_2D(const struct Generalized_Newtonian *gn_loc,
@@ -221,8 +205,7 @@ extern int lub2D_numjac(const double h,
                         struct Generalized_Newtonian *gn_loc,
                         double xj[3][3]);
 
-extern int lub2D_flow2D(struct Generalized_Newtonian *gn_loc,
-                        const double gradp[DIM],
+extern int lub2D_flow2D(const double gradp[DIM],
                         const double ev[DIM],
                         const double dev_dpg[DIM][DIM],
                         double qfl[DIM],

@@ -22,6 +22,8 @@ report by Schunk, et al. (2002) for an overview and further usage tips.
    solver_specifications/solution_algorithm
    solver_specifications/matrix_storage_format
    solver_specifications/stratimikos_file
+   solver_specifications/mumps_icntl.rst
+   solver_specifications/mumps_cntl.rst
    solver_specifications/preconditioner
    solver_specifications/matrix_subdomain_solver
    solver_specifications/matrix_scaling
@@ -47,12 +49,19 @@ report by Schunk, et al. (2002) for an overview and further usage tips.
    solver_specifications/number_of_newton_iterations
    solver_specifications/modified_newton_tolerance
    solver_specifications/jacobian_reform_time_stride
+   solver_specifications/newton_line_search_type
    solver_specifications/newton_correction_factor
    solver_specifications/normalized_residual_tolerance
    solver_specifications/normalized_correction_tolerance
    solver_specifications/residual_ratio_tolerance
+   solver_specifications/residual_relative_tolerance
    solver_specifications/pressure_stabilization
    solver_specifications/pressure_stabilization_scaling
+   solver_specifications/pressure_stabilization_disable_tau_sens
+   solver_specifications/pressure_stabilization_lagged_tau
+   solver_specifications/supg_disable_tau_sens
+   solver_specifications/supg_lagged_tau
+   solver_specifications/use_autodiff_assembly
    solver_specifications/linear_stability
    solver_specifications/filter_concentration
    solver_specifications/disable_viscosity_sensitivities

@@ -234,7 +234,9 @@ int assemble_mesh(double time,
    *      is equal to the problem dimension, but ielem_dim is one less than the
    *      problem dimension.
    */
-  if (!pd->e[pg->imtrx][eqn] || (ei[pg->imtrx]->ielem_dim < dim)) {
+  /* Allow it for Fickian Shells, i.e. species expansion  */
+  if (!pd->e[pg->imtrx][eqn] ||
+      (ei[pg->imtrx]->ielem_dim < dim && cr->MassFluxModel != FICKIAN_SHELL)) {
     return (status);
   }
 
@@ -1018,8 +1020,8 @@ int assemble_mesh(double time,
         }
 
       } /* end of loop over equations i  */
-    }   /* end of loop over equation directions a */
-  }     /* end of if jacobian */
+    } /* end of loop over equation directions a */
+  } /* end of if jacobian */
 
   return (status);
 }
@@ -2537,15 +2539,16 @@ double acoustic_impedance(CONDUCTIVITY_DEPENDENCE_STRUCT *d_R, dbl time)
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      R = ls_modulate_thermalconductivity(R, mp->mp2nd->acousticimpedance_phase[0],
-                                          ls->Length_Scale,
-                                          (double)mp->mp2nd->acousticimpedancemask[0],
-                                          (double)mp->mp2nd->acousticimpedancemask[1], d_R);
+      R = ls_modulate_thermalconductivity(
+          R, mp->mp2nd->acousticimpedance_phase[0], ls->Length_Scale,
+          (double)mp->mp2nd->acousticimpedancemask[0], (double)mp->mp2nd->acousticimpedancemask[1],
+          d_R, mp->mp2nd->acousticimpedance_lsi_interp_method);
       ls = ls_old;
     }
     R = ls_modulate_thermalconductivity(R, mp->mp2nd->acousticimpedance, ls->Length_Scale,
                                         (double)mp->mp2nd->acousticimpedancemask[0],
-                                        (double)mp->mp2nd->acousticimpedancemask[1], d_R);
+                                        (double)mp->mp2nd->acousticimpedancemask[1], d_R,
+                                        mp->mp2nd->acousticimpedance_lsi_interp_method);
   }
 
   return (R);
@@ -2615,14 +2618,14 @@ double wave_number(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time) {
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      k = ls_modulate_thermalconductivity(k, mp->mp2nd->wavenumber_phase[0], ls->Length_Scale,
-                                          (double)mp->mp2nd->wavenumbermask[0],
-                                          (double)mp->mp2nd->wavenumbermask[1], d_k);
+      k = ls_modulate_thermalconductivity(
+          k, mp->mp2nd->wavenumber_phase[0], ls->Length_Scale, (double)mp->mp2nd->wavenumbermask[0],
+          (double)mp->mp2nd->wavenumbermask[1], d_k, mp->mp2nd->wavenumber_lsi_interp_method);
       ls = ls_old;
     }
-    k = ls_modulate_thermalconductivity(k, mp->mp2nd->wavenumber, ls->Length_Scale,
-                                        (double)mp->mp2nd->wavenumbermask[0],
-                                        (double)mp->mp2nd->wavenumbermask[1], d_k);
+    k = ls_modulate_thermalconductivity(
+        k, mp->mp2nd->wavenumber, ls->Length_Scale, (double)mp->mp2nd->wavenumbermask[0],
+        (double)mp->mp2nd->wavenumbermask[1], d_k, mp->mp2nd->wavenumber_lsi_interp_method);
   }
   return (k);
 }
@@ -2757,15 +2760,17 @@ double acoustic_absorption(CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha, dbl time)
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      alpha = ls_modulate_thermalconductivity(
-          alpha, mp->mp2nd->acousticabsorption_phase[0], ls->Length_Scale,
-          (double)mp->mp2nd->acousticabsorptionmask[0],
-          (double)mp->mp2nd->acousticabsorptionmask[1], d_alpha);
+      alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->acousticabsorption_phase[0],
+                                              ls->Length_Scale,
+                                              (double)mp->mp2nd->acousticabsorptionmask[0],
+                                              (double)mp->mp2nd->acousticabsorptionmask[1], d_alpha,
+                                              mp->mp2nd->acousticabsorption_lsi_interp_method);
       ls = ls_old;
     }
     alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->acousticabsorption, ls->Length_Scale,
                                             (double)mp->mp2nd->acousticabsorptionmask[0],
-                                            (double)mp->mp2nd->acousticabsorptionmask[1], d_alpha);
+                                            (double)mp->mp2nd->acousticabsorptionmask[1], d_alpha,
+                                            mp->mp2nd->acousticabsorption_lsi_interp_method);
   }
 
   return (alpha);
@@ -2901,15 +2906,16 @@ double light_absorption(CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha, dbl time)
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->lightabsorption_phase[0],
-                                              ls->Length_Scale,
-                                              (double)mp->mp2nd->lightabsorptionmask[0],
-                                              (double)mp->mp2nd->lightabsorptionmask[1], d_alpha);
+      alpha = ls_modulate_thermalconductivity(
+          alpha, mp->mp2nd->lightabsorption_phase[0], ls->Length_Scale,
+          (double)mp->mp2nd->lightabsorptionmask[0], (double)mp->mp2nd->lightabsorptionmask[1],
+          d_alpha, mp->mp2nd->lightabsorption_lsi_interp_method);
       ls = ls_old;
     }
     alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->lightabsorption, ls->Length_Scale,
                                             (double)mp->mp2nd->lightabsorptionmask[0],
-                                            (double)mp->mp2nd->lightabsorptionmask[1], d_alpha);
+                                            (double)mp->mp2nd->lightabsorptionmask[1], d_alpha,
+                                            mp->mp2nd->lightabsorption_lsi_interp_method);
   }
 
   return (alpha);
@@ -3047,12 +3053,14 @@ double refractive_index(CONDUCTIVITY_DEPENDENCE_STRUCT *d_n, dbl time)
       ls = pfd->ls[0];
       n = ls_modulate_thermalconductivity(n, mp->mp2nd->refractiveindex_phase[0], ls->Length_Scale,
                                           (double)mp->mp2nd->refractiveindexmask[0],
-                                          (double)mp->mp2nd->refractiveindexmask[1], d_n);
+                                          (double)mp->mp2nd->refractiveindexmask[1], d_n,
+                                          mp->mp2nd->refractiveindex_lsi_interp_method);
       ls = ls_old;
     }
     n = ls_modulate_thermalconductivity(n, mp->mp2nd->refractiveindex, ls->Length_Scale,
                                         (double)mp->mp2nd->refractiveindexmask[0],
-                                        (double)mp->mp2nd->refractiveindexmask[1], d_n);
+                                        (double)mp->mp2nd->refractiveindexmask[1], d_n,
+                                        mp->mp2nd->refractiveindex_lsi_interp_method);
   }
 
   return (n);
@@ -3189,12 +3197,14 @@ double extinction_index(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time)
       ls = pfd->ls[0];
       k = ls_modulate_thermalconductivity(k, mp->mp2nd->extinctionindex_phase[0], ls->Length_Scale,
                                           (double)mp->mp2nd->extinctionindexmask[0],
-                                          (double)mp->mp2nd->extinctionindexmask[1], d_k);
+                                          (double)mp->mp2nd->extinctionindexmask[1], d_k,
+                                          mp->mp2nd->extinctionindex_lsi_interp_method);
       ls = ls_old;
     }
     k = ls_modulate_thermalconductivity(k, mp->mp2nd->extinctionindex, ls->Length_Scale,
                                         (double)mp->mp2nd->extinctionindexmask[0],
-                                        (double)mp->mp2nd->extinctionindexmask[1], d_k);
+                                        (double)mp->mp2nd->extinctionindexmask[1], d_k,
+                                        mp->mp2nd->extinctionindex_lsi_interp_method);
   }
 
   return (k);
@@ -3207,7 +3217,8 @@ int ls_modulate_momentumsource(double f1[DIM],
                                double width,
                                double pm_minus,
                                double pm_plus,
-                               MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df)
+                               MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df,
+                               const int interp_method)
 
 {
   int i, a, b, var;
@@ -3217,11 +3228,13 @@ int ls_modulate_momentumsource(double f1[DIM],
   for (a = 0; a < dim; a++) {
 
     if (df == NULL) {
-      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, NULL, &factor);
+      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, NULL, &factor,
+                                   interp_method);
 
       return (0);
     } else {
-      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, df->F[a], &factor);
+      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, df->F[a], &factor,
+                                   interp_method);
 
       if (pd->v[pg->imtrx][var = TEMPERATURE]) {
         for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
@@ -4496,6 +4509,76 @@ double scalar_fv_fill_adjmatrl(double **base, int lvdesc, int num_dofs, int var_
 /*******************************************************************************/
 /*******************************************************************************/
 
+static void stress_index_from_var(int var_type, int *mode, int *i, int *j) {
+  int iind = -1, jind = -1;
+  if (var_type >= POLYMER_STRESS11 && var_type <= POLYMER_STRESS33) {
+    *mode = 0;
+    switch (var_type - POLYMER_STRESS11) {
+    case 0:
+      iind = 0;
+      jind = 0;
+      break;
+    case 1:
+      iind = 0;
+      jind = 1;
+      break;
+    case 2:
+      iind = 1;
+      jind = 1;
+      break;
+    case 3:
+      iind = 0;
+      jind = 2;
+      break;
+    case 4:
+      iind = 1;
+      jind = 2;
+      break;
+    case 5:
+      iind = 2;
+      jind = 2;
+      break;
+    }
+    *i = iind;
+    *j = jind;
+  } else if (var_type >= POLYMER_STRESS11_1 && var_type <= POLYMER_STRESS33_7) {
+    *mode = (var_type - POLYMER_STRESS11_1) / 6;
+    switch (var_type - (POLYMER_STRESS11_1 + 6 * *mode)) {
+    case 0:
+      iind = 0;
+      jind = 0;
+      break;
+    case 1:
+      iind = 0;
+      jind = 1;
+      break;
+    case 2:
+      iind = 1;
+      jind = 1;
+      break;
+    case 3:
+      iind = 0;
+      jind = 2;
+      break;
+    case 4:
+      iind = 1;
+      jind = 2;
+      break;
+    case 5:
+      iind = 2;
+      jind = 2;
+      break;
+    }
+    *i = iind;
+    *j = jind;
+  } else {
+    *mode = -1;
+    *i = -1;
+    *j = -1;
+    GOMA_EH(GOMA_ERROR, "Unknown stress variable type %d", var_type);
+  }
+}
+
 void load_matrl_statevector(MATRL_PROP_STRUCT *mp_local)
 
 /**************************************************************************
@@ -4563,6 +4646,12 @@ void load_matrl_statevector(MATRL_PROP_STRUCT *mp_local)
         sv[var_type] = scalar_fv_fill_altmatrl(esp->poynt[0], lvdesc, num_dofs, var_type);
       } else if (var_type == LIGHT_INTM) {
         sv[var_type] = scalar_fv_fill_altmatrl(esp->poynt[1], lvdesc, num_dofs, var_type);
+      } else if ((var_type >= POLYMER_STRESS11 && var_type <= POLYMER_STRESS33) ||
+                 (var_type >= POLYMER_STRESS11_1 && var_type <= POLYMER_STRESS33_7)) {
+        int mode = -1, iind = -1, jind = -1;
+        stress_index_from_var(var_type, &mode, &iind, &jind);
+        sv[var_type] =
+            scalar_fv_fill_altmatrl(esp->S[mode][iind][jind], lvdesc, num_dofs, var_type);
       } else {
         GOMA_EH(GOMA_ERROR, "Unimplemented");
       }
@@ -10478,7 +10567,7 @@ int assemble_momentum_path_dependence(dbl time, /* currentt time step */
           }
 
         } /*end if (active_dofs) */
-      }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
   }
   return (status);

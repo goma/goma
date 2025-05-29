@@ -392,7 +392,7 @@ void load_extra_unknownsAC(int iAC,     /* ID NUMBER OF AC'S */
     case TAGC_TIME_CONST5:
     case TAGC_TIME_CONST6:
     case TAGC_TIME_CONST7:
-      xa[iAC] = ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const;
+      xa[iAC] = ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const_st->lambda0;
       break;
 
     case TAGC_WT_FUNC:
@@ -949,8 +949,8 @@ void update_parameterAC(
             BC_Types[ibc_user].BC_Data_Float[idf_user] = lambda_user;
             break;
           } /*  switch loop */
-        }   /* if ibc_user  */
-      }     /* while ibc_user  */
+        } /* if ibc_user  */
+      } /* while ibc_user  */
 
       /*    now do AC floats if any  */
       ibc_user = 0;
@@ -966,7 +966,7 @@ void update_parameterAC(
           }
           augc[ibc_user].DataFlt[idf_user] = lambda_user;
         } /* if ibc_user  */
-      }   /* while ibc_user  */
+      } /* while ibc_user  */
       fclose(jfp);
 #else
       GOMA_EH(GOMA_ERROR, "aprepro must be run prior to running goma on this platform.");
@@ -1206,7 +1206,7 @@ void update_parameterAC(
     case TAGC_TIME_CONST5:
     case TAGC_TIME_CONST6:
     case TAGC_TIME_CONST7:
-      ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const = lambda;
+      ve_glob[mn][augc[iAC].MPID - TAGC_TIME_CONST]->time_const_st->lambda0 = lambda;
       break;
 
     case TAGC_WT_FUNC:
@@ -2216,8 +2216,8 @@ void overlap_aug_cond(int ija[],
 
         jelem = ielem;
         jside = iside;
-      }                  /* END of "if (augc[jAC].Type == AC_OVERLAP)" */
-    }                    /* END of loop over augmenting conditions (jAC) */
+      } /* END of "if (augc[jAC].Type == AC_OVERLAP)" */
+    } /* END of loop over augmenting conditions (jAC) */
   } else if (ac_lm == 2) /* AC on fluid */
   {
     jelem = -1;
@@ -2252,7 +2252,7 @@ void overlap_aug_cond(int ija[],
         jelem = ielem;
         jside = iside;
       } /* END of "if (augc[jAC].Type == AC_OVERLAP)" */
-    }   /* END of loop over augmenting conditions (jAC) */
+    } /* END of loop over augmenting conditions (jAC) */
 
     /* Fill in terms on solid element block */
     e_start = exo->eb_ptr[ibs];
@@ -2460,7 +2460,7 @@ static int estimate_dAC_LSvel(
       update_parameterAC(jAC, mf_args->x, mf_args->xdot, x_AC, cx, mf_args->exo, mf_args->dpi);
 
     } /* end if augc[jAC] == AC_LS_VEL  */
-  }   /* end  for{jAC...  */
+  } /* end  for{jAC...  */
   return (TRUE);
 } /* End of routine estimate_dAC */
 #endif

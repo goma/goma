@@ -37,6 +37,8 @@
 #include "dpi.h"        /* defn of Dpi */
 #include "exo_struct.h" /* defn of Exo_DB */
 
+#define NLS_FULL_STEP 0
+#define NLS_BACKTRACK 1
 /*
  * Kinds of solvers available...
  */
@@ -61,7 +63,8 @@
 #define STRATIMIKOS          10
 #define PETSC_SOLVER         11
 #define PETSC_COMPLEX_SOLVER 12
-
+#define AMESOS2              13
+#define MUMPS                14
 /*
  * FORTRAN BLAS functions. Inside C, use "DCOPY" and the preprocessor to
  * make it look like the FORTRAN name for this routine.

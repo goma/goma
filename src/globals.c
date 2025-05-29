@@ -203,9 +203,13 @@ String_line Matrix_Absolute_Threshold; /* Trilinos 2 */
 
 String_line Amesos_Package;
 
+String_line Amesos2_Package;
+
 String_line AztecOO_Solver;
 
 String_line Stratimikos_File[MAX_NUM_MATRICES];
+
+String_line Amesos2_File[MAX_NUM_MATRICES];
 
 /*
  * A new Aztec 2.0 option. There are more and difft options and our
@@ -224,6 +228,7 @@ int LOCA_UMF_ID;  /* UMFPACK SYSTEM ID */
 int Max_Newton_Steps;  /* Maximum number of Newton steps to take.     */
 int Guess_Flag;        /* Indicates the type of initial guess         */
 int Conformation_Flag; /* Indicates mapping from stress to log-conformation tensor */
+int Print3DBCDup;
 
 double damp_factor;
 double damp_factor1; /* Relaxation factor for Newton iteration */
@@ -239,6 +244,8 @@ double var_damp[MAX_VARIABLE_TYPES]; /* variable specific damp factors */
 int Newt_Jacobian_Reformation_stride; /*Stride for reformation of jacobian for
                                    modified newton scheme               */
 int Time_Jacobian_Reformation_stride;
+int Newton_Line_Search_Type;
+double Line_Search_Minimum_Damping;
 int modified_newton;               /*boolean flag for modified Newton */
 int save_old_A;                    /*boolean flag for saving old A matrix
                                     for resolve reasons with AZTEC.   There

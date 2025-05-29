@@ -1,3 +1,58 @@
+## Changes in version 7.9.0
+* Add Giesekus model to SQRT_CONF by @wortiz in https://github.com/goma/goma/pull/486
+* Add skip ssl check to Goma tpl build script by @wortiz in https://github.com/goma/goma/pull/487
+* Kelvin-Voigt solid model fix by @rbsecor in https://github.com/goma/goma/pull/485
+* set LD_LIBRARY_PATH in configs when building TPLs with build script by @wortiz in https://github.com/goma/goma/pull/489
+* SHELL_CONC_LS_BC by @rbsecor in https://github.com/goma/goma/pull/490
+* Addition of Taylor Galerkin method to the moment population balance equations by @trkenne in https://github.com/goma/goma/pull/491
+* Stratimikos bugfix by @wortiz in https://github.com/goma/goma/pull/492
+* Update tpl packages for BLAS/LAPACK issues by @wortiz in https://github.com/goma/goma/pull/493
+
+## Changes in version 7.8.1
+- Goma v7.8.1 bugfix for viscoelastic flows by @wortiz in #483
+
+## Changes in version 7.8.0
+- fix readme links by @wortiz in #480
+- Lubrication LS Heaviside Shift by @rbsecor in #481
+- Goma 7.8.0: Add SHEAR_STRESS_APPLIED by @wortiz in #482
+
+## Changes in version 7.7.0
+
+Major new features are Autodiff and stabilization improvements and a new build script in `tpls/` folder
+
+- Shell Energy Update by @rbsecor in https://github.com/goma/goma/pull/459
+- write P1 element variables in segregated solve by @wortiz in https://github.com/goma/goma/pull/460
+- Use Amesos2 Solver Package instead of just Mumps by @wortiz in https://github.com/goma/goma/pull/461
+- GCC 14 warning cleanup, fix for xdot in level set segregated by @wortiz in https://github.com/goma/goma/pull/462
+- Add Fluid Stress Post Processing, update Viscous Stress by @wortiz in https://github.com/goma/goma/pull/463
+- tiny doc update by @wortiz in https://github.com/goma/goma/pull/464
+- Shell Lubrication temperature and convection additions by @rbsecor in https://github.com/goma/goma/pull/465
+- Add under relaxation and tolerances to subcycling. Fix some warnings. by @wortiz in https://github.com/goma/goma/pull/466
+- Legacy build script changes for automation by @wortiz in https://github.com/goma/goma/pull/467
+- Lubrication Logarithm Interpolation by @rbsecor in https://github.com/goma/goma/pull/468
+- Add strumpack to legacy build script petsc, update flux docs by @wortiz in https://github.com/goma/goma/pull/471
+- Updates for cmake to find non-system TPLs by @wortiz in https://github.com/goma/goma/pull/469
+- Add a new TPL build script by @wortiz in https://github.com/goma/goma/pull/473
+- AutoDiff and Stabilization and Line Search by @wortiz in https://github.com/goma/goma/pull/472
+- Lub log ls2 by @rbsecor in https://github.com/goma/goma/pull/470
+- Discontinuous Variable Initial Guess fix and Discontinuous Stress by @wortiz in https://github.com/goma/goma/pull/474
+- Add current AC_VALUE to aprepro AC flag by @wortiz in https://github.com/goma/goma/pull/475
+- Fix level set renormalization for quadratic tets by Harald Ziegelwanger in https://github.com/goma/goma/pull/477
+
+
+## Changes in version 7.6.1
+
+- bugfix for Trilinos 13 [goma#458](https://github.com/goma/goma/pull/458)
+
+## Changes in version 7.6.0
+
+- Tpetra and Amesos2 support, currently expects `TPETRA_INST_INT_INT` [goma#456](https://github.com/goma/goma/pull/456)
+- `MULTI_CONTACT_LINE` Lame Mu model for multi CA problems (also 3D) [goma#454](https://github.com/goma/goma/pull/454)
+- Output BC dup in 3D  [goma#452](https://github.com/goma/goma/pull/453)
+- White Metzner type models [goma#450](https://github.com/goma/goma/pull/450)
+- Support for Trilinos 14 and 15 [goma#442](https://github.com/goma/goma/pull/442)
+- Elliptic mesh for single materials [goma#440](https://github.com/goma/goma/pull/440)
+
 ## Changes in version 7.5.0
 
 - Addition of Rolie-Poly Viscoelastic Model [goma#433](https://github.com/goma/goma/pull/433)

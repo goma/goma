@@ -7,6 +7,7 @@
 *.a
 *.o
 *.pyc
+__pycache__
 goma
 .cproject
 .project
@@ -38,3 +39,6 @@ cmake-debug
 /docs/docs/
 /cmake-variants.yaml
 /cmake-variants.json
+.vscode/
+compile_commands.json
+
