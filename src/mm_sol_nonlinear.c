@@ -1722,7 +1722,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             if (iterations == -1) {
               strcpy(stringer, "err");
             } else {
-              aztec_stringer(AZ_normal, iterations, &stringer[0]);
+              aztec_stringer(AZ_normal, iterations, &stringer_AC[0]);
             }
           } else if (strcmp(Matrix_Format, "tpetra") == 0) {
             int iterations;
@@ -1732,7 +1732,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
               GOMA_EH(err, "Error in stratimikos solve");
               check_parallel_error("Error in solve - stratimikos");
             }
-            aztec_stringer(AZ_normal, iterations, &stringer[0]);
+            aztec_stringer(AZ_normal, iterations, &stringer_AC[0]);
           } else {
             GOMA_EH(
                 GOMA_ERROR,
