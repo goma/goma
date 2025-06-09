@@ -100,9 +100,9 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
  *  Function which computes a normal pressure gradient that would result
  *  in the specified flowrate per unit width entering the boundary.
  *
- *  Logically, the flowrate per unit width would probably only be 
+ *  Logically, the flowrate per unit width would probably only be
  *  constant along the boundary if the lubrication gap height, H, is
- *  constant.  If the gap is variable, an option exists to replace 
+ *  constant.  If the gap is variable, an option exists to replace
  *  "flowrate" with a power-law type gap function -- flowgap * H^(2+1/n).
  *
  *         func =   - flowrate + n .(  H^3 /(12*mu) * (-grad LUB_P)
@@ -111,9 +111,9 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
  *  The boundary condition GRAD_LUB_PRESS_BC employs this function. The
  *  functional form in n . () above represents the result for a Newtonian
  *  liquid.  For non_Newtonian Generalized Newtonian liquids the analogous
- *  form is computed in lub_q_v in mm_shell_util.c.  The gap height, H, 
+ *  form is computed in lub_q_v in mm_shell_util.c.  The gap height, H,
  *  above is stipulated by the Upper and Lower Height Function Constants
- *  in the material block. 
+ *  in the material block.
  *
  *
  * Input:
@@ -523,7 +523,7 @@ void shell_n_dot_curv_bc(double func[DIM],
           }
         }
       } // End of loop over DOFs (j)
-    } // End of FILL assembly
+    }   // End of FILL assembly
     /*** SHELL_LUB_CURV ***/
     var = SHELL_LUB_CURV;
     if (pd->v[pg->imtrx][var]) {
@@ -642,7 +642,7 @@ void shell_conc_ls_bc(double func[DIM],
           d_func[0][var][j] += (conc_liq - conc_gas) * lsi->d_H_dF[j];
         }
       } // End of loop over DOFs (j)
-    } // End of FILL assembly
+    }   // End of FILL assembly
     var = MASS_FRACTION;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
