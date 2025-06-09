@@ -1930,6 +1930,7 @@ void dynamic_contact_angle_model(double *cos_caU,     // cos(theta) for upper
   dbl cosU, cosL;
   dbl cosU_V, cosL_V;
   dbl K0;
+  double ratio = 1.0;
 
   /* Load parameters */
   sigma = mp->surface_tension;
@@ -1940,6 +1941,15 @@ void dynamic_contact_angle_model(double *cos_caU,     // cos(theta) for upper
 
   case CONSTANT:
     cosU = cos(mp->dcaU * M_PIE / 180.0);
+    cosU_V = 0.0;
+    break;
+
+  case TIME_RAMP:
+    cosU = cos(mp->dcaU * M_PIE / 180.0);
+    if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
+      ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
+    }
+    cosU *= ratio;
     cosU_V = 0.0;
     break;
 
@@ -1981,6 +1991,15 @@ void dynamic_contact_angle_model(double *cos_caU,     // cos(theta) for upper
 
   case CONSTANT:
     cosL = cos(mp->dcaL * M_PIE / 180.0);
+    cosL_V = 0.0;
+    break;
+
+  case TIME_RAMP:
+    cosL = cos(mp->dcaL * M_PIE / 180.0);
+    if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
+      ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
+    }
+    cosL *= ratio;
     cosL_V = 0.0;
     break;
 

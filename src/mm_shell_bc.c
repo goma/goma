@@ -97,14 +97,23 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
  *
  * shell_n_dot_flow_bc_confined():
  *
- *  Function which evaluates the expression specifying the
- *  pressure gradient (or flow rate) at a quadrature point normal to the side
- *  of an element.
+ *  Function which computes a normal pressure gradient that would result
+ *  in the specified flowrate per unit width entering the boundary.
+ *
+ *  Logically, the flowrate per unit width would probably only be 
+ *  constant along the boundary if the lubrication gap height, H, is
+ *  constant.  If the gap is variable, an option exists to replace 
+ *  "flowrate" with a power-law type gap function -- flowgap * H^(2+1/n).
  *
  *         func =   - flowrate + n .(  H^3 /(12*mu) * (-grad LUB_P)
  *                                   + 0.5 * (U_bot + U_top) * H )
  *
- *  The boundary condition GRAD_LUB_PRESS_BC employs this function.
+ *  The boundary condition GRAD_LUB_PRESS_BC employs this function. The
+ *  functional form in n . () above represents the result for a Newtonian
+ *  liquid.  For non_Newtonian Generalized Newtonian liquids the analogous
+ *  form is computed in lub_q_v in mm_shell_util.c.  The gap height, H, 
+ *  above is stipulated by the Upper and Lower Height Function Constants
+ *  in the material block. 
  *
  *
  * Input:
@@ -112,7 +121,6 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
  *  flowrate      = specified on the bc card as the first float
  *  flow_gap      = specified on the bc card as the second float (optional)
  *  pwr_index     = specified on the bc card as the third float (optional)
- *  H             = Distance between top and bottom wall
  *
  * Output:
  *
@@ -125,6 +133,7 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
  *
  *
  *   Author: K. Tjiptowidjojo    (12/13/2010)
+ *           modified by R. B. Secor (2024)
  *
  ********************************************************************/
 {
@@ -255,7 +264,6 @@ void shell_n_dot_curv_bc(double func[DIM],
                          double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                          const double theta_deg,
                          const int ibc_flag,         /* NOBC flag from bc input  */
-                         const double penalty,       /* Penalty parameter */
                          const int bc_id,            /* BC_Name */
                          const double time,          /* current time */
                          const double dt,            /* current time step size */
@@ -269,7 +277,7 @@ void shell_n_dot_curv_bc(double func[DIM],
  *
  *  Function which evaluates the boundary terms for the shell Curvature eqn
  *
- *         func =   - n_bdy . nII_LS - epsilon * n_bdy * grad_II_CurvII
+ *         func =   n_bdy . nII_LS + diffusion * n_bdy * grad_II_CurvII
  *
  *  The boundary condition LUB_CURV_NOBC employs this function.
  *  For full NOBC behavior ibc_flag != -1, otherwise if ibc_flag == -1,
@@ -304,7 +312,6 @@ void shell_n_dot_curv_bc(double func[DIM],
   double bound_normal[DIM], bound_dnormal_dx[DIM][DIM][MDE];
   int curv_near;
   double curvX, diffX = 1.0;
-  int extra_diff_term = TRUE;
 
   int eqn = R_SHELL_LUB_CURV;
   if (ei[pg->imtrx]->ielem_dim == 3)
@@ -467,12 +474,10 @@ void shell_n_dot_curv_bc(double func[DIM],
               }
               d_func[0][var][j] *= curvX;
             }
-            if (extra_diff_term) {
-              for (ii = 0; ii < pd->Num_Dim; ii++) {
-                d_func[0][var][j] += diffX * K_diff * hsquared[ii] *
-                                     (gradII_kappa[ii] * bound_dnormal_dx[ii][jj][jk] +
-                                      d_gradII_kappa_dmesh[ii][jj][j]);
-              }
+            for (ii = 0; ii < pd->Num_Dim; ii++) {
+              d_func[0][var][j] += diffX * K_diff * hsquared[ii] *
+                                   (gradII_kappa[ii] * bound_dnormal_dx[ii][jj][jk] +
+                                    d_gradII_kappa_dmesh[ii][jj][j]);
             }
           }
         }
@@ -497,13 +502,13 @@ void shell_n_dot_curv_bc(double func[DIM],
       /* Loop over DOFs (j) */
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         if (pd->e[pg->imtrx][var]) {
-          if (curv_near && !mp->Lub_Isotropic_Curv_Diffusion && extra_diff_term) {
+          if (curv_near && !mp->Lub_Isotropic_Curv_Diffusion) {
             if (!lsi->near && mp->Lub_Curv_Modulation) {
               d_func[0][var][j] += SGN(fv->F) / lsi->alpha * phi_j * diff1 * K_diff;
             }
           }
 
-          if (ibc_flag > -1) {
+          if (ibc_flag != -1) {
             for (ii = 0; ii < pd->Num_Dim; ii++) {
               d_func[0][var][j] -= curvX * d_LSnormal_dF[ii][j] * bound_normal[ii];
             }
@@ -550,10 +555,8 @@ void shell_n_dot_curv_bc(double func[DIM],
     }
   }
   /* Diffusion boundary term */
-  if (extra_diff_term) {
-    for (ii = 0; ii < pd->Num_Dim; ii++) {
-      func[0] += diffX * K_diff * hsquared[ii] * gradII_kappa[ii] * bound_normal[ii];
-    }
+  for (ii = 0; ii < pd->Num_Dim; ii++) {
+    func[0] += diffX * K_diff * hsquared[ii] * gradII_kappa[ii] * bound_normal[ii];
   }
 
   /* clean-up */

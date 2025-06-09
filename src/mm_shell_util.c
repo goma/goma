@@ -3838,10 +3838,15 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     }
     /* Curvature - analytic in the "z" direction  */
     dbl dcaU, dcaL, slopeU, slopeL;
-    dcaU = dcaL = slopeU = slopeL = 0;
+    double d_dcaU_dV, d_dcaL_dV, V;
+    dcaU = dcaL = slopeU = slopeL = V = 0;
     if (pd->v[pg->imtrx][VAR]) {
       dcaU = mp->dcaU * M_PIE / 180.0;
       dcaL = mp->dcaL * M_PIE / 180.0;
+      /* Connecting up the DCA model routine ... no point in V-dependence at the moment*/
+      dynamic_contact_angle_model(&dcaU, &dcaL, V, &d_dcaU_dV, &d_dcaL_dV);
+      //if(lsi->near) fprintf(stderr,"DCA %g %g %g %g\n",tran->time_value, dcaU, dcaL,fv->F);
+
       slopeU = slopeL = 0.;
       for (i = 0; i < dim; i++) {
         slopeU += dHc_U_dX[i] * lsi->normal[i];
