@@ -526,7 +526,7 @@ void shell_n_dot_curv_bc(double func[DIM],
     } // End of FILL assembly
     /*** SHELL_LUB_CURV ***/
     var = SHELL_LUB_CURV;
-    if (pd->v[pg->imtrx][var] && extra_diff_term) {
+    if (pd->v[pg->imtrx][var]) {
       /* Loop over DOFs (j) */
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         /* Prepare basis funcitons (j) */
