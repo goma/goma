@@ -3842,6 +3842,14 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     if (pd->v[pg->imtrx][VAR]) {
       dcaU = mp->dcaU * M_PIE / 180.0;
       dcaL = mp->dcaL * M_PIE / 180.0;
+      /* Connecting up the DCA model routine ... no point in V-dependence at the moment*/
+#if 0
+      /* set aside for now  */
+      double d_dcaU_dV, d_dcaL_dV;
+      double V = 0;
+      dynamic_contact_angle_model(&dcaU, &dcaL, V, &d_dcaU_dV, &d_dcaL_dV);
+#endif
+
       slopeU = slopeL = 0.;
       for (i = 0; i < dim; i++) {
         slopeU += dHc_U_dX[i] * lsi->normal[i];
