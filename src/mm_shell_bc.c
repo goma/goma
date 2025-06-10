@@ -523,7 +523,7 @@ void shell_n_dot_curv_bc(double func[DIM],
           }
         }
       } // End of loop over DOFs (j)
-    }   // End of FILL assembly
+    } // End of FILL assembly
     /*** SHELL_LUB_CURV ***/
     var = SHELL_LUB_CURV;
     if (pd->v[pg->imtrx][var]) {
@@ -642,7 +642,7 @@ void shell_conc_ls_bc(double func[DIM],
           d_func[0][var][j] += (conc_liq - conc_gas) * lsi->d_H_dF[j];
         }
       } // End of loop over DOFs (j)
-    }   // End of FILL assembly
+    } // End of FILL assembly
     var = MASS_FRACTION;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
