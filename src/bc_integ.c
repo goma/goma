@@ -621,6 +621,12 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           }
           break;
 
+        case KIN_ANTOINE_BC:
+          if (iapply) {
+            kin_bc_antoine(func, d_func, x_dot, theta, delta_t, bc_input_id, BC_Types);
+          }
+          break;
+
         case SHELL_SURFACE_CHARGE_BC: /* Applies only to shell elements */
           shell_surface_charge_bc(func, d_func, x_dot, theta, delta_t, elem_side_bc->id_side, wt,
                                   xi, exo, 0);
@@ -1287,6 +1293,12 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           }
           break;
 
+        case YFLUX_ANTOINE_BC:
+          if (iapply) {
+            mass_flux_surf_antoine_bc(func, d_func, x_dot, theta, delta_t, bc_input_id, BC_Types);
+          }
+          break;
+
         case YFLUX_BV_BC:
           if (iapply) {
             mass_flux_BV_surf_bc(
@@ -1473,12 +1485,13 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
         case QRAD_BC:
           qrad_surf(func, d_func, BC_Types[bc_input_id].BC_Data_Float[0],
                     BC_Types[bc_input_id].BC_Data_Float[1], BC_Types[bc_input_id].BC_Data_Float[2],
-                    BC_Types[bc_input_id].BC_Data_Float[3], BC_Types[bc_input_id].BC_Data_Float[4]);
+                    BC_Types[bc_input_id].BC_Data_Float[3], BC_Types[bc_input_id].BC_Data_Float[4],
+                    BC_Types[bc_input_id].BC_Data_Int[2], bc_input_id, time_value);
           break;
 
         case QCONV_BC:
           qrad_surf(func, d_func, BC_Types[bc_input_id].BC_Data_Float[0],
-                    BC_Types[bc_input_id].BC_Data_Float[1], 0., 0., 0.);
+                    BC_Types[bc_input_id].BC_Data_Float[1], 0., 0., 0., 0, bc_input_id, time_value);
           break;
 
         case QRAD_REPULSE_ROLL_BC:
