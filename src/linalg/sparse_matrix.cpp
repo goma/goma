@@ -25,6 +25,8 @@ extern "C" {
 #undef DISABLE_CPP
 }
 
+#include <cinttypes>
+
 extern "C" goma_error GomaSparseMatrix_CreateFromFormat(GomaSparseMatrix *matrix,
                                                         char *matrix_format) {
   if (strcmp(matrix_format, "tpetra") == 0) {

@@ -71,7 +71,10 @@ if __name__ == "__main__":
         "--extract-dir", help="Extract and Build location", type=pathlib.Path
     )
     parser.add_argument(
-        "--build-shared", help="Build shared libraries (Default)", action="store_true"
+        "--build-shared",
+        help="Build shared libraries (Default)",
+        action="store_true",
+        dest="enable_shared",
     )
     parser.add_argument(
         "--build-static",
@@ -79,7 +82,7 @@ if __name__ == "__main__":
         dest="enable_shared",
         action="store_false",
     )
-    parser.set_defaults(build_shared=True)
+    parser.set_defaults(enable_shared=True)
     parser.add_argument(
         "-j", "--jobs", help="Number of parallel jobs", type=int, default=1
     )
@@ -258,7 +261,7 @@ if __name__ == "__main__":
                 package_dir,
                 logger,
                 tpl_registry,
-                args.build_shared,
+                args.enable_shared,
                 prebuilt=True,
                 skip_ssl_verify=args.skip_ssl_verify,
             )
@@ -282,7 +285,7 @@ if __name__ == "__main__":
                 install_dir,
                 logger,
                 tpl_registry,
-                args.build_shared,
+                args.enable_shared,
                 skip_ssl_verify=args.skip_ssl_verify,
             )
 
