@@ -31,11 +31,11 @@ class Package(packages.CMakePackage):
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
-        builder.add_option("-DENABLE_DAP=OFF")
-        builder.add_option("-DENABLE_BYTERANGE:BOOL=OFF")
-        builder.add_option("-DENABLE_PNETCDF:BOOL=ON")
-        builder.add_option("-DENABLE_CDF5=ON")
-        builder.add_option("-DENABLE_MMAP:BOOL=ON")
+        builder.add_option("-DNETCDF_ENABLE_DAP=OFF")
+        builder.add_option("-DNETCDF_ENABLE_BYTERANGE:BOOL=OFF")
+        builder.add_option("-DNETCDF_ENABLE_PNETCDF:BOOL=ON")
+        builder.add_option("-DNETCDF_ENABLE_CDF5=ON")
+        builder.add_option("-DNETCDF_ENABLE_MMAP:BOOL=ON")
 
     def register(self, builder):
         registry = builder._registry

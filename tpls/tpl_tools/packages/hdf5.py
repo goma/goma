@@ -1,8 +1,7 @@
 from tpl_tools.packages import packages
 import os
 
-
-class Package(packages.AutotoolsPackage):
+class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "hdf5"
         self.version = "1.14.6"
@@ -22,14 +21,15 @@ class Package(packages.AutotoolsPackage):
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
         builder.env["CC"] = builder._registry.get_executable("mpicc")
+        builder.env["CXX"] = builder._registry.get_executable("mpicxx")
+        builder.env["FC"] = builder._registry.get_executable("mpifort")
 
     def configure_options(self, builder):
         if builder.build_shared:
-            builder.add_option("--enable-shared")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
-            builder.add_option("--enable-shared=off")
-        builder.add_option("--enable-parallel")
-        builder.add_option("--with-default-api-version=v18")
+            builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
+        builder.add_option("-DHDF5_ENABLE_PARALLEL:BOOL=ON")
 
     def register(self, builder):
         registry = builder._registry
