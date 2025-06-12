@@ -29,8 +29,13 @@ class Package(packages.CMakePackage):
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
-            builder.add_option("-DHDF5_hdf5_hl_LIBRARY_RELEASE=" + builder.env["HDF5_DIR"] + "/lib/libhdf5_hl.a;" + builder.env["HDF5_DIR"] + "/lib/libhdf5.a")
+#            builder.add_option("-DHDF5_hdf5_hl_LIBRARY_RELEASE=" + builder.env["HDF5_DIR"] + "/lib/libhdf5_hl.a;" + builder.env["HDF5_DIR"] + "/lib/libhdf5.a")
         builder.add_option("-DHDF5_ENABLE_PARALLEL:BOOL=ON")
+        builder.add_option("-DDEFAULT_API_VERSION=V18")
+        builder.add_option("-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON")
+        builder.add_option("-DHDF5_BUILD_FORTRAN:BOOL=OFF")
+        builder.add_option("-DHDF5_BUILD_HL_LIB:BOOL=ON")
+        builder.add_option("-DHDF5_DISABLE_COMPILER_WARNINGS:BOOL=ON")
 
     def register(self, builder):
         registry = builder._registry
