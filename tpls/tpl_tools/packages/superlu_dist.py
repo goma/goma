@@ -2,7 +2,6 @@ from tpl_tools.packages import packages
 from tpl_tools import utils
 
 
-
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "superlu_dist"

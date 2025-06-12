@@ -6,8 +6,8 @@ import os
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "scotch"
-        self.version = "7.0.4"
-        self.sha256 = "8ef4719d6a3356e9c4ca7fefd7e2ac40deb69779a5c116f44da75d13b3d2c2c3"
+        self.version = "7.0.7"
+        self.sha256 = "02084471d2ca525f8a59b4bb8c607eb5cca452d6a38cf5c89f5f92f7edc1a5b5"
         self.filename = "scotch-" + self.version + ".tar.gz"
         self.url = (
             "https://gitlab.inria.fr/scotch/scotch/-/archive/v"

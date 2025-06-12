@@ -6,10 +6,10 @@ class Package(packages.AutotoolsPackage):
     def __init__(self):
         self.name = "petsc"
         self.version = "3.23.3"
-        self.sha256 = "bb51e8cbaa3782afce38c6f0bdd64d20ed090695992b7d49817518aa7e909139"
+        self.sha256 = "b548e4b05a84044410eeca9dbbeb4fb3baf8965be96c9802a8310aa07e13c987"
         self.filename = "petsc-" + self.version + ".tar.gz"
         self.url = (
-            "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-"
+            "https://gitlab.com/petsc/petsc/-/archive/v3.23.3/petsc-v"
             + self.version
             + ".tar.gz"
         )
@@ -22,6 +22,7 @@ class Package(packages.AutotoolsPackage):
             "mumps",
             "scotch",
             "parmetis",
+            "hypre",
         ]
 
     def set_environment(self, builder):
@@ -50,7 +51,6 @@ class Package(packages.AutotoolsPackage):
         else:
             configure_options.append("--with-shared-libraries=0")
         configure_options.append("--with-debugging=0")
-        configure_options.append("--download-hypre")
         configure_options.append("--download-strumpack")
         configure_options.append("--with-scalapack=1")
         configure_options.append("--with-scalapack-dir=" + builder.env["SCALAPACK_DIR"])
@@ -71,6 +71,8 @@ class Package(packages.AutotoolsPackage):
         configure_options.append("--with-lapack-lib=" + builder.env["LAPACK_LIBRARIES"])
         configure_options.append("--with-mumps=1")
         configure_options.append("--with-mumps-dir=" + builder.env["MUMPS_DIR"])
+        configure_options.append("--with-hypre=1")
+        configure_options.append("--with-hypre-dir=" + builder.env["HYPRE_DIR"])
         configure_options.append("COPTFLAGS=-O3")
         configure_options.append("CXXOPTFLAGS=-O3")
         configure_options.append("FOPTFLAGS=-O3")

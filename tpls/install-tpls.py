@@ -31,6 +31,7 @@ default_packages = [
     "superlu_dist",
     "suitesparse",
     "trilinos",
+    "hypre",
     "petsc",
     "petsc_complex",
     "sparse",
