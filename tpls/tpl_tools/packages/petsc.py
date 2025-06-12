@@ -14,7 +14,7 @@ class Package(packages.AutotoolsPackage):
             + ".tar.gz"
         )
         self.includes = ["petsc"]
-        self.libraries = ["petsc", "HYPRE", "strumpack"]
+        self.libraries = ["petsc", "strumpack"]
         self.dependencies = [
             "openmpi",
             "scalapack",

@@ -298,7 +298,7 @@ if __name__ == "__main__":
             build.install()
             if not build.check():
                 print(
-                    "Package {} not built, contact developers".format(pc.name),
+                    "Package {} not built, contact Goma developers".format(pc.name),
                     file=sys.stderr,
                 )
                 exit(1)
