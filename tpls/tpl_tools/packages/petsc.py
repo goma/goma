@@ -70,6 +70,7 @@ class Package(packages.AutotoolsPackage):
         configure_options.append("--with-blas-lib=" + builder.env["BLAS_LIBRARIES"])
         configure_options.append("--with-lapack-lib=" + builder.env["LAPACK_LIBRARIES"])
         configure_options.append("--with-mumps=1")
+        configure_options.append("--with-mumps-serial=0")
         configure_options.append("--with-mumps-dir=" + builder.env["MUMPS_DIR"])
         configure_options.append("--with-hypre=1")
         configure_options.append("--with-hypre-dir=" + builder.env["HYPRE_DIR"])

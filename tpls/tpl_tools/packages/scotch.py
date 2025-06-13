@@ -19,7 +19,8 @@ class Package(packages.CMakePackage):
         self.executables = []
         self.libraries = ["scotch", "ptscotch"]
         self.includes = []
-        self.dependencies = ["openmpi", "cmake", "flex", "bison"]
+        # parmetis is a false dependency and is removed when parmetis is not available
+        self.dependencies = ["openmpi", "cmake", "flex", "bison", "parmetis"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -39,6 +40,8 @@ class Package(packages.CMakePackage):
         builder.add_option("-DCMAKE_C_COMPILER=" + CC)
         builder.add_option("-DCMAKE_CXX_COMPILER=" + CXX)
         builder.add_option("-DCMAKE_Fortran_COMPILER=" + FC)
+        if "PARMETIS_DIR" in builder.env:
+            builder.add_option("-DSCOTCH_METIS_PREFIX=ON")
 
     def install(self, builder):
         cmake = builder._registry.get_executable("cmake")

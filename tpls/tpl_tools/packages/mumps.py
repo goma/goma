@@ -64,22 +64,28 @@ class Package(packages.GenericPackage):
             f.write("LORDERINGS = $(LMETIS) $(LPORD) $(LSCOTCH)\n")
             f.write("IORDERINGSF = $(ISCOTCH)\n")
             f.write("IORDERINGSC = $(IMETIS) $(IPORD) $(ISCOTCH)\n")
-            ext = utils.get_library_extension(True)
-            f.write("LIBEXT_SHARED  = " + ext + "\n")
-            if sys.platform == "darwin":
-                f.write("SONAME = -install_name\n")
+            if builder.build_shared:
+                ext = utils.get_library_extension(True)
+                f.write("LIBEXT_SHARED  = " + ext + "\n")
+                if sys.platform == "darwin":
+                    f.write("SONAME = -install_name\n")
+                else:
+                    f.write("SONAME = -soname\n")
+                f.write(
+                    "SHARED_OPT = -shared -Wl,-rpath,"
+                    + builder.install_dir()
+                    + "/lib -Wl,-rpath,"
+                    + builder.env["SCOTCH_DIR"]
+                    + "/lib"
+                )
+                if "PARMETIS_DIR" in builder.env:
+                    f.write(" -Wl,-rpath," + builder.env["PARMETIS_DIR"] + "/lib")
+                f.write(" -Wl,-rpath," + builder.env["METIS_DIR"] + "/lib\n")
             else:
-                f.write("SONAME = -soname\n")
-            f.write(
-                "SHARED_OPT = -shared -Wl,-rpath,"
-                + builder.install_dir()
-                + "/lib -Wl,-rpath,"
-                + builder.env["SCOTCH_DIR"]
-                + "/lib"
-            )
-            if builder.env["PARMETIS_DIR"]:
-                f.write(" -Wl,-rpath," + builder.env["PARMETIS_DIR"] + "/lib")
-            f.write(" -Wl,-rpath," + builder.env["METIS_DIR"] + "/lib\n")
+                f.write("LIBEXT_SHARED  = \n")
+                f.write("SONAME = \n")
+                f.write("SHARED_OPT = \n")
+
             f.write("FPIC_OPT = -fPIC\n")
             f.write("LIBEXT  = .a\n")
             f.write("OUTC    = -o\n")

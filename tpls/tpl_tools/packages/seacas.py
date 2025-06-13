@@ -28,6 +28,9 @@ class Package(packages.CMakePackage):
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
+            builder.add_option("-DSeacas_EXTRA_LINK_FLAGS=z;dl;m")
+            builder.add_option("-DSEACASExodus_ENABLE_SHARED:BOOL=OFF")
+
         builder.add_option("-DTPL_ENABLE_Netcdf:BOOL=ON")
         builder.add_option("-DTPL_ENABLE_MPI:BOOL=ON")
         if utils.check_for_x11(builder._extract_dir, builder.env["CC"]):
