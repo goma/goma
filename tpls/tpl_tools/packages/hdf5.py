@@ -1,6 +1,7 @@
 from tpl_tools.packages import packages
 import os
 
+
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "hdf5"
@@ -36,16 +37,16 @@ class Package(packages.CMakePackage):
         builder.add_option("-DHDF5_BUILD_HL_LIB:BOOL=ON")
         builder.add_option("-DHDF5_DISABLE_COMPILER_WARNINGS:BOOL=ON")
 
-        builder.add_option("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON") 
-        builder.add_option("-DBUILD_TESTING:BOOL=OFF") 
+        builder.add_option("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON")
+        builder.add_option("-DBUILD_TESTING:BOOL=OFF")
         builder.add_option("-DDEFAULT_API_VERSION=V18")
-        builder.add_option("-DHDF5_ENABLE_NONSTANDARD_FEATURE_FLOAT16=OFF") 
+        builder.add_option("-DHDF5_ENABLE_NONSTANDARD_FEATURE_FLOAT16=OFF")
         builder.add_option("-DHDF5_ENABLE_PARALLEL:BOOL=ON")
-        builder.add_option("-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON") 
+        builder.add_option("-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON")
         builder.add_option("-DHDF5_BUILD_CPP_LIB:BOOL=OFF")
         builder.add_option("-DHDF5_BUILD_FORTRAN:BOOL=OFF")
-        builder.add_option("-DHDF5_BUILD_HL_LIB:BOOL=ON") 
-        builder.add_option("-DHDF5_DISABLE_COMPILER_WARNINGS:BOOL=ON") 
+        builder.add_option("-DHDF5_BUILD_HL_LIB:BOOL=ON")
+        builder.add_option("-DHDF5_DISABLE_COMPILER_WARNINGS:BOOL=ON")
 
     def register(self, builder):
         registry = builder._registry
