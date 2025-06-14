@@ -1,4 +1,5 @@
 from tpl_tools.packages import packages
+from tpl_tools import utils
 
 
 class Package(packages.CMakePackage):
@@ -134,9 +135,7 @@ class Package(packages.CMakePackage):
                 + builder.env["SUPERLU_DIST_DIR"]
                 + "/include"
             )
-        ext = ".a"
-        if builder.build_shared:
-            ext = ".so"
+        ext = utils.get_library_extension(builder.build_shared)
         if "PARMETIS_DIR" in builder.env:
             builder.add_option("-DTPL_ENABLE_ParMETIS:BOOL=ON ")
             builder.add_option("-D Amesos_ENABLE_ParMETIS:BOOL=ON ")

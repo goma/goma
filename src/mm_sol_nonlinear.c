@@ -774,8 +774,10 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     if (ams->GomaMatrixData != NULL) {
       GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
       matrix->put_scalar(matrix, 0.0);
+#ifdef GOMA_ENABLE_PETSC
     } else if (strcmp(Matrix_Format, "petsc") == 0) {
       petsc_zero_mat(ams);
+#endif
     } else {
       init_vec_value(a, 0.0, ams->nnz);
     }

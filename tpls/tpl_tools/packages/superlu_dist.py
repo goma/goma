@@ -1,11 +1,12 @@
 from tpl_tools.packages import packages
+from tpl_tools import utils
 
 
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "superlu_dist"
-        self.version = "9.0.0"
-        self.sha256 = "aa43d33d4b1b0f5f7b5ad7685e9a6bc25088832c6c74d2ab8f75a2c9f4e9e955"
+        self.version = "9.1.0"
+        self.sha256 = "1cb2c6dc7e8231b2ec30c1266e55e440ffca9f55527771d8df28f900dd179f9d"
         self.filename = "superlu_dist-" + self.version + ".tar.gz"
         self.url = (
             "https://github.com/xiaoyeli/superlu_dist/archive/refs/tags/v"
@@ -37,10 +38,9 @@ class Package(packages.CMakePackage):
         builder.add_option("-DCMAKE_C_COMPILER=" + CC)
         builder.add_option("-DCMAKE_CXX_COMPILER=" + CXX)
         builder.add_option("-DCMAKE_Fortran_COMPILER=" + FC)
+        builder.add_option("-DCMAKE_C_STANDARD=11")
         builder.add_option("-DTPL_BLAS_LIBRARIES=" + builder.env["BLAS_LIBRARIES"])
-        ext = ".a"
-        if builder.build_shared:
-            ext = ".so"
+        ext = utils.get_library_extension(builder.build_shared)
         builder.add_option(
             "-DTPL_PARMETIS_LIBRARIES="
             + builder.env["PARMETIS_DIR"]

@@ -12,7 +12,7 @@ class Package(packages.CMakePackage):
         )
         self.libraries = ["parmetis"]
         self.includes = ["parmetis.h"]
-        self.dependencies = ["cmake", "metis"]
+        self.dependencies = ["cmake", "metis", "openmpi"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
