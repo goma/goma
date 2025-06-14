@@ -11049,8 +11049,8 @@ void dPdz_function(dbl tt,
   dbl V_S = H * (1 + 2 * tt) / dt;
 
   /* Calculate dynamic contact angle */
-  dbl cosT, cosT_V, a1, a2;
-  dynamic_contact_angle_model(&cosT, &a1, V, &cosT_V, &a2);
+  dbl cosT, cosT_V, a1, a2, dcaU, dcaL;
+  dynamic_contact_angle_model(&cosT, &a1, V, &cosT_V, &a2, &dcaU, &dcaL);
 
   /* Calculate capillary pressure */
   Pcap = 2 * sigma * cosT / R;

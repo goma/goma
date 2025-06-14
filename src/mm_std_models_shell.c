@@ -1914,7 +1914,9 @@ void dynamic_contact_angle_model(double *cos_caU,     // cos(theta) for upper
                                  double *cos_caL,     // cos(theta) for lower
                                  double V,            // wetting line velocity
                                  double *d_cos_caU_V, // sensitivity for upper
-                                 double *d_cos_caL_V  // sensitivity for lower
+                                 double *d_cos_caL_V, // sensitivity for lower
+                                 double *dcaU,        // wetting angle (radians) upper
+                                 double *dcaL         // wetting angle (radians) lower
 ) {
   /*****************************************************************************
    * This function calculates the cosine of the contact angle in the lubrication
@@ -1937,20 +1939,22 @@ void dynamic_contact_angle_model(double *cos_caU,     // cos(theta) for upper
   mu = mp->viscosity;
 
   /* Upper contact angle */
+  *dcaU = mp->dcaU * M_PIE / 180.0;
   switch (mp->DcaUFunctionModel) {
 
   case CONSTANT:
-    cosU = cos(mp->dcaU * M_PIE / 180.0);
+    cosU = cos(*dcaU);
     cosU_V = 0.0;
     break;
 
   case TIME_RAMP:
-    cosU = cos(mp->dcaU * M_PIE / 180.0);
+    cosU = cos(*dcaU);
     if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
       ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
     }
     cosU *= ratio;
     cosU_V = 0.0;
+    *dcaU = acos(cosU);
     break;
 
   case DYNAMIC_CA:
@@ -1964,6 +1968,7 @@ void dynamic_contact_angle_model(double *cos_caU,     // cos(theta) for upper
     C2 = 1 / (2 * lambda * K0);
     cosU = cos(theta0) - C1 * asinh(C2 * V);
     cosU_V = -C1 * C2 / sqrt(1 + pow(C2 * V, 2));
+    *dcaU = acos(cosU);
     break;
 
   case DYNAMIC_LINEAR_CA:
@@ -1975,32 +1980,36 @@ void dynamic_contact_angle_model(double *cos_caU,     // cos(theta) for upper
     K0 = kBT / (mu * vl) * exp(-sigma * pow(lambda, 2) / kBT * (1 + cos(theta0)));
     cosU = cos(theta0) - kBT / (K0 * sigma * pow(lambda, 3)) * V;
     cosU_V = -kBT / (K0 * sigma * pow(lambda, 3));
+    *dcaU = acos(cosU);
     break;
 
   default:
     GOMA_EH(GOMA_ERROR, "Wrong upper contact angle model");
     cosU = 0.0;
     cosU_V = 0.0;
+    *dcaU = acos(cosU);
     break;
   }
   *cos_caU = cosU;
   *d_cos_caU_V = cosU_V;
 
   /* Lower contact angle */
+  *dcaL = mp->dcaL * M_PIE / 180.0;
   switch (mp->DcaLFunctionModel) {
 
   case CONSTANT:
-    cosL = cos(mp->dcaL * M_PIE / 180.0);
+    cosL = cos(*dcaL);
     cosL_V = 0.0;
     break;
 
   case TIME_RAMP:
-    cosL = cos(mp->dcaL * M_PIE / 180.0);
+    cosL = cos(*dcaL);
     if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
       ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
     }
     cosL *= ratio;
     cosL_V = 0.0;
+    *dcaL = acos(cosL);
     break;
 
   case DYNAMIC_CA:
@@ -2014,6 +2023,7 @@ void dynamic_contact_angle_model(double *cos_caU,     // cos(theta) for upper
     C2 = 1 / (2 * lambda * K0);
     cosL = cos(theta0) - C1 * asinh(C2 * V);
     cosL_V = -C1 * C2 / sqrt(1 + pow(C2 * V, 2));
+    *dcaL = acos(cosL);
     break;
 
   case DYNAMIC_LINEAR_CA:
@@ -2025,6 +2035,7 @@ void dynamic_contact_angle_model(double *cos_caU,     // cos(theta) for upper
     K0 = kBT / (mu * vl) * exp(-sigma * pow(lambda, 2) / kBT * (1 + cos(theta0)));
     cosL = cos(theta0) - kBT / (K0 * sigma * pow(lambda, 3)) * V;
     cosL_V = -kBT / (K0 * sigma * pow(lambda, 3));
+    *dcaL = acos(cosL);
     break;
 
   default:

@@ -73,7 +73,8 @@ EXTERN double porous_shell_rel_perm_model /* mm_std_models_shell.c          */
 EXTERN void porous_shell_permeability_model /* mm_std_models_shell.c          */
     (int);
 
-EXTERN void dynamic_contact_angle_model(double *, double *, double, double *, double *);
+EXTERN void
+dynamic_contact_angle_model(double *, double *, double, double *, double *, double *, double *);
 
 EXTERN double rolling_pressure(double, double *, double);
 
