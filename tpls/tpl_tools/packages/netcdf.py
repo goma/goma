@@ -31,11 +31,22 @@ class Package(packages.CMakePackage):
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
-        builder.add_option("-DENABLE_DAP=OFF")
-        builder.add_option("-DENABLE_BYTERANGE:BOOL=OFF")
-        builder.add_option("-DENABLE_PNETCDF:BOOL=ON")
-        builder.add_option("-DENABLE_CDF5=ON")
-        builder.add_option("-DENABLE_MMAP:BOOL=ON")
+        builder.add_option("-DNETCDF_ENABLE_DAP=OFF")
+        builder.add_option("-DNETCDF_ENABLE_BYTERANGE:BOOL=OFF")
+        builder.add_option("-DNETCDF_ENABLE_PNETCDF:BOOL=ON")
+        builder.add_option("-DNETCDF_ENABLE_CDF5=ON")
+        builder.add_option("-DNETCDF_ENABLE_MMAP:BOOL=ON")
+        builder.add_option("-DHDF5_ROOT:PATH=" + builder.env["HDF5_DIR"])
+        builder.add_option("-DHDF5_DIR:PATH=" + builder.env["HDF5_DIR"])
+        builder.add_option("-DNETCDF_ENABLE_HDF5:BOOL=ON")
+        builder.add_option("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON")
+        builder.add_option("-DBUILD_TESTING:BOOL=OFF")
+        builder.add_option("-DNETCDF_ENABLE_NCZARR_FILTERS:BOOL=OFF")
+        builder.add_option("-DNETCDF_ENABLE_NCZARR:BOOL=OFF")
+        builder.add_option("-DNETCDF_ENABLE_V2_API:BOOL=OFF")
+        builder.add_option("-DNETCDF_ENABLE_FILTER_TESTING:BOOL=OFF")
+        builder.add_option("-DNETCDF_ENABLE_TESTS:BOOL=OFF")
+        builder.add_option("-DNETCDF_ENABLE_QUANTIZE:BOOL=ON")
 
     def register(self, builder):
         registry = builder._registry

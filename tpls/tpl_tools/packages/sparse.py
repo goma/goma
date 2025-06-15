@@ -1,5 +1,6 @@
 from tpl_tools.packages import packages
 from tpl_tools.builder import mkdir_p
+from tpl_tools import utils
 import os
 import shutil
 import glob
@@ -65,9 +66,9 @@ class Package(packages.GenericPackage):
             "w",
         ) as f:
             if builder.build_shared:
-                f.write("CFLAGS = -O2 -fPIC\n")
+                f.write("CFLAGS = -O2 -fPIC -std=c99\n")
             else:
-                f.write("CFLAGS = -O2\n")
+                f.write("CFLAGS = -O2 -std=c99\n")
             f.write("LINTFLAGS = -lc -lm\n")
             f.write("SHELL = /bin/sh\n")
             f.write("CC = " + builder.env["CC"] + "\n")
@@ -79,10 +80,8 @@ class Package(packages.GenericPackage):
             f.write(
                 "OFILES = spAllocate.o spBuild.o spFactor.o spOutput.o spSolve.o spUtils.o spFortran.o\n"
             )
-            if builder.build_shared:
-                f.write("LIBRARY = ../lib/libsparse.so\n")
-            else:
-                f.write("LIBRARY = ../lib/libsparse.a\n")
+            ext = utils.get_library_extension(builder.build_shared)
+            f.write("LIBRARY = ../lib/libsparse" + ext + "\n")
             f.write("DESTINATION = ../bin/sparse\n")
             f.write("TESTC = spTest.c\n")
             f.write("TESTO = spTest.o\n")
