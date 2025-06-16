@@ -774,8 +774,10 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     if (ams->GomaMatrixData != NULL) {
       GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
       matrix->put_scalar(matrix, 0.0);
+#ifdef GOMA_ENABLE_PETSC
     } else if (strcmp(Matrix_Format, "petsc") == 0) {
       petsc_zero_mat(ams);
+#endif
     } else {
       init_vec_value(a, 0.0, ams->nnz);
     }
@@ -1722,7 +1724,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             if (iterations == -1) {
               strcpy(stringer, "err");
             } else {
-              aztec_stringer(AZ_normal, iterations, &stringer[0]);
+              aztec_stringer(AZ_normal, iterations, &stringer_AC[0]);
             }
           } else if (strcmp(Matrix_Format, "tpetra") == 0) {
             int iterations;
@@ -1732,7 +1734,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
               GOMA_EH(err, "Error in stratimikos solve");
               check_parallel_error("Error in solve - stratimikos");
             }
-            aztec_stringer(AZ_normal, iterations, &stringer[0]);
+            aztec_stringer(AZ_normal, iterations, &stringer_AC[0]);
           } else {
             GOMA_EH(
                 GOMA_ERROR,

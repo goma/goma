@@ -1,12 +1,14 @@
 from tpl_tools.packages import packages
+from tpl_tools import utils
 import os
+import sys
 
 
 class Package(packages.GenericPackage):
     def __init__(self):
         self.name = "openblas"
-        self.version = "0.3.28"
-        self.sha256 = "f1003466ad074e9b0c8d421a204121100b0751c96fc6fcf3d1456bd12f8a00a1"
+        self.version = "0.3.29"
+        self.sha256 = "38240eee1b29e2bde47ebb5d61160207dc68668a54cac62c076bb5032013b1eb"
         self.filename = "OpenBLAS" + self.version + ".tar.gz"
         self.compression = "gz"
         self.url = (
@@ -21,15 +23,21 @@ class Package(packages.GenericPackage):
 
     def build(self, builder):
         self.build_command = ["make"]
+        if sys.platform == "darwin":
+            self.build_command.append("NO_SVE=1")
+        else:
+            self.build_command.append("TARGET=GENERIC")
+            self.build_command.append("DYNAMIC_OLDER=1")
         self.build_command.append("USE_THREAD=0")
         self.build_command.append("USE_OPENMP=0")
         self.build_command.append("DYNAMIC_ARCH=1")
-        self.build_command.append("TARGET=GENERIC")
-        self.build_command.append("DYNAMIC_OLDER=1")
         if builder.build_shared:
             self.build_command.append("NO_SHARED=0")
+            self.build_command.append("shared")
         else:
             self.build_command.append("NO_SHARED=1")
+        self.build_command.append("libs")
+        self.build_command.append("netlib")
         builder.run_command(self.build_command, jobs_flag="-j", parallel=True)
 
     def install(self, builder):
@@ -41,9 +49,7 @@ class Package(packages.GenericPackage):
     def register(self, builder):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
-        ext = ".a"
-        if builder.build_shared:
-            ext = ".so"
+        ext = utils.get_library_extension(builder.build_shared)
         registry.set_environment_variable("OPENBLAS_DIR", builder.install_dir())
         registry.set_environment_variable(
             "BLAS_LIBRARIES",

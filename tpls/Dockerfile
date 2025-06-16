@@ -1,7 +1,6 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
-RUN apt-get update
-RUN apt-get install -y git build-essential m4 zlib1g-dev libx11-dev gfortran pkg-config autoconf python3-dev vim tmux nano gdb valgrind libssl-dev curl
+RUN apt-get update && apt-get install -y git build-essential m4 zlib1g-dev libx11-dev gfortran pkg-config autoconf python3-dev python3-pip vim tmux nano gdb valgrind libssl-dev curl
 RUN apt-get autoremove && apt-get clean
 
 RUN git clone https://github.com/goma/goma /opt/goma

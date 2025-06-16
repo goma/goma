@@ -6,8 +6,8 @@ import os
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "seacas"
-        self.version = "v2025-04-14"
-        self.sha256 = "7704fc27e4f0d283fd9272ea769dbeffd971315a982e265c0d7c99fc77186476"
+        self.version = "v2025-06-07"
+        self.sha256 = "2974705f2859e30bca48b619fda078bb771c0e94381af9e624749afb9fd72780"
         self.filename = "seacas-" + self.version + ".tar.gz"
         self.url = (
             "https://github.com/sandialabs/seacas/archive/" + self.version + ".tar.gz"
@@ -28,6 +28,9 @@ class Package(packages.CMakePackage):
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
+            builder.add_option("-DSeacas_EXTRA_LINK_FLAGS=z;dl;m")
+            builder.add_option("-DSEACASExodus_ENABLE_SHARED:BOOL=OFF")
+
         builder.add_option("-DTPL_ENABLE_Netcdf:BOOL=ON")
         builder.add_option("-DTPL_ENABLE_MPI:BOOL=ON")
         if utils.check_for_x11(builder._extract_dir, builder.env["CC"]):
