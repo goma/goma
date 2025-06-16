@@ -533,8 +533,10 @@ huygens_renormalization ( double *x,
     /* this call cleanses the LS field of "droplets" that surround exactly one
      * node */
 
+    purge_spurious_LS(x, exo, num_total_nodes);
+
+    // Use old level set structures to create surfaces
     if (ls->Renorm_Method != FACET_BASED) {
-      purge_spurious_LS(x, exo, num_total_nodes);
 
       list = create_surf_list();
       isosurf = create_surf(LS_SURF_ISOSURFACE);
@@ -2581,8 +2583,8 @@ static int Hrenorm_constrain(Exo_DB *exo,
 #ifdef PARALLEL
       if (Num_Proc > 1)
         external = ext_dof[k];
-        /* when accumulating the dot products it is important not to add the
-         * external dofs */
+      /* when accumulating the dot products it is important not to add the
+       * external dofs */
 #endif
 
       if (!external) {
