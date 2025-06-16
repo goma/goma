@@ -13,7 +13,6 @@
 \************************************************************************/
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
 #include <fstream>
 #include <ios>
 #include <iostream>
@@ -44,6 +43,19 @@ extern "C" {
 
 using namespace goma::distance_tools;
 
+// clang format off
+static const std::array<std::array<double, 3>, 4> tet_points = {
+    {{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}};
+
+static const std::array<std::array<double, 3>, 27> hex_points = {
+    {{-1.0, -1.0, -1.0}, {1.0, -1.0, -1.0}, {1.0, 1.0, -1.0},  {-1.0, 1.0, -1.0}, {-1.0, -1.0, 1.0},
+     {1.0, -1.0, 1.0},   {1.0, 1.0, 1.0},   {-1.0, 1.0, 1.0},  {0.0, -1.0, -1.0}, {1.0, 0.0, -1.0},
+     {0.0, 1.0, -1.0},   {-1.0, 0.0, -1.0}, {-1.0, -1.0, 0.0}, {1.0, -1.0, 0.0},  {1.0, 1.0, 0.0},
+     {-1.0, 1.0, 0.0},   {0.0, -1.0, 1.0},  {1.0, 0.0, 1.0},   {0.0, 1.0, 1.0},   {-1.0, 0.0, 1.0},
+     {0.0, 0.0, 0.0},    {0.0, 0.0, -1.0},  {0.0, 0.0, 1.0},   {-1.0, 0.0, 0.0},  {1.0, 0.0, 0.0},
+     {0.0, -1.0, 0.0},   {0.0, 1.0, 0.0}}};
+// clang format on
+
 class BasicTimer {
   double start_;
 
@@ -69,10 +81,41 @@ public:
   }
 };
 
-void shape_to_triangle(int itype,
-                       std::vector<std::tuple<Point<2>, Point<2>, Point<2>>> &triangles,
-                       std::vector<std::tuple<int, int, int>> &order,
-                       int dofs) {
+template <int pdim> struct PointCloud {
+  std::vector<Point<pdim>> pts;
+
+  // Must return the number of data points
+  inline size_t kdtree_get_point_count() const { return pts.size(); }
+
+  // Returns the dim'th component of the idx'th point in the class:
+  // Since this is inlined and the "dim" argument is typically an immediate
+  // value, the
+  //  "if/else's" are actually solved at compile time.
+  inline double kdtree_get_pt(const size_t idx, const size_t dim) const {
+    if (dim == 0)
+      return pts[idx][0];
+    else if (dim == 1)
+      return pts[idx][1];
+    else {
+      if (pdim == 3)
+        return pts[idx][2];
+      else
+        return 0.0;
+    }
+  }
+
+  // Optional bounding-box computation: return false to default to a standard
+  // bbox computation loop.
+  //   Return true if the BBOX was already computed by the class and returned
+  //   in "bb" so it can be avoided to redo it again. Look at bb.size() to
+  //   find out the expected dimensionality (e.g. 2 or 3 for point clouds)
+  template <class BBOX> bool kdtree_get_bbox(BBOX & /* bb */) const { return false; }
+};
+
+static void shape_to_triangle(int itype,
+                              std::vector<std::tuple<Point<2>, Point<2>, Point<2>>> &triangles,
+                              std::vector<std::tuple<int, int, int>> &order,
+                              int dofs) {
   int shape = type2shape(itype);
   switch (shape) {
   case TRIANGLE:
@@ -129,10 +172,10 @@ void shape_to_triangle(int itype,
   }
 }
 
-void shape_to_quad(int itype,
-                   std::vector<std::tuple<Point<2>, Point<2>, Point<2>, Point<2>>> &quads,
-                   std::vector<std::tuple<int, int, int, int>> &order,
-                   int dofs) {
+static void shape_to_quad(int itype,
+                          std::vector<std::tuple<Point<2>, Point<2>, Point<2>, Point<2>>> &quads,
+                          std::vector<std::tuple<int, int, int, int>> &order,
+                          int dofs) {
   int shape = type2shape(itype);
   switch (shape) {
   case QUADRILATERAL:
@@ -162,153 +205,11 @@ void shape_to_quad(int itype,
     break;
   }
 }
-const std::array<std::array<double, 3>, 4> tet_points = {{
-    {0.0, 0.0, 0.0},
-    {1.0, 0.0, 0.0},
-    {
-        0.0,
-        1.0,
-        0.0,
-    },
-    {
-        0.0,
-        0.0,
-        1.0,
-    },
-}};
 
-const std::array<std::array<double, 3>, 27> hex_points = {{{-1.0, -1.0, -1.0},
-                                                           {1.0, -1.0, -1.0},
-                                                           {
-                                                               1.0,
-                                                               1.0,
-                                                               -1.0,
-                                                           },
-                                                           {
-                                                               -1.0,
-                                                               1.0,
-                                                               -1.0,
-                                                           },
-                                                           {
-                                                               -1.0,
-                                                               -1.0,
-                                                               1.0,
-                                                           },
-                                                           {
-                                                               1.0,
-                                                               -1.0,
-                                                               1.0,
-                                                           },
-                                                           {
-                                                               1.0,
-                                                               1.0,
-                                                               1.0,
-                                                           },
-                                                           {
-                                                               -1.0,
-                                                               1.0,
-                                                               1.0,
-                                                           },
-                                                           {
-                                                               0.0,
-                                                               -1.0,
-                                                               -1.0,
-                                                           },
-                                                           {
-                                                               1.0,
-                                                               0.0,
-                                                               -1.0,
-                                                           },
-                                                           {
-                                                               0.0,
-                                                               1.0,
-                                                               -1.0,
-                                                           },
-                                                           {
-                                                               -1.0,
-                                                               0.0,
-                                                               -1.0,
-                                                           },
-                                                           {
-                                                               -1.0,
-                                                               -1.0,
-                                                               0.0,
-                                                           },
-                                                           {
-                                                               1.0,
-                                                               -1.0,
-                                                               0.0,
-                                                           },
-                                                           {
-                                                               1.0,
-                                                               1.0,
-                                                               0.0,
-                                                           },
-                                                           {
-                                                               -1.0,
-                                                               1.0,
-                                                               0.0,
-                                                           },
-                                                           {
-                                                               0.0,
-                                                               -1.0,
-                                                               1.0,
-                                                           },
-                                                           {
-                                                               1.0,
-                                                               0.0,
-                                                               1.0,
-                                                           },
-                                                           {
-                                                               0.0,
-                                                               1.0,
-                                                               1.0,
-                                                           },
-                                                           {
-                                                               -1.0,
-                                                               0.0,
-                                                               1.0,
-                                                           },
-                                                           {
-                                                               0.0,
-                                                               0.0,
-                                                               0.0,
-                                                           },
-                                                           {
-                                                               0.0,
-                                                               0.0,
-                                                               -1.0,
-                                                           },
-                                                           {
-                                                               0.0,
-                                                               0.0,
-                                                               1.0,
-                                                           },
-                                                           {
-                                                               -1.0,
-                                                               0.0,
-                                                               0.0,
-                                                           },
-                                                           {
-                                                               1.0,
-                                                               0.0,
-                                                               0.0,
-                                                           },
-                                                           {
-                                                               0.0,
-                                                               -1.0,
-                                                               0.0,
-                                                           },
-                                                           {
-                                                               0.0,
-                                                               1.0,
-                                                               0.0,
-                                                           }}};
-
-void shape_to_hex(int itype,
-                  std::vector<std::array<Point<3>, 8>> &hexes,
-                  std::vector<std::array<int, 8>> &order,
-                  int dofs) {
+static void shape_to_hex(int itype,
+                         std::vector<std::array<Point<3>, 8>> &hexes,
+                         std::vector<std::array<int, 8>> &order,
+                         int dofs) {
   int shape = type2shape(itype);
   switch (shape) {
   case HEXAHEDRON:
@@ -334,10 +235,10 @@ void shape_to_hex(int itype,
   }
 }
 
-void shape_to_tet(int itype,
-                  std::vector<std::array<Point<3>, 4>> &tets,
-                  std::vector<std::array<int, 4>> &order,
-                  int dofs) {
+static void shape_to_tet(int itype,
+                         std::vector<std::array<Point<3>, 4>> &tets,
+                         std::vector<std::array<int, 4>> &order,
+                         int dofs) {
   int shape = type2shape(itype);
   switch (shape) {
   case TETRAHEDRON:
@@ -357,7 +258,7 @@ void shape_to_tet(int itype,
   }
 }
 
-void interp_quad_dofs(std::vector<double> &ls_values) {
+static void interp_quad_dofs(std::vector<double> &ls_values) {
   ls_values[4] = 0.5 * (ls_values[0] + ls_values[1]);
   ls_values[5] = 0.5 * (ls_values[1] + ls_values[2]);
   ls_values[6] = 0.5 * (ls_values[2] + ls_values[3]);
@@ -365,50 +266,19 @@ void interp_quad_dofs(std::vector<double> &ls_values) {
   ls_values[8] = 0.25 * (ls_values[0] + ls_values[1] + ls_values[2] + ls_values[3]);
 }
 
-template <int pdim> struct PointCloud {
-  std::vector<Point<pdim>> pts;
-
-  // Must return the number of data points
-  inline size_t kdtree_get_point_count() const { return pts.size(); }
-
-  // Returns the dim'th component of the idx'th point in the class:
-  // Since this is inlined and the "dim" argument is typically an immediate
-  // value, the
-  //  "if/else's" are actually solved at compile time.
-  inline double kdtree_get_pt(const size_t idx, const size_t dim) const {
-    if (dim == 0)
-      return pts[idx][0];
-    else if (dim == 1)
-      return pts[idx][1];
-    else {
-      if (pdim == 3)
-        return pts[idx][2];
-      else
-        return 0.0;
-    }
-  }
-
-  // Optional bounding-box computation: return false to default to a standard
-  // bbox computation loop.
-  //   Return true if the BBOX was already computed by the class and returned
-  //   in "bb" so it can be avoided to redo it again. Look at bb.size() to
-  //   find out the expected dimensionality (e.g. 2 or 3 for point clouds)
-  template <class BBOX> bool kdtree_get_bbox(BBOX & /* bb */) const { return false; }
-};
-
-void generate_point_cloud(PointCloud<3> &pc, std::vector<Triangle<3>> &facets) {
+static void generate_point_cloud(PointCloud<3> &pc, std::vector<Triangle<3>> &facets) {
   for (auto &facet : facets) {
     pc.pts.push_back(facet.centroid());
   }
 }
 
-void generate_point_cloud(PointCloud<2> &pc, std::vector<Line<2>> &facets) {
+static void generate_point_cloud(PointCloud<2> &pc, std::vector<Line<2>> &facets) {
   for (auto &facet : facets) {
     pc.pts.push_back(facet.centroid());
   }
 }
 
-void facet_based_reinitialization_3D(
+static void facet_based_reinitialization_3D(
     double *x, Exo_DB *exo, Comm_Ex *cx, Dpi *dpi, int num_total_nodes, double time) {
   using goma::distance_tools::Triangle;
 
@@ -665,7 +535,7 @@ void facet_based_reinitialization_3D(
       resultSet.init(&ret_index[0], &out_dist_sqr[0]);
 
       double query_pt[3] = {p[0], p[1], p[2]};
-      index.findNeighbors(resultSet, query_pt, nanoflann::SearchParams());
+      index.findNeighbors(resultSet, query_pt, nanoflann::SearchParameters());
 
       double min_distance = std::numeric_limits<double>::max();
       // for (size_t i = 0; i < facets.size(); i++) {
@@ -685,7 +555,7 @@ void facet_based_reinitialization_3D(
   timer.print_elapsed("           Reinitialization time:");
 }
 
-void facet_based_reinitialization_2D(
+static void facet_based_reinitialization_2D(
     double *x, Exo_DB *exo, Comm_Ex *cx, Dpi *dpi, int num_total_nodes, double time) {
   using goma::distance_tools::Line;
 
@@ -922,7 +792,7 @@ void facet_based_reinitialization_2D(
       resultSet.init(&ret_index[0], &out_dist_sqr[0]);
 
       double query_pt[2] = {p[0], p[1]};
-      index.findNeighbors(resultSet, query_pt, nanoflann::SearchParams());
+      index.findNeighbors(resultSet, query_pt, nanoflann::SearchParameters());
 
       double min_distance = std::numeric_limits<double>::max();
       // for (size_t i = 0; i < facets.size(); i++) {

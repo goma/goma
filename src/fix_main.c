@@ -264,7 +264,7 @@ static void get_fix_info(char *filename, int *num_procs, char mono_name[MAX_FNL]
   char *token = strtok(parse_string, ".");
   int tk = 0;
 
-#if defined(__GNUC__) && __GNUC__ >= 12 && __GNUC__ < 15
+#if defined(__GNUC__) && __GNUC__ >= 12 && __GNUC__ <= 15
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
 #endif
@@ -276,7 +276,7 @@ static void get_fix_info(char *filename, int *num_procs, char mono_name[MAX_FNL]
     strncpy(last_token, token, MAX_FNL - 1);
     token = strtok(NULL, ".");
   }
-#if defined(__GNUC__) && __GNUC__ >= 12 && __GNUC__ < 15
+#if defined(__GNUC__) && __GNUC__ >= 12 && __GNUC__ <= 15
 #pragma GCC diagnostic pop
 #endif
 
