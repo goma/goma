@@ -3837,19 +3837,19 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       }
     }
     /* Curvature - analytic in the "z" direction  */
-    dbl dcaU, dcaL, slopeU, slopeL;
-    dcaU = dcaL = slopeU = slopeL = 0;
+    dbl dcaU, dcaL, slopeU, slopeL, cos_dcaU, cos_dcaL;
+    dcaU = dcaL = 0.5 * M_PIE;
+    slopeU = slopeL = cos_dcaU = cos_dcaL = 0;
     if (pd->v[pg->imtrx][VAR]) {
-      dcaU = mp->dcaU * M_PIE / 180.0;
-      dcaL = mp->dcaL * M_PIE / 180.0;
-      /* Connecting up the DCA model routine ... no point in V-dependence at the moment*/
-#if 0
-      /* set aside for now  */
       double d_dcaU_dV, d_dcaL_dV;
       double V = 0;
-      dynamic_contact_angle_model(&dcaU, &dcaL, V, &d_dcaU_dV, &d_dcaL_dV);
-#endif
-
+      if (mp->DcaUFunctionModel == CONSTANT && mp->DcaLFunctionModel == CONSTANT) {
+        dcaU = mp->dcaU * M_PIE / 180.0;
+        dcaL = mp->dcaL * M_PIE / 180.0;
+      } else {
+        /* Connecting up the DCA model routine ... no point in V-dependence at the moment*/
+        dynamic_contact_angle_model(&cos_dcaU, &cos_dcaL, V, &d_dcaU_dV, &d_dcaL_dV, &dcaU, &dcaL);
+      }
       slopeU = slopeL = 0.;
       for (i = 0; i < dim; i++) {
         slopeU += dHc_U_dX[i] * lsi->normal[i];
@@ -3858,7 +3858,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       /*  Positive sign for convex meniscus, negative for concave meniscus,
             this sign convention is opposite of generally accepted one for curvature
           i.e., 2H = grad-dot-normal_vector vs. 2H = -grad-dot-normal_vector       */
-      CURV = -(cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / H_cap;
+      cos_dcaU = cos(dcaU + atan(slopeU));
+      cos_dcaL = cos(dcaL + atan(-slopeL));
+      CURV = -(cos_dcaU + cos_dcaL) / H_cap;
       LubAux->op_curv = CURV;
 
       /* Curvature - numerical in planview direction */
@@ -3875,7 +3877,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       }
 
       /* Sensitivity to height */
-      D_CURV_DH = (cos(dcaU + atan(slopeU)) + cos(dcaL + atan(-slopeL))) / (H_cap * H_cap);
+      D_CURV_DH = (cos_dcaU + cos_dcaL) / (H_cap * H_cap);
 
       /* Sensitivity to level set F */
       for (i = 0; i < ei[pg->imtrx]->dof[VAR]; i++) {
@@ -5592,8 +5594,9 @@ void calculate_lub_q_v_old(
     double H_cap, dHc_U_dX[DIM], dHc_L_dX[DIM];
 
     /* Curvature - analytic in the "z" direction  */
-    dbl dcaU, dcaL, slopeU, slopeL;
-    dcaU = dcaL = slopeU = slopeL = 0.0;
+    dbl dcaU, dcaL, slopeU, slopeL, cos_dcaU, cos_dcaL;
+    dcaU = dcaL = 0.5 * M_PIE;
+    slopeU = slopeL = cos_dcaU = cos_dcaL = 0.0;
     if (mp->HeightUFunctionModel == WALL_DISTMOD || mp->HeightUFunctionModel == WALL_DISTURB) {
       H_cap = MAX(H_U - H_L, DBL_SEMI_SMALL);
       memset(dHc_U_dX, 0.0, sizeof(double) * DIM);
@@ -5606,8 +5609,15 @@ void calculate_lub_q_v_old(
       }
     }
     if (pd->v[pg->imtrx][VAR]) {
-      dcaU = mp->dcaU * M_PIE / 180.0;
-      dcaL = mp->dcaL * M_PIE / 180.0;
+      double d_dcaU_dV, d_dcaL_dV;
+      double V = 0;
+      if (mp->DcaUFunctionModel == CONSTANT && mp->DcaLFunctionModel == CONSTANT) {
+        dcaU = mp->dcaU * M_PIE / 180.0;
+        dcaL = mp->dcaL * M_PIE / 180.0;
+      } else {
+        /* Connecting up the DCA model routine ... no point in V-dependence at the moment*/
+        dynamic_contact_angle_model(&cos_dcaU, &cos_dcaL, V, &d_dcaU_dV, &d_dcaL_dV, &dcaU, &dcaL);
+      }
       slopeU = slopeL = 0.;
       for (i = 0; i < dim; i++) {
         slopeU += dHc_U_dX[i] * lsi->normal[i];
