@@ -1,5 +1,5 @@
-#include "util/facet_helper.hpp"
-#include "util/marching_cubes.hpp"
+#include "ls/create_facets.hpp"
+#include "ls/marching_cubes.hpp"
 #include <iostream>
 
 namespace goma {

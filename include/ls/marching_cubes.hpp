@@ -1,5 +1,5 @@
-#ifndef GOMA_ENABLE_MARCHING_CUBES
-#define GOMA_ENABLE_MARCHING_CUBES
+#ifndef GOMA_MARCHING_CUBES_HPP
+#define GOMA_MARCHING_CUBES_HPP
 
 #include <array>
 
@@ -288,4 +288,4 @@ constexpr std::array<std::array<int, 16>, 256> tri_table = {
 } // namespace marching_cubes
 } // namespace goma
 
-#endif // GOMA_ENABLE_MARCHING_CUBES
+#endif // GOMA_MARCHING_CUBES_HPP

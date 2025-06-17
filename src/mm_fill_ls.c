@@ -38,7 +38,7 @@
 #include "exodusII.h"
 #include "linalg/sparse_matrix.h"
 #include "load_field_variables.h"
-#include "ls/facet_based_reinit.h"
+#include "ls/facet_reinitialization.h"
 #include "mm_as_alloc.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_fill.h"
@@ -971,7 +971,7 @@ void surf_based_initialization(double *x,
         closest->closest_point->distance *= sign;
       }
 
-      if (ls != NULL && ls->Huygens_Freeze_Nodes && fabs(time) > 0) {
+      if (ls != NULL && ls->Freeze_Interface_Nodes && fabs(time) > 0) {
 
         int node_is_frozen = 0;
         for (int ielem = exo->node_elem_pntr[I]; ielem < exo->node_elem_pntr[I + 1]; ielem++) {
@@ -2583,8 +2583,8 @@ static int Hrenorm_constrain(Exo_DB *exo,
 #ifdef PARALLEL
       if (Num_Proc > 1)
         external = ext_dof[k];
-      /* when accumulating the dot products it is important not to add the
-       * external dofs */
+        /* when accumulating the dot products it is important not to add the
+         * external dofs */
 #endif
 
       if (!external) {

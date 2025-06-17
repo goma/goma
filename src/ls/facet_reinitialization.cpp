@@ -23,8 +23,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ls/facet_based_reinit.h"
-#include "util/facet_helper.hpp"
+#include "ls/create_facets.hpp"
+#include "ls/facet_reinitialization.h"
 
 extern "C" {
 #define DISABLE_CPP
@@ -43,18 +43,48 @@ extern "C" {
 
 using namespace goma::distance_tools;
 
-// clang format off
+// clang-format off
 static const std::array<std::array<double, 3>, 4> tet_points = {
-    {{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}};
+  {
+    {0.0, 0.0, 0.0},
+    {1.0, 0.0, 0.0},
+    {0.0, 1.0, 0.0},
+    {0.0, 0.0, 1.0}
+  }
+};
 
 static const std::array<std::array<double, 3>, 27> hex_points = {
-    {{-1.0, -1.0, -1.0}, {1.0, -1.0, -1.0}, {1.0, 1.0, -1.0},  {-1.0, 1.0, -1.0}, {-1.0, -1.0, 1.0},
-     {1.0, -1.0, 1.0},   {1.0, 1.0, 1.0},   {-1.0, 1.0, 1.0},  {0.0, -1.0, -1.0}, {1.0, 0.0, -1.0},
-     {0.0, 1.0, -1.0},   {-1.0, 0.0, -1.0}, {-1.0, -1.0, 0.0}, {1.0, -1.0, 0.0},  {1.0, 1.0, 0.0},
-     {-1.0, 1.0, 0.0},   {0.0, -1.0, 1.0},  {1.0, 0.0, 1.0},   {0.0, 1.0, 1.0},   {-1.0, 0.0, 1.0},
-     {0.0, 0.0, 0.0},    {0.0, 0.0, -1.0},  {0.0, 0.0, 1.0},   {-1.0, 0.0, 0.0},  {1.0, 0.0, 0.0},
-     {0.0, -1.0, 0.0},   {0.0, 1.0, 0.0}}};
-// clang format on
+  {
+    {-1.0, -1.0, -1.0},
+    { 1.0, -1.0, -1.0},
+    { 1.0,  1.0, -1.0},
+    {-1.0,  1.0, -1.0},
+    {-1.0, -1.0,  1.0},
+    { 1.0, -1.0,  1.0},
+    { 1.0,  1.0,  1.0},
+    {-1.0,  1.0,  1.0},
+    { 0.0, -1.0, -1.0},
+    { 1.0,  0.0, -1.0},
+    { 0.0,  1.0, -1.0},
+    {-1.0,  0.0, -1.0},
+    {-1.0, -1.0,  0.0},
+    { 1.0, -1.0,  0.0},
+    { 1.0,  1.0,  0.0},
+    {-1.0,  1.0,  0.0},
+    { 0.0, -1.0,  1.0},
+    { 1.0,  0.0,  1.0},
+    { 0.0,  1.0,  1.0},
+    {-1.0,  0.0,  1.0},
+    { 0.0,  0.0,  0.0},
+    { 0.0,  0.0, -1.0},
+    { 0.0,  0.0,  1.0},
+    {-1.0,  0.0,  0.0},
+    { 1.0,  0.0,  0.0},
+    { 0.0, -1.0,  0.0},
+    { 0.0,  1.0,  0.0}
+  }
+};
+// clang-format on
 
 class BasicTimer {
   double start_;
@@ -507,7 +537,7 @@ static void facet_based_reinitialization_3D(
   my_kd_tree_t index(3, pc, nanoflann::KDTreeSingleIndexAdaptorParams(10));
 
   for (int node = 0; node < num_total_nodes; node++) {
-    if (ls->Huygens_Freeze_Nodes && level_set_nodes.find(node) != level_set_nodes.end()) {
+    if (ls->Freeze_Interface_Nodes && level_set_nodes.find(node) != level_set_nodes.end()) {
       continue;
     }
     int index_ls = Index_Solution(node, ls->var, 0, 0, -2, pg->imtrx);
@@ -766,7 +796,7 @@ static void facet_based_reinitialization_2D(
 
   // For each node we will compute the distance to the closest facet
   for (int node = 0; node < num_total_nodes; node++) {
-    if (ls->Huygens_Freeze_Nodes && level_set_nodes.find(node) != level_set_nodes.end()) {
+    if (ls->Freeze_Interface_Nodes && level_set_nodes.find(node) != level_set_nodes.end()) {
       continue;
     }
     int index_ls = Index_Solution(node, ls->var, 0, 0, -2, pg->imtrx);

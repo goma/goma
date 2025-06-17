@@ -518,7 +518,9 @@ set(GOMA_INCLUDES
     include/linalg/sparse_matrix.h
     include/linalg/sparse_matrix_tpetra.h
     include/linalg/sparse_matrix_epetra.h
-    include/ls/facet_based_reinit.h
+    include/ls/create_facets.hpp
+    include/ls/facet_reinitialization.h
+    include/ls/marching_cubes.hpp
     include/load_field_variables.h
     include/loca_const.h
     include/loca_util_const.h
@@ -678,7 +680,8 @@ set(GOMA_SOURCES
     src/linalg/sparse_matrix.cpp
     src/linalg/sparse_matrix_tpetra.cpp
     src/linalg/sparse_matrix_epetra.cpp
-    src/ls/facet_based_reinit.cpp
+    src/ls/create_facets.cpp
+    src/ls/facet_reinitialization.cpp
     src/load_field_variables.c
     src/loca_bord.c
     src/loca_eigen_c2f.F
@@ -832,12 +835,12 @@ set(GOMA_USER_SOURCES
 
 set(GOMA_UTIL_INCLUDES
     include/bc/rotate_util.h include/mm_eh.h include/util/goma_normal.h
-    include/util/facet_helper.hpp include/util/aprepro_helper.h
+    include/util/aprepro_helper.h
     include/util/distance_helpers.h)
 
 set(GOMA_UTIL_SOURCES
     src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c
-    src/util/facet_helper.cpp src/util/aprepro_helper.cpp
+    src/util/aprepro_helper.cpp
     src/util/distance_helpers.cpp)
 
 set(GDS_INCLUDES include/gds/gds_vector.h)

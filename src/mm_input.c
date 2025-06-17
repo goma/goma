@@ -2869,7 +2869,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       ECHO(echo_string, echo_file);
     }
 
-    ls->Huygens_Freeze_Nodes = FALSE;
+    ls->Freeze_Interface_Nodes = FALSE;
 
     iread = look_for_optional(ifp, "Huygens Freeze Nodes", input, '=');
     if (iread == 1) {
@@ -2880,13 +2880,33 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       stringup(input);
 
       if ((strcmp(input, "ON") == 0) || (strcmp(input, "YES") == 0)) {
-        ls->Huygens_Freeze_Nodes = TRUE;
+        ls->Freeze_Interface_Nodes = TRUE;
       } else if ((strcmp(input, "OFF") == 0) || (strcmp(input, "NO") == 0)) {
-        ls->Huygens_Freeze_Nodes = FALSE;
+        ls->Freeze_Interface_Nodes = FALSE;
       } else {
         GOMA_EH(GOMA_ERROR, "Error unknown value for Huygens Freeze Nodes");
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Huygens Freeze Nodes", input);
+      ECHO(echo_string, echo_file);
+    }
+
+    iread = look_for_optional(ifp, "Level Set Freeze Interface Nodes", input, '=');
+    if (iread == 1) {
+      if (fscanf(ifp, "%s", input) != 1) {
+        GOMA_EH(GOMA_ERROR, "Error reading Level Set Freeze Interface Nodes flag.");
+      }
+      strip(input);
+      stringup(input);
+
+      if ((strcmp(input, "ON") == 0) || (strcmp(input, "YES") == 0)) {
+        ls->Freeze_Interface_Nodes = TRUE;
+      } else if ((strcmp(input, "OFF") == 0) || (strcmp(input, "NO") == 0)) {
+        ls->Freeze_Interface_Nodes = FALSE;
+      } else {
+        GOMA_EH(GOMA_ERROR, "Error unknown value for Level Set Freeze Interface Nodes");
+      }
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Level Set Freeze Interface Nodes",
+               input);
       ECHO(echo_string, echo_file);
     }
 
