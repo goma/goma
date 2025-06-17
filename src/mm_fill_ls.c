@@ -528,7 +528,7 @@ huygens_renormalization ( double *x,
       DPRINTF(stdout, "\n\t Maximum number of steps without renormalization reached: %d",
               ls->Renorm_Freq);
     }
-    DPRINTF(stdout, "\n\t Huygens renormalization : ");
+    DPRINTF(stdout, "\n\t Huygens renormalization: ");
 
     /* this call cleanses the LS field of "droplets" that surround exactly one
      * node */
@@ -583,7 +583,7 @@ huygens_renormalization ( double *x,
 
     ls->Sat_Hyst_Renorm_Lockout = 4;
 
-    DPRINTF(stdout, "    done. \n");
+    DPRINTF(stdout, "\t done. \n");
 
   } else if (ls->Renorm_Freq == 0) {
     status = 0;

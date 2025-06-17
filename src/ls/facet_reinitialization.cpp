@@ -101,8 +101,12 @@ public:
 
   void print_elapsed(const char *msg) {
     MPI_Barrier(MPI_COMM_WORLD);
-    if (ProcID == 0)
+    if (ProcID == 0) {
+      auto precision = std::cout.precision();
+      std::cout.precision(1);
       std::cout << msg << " " << std::scientific << elapsed() << " sec" << std::endl;
+      std::cout.precision(precision);
+    }
   }
 
   void print_elapsed_and_reset(const char *msg) {
@@ -314,8 +318,6 @@ static void facet_based_reinitialization_3D(
 
   // We are going to loop over all elements and check if the level set interface exists on that
   // element.
-  BasicTimer timer;
-  timer.start();
   std::vector<Triangle<3>> facets;
 
   std::vector<std::array<Point<3>, 8>> hexes;
@@ -482,8 +484,6 @@ static void facet_based_reinitialization_3D(
     }
   }
 
-  timer.print_elapsed_and_reset("           Facet computation time:");
-
   // If the level set interface exists on that element we will compute facets for that element.
 
   // We will share our facets with other processors
@@ -523,8 +523,6 @@ static void facet_based_reinitialization_3D(
         Point<3>({all_facets[i * 9 + 3], all_facets[i * 9 + 4], all_facets[i * 9 + 5]}),
         Point<3>({all_facets[i * 9 + 6], all_facets[i * 9 + 7], all_facets[i * 9 + 8]})));
   }
-
-  timer.print_elapsed_and_reset("          Facet communication time:");
 
   PointCloud<3> pc;
   generate_point_cloud(pc, facets);
@@ -582,7 +580,6 @@ static void facet_based_reinitialization_3D(
     }
   }
 
-  timer.print_elapsed("           Reinitialization time:");
 }
 
 static void facet_based_reinitialization_2D(
@@ -598,8 +595,6 @@ static void facet_based_reinitialization_2D(
   std::vector<std::tuple<Point<2>, Point<2>, Point<2>, Point<2>>> quads;
   std::vector<std::tuple<int, int, int, int>> quad_nodes;
 
-  BasicTimer timer;
-  timer.start();
   std::unordered_set<int> level_set_nodes;
 
   for (int elem_block = 0; elem_block < exo->num_elem_blocks; elem_block++) {
@@ -739,7 +734,6 @@ static void facet_based_reinitialization_2D(
       }
     }
   }
-  timer.print_elapsed_and_reset("Create facets");
 
   std::ofstream file("facets.txt");
   file << "x,y\n";
@@ -783,7 +777,6 @@ static void facet_based_reinitialization_2D(
                              {all_facets[i * 4 + 2], all_facets[i * 4 + 3]}));
   }
 
-  timer.print_elapsed_and_reset("Facet MPI communication");
   PointCloud<2> pc;
   generate_point_cloud(pc, facets);
 
@@ -836,11 +829,12 @@ static void facet_based_reinitialization_2D(
     }
   }
 
-  timer.print_elapsed_and_reset("Reinitialization using facets");
 }
 
 extern "C" void facet_based_reinitialization(
     double *x, Exo_DB *exo, Comm_Ex *cx, Dpi *dpi, int num_total_nodes, double time) {
+  BasicTimer timer;
+  timer.start();
   if (ProcID == 0)
     std::cout << "Facet based reinitialization\n";
   if (exo->num_dim == 2) {
@@ -850,4 +844,5 @@ extern "C" void facet_based_reinitialization(
   } else {
     GOMA_EH(GOMA_ERROR, "Unsupported dimension %d", exo->num_dim);
   }
+  timer.print_elapsed("\t  Reinitialization time:");
 }
