@@ -1379,7 +1379,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &ls->Toure_Penalty, 1, MPI_INT);
     ddd_add_member(n, &ls->YZbeta, 1, MPI_INT);
     ddd_add_member(n, &ls->YZbeta_scale, 1, MPI_DOUBLE);
-    ddd_add_member(n, &ls->Huygens_Freeze_Nodes, 1, MPI_INT);
+    ddd_add_member(n, &ls->Freeze_Interface_Nodes, 1, MPI_INT);
     ddd_add_member(n, &ls->Semi_Implicit_Integration, 1, MPI_INT);
   }
 
@@ -2700,6 +2700,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &CONTACT_DISTANCE, 1, MPI_INT);
   ddd_add_member(n, &PP_FLUID_STRESS, 1, MPI_INT);
   ddd_add_member(n, &LUB_CONVECTION, 1, MPI_INT);
+  ddd_add_member(n, &PP_MESH_VELOCITY, 1, MPI_INT);
   ddd_add_member(n, &USER_POST, 1, MPI_INT);
   if (len_u_post_proc > 0) {
     ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);

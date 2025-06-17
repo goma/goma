@@ -7,7 +7,7 @@ enable_language(CXX)
 enable_language(Fortran)
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${goma_SOURCE_DIR}/cmake")
@@ -518,6 +518,9 @@ set(GOMA_INCLUDES
     include/linalg/sparse_matrix.h
     include/linalg/sparse_matrix_tpetra.h
     include/linalg/sparse_matrix_epetra.h
+    include/ls/create_facets.hpp
+    include/ls/facet_reinitialization.h
+    include/ls/marching_cubes.hpp
     include/load_field_variables.h
     include/loca_const.h
     include/loca_util_const.h
@@ -677,6 +680,8 @@ set(GOMA_SOURCES
     src/linalg/sparse_matrix.cpp
     src/linalg/sparse_matrix_tpetra.cpp
     src/linalg/sparse_matrix_epetra.cpp
+    src/ls/create_facets.cpp
+    src/ls/facet_reinitialization.cpp
     src/load_field_variables.c
     src/loca_bord.c
     src/loca_eigen_c2f.F
@@ -830,10 +835,13 @@ set(GOMA_USER_SOURCES
 
 set(GOMA_UTIL_INCLUDES
     include/bc/rotate_util.h include/mm_eh.h include/util/goma_normal.h
-    include/util/aprepro_helper.h include/util/distance_helpers.h)
+    include/util/aprepro_helper.h
+    include/util/distance_helpers.h)
 
-set(GOMA_UTIL_SOURCES src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c
-                      src/util/aprepro_helper.cpp src/util/distance_helpers.cpp)
+set(GOMA_UTIL_SOURCES
+    src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c
+    src/util/aprepro_helper.cpp
+    src/util/distance_helpers.cpp)
 
 set(GDS_INCLUDES include/gds/gds_vector.h)
 
@@ -1014,6 +1022,7 @@ foreach(d ${GOMA_COMPILE_DEFINITIONS})
   message(STATUS "${d}")
 endforeach()
 message("\n")
+message(STATUS "Exodus include dirs:" ${SEACASExodus_INCLUDE_DIRS})
 
 set(GOMA_TPL_INCLUDES
     ${GOMA_TPL_INCLUDES}
@@ -1080,7 +1089,8 @@ if(ENABLE_WARNINGS)
 endif()
 
 add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
-target_include_directories(goma PUBLIC include)
+target_include_directories(
+  goma PUBLIC include ${PROJECT_SOURCE_DIR}/tpls/nanoflann/include)
 target_include_directories(goma SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_directories(goma PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
 target_link_libraries(goma PUBLIC ${GOMA_TPL_LIBRARIES} gds)
