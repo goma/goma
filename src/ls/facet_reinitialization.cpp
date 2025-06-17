@@ -579,7 +579,6 @@ static void facet_based_reinitialization_3D(
       x[index_ls] = std::copysign(min_distance, x[index_ls]);
     }
   }
-
 }
 
 static void facet_based_reinitialization_2D(
@@ -828,7 +827,6 @@ static void facet_based_reinitialization_2D(
       x[index_ls] = std::copysign(min_distance, x[index_ls]);
     }
   }
-
 }
 
 extern "C" void facet_based_reinitialization(
