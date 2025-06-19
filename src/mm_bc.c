@@ -2335,7 +2335,7 @@ int find_id_side(const int ielem,                /* element index number */
       sum += shape(0.0, 0.0, -1.0, ielem_type, PSI, id_local_elem_coord[i]);
     if (sum > 0.999)
       return (5);
-    /* fall through */
+    FALLTHROUGH;
   case 2:
     /* newly added for triangles */
     /* This is messing with shell elements so setting it aside */

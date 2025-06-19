@@ -343,6 +343,7 @@ int WALL_DISTANCE = -1;
 int CONTACT_DISTANCE = -1;
 int PP_FLUID_STRESS = -1; /* Fluid Stress without Pressure contribution */
 int LUB_CONVECTION = -1;
+int PP_MESH_VELOCITY = -1;
 
 int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
                           * actually is */
@@ -3155,6 +3156,20 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[LUB_CONVECTION + 2] = 1.0;
 
   } /* end of LUB_CONVECTION */
+
+  if ((PP_MESH_VELOCITY != -1) && pd->e[pg->imtrx][R_MESH1]) {
+    /* Post velocities */
+    local_post[PP_MESH_VELOCITY] = fv_dot->d[0];
+    local_lumped[PP_MESH_VELOCITY] = 1.0;
+    if (pd->Num_Dim > 1) {
+      local_post[PP_MESH_VELOCITY + 1] = fv_dot->d[1];
+      local_lumped[PP_MESH_VELOCITY + 1] = 1.0;
+    }
+    if (pd->Num_Dim > 2) {
+      local_post[PP_MESH_VELOCITY + 2] = fv_dot->d[2];
+      local_lumped[PP_MESH_VELOCITY + 2] = 1.0;
+    }
+  }
 
   if ((PP_LAME_MU != -1) && (pd->e[pg->imtrx][R_MESH1])) {
 
@@ -7964,6 +7979,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "TFMP_inverse_Peclet", &TFMP_INV_PECLET);
   iread = look_for_post_proc(ifp, "TFMP_Krg", &TFMP_KRG);
   iread = look_for_post_proc(ifp, "Lubrication Convection", &LUB_CONVECTION);
+  iread = look_for_post_proc(ifp, "Mesh Velocity", &PP_MESH_VELOCITY);
 
   /* Report count of post-proc vars to be exported */
   /*
@@ -11730,6 +11746,32 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
     index++;
     index_post++;
+  }
+
+  if (PP_MESH_VELOCITY != -1 && (Num_Var_In_Type[pg->imtrx][R_MESH1])) {
+    if (PP_MESH_VELOCITY == 2) {
+      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+    }
+    PP_MESH_VELOCITY = index_post;
+    sprintf(nm, "MVX");
+    sprintf(ds, "Mesh velocity x-component");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+    if (pd->Num_Dim > 1) {
+      sprintf(nm, "MVY");
+      sprintf(ds, "Mesh velocity y-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+    if (pd->Num_Dim > 2) {
+      sprintf(nm, "MVZ");
+      sprintf(ds, "Mesh velocity z-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
   }
 
   if (SH_SAT_OPEN != -1 && Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_OPEN]) {
