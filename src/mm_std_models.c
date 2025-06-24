@@ -1722,7 +1722,8 @@ double epoxy_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   /* find equation that has extent of reaction */
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
     if (mp->SpeciesSourceModel[w] == EPOXY || mp->SpeciesSourceModel[w] == EPOXY_DEA ||
-        mp->SpeciesSourceModel[w] == EPOXY_LINEAR_EXP) {
+        mp->SpeciesSourceModel[w] == EPOXY_LINEAR_EXP ||
+        mp->SpeciesSourceModel[w] == EPOXY_ARRHENIUS_EXP) {
       /* extent of reaction, alpha */
       species_no = w;
     }
@@ -1745,7 +1746,8 @@ double epoxy_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     if (d_h != NULL && pd->v[pg->imtrx][var]) {
       if (mp->SpeciesSourceModel[species_no] == EPOXY ||
           (mp->SpeciesSourceModel[species_no] == EPOXY_DEA) ||
-          (mp->SpeciesSourceModel[species_no] == EPOXY_LINEAR_EXP)) {
+          (mp->SpeciesSourceModel[species_no] == EPOXY_LINEAR_EXP) ||
+          (mp->SpeciesSourceModel[species_no] == EPOXY_ARRHENIUS_EXP)) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           d_h->C[species_no][j] += delta_h * (1 + 2. * tt) / dt * bf[var]->phi[j];
         }

@@ -118,8 +118,59 @@ not be repeated.
 	* <float7> :math:`m` Heaviside transition for Breakdown and Buildup
 	* <float8> :math:`m_y` Transition for yield stress
 
+**EPOXY_LINEAR_EXP** <species> <floatlist>
+
+	* <float1> :math:`A1``
+	* <float2> :math:`E1/R`
+	* <float3> :math:`A2`
+	* <float4> :math:`E2/R`
+	* <float5> :math:`A_m`
+	* <float6> :math:`B_m`
+	* <float7> :math:`A_n`
+	* <float8> :math:`B_n`
+
+	Corresponds to the linear exponential model for epoxy curing, where the source term for cure, :math:`\alpha` is given by:
+
+	.. math::
+
+		\dot{\alpha} = \left(k_1 + k_2 \alpha^m\right) \left(1 - \alpha\right)^n
+
+    where :math:`k_1 = A1 \exp(-E1/(R T))` and :math:`k_2 = A2 \exp(-E2/(R T))` are the rate constants, and :math:`m` and :math:`n` are the exponents.
+
+	.. math::
+
+		m = A_m T + B_m
+		n = A_n T + B_n
+
+
+**EPOXY_ARRHENIUS_EXP** <species> <floatlist>
+
+	* <float1> :math:`A1``
+	* <float2> :math:`E1/R`
+	* <float3> :math:`A2`
+	* <float4> :math:`E2/R`
+	* <float5> :math:`A_m`
+	* <float6> :math:`B_m`
+	* <float7> :math:`A_n`
+	* <float8> :math:`B_n`
+
+	Corresponds to the linear exponential model for epoxy curing, where the source term for cure, :math:`\alpha` is given by:
+
+	.. math::
+
+		\dot{\alpha} = \left(k_1 + k_2 \alpha^m\right) \left(1 - \alpha\right)^n
+
+    where :math:`k_1 = A1 \exp(-E1/(R T))` and :math:`k_2 = A2 \exp(-E2/(R T))` are the rate constants, and :math:`m` and :math:`n` are the exponents.
+
+	.. math::
+
+		m = A_m exp (-B_m / T)
+		n = A_n exp (-B_n / T)
+		
+
 **USER** <species> <floatlist>
 	The **USER** option indicates that a user-defined model has been introduced into the usr_species_source routine in the user_mp.c file. The <float_list> is of arbitrary length subject to the user’s requirements to parameterize the model.
+
 
 ------------
 **Examples**
