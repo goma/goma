@@ -396,15 +396,15 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                 }
               }
             } /* for (i = 0; i < exo->ns_num_nodes[ins]; i++) { */
-          }   /* if (exo->ns_id[ins] == BC_Types[ibc].BC_ID) { */
-        }     /* for (ins = 0; ins < exo->num_node_sets; ins++) { */
+          } /* if (exo->ns_id[ins] == BC_Types[ibc].BC_ID) { */
+        } /* for (ins = 0; ins < exo->num_node_sets; ins++) { */
         used_BC = gsum_Int(used_BC);
         if (ProcID == 0) {
           matrix_used_BC[ibc] |= used_BC;
         }
 
       } /* END if (!strcmp(BC_Types[ibc].Set_Type, "NS"))   */
-    }   /* for (ibc = 0; ibc < Num_BC; ibc++) */
+    } /* for (ibc = 0; ibc < Num_BC; ibc++) */
 
     /***************************************************************************/
     /*      BOUNDARY CONDITIONS SPECIFIED BY SIDE SETS                         */
@@ -577,7 +577,7 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
             }
 
           } /* if (Proc_SS_Ids[iss] == BC_Types[ibc].BC_ID)  */
-        }   /*  for (iss = 0; iss < Proc_Num_Side_Sets; iss++) */
+        } /*  for (iss = 0; iss < Proc_Num_Side_Sets; iss++) */
         /*
          */
 
@@ -586,7 +586,7 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
           matrix_used_BC[ibc] |= used_BC;
         }
       } /* END if (!strcmp(BC_Types[ibc].Set_Type, "SS")) 		      */
-    }   /* END for (ibc = 0; ibc < Num_BC; ibc++)				      */
+    } /* END for (ibc = 0; ibc < Num_BC; ibc++)				      */
 
     /****************************************************************************/
     /*      RESOLVE BOUNDARY CONDITION CONFLICTS SPECIFIED                      */
@@ -937,10 +937,10 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                         BC_Unk_List[inode][offset][j] = -1;
                       }
                     } /* if ((ibc2 != ibc1) && (ibc2 != -1)) */
-                  }   /* for (k=j+1; k<idup; k++) */
-                }     /* if (BC_Types[ibc1].desc->method == DIRICHLET) */
-              }       /* if (ibc1 != -1) */
-            }         /*  for (j=0; j<idup-1; j++)*/
+                  } /* for (k=j+1; k<idup; k++) */
+                } /* if (BC_Types[ibc1].desc->method == DIRICHLET) */
+              } /* if (ibc1 != -1) */
+            } /*  for (j=0; j<idup-1; j++)*/
 
             /*
              * Compress the list and find the number of bcs
@@ -1139,9 +1139,9 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                       }
                     }
                   } /* for (k=j+1; k<idup; k++) */
-                }   /* if (BC_Types[ibc1].desc->method == DIRICHLET) */
-              }     /* if (ibc1 != -1) */
-            }       /*  for (j=0; j<idup-1; j++)*/
+                } /* if (BC_Types[ibc1].desc->method == DIRICHLET) */
+              } /* if (ibc1 != -1) */
+            } /*  for (j=0; j<idup-1; j++)*/
             compress_bc_list(BC_Unk_List[inode][offset]);
             idup = find_first_opening(BC_Unk_List[inode][offset], MAX_NODAL_BCS);
             /*****************************************************************************/
@@ -1644,9 +1644,9 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                       }
                     }
                   } /* for (k=j+1; k<idup; k++) */
-                }   /* if (BC_Types[ibc1].desc->method == DIRICHLET) */
-              }     /* if (ibc1 != -1) */
-            }       /*  for (j=0; j<idup-1; j++)*/
+                } /* if (BC_Types[ibc1].desc->method == DIRICHLET) */
+              } /* if (ibc1 != -1) */
+            } /*  for (j=0; j<idup-1; j++)*/
 
             /*
              * WEAK conditions remaining in dup list apply as they are,
@@ -1654,7 +1654,7 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
              */
 
           } /* if idup>1 */
-        }   /*  for (eqn=0; eqn<MAX_VARIABLE_TYPES + MAX_CONC; eqn++)  */
+        } /*  for (eqn=0; eqn<MAX_VARIABLE_TYPES + MAX_CONC; eqn++)  */
 
         /*
          * Make sure the bc list is compressed
@@ -1663,7 +1663,7 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
           compress_bc_list(BC_Unk_List[inode][offset]);
         }
       } /* if (BC_list[inode] != NULL) */
-    }   /*for (inode=0; inode<num_total_nodes; inode++)  */
+    } /*for (inode=0; inode<num_total_nodes; inode++)  */
 
     /***************************************************************************/
     /* CLEAN UP                                                                */
@@ -1934,18 +1934,22 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
             }
           }
         } /* end of loop over ivar */
-      }   /* BC_Unk_List == NULL */
+      } /* BC_Unk_List == NULL */
     }
 
     if (num_bc_nodes > 0) {
-      mesh_rotate_node[pg->imtrx] = (int *)realloc(
-          mesh_rotate_node[pg->imtrx], (size_t)num_mesh_rotate[pg->imtrx] * sizeof(int));
-      mesh_rotate_ss[pg->imtrx] = (int *)realloc(mesh_rotate_ss[pg->imtrx],
-                                                 (size_t)num_mesh_rotate[pg->imtrx] * sizeof(int));
-      mom_rotate_node[pg->imtrx] = (int *)realloc(mom_rotate_node[pg->imtrx],
+      if (num_mesh_rotate[pg->imtrx] > 0) {
+        mesh_rotate_node[pg->imtrx] = (int *)realloc(
+            mesh_rotate_node[pg->imtrx], (size_t)num_mesh_rotate[pg->imtrx] * sizeof(int));
+        mesh_rotate_ss[pg->imtrx] = (int *)realloc(
+            mesh_rotate_ss[pg->imtrx], (size_t)num_mesh_rotate[pg->imtrx] * sizeof(int));
+      }
+      if (num_mom_rotate[pg->imtrx] > 0) {
+        mom_rotate_node[pg->imtrx] = (int *)realloc(
+            mom_rotate_node[pg->imtrx], (size_t)num_mom_rotate[pg->imtrx] * sizeof(int));
+        mom_rotate_ss[pg->imtrx] = (int *)realloc(mom_rotate_ss[pg->imtrx],
                                                   (size_t)num_mom_rotate[pg->imtrx] * sizeof(int));
-      mom_rotate_ss[pg->imtrx] =
-          (int *)realloc(mom_rotate_ss[pg->imtrx], (size_t)num_mom_rotate[pg->imtrx] * sizeof(int));
+      }
     }
 
     if (mesh_rotate_node[pg->imtrx] != NULL || mom_rotate_node[pg->imtrx] != NULL) {
@@ -2158,10 +2162,10 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                 }
               }
             } /* for (i = 0; i < exo->ns_num_nodes[ins]; i++) */
-          }   /* if (exo->ns_id[ins] == BC_Types[ibc].BC_ID) */
-        }     /*for (ins = 0; ins < Proc_Num_Node_Sets; ins++) */
-      }       /* END if (!strcmp(BC_Types[ibc].Set_Type, "NS"))   */
-    }         /*for (ibc = 0; ibc < Num_BC; ibc++) */
+          } /* if (exo->ns_id[ins] == BC_Types[ibc].BC_ID) */
+        } /*for (ins = 0; ins < Proc_Num_Node_Sets; ins++) */
+      } /* END if (!strcmp(BC_Types[ibc].Set_Type, "NS"))   */
+    } /*for (ibc = 0; ibc < Num_BC; ibc++) */
 
     /*****************************************************************************/
     /*      BOUNDARY CONDITIONS SPECIFIED BY SIDE SETS                           */
@@ -2320,12 +2324,12 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                     }
                   }
                 } /* if ( node_ok ) */
-              }   /* for ( lni=exo->ss_node_side_index[iss][side_index]; */
-            }     /*for ( side_index=0; side_index<exo->ss_num_sides[iss]; side_index++) */
-          }       /* if (Proc_SS_Ids[iss] == BC_Types[ibc].BC_ID)  */
-        }         /*  for (iss = 0; iss < Proc_Num_Side_Sets; iss++) */
-      }           /* END if (!strcmp(BC_Types[ibc].Set_Type, "SS")) 		      */
-    }             /* END for (ibc = 0; ibc < Num_BC; ibc++)				      */
+              } /* for ( lni=exo->ss_node_side_index[iss][side_index]; */
+            } /*for ( side_index=0; side_index<exo->ss_num_sides[iss]; side_index++) */
+          } /* if (Proc_SS_Ids[iss] == BC_Types[ibc].BC_ID)  */
+        } /*  for (iss = 0; iss < Proc_Num_Side_Sets; iss++) */
+      } /* END if (!strcmp(BC_Types[ibc].Set_Type, "SS")) 		      */
+    } /* END for (ibc = 0; ibc < Num_BC; ibc++)				      */
 
     /***************************************************************************/
     /*
@@ -2444,8 +2448,8 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
             }
           }
         } /* if (node_ok)  */
-      }   /*  end of loop over nodes */
-    }     /* END for (irc = 0; irc < Num_ROT; irc++)				     */
+      } /*  end of loop over nodes */
+    } /* END for (irc = 0; irc < Num_ROT; irc++)				     */
 
 #ifndef PARALLEL
     fprintf(stderr, "Found %d nodes at which to rotate equations\n", num_rot_nodes);
@@ -2892,8 +2896,8 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                     }
 
                   } /* end of if SI doesn't exist */
-                }   /* end of if PC doesnt exist */
-              }     /* end of if DC doesnt exist */
+                } /* end of if PC doesnt exist */
+              } /* end of if DC doesnt exist */
 
               /* redo list keeping only those in save_this_bc */
               k = 0;
@@ -2907,10 +2911,10 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                 BC_Unk_List[inode][offset][j] = -1;
               }
             } /* end of if ndup > 1 */
-          }   /* end of if standard BC */
-        }     /* end of loop over equations */
-      }       /* end of if BC_list */
-    }         /* end of loop over nodes */
+          } /* end of if standard BC */
+        } /* end of loop over equations */
+      } /* end of if BC_list */
+    } /* end of loop over nodes */
 
     /******************************************************************************/
     /* CLEAN UP                                                                   */

@@ -13,4 +13,6 @@ mechanisms that are charge-dependent.
    electrical_properties/magnetic_permeability
    electrical_properties/electromagnetic_incident_wave
    electrical_properties/extinction_index
+   electrical_properties/lsi_extinction_index_interp.rst
    electrical_properties/refractive_index
+   electrical_properties/lsi_refractive_index_interp.rst

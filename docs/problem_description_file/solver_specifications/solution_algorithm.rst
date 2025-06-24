@@ -126,6 +126,8 @@ stratimikos
 petsc
     PETSc solver and preconditioner, will use `petscrc` file or `-petsc`
     command line, see Technical Discussion for more information
+mumps
+    MUMPS Direct solver
 
 
 ------------

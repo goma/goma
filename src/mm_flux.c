@@ -1475,6 +1475,8 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
               }
               local_flux += weight * det * local_q;
               local_flux_conv += weight * det * local_qconv;
+              /* clean-up */
+              safe_free((void *)n_dof);
               break;
 
             case FORCE_X:
@@ -3709,9 +3711,9 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
           }
 
         } /*  material id conditional */
-      }   /*   element loop */
-    }     /* num_side_in_set > 0 */
-  }       /*   sset id   */
+      } /*   element loop */
+    } /* num_side_in_set > 0 */
+  } /*   sset id   */
   else {
 
     /**  Apply end point conditions when the nset is not found   **/
@@ -4026,14 +4028,14 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                   break;
                 }
               } /*  J_AC  */
-            }   /*  blk_id  */
+            } /*  blk_id  */
           }
         } /* ss_sides loop	*/
         if (corner_elem == -1)
           GOMA_EH(GOMA_ERROR, "corner element not found");
 
       } /* if sset_id	*/
-    }   /* if nset_id	*/
+    } /* if nset_id	*/
     else {
 #ifndef PARALLEL
       (void)sprintf(Err_Msg, "%s could not locate SSID %d.", yo, side_set_id);
@@ -4160,12 +4162,12 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
       (quantity == I_NEG_FILL || quantity == I_MASS_NEGATIVE_FILL || quantity == I_NEG_VOLPLANE ||
        quantity == I_NEG_VX || quantity == I_NEG_VY || quantity == I_NEG_VZ ||
        quantity == I_NEG_CENTER_X || quantity == I_NEG_CENTER_Y || quantity == I_NEG_CENTER_Z ||
-       I_HEAT_ENERGY_NEG);
+       quantity == I_HEAT_ENERGY_NEG);
   int pos_LS_integ =
       (quantity == I_POS_FILL || quantity == I_MASS_POSITIVE_FILL || quantity == I_POS_VOLPLANE ||
        quantity == I_POS_VX || quantity == I_POS_VY || quantity == I_POS_VZ ||
        quantity == I_POS_CENTER_X || quantity == I_POS_CENTER_Y || quantity == I_POS_CENTER_Z ||
-       I_HEAT_ENERGY_POS);
+       quantity == I_HEAT_ENERGY_POS);
   int do_LS_integ = (neg_LS_integ || pos_LS_integ);
 
   adaptive_integration_active = (ls != NULL && ls->AdaptIntegration && do_LS_integ);
@@ -6976,9 +6978,9 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
           }
 
         } /*  material id conditional */
-      }   /*   element loop */
-    }     /* num_side_in_set > 0 */
-  }       /*   sset id   */
+      } /*   element loop */
+    } /* num_side_in_set > 0 */
+  } /*   sset id   */
   else {
     /**  Apply end point conditions when the nset is not found   **/
     nset_id = in_list(side_set_id, 0, exo->num_node_sets, exo->ns_id);
@@ -7158,13 +7160,13 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
                 GOMA_EH(GOMA_ERROR, "Illegal flux type");
                 break;
               } /*  end of switch */
-            }   /*  mat_id  */
+            } /*  mat_id  */
           }
         } /*  ss_sides loop  */
         if (corner_elem == -1)
           GOMA_EH(GOMA_ERROR, "corner element not found");
       } /*  if sset_id     */
-    }   /*  if nset_id     */
+    } /*  if nset_id     */
     else {
 #ifndef PARALLEL
       (void)sprintf(Err_Msg, "%s could not locate SSID %d.", yo, side_set_id);
@@ -8821,7 +8823,7 @@ int adaptive_weight(double w[],
         break;
       default:
         printf("unknown weight fcn type %d \n", wt_type);
-      }      /* end of wt_type switch */
+      } /* end of wt_type switch */
       break; /* end of dim switch, case 1 */
 
     case 2:
@@ -9456,7 +9458,7 @@ int interface_crossing_2DQ(const double ls_F[],
       }
       break;
     } /* end of nint2D[iside] switch */
-  }   /* end of for iside loop  */
+  } /* end of for iside loop  */
 
   /**  check for interface duplication from corner nodes  **/
   for (i = 0; i < is2D; i++) {

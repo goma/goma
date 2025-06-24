@@ -972,7 +972,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
       if (sscanf(third_string, "%d", &ExoTimePlane) != 1) {
         GOMA_EH(GOMA_ERROR, "Time plane for read_exoII_file option is undecipherable");
       }
-      // Fall through
+      FALLTHROUGH;
     case 2:
       Guess_Flag = 6;
       strcpy(ExoAuxFile, second_string);
@@ -2247,6 +2247,9 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       } else if (strcmp(input, "Huygens") == 0) {
         ls->Renorm_Method = HUYGENS;
         strcat(echo_string, "Huygens");
+      } else if (strcmp(input, "Facet_Based") == 0) {
+        ls->Renorm_Method = FACET_BASED;
+        strcat(echo_string, "Facet_Based");
       } else if (strcmp(input, "Huygens_Constrained") == 0) {
 
         ls->Renorm_Method = HUYGENS_C;
@@ -2595,7 +2598,17 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       ECHO(echo_string, echo_file);
     }
 
-    ls->Contact_Tolerance = 0.5;
+    ls->Contact_Tolerance = 0.0;
+    iread = look_for_optional(ifp, "Level Set Contact Tolerance", input, '=');
+    if (iread == 1) {
+      if (fscanf(ifp, "%lf", &(ls->Contact_Tolerance)) != 1) {
+        GOMA_EH(GOMA_ERROR, "Error reading Level Set Contact Tolerance.");
+      }
+
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %lf", "Level Set Contact Tolerance",
+               ls->Contact_Tolerance);
+      ECHO(echo_string, echo_file);
+    }
 
     /* Check if this is a fluid/solid interaction problem. */
     ls->Fluid_Solid = FALSE;
@@ -2856,7 +2869,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       ECHO(echo_string, echo_file);
     }
 
-    ls->Huygens_Freeze_Nodes = FALSE;
+    ls->Freeze_Interface_Nodes = FALSE;
 
     iread = look_for_optional(ifp, "Huygens Freeze Nodes", input, '=');
     if (iread == 1) {
@@ -2867,13 +2880,33 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       stringup(input);
 
       if ((strcmp(input, "ON") == 0) || (strcmp(input, "YES") == 0)) {
-        ls->Huygens_Freeze_Nodes = TRUE;
+        ls->Freeze_Interface_Nodes = TRUE;
       } else if ((strcmp(input, "OFF") == 0) || (strcmp(input, "NO") == 0)) {
-        ls->Huygens_Freeze_Nodes = FALSE;
+        ls->Freeze_Interface_Nodes = FALSE;
       } else {
         GOMA_EH(GOMA_ERROR, "Error unknown value for Huygens Freeze Nodes");
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Huygens Freeze Nodes", input);
+      ECHO(echo_string, echo_file);
+    }
+
+    iread = look_for_optional(ifp, "Level Set Freeze Interface Nodes", input, '=');
+    if (iread == 1) {
+      if (fscanf(ifp, "%s", input) != 1) {
+        GOMA_EH(GOMA_ERROR, "Error reading Level Set Freeze Interface Nodes flag.");
+      }
+      strip(input);
+      stringup(input);
+
+      if ((strcmp(input, "ON") == 0) || (strcmp(input, "YES") == 0)) {
+        ls->Freeze_Interface_Nodes = TRUE;
+      } else if ((strcmp(input, "OFF") == 0) || (strcmp(input, "NO") == 0)) {
+        ls->Freeze_Interface_Nodes = FALSE;
+      } else {
+        GOMA_EH(GOMA_ERROR, "Error unknown value for Level Set Freeze Interface Nodes");
+      }
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Level Set Freeze Interface Nodes",
+               input);
       ECHO(echo_string, echo_file);
     }
 
@@ -4200,7 +4233,7 @@ void rd_track_specs(FILE *ifp, char *input) {
                 cpcc[iCC].End_CC_Value =
                     cpcc[iCC].coeff_0 +
                     cpcc[iCC].coeff_1 * pow(EndParameterValue, cpcc[iCC].coeff_2);
-                /* fall through */
+                FALLTHROUGH;
               default:
                 DPRINTF(stderr, "%s:\tCC[%d] flag must be 0, 1, or 2\n", yo, iCC + 1);
                 exit(-1);
@@ -5988,6 +6021,9 @@ void rd_solver_specs(FILE *ifp, char *input) {
   } else if (strcmp(Matrix_Solver, "amesos") == 0) {
     Linear_Solver = AMESOS;
     is_Solver_Serial = FALSE;
+  } else if (strcmp(Matrix_Solver, "mumps") == 0) {
+    Linear_Solver = MUMPS;
+    is_Solver_Serial = FALSE;
   } else if (strcmp(Matrix_Solver, "amesos2") == 0) {
     Linear_Solver = AMESOS2;
     is_Solver_Serial = FALSE;
@@ -6147,6 +6183,55 @@ void rd_solver_specs(FILE *ifp, char *input) {
 
   for (int i = 1; i < MAX_NUM_MATRICES; i++) {
     strcpy(Amesos2_File[i], Amesos2_File[0]);
+  }
+
+  // Optional MUMPS controls
+  if (upd->solver_info == NULL) {
+    upd->solver_info = calloc(1, sizeof(solver_information));
+  }
+  if (Linear_Solver == MUMPS) {
+    // have to figure out which ones we actually want to be setable
+    const int num_icntl = 27;
+    const int readable_parameters[27] = {4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
+                                         18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 58};
+    for (int i = 0; i < num_icntl; i++) {
+      int param = readable_parameters[i];
+      snprintf(search_string, 1024, "MUMPS ICNTL %d", param);
+      iread = look_for_optional(ifp, search_string, input, '=');
+      if (iread == 1) {
+        read_string(ifp, input, '\n');
+        strip(input);
+        int count = sscanf(input, "%d", &upd->solver_info->icntl[param - 1]);
+        if (count == 1) {
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", search_string,
+                   upd->solver_info->icntl[param - 1]);
+          ECHO(echo_string, echo_file);
+          upd->solver_info->icntl_user_set[param - 1] = 1;
+        } else if (count != 1) {
+          GOMA_EH(GOMA_ERROR, "Error reading MUMPS ICNTL %d", param);
+        }
+      }
+    }
+    const int num_cntl = 6;
+    const int readable_parameters_cntl[6] = {1, 2, 3, 4, 5, 7};
+    for (int i = 0; i < num_cntl; i++) {
+      int param = readable_parameters_cntl[i];
+      snprintf(search_string, 1024, "MUMPS CNTL %d", param);
+      iread = look_for_optional(ifp, search_string, input, '=');
+      if (iread == 1) {
+        read_string(ifp, input, '\n');
+        strip(input);
+        int count = sscanf(input, "%lf", &upd->solver_info->cntl[param - 1]);
+        if (count == 1) {
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %lf", search_string,
+                   upd->solver_info->cntl[param - 1]);
+          ECHO(echo_string, echo_file);
+          upd->solver_info->cntl_user_set[param - 1] = 1;
+        } else if (count != 1) {
+          GOMA_EH(GOMA_ERROR, "Error reading MUMPS ICNTL %d", param);
+        }
+      }
+    }
   }
 
   strcpy(search_string, "Preconditioner");
@@ -6564,9 +6649,10 @@ void rd_solver_specs(FILE *ifp, char *input) {
   char ls_type[MAX_CHAR_IN_INPUT] = "FULL_STEP";
   ;
   Newton_Line_Search_Type = NLS_FULL_STEP;
-  int lsread = look_for_optional_string(ifp, "Newton line search type", ls_type, MAX_CHAR_IN_INPUT);
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
+  int lsread = look_for_optional_string(ifp, "Newton line search type", ls_type, MAX_CHAR_IN_INPUT);
   if (lsread >= 1) {
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
     if (strcmp("FULL_STEP", ls_type) == 0) {
       Newton_Line_Search_Type = NLS_FULL_STEP;
     } else if (strcmp("BACKTRACK", ls_type) == 0) {
@@ -6575,22 +6661,20 @@ void rd_solver_specs(FILE *ifp, char *input) {
       GOMA_EH(GOMA_ERROR, "Unknown Newton line search type: %s", ls_type);
     }
   }
-  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Newton line search type", ls_type);
   ECHO(echo_string, echo_file);
 
-  if (fscanf(ifp, "%le %le %le %le %le", &custom_tol1, &damp_factor2, &custom_tol2, &damp_factor3,
-             &custom_tol3) != 5) {
-    damp_factor2 = damp_factor3 = -1.;
-    custom_tol1 = custom_tol2 = custom_tol3 = -1;
-    rewind(ifp); /* Added to make ibm happy when single relaxation value input. dal/1-6-99 */
-  } else {
-    if ((damp_factor1 <= 1. && damp_factor1 >= 0.) && (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
-        (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
-      SPF(endofstring(echo_string), " %.4g %.4g %.4g %.4g %.4g", custom_tol1, damp_factor2,
-          custom_tol2, damp_factor3, custom_tol3);
-    } else {
-      GOMA_EH(GOMA_ERROR, "All damping factors must be in the range 0 <= fact <=1");
+  Line_Search_Minimum_Damping = 0.005;
+  lsread = look_for_optional_string(ifp, "Line search minimum damping", ls_type, MAX_CHAR_IN_INPUT);
+  if (lsread >= 1) {
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Line search minimum damping", ls_type);
+    if (sscanf(ls_type, "%lf", &Line_Search_Minimum_Damping) != 1) {
+      GOMA_EH(GOMA_ERROR, "Unknown Line search minimum damping: %s", ls_type);
     }
+    ECHO(echo_string, echo_file);
+  } else {
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %lf", "Line search minimum damping",
+             Line_Search_Minimum_Damping);
+    ECHO(echo_string, echo_file);
   }
 
   look_for(ifp, "Newton correction factor", input, '=');
@@ -13400,7 +13484,7 @@ void rd_table_data(FILE *ifp, char *input, struct Data_Table *table, char *endli
   switch (table_dim) {
   case 3:
     table->t3 = (double *)smalloc(sizeof(double) * Num_Pnts);
-    /* fall through */
+    FALLTHROUGH;
   case 2:
   case 1:
     table->t2 = (double *)smalloc(sizeof(double) * Num_Pnts);

@@ -37,10 +37,11 @@ POWER_LAW
     second, n, is the exponent on the strain rate which can take on any value between 1 (Newtonian)
     and 0 (infinitely shear thinning). n is entered with the *Power Law Exponent* card. The form of
     the equation is                                                                                
+    
+    .. math::
+
+       \mu = \mu_0 \dot{\gamma}^{n-1}
                                                                                                    
-    .. figure:: /figures/376_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 40%                                                                                 
                                                                                                    
     where is the second invariant of the shear-rate tensor. To obtain solutions with the power law 
     model, it is best to start with a Newtonian initial guess since the viscosity becomes infinite 
@@ -57,9 +58,9 @@ CARREAU
     the transition between the low-rate and the power-law region and is entered with the Aexp card.
     The form of the equation is                                                                    
                                                                                                    
-    .. figure:: /figures/377_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 40%                                                                                 
+    .. math::
+
+       \mu = \mu_0 + (\mu_{\infty} - \mu_0) (1 + (\lambda \dot{\gamma})^a)^{(n-1)/a}
                                                                                                    
     where is the second invariant of the shear-rate tensor.                                        
 
@@ -76,36 +77,37 @@ BINGHAM
     dimensionless parameter that describes the transition between the low-rate and the power-law   
     region and is entered with the Aexp card. The form of the equation is                          
                                                                                                    
-    .. figure:: /figures/378_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 40%                                                                                 
+    .. math::
+
+       \mu = a_T \left(\mu_\infty + \left(\mu_0 - \mu_{\infty} + \tau_y \frac{(1-exp(-a_T \dot{\gamma} F))}{a_T\dot{\gamma}}\right) (1 + (a_T\lambda \dot{\gamma})^a)^{(n-1)/a} \right)
                                                                                                    
     where is a simplified temperature dependent shift factor that is expressed as an Arrhenius type
     temperature dependence of the following form:                                                  
                                                                                                    
-    .. figure:: /figures/379_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 40%                                                                                 
+    .. math::
+
+       a_T = exp\left(\frac{E_{\mu}}{R} \left(\frac{1}{T} - \frac{1}{T_{ref}}\right)\right)
                                                                                                    
     The exponent for the temperature dependence, Eμ/R, is input using the Thermal Exponent card.   
     Tref is input using the Reference Temperature card in the thermal properties section of the    
     material file. The stress at which the material yields is input with the Yield Stress card. The
     sharpness of the transition from the solid to fluid state, F, is indicated with the Yield      
     Exponent card.                                                                                 
+
 CARREAU_WLF
     An extension of the Carreau-Yasuda model to incorporate a temperature-dependent shift in       
     shear-rate according to the Williams-Landel-Ferry equation (Hudson and Jones, 1993). The form  
     of the equation is                                                                             
                                                                                                    
-    .. figure:: /figures/380_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 40%                                                                                 
+    .. math::
+
+       \mu = a_T \left[\mu_0 + (\mu_{\infty} - \mu_0) (1 + (a_T\lambda \dot{\gamma})^a)^{(n-1)/a}\right]
                                                                                                    
     where :math:`a_T` is another form of the temperature-dependent shift factor:                   
-                                                                                                   
-    .. figure:: /figures/381_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 40%                                                                                 
+   
+    .. math::
+      
+       a_T = exp\left[\frac{c_1(T_{ref} - T)}{c_2 + T - T_{ref}}\right]
                                                                                                    
     Here is a thermal exponential factor (can be Arrhenius) and is input by the *Thermal Exponent* 
     card; :math:`c_2` is the WLF constant 2 and is input by the *Thermal WLF Constant2* card. μ0,  
@@ -257,9 +259,9 @@ HERSCHEL_BULKLEY
     values to operate: a reference viscosity value, μ0, a power-law exponent, n. and a yield shear 
     stress value, :math:`τ_y`. The model for this constitutive relations is as follows:            
                                                                                                    
-    .. figure:: /figures/390_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 90%                                                                                 
+    .. math::
+
+       \mu = \mu_0 (\dot{\gamma} + \epsilon)^{n-1} + \frac{\tau_y}{(\dot{\gamma} + \epsilon)}
                                                                                                    
     The nature of this relation is best seen by multiplying the entire relation by the shear rate  
     to produce a relation between shear stress and shear rate. In this manner it can be seen that  
@@ -277,6 +279,43 @@ HERSCHEL_BULKLEY
     the iteration scheme no longer uses an exact Jacobian. The difference is seen in that this     
     model will take relatively more iterations to converge to an answer. The user should expect    
     this and not be too troubled (it’s alright to be troubled a little).                           
+    
+    The parameter :math:`\epsilon` is a small number to avoid division by zero and acts as a 
+    regularization. It is set to 1e-5 by default.
+
+HERSCHEL_BULKLEY_PAPANASTASIOU
+    
+    See Regularization Model card for more options
+
+    This is a variant on the power law model that includes a yield stress. It
+    requires three input values to operate: a reference viscosity value, μ0, a
+    power-law exponent, n., a yield regularization exponent :math:`f` and a
+    yield shear stress value, :math:`τ_y`. The model for this constitutive
+    relations is as follows:            
+                                                                                                   
+    .. math::
+      
+       \mu = \mu_0 \dot{\gamma}^{n-1} + (1-exp(-f \dot{\gamma})) \frac{\tau_y}{\dot{\gamma}}
+                                                                                                   
+    The nature of this relation is best seen by multiplying the entire relation by the shear rate  
+    to produce a relation between shear stress and shear rate. In this manner it can be seen that  
+    the shear stress does not go to zero for zero shear rate. Instead it approaches the yield shear
+    stress value. Put another way, only for imposed shear stresses greater than the yield stress   
+    will the fluid exhibit a nonzero shear rate. This is effective yielding behavior.              
+                                                                                                   
+    A caveat needs stating at this point. This model is essentially a superposition of two         
+    power-law models. One with the supplied exponent and the other with an implicit exponent of    
+    n = 0. It has long been observed that power-law models with exponents approaching zero         
+    exhibit very poor convergence properties. The Herschel_Bulkley model is no exception. To       
+    alleviate these convergence problems somewhat, the sensitivities of the yield stress term with 
+    respect to shear rate has not been included in the Jacobian entries for this viscosity model.  
+    This helps in that it allows for convergence at most yield stress values, but also means that  
+    the iteration scheme no longer uses an exact Jacobian. The difference is seen in that this     
+    model will take relatively more iterations to converge to an answer. The user should expect    
+    this and not be too troubled (it’s alright to be troubled a little).                           
+   
+    The Papanastasiou regularization alleviates some of the difficulties when :math:`\dot{\gamma}`
+    becomes small.
 
 TURBULENT_SA     
     Spalart Allmaras turbulence model. This model is a one-equation model.
@@ -288,6 +327,23 @@ TURBULENT_SA
 TURBULENT_SA_DYNAMIC
     Same as TURBULENT_SA but multiplies kinematic viscosity by density in
     the momentum equation to get a dynamic viscosity.
+    
+FLUIDITY
+    This is a Fluidity model describing Laponite suspensions.
+    Expects a suspensions species number as well as a species enabled with FLUIDITY source equation.
+    
+    The form of the equation is
+
+      .. math::
+
+         \phi = \phi_0 + (\phi_\infty - \phi_0) \phi_*
+
+         \mu = 1 / \phi
+         
+    Where :math:`\phi_*` is the normalized fluidty between 0 and 1 which is the species equation.
+    The required parameters are read in from the species source using
+    Suspension Species Number card.
+   
 
 
 --------
@@ -300,9 +356,6 @@ The following is a sample card setting the liquid constitutive equation type to
 ::
 
    Liquid Constitutive Equation = NEWTONIAN
-
-::
-
    Viscosity = CONSTANT 1.00
 
 The following is a sample card setting the liquid constitutive equation type to
@@ -311,13 +364,7 @@ The following is a sample card setting the liquid constitutive equation type to
 ::
 
    Liquid Constitutive Equation = POWER_LAW
-
-::
-
    Low Rate Viscosity= CONSTANT 1.
-
-::
-
    Power Law Exponent= CONSTANT 1.
 
 The following is a sample card setting the liquid constitutive equation type to
@@ -326,25 +373,10 @@ The following is a sample card setting the liquid constitutive equation type to
 ::
 
    Liquid Constitutive Equation = CARREAU
-
-::
-
    Low Rate Viscosity= CONSTANT 1.
-
-::
-
    Power Law Exponent= CONSTANT 1.
-
-::
-
    High Rate Viscosity= CONSTANT 0.001
-
-::
-
    Time Constant = CONSTANT 1.
-
-::
-
    Aexp = CONSTANT 1.
 
 The following is a sample card setting the liquid constitutive equation type to
@@ -353,41 +385,14 @@ The following is a sample card setting the liquid constitutive equation type to
 ::
 
    Liquid Constitutive Equation = BINGHAM
-
-::
-
    Low Rate Viscosity= CONSTANT 10.00
-
-::
-
    Power Law Exponent= CONSTANT .70
-
-::
-
    High Rate Viscosity= CONSTANT 0.01
-
-::
-
    Time Constant = CONSTANT 100.
-
-::
-
    Aexp = CONSTANT 2.5
-
-::
-
    Thermal Exponent = CONSTANT 1.
-
-::
-
    Yield Stress = CONSTANT 5.
-
-::
-
    Yield Exponent = CONSTANT 1.0
-
-::
-
    Reference Temperature= CONSTANT 273.
 
 The following is a sample card setting the liquid constitutive equation type to
@@ -396,38 +401,13 @@ The following is a sample card setting the liquid constitutive equation type to
 ::
 
    Liquid Constitutive Equation = CARREAU_WLF
-
-::
-
    Low Rate Viscosity= CONSTANT 10.00
-
-::
-
    Power Law Exponent= CONSTANT .70
-
-::
-
    High Rate Viscosity= CONSTANT 0.01
-
-::
-
    Time Constant = CONSTANT 100.
-
-::
-
    Aexp = CONSTANT 2.5
-
-::
-
    Thermal Exponent = CONSTANT 1.
-
-
-::
-
    Thermal WLF Constant2 = CONSTANT 0.5
-
-::
-
    Reference Temperature= CONSTANT 273.
 
 The following is a sample card setting the liquid constitutive equation type to **CURE**
@@ -436,14 +416,7 @@ and demonstrates the required cards:
 ::
 
    Liquid Constitutive Equation = CURE
-
-
-::
-
    Low Rate Viscosity= CONSTANT 1.
-
-::
-
    Power Law Exponent= CONSTANT 1.
 
 The following is a sample card setting the liquid constitutive equation type to
@@ -452,14 +425,7 @@ The following is a sample card setting the liquid constitutive equation type to
 ::
 
    Liquid Constitutive Equation = THERMAL
-
-
-::
-
    Low Rate Viscosity= CONSTANT 1.
-
-::
-
    Thermal Exponent= CONSTANT 9.
 
 The following is a sample card setting the liquid constitutive equation type to **EPOXY**
@@ -468,29 +434,11 @@ and demonstrates the required cards:
 ::
 
    Liquid Constitutive Equation = EPOXY
-
-::
-
-   Liquid Constitutive Equation = FILLED_EPOXY
-
-::
-
+   #Liquid Constitutive Equation = FILLED_EPOXY
    Low Rate Viscosity= CONSTANT 1.e5
-
-::
-
    Thermal Exponent= CONSTANT 9.
-
-::
-
    Cure Gel Point = CONSTANT 0.8
-
-::
-
    Cure A Exponent= CONSTANT 0.3
-
-::
-
    Cure B Exponent= CONSTANT 43.8
 
 The following is a sample card setting the liquid constitutive equation type to
@@ -499,21 +447,9 @@ The following is a sample card setting the liquid constitutive equation type to
 ::
 
    Liquid Constitutive Equation = SUSPENSION
-
-::
-
    Low Rate Viscosity= CONSTANT 1.e5
-
-::
-
    Power Law Exponent = CONSTANT -3.0
-
-::
-
    Suspension Maximum Packing= CONSTANT 0.49
-
-::
-
    Suspension Species Number = 0
 
 The following is a sample card setting the liquid constitutive equation type to
@@ -522,45 +458,15 @@ The following is a sample card setting the liquid constitutive equation type to
 ::
 
    Liquid Constitutive Equation = FILLED_EPOXY
-
-::
-
    Low Rate Viscosity = CONSTANT 1.e5
-
-::
-
    Power Law Exponent = CONSTANT -3.0
-
-::
-
    Thermal Exponent = CONSTANT 9.
-
-::
-
    Suspension Maximum Packing = CONSTANT 0.49
-
-::
-
    Suspension Species Number = 0
-
-::
-
    Cure Gel Point = CONSTANT 0.8
-
-::
-
    Cure A Exponent = CONSTANT 0.3
-
-::
-
    Cure B Exponent = CONSTANT 43.8
-
-::
-
    Cure Species Number = 2
-
-::
-
    Unreacted Gel Temperature = CONSTANT 243
 
 The following is a sample card setting the liquid constitutive equation type to
@@ -569,25 +475,10 @@ The following is a sample card setting the liquid constitutive equation type to
 ::
 
    Liquid Constitutive Equation = POWERLAW_SUSPENSION
-
-::
-
    Low Rate Viscosity= CONSTANT 1.
-
-::
-
    Power Law Exponent= CONSTANT 1.
-
-::
-
    Thermal Exponent = CONSTANT -1.82
-
-::
-
    Suspension Maximum Packing= CONSTANT 0.68
-
-::
-
    Suspension Species Number= 0
 
 The following is a sample card setting the liquid constitutive equation type to
@@ -596,41 +487,14 @@ The following is a sample card setting the liquid constitutive equation type to
 ::
 
    Liquid Constitutive Equation = CARREAU_SUSPENSION
-
-::
-
    Low Rate Viscosity= CONSTANT 1.
-
-::
-
    Power Law Exponent= CONSTANT 1.
-
-::
-
    High Rate Viscosity= CONSTANT 0.001
-
-::
-
    High Rate Viscosity= CONSTANT 0.001
-
-::
-
    Time Constant = CONSTANT 1.
-
-::
-
    Aexp = CONSTANT 1.
-
-::
-
    Thermal Exponent = CONSTANT -1.82
-
-::
-
    Suspension Maximum Packing= CONSTANT 0.68
-
-::
-
    Suspension Species Number= 0
 
 The following card gives an example of the **HERSCHEL_BULKLEY** model
@@ -638,18 +502,22 @@ The following card gives an example of the **HERSCHEL_BULKLEY** model
 ::
 
    Liquid Constitutive Equation = HERSCHEL_BULKLEY
-
-::
-
    Low Rate Viscosity = CONSTANT 0.337
-
-::
-
    Power Law Exponent = CONSTANT 0.817
+   Yield Stress = CONSTANT 1.39
+   # Epsilon Regularization is optional and 1e-5 by default
+   Epsilon Regularization = CONSTANT 1e-6
+
+The following card gives an example of the **HERSCHEL_BULKLEY_PAPANASTASIOU** model
 
 ::
 
-   Yield Stress = CONSTANT 1.39
+   Liquid Constitutive Equation = HERSCHEL_BULKLEY_PAPANASTASIOU
+   Low Rate Viscosity           = CONSTANT 0.337
+   Power Law Exponent           = CONSTANT 0.817
+   Yield Stress                 = CONSTANT 1.39
+   Yield Exponent               = CONSTANT 100
+
 
 --------------------
 Technical Discussion

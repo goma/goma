@@ -12,6 +12,7 @@ class Package(packages.CMakePackage):
         )
         self.libraries = ["parmetis"]
         self.includes = ["parmetis.h"]
+        self.dependencies = ["cmake", "metis", "openmpi"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -27,12 +28,12 @@ class Package(packages.CMakePackage):
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
             builder.add_option("-DSHARED:BOOL=OFF")
         builder.add_option("-DGKLIB_PATH=./headers")
-        builder.add_option(
-            "-DMETIS_PATH=" + builder._registry.environment["METIS_DIR"]
-        )
+        builder.add_option("-DMETIS_PATH=" + builder._registry.environment["METIS_DIR"])
 
     def register(self, builder):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("PARMETIS_DIR", builder.install_dir())
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

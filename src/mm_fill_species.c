@@ -50,6 +50,7 @@
 #include "mm_mp_structs.h"
 #include "mm_qtensor_model.h"
 #include "mm_species.h"
+#include "models/fluidity.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
@@ -402,6 +403,45 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
       calc_pspg(pspg, &d_pspg, time, tt, dt, pg_data);
     }
 
+    dbl yzbeta = 0;
+    int shock_capture = mp->SpYZbeta_funcModel == YZBETA_MIXED;
+
+    if (shock_capture) {
+      if (pd->TimeIntegration == STEADY) {
+        GOMA_EH(GOMA_ERROR, "Species Shock capture only implemented for transient models");
+      }
+
+      dbl strong_residual = 0;
+      strong_residual = fv_dot_old->c[w];
+      for (int p = 0; p < VIM; p++) {
+        strong_residual += fv_old->v[p] * fv_old->grad_c[w][p];
+      }
+      dbl h_elem = 0;
+      for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+        h_elem += pg_data->hsquared[a];
+      }
+      /* This is the size of the element */
+      h_elem = sqrt(h_elem / ((double)ei[pg->imtrx]->ielem_dim));
+
+      dbl inner = 0;
+      dbl Yinv = 1.0 / 0.1;
+      for (int i = 0; i < dim; i++) {
+        inner += Yinv * fv_old->grad_c[w][i] * fv_old->grad_c[w][i];
+      }
+
+      dbl dc2 = fabs(Yinv * strong_residual) * h_elem * h_elem * 0.25;
+      dbl dc1 = dc2;
+      if (0 && ls != NULL && fabs(fv->F) < (ls->Length_Scale * 0.5)) {
+        dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+        dc1 = fabs(Yinv * strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+      }
+      dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+      dc1 = fabs(Yinv * strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+      // dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
+      // yzbeta = fmin(supg_tau, 0.5*(dc1+dc2));//0.5*(dc1 + dc2);
+      yzbeta = 0.5 * (dc1 + dc2) * mp->SpYZbeta_func;
+    }
+
     /*
      * Residuals_________________________________________________________________
      */
@@ -589,6 +629,15 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
             diffusion *= h3 * det_J * wt;
             diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
           }
+          dbl sc_val = 0;
+          if (shock_capture) {
+            for (p = 0; p < VIM; p++) {
+              sc_val += yzbeta * bf[eqn]->grad_phi[i][p] * fv->grad_c[w][i];
+            }
+
+            sc_val *= h3 * det_J * wt;
+            sc_val *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+          }
           /*
            * HKM -> Note the addition of a species molecular weight
            *        term is currently done in the source term
@@ -620,12 +669,12 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
            *  in the local element residual vector.
            */
           lec->R[LEC_R_INDEX((MAX_PROB_VAR + w), ii)] +=
-              Heaviside * (mass + advection) + diffusion + source;
+              Heaviside * (mass + advection) + diffusion + sc_val + source;
 
         } /* if active_dofs */
 
       } /* end of loop over equations */
-    }   /* end of assemble residuals */
+    } /* end of assemble residuals */
 
     /*
      * Jacobian terms...
@@ -846,6 +895,16 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                   diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                 }
 
+                dbl sc_val = 0;
+                if (shock_capture) {
+                  for (p = 0; p < VIM; p++) {
+                    sc_val += yzbeta * bf[eqn]->grad_phi[i][p] * bf[var]->grad_phi[j][p];
+                  }
+
+                  sc_val *= h3 * det_J * wt;
+                  sc_val *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                }
+
                 source = 0.;
                 if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                   source += s_terms.d_MassSource_dc[w][w1][j];
@@ -872,7 +931,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                 }
 
                 lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), (MAX_PROB_VAR + w1), ii, j)] +=
-                    Heaviside * (mass + advection) + diffusion + source;
+                    Heaviside * (mass + advection) + diffusion + sc_val + source;
               }
             }
           }
@@ -1233,6 +1292,16 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
                   diffusion *= pd->etm[pg->imtrx][eqn][LOG2_DIFFUSION];
                 }
+                dbl sc_val = 0;
+                if (shock_capture) {
+                  for (p = 0; p < VIM; p++) {
+                    sc_val += yzbeta * bf[eqn]->grad_phi[i][p] * fv->d_grad_c_dmesh[w][i][b][j];
+                    sc_val += yzbeta * bf[eqn]->d_grad_phi_dmesh[i][p][b][j] * fv->grad_c[w][i];
+                  }
+
+                  sc_val *= h3 * det_J * wt;
+                  sc_val *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                }
 
                 source = 0.;
                 if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
@@ -1268,7 +1337,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                 }
 
                 lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] +=
-                    Heaviside * (mass + advection) + diffusion + source;
+                    Heaviside * (mass + advection) + diffusion + sc_val + source;
               }
             }
           }
@@ -1355,7 +1424,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
               lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] +=
                   mass + advection + diffusion + source;
             } /* for(j) .... */
-          }   /* if ( e[eqn], v[var]) .... */
+          } /* if ( e[eqn], v[var]) .... */
           var = LIGHT_INTP;
           if (pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];
@@ -1370,7 +1439,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
               lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += source;
             } /* for(j) .... */
-          }   /* if ( e[eqn], v[var]) .... */
+          } /* if ( e[eqn], v[var]) .... */
           var = LIGHT_INTM;
           if (pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];
@@ -1385,7 +1454,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
               lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += source;
             } /* for(j) .... */
-          }   /* if ( e[eqn], v[var]) .... */
+          } /* if ( e[eqn], v[var]) .... */
           var = LIGHT_INTD;
           if (pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var]) {
             pvar = upd->vp[pg->imtrx][var];
@@ -1400,7 +1469,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
               lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += source;
             } /* for(j) .... */
-          }   /* if ( e[eqn], v[var]) .... */
+          } /* if ( e[eqn], v[var]) .... */
 
           /*
            * J_s_V  sensitivity of species equation w.r.t. voltage -- RSL 4/4/00
@@ -1454,7 +1523,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                 lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] +=
                     mass + advection + diffusion + source;
               } /* end of loop over j */
-            }   /* end of var = VOLTAGE */
+            } /* end of var = VOLTAGE */
           }
 
           /*  KSC: 9/9/00
@@ -1477,8 +1546,8 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
                 lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += diffusion;
               } /* for(j) .... */
-            }   /* if ( e[eqn], v[var]) .... */
-          }     /* if cr->MassFluxModel == FICKIAN_CHARGED ...  */
+            } /* if ( e[eqn], v[var]) .... */
+          } /* if cr->MassFluxModel == FICKIAN_CHARGED ...  */
 
           /*
            * Jacobian with respect to pressure
@@ -1524,7 +1593,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
 
               lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += advection + diffusion + mass;
             } /* for(j) .... */
-          }   /* if ( e[eqn], v[var]) .... */
+          } /* if ( e[eqn], v[var]) .... */
 
           /*
            * J_s_SH:
@@ -1551,8 +1620,8 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                 lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += diffusion;
 
               } /* for (j) .. J_s_SH */
-            }   /* if (pd) */
-          }     /* if( cr) */
+            } /* if (pd) */
+          } /* if( cr) */
 
           if (mp->SpeciesSourceModel[w] ==
               SSM_BOND) /* These terms only appear for the Bond src term model */
@@ -1571,9 +1640,9 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                   lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += source;
 
                 } /* for (j) .. J_s_SH */
-              }   /* if pd -eqn)*/
-            }     /* if (pd -var) */
-          }       /* if( mp->SpeciesSource) */
+              } /* if pd -eqn)*/
+            } /* if (pd -var) */
+          } /* if( mp->SpeciesSource) */
 
           /*
            * J_s_G:
@@ -1614,9 +1683,9 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
           } /*if ( cr->MassFluxModel == DM_SUSPENSION_BALANCE ) */
 
         } /* if active_dofs */
-      }   /* for (i) .... */
-    }     /* if ( assemble Jacobian ) */
-  }       /* for (w) ... */
+      } /* for (i) .... */
+    } /* if ( assemble Jacobian ) */
+  } /* for (w) ... */
 
   return (status);
 
@@ -2027,8 +2096,8 @@ int assemble_mass_transport_path_dependence(
         } /* if active_dofs */
 
       } /* end of loop over equations */
-    }   /* end of loop over species */
-  }     /* end of assemble residuals */
+    } /* end of loop over species */
+  } /* end of assemble residuals */
   return 0;
 }
 /*****************************************************************************/
@@ -7373,7 +7442,7 @@ void compute_leak_velocity(double *vnorm,
          *mass loss, you need to shore up mass_flux_alloy_surf
          *with func level, ala YFLUX and YFLUX_USER */
       }
-    }    /*else on the if(YFLUX_ALLLOY***) */
+    } /*else on the if(YFLUX_ALLLOY***) */
     else /* This is the YFLUX default in case you weren't paying attention */
     {
 
@@ -7508,7 +7577,7 @@ void compute_leak_velocity(double *vnorm,
           }
         }
       } /* end of loop over vconv directions */
-    }   /* end of if Assemble Jacobian */
+    } /* end of if Assemble Jacobian */
   }
   *vnorm = vnormal;
 }
@@ -7781,7 +7850,7 @@ void compute_leak_energy(double *enorm,
         }
       }
 
-    }    /*else on the if(YFLUX_USER***) */
+    } /*else on the if(YFLUX_USER***) */
     else /* This is the YFLUX default in case you weren't paying attention */
     {
 
@@ -8847,10 +8916,10 @@ int get_convection_velocity(
         break;
       }
       if (volsolid < 0) {
-        double volso = 1.0;
-        for (w = 0; w < pd->Num_Species_Eqn; w++) {
-          volso -= fv->c[w] * mp->specific_volume[w];
-        }
+        // double volso = 1.0;
+        // for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        //   volso -= fv->c[w] * mp->specific_volume[w];
+        // }
         GOMA_WH(-1, "negative nonvolatile volume fraction %g %g", volsolid, fv->c[0]);
       }
 
@@ -8937,8 +9006,8 @@ int get_convection_velocity(
             }
           }
         } /* end of loop over vconv directions */
-      }   /* end of if Assemble Jacobian */
-    }     /* end of if MASS_FRACTION */
+      } /* end of if Assemble Jacobian */
+    } /* end of if MASS_FRACTION */
 
     /*
      * Add in convection due to motion of Stress Free State - Pseudo Lagrangian Convection
@@ -10014,6 +10083,8 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
           }
         }
+      } else if (mp->SpeciesSourceModel[w] == FLUIDITY_THIXOTROPIC) {
+        fluidity_source(w, st, mp->u_species_source[w]);
       } else if (mp->SpeciesSourceModel[w] == BUTLER_VOLMER) /* added by KSC: 05/15/06 */
       {
         dbl dh[3], p[10];
@@ -12223,7 +12294,7 @@ int assemble_invariant(double tt, /* parameter to vary time integration from
         }
       }
     } /* end of for(i.. loop */
-  }   /* end of if(af,, */
+  } /* end of if(af,, */
 
   return (status);
 
@@ -12451,8 +12522,8 @@ int get_particle_convection_velocity(double pvconv[DIM],
             }
           }
         } /* end of loop over pvconv directions */
-      }   /* end of if Assemble Jacobian */
-    }     /* end of if MASS_FRACTION */
+      } /* end of if Assemble Jacobian */
+    } /* end of if MASS_FRACTION */
 
     /*    d_node_position/dt */
     if (pd->TimeIntegration != STEADY &&
@@ -12553,7 +12624,8 @@ int ls_modulate_speciessource(int w, struct Species_Conservation_Terms *st) {
     if (f2 == 0.0)
       f2 = DBL_SMALL;
     st->MassSource[w] =
-        ls_modulate_property(f1, f2, width, pm_minus, pm_plus, st->d_MassSource_dF[w], &factor);
+        ls_modulate_property(f1, f2, width, pm_minus, pm_plus, st->d_MassSource_dF[w], &factor,
+                             mp->mp2nd->speciessource_lsi_interp_method[w]);
     ls = ls_old;
   }
   width = ls->Length_Scale;
@@ -12566,8 +12638,8 @@ int ls_modulate_speciessource(int w, struct Species_Conservation_Terms *st) {
   if (f2 == 0.0)
     f2 = DBL_SMALL;
 
-  st->MassSource[w] =
-      ls_modulate_property(f1, f2, width, pm_minus, pm_plus, st->d_MassSource_dF[w], &factor);
+  st->MassSource[w] = ls_modulate_property(f1, f2, width, pm_minus, pm_plus, st->d_MassSource_dF[w],
+                                           &factor, mp->mp2nd->speciessource_lsi_interp_method[w]);
 
   if (pd->v[pg->imtrx][var = TEMPERATURE]) {
     for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {

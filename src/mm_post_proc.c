@@ -343,6 +343,7 @@ int WALL_DISTANCE = -1;
 int CONTACT_DISTANCE = -1;
 int PP_FLUID_STRESS = -1; /* Fluid Stress without Pressure contribution */
 int LUB_CONVECTION = -1;
+int PP_MESH_VELOCITY = -1;
 
 int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
                           * actually is */
@@ -1076,6 +1077,8 @@ static int calc_standard_fields(double **post_proc_vect,
         calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
       }
       local_post[PP_Viscosity] = LubAux->mu_star;
+      /* Cleanup */
+      safe_free((void *)n_dof);
     } else {
       local_post[PP_Viscosity] = viscosity(gn, NULL, NULL);
     }
@@ -1289,6 +1292,8 @@ static int calc_standard_fields(double **post_proc_vect,
       }
       local_post[MEAN_SHEAR] = LubAux->srate;
       local_lumped[MEAN_SHEAR] = 1.;
+      /* Cleanup */
+      safe_free((void *)n_dof);
     }
   }
 
@@ -3152,6 +3157,20 @@ static int calc_standard_fields(double **post_proc_vect,
 
   } /* end of LUB_CONVECTION */
 
+  if ((PP_MESH_VELOCITY != -1) && pd->e[pg->imtrx][R_MESH1]) {
+    /* Post velocities */
+    local_post[PP_MESH_VELOCITY] = fv_dot->d[0];
+    local_lumped[PP_MESH_VELOCITY] = 1.0;
+    if (pd->Num_Dim > 1) {
+      local_post[PP_MESH_VELOCITY + 1] = fv_dot->d[1];
+      local_lumped[PP_MESH_VELOCITY + 1] = 1.0;
+    }
+    if (pd->Num_Dim > 2) {
+      local_post[PP_MESH_VELOCITY + 2] = fv_dot->d[2];
+      local_lumped[PP_MESH_VELOCITY + 2] = 1.0;
+    }
+  }
+
   if ((PP_LAME_MU != -1) && (pd->e[pg->imtrx][R_MESH1])) {
 
     /* Define parameters */
@@ -3522,7 +3541,7 @@ static int calc_standard_fields(double **post_proc_vect,
               }
             }
           } // for b
-        }   // for a
+        } // for a
       }
     } // Loop over modes
   }
@@ -3567,7 +3586,7 @@ static int calc_standard_fields(double **post_proc_vect,
               }
             }
           } // for b
-        }   // for a
+        } // for a
       }
     } // Loop over modes
   }
@@ -4802,8 +4821,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
                                    ip, ip_total, rd, &pm_terms, *time_ptr, exo, xi, &pg_data);
         GOMA_EH(err, "calc_standard_fields");
       } /* END  for (ip = 0; ip < ip_total; ip++)                      */
-    }   /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
-  }     /* END for (ieb loop) */
+    } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
+  } /* END for (ieb loop) */
 
   /* Solve linear system for requested fields and put back in rhs vector*/
 
@@ -4999,8 +5018,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
             }
           }
         } /* end of node-point loop */
-      }   /* end of element loop on side-set */
-    }     /* end of SS loop */
+      } /* end of element loop on side-set */
+    } /* end of SS loop */
 
     safer_free((void **)&local_post);
     safer_free((void **)&local_lumped);
@@ -5194,7 +5213,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
                                      listndm[w]);
 
           } /* END of loop over components */
-        }   /* END of if(FLUXLINES) */
+        } /* END of if(FLUXLINES) */
 
         if (ENERGY_FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY]) {
           /* Go for it -- Calculate the stream function at the nodes of this element */
@@ -6257,7 +6276,7 @@ static int calc_zz_error_vel(double x[], /* Solution vector                     
                                det_gp_loc[k], max_terms, s_lhs, k, tau_gp_ptch);
 
       } /* End of treating worthy nodes with valid_elem_mask values */
-    }   /* End workhorse LHS loop over this patch */
+    } /* End workhorse LHS loop over this patch */
 
     /* Now loop over needed components in tau_lsp for node i_node,
        again over the elements in the patch this time filling the rhs
@@ -6559,7 +6578,7 @@ static int calc_zz_error_vel(double x[], /* Solution vector                     
       }
 
     } /* End of treating worthy elems with valid_elem_mask values */
-  }   /* End of real loop for element error integration over entire model */
+  } /* End of real loop for element error integration over entire model */
 
 #ifdef RRL_DEBUG
 #ifdef DBG_1
@@ -7960,6 +7979,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "TFMP_inverse_Peclet", &TFMP_INV_PECLET);
   iread = look_for_post_proc(ifp, "TFMP_Krg", &TFMP_KRG);
   iread = look_for_post_proc(ifp, "Lubrication Convection", &LUB_CONVECTION);
+  iread = look_for_post_proc(ifp, "Mesh Velocity", &PP_MESH_VELOCITY);
 
   /* Report count of post-proc vars to be exported */
   /*
@@ -8800,7 +8820,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
       }
       strcpy(pp_data_sens[i]->data_filenm, second_string);
     } /*   data card count loop  */
-  }   /*   if data_sens conditions */
+  } /*   if data_sens conditions */
 
   /*
    *  SCHEDULE POST-PROCESSING PARTICLE TRACKING CALCULATIONS, IF NEEDED
@@ -11726,6 +11746,32 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
     index++;
     index_post++;
+  }
+
+  if (PP_MESH_VELOCITY != -1 && (Num_Var_In_Type[pg->imtrx][R_MESH1])) {
+    if (PP_MESH_VELOCITY == 2) {
+      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+    }
+    PP_MESH_VELOCITY = index_post;
+    sprintf(nm, "MVX");
+    sprintf(ds, "Mesh velocity x-component");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+    if (pd->Num_Dim > 1) {
+      sprintf(nm, "MVY");
+      sprintf(ds, "Mesh velocity y-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+    if (pd->Num_Dim > 2) {
+      sprintf(nm, "MVZ");
+      sprintf(ds, "Mesh velocity z-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
   }
 
   if (SH_SAT_OPEN != -1 && Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_OPEN]) {

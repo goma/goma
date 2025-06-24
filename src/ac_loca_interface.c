@@ -148,6 +148,7 @@
 #include "sl_auxutil.h"
 #include "sl_lu.h"
 #include "sl_matrix_util.h"
+#include "sl_mumps.h"
 #include "sl_umf.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
@@ -1312,7 +1313,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
         }
       }
     } /* End of "passdown.method != LOCA_LSA_ONLY" block */
-  }   /* End of print block */
+  } /* End of print block */
 
   passdown.theta = tran->theta;
 
@@ -1608,6 +1609,15 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
                           "the Amesos solver suite\n");
     }
     amesos_solve(Amesos_Package, ams, x, xr, 1, pg->imtrx);
+    strcpy(stringer, " 1 ");
+    break;
+
+  case MUMPS:
+    if (strcmp(Matrix_Format, "msr") != 0) {
+      GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with the MUMPS "
+                          "solver\n");
+    }
+    error = mumps_solve(ams, x, xr);
     strcpy(stringer, " 1 ");
     break;
 
@@ -2347,6 +2357,18 @@ void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double to
     strcpy(stringer, " 1 ");
     break;
 
+  case MUMPS: {
+    if (strcmp(Matrix_Format, "msr") != 0) {
+      GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with the MUMPS "
+                          "solver\n");
+    }
+    int err = mumps_solve(ams, y, x);
+    if (err != GOMA_SUCCESS) {
+      strcpy(stringer, " 0 ");
+    } else {
+      strcpy(stringer, " 1 ");
+    }
+  } break;
   case AZTEC:
 
     /* Set option of preconditioner reuse */

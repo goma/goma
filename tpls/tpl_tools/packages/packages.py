@@ -1,7 +1,7 @@
 class GenericPackage(object):
 
-    def setDependencies(self, builder):
-        return
+    def getDependencies(self):
+        return self.dependencies
 
     def configure_options(self, builder):
         return
@@ -46,6 +46,7 @@ class CMakePackage(GenericPackage):
         configure_options.extend(builder.get_options())
         configure_options.append("-DCMAKE_INSTALL_PREFIX=" + builder.install_dir())
         configure_options.append("-DCMAKE_BUILD_TYPE=Release")
+        configure_options.append("-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE")
         builder.run_command(configure_options)
 
     def build(self, builder):

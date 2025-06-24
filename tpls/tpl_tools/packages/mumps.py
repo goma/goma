@@ -1,16 +1,26 @@
 from tpl_tools.packages import packages
+from tpl_tools import utils
 import os
 import shutil
+import sys
 
 
 class Package(packages.GenericPackage):
     def __init__(self):
         self.name = "mumps"
-        self.version = "5.7.3"
-        self.sha256 = "84a47f7c4231b9efdf4d4f631a2cae2bdd9adeaabc088261d15af040143ed112"
+        self.version = "5.8.0"
+        self.sha256 = "d762eb8b1d9843a0993b8cfc137d043d04c7c51877ad37c94560433a474340a0"
         self.filename = "mumps-" + self.version + ".tar.gz"
         self.url = "https://mumps-solver.org/MUMPS_" + self.version + ".tar.gz"
         self.libraries = ["dmumps", "zmumps"]
+        self.dependencies = [
+            "lapack",
+            "scalapack",
+            "scotch",
+            "metis",
+            "parmetis",
+            "openmpi",
+        ]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -54,18 +64,28 @@ class Package(packages.GenericPackage):
             f.write("LORDERINGS = $(LMETIS) $(LPORD) $(LSCOTCH)\n")
             f.write("IORDERINGSF = $(ISCOTCH)\n")
             f.write("IORDERINGSC = $(IMETIS) $(IPORD) $(ISCOTCH)\n")
-            f.write("LIBEXT_SHARED  = .so\n")
-            f.write("SONAME = -soname\n")
-            f.write(
-                "SHARED_OPT = -shared -Wl,-rpath,"
-                + builder.install_dir()
-                + "/lib -Wl,-rpath,"
-                + builder.env["SCOTCH_DIR"]
-                + "/lib"
-            )
-            if builder.env["PARMETIS_DIR"]:
-                f.write(" -Wl,-rpath," + builder.env["PARMETIS_DIR"] + "/lib")
-            f.write(" -Wl,-rpath," + builder.env["METIS_DIR"] + "/lib\n")
+            if builder.build_shared:
+                ext = utils.get_library_extension(True)
+                f.write("LIBEXT_SHARED  = " + ext + "\n")
+                if sys.platform == "darwin":
+                    f.write("SONAME = -install_name\n")
+                else:
+                    f.write("SONAME = -soname\n")
+                f.write(
+                    "SHARED_OPT = -shared -Wl,-rpath,"
+                    + builder.install_dir()
+                    + "/lib -Wl,-rpath,"
+                    + builder.env["SCOTCH_DIR"]
+                    + "/lib"
+                )
+                if "PARMETIS_DIR" in builder.env:
+                    f.write(" -Wl,-rpath," + builder.env["PARMETIS_DIR"] + "/lib")
+                f.write(" -Wl,-rpath," + builder.env["METIS_DIR"] + "/lib\n")
+            else:
+                f.write("LIBEXT_SHARED  = \n")
+                f.write("SONAME = \n")
+                f.write("SHARED_OPT = \n")
+
             f.write("FPIC_OPT = -fPIC\n")
             f.write("LIBEXT  = .a\n")
             f.write("OUTC    = -o\n")
@@ -78,13 +98,20 @@ class Package(packages.GenericPackage):
             f.write("FL      = " + builder.env["FC"] + "\n")
             f.write("AR      = ar vr \n")
             f.write("RANLIB  = ranlib \n")
-            f.write("LAPACK = " + builder.env["LAPACK_LIBRARIES"] + " " + builder.env["BLAS_LIBRARIES"] + "\n")
+            f.write(
+                "LAPACK = "
+                + builder.env["LAPACK_LIBRARIES"]
+                + " "
+                + builder.env["BLAS_LIBRARIES"]
+                + "\n"
+            )
             f.write(
                 "SCALAP  = -L"
                 + builder.env["SCALAPACK_DIR"]
                 + "/lib -lscalapack "
                 + builder.env["LAPACK_LIBRARIES"]
-                + " " + builder.env["BLAS_LIBRARIES"]
+                + " "
+                + builder.env["BLAS_LIBRARIES"]
                 + "\n"
             )
             f.write("BLAS = " + builder.env["BLAS_LIBRARIES"] + "\n")
@@ -122,4 +149,6 @@ class Package(packages.GenericPackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("MUMPS_DIR", builder.install_dir())
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

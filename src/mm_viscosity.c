@@ -37,6 +37,7 @@
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
 #include "mm_viscosity.h"
+#include "models/fluidity.h"
 #include "rf_allo.h"
 #include "rf_bc_const.h"
 #include "rf_fem.h"
@@ -54,7 +55,7 @@
  *     viscosity()
  *      (then submodels for viscosity called by viscosity:)
  *        power_law_viscosity()
- *        herschel_buckley_viscosity()
+ *        herschel_bulkley_viscosity()
  *        carreau_viscosity()
  *        bingham_viscosity()
  *        bingham_wlf_viscosity()
@@ -512,6 +513,8 @@ double viscosity(struct Generalized_Newtonian *gn_local,
         d_mu->nn[j] = mp->d_viscosity[var] * bf[var]->phi[j];
       }
     }
+  } else if (gn_local->ConstitutiveEquation == FLUIDITY_THIXOTROPIC_VISCOSITY) {
+    mu = fluidity_viscosity(gn_local->sus_species_no, d_mu);
   } else if (gn_local->ConstitutiveEquation == EPOXY) {
     err = epoxy_viscosity(gn_local->cure_species_no, gn_local->mu0, gn_local->gelpoint,
                           gn_local->cureaexp, gn_local->curebexp, gn_local->atexp);
@@ -640,10 +643,8 @@ double viscosity(struct Generalized_Newtonian *gn_local,
     mu = carreau_suspension_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == POWERLAW_SUSPENSION) {
     mu = powerlaw_suspension_viscosity(gn_local, gamma_dot, d_mu);
-  }
-
-  else if (gn_local->ConstitutiveEquation == HERSCHEL_BULKLEY) {
-    mu = herschel_buckley_viscosity(gn_local, gamma_dot, d_mu);
+  } else if (gn_local->ConstitutiveEquation == HERSCHEL_BULKLEY) {
+    mu = herschel_bulkley_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
              gn_local->ConstitutiveEquation == CARREAU_WLF_CONC_EXP) {
     mu = carreau_wlf_conc_viscosity(gn_local, gamma_dot, d_mu, gn_local->ConstitutiveEquation);
@@ -670,12 +671,14 @@ double viscosity(struct Generalized_Newtonian *gn_local,
       ls = pfd->ls[0];
       err = ls_modulate_viscosity(
           &mu, mp->mp2nd->viscosity_phase[0], ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-          (double)mp->mp2nd->viscositymask[1], d_mu, mp->mp2nd->ViscosityModel);
+          (double)mp->mp2nd->viscositymask[1], d_mu, mp->mp2nd->ViscosityModel,
+          mp->mp2nd->viscosity_lsi_interp_method);
       ls = ls_old;
     }
-    err = ls_modulate_viscosity(
-        &mu, mp->mp2nd->viscosity, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-        (double)mp->mp2nd->viscositymask[1], d_mu, mp->mp2nd->ViscosityModel);
+    err = ls_modulate_viscosity(&mu, mp->mp2nd->viscosity, ls->Length_Scale,
+                                (double)mp->mp2nd->viscositymask[0],
+                                (double)mp->mp2nd->viscositymask[1], d_mu,
+                                mp->mp2nd->ViscosityModel, mp->mp2nd->viscosity_lsi_interp_method);
     GOMA_EH(err, "ls_modulate_viscosity");
   }
   if (DOUBLE_NONZERO(gn_local->thixo_factor)) {
@@ -819,7 +822,7 @@ double power_law_viscosity(struct Generalized_Newtonian *gn_local,
   return (mu);
 }
 
-double herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
+double herschel_bulkley_viscosity(struct Generalized_Newtonian *gn_local,
                                   dbl gamma_dot[DIM][DIM], /* strain rate tensor */
                                   VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
   int a, b;
@@ -839,7 +842,6 @@ double herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
   dbl mu0;
   dbl nexp;
   dbl tau_y;
-  dbl offset;
 
   vdofs = ei[pg->imtrx]->dof[VELOCITY1];
 
@@ -855,20 +857,85 @@ double herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
   mu0 = gn_local->mu0;
   nexp = gn_local->nexp;
   tau_y = gn_local->tau_y;
-  offset = 0.00001;
 
-  val = pow(gammadot + offset, nexp - 1.);
-  mu = mu0 * val;
-  mu += tau_y / (gammadot + offset);
+  switch (gn_local->regularizationModel) {
+  case REGULARIZATION_EPSILON: {
+    dbl epsilon = gn_local->epsilon;
+    val = pow(gammadot + epsilon, nexp - 1.);
+    mu = mu0 * val;
+    mu += tau_y / (gammadot + epsilon);
 
-  /*
-   * d( mu )/dmesh
-   */
+    /*
+     * d( mu )/dmesh
+     */
 
-  val = pow(gammadot + offset, nexp - 2.);
+    val = pow(gammadot + epsilon, nexp - 2.);
 
-  if (d_mu != NULL)
-    d_mu->gd = mu0 * (nexp - 1.0) * val - tau_y / pow(gammadot + offset, 2.0);
+    if (d_mu != NULL) {
+      d_mu->gd = mu0 * (nexp - 1.0) * val - tau_y / pow(gammadot + epsilon, 2.0);
+    }
+  } break;
+  case REGULARIZATION_PAPANASTASIOU: {
+    dbl fexp = gn_local->fexp;
+
+    val = pow(gammadot, nexp - 1.);
+    mu = mu0 * val;
+    mu += (1 - exp(-fexp * gammadot)) * tau_y / (fmax(1e-16, gammadot));
+
+    /*
+     * d( mu )/dmesh
+     */
+
+    if (d_mu != NULL) {
+      d_mu->gd = mu0 * (nexp - 1.0) * pow(gammadot, nexp - 2.0);
+      d_mu->gd += tau_y * (fexp * exp(-fexp * gammadot) / gammadot -
+                           (1 - exp(-fexp * gammadot)) / pow(gammadot, 2.0));
+    }
+  } break;
+  case REGULARIZATION_PAPANASTASIOU_EPSILON: {
+    dbl fexp = gn_local->fexp;
+    dbl epsilon = gn_local->epsilon;
+
+    val = pow(gammadot + epsilon, nexp - 1.);
+    mu = mu0 * val;
+    mu += (1 - exp(-fexp * gammadot)) * tau_y / (fmax(DBL_SEMI_SMALL, gammadot));
+
+    /*
+     * d( mu )/dmesh
+     */
+
+    if (d_mu != NULL) {
+      d_mu->gd = mu0 * (nexp - 1.0) * pow(gammadot + epsilon, nexp - 2.0);
+      d_mu->gd += tau_y * (fexp * exp(-fexp * gammadot) / gammadot -
+                           (1 - exp(-fexp * gammadot)) / pow(gammadot, 2.0));
+    }
+  } break;
+  case REGULARIZATION_YIELD_ONLY_EPSILON: {
+    dbl epsilon = gn_local->epsilon;
+    dbl minval = 0;
+    if (nexp < 1.0) {
+      minval = DBL_SEMI_SMALL; // avoid division by zero
+    }
+    val = pow(fmax(gammadot, minval), nexp - 1.);
+    mu = mu0 * val;
+    mu += tau_y / (gammadot + epsilon);
+
+    /*
+     * d( mu )/dmesh
+     */
+
+    val = pow(fmax(gammadot, minval), nexp - 2.);
+
+    if (d_mu != NULL) {
+      d_mu->gd = mu0 * (nexp - 1.0) * val - tau_y / pow(gammadot + epsilon, 2.0);
+    }
+  } break;
+    break;
+  default:
+    GOMA_EH(GOMA_ERROR, "Unknown Regularization Model for Herschel Bulkley Viscosity");
+    break;
+  }
+
   /*   *d_mu_dgd -= tau_y/pow(gammadot+offset, 2.0); Disabling the sensitivities on this term
    *  otherwise converges not
    */
@@ -2991,8 +3058,8 @@ double bond_viscosity(struct Generalized_Newtonian *gn_local,
  *                      mu_inf    = plateau viscosity at high shear
  *                      mu0       = reference  viscosity when x is zero
  *                      Aexp      = exponent for bond dependence of viscosity
- *                      c(bond_species_no) = concentration tracking structure-factor with a source *
- *term using shear-rate invariant variable
+ *                      c(bond_species_no) = concentration tracking structure-factor with a source
+ *                                           term using shear-rate invariant variable
  *
  *     Function sets the viscosity members of mp.
  *
@@ -3250,7 +3317,8 @@ int ls_modulate_viscosity(double *mu1,
                           double pm_minus,
                           double pm_plus,
                           VISCOSITY_DEPENDENCE_STRUCT *d_mu,
-                          const int model) {
+                          const int model,
+                          const int interp_method) {
   double factor, ratio = 0.0;
   int i, a, w, var;
 
@@ -3259,6 +3327,7 @@ int ls_modulate_viscosity(double *mu1,
     mu2 = *mu1 * ratio;
   } else if (model == TIME_RAMP) {
     ratio = 1.0;
+    // Making specific to starting at time = 0
     if (tran->time_value < (tran->init_time + 10. * tran->Delta_t0)) {
       ratio = (tran->time_value - tran->init_time) / (10. * tran->Delta_t0);
     }
@@ -3266,11 +3335,11 @@ int ls_modulate_viscosity(double *mu1,
   }
 
   if (d_mu == NULL) {
-    *mu1 = ls_modulate_property(*mu1, mu2, width, pm_minus, pm_plus, NULL, &factor);
+    *mu1 = ls_modulate_property(*mu1, mu2, width, pm_minus, pm_plus, NULL, &factor, interp_method);
     return (1);
   }
 
-  *mu1 = ls_modulate_property(*mu1, mu2, width, pm_minus, pm_plus, d_mu->F, &factor);
+  *mu1 = ls_modulate_property(*mu1, mu2, width, pm_minus, pm_plus, d_mu->F, &factor, interp_method);
 
   if (model == RATIO) {
     factor *= (1. - ratio);
@@ -3434,7 +3503,8 @@ double flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis) {
     err = ls_modulate_viscosity(&flow_vis, mp->mp2nd->FlowingLiquid_viscosity, ls->Length_Scale,
                                 (double)mp->mp2nd->FlowingLiquid_viscositymask[0],
                                 (double)mp->mp2nd->FlowingLiquid_viscositymask[1], d_flow_vis,
-                                mp->mp2nd->FlowingLiquidViscosityModel);
+                                mp->mp2nd->FlowingLiquidViscosityModel,
+                                mp->mp2nd->viscosity_lsi_interp_method);
     GOMA_EH(err, "ls_modulate_viscosity");
   }
 

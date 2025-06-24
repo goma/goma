@@ -9,8 +9,7 @@ import argparse
 import pathlib
 
 
-# Currently we don't check dependencies so this needs to be in a specific order
-packages = [
+default_packages = [
     "cmake",
     "openmpi",
     "hdf5",
@@ -32,6 +31,7 @@ packages = [
     "superlu_dist",
     "suitesparse",
     "trilinos",
+    "hypre",
     "petsc",
     "petsc_complex",
     "sparse",
@@ -40,6 +40,7 @@ packages = [
 
 
 if __name__ == "__main__":
+    packages = default_packages.copy()
     CC = os.environ.get("CC")
     CXX = os.environ.get("CXX")
     FC = os.environ.get("FC")
@@ -70,7 +71,10 @@ if __name__ == "__main__":
         "--extract-dir", help="Extract and Build location", type=pathlib.Path
     )
     parser.add_argument(
-        "--build-shared", help="Build shared libraries (Default)", action="store_true"
+        "--build-shared",
+        help="Build shared libraries (Default)",
+        action="store_true",
+        dest="enable_shared",
     )
     parser.add_argument(
         "--build-static",
@@ -78,7 +82,7 @@ if __name__ == "__main__":
         dest="enable_shared",
         action="store_false",
     )
-    parser.set_defaults(build_shared=True)
+    parser.set_defaults(enable_shared=True)
     parser.add_argument(
         "-j", "--jobs", help="Number of parallel jobs", type=int, default=1
     )
@@ -89,9 +93,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--openblas",
-    help="Build using OpenBLAS (Default)",
-    dest="netlib_blas",
-    action="store_true",
+        help="Build using OpenBLAS (Default)",
+        dest="netlib_blas",
+        action="store_true",
     )
     parser.set_defaults(netlib_blas=False)
     parser.add_argument(
@@ -123,6 +127,13 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.set_defaults(write_dynamic_library_path=False)
+    parser.add_argument(
+        "--install-complex-petsc",
+        help="Install a complex version of petsc alongside the regular",
+        dest="petsc_complex",
+        action="store_true",
+    )
+    parser.set_defaults(petsc_complex=False)
 
     for p in packages:
         pm = importlib.import_module("tpl_tools." + ".".join(["packages", p]))
@@ -134,6 +145,10 @@ if __name__ == "__main__":
         )
 
     args = parser.parse_args()
+
+    if not args.petsc_complex:
+        packages.remove("petsc_complex")
+
     if not args.enable_parmetis:
         print("ParMETIS has been disabled ")
         print("\tDisabling ParMETIS")
@@ -145,7 +160,6 @@ if __name__ == "__main__":
         packages.remove("openblas")
     else:
         packages.remove("lapack")
-
 
     install_dir = os.path.abspath(os.path.expanduser(args.INSTALL_DIR))
     download_dir = os.path.join(install_dir, "downloads")
@@ -202,7 +216,38 @@ if __name__ == "__main__":
         tpl_registry.set_environment_variable("FC", "gfortran")
         tpl_registry.set_environment_variable("F77", "gfortran")
 
-    for p in packages:
+    dependency_graph = {
+        p: pkg.dependencies
+        for p, pkg in [
+            (
+                p,
+                importlib.import_module(
+                    "tpl_tools." + ".".join(["packages", p])
+                ).Package(),
+            )
+            for p in packages
+        ]
+    }
+
+    if "openblas" in packages:
+        for p in dependency_graph.keys():
+            if "lapack" in dependency_graph[p]:
+                dependency_graph[p].remove("lapack")
+                dependency_graph[p].append("openblas")
+
+    if not args.enable_parmetis:
+        for p in dependency_graph.keys():
+            for n in ["parmetis", "superlu_dist"]:
+                if n in dependency_graph[p]:
+                    dependency_graph[p].remove(n)
+
+    logger.log("Dependency graph: {}".format(dependency_graph))
+
+    install_order = utils.topological_sort(dependency_graph)[::-1]
+
+    logger.log("Install order: {}".format(install_order))
+
+    for p in install_order:
         pm = importlib.import_module("tpl_tools." + ".".join(["packages", p]))
         pc = pm.Package()
         if getattr(args, pc.name.replace("-", "_") + "_dir"):
@@ -216,14 +261,19 @@ if __name__ == "__main__":
                 package_dir,
                 logger,
                 tpl_registry,
-                args.build_shared,
+                args.enable_shared,
                 prebuilt=True,
-                skip_ssl_verify=args.skip_ssl_verify
+                skip_ssl_verify=args.skip_ssl_verify,
             )
             if build.check(True):
                 build.logger.log("Package {} found at {}".format(pc.name, package_dir))
             else:
-                print("Package {} not found check directory or let script build".format(pc.name), file=sys.stderr)
+                print(
+                    "Package {} not found check directory or let script build".format(
+                        pc.name
+                    ),
+                    file=sys.stderr,
+                )
                 exit(1)
             build.register()
         else:
@@ -235,8 +285,8 @@ if __name__ == "__main__":
                 install_dir,
                 logger,
                 tpl_registry,
-                args.build_shared,
-                skip_ssl_verify=args.skip_ssl_verify
+                args.enable_shared,
+                skip_ssl_verify=args.skip_ssl_verify,
             )
 
             if build.check():
@@ -250,10 +300,15 @@ if __name__ == "__main__":
             build.build()
             build.install()
             if not build.check():
-                print("Package {} not built, contact developers".format(pc.name), file=sys.stderr)
+                print(
+                    "Package {} not built, contact Goma developers".format(pc.name),
+                    file=sys.stderr,
+                )
                 exit(1)
             build.register()
-    tpl_registry.config.write_config(os.path.join(install_dir, "config.sh"), "bash", args.write_dynamic_library_path)
+    tpl_registry.config.write_config(
+        os.path.join(install_dir, "config.sh"), "bash", args.write_dynamic_library_path
+    )
     logger.log(
         "Bash config written to {}, source with bash".format(
             os.path.join(install_dir, "config.sh")
@@ -261,7 +316,9 @@ if __name__ == "__main__":
     )
 
     tpl_registry.config.write_config(
-        os.path.join(install_dir, "config.fish"), "fish", args.write_dynamic_library_path
+        os.path.join(install_dir, "config.fish"),
+        "fish",
+        args.write_dynamic_library_path,
     )
     logger.log(
         "Fish config written to {}, source with fish".format(

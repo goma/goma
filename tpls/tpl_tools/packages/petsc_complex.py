@@ -1,20 +1,22 @@
 from tpl_tools.packages import packages
+from tpl_tools import utils
 import os
 
 
 class Package(packages.AutotoolsPackage):
     def __init__(self):
         self.name = "petsc-complex"
-        self.version = "3.22.1"
-        self.sha256 = "7117d3ae6827f681ed9737939d4e86896b4751e27cca941bb07e5703f19a0a7b"
+        self.version = "3.23.3"
+        self.sha256 = "b548e4b05a84044410eeca9dbbeb4fb3baf8965be96c9802a8310aa07e13c987"
         self.filename = "petsc-" + self.version + ".tar.gz"
         self.url = (
-            "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-"
+            "https://gitlab.com/petsc/petsc/-/archive/v3.23.3/petsc-v"
             + self.version
             + ".tar.gz"
         )
         self.includes = ["petsc"]
         self.libraries = ["petsc", "HYPRE"]
+        self.dependencies = ["openmpi", "scalapack", "metis", "mumps", "scotch"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -59,7 +61,12 @@ class Package(packages.AutotoolsPackage):
         configure_options.append("--with-mumps=1")
         configure_options.append("--with-mumps-dir=" + builder.env["MUMPS_DIR"])
         configure_options.append("--with-scalar-type=complex")
-        configure_options.append("COPTFLAGS=-O3")
+        compiler, version = utils.check_gcc_clang_version(builder.env["CC"])
+        if compiler == "gcc" and version >= (14, 0, 0):
+            configure_options.append("COPTFLAGS=-O3 -Wno-incompatible-pointer-types")
+        else:
+            configure_options.append("COPTFLAGS=-O3")
+
         configure_options.append("CXXOPTFLAGS=-O3")
         configure_options.append("FOPTFLAGS=-O3")
         configure_options.append("PETSC_ARCH=arch-c-complex")

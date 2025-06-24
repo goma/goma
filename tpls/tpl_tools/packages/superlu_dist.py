@@ -1,11 +1,12 @@
 from tpl_tools.packages import packages
+from tpl_tools import utils
 
 
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "superlu_dist"
-        self.version = "9.0.0"
-        self.sha256 = "aa43d33d4b1b0f5f7b5ad7685e9a6bc25088832c6c74d2ab8f75a2c9f4e9e955"
+        self.version = "9.1.0"
+        self.sha256 = "1cb2c6dc7e8231b2ec30c1266e55e440ffca9f55527771d8df28f900dd179f9d"
         self.filename = "superlu_dist-" + self.version + ".tar.gz"
         self.url = (
             "https://github.com/xiaoyeli/superlu_dist/archive/refs/tags/v"
@@ -14,13 +15,7 @@ class Package(packages.CMakePackage):
         )
         self.libraries = ["superlu_dist"]
         self.includes = ["superlu_dist_config.h"]
-
-    def setDependencies(self, builder):
-        builder.set_dependency("packages.openmpi")
-        builder.set_dependency("packages.openblas")
-        builder.set_dependency("packages.metis")
-        builder.set_dependency("packages.parmetis")
-        return
+        self.dependencies = ["cmake", "metis", "parmetis", "openmpi"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -43,19 +38,9 @@ class Package(packages.CMakePackage):
         builder.add_option("-DCMAKE_C_COMPILER=" + CC)
         builder.add_option("-DCMAKE_CXX_COMPILER=" + CXX)
         builder.add_option("-DCMAKE_Fortran_COMPILER=" + FC)
-        builder.add_option("-DPNetCDF_ROOT:PATH=" + builder.env["PNETCDF_DIR"])
-        builder.add_option("-DNetCDF_ROOT:PATH=" + builder.env["NETCDF_DIR"])
-        builder.add_option("-DnetCDF_ROOT:PATH=" + builder.env["NETCDF_DIR"])
-        builder.add_option("-DHDF5_ROOT:PATH=" + builder.env["HDF5_DIR"])
-        builder.add_option("-DHDF5_DIR:PATH=" + builder.env["HDF5_DIR"])
-        builder.add_option("-DTPL_ENABLE_Matio=OFF")
-        builder.add_option("-DSeacas_ENABLE_ALL_PACKAGES:BOOL=ON")
-        builder.add_option("-DSeacas_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON")
-        builder.add_option("-DSeacas_ENABLE_SECONDARY_TESTED_CODE:BOOL=ON")
+        builder.add_option("-DCMAKE_C_STANDARD=11")
         builder.add_option("-DTPL_BLAS_LIBRARIES=" + builder.env["BLAS_LIBRARIES"])
-        ext = ".a"
-        if builder.build_shared:
-            ext = ".so"
+        ext = utils.get_library_extension(builder.build_shared)
         builder.add_option(
             "-DTPL_PARMETIS_LIBRARIES="
             + builder.env["PARMETIS_DIR"]
@@ -79,4 +64,6 @@ class Package(packages.CMakePackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("SUPERLU_DIST_DIR", builder.install_dir())
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

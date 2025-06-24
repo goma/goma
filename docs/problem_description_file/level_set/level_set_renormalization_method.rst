@@ -50,6 +50,10 @@ Huygens_Constrained
     enforces a global constraint, it is possible that material might be moved
     nonphysically around the computational domain.
 
+Facet_Based
+    This is similar to Huygens method but uses a marching-cubes and marching
+    squares like approach to construct the facets
+
 ------------
 Examples
 ------------
@@ -62,6 +66,10 @@ This is a sample renormalization method input card:
 -------------------------
 Technical Discussion
 -------------------------
+
+It is almost always beneficial to also enable *Level Set Freeze Interface Nodes* 
+when using the renormalization method. This option will freeze the level set
+function at the interface nodes during the renormalization process.
 
 Renormalization is an operation particular to level set embedded interface tracking.
 The level set function :math:`\phi` is usually specified in terms of a signed distance to the

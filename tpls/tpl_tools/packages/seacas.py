@@ -6,25 +6,16 @@ import os
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "seacas"
-        self.version = "2024-08-15"
-        self.sha256 = "c85130b0dac5ab9a08dcb53c8ccff478122d72b08bd41d99c0adfddc5eb18a52"
+        self.version = "v2025-06-07"
+        self.sha256 = "2974705f2859e30bca48b619fda078bb771c0e94381af9e624749afb9fd72780"
         self.filename = "seacas-" + self.version + ".tar.gz"
         self.url = (
-            "https://github.com/sandialabs/seacas/archive/refs/tags/v"
-            + self.version
-            + ".tar.gz"
+            "https://github.com/sandialabs/seacas/archive/" + self.version + ".tar.gz"
         )
         self.executables = ["algebra", "aprepro", "mapvar", "explore"]
         self.libraries = ["exodus", "aprepro_lib"]
         self.includes = ["exodusII.h", "aprepro.h"]
-
-    def setDependencies(self, builder):
-        builder.set_dependency("packages.openmpi")
-        builder.set_dependency("packages.hdf5")
-        builder.set_dependency("packages.pnetcdf")
-        builder.set_dependency("packages.netcdf")
-        builder.set_dependency("packages.fmt")
-        return
+        self.dependencies = ["openmpi", "cmake", "fmt", "hdf5", "netcdf", "pnetcdf"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -37,6 +28,9 @@ class Package(packages.CMakePackage):
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
+            builder.add_option("-DSeacas_EXTRA_LINK_FLAGS=z;dl;m")
+            builder.add_option("-DSEACASExodus_ENABLE_SHARED:BOOL=OFF")
+
         builder.add_option("-DTPL_ENABLE_Netcdf:BOOL=ON")
         builder.add_option("-DTPL_ENABLE_MPI:BOOL=ON")
         if utils.check_for_x11(builder._extract_dir, builder.env["CC"]):
@@ -65,7 +59,9 @@ class Package(packages.CMakePackage):
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("ACCESS", builder.install_dir())
         registry.set_environment_variable("SEACAS_DIR", builder.install_dir())
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )
         registry.prepend_environment_variable(
             "PATH", os.path.join(builder.install_dir(), "bin")
         )

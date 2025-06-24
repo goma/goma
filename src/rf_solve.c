@@ -283,8 +283,8 @@ void initial_guess_stress_to_log_conf(double *x, int num_total_nodes) {
         x[s_idx[1][1]] = log_s[1][1];
 
       } /* Loop over nodes */
-    }   /* Loop over modes */
-  }     /* Loop over materials */
+    } /* Loop over modes */
+  } /* Loop over materials */
 }
 
 void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
@@ -1537,6 +1537,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             case HUYGENS:
             case HUYGENS_C:
             case HUYGENS_MASS_ITER:
+            case FACET_BASED:
               Renorm_Now =
                   (ls->Force_Initial_Renorm || (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0));
 
@@ -1668,7 +1669,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               DPRINTF(stdout, "\n\t\t Exodus file read initialization for phase function fields");
               break;
             } /* end of switch(ls->Init_Method ) */
-          }   /* end of i<pfd->num_phase_funcs */
+          } /* end of i<pfd->num_phase_funcs */
 
           ls = ls_save; /* OK, used the level set routines now be nice and point
                            ls back to where you found it */
@@ -2271,6 +2272,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           case HUYGENS:
           case HUYGENS_C:
           case HUYGENS_MASS_ITER:
+          case FACET_BASED:
             Renorm_Now =
                 (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) || ls_adc_event == TRUE;
 
@@ -2316,6 +2318,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             case HUYGENS:
             case HUYGENS_C:
             case HUYGENS_MASS_ITER:
+            case FACET_BASED:
               Renorm_Now = (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0);
 
               did_renorm =

@@ -1020,8 +1020,8 @@ int assemble_mesh(double time,
         }
 
       } /* end of loop over equations i  */
-    }   /* end of loop over equation directions a */
-  }     /* end of if jacobian */
+    } /* end of loop over equation directions a */
+  } /* end of if jacobian */
 
   return (status);
 }
@@ -2539,15 +2539,16 @@ double acoustic_impedance(CONDUCTIVITY_DEPENDENCE_STRUCT *d_R, dbl time)
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      R = ls_modulate_thermalconductivity(R, mp->mp2nd->acousticimpedance_phase[0],
-                                          ls->Length_Scale,
-                                          (double)mp->mp2nd->acousticimpedancemask[0],
-                                          (double)mp->mp2nd->acousticimpedancemask[1], d_R);
+      R = ls_modulate_thermalconductivity(
+          R, mp->mp2nd->acousticimpedance_phase[0], ls->Length_Scale,
+          (double)mp->mp2nd->acousticimpedancemask[0], (double)mp->mp2nd->acousticimpedancemask[1],
+          d_R, mp->mp2nd->acousticimpedance_lsi_interp_method);
       ls = ls_old;
     }
     R = ls_modulate_thermalconductivity(R, mp->mp2nd->acousticimpedance, ls->Length_Scale,
                                         (double)mp->mp2nd->acousticimpedancemask[0],
-                                        (double)mp->mp2nd->acousticimpedancemask[1], d_R);
+                                        (double)mp->mp2nd->acousticimpedancemask[1], d_R,
+                                        mp->mp2nd->acousticimpedance_lsi_interp_method);
   }
 
   return (R);
@@ -2617,14 +2618,14 @@ double wave_number(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time) {
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      k = ls_modulate_thermalconductivity(k, mp->mp2nd->wavenumber_phase[0], ls->Length_Scale,
-                                          (double)mp->mp2nd->wavenumbermask[0],
-                                          (double)mp->mp2nd->wavenumbermask[1], d_k);
+      k = ls_modulate_thermalconductivity(
+          k, mp->mp2nd->wavenumber_phase[0], ls->Length_Scale, (double)mp->mp2nd->wavenumbermask[0],
+          (double)mp->mp2nd->wavenumbermask[1], d_k, mp->mp2nd->wavenumber_lsi_interp_method);
       ls = ls_old;
     }
-    k = ls_modulate_thermalconductivity(k, mp->mp2nd->wavenumber, ls->Length_Scale,
-                                        (double)mp->mp2nd->wavenumbermask[0],
-                                        (double)mp->mp2nd->wavenumbermask[1], d_k);
+    k = ls_modulate_thermalconductivity(
+        k, mp->mp2nd->wavenumber, ls->Length_Scale, (double)mp->mp2nd->wavenumbermask[0],
+        (double)mp->mp2nd->wavenumbermask[1], d_k, mp->mp2nd->wavenumber_lsi_interp_method);
   }
   return (k);
 }
@@ -2759,15 +2760,17 @@ double acoustic_absorption(CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha, dbl time)
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      alpha = ls_modulate_thermalconductivity(
-          alpha, mp->mp2nd->acousticabsorption_phase[0], ls->Length_Scale,
-          (double)mp->mp2nd->acousticabsorptionmask[0],
-          (double)mp->mp2nd->acousticabsorptionmask[1], d_alpha);
+      alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->acousticabsorption_phase[0],
+                                              ls->Length_Scale,
+                                              (double)mp->mp2nd->acousticabsorptionmask[0],
+                                              (double)mp->mp2nd->acousticabsorptionmask[1], d_alpha,
+                                              mp->mp2nd->acousticabsorption_lsi_interp_method);
       ls = ls_old;
     }
     alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->acousticabsorption, ls->Length_Scale,
                                             (double)mp->mp2nd->acousticabsorptionmask[0],
-                                            (double)mp->mp2nd->acousticabsorptionmask[1], d_alpha);
+                                            (double)mp->mp2nd->acousticabsorptionmask[1], d_alpha,
+                                            mp->mp2nd->acousticabsorption_lsi_interp_method);
   }
 
   return (alpha);
@@ -2903,15 +2906,16 @@ double light_absorption(CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha, dbl time)
     if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY]) {
       ls_old = ls;
       ls = pfd->ls[0];
-      alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->lightabsorption_phase[0],
-                                              ls->Length_Scale,
-                                              (double)mp->mp2nd->lightabsorptionmask[0],
-                                              (double)mp->mp2nd->lightabsorptionmask[1], d_alpha);
+      alpha = ls_modulate_thermalconductivity(
+          alpha, mp->mp2nd->lightabsorption_phase[0], ls->Length_Scale,
+          (double)mp->mp2nd->lightabsorptionmask[0], (double)mp->mp2nd->lightabsorptionmask[1],
+          d_alpha, mp->mp2nd->lightabsorption_lsi_interp_method);
       ls = ls_old;
     }
     alpha = ls_modulate_thermalconductivity(alpha, mp->mp2nd->lightabsorption, ls->Length_Scale,
                                             (double)mp->mp2nd->lightabsorptionmask[0],
-                                            (double)mp->mp2nd->lightabsorptionmask[1], d_alpha);
+                                            (double)mp->mp2nd->lightabsorptionmask[1], d_alpha,
+                                            mp->mp2nd->lightabsorption_lsi_interp_method);
   }
 
   return (alpha);
@@ -3049,12 +3053,14 @@ double refractive_index(CONDUCTIVITY_DEPENDENCE_STRUCT *d_n, dbl time)
       ls = pfd->ls[0];
       n = ls_modulate_thermalconductivity(n, mp->mp2nd->refractiveindex_phase[0], ls->Length_Scale,
                                           (double)mp->mp2nd->refractiveindexmask[0],
-                                          (double)mp->mp2nd->refractiveindexmask[1], d_n);
+                                          (double)mp->mp2nd->refractiveindexmask[1], d_n,
+                                          mp->mp2nd->refractiveindex_lsi_interp_method);
       ls = ls_old;
     }
     n = ls_modulate_thermalconductivity(n, mp->mp2nd->refractiveindex, ls->Length_Scale,
                                         (double)mp->mp2nd->refractiveindexmask[0],
-                                        (double)mp->mp2nd->refractiveindexmask[1], d_n);
+                                        (double)mp->mp2nd->refractiveindexmask[1], d_n,
+                                        mp->mp2nd->refractiveindex_lsi_interp_method);
   }
 
   return (n);
@@ -3191,12 +3197,14 @@ double extinction_index(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time)
       ls = pfd->ls[0];
       k = ls_modulate_thermalconductivity(k, mp->mp2nd->extinctionindex_phase[0], ls->Length_Scale,
                                           (double)mp->mp2nd->extinctionindexmask[0],
-                                          (double)mp->mp2nd->extinctionindexmask[1], d_k);
+                                          (double)mp->mp2nd->extinctionindexmask[1], d_k,
+                                          mp->mp2nd->extinctionindex_lsi_interp_method);
       ls = ls_old;
     }
     k = ls_modulate_thermalconductivity(k, mp->mp2nd->extinctionindex, ls->Length_Scale,
                                         (double)mp->mp2nd->extinctionindexmask[0],
-                                        (double)mp->mp2nd->extinctionindexmask[1], d_k);
+                                        (double)mp->mp2nd->extinctionindexmask[1], d_k,
+                                        mp->mp2nd->extinctionindex_lsi_interp_method);
   }
 
   return (k);
@@ -3209,7 +3217,8 @@ int ls_modulate_momentumsource(double f1[DIM],
                                double width,
                                double pm_minus,
                                double pm_plus,
-                               MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df)
+                               MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df,
+                               const int interp_method)
 
 {
   int i, a, b, var;
@@ -3219,11 +3228,13 @@ int ls_modulate_momentumsource(double f1[DIM],
   for (a = 0; a < dim; a++) {
 
     if (df == NULL) {
-      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, NULL, &factor);
+      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, NULL, &factor,
+                                   interp_method);
 
       return (0);
     } else {
-      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, df->F[a], &factor);
+      f1[a] = ls_modulate_property(f1[a], f2[a], width, pm_minus, pm_plus, df->F[a], &factor,
+                                   interp_method);
 
       if (pd->v[pg->imtrx][var = TEMPERATURE]) {
         for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
@@ -4171,7 +4182,7 @@ double quad_isomap_invert(const double x1,
       for (i = 0; i < elem_nodes; i++) {
         coord[2][i] = z[itp[i]];
       }
-      /* fall through */
+      FALLTHROUGH;
     case 2:
       for (i = 0; i < elem_nodes; i++) {
         coord[0][i] = x[itp[i]];
@@ -4193,7 +4204,7 @@ double quad_isomap_invert(const double x1,
         jac[2][2] += coord[2][i] * phig[i];
         xpt[2] += coord[2][i] * phi[i];
       }
-      /* fall through */
+      FALLTHROUGH;
     case 2:
       for (i = 0; i < elem_nodes; i++) {
         jac[0][0] += coord[0][i] * phic[i];
@@ -4385,7 +4396,7 @@ double quad_isomap_invert(const double x1,
       switch (dim) {
       case 3:
         pg += pp[i] * phig[i];
-        /* fall through */
+        FALLTHROUGH;
       case 2:
         pc += pp[i] * phic[i];
         pe += pp[i] * phie[i];
@@ -10556,7 +10567,7 @@ int assemble_momentum_path_dependence(dbl time, /* currentt time step */
           }
 
         } /*end if (active_dofs) */
-      }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
   }
   return (status);

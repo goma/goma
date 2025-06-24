@@ -230,10 +230,10 @@ void find_and_set_Dirichlet(double x[],    /* solution vector at this processor 
                             error_cond);
 
             } /* END for (i = 0; i < Proc_NS_Count[ins]; i++)               */
-          }   /* END if (Proc_NS_Ids[ins] == BC_Types[ibc].BC_ID)	     */
-        }     /* END for (ins = 0; ins < Proc_Num_Node_Sets; ins++) 	     */
-      }       /* END if (BC_Types[ibc].BC_Name == U_BC  || ....		     */
-    }         /* END if (!strcmp(BC_Types[ibc].Set_Type, "NS")) 		     */
+          } /* END if (Proc_NS_Ids[ins] == BC_Types[ibc].BC_ID)	     */
+        } /* END for (ins = 0; ins < Proc_Num_Node_Sets; ins++) 	     */
+      } /* END if (BC_Types[ibc].BC_Name == U_BC  || ....		     */
+    } /* END if (!strcmp(BC_Types[ibc].Set_Type, "NS")) 		     */
 
     /*****************************************************************************/
     /*                             BLOCK 2                                       */
@@ -296,9 +296,9 @@ void find_and_set_Dirichlet(double x[],    /* solution vector at this processor 
               }
             }
           } /* END if (Proc_SS_Ids[ins] == BC_Types[ibc].BC_ID)	      */
-        }   /* END for (ins = 0; ins < Proc_Num_Side_Sets; ins++) 	      */
-      }     /* END if (BC_Types[ibc].BC_Name ==USIDE_BC ...			      */
-    }       /* END if (!strcmp(BC_Types[ibc].Set_Type, "SS")) 		      */
+        } /* END for (ins = 0; ins < Proc_Num_Side_Sets; ins++) 	      */
+      } /* END if (BC_Types[ibc].BC_Name ==USIDE_BC ...			      */
+    } /* END if (!strcmp(BC_Types[ibc].Set_Type, "SS")) 		      */
 
     /*****************************************************************************/
     /*                             BLOCK 3                                       */
@@ -366,11 +366,11 @@ void find_and_set_Dirichlet(double x[],    /* solution vector at this processor 
               }
             }
           } /*  for (ielem = e_start; ielem < e_end; ielem++) */
-        }   /* for (eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++)  */
-      }     /* if (BC_Types[ibc].desc->method == DIRICHLET) */
+        } /* for (eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++)  */
+      } /* if (BC_Types[ibc].desc->method == DIRICHLET) */
       safer_free((void **)&been_there);
     } /* if (!strcmp(BC_Types[ibc].Set_Type, "MN")) */
-  }   /* END for (ibc = 0; ibc < Num_BC; ibc++) */
+  } /* END for (ibc = 0; ibc < Num_BC; ibc++) */
 
   if (error_cond) {
     printf("find_and_set_Dirichlet WARNING: error condition found\n");
@@ -980,8 +980,8 @@ void set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[], Exo
                   }
                 }
               } /* END for (i = 0; i < Proc_NS_Count[ins]; i++)           */
-            }   /* END if (Proc_NS_Ids[ins] == BC_Types[ibc].BC_ID)	     */
-          }     /* END for (ins = 0; ins < Proc_Num_Node_Sets; ins++) 	     */
+            } /* END if (Proc_NS_Ids[ins] == BC_Types[ibc].BC_ID)	     */
+          } /* END for (ins = 0; ins < Proc_Num_Node_Sets; ins++) 	     */
         }
       }
 
@@ -1058,11 +1058,11 @@ void set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[], Exo
               }
 
             } /* END for (i = 0; i < Proc_SS_Elem_Count[iss]; i++)          */
-          }   /* END if (Proc_SS_Ids[iss] == BC_Types[ibc].BC_ID)	     */
-        }     /* END for (iss = 0; iss < Proc_Num_Side_Sets; iss++) 	     */
-      }       /* END if (BC_Types[ibc].BC_Name == TNRMLSIDE_BC || ....	     */
-    }         /* END if (!strcmp(BC_Types[ibc].Set_Type, "SS")) 		     */
-  }           /* END for (ibc = 0; ibc < Num_BC; ibc++)				     */
+          } /* END if (Proc_SS_Ids[iss] == BC_Types[ibc].BC_ID)	     */
+        } /* END for (iss = 0; iss < Proc_Num_Side_Sets; iss++) 	     */
+      } /* END if (BC_Types[ibc].BC_Name == TNRMLSIDE_BC || ....	     */
+    } /* END if (!strcmp(BC_Types[ibc].Set_Type, "SS")) 		     */
+  } /* END for (ibc = 0; ibc < Num_BC; ibc++)				     */
 
   /*****************************************************************************/
   /*                              BLOCK 4                                      */
@@ -1697,7 +1697,7 @@ void set_up_Edge_BC(struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[],
                   found = node_ctr > 1 ? TRUE : FALSE;
 
                 } /* end of j != -1 */
-              }   /* end of for(l = ... */
+              } /* end of for(l = ... */
 
               if (found == TRUE) {
 
@@ -2335,7 +2335,7 @@ int find_id_side(const int ielem,                /* element index number */
       sum += shape(0.0, 0.0, -1.0, ielem_type, PSI, id_local_elem_coord[i]);
     if (sum > 0.999)
       return (5);
-    /* fall through */
+    FALLTHROUGH;
   case 2:
     /* newly added for triangles */
     /* This is messing with shell elements so setting it aside */

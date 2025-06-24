@@ -448,8 +448,8 @@ void eighqr(int n, dbl **a, EV *e) {
           e->u[j][k] -= p;
         }
       } /* for(k = m; k <= nm; k++) */
-    }   /* else if (l != nn and l != nm) */
-  }     /* while(nn > 0) */
+    } /* else if (l != nn and l != nm) */
+  } /* while(nn > 0) */
 
   /* Find eigenvectors
    */
@@ -531,7 +531,7 @@ void eighqr(int n, dbl **a, EV *e) {
           a[j][nn] /= t;
         }
       } /* for(i = nl; i > 0; i--) */
-    }   /* if(q < 0.0) */
+    } /* if(q < 0.0) */
     else if (q == 0.0) {
       m = nn;
       a[nn][nn] = 1.0;
@@ -579,8 +579,8 @@ void eighqr(int n, dbl **a, EV *e) {
         for (j = i; j <= nn; j++)
           a[j][nn] /= t;
       } /* for(i = nm; i > 0; i--) */
-    }   /* else if(q == 0.0) */
-  }     /* for(nn = n; nn > 0; nn--) */
+    } /* else if(q == 0.0) */
+  } /* for(nn = n; nn > 0; nn--) */
   for (j = n; j > 0; j--) {
     m = MIN(j, n);
     for (i = 1; i <= n; i++) {

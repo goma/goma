@@ -51,8 +51,8 @@
 #define GOMA_VERSION STRINGCON(GIT_VERSION)
 #else
 #define GOMA_MAJOR_VERSION 7
-#define GOMA_MINOR_VERSION 8
-#define GOMA_PATCH_VERSION 2
+#define GOMA_MINOR_VERSION 9
+#define GOMA_PATCH_VERSION 0
 #define GOMA_VERSION \
   STRINGCON(GOMA_MAJOR_VERSION) "." STRINGCON(GOMA_MINOR_VERSION) "." STRINGCON(GOMA_PATCH_VERSION)
 #endif
@@ -539,6 +539,14 @@ extern int zero_detJ_global;
 #define UNUSED __attribute__((unused))
 #else
 #define UNUSED
+#endif
+#endif
+
+#ifndef FALLTHROUGH
+#if defined(__GNUC__) && __GNUC__ >= 7 || defined(__clang__) && __clang_major__ >= 12
+#define FALLTHROUGH __attribute__((fallthrough))
+#else
+#define FALLTHROUGH ((void)0)
 #endif
 #endif
 

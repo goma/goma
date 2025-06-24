@@ -1,8 +1,35 @@
 from tpl_tools.packages import packages
 from tpl_tools.builder import mkdir_p
+from tpl_tools import utils
 import os
 import shutil
 import glob
+
+patch = """diff --git a/src/spTest.c b/src/spTest.c
+index 20ab7cc..9e98134 100644
+--- a/src/spTest.c
++++ b/src/spTest.c
+@@ -28,6 +28,9 @@
+  *  Copyright (c) 1985-2003 by Kenneth S. Kundert
+  */
+
++#include <sys/times.h>
++#include <stdlib.h>
++
+ #ifndef lint
+ static char copyright[] =
+     "Sparse1.4: Copyright (c) 1985-2003 by Kenneth S. Kundert";
+@@ -137,9 +140,9 @@ extern int strcmp(), strncmp(), strlen();
+ double
+ Time()
+ {
+-    struct time {long user, system, childuser, childsystem;} time;
++    struct tms time;
+     (void)times(&time);
+-    return (double)time.user / (double)HZ;
++    return (double)time.tms_utime / (double)HZ;
+ }
+"""
 
 
 class Package(packages.GenericPackage):
@@ -20,8 +47,18 @@ class Package(packages.GenericPackage):
         )
         self.includes = ["spMatrix.h"]
         self.libraries = ["sparse"]
+        self.dependencies = []
 
     def configure_options(self, builder):
+        with open(
+            os.path.join(
+                builder._extract_dir, builder._extracted_folder, "sparse.patch"
+            ),
+            "w",
+        ) as f:
+            f.write(patch)
+
+        builder.run_command(["patch", "-p1", "-i", "sparse.patch"])
         with open(
             os.path.join(
                 builder._extract_dir, builder._extracted_folder, "src", "Makefile"
@@ -29,9 +66,9 @@ class Package(packages.GenericPackage):
             "w",
         ) as f:
             if builder.build_shared:
-                f.write("CFLAGS = -O2 -fPIC\n")
+                f.write("CFLAGS = -O2 -fPIC -std=c99\n")
             else:
-                f.write("CFLAGS = -O2\n")
+                f.write("CFLAGS = -O2 -std=c99\n")
             f.write("LINTFLAGS = -lc -lm\n")
             f.write("SHELL = /bin/sh\n")
             f.write("CC = " + builder.env["CC"] + "\n")
@@ -43,10 +80,8 @@ class Package(packages.GenericPackage):
             f.write(
                 "OFILES = spAllocate.o spBuild.o spFactor.o spOutput.o spSolve.o spUtils.o spFortran.o\n"
             )
-            if builder.build_shared:
-                f.write("LIBRARY = ../lib/libsparse.so\n")
-            else:
-                f.write("LIBRARY = ../lib/libsparse.a\n")
+            ext = utils.get_library_extension(builder.build_shared)
+            f.write("LIBRARY = ../lib/libsparse" + ext + "\n")
             f.write("DESTINATION = ../bin/sparse\n")
             f.write("TESTC = spTest.c\n")
             f.write("TESTO = spTest.o\n")
@@ -85,4 +120,6 @@ class Package(packages.GenericPackage):
         registry = builder._registry
         registry.register_package(self.name, builder.install_dir())
         registry.set_environment_variable("SPARSE_DIR", builder.install_dir())
-        registry.prepend_environment_variable("CMAKE_PREFIX_PATH", builder.install_dir())
+        registry.prepend_environment_variable(
+            "CMAKE_PREFIX_PATH", builder.install_dir()
+        )

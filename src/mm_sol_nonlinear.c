@@ -20,6 +20,7 @@
 #include "linalg/sparse_matrix.h"
 #include "mm_eh.h"
 #include "mm_mp_const.h"
+#include "sl_mumps.h"
 #include "sl_util_structs.h"
 #include <az_aztec_defs.h>
 
@@ -773,8 +774,10 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     if (ams->GomaMatrixData != NULL) {
       GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
       matrix->put_scalar(matrix, 0.0);
+#ifdef GOMA_ENABLE_PETSC
     } else if (strcmp(Matrix_Format, "petsc") == 0) {
       petsc_zero_mat(ams);
+#endif
     } else {
       init_vec_value(a, 0.0, ams->nnz);
     }
@@ -1428,6 +1431,19 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       amesos_solve(Amesos_Package, ams, delta_x, resid_vector, 1, pg->imtrx);
       strcpy(stringer, " 1 ");
       break;
+    case MUMPS:
+
+      if ((strcmp(Matrix_Format, "msr") != 0)) {
+        GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with "
+                            "the MUMPS solver\n");
+      }
+      err = mumps_solve(ams, delta_x, resid_vector);
+      if (err != GOMA_SUCCESS) {
+        return_value = -1;
+        goto free_and_clear;
+      }
+      strcpy(stringer, " 1 ");
+      break;
     case AMESOS2:
 
       if (ams->GomaMatrixData != NULL) {
@@ -1590,6 +1606,19 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           strcpy(stringer_AC, " 1 ");
           break;
 
+        case MUMPS:
+          if ((strcmp(Matrix_Format, "msr") != 0)) {
+            GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with "
+                                "the MUMPS solver\n");
+          }
+          err = mumps_solve(ams, &wAC[iAC][0], &bAC[iAC][0]);
+          strcpy(stringer_AC, " 1 ");
+          if (err != GOMA_SUCCESS) {
+            return_value = -1;
+            goto free_and_clear;
+          }
+          break;
+
         case AZTEC:
           /*
            * Initialization is now performed up in
@@ -1695,7 +1724,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             if (iterations == -1) {
               strcpy(stringer, "err");
             } else {
-              aztec_stringer(AZ_normal, iterations, &stringer[0]);
+              aztec_stringer(AZ_normal, iterations, &stringer_AC[0]);
             }
           } else if (strcmp(Matrix_Format, "tpetra") == 0) {
             int iterations;
@@ -1705,7 +1734,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
               GOMA_EH(err, "Error in stratimikos solve");
               check_parallel_error("Error in solve - stratimikos");
             }
-            aztec_stringer(AZ_normal, iterations, &stringer[0]);
+            aztec_stringer(AZ_normal, iterations, &stringer_AC[0]);
           } else {
             GOMA_EH(
                 GOMA_ERROR,
@@ -1923,7 +1952,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     */
 
     if (inewton && (Resid_Norm_stack[2] > 0) && (Resid_Norm_stack[2] != 1) &&
-        (Resid_Norm_stack[1] > 0) && (Resid_Norm_stack[1] != 1) &&
+        (Resid_Norm_stack[1] > 0) && (Resid_Norm_stack[1] != 1) && (Soln_Norm_stack[2] > 0) &&
+        (Soln_Norm_stack[1] != 1) &&
         (inewton <= 1 || ((Resid_Norm_stack[0] > 0) && (Resid_Norm_stack[0] != 1)))) {
 #if 1
       if (inewton <= 1) {
@@ -1950,6 +1980,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     }
     if (nAC && inewton && (AC_Resid_Norm_stack[2] > 0) && (AC_Resid_Norm_stack[2] != 1) &&
         (AC_Resid_Norm_stack[1] > 0) && (AC_Resid_Norm_stack[0] != 1) &&
+        (AC_Soln_Norm_stack[2] > 0) && (AC_Soln_Norm_stack[1] != 1) &&
         (inewton <= 1 || ((AC_Resid_Norm_stack[0] > 0) && (AC_Resid_Norm_stack[0] != 1)))) {
 #if 1
       if (inewton <= 1 && DOUBLE_NONZERO(log10(AC_Resid_Norm_stack[1]))) {
@@ -2124,7 +2155,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     if (Newton_Line_Search_Type == NLS_BACKTRACK) {
       dbl damp = 1.0;
       dbl reduction_factor = 0.5;
-      dbl min_damp = 0.1;
+      dbl min_damp = Line_Search_Minimum_Damping;
       dbl *w = alloc_dbl_1(numProcUnknowns, 0.0);
       dbl *R = alloc_dbl_1(numProcUnknowns, 0.0);
       dbl *x_save = alloc_dbl_1(numProcUnknowns, 0.0);
@@ -2609,7 +2640,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     inewton++;
     af->Sat_hyst_reevaluate = FALSE; /*only want this true
                                        for first iteration*/
-  }                                  /* End of loop over newton iterations */
+  } /* End of loop over newton iterations */
 
   /**********************************************************************/
   /**********************************************************************
@@ -3602,6 +3633,18 @@ static int soln_sens(double lambda,  /*  parameter */
                           "the Amesos solver suite\n");
     }
     amesos_solve(Amesos_Package, ams, x_sens, resid_vector_sens, 0, pg->imtrx);
+    strcpy(stringer, " 1 ");
+    break;
+  case MUMPS:
+
+    if ((strcmp(Matrix_Format, "msr") != 0)) {
+      GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with "
+                          "the MUMPS solver\n");
+    }
+    err = mumps_solve(ams, x_sens, resid_vector_sens);
+    if (err != GOMA_SUCCESS) {
+      strcpy(stringer, "0");
+    }
     strcpy(stringer, " 1 ");
     break;
   case AMESOS2:

@@ -1120,6 +1120,7 @@ struct Generalized_Newtonian {
   int fexpModel;
   dbl epsilon;
   int epsilonModel;
+  int regularizationModel;
   /* these are for SUSPENSION/FILLED_EPOXY models */
   dbl maxpack;
   int maxpackModel;
@@ -1405,66 +1406,79 @@ struct Second_LS_Phase_Properties {
   int ViscosityModel;
   dbl viscosity;
   int viscositymask[2];
+  int viscosity_lsi_interp_method;
   dbl viscosity_phase[MAX_PHASE_FUNC];
 
   int DensityModel;
   dbl density;
   int densitymask[2];
+  int density_lsi_interp_method;
   dbl density_phase[MAX_PHASE_FUNC];
 
   int HeatCapacityModel;
   dbl heatcapacity;
   int heatcapacitymask[2];
+  int heatcapacity_lsi_interp_method;
   dbl heatcapacity_phase[MAX_PHASE_FUNC];
 
   int ThermalConductivityModel;
   dbl thermalconductivity;
   int thermalconductivitymask[2];
+  int thermalconductivity_lsi_interp_method;
   dbl thermalconductivity_phase[MAX_PHASE_FUNC];
 
   int MomentumSourceModel;
   dbl momentumsource[DIM];
   int momentumsourcemask[2];
+  int momentumsource_lsi_interp_method;
   dbl momentumsource_phase[MAX_PHASE_FUNC][DIM];
 
   int HeatSourceModel;
   dbl heatsource;
   int heatsourcemask[2];
+  int heatsource_lsi_interp_method;
   dbl heatsource_phase[MAX_PHASE_FUNC];
 
   int AcousticImpedanceModel;
   dbl acousticimpedance;
   int acousticimpedancemask[2];
+  int acousticimpedance_lsi_interp_method;
   dbl acousticimpedance_phase[MAX_PHASE_FUNC];
 
   int wavenumberModel;
   dbl wavenumber;
   int wavenumbermask[2];
+  int wavenumber_lsi_interp_method;
   dbl wavenumber_phase[MAX_PHASE_FUNC];
 
   int AcousticAbsorptionModel;
   dbl acousticabsorption;
   int acousticabsorptionmask[2];
+  int acousticabsorption_lsi_interp_method;
   dbl acousticabsorption_phase[MAX_PHASE_FUNC];
 
   int RefractiveIndexModel;
   dbl refractiveindex;
   int refractiveindexmask[2];
+  int refractiveindex_lsi_interp_method;
   dbl refractiveindex_phase[MAX_PHASE_FUNC];
 
   int LightAbsorptionModel;
   dbl lightabsorption;
   int lightabsorptionmask[2];
+  int lightabsorption_lsi_interp_method;
   dbl lightabsorption_phase[MAX_PHASE_FUNC];
 
   int ExtinctionIndexModel;
   dbl extinctionindex;
   int extinctionindexmask[2];
+  int extinctionindex_lsi_interp_method;
   dbl extinctionindex_phase[MAX_PHASE_FUNC];
 
   int SpeciesSourceModel[MAX_CONC];
   dbl speciessource[MAX_CONC];
   int speciessourcemask[2][MAX_CONC];
+  int speciessource_lsi_interp_method[MAX_CONC];
   dbl speciessource_phase[MAX_PHASE_FUNC][MAX_CONC];
   int use_species_source_width[MAX_CONC];
   dbl species_source_width[MAX_CONC];
@@ -1472,6 +1486,7 @@ struct Second_LS_Phase_Properties {
   int FlowingLiquidViscosityModel;
   dbl FlowingLiquid_viscosity;
   int FlowingLiquid_viscositymask[2];
+  int FlowingLiquid_viscosity_lsi_interp_method;
   dbl FlowingLiquid_viscosity_phase[MAX_PHASE_FUNC];
 };
 
