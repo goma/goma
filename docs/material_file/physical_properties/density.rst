@@ -40,10 +40,8 @@ following the Examples.
    surface between two fluids is tracked with a volume-of-fluid method. The
    {float_list} contains two values for this model, where:
 
-   * <float1> - Density of the fluid in phase
-   1, denoted by F=1
-   * <float2> - Density of the fluid in phase
-   2, denoted by F=0
+   * <float1> - Density of the fluid in phase 1, denoted by F=1
+   * <float2> - Density of the fluid in phase 2, denoted by F=0
 
    This card is required when using the FILL momentum source
    (Navier-Stokes Source  in Source Terms section of manual) since it  makes
@@ -54,21 +52,17 @@ following the Examples.
    the carrier fluid have different densities. The {float_list} contains three
    values for this model, where:
    
-   * <float1> - Species number associated with
-   the solid particulate phase (the parser reads this as a float but it is cast
-   as an integer when assigned).
-   * <float2> - Density of the fluid in the
-   carrier fluid, :math:`\rho_f` .
-   * <float3> - Density of the solid
-   particulate phase, :math:`rho_s` .
+   * <float1> - Species number associated with the solid particulate phase (the
+     parser reads this as a float but it is cast as an integer when assigned).
+   * <float2> - Density of the fluid in the carrier fluid, :math:`\rho_f` .
+   * <float3> - Density of the solid particulate phase, :math:`rho_s` .
 
 **THERMAL_BATTERY** <float1> <float2>
    This model is used to relate electrolyte density to field variables such as
    mole fraction. A simple empirical form is used, with two constants in the
    {float_list}:
    
-   * <float1> - Base Electrolyte Density,
-   :math:`p_0`.
+   * <float1> - Base Electrolyte Density, :math:`p_0`.
    * <float2> - Constant, :math:`\alpha` .
    
    (See Technical Discussion.)
@@ -86,13 +80,9 @@ following the Examples.
    assures a smooth transition in density across the zero level set contour. The
    {float_list} contains three values for this model, where:
    
-   * <float1> - Fluid density in the negative
-   regions of the level set function, :math:`\rho_–`
-   * <float2> - Fluid density in the positive
-   regions of the level set function, :math:`\rho_+`
-   * <float3> - Length scale over which the
-   transition occurs, :math:`\alpha` . If this parameter is set to zero, it will
-   default to one-half the Level Set Length Scale value already specified.
+   * <float1> - Fluid density in the negative  regions of the level set function, :math:`\rho_–`
+   * <float2> - Fluid density in the positive  regions of the level set function, :math:`\rho_+`
+   * <float3> - Length scale over which the transition occurs, :math:`\alpha` . If this parameter is set to zero, it will default to one-half the Level Set Length Scale value already specified.
    
    This card is required when using the LEVEL_SET momentum source model
    (Navier-Stokes Source in Source Terms of manual) since it makes use of this
@@ -105,16 +95,16 @@ following the Examples.
    of values that depend on the number phase functions being tracked, where:
    
    * <floatlist> list of float variables equal
-   to the number of phase functions. These are the constant densities of each
-   phase in order from 1 to number of phase functions that are represented by
-   each phase function.
+     to the number of phase functions. These are the constant densities of each
+     phase in order from 1 to number of phase functions that are represented by
+     each phase function.
    * <float1> Length scale over which the
-   transition between one phases density to the other occurs, :math:`\alpha` .
-   If parameter is set to zero, it will default to one-half the Level Set Length
-   Scale value already specified.
+     transition between one phases density to the other occurs, :math:`\alpha` .
+     If parameter is set to zero, it will default to one-half the Level Set Length
+     Scale value already specified.
    * <float3> The “null” value for density.
-   This is the value for density which will be assigned to those regions of the
-   flow where all the phase functions are less than or equal to zero.
+     This is the value for density which will be assigned to those regions of the
+     flow where all the phase functions are less than or equal to zero.
    
    This card is required when using the PHASE_FUNCTION momentum source model
    (Navier-Stokes Source in Source Terms of manual) since it makes use of this
@@ -136,10 +126,8 @@ following the Examples.
    This model is used to model the density of a material that is undergoing
    cure shrinkage. The {float_list} contains three values for this model, where:
    
-   * <float1> - Initial density of the material
-   before cure shrinkage, :math:`\rho_l`
-   * <float2> - Final density of the material
-   after cure shrinkage, :math:`\rho_f`
+   * <float1> - Initial density of the material before cure shrinkage, :math:`\rho_l`
+   * <float2> - Final density of the material after cure shrinkage, :math:`\rho_f`
    * <float3> - :math:`\alpha_m`
    * <float4> - :math:`\alpha_g`
    * <float5> - minimum value of species to enable cure shrinkage, :math:`Y_{min}`
