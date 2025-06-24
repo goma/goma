@@ -119,53 +119,57 @@ not be repeated.
 	* <float8> :math:`m_y` Transition for yield stress
 
 **EPOXY_LINEAR_EXP** <species> <floatlist>
+   Similar to the **EPOXY_DEA** model, but uses a linear equations in the exponents
 
-	* <float1> :math:`A1``
-	* <float2> :math:`E1/R`
-	* <float3> :math:`A2`
-	* <float4> :math:`E2/R`
-	* <float5> :math:`A_m`
-	* <float6> :math:`B_m`
-	* <float7> :math:`A_n`
-	* <float8> :math:`B_n`
+   * <float1> :math:`A1``
+   * <float2> :math:`E1/R`
+   * <float3> :math:`A2`
+   * <float4> :math:`E2/R`
+   * <float5> :math:`A_m`
+   * <float6> :math:`B_m`
+   * <float7> :math:`A_n`
+   * <float8> :math:`B_n`
 
-	Corresponds to the linear exponential model for epoxy curing, where the source term for cure, :math:`\alpha` is given by:
+   Corresponds to the linear exponential model for epoxy curing, where the source term for cure, :math:`\alpha` is given by:
 
-	.. math::
+   .. math::
 
-		\dot{\alpha} = \left(k_1 + k_2 \alpha^m\right) \left(1 - \alpha\right)^n
+      \dot{\alpha} = \left(k_1 + k_2 \alpha^m\right) \left(1 - \alpha\right)^n
 
-    where :math:`k_1 = A1 \exp(-E1/(R T))` and :math:`k_2 = A2 \exp(-E2/(R T))` are the rate constants, and :math:`m` and :math:`n` are the exponents.
+   where :math:`k_1 = A1 \exp(-E1/(R T))` and :math:`k_2 = A2 \exp(-E2/(R T))` are the rate constants, and :math:`m` and :math:`n` are the exponents.
 
-	.. math::
+   .. math::
 
-		m = A_m T + B_m
-		n = A_n T + B_n
+      m = A_m T + B_m
+	  
+   	  n = A_n T + B_n
 
 
 **EPOXY_ARRHENIUS_EXP** <species> <floatlist>
+   Similar to the **EPOXY_DEA** model, but uses a Arrhenius equations in the exponents
 
-	* <float1> :math:`A1``
-	* <float2> :math:`E1/R`
-	* <float3> :math:`A2`
-	* <float4> :math:`E2/R`
-	* <float5> :math:`A_m`
-	* <float6> :math:`B_m`
-	* <float7> :math:`A_n`
-	* <float8> :math:`B_n`
+   * <float1> :math:`A1``
+   * <float2> :math:`E1/R`
+   * <float3> :math:`A2`
+   * <float4> :math:`E2/R`
+   * <float5> :math:`A_m`
+   * <float6> :math:`B_m`
+   * <float7> :math:`A_n`
+   * <float8> :math:`B_n`
 
-	Corresponds to the linear exponential model for epoxy curing, where the source term for cure, :math:`\alpha` is given by:
+   Corresponds to the linear exponential model for epoxy curing, where the source term for cure, :math:`\alpha` is given by:
 
-	.. math::
+   .. math::
 
-		\dot{\alpha} = \left(k_1 + k_2 \alpha^m\right) \left(1 - \alpha\right)^n
+      \dot{\alpha} = \left(k_1 + k_2 \alpha^m\right) \left(1 - \alpha\right)^n
 
-    where :math:`k_1 = A1 \exp(-E1/(R T))` and :math:`k_2 = A2 \exp(-E2/(R T))` are the rate constants, and :math:`m` and :math:`n` are the exponents.
+   where :math:`k_1 = A1 \exp(-E1/(R T))` and :math:`k_2 = A2 \exp(-E2/(R T))` are the rate constants, and :math:`m` and :math:`n` are the exponents.
 
-	.. math::
+   .. math::
 
-		m = A_m exp (-B_m / T)
-		n = A_n exp (-B_n / T)
+      m = A_m exp (-B_m / T)
+
+      n = A_n exp (-B_n / T)
 		
 
 **USER** <species> <floatlist>
