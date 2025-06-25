@@ -6156,7 +6156,9 @@ void mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
   double df1_dc[MAX_CONC], df2_dc[MAX_CONC], dacoeff_dx[MAX_CONC];
   double df3_dc[MAX_CONC], df_dc[MAX_CONC], dact_dx[MAX_CONC];
   double truedf_dc[MAX_CONC], dv_dw[MAX_CONC][MAX_CONC];
-  double C[MAX_CONC], vol[MAX_CONC], sv[MAX_CONC], mfrac[MAX_CONC];
+  double C[MAX_CONC], vol[MAX_CONC]; 
+  double mfrac[MAX_CONC] = {0.};
+  double sv[MAX_CONC] = {0.};
   double mw[MAX_CONC], prod[MAX_CONC];
   double bottom, prod2, sum_C, acoeff;
   double chi[MAX_CONC][MAX_CONC],
@@ -6423,11 +6425,13 @@ void mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
     for (i = 0; i < Num_S1; i++) {
       if (mp->specific_volume[i] < 0.) {
         GOMA_EH(GOMA_ERROR, "Specific volume not specified in the material file.");
+        return;
       } else {
         sv[i] = mp->specific_volume[i];
       }
       if (mp->molar_volume[i] < 0.) {
         GOMA_EH(GOMA_ERROR, "Molar volume not specified in the material file");
+        return;
       } else {
         vol[i] = mp->molar_volume[i];
       }
@@ -7268,7 +7272,7 @@ void compute_leak_velocity(double *vnorm,
   double k1, E1, kn1, En1, c_H2S, c_O2;
   double xbulk, d_xbulk_dC[MAX_CONC];
   double vnormal, phi_j;
-  double alpha_v, beta_v;
+  double alpha_v = 0., beta_v = 0.;
 
   int mode;
   double amb_pres, A, mtc, Y_inf, driving_force;
@@ -8042,7 +8046,7 @@ void compute_leak_energy(double *enorm,
   double mass_tran_coeff, Y_c;
   double xbulk, lat_heat_bulk;
   double enormal, phi_j;
-  double alpha_v, beta_v;
+  double alpha_v = 0., beta_v = 0.;
 
   int mode;
   double amb_pres, A, mtc, Y_inf, driving_force;

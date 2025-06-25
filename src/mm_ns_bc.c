@@ -15147,7 +15147,7 @@ void qrad_surf(double func[DIM],
                double epsilon,         /* emissivity                              */
                double sigma,           /* Boltzmann's constant                    */
                double T_offset,        /* Temperature offset                      */
-               int modeln,             /* Optional model number                   */
+               int model_number,             /* Optional model number                   */
                int bc_input_id,        /* bc_input_id for table bc                */
                double time)            /* time for interpolation of boundary vals */
 /******************************************************************************
@@ -15165,7 +15165,7 @@ void qrad_surf(double func[DIM],
   int var;
   double phi_j;
   double omega[MAX_CONC], rho[MAX_CONC], depsilon_dx[MAX_CONC], deps_dc[MAX_CONC];
-  double density_tot;
+  double density_tot = 0.;
   double dw_dc[MAX_CONC][MAX_CONC], drho_dc[MAX_CONC][MAX_CONC];
   double d_Tc[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE];
   double Ta[DIM];
@@ -15173,7 +15173,7 @@ void qrad_surf(double func[DIM],
   propertyJac_realloc(&densityJac, mp->Num_Species + 1);
   /***************************** EXECUTION BEGINS *******************************/
 
-  if (modeln == 1 || modeln == 2) {
+  if (model_number == 1 || model_number == 2) {
     density_tot = calc_density(mp, TRUE, densityJac, 0.0);
     memset(rho, 0, sizeof(dbl) * MAX_CONC);
     memset(drho_dc, 0, sizeof(dbl) * MAX_CONC * MAX_CONC);
@@ -15220,11 +15220,11 @@ void qrad_surf(double func[DIM],
       depsilon_dx[i] = (mp->emissivity[i] - mp->emissivity[pd->Num_Species_Eqn]);
     }
   }
-  if (modeln == 2 || modeln == 3) {
+  if (model_number == 2 || model_number == 3) {
     apply_table_wic_bc(Ta, d_Tc, &BC_Types[bc_input_id], time);
     T_c = Ta[0];
   }
-  if (modeln == 3) {
+  if (model_number == 3) {
     epsilon = 0.0;
   }
 
@@ -15237,7 +15237,7 @@ void qrad_surf(double func[DIM],
 
   if (af->Assemble_Jacobian) {
     /* sum the contributions to the global stiffness matrix */
-    if (modeln == 1) {
+    if (model_number == 1) {
       var = TEMPERATURE;
       for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
         phi_j = bf[var]->phi[j_id];
@@ -15275,7 +15275,7 @@ void qrad_surf(double func[DIM],
   }
 
   return;
-} /* END of routine qrad_surf
+} /* END of routine qrad_surf */
 
 
 /*****************************************************************************/

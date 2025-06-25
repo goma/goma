@@ -8073,7 +8073,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     model_read = look_for_species_prop(imp, "Emissivity", mat_ptr, mat_ptr->EmissivityModel,
                                        mat_ptr->emissivity, NO_USER, NULL, model_name, SCALAR_INPUT,
                                        &species_no, es);
-    fallback_chemkin_generic_prop(&model_read, j, &(mat_ptr->emissivity[j]), TRUE, mat_ptr);
+    fallback_chemkin_generic_prop(&model_read, j, &(mat_ptr->EmissivityModel[j]), TRUE, mat_ptr);
     ECHO(es, echo_file);
 
     model_read = look_for_species_prop(imp, "Charge Number", mat_ptr, mat_ptr->ChargeNumberModel,
