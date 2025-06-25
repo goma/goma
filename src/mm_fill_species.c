@@ -8916,6 +8916,7 @@ int get_convection_velocity(
         break;
       }
       if (volsolid < 0) {
+        // Appears unused at the moment.
         // double volso = 1.0;
         // for (w = 0; w < pd->Num_Species_Eqn; w++) {
         //   volso -= fv->c[w] * mp->specific_volume[w];

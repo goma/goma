@@ -34,6 +34,7 @@ extern "C" goma_error GomaSparseMatrix_Tpetra_Create(GomaSparseMatrix *matrix) {
   (*matrix)->row_sum_scaling = g_tpetra_row_sum_scaling;
   (*matrix)->zero_global_row = g_tpetra_zero_row;
   (*matrix)->zero_global_row_set_diag = g_tpetra_zero_row_set_diag;
+  (*matrix)->matrix_vector_mult = g_tpetra_matrix_vector_mult;
   (*matrix)->destroy = g_tpetra_destroy;
   return GOMA_SUCCESS;
 }
@@ -125,6 +126,34 @@ extern "C" goma_error g_tpetra_sum_into_row_values(GomaSparseMatrix matrix,
 extern "C" goma_error g_tpetra_put_scalar(GomaSparseMatrix matrix, double scalar) {
   auto *tmp = static_cast<TpetraSparseMatrix *>(matrix->data);
   tmp->matrix->setAllToScalar(scalar);
+  return GOMA_SUCCESS;
+}
+
+extern "C" goma_error
+g_tpetra_matrix_vector_mult(GomaSparseMatrix matrix, double *vector_in, double *vector_out) {
+  auto *tmp = static_cast<TpetraSparseMatrix *>(matrix->data);
+  RCP<Tpetra::Vector<double, LO, GO>> tpetra_x =
+      rcp(new Tpetra::Vector<double, LO, GO>(tmp->matrix->getDomainMap()));
+  RCP<Tpetra::Vector<double, LO, GO>> tpetra_b =
+      rcp(new Tpetra::Vector<double, LO, GO>(tmp->matrix->getRangeMap()));
+
+  for (size_t i = 0; i < tpetra_x->getLocalLength(); i++) {
+    tpetra_x->replaceGlobalValue(matrix->global_ids[i], vector_in[i]);
+  }
+  for (size_t i = 0; i < tpetra_b->getLocalLength(); i++) {
+    tpetra_b->replaceGlobalValue(matrix->global_ids[i], vector_out[i]);
+  }
+
+  if (!tmp->matrix->isFillComplete()) {
+    tmp->matrix->endAssembly();
+  }
+  tmp->matrix->apply(*tpetra_x, *tpetra_b);
+  tmp->matrix->beginAssembly();
+
+  auto x_data = tpetra_b->getData();
+  for (size_t i = 0; i < tmp->matrix->getLocalNumRows(); i++) {
+    vector_out[i] = x_data[i];
+  }
   return GOMA_SUCCESS;
 }
 

@@ -23,7 +23,9 @@
 
 #include <stddef.h>
 
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "dp_map_comm_vec.h"
 #include "dp_types.h"
 #include "mpi.h"
@@ -70,7 +72,10 @@ extern int gsum_Int(int);
 extern double gavg_double(double);
 extern void print_sync_start(int);
 extern void print_sync_end(int);
-extern void sync_processors(void);
+
+#ifndef AZ_PROC_SIZE
+#define AZ_PROC_SIZE 1
+#endif
 
 #ifdef PARALLEL
 extern int Proc_Config[AZ_PROC_SIZE];
@@ -80,4 +85,9 @@ extern int Proc_Config[AZ_PROC_SIZE];
 #endif
 #endif
 
+double goma_gsum_double(double value);
+double goma_gmin_double(double value);
+double goma_gmax_double(double value);
+int goma_gsum_int(int value);
+int goma_gmax_int(int value);
 #endif

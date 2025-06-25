@@ -23,7 +23,9 @@ static char rcsid[] = "$Id: mm_shell_util.c,v 5.17 2010-07-21 16:39:27 hkmoffa E
 /* Standard include files */
 #define GOMA_MM_SHELL_UTIL_C
 #include "mm_shell_util.h"
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "density.h"
 #include "el_elm.h"
 #include "el_geom.h"
@@ -4038,6 +4040,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     double dq_dshrw = 0.;
     double DQ_DH[DIM];
     double D_Q_DF[DIM][MDE], D_V_DF[DIM][MDE], DGRADP_DF[DIM][MDE];
+    // This seems unused at the moment
     // double DGRADP_DK = 0.;
     double DGRADP_DX[DIM][DIM][MDE], DGRADP_DNORMAL[DIM][DIM][MDE];
     double DGRADP_DV[DIM][DIM][MDE];

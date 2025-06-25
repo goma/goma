@@ -14,7 +14,9 @@
 
 #include "mm_fill_continuity.h"
 #include "ac_particles.h"
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "bc_colloc.h"
 #include "bc_contact.h"
 #include "density.h"
@@ -73,6 +75,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef FSUB_TYPE
+#define FSUB_TYPE void
+#endif
 
 // direct call to a fortran LAPACK eigenvalue routine
 extern FSUB_TYPE dsyev_(char *JOBZ,

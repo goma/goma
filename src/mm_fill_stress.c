@@ -28,7 +28,9 @@
 /* GOMA include files */
 #include "ac_stability.h"
 #include "ac_stability_util.h"
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "bc_colloc.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
@@ -71,6 +73,10 @@
 #include "mm_fill_stress.h"
 
 extern struct Boundary_Condition *inlet_BC[MAX_VARIABLE_TYPES + MAX_CONC];
+
+#ifndef FSUB_TYPE
+#define FSUB_TYPE void
+#endif
 
 // direct call to a fortran LAPACK eigenvalue routine
 extern FSUB_TYPE dsyev_(char *JOBZ,
