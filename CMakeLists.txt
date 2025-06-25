@@ -87,14 +87,6 @@ set(GOMA_COMPILER_OVERRIDE
       "allow goma to compile with different compilers than TPLs, use with caution"
 )
 
-# Trilinos required packages
-#foreach(package Amesos AztecOO Epetra)
-#  list(FIND Trilinos_PACKAGE_LIST ${package} trilinos_package_index)
-#  if(${trilinos_package_index} LESS 0)
-#    message(FATAL_ERROR "Trilinos not built with ${package} a required package")
-#  endif()
-#endforeach()
-
 # stratimikos and teko
 list(FIND Trilinos_PACKAGE_LIST Stratimikos stratimikos_package_index)
 if(${stratimikos_package_index} GREATER_EQUAL 0)
