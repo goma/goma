@@ -6156,7 +6156,7 @@ void mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
   double df1_dc[MAX_CONC], df2_dc[MAX_CONC], dacoeff_dx[MAX_CONC];
   double df3_dc[MAX_CONC], df_dc[MAX_CONC], dact_dx[MAX_CONC];
   double truedf_dc[MAX_CONC], dv_dw[MAX_CONC][MAX_CONC];
-  double C[MAX_CONC], vol[MAX_CONC]; 
+  double C[MAX_CONC], vol[MAX_CONC];
   double mfrac[MAX_CONC] = {0.};
   double sv[MAX_CONC] = {0.};
   double mw[MAX_CONC], prod[MAX_CONC];

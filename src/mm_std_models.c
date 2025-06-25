@@ -3304,9 +3304,9 @@ int Free_Vol_Theory_Diffusivity(int species_no, /* current species number*/
     /* Calculate Q_thermo, the thermodynamic factor as defined
        in the Price 2003 paper*/
 
-    /* Q_thermo = ( (1.0 - vol_frac_1) * (1.0 - (2.0 * vol_frac_1 * chi)) )
-      + ( (vol_frac_1 * V_10 * MW_1 )/ (V_20 * MW_2 * beta) ) ; */
-    Q_thermo = 1.0;
+    Q_thermo = ((1.0 - vol_frac_1) * (1.0 - (2.0 * vol_frac_1 * chi))) +
+               ((vol_frac_1 * V_10 * MW_1) / (V_20 * MW_2 * beta));
+    // Q_thermo = 1.0;
   }
 
   /* For the friction-based model  param[12] = 4 */
@@ -3393,9 +3393,9 @@ int Free_Vol_Theory_Diffusivity(int species_no, /* current species number*/
                           pow(V_fh_gamma, 2.0));
         if (fv_model_number != 0) {
           d_D1_dc[w] = D_o * exponen * dexponen_dc[w];
-          /* dQ_dc[w]= d_vol_frac_1_dc[w] * ( 4.0*chi*vol_frac_1 - 2.0*chi
-                   +(V_10*MW_1)/(V_20*MW_2*beta)- 1.0); */
-          dQ_dc[w] = 0.0;
+          dQ_dc[w] = d_vol_frac_1_dc[w] * (4.0 * chi * vol_frac_1 - 2.0 * chi +
+                                           (V_10 * MW_1) / (V_20 * MW_2 * beta) - 1.0);
+          // dQ_dc[w] = 0.0;
         }
 
         if (fv_model_number == 4) {

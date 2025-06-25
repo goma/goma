@@ -15147,7 +15147,7 @@ void qrad_surf(double func[DIM],
                double epsilon,         /* emissivity                              */
                double sigma,           /* Boltzmann's constant                    */
                double T_offset,        /* Temperature offset                      */
-               int model_number,             /* Optional model number                   */
+               int model_number,       /* Optional model number                   */
                int bc_input_id,        /* bc_input_id for table bc                */
                double time)            /* time for interpolation of boundary vals */
 /******************************************************************************
@@ -15276,7 +15276,6 @@ void qrad_surf(double func[DIM],
 
   return;
 } /* END of routine qrad_surf */
-
 
 /*****************************************************************************/
 void qside_contact_resis(double func[DIM],
