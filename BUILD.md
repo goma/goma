@@ -1,7 +1,7 @@
-
 ## Build Instructions
 
-Goma now uses `CMake` to build, Makefile build system has been removed
+Goma uses CMake to build it's source code. A number of third party libraries are required
+to use goma. A script to build third party libraries is available in the `tpls` folder.
 
 Common configuration options can be configured from the command line
 or through the `CMake` GUI interfaces
@@ -82,38 +82,16 @@ After completed you would then do:
 
 #### Spack
 
-Third party libraries can be built with spack for development of goma using:
+Goma is available in spack though many users have found it difficult to use:
 
-    spack env create goma <path to goma src>/spack.yaml
-    spack env activate goma
-    spack install
+    spack install goma@release
 
-Currently expects the spack develop branch
-
-Then Goma can be configured using that environment:
-
-    spack env activate goma
-    cmake -B <build directory> <path to goma src>
-    make -C <build directory>
-
-A spack package is in progress and soon one might be able to:
-
-    spack install goma
-
-#### Legacy build script (deprecated)
-
-The legacy build script has been updated slightly with newer libraries.
-This is missing Omega_h and PETSc support
-
-We are considering this script deprecated in favor of the `spack` tool
-
-See [scripts/README.md](scripts/README.md)
 
 #### Docker build
 
 A docker build with libraries pre-built is available at [https://hub.docker.com/r/westonortiz/goma-libs](https://hub.docker.com/r/westonortiz/goma-libs)
 
-Source for the docker build is here: [https://github.com/wortiz/docker-goma-libs](https://github.com/wortiz/docker-goma-libs)
+Source for the docker build is here: [https://github.com/goma/goma/tree/main/tpls](https://github.com/goma/goma/tree/main/tpls)
 
 
 

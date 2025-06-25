@@ -340,7 +340,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
 
     case LS_SOLID_FLUID_BC:
       overlap_bc = TRUE;
-      /* fall through */
+      FALLTHROUGH;
     case SA_WALL_FUNC_BC:
     case OMEGA_WALL_FUNC_BC:
     case PSPG_BC:
@@ -414,7 +414,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
        */
     case SURFTANG_SCALAR_BC:
       GOMA_WH(-1, "Use CAP_ENDFORCE_SCALAR for consistent sign convention");
-      /*FALLTHROUGH*/
+      FALLTHROUGH;
     case QSIDE_BC:
       /*	case TNRMLSIDE_BC:  12/6/01 */
       /*	case TSHRSIDE_BC:   ..dal   */
@@ -830,7 +830,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case LS_ADC_OLD_BC:
     case LS_ADC_BC:
       srand((long)ut()); /* Seed the random number generator  when LS_ADC is used */
-                         /* fall through */
+      FALLTHROUGH;
     case FORCE_BC:
     case FORCE_SIC_BC:
     case FORCE_RS_BC:
@@ -911,7 +911,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
        */
     case SURFTANG_BC:
       GOMA_WH(-1, "Use CAP_ENDFORCE for consistent sign convention");
-      /*FALLTHROUGH*/
+      FALLTHROUGH;
     case PLANEX_BC:
     case PLANEY_BC:
     case PLANEZ_BC:
@@ -1772,7 +1772,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
        */
     case FLOW_PRESS_USER_BC:
       GOMA_WH(-1, " FLOW_PRESS_USER is no longer used.  Use PRESSURE_USER instead.");
-      /* Fall through */
+      FALLTHROUGH;
     case UVARY_BC:
     case VVARY_BC:
     case WVARY_BC:

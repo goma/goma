@@ -632,6 +632,16 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     mat_ptr->len_u_density = num_const;
     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_density);
+  } else if (model_read == -1 && !strcmp(model_name, "CURE_SHRINKAGE")) {
+    mat_ptr->DensityModel = DENSITY_CURE_SHRINKAGE;
+    num_const = read_constants(imp, &(mat_ptr->u_density), 0);
+    if (num_const != 5) {
+      sprintf(err_msg, "Material %s - expected 5 constants for %s %s model.\n",
+              pd_glob[mn]->MaterialName, "Density", "CURE_SHRINKAGE");
+      GOMA_EH(GOMA_ERROR, err_msg);
+    }
+    mat_ptr->len_u_density = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_density);
   } else {
     sprintf(err_msg, "Material %s - unrecognized model for %s \"%s\" ???\n",
             pd_glob[mn]->MaterialName, "Density", model_name);
@@ -2130,6 +2140,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   // Set the default
   mp_glob[mn]->DilationalViscosityModel = DILVISCM_KAPPAWIPESMU;
+  SPF(es, "Dilational Viscosity = ");
   model_read = look_for_mat_proptable(
       imp, "Dilational Viscosity", &(mp_glob[mn]->DilationalViscosityModel),
       &(mp_glob[mn]->dilationalViscosity), &(mp_glob[mn]->u_dilationalViscosity),
@@ -2172,6 +2183,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   } else if (strcmp(model_name, " ")) {
     // We're here if we found the card, but couldn't read it
     GOMA_EH(model_read, "Dilational Viscosity");
+  }
+
+  if (mp_glob[mn]->DilationalViscosityModel != DILVISCM_KAPPAWIPESMU) {
+    ECHO(es, echo_file);
   }
 
   model_read = look_for_mat_prop(imp, "Dilational Viscosity Multiplier", &(i0), &(a0), NO_USER,
@@ -4886,6 +4901,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     if (pd_glob[mn]->e[imtrx][R_POR_ENERGY]) {
       have_por_energy = 1;
+    }
+    if (pd_glob[mn]->e[imtrx][R_POR_SINK_MASS]) {
+      have_por_sink_mass = 1;
     }
     if (pd_glob[mn]->e[imtrx][R_SHELL_SAT_OPEN]) {
       have_shell_sat_open = 1;
@@ -8921,9 +8939,61 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->u_species_source[species_no][4] = a4; /* prefactor for k2, mid T */
 
       SPF_DBL_VEC(endofstring(es), 5, mat_ptr->u_species_source[species_no]);
-    }
+    } else if (!strcmp(model_name, "EPOXY_LINEAR_EXP")) {
+      SpeciesSourceModel = EPOXY_LINEAR_EXP;
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      if (fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7) !=
+          8) {
+        sprintf(err_msg, "Matl %s needs 8 constants for %s %s model.\n", pd_glob[mn]->MaterialName,
+                "Species Source", "EPOXY_LINEAR_EXP");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
 
-    else if (!strcmp(model_name, "SSM_BOND")) {
+      mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 8, sizeof(dbl));
+
+      mat_ptr->len_u_species_source[species_no] = 8;
+
+      mat_ptr->u_species_source[species_no][0] = a0; /* prefactor for k1 */
+      mat_ptr->u_species_source[species_no][1] = a1; /* exponent for k1 */
+      mat_ptr->u_species_source[species_no][2] = a2; /* prefactor for k2 */
+      mat_ptr->u_species_source[species_no][3] = a3; /* exponent for k2 */
+      // m = A_m * T + B_m
+      mat_ptr->u_species_source[species_no][4] = a4; /* A_m */
+      mat_ptr->u_species_source[species_no][5] = a5; /* B_m */
+      // n = A_n * T + B_n
+      mat_ptr->u_species_source[species_no][6] = a6; /* A_n */
+      mat_ptr->u_species_source[species_no][7] = a7; /* B_n */
+
+      SPF_DBL_VEC(endofstring(es), 8, mat_ptr->u_species_source[species_no]);
+    } else if (!strcmp(model_name, "EPOXY_ARRHENIUS_EXP")) {
+      SpeciesSourceModel = EPOXY_ARRHENIUS_EXP;
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      if (fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7) !=
+          8) {
+        sprintf(err_msg, "Matl %s needs 8 constants for %s %s model.\n", pd_glob[mn]->MaterialName,
+                "Species Source", "EPOXY_ARRHENIUS_EXP");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+
+      mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 8, sizeof(dbl));
+
+      mat_ptr->len_u_species_source[species_no] = 8;
+
+      mat_ptr->u_species_source[species_no][0] = a0; /* prefactor for k1 */
+      mat_ptr->u_species_source[species_no][1] = a1; /* exponent for k1 */
+      mat_ptr->u_species_source[species_no][2] = a2; /* prefactor for k2 */
+      mat_ptr->u_species_source[species_no][3] = a3; /* exponent for k2 */
+      // m = A_m * exp(B_m/T)
+      mat_ptr->u_species_source[species_no][4] = a4; /* A_m */
+      mat_ptr->u_species_source[species_no][5] = a5; /* B_m */
+      // m = A_n * exp(B_n/T)
+      mat_ptr->u_species_source[species_no][6] = a6; /* A_n */
+      mat_ptr->u_species_source[species_no][7] = a7; /* B_n */
+
+      SPF_DBL_VEC(endofstring(es), 8, mat_ptr->u_species_source[species_no]);
+    } else if (!strcmp(model_name, "SSM_BOND")) {
       SpeciesSourceModel = SSM_BOND;
       model_read = 1;
       mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;

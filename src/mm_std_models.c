@@ -838,6 +838,186 @@ int epoxy_species_source(int species_no, /* Current species number */
   }
   return 0;
 }
+
+int epoxy_linear_exp_species_source(int species_no, /* Current species number */
+                                    double *param)  /* pointer to user-defined parameter list */
+
+{
+  /* Local Variables */
+  int eqn, var, var_offset, imtrx;
+  /*  int p, q, a, b, c;*/
+
+  /*  int v,w;*/
+
+  /*  int mdofs,vdofs;*/
+
+  /*  dbl C[MAX_CONC]; Convenient local variables */
+  dbl T; /* temperature for rate constants */
+  dbl A1, E1, A2, E2;
+  dbl A_m, B_m, A_n, B_n;
+  dbl k1, k2;
+  dbl alpha, alpha_m, alpha_m1, alpha_n, alpha_n1;
+
+  /* Begin Execution */
+
+  if (pd->gv[TEMPERATURE]) {
+    T = fv->T;
+  } else {
+    T = upd->Process_Temperature;
+  }
+
+  /* extent of reaction, alpha */
+  alpha = fv->c[species_no];
+  /*  if(alpha <= 0.) alpha = 0.0001; */
+  A1 = param[0];
+  E1 = param[1];
+  A2 = param[2];
+  E2 = param[3];
+  A_m = param[4];
+  B_m = param[5];
+  A_n = param[6];
+  B_n = param[7];
+
+  /* Arhenius type rate constants for extent of reaction model */
+  k1 = A1 * exp(-E1 / T);
+  k2 = A2 * exp(-E2 / T);
+
+  dbl m = A_m * T + B_m;
+  dbl mt = A_m;
+  dbl n = A_n * T + B_n;
+  dbl nt = A_n;
+
+  if (alpha > 0.0) {
+    alpha_m = pow(alpha, m);
+    alpha_m1 = pow(alpha, m - 1);
+  } else {
+    alpha_m = 0.;
+    alpha_m1 = 0.;
+  }
+
+  alpha_n = pow((1. - alpha), n);
+  alpha_n1 = pow((1. - alpha), n - 1);
+
+  /**********************************************************/
+
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    if (pd->e[imtrx][eqn] & T_SOURCE) {
+      mp->species_source[species_no] = (k1 + k2 * alpha_m) * alpha_n;
+
+      /* Jacobian entries for source term */
+      var = MASS_FRACTION;
+      if (pd->v[pg->imtrx][var]) {
+        var_offset = MAX_VARIABLE_TYPES + species_no;
+        mp->d_species_source[var_offset] =
+            (m * k2 * alpha_m1) * alpha_n - (k1 + k2 * alpha_m) * n * alpha_n1;
+      }
+      var = TEMPERATURE;
+      if (pd->v[pg->imtrx][var]) {
+        // k1 and k2 portion
+        mp->d_species_source[var] = (k1 * E1 + k2 * E2 * alpha_m) * alpha_n / (T * T);
+        // k2 * alpha_m portion
+        if (alpha > 0) {
+          mp->d_species_source[var] += k2 * mt * log(alpha) * alpha_m * alpha_n;
+        }
+        //  alpha_n portion
+        mp->d_species_source[var] += nt * log(1.0 - alpha) * alpha_n * (k1 + k2 * alpha_m);
+      }
+    }
+  }
+  return 0;
+}
+
+int epoxy_arrhenius_exp_species_source(int species_no, /* Current species number */
+                                       double *param)  /* pointer to user-defined parameter list */
+
+{
+  /* Local Variables */
+  int eqn, var, var_offset, imtrx;
+  /*  int p, q, a, b, c;*/
+
+  /*  int v,w;*/
+
+  /*  int mdofs,vdofs;*/
+
+  /*  dbl C[MAX_CONC]; Convenient local variables */
+  dbl T; /* temperature for rate constants */
+  dbl A1, E1, A2, E2;
+  dbl A_m, B_m, A_n, B_n;
+  dbl k1, k2;
+  dbl alpha, alpha_m, alpha_m1, alpha_n, alpha_n1;
+
+  /* Begin Execution */
+
+  if (pd->gv[TEMPERATURE]) {
+    T = fv->T;
+  } else {
+    T = upd->Process_Temperature;
+  }
+
+  /* extent of reaction, alpha */
+  alpha = fv->c[species_no];
+  /*  if(alpha <= 0.) alpha = 0.0001; */
+  A1 = param[0];
+  E1 = param[1];
+  A2 = param[2];
+  E2 = param[3];
+  A_m = param[4];
+  B_m = param[5];
+  A_n = param[6];
+  B_n = param[7];
+
+  /* Arhenius type rate constants for extent of reaction model */
+  k1 = A1 * exp(-E1 / T);
+  k2 = A2 * exp(-E2 / T);
+
+  dbl m = A_m * exp(-B_m / T);
+  dbl mt = B_m * m / (T * T);
+  dbl n = A_n * exp(-B_n / T);
+  dbl nt = B_n * n / (T * T);
+
+  if (alpha > 0.0) {
+    alpha_m = pow(alpha, m);
+    alpha_m1 = pow(alpha, m - 1);
+  } else {
+    alpha_m = 0.;
+    alpha_m1 = 0.;
+  }
+
+  alpha_n = pow((1. - alpha), n);
+  alpha_n1 = pow((1. - alpha), n - 1);
+
+  /**********************************************************/
+
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    if (pd->e[imtrx][eqn] & T_SOURCE) {
+      mp->species_source[species_no] = (k1 + k2 * alpha_m) * alpha_n;
+
+      /* Jacobian entries for source term */
+      var = MASS_FRACTION;
+      if (pd->v[pg->imtrx][var]) {
+        var_offset = MAX_VARIABLE_TYPES + species_no;
+        mp->d_species_source[var_offset] =
+            (m * k2 * alpha_m1) * alpha_n - (k1 + k2 * alpha_m) * n * alpha_n1;
+      }
+      var = TEMPERATURE;
+      if (pd->v[pg->imtrx][var]) {
+        // k1 and k2 portion
+        mp->d_species_source[var] = (k1 * E1 + k2 * E2 * alpha_m) * alpha_n / (T * T);
+        // k2 * alpha_m portion
+        if (alpha > 0) {
+          mp->d_species_source[var] += k2 * mt * log(alpha) * alpha_m * alpha_n;
+        }
+        //  alpha_n portion
+        mp->d_species_source[var] += nt * log(1.0 - alpha) * alpha_n * (k1 + k2 * alpha_m);
+      }
+    }
+  }
+  return 0;
+}
 /*****************************************************************************/
 /* END of routine epoxy_species_source */
 /*****************************************************************************/
@@ -1541,7 +1721,9 @@ double epoxy_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
   /* find equation that has extent of reaction */
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
-    if (mp->SpeciesSourceModel[w] == EPOXY || mp->SpeciesSourceModel[w] == EPOXY_DEA) {
+    if (mp->SpeciesSourceModel[w] == EPOXY || mp->SpeciesSourceModel[w] == EPOXY_DEA ||
+        mp->SpeciesSourceModel[w] == EPOXY_LINEAR_EXP ||
+        mp->SpeciesSourceModel[w] == EPOXY_ARRHENIUS_EXP) {
       /* extent of reaction, alpha */
       species_no = w;
     }
@@ -1563,7 +1745,9 @@ double epoxy_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     var = MASS_FRACTION;
     if (d_h != NULL && pd->v[pg->imtrx][var]) {
       if (mp->SpeciesSourceModel[species_no] == EPOXY ||
-          (mp->SpeciesSourceModel[species_no] == EPOXY_DEA)) {
+          (mp->SpeciesSourceModel[species_no] == EPOXY_DEA) ||
+          (mp->SpeciesSourceModel[species_no] == EPOXY_LINEAR_EXP) ||
+          (mp->SpeciesSourceModel[species_no] == EPOXY_ARRHENIUS_EXP)) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           d_h->C[species_no][j] += delta_h * (1 + 2. * tt) / dt * bf[var]->phi[j];
         }

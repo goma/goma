@@ -229,6 +229,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define DENSITY_FOAM_PBE_EQN    35
 #define DENSITY_FOAM_PMDI_10    20
 #define DENSITY_MOMENT_BASED    21
+#define DENSITY_CURE_SHRINKAGE  906
 /**********************************************************************************/
 
 /*
@@ -338,9 +339,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define TURBULENT_K_OMEGA    54
 
 #define FLUIDITY_THIXOTROPIC_VISCOSITY 55
-
 #define HERSCHEL_BULKLEY_PAPANASTASIOU 56 /* Herschel_bulkley model - power-law + yield stress */
-
+#define EPOXY_LINEAR_EXP               57
+#define EPOXY_ARRHENIUS_EXP            58
 /*
  *  Heat source modeling
  *
