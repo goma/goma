@@ -2232,13 +2232,16 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             AZ_matrix_create(ams->data_org[AZ_N_internal] + ams->data_org[AZ_N_border]);
         AZ_set_MSR(Amat, ams->bindx, ams->val, ams->data_org, 0, NULL, AZ_LOCAL);
         AZ_MSR_matvec_mult(delta_x, w, Amat, ams->proc_config);
-        for (int i = 0; i < numProcUnknowns; i++) {
-          slope += w[i] * R[i];
-        }
-        MPI_Allreduce(MPI_IN_PLACE, &slope, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+        GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+        matrix->matrix_vector_mult(matrix, delta_x, w);
       } else {
         GOMA_EH(GOMA_ERROR, "Newton Line Search with Backtracking requires MSR matrix format");
       }
+      for (int i = 0; i < numProcUnknowns; i++) {
+        slope += w[i] * R[i];
+      }
+      MPI_Allreduce(MPI_IN_PLACE, &slope, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
       if (slope > 0) {
         slope = -slope;
       } else if (slope == 0) {
