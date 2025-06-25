@@ -6,11 +6,11 @@ import os
 class Package(packages.AutotoolsPackage):
     def __init__(self):
         self.name = "petsc-complex"
-        self.version = "3.22.3"
-        self.sha256 = "88c0d465a3bd688cb17ebf06a17c06d6e9cc457fa6b9643d217389424e6bd795"
+        self.version = "3.23.3"
+        self.sha256 = "b548e4b05a84044410eeca9dbbeb4fb3baf8965be96c9802a8310aa07e13c987"
         self.filename = "petsc-" + self.version + ".tar.gz"
         self.url = (
-            "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-"
+            "https://gitlab.com/petsc/petsc/-/archive/v3.23.3/petsc-v"
             + self.version
             + ".tar.gz"
         )

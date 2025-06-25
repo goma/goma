@@ -38,6 +38,7 @@
 #include "exodusII.h"
 #include "linalg/sparse_matrix.h"
 #include "load_field_variables.h"
+#include "ls/facet_reinitialization.h"
 #include "mm_as_alloc.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_fill.h"
@@ -529,25 +530,29 @@ huygens_renormalization ( double *x,
       DPRINTF(stdout, "\n\t Maximum number of steps without renormalization reached: %d",
               ls->Renorm_Freq);
     }
-    DPRINTF(stdout, "\n\t Huygens renormalization : ");
+    DPRINTF(stdout, "\n\t Huygens renormalization: ");
 
     /* this call cleanses the LS field of "droplets" that surround exactly one
      * node */
 
     purge_spurious_LS(x, exo, num_total_nodes);
 
-    list = create_surf_list();
-    isosurf = create_surf(LS_SURF_ISOSURFACE);
-    s = (struct LS_Surf_Iso_Data *)isosurf->data;
-    s->isovar = ls->var;
-    if (ls->Initial_LS_Displacement != 0.) {
-      s->isoval = ls->Initial_LS_Displacement;
-      ls->Initial_LS_Displacement = 0.;
-    } else {
-      s->isoval = 0.;
-    }
+    // Use old level set structures to create surfaces
+    if (ls->Renorm_Method != FACET_BASED) {
 
-    append_surf(list, isosurf);
+      list = create_surf_list();
+      isosurf = create_surf(LS_SURF_ISOSURFACE);
+      s = (struct LS_Surf_Iso_Data *)isosurf->data;
+      s->isovar = ls->var;
+      if (ls->Initial_LS_Displacement != 0.) {
+        s->isoval = ls->Initial_LS_Displacement;
+        ls->Initial_LS_Displacement = 0.;
+      } else {
+        s->isoval = 0.;
+      }
+
+      append_surf(list, isosurf);
+    }
 
     if (ls->Renorm_Method == HUYGENS) {
       surf_based_initialization(x, NULL, NULL, exo, num_total_nodes, list, time, 0., 0.);
@@ -560,6 +565,8 @@ huygens_renormalization ( double *x,
     } else if (ls->Renorm_Method == SMOLIANSKI_ONLY) {
       Hrenorm_smolianksi_only(exo, cx, dpi, x, list, num_total_nodes, num_ls_unkns, num_total_unkns,
                               time);
+    } else if (ls->Renorm_Method == FACET_BASED) {
+      facet_based_reinitialization(x, exo, cx, dpi, num_total_nodes, time);
     } else {
       GOMA_EH(GOMA_ERROR, "You shouldn't actually be here. \n");
     }
@@ -578,7 +585,7 @@ huygens_renormalization ( double *x,
 
     ls->Sat_Hyst_Renorm_Lockout = 4;
 
-    DPRINTF(stdout, "    done. \n");
+    DPRINTF(stdout, "\t done. \n");
 
   } else if (ls->Renorm_Freq == 0) {
     status = 0;
@@ -966,7 +973,7 @@ void surf_based_initialization(double *x,
         closest->closest_point->distance *= sign;
       }
 
-      if (ls != NULL && ls->Huygens_Freeze_Nodes && fabs(time) > 0) {
+      if (ls != NULL && ls->Freeze_Interface_Nodes && fabs(time) > 0) {
 
         int node_is_frozen = 0;
         for (int ielem = exo->node_elem_pntr[I]; ielem < exo->node_elem_pntr[I + 1]; ielem++) {
@@ -6166,8 +6173,10 @@ double ls_modulate_property(double p1,
     level_set_property(p_minus, p_plus, width, &p, dpdF);
   else if (interp_method == LSI_INTERP_LOG)
     level_set_property_log(p_minus, p_plus, width, &p, dpdF);
-  else
+  else {
     GOMA_EH(-1, "Unknown level set interface interpolation method");
+    return 0.0;
+  }
 
   if (ls->Elem_Sign == -1) {
     *factor = pm_plus;
@@ -7057,7 +7066,7 @@ static void divide_shape_fcn_tree(NTREE *parent, int max_level) {
     switch (parent->dim) {
     case 3:
       xi_m[2] = (parent->xi[0][2] + parent->xi[4][2]) / 2.0;
-      /* fall through */
+      FALLTHROUGH;
     case 2:
       xi_m[0] = (parent->xi[0][0] + parent->xi[1][0]) / 2.0;
       xi_m[1] = (parent->xi[1][1] + parent->xi[2][1]) / 2.0;
@@ -7285,6 +7294,7 @@ static void gather_subtree_coords(NTREE *tree, double *xi_m, double (*sub_xi)[DI
       sub_xi[i][1] = t;
       sub_xi[i][2] = u;
     }
+    break;
   default:
     break;
   }

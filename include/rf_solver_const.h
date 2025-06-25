@@ -64,6 +64,7 @@
 #define PETSC_SOLVER         11
 #define PETSC_COMPLEX_SOLVER 12
 #define AMESOS2              13
+#define MUMPS                14
 /*
  * FORTRAN BLAS functions. Inside C, use "DCOPY" and the preprocessor to
  * make it look like the FORTRAN name for this routine.

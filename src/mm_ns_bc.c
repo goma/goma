@@ -10444,7 +10444,7 @@ void fapply_moving_CA_sinh(
   switch (bc_type) {
   case VELO_THETA_COX_BC:
     reciprocal_slip = 1. / velocity_pre_exponential;
-  /* fall through */
+    FALLTHROUGH;
   case VELO_THETA_SHIK_BC:
     theta_max = M_PIE * theta_max_degrees / 180.;
     thetaeq = equilibrium_contact_angle * (M_PIE / 180);

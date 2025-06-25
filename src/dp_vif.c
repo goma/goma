@@ -193,6 +193,7 @@ void raven_landing(void) {
    */
 
   upd->turbulent_info = calloc(1, sizeof(turbulent_information));
+  upd->solver_info = calloc(1, sizeof(solver_information));
 
   /*
    * Instead of communicating all efv, just this bit, the remainder in
@@ -1034,6 +1035,10 @@ void noahs_ark(void) {
   ddd_add_member(n, &(upd->turbulent_info->num_side_sets), 1, MPI_INT);
   ddd_add_member(n, &(upd->turbulent_info->k_inf), 1, MPI_DOUBLE);
   ddd_add_member(n, &(upd->turbulent_info->omega_inf), 1, MPI_DOUBLE);
+  ddd_add_member(n, &(upd->solver_info->icntl), 60, MPI_INT);
+  ddd_add_member(n, &(upd->solver_info->icntl_user_set), 60, MPI_INT);
+  ddd_add_member(n, &(upd->solver_info->cntl), 7, MPI_DOUBLE);
+  ddd_add_member(n, &(upd->solver_info->cntl_user_set), 7, MPI_INT);
 
   for (i = 0; i < upd->Num_Mat; i++) {
     int imtrx;
@@ -1373,7 +1378,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &ls->Toure_Penalty, 1, MPI_INT);
     ddd_add_member(n, &ls->YZbeta, 1, MPI_INT);
     ddd_add_member(n, &ls->YZbeta_scale, 1, MPI_DOUBLE);
-    ddd_add_member(n, &ls->Huygens_Freeze_Nodes, 1, MPI_INT);
+    ddd_add_member(n, &ls->Freeze_Interface_Nodes, 1, MPI_INT);
     ddd_add_member(n, &ls->Semi_Implicit_Integration, 1, MPI_INT);
   }
 
@@ -2694,6 +2699,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &CONTACT_DISTANCE, 1, MPI_INT);
   ddd_add_member(n, &PP_FLUID_STRESS, 1, MPI_INT);
   ddd_add_member(n, &LUB_CONVECTION, 1, MPI_INT);
+  ddd_add_member(n, &PP_MESH_VELOCITY, 1, MPI_INT);
   ddd_add_member(n, &USER_POST, 1, MPI_INT);
   if (len_u_post_proc > 0) {
     ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);

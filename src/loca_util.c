@@ -334,12 +334,16 @@ void sort_by_real(int nconv, int ncv, int ldv, double *d, double *v) {
   /* Mark final element of count array with -1 */
   count[ncv] = -1;
 // remove faulty warning GCC 12+
+#if defined(__GNUC__) && __GNUC__ >= 12 && __GNUC__ <= 15
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Walloc-size-larger-than="
+#endif
   GOMA_ASSERT_ALWAYS(((size_t)(ntd * sizeof(double))) < PTRDIFF_MAX);
   /* Arrays td and tv will hold the sorted eigenvalues and eigenvectors */
   td = (double *)calloc(ntd, sizeof(double));
+#if defined(__GNUC__) && __GNUC__ >= 12 && __GNUC__ <= 15
 #pragma GCC diagnostic pop
+#endif
   for (i = 0; i < ntd; i++)
     td[i] = 0.0;
   tv = (double *)calloc(ntv, sizeof(double));

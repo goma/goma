@@ -7,7 +7,7 @@ enable_language(CXX)
 enable_language(Fortran)
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${goma_SOURCE_DIR}/cmake")
@@ -382,6 +382,19 @@ if(ENABLE_PETSC AND PETSC_FOUND)
   list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_PETSC)
 endif()
 
+option(ENABLE_MUMPS "ENABLE_MUMPS" ON)
+if (ENABLE_MUMPS)
+  find_package(MUMPS)
+  if(MUMPS_FOUND)
+    message(STATUS "Using MUMPS ${MUMPS_LIBRARIES}")
+    set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${MUMPS_LIBRARIES})
+    set(GOMA_TPL_INCLUDES ${GOMA_TPL_INCLUDES} ${MUMPS_INCLUDES})
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_MUMPS)
+  else()
+    message(STATUS "MUMPS library not found")
+  endif()
+endif()
+
 # UMFPACK in trilinos
 list(FIND Trilinos_TPL_LIST UMFPACK trilinos_package_index)
 option(ENABLE_UMFPACK "ENABLE_UMFPACK" ON)
@@ -531,6 +544,9 @@ set(GOMA_INCLUDES
     include/linalg/sparse_matrix.h
     include/linalg/sparse_matrix_tpetra.h
     include/linalg/sparse_matrix_epetra.h
+    include/ls/create_facets.hpp
+    include/ls/facet_reinitialization.h
+    include/ls/marching_cubes.hpp
     include/load_field_variables.h
     include/loca_const.h
     include/loca_util_const.h
@@ -640,6 +656,7 @@ set(GOMA_INCLUDES
     include/sl_petsc_complex.h
     include/sl_matrix_util.h
     include/sl_stratimikos_interface.h
+    include/sl_mumps.h
     include/sl_umf.h
     include/sl_util.h
     include/sl_util_structs.h
@@ -689,6 +706,8 @@ set(GOMA_SOURCES
     src/linalg/sparse_matrix.cpp
     src/linalg/sparse_matrix_tpetra.cpp
     src/linalg/sparse_matrix_epetra.cpp
+    src/ls/create_facets.cpp
+    src/ls/facet_reinitialization.cpp
     src/load_field_variables.c
     src/loca_bord.c
     src/loca_eigen_c2f.F
@@ -806,6 +825,7 @@ set(GOMA_SOURCES
     src/sl_matrix_util.c
     src/sl_squash.c
     src/sl_stratimikos_interface.cpp
+    src/sl_mumps.c
     src/sl_umf.c
     src/sl_util.c
     src/wr_dpi.c
@@ -841,10 +861,13 @@ set(GOMA_USER_SOURCES
 
 set(GOMA_UTIL_INCLUDES
     include/bc/rotate_util.h include/mm_eh.h include/util/goma_normal.h
-    include/util/aprepro_helper.h include/util/distance_helpers.h)
+    include/util/aprepro_helper.h
+    include/util/distance_helpers.h)
 
-set(GOMA_UTIL_SOURCES src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c
-                      src/util/aprepro_helper.cpp src/util/distance_helpers.cpp)
+set(GOMA_UTIL_SOURCES
+    src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c
+    src/util/aprepro_helper.cpp
+    src/util/distance_helpers.cpp)
 
 set(GDS_INCLUDES include/gds/gds_vector.h)
 
@@ -1025,6 +1048,7 @@ foreach(d ${GOMA_COMPILE_DEFINITIONS})
   message(STATUS "${d}")
 endforeach()
 message("\n")
+message(STATUS "Exodus include dirs:" ${SEACASExodus_INCLUDE_DIRS})
 
 set(GOMA_TPL_INCLUDES
     ${GOMA_TPL_INCLUDES}
@@ -1091,7 +1115,8 @@ if(ENABLE_WARNINGS)
 endif()
 
 add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
-target_include_directories(goma PUBLIC include)
+target_include_directories(
+  goma PUBLIC include ${PROJECT_SOURCE_DIR}/tpls/nanoflann/include)
 target_include_directories(goma SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_directories(goma PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
 target_link_libraries(goma PUBLIC ${GOMA_TPL_LIBRARIES} gds)

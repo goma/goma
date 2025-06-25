@@ -1938,14 +1938,18 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
     }
 
     if (num_bc_nodes > 0) {
-      mesh_rotate_node[pg->imtrx] = (int *)realloc(
-          mesh_rotate_node[pg->imtrx], (size_t)num_mesh_rotate[pg->imtrx] * sizeof(int));
-      mesh_rotate_ss[pg->imtrx] = (int *)realloc(mesh_rotate_ss[pg->imtrx],
-                                                 (size_t)num_mesh_rotate[pg->imtrx] * sizeof(int));
-      mom_rotate_node[pg->imtrx] = (int *)realloc(mom_rotate_node[pg->imtrx],
+      if (num_mesh_rotate[pg->imtrx] > 0) {
+        mesh_rotate_node[pg->imtrx] = (int *)realloc(
+            mesh_rotate_node[pg->imtrx], (size_t)num_mesh_rotate[pg->imtrx] * sizeof(int));
+        mesh_rotate_ss[pg->imtrx] = (int *)realloc(
+            mesh_rotate_ss[pg->imtrx], (size_t)num_mesh_rotate[pg->imtrx] * sizeof(int));
+      }
+      if (num_mom_rotate[pg->imtrx] > 0) {
+        mom_rotate_node[pg->imtrx] = (int *)realloc(
+            mom_rotate_node[pg->imtrx], (size_t)num_mom_rotate[pg->imtrx] * sizeof(int));
+        mom_rotate_ss[pg->imtrx] = (int *)realloc(mom_rotate_ss[pg->imtrx],
                                                   (size_t)num_mom_rotate[pg->imtrx] * sizeof(int));
-      mom_rotate_ss[pg->imtrx] =
-          (int *)realloc(mom_rotate_ss[pg->imtrx], (size_t)num_mom_rotate[pg->imtrx] * sizeof(int));
+      }
     }
 
     if (mesh_rotate_node[pg->imtrx] != NULL || mom_rotate_node[pg->imtrx] != NULL) {

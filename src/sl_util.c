@@ -448,6 +448,9 @@ void set_aztec_options_params(int options[], double params[]) {
   } else if (strcmp(Matrix_Solver, "amesos") == 0) {
     Linear_Solver = AMESOS;
     options[AZ_solver] = -1;
+  } else if (strcmp(Matrix_Solver, "mumps") == 0) {
+    Linear_Solver = MUMPS;
+    options[AZ_solver] = -1;
   } else if (strcmp(Matrix_Solver, "amesos2") == 0) {
     Linear_Solver = AMESOS2;
     options[AZ_solver] = -1;

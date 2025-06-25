@@ -39,6 +39,7 @@ class Package(packages.CMakePackage):
         builder.add_option("-DBLAS_LIBRARIES=" + builder.env["BLAS_LIBRARIES"])
         builder.add_option("-DLAPACK_LIBRARIES=" + builder.env["LAPACK_LIBRARIES"])
         builder.add_option("-DSCALAPACK_BUILD_TESTS=OFF")
+        builder.add_option("-DCMAKE_C_STANDARD=99")
 
     def register(self, builder):
         registry = builder._registry

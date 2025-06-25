@@ -4184,7 +4184,7 @@ double quad_isomap_invert(const double x1,
       for (i = 0; i < elem_nodes; i++) {
         coord[2][i] = z[itp[i]];
       }
-      /* fall through */
+      FALLTHROUGH;
     case 2:
       for (i = 0; i < elem_nodes; i++) {
         coord[0][i] = x[itp[i]];
@@ -4206,7 +4206,7 @@ double quad_isomap_invert(const double x1,
         jac[2][2] += coord[2][i] * phig[i];
         xpt[2] += coord[2][i] * phi[i];
       }
-      /* fall through */
+      FALLTHROUGH;
     case 2:
       for (i = 0; i < elem_nodes; i++) {
         jac[0][0] += coord[0][i] * phic[i];
@@ -4398,7 +4398,7 @@ double quad_isomap_invert(const double x1,
       switch (dim) {
       case 3:
         pg += pp[i] * phig[i];
-        /* fall through */
+        FALLTHROUGH;
       case 2:
         pc += pp[i] * phic[i];
         pe += pp[i] * phie[i];

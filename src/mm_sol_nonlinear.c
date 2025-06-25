@@ -19,6 +19,12 @@
 #ifdef GOMA_ENABLE_AZTEC
 #include <az_aztec_defs.h>
 #endif
+#include "bc_contact.h"
+#include "linalg/sparse_matrix.h"
+#include "mm_eh.h"
+#include "mm_mp_const.h"
+#include "sl_mumps.h"
+#include "sl_util_structs.h"
 
 #define GOMA_MM_SOL_NONLINEAR_C
 /* Needed to declare POSIX function drand48 */
@@ -779,8 +785,10 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     if (ams->GomaMatrixData != NULL) {
       GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
       matrix->put_scalar(matrix, 0.0);
+#ifdef GOMA_ENABLE_PETSC
     } else if (strcmp(Matrix_Format, "petsc") == 0) {
       petsc_zero_mat(ams);
+#endif
     } else {
       init_vec_value(a, 0.0, ams->nnz);
     }
@@ -1439,6 +1447,20 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       break;
 #endif
 
+    case MUMPS:
+
+      if ((strcmp(Matrix_Format, "msr") != 0)) {
+        GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with "
+                            "the MUMPS solver\n");
+      }
+      err = mumps_solve(ams, delta_x, resid_vector);
+      if (err != GOMA_SUCCESS) {
+        return_value = -1;
+        goto free_and_clear;
+      }
+      strcpy(stringer, " 1 ");
+      break;
+
     case AMESOS2:
 
       if (ams->GomaMatrixData != NULL) {
@@ -1614,6 +1636,19 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           break;
 #endif
 
+        case MUMPS:
+          if ((strcmp(Matrix_Format, "msr") != 0)) {
+            GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with "
+                                "the MUMPS solver\n");
+          }
+          err = mumps_solve(ams, &wAC[iAC][0], &bAC[iAC][0]);
+          strcpy(stringer_AC, " 1 ");
+          if (err != GOMA_SUCCESS) {
+            return_value = -1;
+            goto free_and_clear;
+          }
+          break;
+
 #ifdef GOMA_ENABLE_AZTEC
         case AZTEC:
           /*
@@ -1721,7 +1756,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             if (iterations == -1) {
               strcpy(stringer, "err");
             } else {
-              aztec_stringer(AZ_normal, iterations, &stringer[0]);
+              aztec_stringer(AZ_normal, iterations, &stringer_AC[0]);
             }
             solver_found = 1;
           }
@@ -1735,7 +1770,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
               GOMA_EH(err, "Error in stratimikos solve");
               check_parallel_error("Error in solve - stratimikos");
             }
-            aztec_stringer(AZ_normal, iterations, &stringer[0]);
+            aztec_stringer(AZ_normal, iterations, &stringer_AC[0]);
             solver_found = 1;
           }
 #endif
@@ -3646,6 +3681,18 @@ static int soln_sens(double lambda,  /*  parameter */
     strcpy(stringer, " 1 ");
     break;
 #endif
+  case MUMPS:
+
+    if ((strcmp(Matrix_Format, "msr") != 0)) {
+      GOMA_EH(GOMA_ERROR, " Sorry, only MSR matrix format is currently supported with "
+                          "the MUMPS solver\n");
+    }
+    err = mumps_solve(ams, x_sens, resid_vector_sens);
+    if (err != GOMA_SUCCESS) {
+      strcpy(stringer, "0");
+    }
+    strcpy(stringer, " 1 ");
+    break;
   case AMESOS2:
 
     if (ams->GomaMatrixData != NULL) {

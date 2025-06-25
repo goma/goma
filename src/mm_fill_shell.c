@@ -11051,8 +11051,8 @@ void dPdz_function(dbl tt,
   dbl V_S = H * (1 + 2 * tt) / dt;
 
   /* Calculate dynamic contact angle */
-  dbl cosT, cosT_V, a1, a2;
-  dynamic_contact_angle_model(&cosT, &a1, V, &cosT_V, &a2);
+  dbl cosT, cosT_V, a1, a2, dcaU, dcaL;
+  dynamic_contact_angle_model(&cosT, &a1, V, &cosT_V, &a2, &dcaU, &dcaL);
 
   /* Calculate capillary pressure */
   Pcap = 2 * sigma * cosT / R;
@@ -15189,7 +15189,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
         /* Assemble source term */
 
         source = 0.0;
-        if (T_SOURCE) {
+        if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
           source = H * LubAux->gradP_mag - vis_top * shear_top + vis_bot * shear_bot;
           source *= phi_i * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
         }
@@ -15210,7 +15210,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
         /* Assemble advection term */
 
         advection = 0.0;
-        if (T_ADVECTION) {
+        if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
           for (ii = 0; ii < DIM; ii++) {
             advection += ev[ii] * (veloU[ii] - veloL[ii]);
           }
@@ -15221,7 +15221,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
         /* Assemble source term */
 
         source = 0.0;
-        if (T_SOURCE) {
+        if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
           source = -vis_top * SQUARE(shear_top) + vis_bot * SQUARE(shear_bot) + viscint[0];
           source *= phi_i * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
         }
@@ -15243,7 +15243,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
         /* Assemble advection term */
 
         advection = 0.0;
-        if (T_ADVECTION) {
+        if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
           for (ii = 0; ii < DIM; ii++) {
             advection += evf[ii] * (veloU[ii] - veloL[ii]);
           }
@@ -15254,7 +15254,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
         /* Assemble source term */
 
         source = 0.0;
-        if (T_SOURCE) {
+        if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
           source = -cross_shear *
                    (shear_top * (1. + log(vis_top)) - shear_bot * (1. + log(vis_bot)) - viscint[1]);
           source *= phi_i * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
@@ -15288,7 +15288,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
             phi_j = bf[var]->phi[j];
 
             source = 0.0;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               source = 2 * phi_i * (-vis_top - SQUARE(shear_top) * dvis_top) * phi_j;
               source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
@@ -15306,7 +15306,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
             phi_j = bf[var]->phi[j];
 
             source = 0.0;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               source = phi_i * (vis_bot + SQUARE(shear_bot) * dvis_bot) * phi_j;
               source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
@@ -15324,7 +15324,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
             phi_j = bf[var]->phi[j];
 
             source = 0.;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               source = phi_i * (-dvis_top_dK * shear_top + dvis_bot_dK * shear_bot) * phi_j;
               source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
@@ -15346,7 +15346,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
                     n_dof[MESH_DISPLACEMENT1], dof_map);
 
             source = 0.;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               for (jj = 0; jj < dim; jj++) {
                 source += ev[jj] * grad_II_phi_j[jj];
               }
@@ -15382,7 +15382,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
             advection = 0.0;
 
             source = 0.0;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               source = phi_i * (-shear_top * (vis_top + SQUARE(shear_top) * dvis_top)) * phi_j;
               source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
@@ -15403,7 +15403,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
             advection = 0.0;
 
             source = 0.0;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               source = phi_i * (shear_bot * (vis_bot + SQUARE(shear_bot) * dvis_bot)) * phi_j;
               source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
@@ -15422,7 +15422,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
             phi_j = bf[var]->phi[j];
 
             source = 0.;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               source = phi_i *
                        (-SQUARE(shear_top) * dvis_top_dK + SQUARE(shear_bot) * dvis_bot_dK -
                         dviscint_dK[0]) *
@@ -15447,7 +15447,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
                     n_dof[MESH_DISPLACEMENT1], dof_map);
 
             advection = 0.0;
-            if (T_ADVECTION) {
+            if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
               double advection1 = 0., advection2 = 0.;
               for (ii = 0; ii < dim; ii++) {
                 advection1 += ev[ii] * (veloU[ii] - veloL[ii]);
@@ -15488,7 +15488,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
             advection = 0.0;
 
             source = 0.0;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               source =
                   phi_i * (-cross_shear * (1. + SQUARE(shear_top) * dvis_top / vis_top)) * phi_j;
               source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
@@ -15509,7 +15509,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
             advection = 0.0;
 
             source = 0.0;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               source =
                   phi_i * (cross_shear * (1. + SQUARE(shear_bot) * dvis_bot / vis_bot)) * phi_j;
               source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
@@ -15528,7 +15528,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
             phi_j = bf[var]->phi[j];
 
             source = 0.;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               source = phi_i *
                        (-(shear_top * (1. + log(vis_top)) - shear_bot * (1. + log(vis_bot)) -
                           viscint[1]) -
@@ -15555,7 +15555,7 @@ int assemble_lubrication_thinning(double time,    /* present time value */
                     n_dof[MESH_DISPLACEMENT1], dof_map);
 
             advection = 0.0;
-            if (T_ADVECTION) {
+            if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
               double advection1 = 0., advection2 = 0.;
               for (ii = 0; ii < dim; ii++) {
                 advection1 += evf[ii] * (veloU[ii] - veloL[ii]);

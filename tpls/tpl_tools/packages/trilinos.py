@@ -1,11 +1,12 @@
 from tpl_tools.packages import packages
+from tpl_tools import utils
 
 
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "trilinos"
-        self.version = "16.0.0"
-        self.sha256 = "46bfc40419ed2aa2db38c144fb8e61d4aa8170eaa654a88d833ba6b92903f309"
+        self.version = "16.1.0"
+        self.sha256 = "e9651c88f581049457036cfc01b527a9d3903c257338eeeab942befd7452f23a"
         self.filename = "trilinos-" + self.version + ".tar.gz"
         self.url = (
             "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-"
@@ -134,9 +135,7 @@ class Package(packages.CMakePackage):
                 + builder.env["SUPERLU_DIST_DIR"]
                 + "/include"
             )
-        ext = ".a"
-        if builder.build_shared:
-            ext = ".so"
+        ext = utils.get_library_extension(builder.build_shared)
         if "PARMETIS_DIR" in builder.env:
             builder.add_option("-DTPL_ENABLE_ParMETIS:BOOL=ON ")
             builder.add_option("-D Amesos_ENABLE_ParMETIS:BOOL=ON ")
