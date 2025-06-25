@@ -490,7 +490,8 @@ int assemble_continuity(dbl time_value, /* current time */
           if (mp->DensityModel == DENSITY_FOAM || mp->DensityModel == DENSITY_FOAM_CONC ||
               mp->DensityModel == DENSITY_FOAM_TIME || mp->DensityModel == DENSITY_FOAM_TIME_TEMP ||
               mp->DensityModel == DENSITY_MOMENT_BASED ||
-              mp->DensityModel == DENSITY_FOAM_PMDI_10) {
+              mp->DensityModel == DENSITY_FOAM_PMDI_10 ||
+              mp->DensityModel == DENSITY_CURE_SHRINKAGE) {
             /* These density models locally permit a time and spatially varying
                density.  Consequently, the Lagrangian derivative of the density
                terms in the continuity equation are not zero and are
@@ -1085,7 +1086,8 @@ int assemble_continuity(dbl time_value, /* current time */
               if (mp->DensityModel == DENSITY_FOAM || mp->DensityModel == DENSITY_FOAM_CONC ||
                   mp->DensityModel == DENSITY_FOAM_TIME || mp->DensityModel == DENSITY_FOAM_PBE ||
                   mp->DensityModel == DENSITY_FOAM_TIME_TEMP ||
-                  mp->DensityModel == DENSITY_FOAM_PMDI_10) {
+                  mp->DensityModel == DENSITY_FOAM_PMDI_10 ||
+                  mp->DensityModel == DENSITY_CURE_SHRINKAGE) {
                 source = sourceBase * d_h3detJ_dmesh_bj * wt + dFVS_dx[b][j] * d_area;
                 source *= phi_i * source_etm;
               } else if (mp->DensityModel == REACTIVE_FOAM) {
@@ -1193,7 +1195,8 @@ int assemble_continuity(dbl time_value, /* current time */
               /* Foaming volume source term */
 
               if (mp->DensityModel == REACTIVE_FOAM || mp->DensityModel == DENSITY_FOAM ||
-                  mp->DensityModel == DENSITY_FOAM_PBE) {
+                  mp->DensityModel == DENSITY_FOAM_PBE ||
+                  mp->DensityModel == DENSITY_CURE_SHRINKAGE) {
                 source += dFVS_dC[w][j];
                 source *= phi_i * h3 * det_J * wt * pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
               }
@@ -2154,6 +2157,123 @@ double FoamVolumeSource(double time,
           }
         }
       }
+    }
+  } else if (mp->DensityModel == DENSITY_CURE_SHRINKAGE) {
+    int ConstitutiveEquation = gn_glob[ei[pg->imtrx]->mn]->ConstitutiveEquation;
+    int species_no = 0;
+
+    if (ConstitutiveEquation == CURE || ConstitutiveEquation == EPOXY ||
+        ConstitutiveEquation == FILLED_EPOXY || ConstitutiveEquation == FOAM_PMDI_10) {
+      species_no = gn_glob[ei[pg->imtrx]->mn]->cure_species_no;
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown constitutive equation for density model CURE_SHRINKAGE");
+    }
+
+    if (fv->c[species_no] >= mp->u_density[4]) {
+
+      DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+      DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+
+      rho = density(d_rho, time);
+
+      dbl d_grad_rho_dC[MAX_CONC][MDE] = {{0.0}};
+      dbl d_grad_rho_dX[DIM][DIM][MDE] = {{{0.0}}};
+
+      dbl rho_l = mp->u_density[0];
+      dbl rho_s = mp->u_density[1];
+      dbl alpha_m = mp->u_density[2];
+      dbl alpha_g = mp->u_density[3];
+
+      double rho_dot = ((rho_s - rho_l) / (alpha_m - alpha_g)) * (fv_dot->c[0]);
+
+      double grad_rho[DIM] = {0.0};
+
+      for (a = 0; a < dim; a++) {
+        grad_rho[a] = ((rho_s - rho_l) / (alpha_m - alpha_g)) * (fv->grad_c[0][a]);
+        if (af->Assemble_Jacobian) {
+          var = MASS_FRACTION;
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_grad_rho_dC[a][j] +=
+                ((rho_s - rho_l) / (alpha_m - alpha_g)) * (bf[var]->grad_phi[j][a]);
+          }
+          for (int b = 0; b < dim; b++) {
+            var = MESH_DISPLACEMENT1 + b;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              d_grad_rho_dX[a][b][j] +=
+                  ((rho_s - rho_l) / (alpha_m - alpha_g)) * (fv->d_grad_c_dmesh[a][0][b][j]);
+            }
+          }
+        }
+      }
+
+      double inv_rho = 1 / rho;
+
+      dbl include_xdot = 1;
+
+      source = rho_dot;
+      for (a = 0; a < dim; a++) {
+        source += (fv->v[a] - include_xdot * fv_dot->x[a]) * grad_rho[a];
+      }
+      source *= inv_rho;
+
+      if (af->Assemble_Jacobian) {
+        var = TEMPERATURE;
+        if (pd->v[pg->imtrx][var]) {
+          for (j = 0; pd->v[pg->imtrx][var] && j < ei[pg->imtrx]->dof[var]; j++) {
+            dFVS_dT[j] = 0;
+          }
+        }
+      }
+
+      var = VELOCITY1;
+      if (pd->v[pg->imtrx][var]) {
+        for (a = 0; a < dim; a++) {
+          var = VELOCITY1 + a;
+          for (j = 0; pd->v[pg->imtrx][var] && j < ei[pg->imtrx]->dof[var]; j++) {
+            dFVS_dv[a][j] = inv_rho * (bf[var]->phi[j] * grad_rho[a]);
+          }
+        }
+      }
+
+      var = MESH_DISPLACEMENT1;
+      if (pd->v[pg->imtrx][var]) {
+        for (a = 0; a < dim; a++) {
+          for (int b = 0; b < dim; b++) {
+            var = MESH_DISPLACEMENT1 + b;
+            for (j = 0; pd->v[pg->imtrx][var] && j < ei[pg->imtrx]->dof[var]; j++) {
+              dFVS_dx[b][j] +=
+                  inv_rho *
+                  ((-(1.0 + 2.0 * tt) / dt) * include_xdot * bf[var]->phi[j] * grad_rho[a] +
+                   (fv->v[a] - include_xdot * fv_dot->x[a]) * d_grad_rho_dX[a][b][j]);
+            }
+          }
+        }
+      }
+
+      var = MASS_FRACTION;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          dFVS_dC[species_no][j] = inv_rho * ((rho_s - rho_l) / (alpha_m - alpha_g)) *
+                                       ((1.0 + 2.0 * tt) / dt) * bf[var]->phi[j] +
+                                   (-d_rho->C[0][j] * inv_rho * inv_rho) * rho_dot;
+          for (a = 0; a < dim; a++) {
+            dFVS_dC[species_no][j] +=
+                inv_rho * ((fv->v[a] - include_xdot * fv_dot->x[a]) * d_grad_rho_dC[a][j]) +
+                (-d_rho->C[0][j] * inv_rho * inv_rho) * (fv->v[a] - include_xdot * fv_dot->x[a]) *
+                    grad_rho[a];
+          }
+        }
+      }
+      var = FILL;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          source_c = inv_rho * d_rho->F[j] * source;
+
+          dFVS_dF[j] = source_c;
+        }
+      }
+    } else {
+      source = 0;
     }
   }
 
