@@ -49,6 +49,9 @@ goma_error g_tpetra_sum_into_row_values(GomaSparseMatrix matrix,
 
 goma_error g_tpetra_put_scalar(GomaSparseMatrix matrix, double scalar);
 
+goma_error
+g_tpetra_matrix_vector_mult(GomaSparseMatrix matrix, double *vector_in, double *vector_out);
+
 goma_error g_tpetra_row_sum_scaling(GomaSparseMatrix matrix, double *b, double *scale);
 
 goma_error g_tpetra_zero_row(GomaSparseMatrix matrix, GomaGlobalOrdinal global_row);

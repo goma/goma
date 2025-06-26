@@ -2909,7 +2909,7 @@ struct Level_Set_Data {
   int Sat_Hyst_Renorm_Lockout;
   int ghost_stress;
   int Toure_Penalty;
-  int Huygens_Freeze_Nodes;
+  int Freeze_Interface_Nodes;
   int Enable_Div_Term;
   int Semi_Implicit_Integration;
   int YZbeta;

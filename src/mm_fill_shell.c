@@ -23,7 +23,9 @@ static char rcsid[] = "$Id: mm_fill_shell.c,v 5.62 2010-07-30 21:14:52 prschun E
 #endif
 
 /* Standard include files */
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "std.h"
 #include <math.h>
 #include <stdio.h>
@@ -11049,8 +11051,8 @@ void dPdz_function(dbl tt,
   dbl V_S = H * (1 + 2 * tt) / dt;
 
   /* Calculate dynamic contact angle */
-  dbl cosT, cosT_V, a1, a2;
-  dynamic_contact_angle_model(&cosT, &a1, V, &cosT_V, &a2);
+  dbl cosT, cosT_V, a1, a2, dcaU, dcaL;
+  dynamic_contact_angle_model(&cosT, &a1, V, &cosT_V, &a2, &dcaU, &dcaL);
 
   /* Calculate capillary pressure */
   Pcap = 2 * sigma * cosT / R;
