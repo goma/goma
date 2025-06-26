@@ -293,9 +293,9 @@ int ad_beer_belly(void) {
 
   if (elem_shape == SHELL || elem_shape == TRISHELL || (mp->ehl_integration_kind == SIK_S)) {
     dim++;
-      for (j = 0; j < pdim; j++) {
-        ad_fv->J[pd->Num_Dim - 1][j] = MapBf->J[pd->Num_Dim - 1][j] = (j + 1) * 1.0;
-      }
+    for (j = 0; j < pdim; j++) {
+      ad_fv->J[pd->Num_Dim - 1][j] = MapBf->J[pd->Num_Dim - 1][j] = (j + 1) * 1.0;
+    }
 
     /*Real Quick check on Jacobian to make sure this arbitrary assignment
      *didn't screw things up. Note that the detJ in the shell case can be
@@ -608,8 +608,9 @@ extern "C" void fill_ad_field_variables() {
   if (pd->gv[SHELL_SAT_1]) {
     ad_fv->sh_sat_1 = 0;
     for (int i = 0; i < ei[upd->matrix_index[SHELL_SAT_1]]->dof[SHELL_SAT_1]; i++) {
-      ad_fv->sh_sat_1 += ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_1] + i, *esp->sh_sat_1[i]) *
-                   bf[SHELL_SAT_1]->phi[i];
+      ad_fv->sh_sat_1 +=
+          ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_1] + i, *esp->sh_sat_1[i]) *
+          bf[SHELL_SAT_1]->phi[i];
     }
 
     for (int q = 0; q < pd->Num_Dim; q++) {
@@ -626,8 +627,9 @@ extern "C" void fill_ad_field_variables() {
   if (pd->gv[SHELL_SAT_2]) {
     ad_fv->sh_sat_2 = 0;
     for (int i = 0; i < ei[upd->matrix_index[SHELL_SAT_2]]->dof[SHELL_SAT_2]; i++) {
-      ad_fv->sh_sat_2 += ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_2] + i, *esp->sh_sat_2[i]) *
-                   bf[SHELL_SAT_2]->phi[i];
+      ad_fv->sh_sat_2 +=
+          ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_2] + i, *esp->sh_sat_2[i]) *
+          bf[SHELL_SAT_2]->phi[i];
     }
 
     for (int q = 0; q < pd->Num_Dim; q++) {
@@ -644,8 +646,9 @@ extern "C" void fill_ad_field_variables() {
   if (pd->gv[SHELL_SAT_3]) {
     ad_fv->sh_sat_3 = 0;
     for (int i = 0; i < ei[upd->matrix_index[SHELL_SAT_3]]->dof[SHELL_SAT_3]; i++) {
-      ad_fv->sh_sat_3 += ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_3] + i, *esp->sh_sat_3[i]) *
-                   bf[SHELL_SAT_3]->phi[i];
+      ad_fv->sh_sat_3 +=
+          ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_3] + i, *esp->sh_sat_3[i]) *
+          bf[SHELL_SAT_3]->phi[i];
     }
 
     for (int q = 0; q < pd->Num_Dim; q++) {
@@ -658,8 +661,6 @@ extern "C" void fill_ad_field_variables() {
       }
     }
   }
-
-
 
   if (pd->gv[EDDY_NU]) {
     ad_fv->eddy_nu = 0;

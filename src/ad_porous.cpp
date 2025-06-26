@@ -1,14 +1,14 @@
-#include <ad_turbulence.h>
 #include <ad_porous.h>
+#include <ad_turbulence.h>
 
 extern "C" {
-#include "rf_fem_const.h"
 #include "mm_as.h"
-#include "mm_mp.h"
 #include "mm_as_const.h"
+#include "mm_mp.h"
 #include "mm_shell_util.h"
 #include "mm_std_models_shell.h"
 #include "rf_allo.h"
+#include "rf_fem_const.h"
 }
 
 static inline ADType set_ad_or_dbl(dbl val, int eqn, int dof) {
@@ -909,11 +909,9 @@ void ad_porous_shell_open_source_model(
   return;
 }
 #else
-void ad_porous_shell_open_source_model(
-    ADType j_1_2,                 // Flux between porous layers 1 and 2
-    ADType j_2_3,                 // Flux between porous layers 2 and 3
-    ADType cap_pres_fv[MAX_POR_SHELL]
-    )
+void ad_porous_shell_open_source_model(ADType j_1_2, // Flux between porous layers 1 and 2
+                                       ADType j_2_3, // Flux between porous layers 2 and 3
+                                       ADType cap_pres_fv[MAX_POR_SHELL])
 /*****************************************************************************
  * This function calculates inter-layer fluxes amongst porous shell layers.
  * As of now, each layer is assumed to be stacked on top one another.
@@ -965,82 +963,80 @@ void ad_porous_shell_open_source_model(
   for (ipore = 0; ipore < pd->Num_Porous_Shell_Eqn; ipore++) {
     var = porous_shell_var[ipore];
     if (pd->v[pg->imtrx][var]) {
-        switch (ipore) {
-        case 0:
-          sat_normalized_1 = sat_nodes[ipore] - sat_center_1;
-          sat_nodes[ipore] = ad_fv->sh_sat_3; 
-          break;
-        case 1:
-          sat_nodes[ipore] = ad_fv->sh_sat_2; 
-          sat_normalized_2 = sat_nodes[ipore] - sat_center_2;
-          break;
-        case 2:
-          sat_nodes[ipore] = ad_fv->sh_sat_3; 
-          sat_normalized_3 = sat_nodes[ipore] - sat_center_3;
-          break;
-        }
+      switch (ipore) {
+      case 0:
+        sat_normalized_1 = sat_nodes[ipore] - sat_center_1;
+        sat_nodes[ipore] = ad_fv->sh_sat_3;
+        break;
+      case 1:
+        sat_nodes[ipore] = ad_fv->sh_sat_2;
+        sat_normalized_2 = sat_nodes[ipore] - sat_center_2;
+        break;
+      case 2:
+        sat_nodes[ipore] = ad_fv->sh_sat_3;
+        sat_normalized_3 = sat_nodes[ipore] - sat_center_3;
+        break;
       }
-      H[ipore] = porous_shell_height_model(ipore);
-      kappa[ipore] = porous_shell_cross_perm_model(ipore);
     }
+    H[ipore] = porous_shell_height_model(ipore);
+    kappa[ipore] = porous_shell_cross_perm_model(ipore);
+  }
 
   /* Apply heaviside function to deactivate flux at S_1 > 0.99*/
 
-    if (sat_nodes[0] >= sat_max_1) {
-      Hside_1 = 0.0;
-      Hside_1_square = 0.0;
-    } else if (sat_nodes[0] <= (sat_max_1 - width_1)) {
-      Hside_1 = 1.0;
-      Hside_1_square = 1.0;
-    } else {
-      Hside_1 = 1.0 - 0.5 * (1. + sat_normalized_1 / alpha_1 -
-                                sin(M_PIE * sat_normalized_1 / alpha_1) / M_PIE);
-      Hside_1_square = Hside_1 * Hside_1;
-    }
+  if (sat_nodes[0] >= sat_max_1) {
+    Hside_1 = 0.0;
+    Hside_1_square = 0.0;
+  } else if (sat_nodes[0] <= (sat_max_1 - width_1)) {
+    Hside_1 = 1.0;
+    Hside_1_square = 1.0;
+  } else {
+    Hside_1 = 1.0 - 0.5 * (1. + sat_normalized_1 / alpha_1 -
+                           sin(M_PIE * sat_normalized_1 / alpha_1) / M_PIE);
+    Hside_1_square = Hside_1 * Hside_1;
+  }
 
   /* Apply heaviside function to activate flux at S_2 > S_min*/
-    if (sat_nodes[1] >= sat_min_2) {
-      Hside_2 = 1.0;
-    } else if (sat_nodes[1] <= (sat_min_2 - width_2)) {
-      Hside_2 = 0.0;
-    } else {
-      Hside_2 = 0.5 * (1. + sat_normalized_2 / alpha_2 +
-                          sin(M_PIE * sat_normalized_2 / alpha_2) / M_PIE);
-    }
-
+  if (sat_nodes[1] >= sat_min_2) {
+    Hside_2 = 1.0;
+  } else if (sat_nodes[1] <= (sat_min_2 - width_2)) {
+    Hside_2 = 0.0;
+  } else {
+    Hside_2 =
+        0.5 * (1. + sat_normalized_2 / alpha_2 + sin(M_PIE * sat_normalized_2 / alpha_2) / M_PIE);
+  }
 
   /* Apply heaviside function to deactivate flux at S_3 > 0.99*/
   if (pd->e[pg->imtrx][R_SHELL_SAT_3]) {
-      if (sat_nodes[2] >= sat_max_3) {
-        Hside_3 = 0.0;
-        Hside_3_square = 0.0;
-      } else if (sat_nodes[2] <= (sat_max_3 - width_3)) {
-        Hside_3 = 1.0;
-        Hside_3_square = 1.0;
-      } else {
-        Hside_3 = 1.0 - 0.5 * (1. + sat_normalized_3 / alpha_3 -
-                                  sin(M_PIE * sat_normalized_3 / alpha_3) / M_PIE);
-        Hside_3_square = Hside_3 * Hside_3;
-      }
+    if (sat_nodes[2] >= sat_max_3) {
+      Hside_3 = 0.0;
+      Hside_3_square = 0.0;
+    } else if (sat_nodes[2] <= (sat_max_3 - width_3)) {
+      Hside_3 = 1.0;
+      Hside_3_square = 1.0;
+    } else {
+      Hside_3 = 1.0 - 0.5 * (1. + sat_normalized_3 / alpha_3 -
+                             sin(M_PIE * sat_normalized_3 / alpha_3) / M_PIE);
+      Hside_3_square = Hside_3 * Hside_3;
     }
+  }
 
   /* Populate the interporous flux */
-    j_1_2 = (kappa[0] / mu) * (cap_pres_fv[0] - cap_pres_fv[1]) / (2.0 * H[0]);
-    j_1_2 += (kappa[1] / mu) * (cap_pres_fv[0] - cap_pres_fv[1]) / (2.0 * H[1]);
-    j_1_2 *= Hside_1_square * Hside_2;
+  j_1_2 = (kappa[0] / mu) * (cap_pres_fv[0] - cap_pres_fv[1]) / (2.0 * H[0]);
+  j_1_2 += (kappa[1] / mu) * (cap_pres_fv[0] - cap_pres_fv[1]) / (2.0 * H[1]);
+  j_1_2 *= Hside_1_square * Hside_2;
 
-    if (pd->e[pg->imtrx][R_SHELL_SAT_3]) {
-      j_2_3 = (kappa[1] / mu) * (cap_pres_fv[2] - cap_pres_fv[1]) / (2.0 * H[1]);
-      j_2_3 += (kappa[2] / mu) * (cap_pres_fv[2] - cap_pres_fv[1]) / (2.0 * H[2]);
-      j_2_3 *= Hside_2 * Hside_3_square;
-    }
+  if (pd->e[pg->imtrx][R_SHELL_SAT_3]) {
+    j_2_3 = (kappa[1] / mu) * (cap_pres_fv[2] - cap_pres_fv[1]) / (2.0 * H[1]);
+    j_2_3 += (kappa[2] / mu) * (cap_pres_fv[2] - cap_pres_fv[1]) / (2.0 * H[2]);
+    j_2_3 *= Hside_2 * Hside_3_square;
+  }
 
   /* Populate the interporous flux sensitivity */
   return;
 }
 
 #endif
-
 
 ADType porous_shell_rel_perm_model(int ipore, ADType saturation) {
   /******************************************************************************
@@ -1102,8 +1098,8 @@ ADType porous_shell_rel_perm_model(int ipore, ADType saturation) {
      *  to this.
      */
     else if (s_eff >= 0.99999) {
- k_rel = 1.0 / viscosity;
-     mp->PorousShellRelPerm[ipore] = k_rel.val();
+      k_rel = 1.0 / viscosity;
+      mp->PorousShellRelPerm[ipore] = k_rel.val();
 
     }
 
@@ -1117,7 +1113,7 @@ ADType porous_shell_rel_perm_model(int ipore, ADType saturation) {
       a1 = 1.0 - factor2;
       k_rel = sqrt(s_eff) * a1 * a1 / viscosity;
 
-     mp->PorousShellRelPerm[ipore] = k_rel.val();
+      mp->PorousShellRelPerm[ipore] = k_rel.val();
     }
 
     break;
@@ -1206,7 +1202,6 @@ ADType porous_shell_rel_perm_model(int ipore, ADType saturation) {
   return (k_rel);
 }
 
-
 void Inn_ad(ADType v[DIM], // Input vector
             ADType w[DIM]  // Output rotated vector
             )
@@ -1232,9 +1227,9 @@ void Inn_ad(ADType v[DIM], // Input vector
 } /* End of Inn */
 
 extern "C" int ad_assemble_porous_shell_saturation(dbl tt,           // Time integration form
-                                     dbl dt,           // Time step size
-                                     dbl xi[DIM],      // Current coordinates
-                                     const Exo_DB *exo // ExoII handle
+                                                   dbl dt,           // Time step size
+                                                   dbl xi[DIM],      // Current coordinates
+                                                   const Exo_DB *exo // ExoII handle
 ) {
 
   /* --- Initialization -----------------------------------------------------*/
@@ -1248,8 +1243,8 @@ extern "C" int ad_assemble_porous_shell_saturation(dbl tt,           // Time int
     return (status);
 
   // Variable definitions
-  int eqn, peqn, var;                      // Equation / variables
-  int i, j, a, b, ipore;                  // Counter variables
+  int eqn, peqn, var;                            // Equation / variables
+  int i, j, a, b, ipore;                         // Counter variables
   dbl phi_i, grad_phi_i[DIM], gradII_phi_i[DIM]; // Basis functions (i)
   dbl d_gradII_phi_i_dmesh[DIM][DIM][MDE];
 
@@ -1397,9 +1392,9 @@ extern "C" int ad_assemble_porous_shell_saturation(dbl tt,           // Time int
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         cap_pres[ipore][j] = ad_load_cap_pres(ipore, j, -1, sat_nodes[ipore][j]);
       }
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          cap_pres_fv[ipore] += cap_pres[ipore][j] * bf[var]->phi[j];
-        }
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        cap_pres_fv[ipore] += cap_pres[ipore][j] * bf[var]->phi[j];
+      }
       for (a = 0; a < DIM; a++) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           grad_p[ipore][a] += cap_pres[ipore][j] * bf[var]->grad_phi[j][a];
@@ -1466,7 +1461,7 @@ extern "C" int ad_assemble_porous_shell_saturation(dbl tt,           // Time int
 
   if (pd->Num_Porous_Shell_Eqn > 1) {
 
-    #if 0
+#if 0
     ADType j_1_2[MDE] = {0.0}; // Flux between porous layers 1 and 2
     ADType j_2_3[MDE] = {0.0}; // Flux between porous layers 2 and 3
 
@@ -1486,11 +1481,10 @@ extern "C" int ad_assemble_porous_shell_saturation(dbl tt,           // Time int
 
       }
     }
-    #else 
+#else
 
     ADType j_1_2 = 0;
     ADType j_2_3 = 0;
-
 
     /* Calculate the fluxes and their sensitivities */
     ad_porous_shell_open_source_model(j_1_2, j_2_3, cap_pres_fv);
@@ -1504,11 +1498,10 @@ extern "C" int ad_assemble_porous_shell_saturation(dbl tt,           // Time int
       if (pd->Num_Porous_Shell_Eqn > 2) {
         E_SOUR[1][j] += j_2_3;
         E_SOUR[2][j] = -j_2_3;
-
       }
     }
 
-    #endif
+#endif
   }
 
   // Load sink terms due to adsorption and its sensitivities

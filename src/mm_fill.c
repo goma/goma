@@ -2241,11 +2241,11 @@ Revised:         Summer 1998, SY Tam (UNM)
     }
 
     if ((pde[R_SHELL_SAT_1]) || (pde[R_SHELL_SAT_2]) || (pde[R_SHELL_SAT_3])) {
-        if (upd->AutoDiff) {
-      err = ad_assemble_porous_shell_saturation(theta, delta_t, xi, exo);
-        } else {
-      err = assemble_porous_shell_saturation(theta, delta_t, xi, exo);
-        }
+      if (upd->AutoDiff) {
+        err = ad_assemble_porous_shell_saturation(theta, delta_t, xi, exo);
+      } else {
+        err = assemble_porous_shell_saturation(theta, delta_t, xi, exo);
+      }
       GOMA_EH(err, "assemble_porous_shell_saturation");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("assemble_porous_shell_saturation");

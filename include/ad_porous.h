@@ -13,9 +13,9 @@ extern "C" {
 #include "std.h"
 
 int ad_assemble_porous_shell_saturation(dbl tt,           // Time integration form
-                                     dbl dt,           // Time step size
-                                     dbl xi[DIM],      // Current coordinates
-                                     const Exo_DB *exo // ExoII handle
+                                        dbl dt,           // Time step size
+                                        dbl xi[DIM],      // Current coordinates
+                                        const Exo_DB *exo // ExoII handle
 );
 
 #ifdef __cplusplus
