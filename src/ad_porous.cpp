@@ -1,6 +1,8 @@
 #ifdef GOMA_ENABLE_SACADO
-#include <ad_porous.h>
+
 #include <ad_turbulence.h>
+
+#include <ad_porous.h>
 
 extern "C" {
 #include "mm_as.h"
