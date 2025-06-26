@@ -1,3 +1,4 @@
+#ifdef GOMA_ENABLE_SACADO
 #include <ad_porous.h>
 #include <ad_turbulence.h>
 
@@ -1605,3 +1606,4 @@ extern "C" int ad_assemble_porous_shell_saturation(dbl tt,           // Time int
   return (status);
 
 } // End of assemble_porous_shell_saturation
+#endif // GOMA_ENABLE_SACADO
