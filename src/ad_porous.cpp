@@ -669,6 +669,7 @@ ADType ad_por_mass_source_model(void)
  *  Jacobian sensitivities
  *
  *  Kristianto Tjiptowidjojo (June 2015)
+ * Modified for AD (2025)
  *
  *
  ******************************************************************************/
@@ -772,11 +773,10 @@ ADType ad_por_mass_source_model(void)
   return (MassSource);
 }
 
-#if 0
-void ad_porous_shell_open_source_model(
-    ADType j_1_2[MDE],                 // Flux between porous layers 1 and 2
-    ADType j_2_3[MDE]                 // Flux between porous layers 2 and 3
-    )
+#ifdef AD_POROUS_SHELL_NODE_SOURCE
+void ad_porous_shell_open_source_model(ADType j_1_2[MDE], // Flux between porous layers 1 and 2
+                                       ADType j_2_3[MDE]  // Flux between porous layers 2 and 3
+                                       )
 /*****************************************************************************
  * This function calculates inter-layer fluxes amongst porous shell layers.
  * As of now, each layer is assumed to be stacked on top one another.
@@ -784,6 +784,7 @@ void ad_porous_shell_open_source_model(
  *
  *
  * Kristianto Tjiptowidjojo   (tjiptowi@unm.edu)  October 2019
+ * Modified for AD (2025)
  *
  *****************************************************************************/
 {
@@ -922,6 +923,7 @@ void ad_porous_shell_open_source_model(ADType j_1_2, // Flux between porous laye
  *
  *
  * Kristianto Tjiptowidjojo   (tjiptowi@unm.edu)  October 2019
+ * Modified for AD (2025)
  *
  *****************************************************************************/
 {
@@ -1464,10 +1466,9 @@ extern "C" int ad_assemble_porous_shell_saturation(dbl tt,           // Time int
 
   if (pd->Num_Porous_Shell_Eqn > 1) {
 
-#if 0
+#ifdef AD_POROUS_SHELL_NODE_SOURCE
     ADType j_1_2[MDE] = {0.0}; // Flux between porous layers 1 and 2
     ADType j_2_3[MDE] = {0.0}; // Flux between porous layers 2 and 3
-
 
     /* Calculate the fluxes and their sensitivities */
     ad_porous_shell_open_source_model(j_1_2, j_2_3);
@@ -1481,7 +1482,6 @@ extern "C" int ad_assemble_porous_shell_saturation(dbl tt,           // Time int
       if (pd->Num_Porous_Shell_Eqn > 2) {
         E_SOUR[1][j] += j_2_3[j];
         E_SOUR[2][j] = -j_2_3[j];
-
       }
     }
 #else
