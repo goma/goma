@@ -1897,6 +1897,7 @@ void noahs_ark(void) {
     ddd_add_member(n, mp_glob[i]->SBM_Lengths, MAX_CONC, MPI_DOUBLE);
     ddd_add_member(n, mp_glob[i]->NSCoeff, MAX_CONC, MPI_DOUBLE);
     ddd_add_member(n, mp_glob[i]->cur_diffusivity, MAX_CONC, MPI_DOUBLE);
+    ddd_add_member(n, mp_glob[i]->SettlingSpeed, MAX_CONC, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->q_diffusivity[0][0], MAX_CONC * DIM, MPI_DOUBLE);
 
     ddd_add_member(n, mp_glob[i]->latent_heat_fusion, MAX_CONC, MPI_DOUBLE);
@@ -1921,6 +1922,7 @@ void noahs_ark(void) {
     ddd_add_member(n, mp_glob[i]->DiffusivityModel, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->LatentHeatFusionModel, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->LatentHeatVapModel, MAX_CONC, MPI_INT);
+    ddd_add_member(n, mp_glob[i]->SettlingModel, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->RefConcnModel, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->SpecVolExpModel, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->SpeciesSourceModel, MAX_CONC, MPI_INT);
@@ -2013,6 +2015,7 @@ void noahs_ark(void) {
     ddd_add_member(n, mp_glob[i]->len_SBM_Lengths2, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->len_u_nscoeff, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->len_u_qdiffusivity, MAX_CONC, MPI_INT);
+    ddd_add_member(n, mp_glob[i]->len_u_settling, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->len_u_species_source, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->len_u_species_vol_expansion, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->len_u_vapor_pressure, MAX_CONC, MPI_INT);
@@ -2073,6 +2076,9 @@ void noahs_ark(void) {
 
     ddd_add_member(n, &mp_glob[i]->d_diffusivity[0][0],
                    (MAX_CONC) * (MAX_VARIABLE_TYPES + MAX_CONC), MPI_DOUBLE);
+
+    ddd_add_member(n, &mp_glob[i]->d_settling[0][0], (MAX_CONC) * (MAX_VARIABLE_TYPES + MAX_CONC),
+                   MPI_DOUBLE);
 
     ddd_add_member(n, &mp_glob[i]->d_latent_heat_fusion[0][0],
                    (MAX_CONC) * (MAX_VARIABLE_TYPES + MAX_CONC), MPI_DOUBLE);
@@ -3107,6 +3113,8 @@ void ark_landing(void) {
       dalloc(m->len_u_nscoeff[j], m->u_nscoeff[j]);
 
       dalloc(m->len_u_qdiffusivity[j], m->u_qdiffusivity[j]);
+
+      dalloc(m->len_u_settling[j], m->u_settling[j]);
 
       dalloc(m->len_u_species_source[j], m->u_species_source[j]);
 

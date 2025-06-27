@@ -855,7 +855,10 @@ EXTERN void qrad_surf /* mm_fill_terms.c                           */
      double,  /* T_c - bath temperature (Kelvin)	     */
      double,  /* emissivity                                */
      double,  /* Boltzmann's constant                      */
-     double); /* Kelvin-to-Celsius Conversion              */
+     double,  /* Kelvin-to-Celsius Conversion              */
+     int,     /* Optional model number                     */
+     int,     /* bc_input_id for table bc                  */
+     double); /* time_val for input table                  */
 
 EXTERN void qrad_surf_repulse /* mm_ns_bc.c                           */
     (double[DIM],             /* func                                      */
