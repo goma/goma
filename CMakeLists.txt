@@ -508,6 +508,7 @@ set(GOMA_INCLUDES
     include/ac_stability_util.h
     include/ac_update_parameter.h
     include/ad_turbulence.h
+    include/ad_porous.h
     include/ad_momentum.h
     include/ad_stress.h
     include/bc_colloc.h
@@ -674,6 +675,7 @@ set(GOMA_SOURCES
     src/ac_stability_util.c
     src/ac_update_parameter.c
     src/ad_turbulence.cpp
+    src/ad_porous.cpp
     src/ad_momentum.cpp
     src/ad_stress.cpp
     src/bc_colloc.c
