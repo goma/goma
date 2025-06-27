@@ -925,7 +925,7 @@ void ad_porous_shell_open_source_model(ADType j_1_2, // Flux between porous laye
  *
  *****************************************************************************/
 {
-  int ipore, var, j;
+  int ipore, var;
 
   int porous_shell_var[MAX_POR_SHELL];
   porous_shell_var[0] = SHELL_SAT_1;
