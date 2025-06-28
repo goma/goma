@@ -87,14 +87,6 @@ set(GOMA_COMPILER_OVERRIDE
       "allow goma to compile with different compilers than TPLs, use with caution"
 )
 
-# Trilinos required packages
-foreach(package Amesos AztecOO Epetra)
-  list(FIND Trilinos_PACKAGE_LIST ${package} trilinos_package_index)
-  if(${trilinos_package_index} LESS 0)
-    message(FATAL_ERROR "Trilinos not built with ${package} a required package")
-  endif()
-endforeach()
-
 # stratimikos and teko
 list(FIND Trilinos_PACKAGE_LIST Stratimikos stratimikos_package_index)
 if(${stratimikos_package_index} GREATER_EQUAL 0)
@@ -119,6 +111,33 @@ if(${sacado_package_index} GREATER_EQUAL 0)
   if(ENABLE_SACADO)
     message(STATUS "TRILINOS: Sacado found, enabling in Goma")
     list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_SACADO)
+  endif()
+endif()
+
+list(FIND Trilinos_PACKAGE_LIST Epetra epetra_package_index)
+if(${epetra_package_index} GREATER_EQUAL 0)
+  option(ENABLE_EPETRA "ENABLE_EPETRA" ON)
+  if(ENABLE_EPETRA)
+    message(STATUS "TRILINOS: Epetra found, enabling in Goma")
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_EPETRA)
+  endif()
+endif()
+
+list(FIND Trilinos_PACKAGE_LIST AztecOO aztecoo_package_index)
+if(${aztecoo_package_index} GREATER_EQUAL 0)
+  option(ENABLE_AZTEC "ENABLE_AZTEC" ON)
+  if(ENABLE_AZTEC)
+    message(STATUS "TRILINOS: AztecOO found, enabling in Goma")
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_AZTEC)
+  endif()
+endif()
+
+list(FIND Trilinos_PACKAGE_LIST Amesos amesos_package_index)
+if(${amesos_package_index} GREATER_EQUAL 0)
+  option(ENABLE_AMESOS "ENABLE_AMESOS" ON)
+  if(ENABLE_AMESOS)
+    message(STATUS "TRILINOS: Amesos found, enabling in Goma")
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_AMESOS)
   endif()
 endif()
 
@@ -448,7 +467,6 @@ endif()
 
 option_definition(DISABLE_COLOR_ERROR_PRINT OFF)
 option_definition(COMPILER_64BIT ON)
-option_definition(GOMA_ENABLE_AMESOS ON)
 option_definition(TRILINOS ON)
 option_definition(CHECK_FINITE OFF)
 option_definition(NO_CHEBYSHEV_PLEASE ON)
@@ -490,6 +508,7 @@ set(GOMA_INCLUDES
     include/ac_stability_util.h
     include/ac_update_parameter.h
     include/ad_turbulence.h
+    include/ad_porous.h
     include/ad_momentum.h
     include/ad_stress.h
     include/bc_colloc.h
@@ -656,6 +675,7 @@ set(GOMA_SOURCES
     src/ac_stability_util.c
     src/ac_update_parameter.c
     src/ad_turbulence.cpp
+    src/ad_porous.cpp
     src/ad_momentum.cpp
     src/ad_stress.cpp
     src/bc_colloc.c

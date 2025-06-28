@@ -17,7 +17,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "brkfix/fix.h"
 #include "dp_comm.h"
 #include "dp_utils.h"
@@ -461,9 +463,11 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
     }
   }
 
+#ifdef GOMA_ENABLE_AZTEC
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
     AZ_set_proc_config(ams[pg->imtrx]->proc_config, MPI_COMM_WORLD);
   }
+#endif
 
   /* Allocate solution arrays on first call only */
   if (callnum == 1) {

@@ -13,161 +13,136 @@
 This required card is used to specify the model, and all associated parameters, for
 density. Definitions of the input parameters are as follows:
 
-+------------+---------------------------------------------------------------------------------------+
-|{model_name}|Name of the density model. This parameter can have one of the following values:        |
-|            |**CONSTANT, USER, FILL, SUSPENSION, IDEAL_GAS, THERMAL_BATTERY, LEVEL_SET,**           |
-|            |**CONST_PHASE_FUNCTION, FOAM, REACTIVE_FOAM, or SOLVENT_POLYMER.**                     |
-|            |Boussinesq models can be selected through the *Navier-Stokes Source* card.             |
-+------------+---------------------------------------------------------------------------------------+
-|{float_list}|One or more floating point numbers (<float1> through <floatn> whose interpretation is  |
-|            |determined by the selection for {model_name}.                                          |
-+------------+---------------------------------------------------------------------------------------+
+{model_name}
+   Name of the density model. This parameter can have one of the following values:        
+   **CONSTANT, USER, FILL, SUSPENSION, IDEAL_GAS, THERMAL_BATTERY, LEVEL_SET,**           
+   **CONST_PHASE_FUNCTION, FOAM, REACTIVE_FOAM, or SOLVENT_POLYMER.**                     
+   Boussinesq models can be selected through the *Navier-Stokes Source* card.             
+{float_list}
+   One or more floating point numbers (<float1> through <floatn> whose interpretation is  
+   determined by the selection for {model_name}.                                          
 
 Thus, choices for {model_name} and the accompanying parameter list are given
 below; additional guidance to the user can be found in the Technical Discussion section
 following the Examples.
 
-+------------------------------------------------------+---------------------------------------------+
-|**CONSTANT** <float1>                                 |For the **CONSTANT** density model,          |
-|                                                      |{float_list} is a single value:              |
-|                                                      |                                             |
-|                                                      | * <float1> - Density [M/L3 ]                |
-+------------------------------------------------------+---------------------------------------------+
-|**USER** <float1> ... <floatn>                        |For a user-defined model, the set of         | 
-|                                                      |parameters specified as <float1> through     |
-|                                                      |<floatn> are defined in the                  |
-|                                                      |function usr_density.                        |
-+------------------------------------------------------+---------------------------------------------+
-|**FILL** <float1> <float2>                            |The model is used with the fill equation when|
-|                                                      |the location of the free surface between two |
-|                                                      |fluids is tracked with a volume-of-fluid     |
-|                                                      |method. The {float_list} contains two values |
-|                                                      |for this model, where:                       |
-|                                                      |                                             |
-|                                                      | * <float1> - Density of the fluid in phase  |
-|                                                      |   1, denoted by F=1                         |
-|                                                      | * <float2> - Density of the fluid in phase  |
-|                                                      |   2, denoted by F=0                         |
-|                                                      |                                             |
-|                                                      |This card is required when using the FILL    |
-|                                                      |momentum source model (Navier-Stokes Source  |
-|                                                      |in Source Terms section of manual) since it  |
-|                                                      |makes use of this model to                   |
-|                                                      |compute the value of the density.            |
-+------------------------------------------------------+---------------------------------------------+
-|**SUSPENSION** <float1> <float2> <float3>             |The option is used to model a suspension     |
-|                                                      |where the solid particle phase and the       |
-|                                                      |carrier fluid have different densities. The  |
-|                                                      |{float_list} contains three values for this  |
-|                                                      |model, where:                                |
-|                                                      |                                             |
-|                                                      | * <float1> - Species number associated with |
-|                                                      |   the solid particulate phase (the parser   |
-|                                                      |   reads this as a float but it is cast as   |
-|                                                      |   an integer when assigned).                |
-|                                                      | * <float2> - Density of the fluid in the    |
-|                                                      |   carrier fluid, :math:`\rho_f` .           |
-|                                                      | * <float3> - Density of the solid           | 
-|                                                      |   particulate phase, :math:`rho_s` .        |
-+------------------------------------------------------+---------------------------------------------+
-|**THERMAL_BATTERY** <float1> <float2>                 |This model is used to relate electrolyte     |
-|                                                      |density to field variables such as mole      |
-|                                                      |fraction. A simple empirical form is used,   |
-|                                                      |with two constants in the {float_list}:      |
-|                                                      |                                             |
-|                                                      | * <float1> - Base Electrolyte Density,      |
-|                                                      |   :math:`p_0`.                              |
-|                                                      | * <float2> - Constant, :math:`\alpha` .     |
-|                                                      |                                             |
-|                                                      |(See Technical Discussion.)                  |
-+------------------------------------------------------+---------------------------------------------+
-|**SOLVENT_POLYMER <float1>**                          |This density model is used primarily in      |
-|                                                      |problems involving drying of polymeric       |
-|                                                      |solutions. The single float parameter on this|
-|                                                      |card is specific volume of the solvent       |
-|                                                      |material. Note that the numerical value for  |
-|                                                      |this parameter must be chosen to be          |
-|                                                      |consistent with the specific volumes for each|
-|                                                      |species in the solution set with the Specific|
-|                                                      |Volumes card in the material file            |
-|                                                      |(discussed below).                           |
-+------------------------------------------------------+---------------------------------------------+
-|**LEVEL_SET <float1> <float2> <float3>**              |This model is used to vary the density in the|
-|                                                      |flow regime when following an interface      |
-|                                                      |between two fluids using level set interface |
-|                                                      |tracking. This choice assures a smooth       |
-|                                                      |transition in density across the zero level  |
-|                                                      |set contour. The {float_list} contains three |
-|                                                      |values for this model, where:                |
-|                                                      |                                             |
-|                                                      | * <float1> - Fluid density in the negative  |
-|                                                      |   regions of the level set function,        |
-|                                                      |   :math:`\rho_–`                            |
-|                                                      | * <float2> - Fluid density in the positive  |
-|                                                      |   regions of the level set function,        |
-|                                                      |   :math:`\rho_+`                            |
-|                                                      | * <float3> - Length scale over which the    |
-|                                                      |   transition occurs, :math:`\alpha` . If    |
-|                                                      |   this parameter is set to zero, it will    |
-|                                                      |   default to one-half the Level Set Length  |
-|                                                      |   Scale value already specified.            |
-|                                                      |                                             |
-|                                                      |This card is required when using the         |
-|                                                      |LEVEL_SET momentum source model              |
-|                                                      |(Navier-Stokes Source in Source Terms section|
-|                                                      |of manual) since it makes use of this model  |
-|                                                      |to compute the value of the density.         |
-+------------------------------------------------------+---------------------------------------------+
-|**CONST_PHASE_FUNCTION <floatlist> <float1> <float2>**|This model is used to vary the density in the|
-|                                                      |flow regime when using phase function        |
-|                                                      |tracking of muliple phases. This choice      |
-|                                                      |assures a smooth transition in density across|
-|                                                      |the phase boundaries. The {float_list}       |
-|                                                      |contains a variable number of values that    |
-|                                                      |depend on the number phase functions being   |
-|                                                      |tracked, where:                              |
-|                                                      |                                             |
-|                                                      | * <floatlist> list of float variables equal |
-|                                                      |   to the number of phase functions. These   |
-|                                                      |   are the constant densities of each phase  |
-|                                                      |   in order from 1 to number of phase        |
-|                                                      |   functions that are represented by each    |
-|                                                      |   phase function.                           |
-|                                                      | * <float1> Length scale over which the      |
-|                                                      |   transition between one phases density to  |
-|                                                      |   the other occurs, :math:`\alpha` . If this|
-|                                                      |   parameter is set to zero, it will default |
-|                                                      |   to one-half the Level Set Length Scale    |
-|                                                      |   value already specified.                  |
-|                                                      | * <float3> The “null” value for density.    |
-|                                                      |   This is the value for density which will  |
-|                                                      |   be assigned to those regions of the flow  |
-|                                                      |   where all the phase functions are less    |
-|                                                      |   than or equal to zero.                    |
-|                                                      |                                             |
-|                                                      |This card is required when using the         |
-|                                                      |PHASE_FUNCTION momentum source model         |
-|                                                      |(Navier-Stokes Source in Source Terms section|
-|                                                      |of manual) since it makes use of this model  |
-|                                                      |to compute the value of the density.         |
-+------------------------------------------------------+---------------------------------------------+
-|**REACTIVE_FOAM <float1>**                            |This model is used when a constant density   |
-|                                                      |assumption does not apply in the model of    |
-|                                                      |interest, as with reactive mixtures. While   |
-|                                                      |this model was implemented for foam          |
-|                                                      |applications, the form of the density        |
-|                                                      |equation is quite universal. One important   |
-|                                                      |assumption in this model is that the volume  |
-|                                                      |change upon mixing is zero. The single       |
-|                                                      |float input is the specific volume of the N+1|
-|                                                      |species (not modeled in the problem).        |
-|                                                      |                                             |
-|                                                      |This model choice requires the use of the    |
-|                                                      |FOAM species source model - Goma will fail if|
-|                                                      |it is not specified. Please see the Species  |
-|                                                      |Source section for instructions on specifying|
-|                                                      |the FOAM model.                              |
-+------------------------------------------------------+---------------------------------------------+
+**CONSTANT** <float1>                                 
+   For the **CONSTANT** density model, {float_list} is a single value:
+                                                                                                      
+   * <float1> - Density [M/L3 ]                
+
+**USER** <float1> ... <floatn>
+   For a user-defined model, the set of parameters specified as <float1> through
+   <floatn> are defined in the function usr_density.
+
+**FILL** <float1> <float2>
+   The model is used with the fill equation when the location of the free
+   surface between two fluids is tracked with a volume-of-fluid method. The
+   {float_list} contains two values for this model, where:
+
+   * <float1> - Density of the fluid in phase 1, denoted by F=1
+   * <float2> - Density of the fluid in phase 2, denoted by F=0
+
+   This card is required when using the FILL momentum source
+   (Navier-Stokes Source  in Source Terms section of manual) since it  makes
+   of this model to compute the value of the density.
+
+**SUSPENSION** <float1> <float2> <float3>
+   The option is used to model a suspension where the solid particle phase and
+   the carrier fluid have different densities. The {float_list} contains three
+   values for this model, where:
+   
+   * <float1> - Species number associated with the solid particulate phase (the
+     parser reads this as a float but it is cast as an integer when assigned).
+   * <float2> - Density of the fluid in the carrier fluid, :math:`\rho_f` .
+   * <float3> - Density of the solid particulate phase, :math:`rho_s` .
+
+**THERMAL_BATTERY** <float1> <float2>
+   This model is used to relate electrolyte density to field variables such as
+   mole fraction. A simple empirical form is used, with two constants in the
+   {float_list}:
+   
+   * <float1> - Base Electrolyte Density, :math:`p_0`.
+   * <float2> - Constant, :math:`\alpha` .
+   
+   (See Technical Discussion.)
+
+**SOLVENT_POLYMER <float1>**
+   This density model is used primarily in problems involving drying of
+   polymeric solutions. The single float parameter on card is specific volume of
+   the solvent material. Note that the numerical value for this parameter must
+   be chosen to be consistent with the specific volumes for species in the
+   solution set with the Volumes card in the material file (discussed below).
+   
+**LEVEL_SET <float1> <float2> <float3>**
+   This model is used to vary the density in flow regime when following an
+   interface between two fluids using level set interface tracking. This choice
+   assures a smooth transition in density across the zero level set contour. The
+   {float_list} contains three values for this model, where:
+   
+   * <float1> - Fluid density in the negative  regions of the level set function, :math:`\rho_–`
+   * <float2> - Fluid density in the positive  regions of the level set function, :math:`\rho_+`
+   * <float3> - Length scale over which the transition occurs, :math:`\alpha` . If this parameter is set to zero, it will default to one-half the Level Set Length Scale value already specified.
+   
+   This card is required when using the LEVEL_SET momentum source model
+   (Navier-Stokes Source in Source Terms of manual) since it makes use of this
+   model to compute the value of the density.
+
+**CONST_PHASE_FUNCTION <floatlist> <float1> <float2>**
+   This model is used to vary the density in flow regime when using phase
+   function tracking of muliple phases. This choice assures a smooth transition
+   in density the phase boundaries. The {float_list} contains a variable number
+   of values that depend on the number phase functions being tracked, where:
+   
+   * <floatlist> list of float variables equal
+     to the number of phase functions. These are the constant densities of each
+     phase in order from 1 to number of phase functions that are represented by
+     each phase function.
+   * <float1> Length scale over which the
+     transition between one phases density to the other occurs, :math:`\alpha` .
+     If parameter is set to zero, it will default to one-half the Level Set Length
+     Scale value already specified.
+   * <float3> The “null” value for density.
+     This is the value for density which will be assigned to those regions of the
+     flow where all the phase functions are less than or equal to zero.
+   
+   This card is required when using the PHASE_FUNCTION momentum source model
+   (Navier-Stokes Source in Source Terms of manual) since it makes use of this
+   model to compute the value of the density.
+
+**REACTIVE_FOAM <float1>**                            
+   This model is used when a constant density assumption does not apply in the
+   model of interest, as with reactive mixtures. While this model was
+   implemented for foam applications, the form of the density equation is quite
+   universal. One important assumption in this model is that the volume change
+   upon mixing is zero. The single float input is the specific volume of the N+
+   species (not modeled in the problem).
+   
+   This model choice requires the use of the FOAM species source model - Goma
+   will fail it is not specified. Please see the Species Source section for
+   instructions on the FOAM model.
+
+**CURE_SHRINKAGE** <float1> <float2> <float3> <float4> <float5>
+   This model is used to model the density of a material that is undergoing
+   cure shrinkage. The {float_list} contains three values for this model, where:
+   
+   * <float1> - Initial density of the material before cure shrinkage, :math:`\rho_l`
+   * <float2> - Final density of the material after cure shrinkage, :math:`\rho_f`
+   * <float3> - :math:`\alpha_m`
+   * <float4> - :math:`\alpha_g`
+   * <float5> - minimum value of species to enable cure shrinkage, :math:`Y_{min}`
+   
+   The density is computed as follows:
+
+   If the species value is greater than or equal to the minimum value, then
+
+   .. math::
+       \rho = \rho_l + ((\rho_f - \rho_l) / (\alpha_m - \alpha_g)) (Y - \alpha_g)
+      
+   else 
+
+   .. math::
+       \rho = \rho_l + ((\rho_f - \rho_l) / (\alpha_m - \alpha_g)) (Y_{min} - \alpha_g)
 
 ------------
 **Examples**

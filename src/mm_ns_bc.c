@@ -29,7 +29,9 @@
 
 /* GOMA include files */
 #include "ac_stability.h"
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "bc_colloc.h"
 #include "density.h"
 #include "el_elm.h"
@@ -153,6 +155,9 @@ extern double dsigma_dx[DIM][MDE];
 static double slip_coefficient(
     const double, const double, const double, const double, double *, const double, const double);
 
+#ifndef FSUB_TYPE
+#define FSUB_TYPE void
+#endif
 extern FSUB_TYPE dgemv_(char *TRANS,
                         int *M,
                         int *N,
