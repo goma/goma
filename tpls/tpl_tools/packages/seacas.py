@@ -66,6 +66,10 @@ class Package(packages.CMakePackage):
         builder.add_option("-DCMAKE_C_COMPILER=" + CC)
         builder.add_option("-DCMAKE_CXX_COMPILER=" + CXX)
         builder.add_option("-DCMAKE_Fortran_COMPILER=" + FC)
+        builder.add_option("-DCMAKE_BUILD_TYPE=RELEASE")
+        # Mapvar does not work on multiple blocks with -O2 or higher optimization levels
+        # force -O1 optimization level for now https://github.com/sandialabs/seacas/issues/688
+        builder.add_option("-DCMAKE_Fortran_FLAGS_RELEASE_OVERRIDE=-O1")
         builder.add_option("-DPNetCDF_ROOT:PATH=" + builder.env["PNETCDF_DIR"])
         builder.add_option("-DNetCDF_ROOT:PATH=" + builder.env["NETCDF_DIR"])
         builder.add_option("-DnetCDF_ROOT:PATH=" + builder.env["NETCDF_DIR"])
