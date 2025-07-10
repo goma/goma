@@ -57,6 +57,13 @@ section of code that evaluates the corresponding term will be skipped.
 ------------
 **Examples**
 ------------
+For Psuedo solid mesh motion typically only the diffusion and boundary terms are used.
+
+::
+
+   EQ = mesh1 Q1 D1 Q1 0. 0. 1. 1. 0.
+   EQ = mesh2 Q1 D2 Q1 0. 0. 1. 1. 0.
+
 
 The following is a sample card for the first mesh equation that uses linear continuous
 interpolation and turns on all term multipliers except for the mass matrix:
