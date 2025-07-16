@@ -1200,7 +1200,7 @@ bool near_circle(const dbl xcen[DIM], const dbl rad, const dbl point[DIM], const
   // check if point is within the circle radius plus tolerance
   dbl dist = sqrt(SQUARE(point[0] - xcen[0]) + SQUARE(point[1] - xcen[1]));
   return (dist <= rad + tol);
-} 
+}
 
 /*****************************************************************************/
 /* This function is used to create a double fillet geometry boundary condition.
@@ -1264,7 +1264,7 @@ void f_double_fillet(const int ielem_dim,
   dbl xcen2 = fillet_cen2[0];
   dbl ycen2 = fillet_cen2[1];
 
-  #if 0
+#if 0
   static int once = 1;
   if (once) {
 
@@ -1277,7 +1277,7 @@ void f_double_fillet(const int ielem_dim,
            end_edge[0], end_edge[1]);
     once = 0;
   }
-  #endif
+#endif
 
   // 5 regions
   dbl fdist[5];
@@ -1314,20 +1314,20 @@ void f_double_fillet(const int ielem_dim,
   fdx[4] = sin(slope_edge2);
   fdy[4] = cos(slope_edge2);
 
-
   dbl fil1[DIM] = {fv->x[0] - xcen1, fv->x[1] - ycen1};
   dbl edge1[DIM] = {start_edge[0] - xcen1, start_edge[1] - ycen1};
   dbl main1[DIM] = {start_main[0] - xcen1, start_main[1] - ycen1};
 
-
   dbl fil2[DIM] = {fv->x[0] - xcen2, fv->x[1] - ycen2};
   dbl edge2[DIM] = {end_edge[0] - xcen2, end_edge[1] - ycen2};
   dbl main2[DIM] = {end_main[0] - xcen2, end_main[1] - ycen2};
-  
+
   int min_idx = 0;
-  if (in_between_vectors_2D(edge1, main1, fil1) && near_circle(fillet_cen, radius_1, fv->x, 1.5*radius_1)) {
+  if (in_between_vectors_2D(edge1, main1, fil1) &&
+      near_circle(fillet_cen, radius_1, fv->x, 1.5 * radius_1)) {
     min_idx = 0;
-  } else if (in_between_vectors_2D(edge2, main2, fil2) && near_circle(fillet_cen2, radius_2, fv->x, 1.5*radius_2)) {
+  } else if (in_between_vectors_2D(edge2, main2, fil2) &&
+             near_circle(fillet_cen2, radius_2, fv->x, 1.5 * radius_2)) {
     min_idx = 1;
   } else {
     for (int i = 2; i < 5; i++) {
@@ -1335,7 +1335,6 @@ void f_double_fillet(const int ielem_dim,
         min_idx = i;
       }
     }
-
   }
 
   *func = fdist[min_idx];
