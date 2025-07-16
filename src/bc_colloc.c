@@ -1224,7 +1224,6 @@ void f_double_fillet(const int ielem_dim,
   dbl sangle = atan2(ydir, xdir);
 
   // fillet 1
-  dbl dist_fillet_1 = radius_1 / tan(0.5 * theta_1);
   dbl fillet_cen[DIM];
   dbl start_main[DIM];
   dbl start_edge[DIM];
@@ -1237,7 +1236,6 @@ void f_double_fillet(const int ielem_dim,
   dbl ycen1 = fillet_cen[1];
 
   // fillet 2
-  dbl dist_fillet_2 = radius_2 / tan(0.5 * theta_2);
   dbl fillet_cen2[DIM];
   dbl rot2[DIM];
   dbl end_main[DIM];
@@ -1255,32 +1253,32 @@ void f_double_fillet(const int ielem_dim,
 
   // fillet 1
   fdist[0] = radius_1 - sqrt(SQUARE(fv->x[0] - xcen1) + SQUARE(fv->x[1] - ycen1));
-  fdx[0] = 2. * (fv->x[0] - xcen1);
-  fdy[0] = 2. * (fv->x[1] - ycen1);
+  fdx[0] = -(fv->x[0] - xcen1) / sqrt(SQUARE(fv->x[0] - xcen1) + SQUARE(fv->x[1] - ycen1));
+  fdy[0] = -(fv->x[1] - ycen1) / sqrt(SQUARE(fv->x[0] - xcen1) + SQUARE(fv->x[1] - ycen1));
 
   // fillet 2
   fdist[1] = radius_2 - sqrt(SQUARE(fv->x[0] - xcen2) + SQUARE(fv->x[1] - ycen2));
-  fdx[1] = 2. * (fv->x[0] - xcen2);
-  fdy[1] = 2. * (fv->x[1] - ycen2);
+  fdx[1] = -(fv->x[0] - xcen2) / sqrt(SQUARE(fv->x[0] - xcen2) + SQUARE(fv->x[1] - ycen2));
+  fdy[1] = -(fv->x[1] - ycen2) / sqrt(SQUARE(fv->x[0] - xcen2) + SQUARE(fv->x[1] - ycen2));
 
   // main slope
   // check if point is on the main slope
-  fdist[2] = fabs((fv->x[1] - pt1_y) * cos(sangle)) + fabs((fv->x[0] - pt1_x) * sin(sangle));
-  fdx[2] = -sin(sangle);
+  fdist[2] = (fv->x[1] - pt1_y) * cos(sangle) + (fv->x[0] - pt1_x) * sin(sangle);
+  fdx[2] = sin(sangle);
   fdy[2] = cos(sangle);
 
   // edge 1
   dbl slope_edge = atan2(start_edge[1] - pt1_y, start_edge[0] - pt1_x);
-  fdist[3] = fabs((fv->x[1] - start_edge[1]) * cos(slope_edge)) +
-           fabs((fv->x[0] - start_edge[0]) * sin(slope_edge));
-  fdx[3] = -sin(slope_edge);
+  fdist[3] = ((fv->x[1] - start_edge[1]) * cos(slope_edge)) +
+           ((fv->x[0] - start_edge[0]) * sin(slope_edge));
+  fdx[3] = sin(slope_edge);
   fdy[3] = cos(slope_edge);
 
   // edge 2
   dbl slope_edge2 = atan2(end_edge[1] - pt2_y, end_edge[0] - pt2_x);
-  fdist[4] = fabs((fv->x[1] - end_edge[1]) * cos(slope_edge2)) +
-           fabs((fv->x[0] - end_edge[0]) * sin(slope_edge2));
-  fdx[4] = -sin(slope_edge2);
+  fdist[4] = ((fv->x[1] - end_edge[1]) * cos(slope_edge2)) +
+           ((fv->x[0] - end_edge[0]) * sin(slope_edge2));
+  fdx[4] = sin(slope_edge2);
   fdy[4] = cos(slope_edge2);
 
 
