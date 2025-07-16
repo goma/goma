@@ -1141,16 +1141,20 @@ fprintf(stderr,"circle %g %g %g %g\n",xcirc,ycirc,xcen2, ycen2);
 } /* END of routine f_double_rad                                             */
 /*****************************************************************************/
 
-void rotate_line(dbl origin[DIM], dbl point[DIM], dbl angle, dbl xrot[DIM]) 
-{
+void rotate_line(dbl origin[DIM], dbl point[DIM], dbl angle, dbl xrot[DIM]) {
   dbl ca = cos(angle);
   dbl sa = sin(angle);
-  xrot[0] = origin[0]  + ca * (point[0] - origin[0]) - sa * (point[1] - origin[1]);
-  xrot[1] = origin[1]  + sa * (point[0] - origin[0]) + ca * (point[1] - origin[1]);
+  xrot[0] = origin[0] + ca * (point[0] - origin[0]) - sa * (point[1] - origin[1]);
+  xrot[1] = origin[1] + sa * (point[0] - origin[0]) + ca * (point[1] - origin[1]);
 }
 
-void fillet_center( dbl origin[DIM], dbl p1[DIM], dbl p2[DIM], dbl rad, dbl xcen[DIM], dbl start1[DIM], dbl start2[DIM])
-{
+void fillet_center(dbl origin[DIM],
+                   dbl p1[DIM],
+                   dbl p2[DIM],
+                   dbl rad,
+                   dbl xcen[DIM],
+                   dbl start1[DIM],
+                   dbl start2[DIM]) {
   dbl line1[DIM], line2[DIM];
 
   line1[0] = origin[0] - p1[0];
@@ -1164,7 +1168,7 @@ void fillet_center( dbl origin[DIM], dbl p1[DIM], dbl p2[DIM], dbl rad, dbl xcen
 
   start1[0] = origin[0] - rad * cos(angle1);
   start1[1] = origin[1] - rad * sin(angle1);
-  
+
   start2[0] = origin[0] - rad * cos(angle2);
   start2[1] = origin[1] - rad * sin(angle2);
 
@@ -1182,6 +1186,21 @@ void fillet_center( dbl origin[DIM], dbl p1[DIM], dbl p2[DIM], dbl rad, dbl xcen
   xcen[0] = mid[0] - midlength * cos(angle_mid);
   xcen[1] = mid[1] - midlength * sin(angle_mid);
 }
+
+bool in_between_vectors_2D(const dbl v1[DIM], const dbl v2[DIM], const dbl v3[DIM]) {
+  // z component of cross product v1 x v3 * v1 x v2
+  dbl cross1 = (v1[1] * v3[0] - v1[0] * v3[1]) * (v1[1] * v2[0] - v1[0] * v2[1]);
+  // z component of cross product v2 x v3 * v2 x v1
+  dbl cross2 = (v2[1] * v3[0] - v2[0] * v3[1]) * (v2[1] * v1[0] - v2[0] * v1[1]);
+  // both have same sign then the point is between the two vectors
+  return cross1 * cross2 > 0.0;
+}
+
+bool near_circle(const dbl xcen[DIM], const dbl rad, const dbl point[DIM], const dbl tol) {
+  // check if point is within the circle radius plus tolerance
+  dbl dist = sqrt(SQUARE(point[0] - xcen[0]) + SQUARE(point[1] - xcen[1]));
+  return (dist <= rad + tol);
+} 
 
 /*****************************************************************************/
 /* This function is used to create a double fillet geometry boundary condition.
@@ -1245,6 +1264,20 @@ void f_double_fillet(const int ielem_dim,
   dbl xcen2 = fillet_cen2[0];
   dbl ycen2 = fillet_cen2[1];
 
+  #if 0
+  static int once = 1;
+  if (once) {
+
+    printf("Double Fillet BC: pt1 (%g, %g), pt2 (%g, %g)\n", pt1_x, pt1_y, pt2_x, pt2_y);
+    printf("Double Fillet BC: xcen1 (%g, %g), xcen2 (%g, %g)\n", xcen1, ycen1, xcen2, ycen2);
+    printf("Double Fillet BC: radius_1 %g, radius_2 %g\n", radius_1, radius_2);
+    printf("Double Fillet BC: start_main (%g, %g), start_edge (%g, %g)\n", start_main[0],
+           start_main[1], start_edge[0], start_edge[1]);
+    printf("Double Fillet BC: end_main (%g, %g), end_edge (%g, %g)\n", end_main[0], end_main[1],
+           end_edge[0], end_edge[1]);
+    once = 0;
+  }
+  #endif
 
   // 5 regions
   dbl fdist[5];
@@ -1270,25 +1303,39 @@ void f_double_fillet(const int ielem_dim,
   // edge 1
   dbl slope_edge = atan2(start_edge[1] - pt1_y, start_edge[0] - pt1_x);
   fdist[3] = ((fv->x[1] - start_edge[1]) * cos(slope_edge)) +
-           ((fv->x[0] - start_edge[0]) * sin(slope_edge));
+             ((fv->x[0] - start_edge[0]) * sin(slope_edge));
   fdx[3] = sin(slope_edge);
   fdy[3] = cos(slope_edge);
 
   // edge 2
   dbl slope_edge2 = atan2(end_edge[1] - pt2_y, end_edge[0] - pt2_x);
-  fdist[4] = ((fv->x[1] - end_edge[1]) * cos(slope_edge2)) +
-           ((fv->x[0] - end_edge[0]) * sin(slope_edge2));
+  fdist[4] =
+      ((fv->x[1] - end_edge[1]) * cos(slope_edge2)) + ((fv->x[0] - end_edge[0]) * sin(slope_edge2));
   fdx[4] = sin(slope_edge2);
   fdy[4] = cos(slope_edge2);
 
 
+  dbl fil1[DIM] = {fv->x[0] - xcen1, fv->x[1] - ycen1};
+  dbl edge1[DIM] = {start_edge[0] - xcen1, start_edge[1] - ycen1};
+  dbl main1[DIM] = {start_main[0] - xcen1, start_main[1] - ycen1};
+
+
+  dbl fil2[DIM] = {fv->x[0] - xcen2, fv->x[1] - ycen2};
+  dbl edge2[DIM] = {end_edge[0] - xcen2, end_edge[1] - ycen2};
+  dbl main2[DIM] = {end_main[0] - xcen2, end_main[1] - ycen2};
+  
   int min_idx = 0;
-  dbl min_dist = fabs(fdist[0]);
-  for (int i = 1; i < 5; i++) {
-    if (fabs(fdist[i]) < min_dist) {
-      min_dist = fabs(fdist[i]);
-      min_idx = i;
+  if (in_between_vectors_2D(edge1, main1, fil1) && near_circle(fillet_cen, radius_1, fv->x, 1.5*radius_1)) {
+    min_idx = 0;
+  } else if (in_between_vectors_2D(edge2, main2, fil2) && near_circle(fillet_cen2, radius_2, fv->x, 1.5*radius_2)) {
+    min_idx = 1;
+  } else {
+    for (int i = 2; i < 5; i++) {
+      if (fabs(fdist[i]) < fabs(fdist[min_idx])) {
+        min_idx = i;
+      }
     }
+
   }
 
   *func = fdist[min_idx];
