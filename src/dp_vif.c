@@ -605,6 +605,8 @@ void noahs_ark(void) {
 
   if (efv->ev != T_NOTHING) {
     ddd_add_member(n, &efv->TALE, 1, MPI_INT);
+    ddd_add_member(n, &efv->ipix, MAX_EXTERNAL_FIELD, MPI_INT);
+    ddd_add_member(n, &efv->ipix_matid, MAX_EXTERNAL_FIELD, MPI_INT);
     for (i = 0; i < efv->Num_external_field; i++) {
       ddd_add_member(n, efv->name[i], 20, MPI_CHAR);
       ddd_add_member(n, efv->file_nm[i], MAX_FNL, MPI_CHAR);
