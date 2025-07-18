@@ -30,12 +30,8 @@
  *
  *******************************************************************************/
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define GOMA_MM_FILL_C
+#include "ac_conti.h"
+#include "brkfix/fix.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
@@ -56,13 +52,22 @@
 #include "rf_allo.h"
 #include "rf_fem.h"
 #include "rf_mp.h"
+#include "rf_solve.h"
 #include "std.h"
 #include "wr_exo.h"
+#include <mpi.h>
+
+#define INDEX3D(i, j, k, sizes) (i * sizes[1] * sizes[2] + j * sizes[2] + k)
 
 int first_time_fopen2 = TRUE;
 
-static double
-bi_interp(double xg, double yg, double resolution[], double ***pixdata, int pixsize[]);
+static double bi_interp(double xg,
+                        double yg,
+                        double min_x,
+                        double min_y,
+                        double resolution[],
+                        double *pixdata,
+                        int pixsize[]);
 
 static double
 tri_interp(double xg, double yg, double zg, double resolution[], double ***pixdata, int pixsize[]);
@@ -82,7 +87,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
       nod_var_names_temp[MAX_EXTERNAL_FIELD]; // Variable names array, including possible duplicates
 
   /* File handling variables */
-  int CPU_word_size = sizeof(float);
+  int CPU_word_size = sizeof(double);
   int IO_word_size = 0;
   FILE *pixfid;
 
@@ -90,19 +95,19 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   int ipix_blkid = 0;      // Block ID to be filled
   int pixdim;              // Dimensionality (2 or 3)
   int pixsize[3];          // Size in each dimension
-  double ***pixdata;       // All data points
+  double *pixdata;         // All data points
   double pmax, pmin;       // Max/min pixel/voxel value
   int numpix;              // Number of data points
   double resx, resy, resz; // Size of pixels/voxels in x,y,z directions
   double resolution[3];    // Array form of above (easier to pass to function)
-  int pixinterp = 0;       // Flag indicating pixel interpolation (0 - none; 1 - bi/trilinear)
+  int pixinterp = 1;       // Flag indicating pixel interpolation (0 - none; 1 - bi/trilinear)
   double x0, y0, z0;       // Coordinates of origin for pixel/voxel file
   /*  double pixorigin[3];           // Array form of above */
 
   float exoversion;
   int exoout;
-  float *nodal_var_vals;
-  float *nodal_var_vals_err;
+  dbl *nodal_var_vals;
+  dbl *nodal_var_vals_err;
   int time_step = 1;
   double time_value = 0.0;
 
@@ -138,13 +143,14 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   int my_N_ext; // Index of external field being mapped to. May not be what's passed to the
                 // function.
 
-  time0 = ust();
+  time0 = MPI_Wtime();
   my_N_ext = N_ext;
 
   /* Stop if parallel run */
-  if (Num_Proc > 1)
-    GOMA_EH(GOMA_ERROR, "pixel mapping is not yet available in parallel. Run serial then use the "
-                        "mapped exoII file(s)");
+  // if (Num_Proc > 1)
+  //   GOMA_EH(GOMA_ERROR, "pixel mapping is not yet available in parallel. Run serial then use the
+  //   "
+  //                       "mapped exoII file(s)");
 
   /* Turn matID into blockId --Not necessarly the same */
   int ifound = 0;
@@ -158,6 +164,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   if (!ifound)
     GOMA_EH(GOMA_ERROR, "Trouble in rd_pixel_image: cannot find blkid");
 
+  // This is wrong
   curr_eb_nodes = exo->eb_num_elems[ipix_blkid] * exo->eb_num_nodes_per_elem[ipix_blkid];
   my_ignodes = (int *)malloc(curr_eb_nodes * sizeof(int));
 
@@ -170,6 +177,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   /* Open exodus output file */
   /***************************/
   sprintf(exooutfilename, "%s.exoII", "map_pix_fast");
+  multiname(exooutfilename, ProcID, Num_Proc);
 
   /* Replicate current input exodus database to prepare for mapped fields, unless it has already
      been done This is the file we will write out the new fields to for future use as fields */
@@ -178,6 +186,9 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
     one_base(exo, Num_Proc);
     wr_mesh_exo(exo, exooutfilename, 0);
     zero_base(exo);
+
+    if (Num_Proc > 1)
+      wr_dpi(DPI_ptr, exooutfilename);
 
     exoout = ex_open(exooutfilename, EX_WRITE, &CPU_word_size, &IO_word_size, &exoversion);
     GOMA_EH(exoout, "ex_open in rd_pixel_image2.c");
@@ -223,90 +234,118 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   /****************************************/
   /* Open and read voxel file             */
   /****************************************/
-  sprintf(voxfilename, "%s", efv->file_nm[N_ext]);
-  pixfid = fopen(voxfilename, "r");
-  if (pixfid == NULL) {
-    GOMA_EH(GOMA_ERROR, "Could not open voxel file!");
-  }
-  err = fscanf(pixfid, "%d", &pixdim);
-
-  printf("Reading pixel file %s of dimensionality %d into field %s\n", voxfilename, pixdim,
-         efv->name[my_N_ext]);
-
-  pixsize[2] = 1;
   resz = 1;
   z0 = 0;
-  if (pixdim == 2) {
-    err = fscanf(pixfid, "%d %d", &(pixsize[0]), &(pixsize[1]));
-    if (err != 2) {
-      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected two ints");
-      return -1;
+  if (ProcID == 0) {
+    sprintf(voxfilename, "%s", efv->file_nm_serial[N_ext]);
+    pixfid = fopen(voxfilename, "r");
+    if (pixfid == NULL) {
+      GOMA_EH(GOMA_ERROR, "Could not open voxel file!");
     }
-    err = fscanf(pixfid, "%lf %lf", &resx, &resy);
-    if (err != 2) {
-      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected two floats");
-      return -1;
-    }
-    err = fscanf(pixfid, "%lf %lf", &x0, &y0);
-    if (err != 2) {
-      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected two floats");
-      return -1;
-    }
-  } else if (pixdim == 3) {
-    err = fscanf(pixfid, "%d %d %d", &(pixsize[0]), &(pixsize[1]), &(pixsize[2]));
-    if (err != 3) {
-      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected three ints");
-      return -1;
-    }
-    err = fscanf(pixfid, "%lf %lf %lf", &resx, &resy, &resz);
-    if (err != 3) {
-      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected three floats");
-      return -1;
-    }
-    err = fscanf(pixfid, "%lf %lf %lf", &x0, &y0, &z0);
-    if (err != 3) {
-      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected three floats");
-      return -1;
-    }
-  } else {
-    GOMA_EH(
-        GOMA_ERROR,
-        "Problem reading pixel/voxel input file; first entry should be dimensionality (2 or 3)");
-    return -1;
-  }
+    err = fscanf(pixfid, "%d", &pixdim);
 
-  resolution[0] = resx;
-  resolution[1] = resy;
-  resolution[2] = resz;
+    printf("Reading pixel file %s of dimensionality %d into field %s\n", voxfilename, pixdim,
+           efv->name[my_N_ext]);
 
-  /*  pixorigin[0] = x0;
-      pixorigin[1] = y0;
-      pixorigin[2] = z0;
-  */
-
-  if (pixdim != pd->Num_Dim) {
-    printf("WARNING: Pixel file dimensionality is %d, problem dim. is %d\n", pixdim, pd->Num_Dim);
-  }
-
-  numpix = pixsize[0] * pixsize[1] * pixsize[2];
-
-  pixdata = (double ***)malloc(numpix * sizeof(double **));
-  for (i = 0; i < pixsize[0]; i++) {
-    pixdata[i] = (double **)malloc(pixsize[1] * pixsize[2] * sizeof(double *));
-    for (j = 0; j < pixsize[1]; j++) {
-      pixdata[i][j] = (double *)malloc(pixsize[2] * sizeof(double));
-    }
-  }
-
-  /* Read the data points */
-  for (i = 0; i < pixsize[0]; i++)
-    for (j = 0; j < pixsize[1]; j++)
-      for (k = 0; k < pixsize[2]; k++) {
-        err = fscanf(pixfid, "%lf ", &(pixdata[i][j][k]));
-        GOMA_EH(err, "Problem reading file!\n");
+    pixsize[2] = 1;
+    if (pixdim == 2) {
+      err = fscanf(pixfid, "%d %d", &(pixsize[0]), &(pixsize[1]));
+      if (err != 2) {
+        GOMA_EH(GOMA_ERROR, "Error reading pixel file expected two ints");
+        return -1;
       }
+      err = fscanf(pixfid, "%lf %lf", &resx, &resy);
+      if (err != 2) {
+        GOMA_EH(GOMA_ERROR, "Error reading pixel file expected two floats");
+        return -1;
+      }
+      err = fscanf(pixfid, "%lf %lf", &x0, &y0);
+      if (err != 2) {
+        GOMA_EH(GOMA_ERROR, "Error reading pixel file expected two floats");
+        return -1;
+      }
+    } else if (pixdim == 3) {
+      err = fscanf(pixfid, "%d %d %d", &(pixsize[0]), &(pixsize[1]), &(pixsize[2]));
+      if (err != 3) {
+        GOMA_EH(GOMA_ERROR, "Error reading pixel file expected three ints");
+        return -1;
+      }
+      err = fscanf(pixfid, "%lf %lf %lf", &resx, &resy, &resz);
+      if (err != 3) {
+        GOMA_EH(GOMA_ERROR, "Error reading pixel file expected three floats");
+        return -1;
+      }
+      err = fscanf(pixfid, "%lf %lf %lf", &x0, &y0, &z0);
+      if (err != 3) {
+        GOMA_EH(GOMA_ERROR, "Error reading pixel file expected three floats");
+        return -1;
+      }
+    } else {
+      GOMA_EH(
+          GOMA_ERROR,
+          "Problem reading pixel/voxel input file; first entry should be dimensionality (2 or 3)");
+      return -1;
+    }
 
-  fclose(pixfid);
+    resolution[0] = resx;
+    resolution[1] = resy;
+    resolution[2] = resz;
+
+    /*  pixorigin[0] = x0;
+        pixorigin[1] = y0;
+        pixorigin[2] = z0;
+    */
+
+    if (pixdim != pd->Num_Dim) {
+      printf("WARNING: Pixel file dimensionality is %d, problem dim. is %d\n", pixdim, pd->Num_Dim);
+    }
+
+    numpix = pixsize[0] * pixsize[1] * pixsize[2];
+
+    pixdata = (double *)malloc(numpix * sizeof(double));
+
+    /* Read the data points */
+    for (i = 0; i < pixsize[0]; i++) {
+      for (j = 0; j < pixsize[1]; j++) {
+        for (k = 0; k < pixsize[2]; k++) {
+          err = fscanf(pixfid, "%lf ", &(pixdata[INDEX3D(i, j, k, pixsize)]));
+          GOMA_EH(err, "Problem reading file!\n");
+        }
+      }
+    }
+
+    fclose(pixfid);
+  }
+
+  double min_x = Coor[0][0];
+  double min_y = Coor[1][0];
+  for (int i = 0; i < exo->num_nodes; i++) {
+    if (Coor[0][i] < min_x) {
+      min_x = Coor[0][i];
+    }
+    if (Coor[1][i] < min_y) {
+      min_y = Coor[1][i];
+    }
+  }
+
+  MPI_Allreduce(MPI_IN_PLACE, &min_x, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce(MPI_IN_PLACE, &min_y, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+
+  MPI_Bcast(&pixsize, 3, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&pixdim, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&resolution, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&x0, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&y0, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+  if (ProcID != 0) {
+    numpix = pixsize[0] * pixsize[1] * pixsize[2];
+    pixdata = (double *)malloc(numpix * sizeof(double));
+    resx = resolution[0];
+    resy = resolution[1];
+    resz = resolution[2];
+  }
+
+  MPI_Bcast(pixdata, numpix, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   /****************************************/
   /* Some initialization things..         */
@@ -348,6 +387,9 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   nmiss = 0;
   // Loop over elements to assign pixel values to Gauss points
   for (ielem = e_start; ielem < e_end; ielem++) {
+    if (DPI_ptr->elem_owner[ielem] != ProcID) {
+      continue; // Skip elements not owned by this processor
+    }
     load_ei(ielem, exo, 0, pg->imtrx);
     ei[pg->imtrx]->ielem_type = Elem_Type(exo, ielem);
 
@@ -358,31 +400,23 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
 
     for (igp = 0; igp < ngp; igp++) // Loop over GP's
     {
+      find_stu(igp, ei[pg->imtrx]->ielem_type, &(xi[0]), &(xi[1]), &(xi[2]));
+
       err = load_basis_functions(xi, bfd);
       GOMA_EH(err, "problem from load_basis_functions");
 
       err = beer_belly();
       GOMA_EH(err, "beer_belly");
-
-      find_stu(igp, ei[pg->imtrx]->ielem_type, &(xi[0]), &(xi[1]), &(xi[2]));
-
-      xg = yg = zg = 0.0;
-      for (ilnode = 0; ilnode < ei[pg->imtrx]->num_local_nodes; ilnode++) {
-        ignode = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ilnode];
-        phi_i = newshape(xi, ei[pg->imtrx]->ielem_type, PSI, ilnode, ei[pg->imtrx]->ielem_shape,
-                         efv->i[N_ext], ilnode);
-        xg += Coor[0][ignode] * phi_i;
-        yg += Coor[1][ignode] * phi_i;
-        if (pixdim == 3)
-          zg += Coor[2][ignode] * phi_i;
-      }
       // xg, yg, zg are now the global coordinates of the Gauss point
       // Get the pixel value at this point
+      xg = fv->x[0];
+      yg = fv->x[1];
+      zg = (pixdim == 3) ? fv->x[2] : 0.0; // zg is zero for 2D problems
       if (pixinterp) {
         if (pixsize[2] == 1) { // bilinear interpolation
-          val = bi_interp(xg, yg, resolution, pixdata, pixsize);
+          val = bi_interp(xg, yg, min_x, min_y, resolution, pixdata, pixsize);
         } else { // trilinear interpolation
-          val = tri_interp(xg, yg, zg, resolution, pixdata, pixsize);
+          // val = tri_interp(xg, yg, zg, resolution, pixdata, pixsize);
         }
       } else {
         ix = (int)((xg - x0) / resx);
@@ -393,7 +427,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
           nmiss++;
           val = efv->empty_value[N_ext];
         } else {
-          val = pixdata[ix][iy][iz];
+          val = pixdata[INDEX3D(ix, iy, iz, pixsize)];
         }
       }
       save_gp[gp_global++] = val;
@@ -405,6 +439,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
            "the range of the voxel field (%d of %d Gauss points)\n",
            nmiss, gp_global);
   }
+  printf("P%d gp_global = %d\n", ProcID, gp_global);
 
   gp_global = 0;
   // printf("Gauss point values assigned\n");
@@ -415,6 +450,9 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
 
   for (ielem = e_start; ielem < e_end; ielem++) // Loop over elements
   {
+    if (DPI_ptr->elem_owner[ielem] != ProcID) {
+      continue; // Skip elements not owned by this processor
+    }
     load_ei(ielem, exo, 0, pg->imtrx);
     ei[pg->imtrx]->ielem_type = Elem_Type(exo, ielem);
 
@@ -422,6 +460,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
     GOMA_EH(err, "bf_mp_init");
 
     for (igp = 0; igp < elem_info(NQUAD, ei[pg->imtrx]->ielem_type); igp++) {
+      find_stu(igp, ei[pg->imtrx]->ielem_type, &(xi[0]), &(xi[1]), &(xi[2]));
       err = load_basis_functions(xi, bfd);
       GOMA_EH(err, "problem from load_basis_functions");
 
@@ -444,19 +483,21 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
       }
     }
   }
+  printf("P%d gp_global = %d\n", ProcID, gp_global);
 
   /*************************************/
   /* Output to map_pix exoII file      */
   /* and fill in ext_fld_ndl_val array */
   /*************************************/
+  exchange_node(cx[0], DPI_ptr, lumped_mass);
+  exchange_node(cx[0], DPI_ptr, bvec);
 
-  nodal_var_vals_err = (float *)calloc(curr_eb_nodes, sizeof(float));
-  nodal_var_vals = (float *)calloc(exo->num_nodes, sizeof(float));
+  nodal_var_vals_err = (dbl *)calloc(exo->num_nodes, sizeof(dbl));
+  nodal_var_vals = (dbl *)calloc(exo->num_nodes, sizeof(dbl));
   efv->ext_fld_ndl_val[N_ext] = alloc_dbl_1(exo->num_nodes, 0.0);
 
-  for (i = 0; i < curr_eb_nodes; i++) {
-    nodal_var_vals_err[my_ignodes[i]] = efv->ext_fld_ndl_val[my_N_ext][my_ignodes[i]] =
-        bvec[my_ignodes[i]] / lumped_mass[my_ignodes[i]];
+  for (i = 0; i < exo->num_nodes; i++) {
+    nodal_var_vals_err[i] = efv->ext_fld_ndl_val[my_N_ext][i] = bvec[i] / lumped_mass[i];
   }
 
   for (i = 0; i < exo->num_nodes; i++) {
@@ -473,23 +514,35 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
     }
   }
 
-  err = ex_put_var(exoout, time_step, EX_NODAL, k, 1, exo->num_nodes, nodal_var_vals);
+  dbl *base_vector = malloc(sizeof(dbl) * exo->base_mesh->num_nodes);
+  // copy and transform vector to base_vector
+  for (int i = 0; i < exo->num_nodes; i++) {
+    int index = exo->ghost_node_to_base[i];
+    if (index >= 0) {
+      base_vector[index] = nodal_var_vals[i];
+    }
+  }
+  err = ex_put_var(exoout, time_step, EX_NODAL, k, 1, exo->base_mesh->num_nodes, base_vector);
 
+  ex_close(exoout);
+  sprintf(exooutfilename, "%s.exoII", "map_pix_fast");
+
+  free(base_vector);
   /*****************************/
   /* Timing and error estimate */
   /*****************************/
 
-  printf("Time for pixel-to-mesh processing: %6.4lf seconds\n", ust() - time0);
+  printf("Time for pixel-to-mesh processing: %6.4lf seconds\n", MPI_Wtime() - time0);
 
   pmin = 1e20;
   pmax = -1e20;
   for (i = 0; i < pixsize[0]; i++)
     for (j = 0; j < pixsize[1]; j++)
       for (k = 0; k < pixsize[2]; k++) {
-        if (pixdata[i][j][k] < pmin)
-          pmin = pixdata[i][j][k];
-        if (pixdata[i][j][k] > pmax)
-          pmax = pixdata[i][j][k];
+        if (pixdata[INDEX3D(i, j, k, pixsize)] < pmin)
+          pmin = pixdata[INDEX3D(i, j, k, pixsize)];
+        if (pixdata[INDEX3D(i, j, k, pixsize)] > pmax)
+          pmax = pixdata[INDEX3D(i, j, k, pixsize)];
       }
 
   /*  rmsd_error = calc_error(pixdata, pixsize, resolution, pixorigin, nodal_var_vals_err, exo,
@@ -708,8 +761,13 @@ extern double calc_error(double ***pixdata,
   return (tot_error);
 }
 
-static double
-bi_interp(double xg, double yg, double resolution[], double ***pixdata, int pixsize[]) {
+static double bi_interp(double xg,
+                        double yg,
+                        double min_x,
+                        double min_y,
+                        double resolution[],
+                        double *pixdata,
+                        int pixsize[]) {
   /**************************************************************
   Routine for bilinear interpolation (wikipedia has a nice entry explaining this)
   Note that this has nothing to do with FEM, it's just a way to get the pixel value
@@ -724,11 +782,14 @@ bi_interp(double xg, double yg, double resolution[], double ***pixdata, int pixs
   double f11, f12, f21, f22;
   double val;
 
+  xg = xg - min_x; // Adjust for the origin of the pixel file
+  yg = yg - min_y;
+
   dx = resolution[0];
   dy = resolution[1];
   dx2 = 0.5 * dx;
   dy2 = 0.5 * dy;
-  dxdyinv = 1 / (dx * dy);
+  dxdyinv = 1.0 / (dx * dy);
 
   xmax = pixsize[0] * dx - dx2;
   ymax = pixsize[1] * dy - dy2;
@@ -745,10 +806,10 @@ bi_interp(double xg, double yg, double resolution[], double ***pixdata, int pixs
   x2 = MIN(dx2 + (ix + 1) * dx, xmax);
   y1 = MAX(dy2 + iy * dy, dy2);
   y2 = MIN(dy2 + (iy + 1) * dy, ymax);
-  f11 = pixdata[(int)(x1 / dx)][(int)(y1 / dy)][0];
-  f12 = pixdata[(int)(x1 / dx)][(int)(y2 / dy)][0];
-  f21 = pixdata[(int)(x2 / dx)][(int)(y1 / dy)][0];
-  f22 = pixdata[(int)(x2 / dx)][(int)(y2 / dy)][0];
+  f11 = pixdata[INDEX3D((int)(x1 / dx), (int)(y1 / dy), 0, pixsize)];
+  f12 = pixdata[INDEX3D((int)(x1 / dx), (int)(y2 / dy), 0, pixsize)];
+  f21 = pixdata[INDEX3D((int)(x2 / dx), (int)(y1 / dy), 0, pixsize)];
+  f22 = pixdata[INDEX3D((int)(x2 / dx), (int)(y2 / dy), 0, pixsize)];
   val = dxdyinv * (f11 * (x2 - xg) * (y2 - yg) + f21 * (xg - x1) * (y2 - yg) +
                    f12 * (x2 - xg) * (yg - y1) + f22 * (xg - x1) * (yg - y1));
 

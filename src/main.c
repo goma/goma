@@ -565,9 +565,11 @@ int main(int argc, char **argv)
 
     if (efv->Num_external_field != 0) {
       for (i = 0; i < efv->Num_external_field; i++) {
-        filenames[n_files] = malloc(sizeof(char) * MAX_FNL);
-        memcpy(filenames[n_files], efv->file_nm[i], MAX_FNL);
-        n_files++;
+        if (efv->ipix[i] == 0) {
+          filenames[n_files] = malloc(sizeof(char) * MAX_FNL);
+          memcpy(filenames[n_files], efv->file_nm[i], MAX_FNL);
+          n_files++;
+        }
       }
     }
 
@@ -694,6 +696,7 @@ int main(int argc, char **argv)
 
     if (efv->Num_external_field != 0) {
       for (i = 0; i < efv->Num_external_field; i++) {
+        strncpy(efv->file_nm_serial[i], efv->file_nm[i], MAX_FNL);
         multiname(efv->file_nm[i], ProcID, Num_Proc);
       }
     }
