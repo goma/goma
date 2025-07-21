@@ -213,6 +213,7 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
     if (BC_Types[bc_input_id].BC_Name == PLANE_BC || BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
         BC_Types[bc_input_id].BC_Name == FILLET_BC ||
         BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
+        BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_BC ||
         BC_Types[bc_input_id].BC_Name == FEATURE_ROLLON_BC ||
         BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
         BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||
@@ -247,6 +248,7 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
           BC_Types[bc_input_id].BC_Name == PLANE_BC || BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
           BC_Types[bc_input_id].BC_Name == FILLET_BC ||
           BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
+          BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_BC ||
           BC_Types[bc_input_id].BC_Name == FEATURE_ROLLON_BC ||
           BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
           BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||
@@ -370,6 +372,7 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
              BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
              BC_Types[bc_input_id].BC_Name == FILLET_BC ||
              BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
+             BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_BC ||
              BC_Types[bc_input_id].BC_Name == FEATURE_ROLLON_BC ||
              BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
              BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||
@@ -478,6 +481,7 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
                           BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
                           BC_Types[bc_input_id].BC_Name == FILLET_BC ||
                           BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
+                          BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_BC ||
                           BC_Types[bc_input_id].BC_Name == FEATURE_ROLLON_BC ||
                           BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
                           BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||
