@@ -1,3 +1,13 @@
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "numpy",
+#     "opencv-python",
+# ]
+# ///
+
 import numpy as np
 import cv2
 import argparse

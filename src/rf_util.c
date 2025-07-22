@@ -1967,7 +1967,7 @@ void init_vec(
 #endif
     }
     if (map_pix_fast_called) {
-      fix_exo_file(Num_Proc, "map_pix_fast.exoII");
+      //fix_exo_file(Num_Proc, "map_pix_fast.exoII");
     }
   }
 

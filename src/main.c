@@ -806,7 +806,7 @@ int main(int argc, char **argv)
     }
   }
 #ifdef FP_EXCEPT
-  feenableexcept((FE_OVERFLOW | FE_DIVBYZERO | FE_INVALID));
+  feenableexcept((FE_OVERFLOW | FE_UNDERFLOW | FE_DIVBYZERO | FE_INVALID));
 #endif
 
   /***********************************************************************/
