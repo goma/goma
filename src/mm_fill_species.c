@@ -86,6 +86,7 @@
  *  const_mass_flux_surf_bc	 void
  *  mass_flux_BV2_surf_bc         void  (RSL 6/22/02)
  *  mass_flux_NI_surf_bc          void  (RSL 6/22/02)
+ *  mass_flux_surf_antoine_bc     void
  *  current_BV2_surf_bc           void  (RSL 6/22/02)
  *  current_NI_surf_bc            void  (RSL 6/22/02)
  *  mass_flux_equil_mtc		 void
@@ -94,6 +95,7 @@
  *  get_equil_surf_bc             void
  *  sus_mass_flux_surf_bc         void
  *  kin_bc_leak                   void
+ *  kin_bc_antoine                void
  *  kin_bc_electrodeposition      void  (RSL 5/27/02)
  *  vnorm_bc_electrodeposition    void  (RSL 5/30/02)
  *  lat_heat_bc                   void
@@ -2627,6 +2629,234 @@ void mass_flux_surf_SULFIDATION(dbl mass_flux[MAX_CONC],
   return;
 } /* END of routine mass_flux_surf_SULFIDATION                           */
 /****************************************************************************/
+
+void mass_flux_surf_antoine_bc(double func[],
+                               double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                               double x_dot[DIM], /* mesh velocity                             */
+                               dbl tt,            /* parameter to vary time integration from
+                                                   * explicit (tt = 1) to implicit (tt = 0)    */
+                               dbl dt,            /* current value of the time step            */
+                               int bc_input_id,
+                               struct Boundary_Condition *BC_Types)
+/*******************************************************************************
+ *
+ *  Function which calculates the surface integral for a total mass flux
+ *  in evaporating solvent. The driving force is partial pressure difference
+ *  from vapor phase above the control volume and bulk concentration away
+ *  Partial pressure of vapor phase is calculated using Antoine equation
+ *
+ *      Author: Kristianto Tjiptowidjojo    (2/2021)
+ *
+ *******************************************************************************/
+{
+  int j_id;
+  int i_solv = 0, i_part = 0;
+  int var, jvar, kdir;
+  int w, dim;
+  double phi_j;
+
+  double mass_tran_coeff, p_inf;
+  double A, B, C; /*Antoine constants*/
+  double Antoine_param[6];
+  double pvap, dpvap_dT;
+  double phi_part = 1.0, phi_liq = 0.0;
+  double dphi_liq_dc_solv = 0.0, dphi_liq_dc_part = 0.0;
+  double density_tot = 0.0;
+
+  PROPERTYJAC_STRUCT *densityJac = NULL;
+
+  double vnorm; /*Calculated normal velocity */
+  NORMAL_VELOCITY_DEPENDENCE_STRUCT d_vnorm_struct;
+  NORMAL_VELOCITY_DEPENDENCE_STRUCT *d_vnorm = &d_vnorm_struct;
+
+  double vconv[MAX_PDIM];     /*Calculated convection velocity */
+  double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
+  CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
+  CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
+  int err;
+  struct Boundary_Condition *bc = NULL;
+
+  /* local contributions of boundary condition to residual and jacobian */
+
+  /***************************** EXECUTION BEGINS *******************************/
+
+  dim = pd->Num_Dim;
+
+  bc = BC_Types + bc_input_id;
+
+  /**** Get leak velocity *******/
+
+  mass_tran_coeff = bc->BC_Data_Float[0];
+  p_inf = bc->BC_Data_Float[1];
+  A = bc->BC_Data_Float[2];
+  B = bc->BC_Data_Float[3];
+  C = bc->BC_Data_Float[4];
+
+  Antoine_param[0] = 1.0; /* Convergence parameter */
+  Antoine_param[1] = A;
+  Antoine_param[2] = B;
+  Antoine_param[3] = C;
+  Antoine_param[4] = 0.0;   /* Minimum temperature */
+  Antoine_param[5] = 1.0e6; /* Maximum temperature */
+
+  err = antoine_psat(Antoine_param, &pvap, &dpvap_dT);
+  GOMA_EH(err, "Error in calculating vapor pressure from Antoine equation");
+
+  propertyJac_realloc(&densityJac, mp->Num_Species + 1);
+  density_tot = calc_density(mp, TRUE, densityJac, 0.0);
+
+  i_solv = bc->species_eq;
+  i_part = bc->BC_Data_Int[1];
+
+  switch (mp->Species_Var_Type) {
+  case SPECIES_VOL_FRACTION:
+  case SPECIES_UNDEFINED_FORM:
+    phi_part = fv->c[i_part];
+    phi_liq = 1.0 - phi_part;
+    dphi_liq_dc_part = -1.0;
+    dphi_liq_dc_solv = 0.0;
+    break;
+
+  case SPECIES_MASS_FRACTION:
+    phi_part = density_tot * mp->specific_volume[i_part] * fv->c[i_part];
+    phi_liq = 1.0 - phi_part;
+    dphi_liq_dc_part =
+        -densityJac->JacVector[i_part] * mp->specific_volume[i_part] * fv->c[i_part] -
+        density_tot * mp->specific_volume[i_part];
+    dphi_liq_dc_solv = -densityJac->JacVector[i_solv] * mp->specific_volume[i_part] * fv->c[i_part];
+    break;
+
+  case SPECIES_DENSITY:
+    phi_part = mp->specific_volume[i_part] * fv->c[i_part];
+    phi_liq = 1.0 - phi_part;
+    dphi_liq_dc_part = -mp->specific_volume[i_part];
+    dphi_liq_dc_solv = 0.0;
+    break;
+
+  case SPECIES_CONCENTRATION:
+    phi_part = mp->molar_volume[i_part] * fv->c[i_part];
+    phi_liq = 1.0 - phi_part;
+    dphi_liq_dc_part = -mp->molar_volume[i_part];
+    dphi_liq_dc_solv = 0.0;
+    break;
+
+  default:
+    GOMA_EH(GOMA_ERROR, "That Material Species Type is not supported");
+    break;
+  }
+
+  /* Quality control*/
+  if (phi_liq < 0.0) {
+    phi_liq = 0.0;
+    dphi_liq_dc_part = 0.0;
+    dphi_liq_dc_solv = 0.0;
+  } else if (phi_liq > 1.0) {
+    phi_liq = 1.0;
+    dphi_liq_dc_part = 0.0;
+    dphi_liq_dc_solv = 0.0;
+  }
+
+  /* Get mass transfer velocity */
+  vnorm = phi_liq * mass_tran_coeff * (pvap - p_inf);
+
+  /* Get sensitivities of vnorm */
+  memset(d_vnorm->T, 0.0, sizeof(double) * MDE);
+  memset(d_vnorm->C, 0.0, sizeof(double) * MAX_CONC * MDE);
+
+  var = TEMPERATURE;
+  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+    phi_j = bf[var]->phi[j_id];
+    d_vnorm->T[j_id] = phi_liq * mass_tran_coeff * dpvap_dT * phi_j;
+  }
+
+  var = MASS_FRACTION;
+  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+    phi_j = bf[var]->phi[j_id];
+    d_vnorm->C[i_part][j_id] = dphi_liq_dc_part * mass_tran_coeff * (pvap - p_inf) * phi_j;
+    d_vnorm->C[i_solv][j_id] = dphi_liq_dc_solv * mass_tran_coeff * (pvap - p_inf) * phi_j;
+  }
+
+  /****** get the convection velocity *********/
+
+  err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
+  GOMA_EH(err, "Error in calculating effective convection velocity");
+
+  /* Calculate the residual contribution        */
+
+  *func = -vnorm;
+  for (kdir = 0; kdir < dim; kdir++) {
+    *func += fv->c[i_solv] * vconv[kdir] * fv->snormal[kdir];
+  }
+
+  /* Calculate the Jacobian contribution        */
+
+  if (af->Assemble_Jacobian) {
+
+    /* sum the contributions to the global stiffness matrix */
+
+    for (jvar = 0; jvar < dim; jvar++) {
+      var = MESH_DISPLACEMENT1 + jvar;
+      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+        if (pd->v[pg->imtrx][var]) {
+          phi_j = bf[var]->phi[j_id];
+          for (kdir = 0; kdir < dim; kdir++) {
+            /*     d( )/dx        */
+            d_func[0][var][j_id] +=
+                fv->c[i_solv] * vconv[kdir] * fv->dsnormal_dx[kdir][jvar][j_id] +
+                fv->c[i_solv] * d_vconv->X[kdir][jvar][j_id] * fv->snormal[kdir];
+          }
+          d_func[0][var][j_id] += -d_vnorm->X[jvar][j_id];
+        }
+      }
+    }
+
+    for (jvar = 0; jvar < dim; jvar++) {
+      var = VELOCITY1 + jvar;
+      if (pd->v[pg->imtrx][var]) {
+        for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+          for (kdir = 0; kdir < dim; kdir++) {
+            d_func[0][var][j_id] +=
+                fv->c[i_solv] * d_vconv->v[kdir][jvar][j_id] * fv->snormal[kdir];
+          }
+        }
+      }
+    }
+
+    var = TEMPERATURE;
+    if (pd->v[pg->imtrx][var]) {
+      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+        d_func[0][var][j_id] -= d_vnorm->T[j_id];
+        for (kdir = 0; kdir < dim; kdir++) {
+          d_func[0][var][j_id] += fv->c[i_solv] * d_vconv->T[kdir][j_id] * fv->snormal[kdir];
+        }
+      }
+    }
+
+    var = MASS_FRACTION;
+    if (pd->v[pg->imtrx][var]) {
+      for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+          phi_j = bf[var]->phi[j_id];
+          d_func[0][MAX_VARIABLE_TYPES + w][j_id] -= d_vnorm->C[w][j_id];
+          for (kdir = 0; kdir < dim; kdir++) {
+            d_func[0][MAX_VARIABLE_TYPES + w][j_id] +=
+                fv->c[i_solv] * d_vconv->C[kdir][w][j_id] * fv->snormal[kdir];
+            if (w == i_solv) {
+              d_func[0][MAX_VARIABLE_TYPES + w][j_id] += phi_j * vconv[kdir] * fv->snormal[kdir];
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (densityJac != NULL) {
+    propertyJac_destroy(&densityJac);
+  }
+
+} /* END of routine mass_flux_surf_antoine_bc*/
+/******************************************************************************/
+/******************************************************************************/
 
 void mass_flux_surf_BV2(dbl time, /* current time value                    */
                         dbl mass_flux[MAX_CONC],
@@ -5894,7 +6124,6 @@ void const_mass_flux_surf_bc(double func[],
  *           Author: A.C. Sun (9/98)
  *
  ******************************************************************************/
-
 void mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
                          dbl d_mass_flux[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC],
                          double activity[MAX_CONC],
@@ -5905,7 +6134,9 @@ void mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
                          int wspec,               /* species no.                               */
                          double mass_tran_coeff,  /* MASS transfer coeff           */
                          double d_mtc[MAX_VARIABLE_TYPES + MAX_CONC],
-                         double Y_c) /* bulk concentration 	                     */
+                         double Y_c,     /* bulk concentration 	                     */
+                         double alpha_v, /* alpha van laar act. coeff. model      */
+                         double beta_v)  /* beta van laar act. coeff. model       */
 /*****************************************************************************/
 {
   /* Local variables */
@@ -5917,19 +6148,23 @@ void mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
   double P_diff_1, P_diff_2, P_diff_log;
   double P_diff_1_dT, P_diff_log_dT, P_diff_log_dw[MAX_CONC], P_diff_1_dw;
   double P_bulk = 0.;
+  double bottom_vlar;
 
   int i, j, jac, k, mn;
   int Num_S1;
   double flory1, flory2, flory3, flory;
-  double df1_dc[MAX_CONC], df2_dc[MAX_CONC];
-  double df3_dc[MAX_CONC], df_dc[MAX_CONC];
+  double df1_dc[MAX_CONC], df2_dc[MAX_CONC], dacoeff_dx[MAX_CONC];
+  double df3_dc[MAX_CONC], df_dc[MAX_CONC], dact_dx[MAX_CONC];
   double truedf_dc[MAX_CONC], dv_dw[MAX_CONC][MAX_CONC];
   double C[MAX_CONC], vol[MAX_CONC];
+  double mfrac[MAX_CONC] = {0.};
   double sv[MAX_CONC] = {0.};
   double mw[MAX_CONC], prod[MAX_CONC];
-  double bottom, prod2, sum_C;
-  double chi[MAX_CONC][MAX_CONC]; /* chi is the binary interaction parameter*/
-  double mw_last = 0;             /* Molecular weight of non-condensable and conversion factor */
+  double bottom, prod2, sum_C, acoeff;
+  double chi[MAX_CONC][MAX_CONC],
+      dmass_frac_dphi[MAX_CONC][MAX_CONC]; /* chi is the binary interaction parameter*/
+  double dact_dphi[MAX_CONC][MAX_CONC];
+  double mw_last = 0; /* Molecular weight of non-condensable and conversion factor */
 
   if (MAX_CONC < 3) {
     GOMA_EH(GOMA_ERROR, "mass_flux_equil_mtc expects MAX_CONC >= 3");
@@ -6180,6 +6415,124 @@ void mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
     }
   }
 
+  else if (mode == VLAR)
+
+  {
+    /* Define some convenient/repetitive chunks to make eqns more compact */
+
+    Num_S1 = pd->Num_Species_Eqn + 1;
+
+    for (i = 0; i < Num_S1; i++) {
+      if (mp->specific_volume[i] < 0.) {
+        GOMA_EH(GOMA_ERROR, "Specific volume not specified in the material file.");
+        return;
+      } else {
+        sv[i] = mp->specific_volume[i];
+      }
+      if (mp->molar_volume[i] < 0.) {
+        GOMA_EH(GOMA_ERROR, "Molar volume not specified in the material file");
+        return;
+      } else {
+        vol[i] = mp->molar_volume[i];
+      }
+    }
+
+    bottom = 0.;
+    sum_C = 0.;
+    /*  denominators for fraction-based formulations */
+    if (mp->Species_Var_Type == SPECIES_MASS_FRACTION ||
+        mp->Species_Var_Type == SPECIES_UNDEFINED_FORM) {
+      for (i = 0; i < pd->Num_Species_Eqn; i++) {
+        bottom += y_mass[i] * (sv[i] - sv[pd->Num_Species_Eqn]);
+      }
+      bottom += sv[pd->Num_Species_Eqn];
+    }
+    if (mp->Species_Var_Type == SPECIES_MOLE_FRACTION) {
+      for (i = 0; i < pd->Num_Species_Eqn; i++) {
+        bottom += y_mass[i] * (vol[i] - vol[pd->Num_Species_Eqn]);
+      }
+      bottom += vol[pd->Num_Species_Eqn];
+    }
+
+    if (mp->Species_Var_Type == SPECIES_DENSITY) {
+      for (i = 0; i < pd->Num_Species_Eqn; i++) {
+        C[i] = y_mass[i] * sv[i];
+        sum_C += C[i];
+        dv_dw[i][i] = sv[i];
+      }
+    } else if (mp->Species_Var_Type == SPECIES_CONCENTRATION) {
+      for (i = 0; i < pd->Num_Species_Eqn; i++) {
+        C[i] = y_mass[i] * vol[i];
+        sum_C += C[i];
+        dv_dw[i][i] = vol[i];
+      }
+    } else if (mp->Species_Var_Type == SPECIES_MASS_FRACTION ||
+               mp->Species_Var_Type == SPECIES_UNDEFINED_FORM) {
+      for (i = 0; i < pd->Num_Species_Eqn; i++) {
+        C[i] = y_mass[i] * sv[i] / bottom;
+        sum_C += C[i];
+        for (j = 0; j < pd->Num_Species_Eqn; j++) {
+          dv_dw[i][j] = -y_mass[i] * sv[i] * (sv[j] - sv[pd->Num_Species_Eqn]) / SQUARE(bottom);
+        }
+        dv_dw[i][i] += sv[i] / bottom;
+      }
+    } else if (mp->Species_Var_Type == SPECIES_MOLE_FRACTION) {
+      for (i = 0; i < pd->Num_Species_Eqn; i++) {
+        C[i] = y_mass[i] * vol[i] / bottom;
+        sum_C += C[i];
+        for (j = 0; j < pd->Num_Species_Eqn; j++) {
+          dv_dw[i][j] = -y_mass[i] * vol[i] * (vol[j] - vol[pd->Num_Species_Eqn]) / SQUARE(bottom);
+        }
+        dv_dw[i][i] += vol[i] / bottom;
+      }
+    } else {
+      GOMA_EH(GOMA_ERROR, "That species formulation not done in mtc_flory\n");
+    }
+    bottom_vlar = 1. / vol[pd->Num_Species_Eqn];
+    for (i = 0; i < pd->Num_Species_Eqn; i++) {
+      bottom_vlar += C[i] * (1. / vol[i] - 1. / vol[pd->Num_Species_Eqn]);
+    }
+
+    for (i = 0; i < pd->Num_Species_Eqn; i++) {
+      mfrac[i] = C[i] / vol[i] / bottom_vlar;
+    }
+    acoeff = alpha_v / (1. + alpha_v * mfrac[wspec] / beta_v / (1. - mfrac[wspec])) /
+             (1. + alpha_v * mfrac[wspec] / beta_v / (1. - mfrac[wspec]));
+    /* check the simplest case: 1solvent, 1polymer
+    check=(1-sum_C)+chi[0][1]*(1.-sum_C)*(1.-sum_C);
+    printf("flory = %e, check =%e\n", flory[i],check); */
+
+    activity[wspec] = mfrac[wspec] * exp(acoeff);
+
+    for (k = 0; k < pd->Num_Species_Eqn; k++) {
+      dacoeff_dx[k] = -2. * acoeff / (1. + alpha_v * mfrac[wspec] / beta_v / (1. - mfrac[wspec])) *
+                      (alpha_v / beta_v / (1. - mfrac[wspec]) +
+                       alpha_v * mfrac[wspec] / beta_v / (1 - mfrac[wspec]) / (1 - mfrac[wspec]));
+      dact_dx[k] = activity[wspec] * dacoeff_dx[k] + exp(acoeff);
+    }
+
+    for (i = 0; i < pd->Num_Species_Eqn; i++) {
+      for (j = 0; j < pd->Num_Species_Eqn; j++) {
+        dmass_frac_dphi[i][j] =
+            delta(i, j) / vol[i] / bottom_vlar -
+            mfrac[i] * (1. / vol[j] - 1. / vol[pd->Num_Species_Eqn]) / bottom_vlar;
+      }
+    }
+
+    for (i = 0; i < pd->Num_Species_Eqn; i++) {
+      dact_dphi[wspec][i] = 0.;
+      for (j = 0; j < pd->Num_Species_Eqn; j++) {
+        dact_dphi[wspec][i] += dact_dx[j] * dmass_frac_dphi[j][i];
+      }
+    }
+
+    for (i = 0; i < pd->Num_Species_Eqn; i++) {
+      dact_dC[wspec][i] = 0.;
+      for (j = 0; j < pd->Num_Species_Eqn; j++) {
+        dact_dC[wspec][i] = dact_dphi[wspec][j] * dv_dw[j][i];
+      }
+    }
+  }
   /* HARDWIRE a linear increase in MTC from zero to mass_tran_coeff
     along free surface boundary */
 
@@ -6593,7 +6946,6 @@ void act_coeff(dbl lngamma[MAX_CONC],
  * Flory-Huggins VLE model.
  *          Author: A.C. Sun 9/98                                            */
 /*****************************************************************************/
-
 void get_equil_surf_bc(double func[],
                        double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                        int mode,  /* model on which the VLE is based           */
@@ -6615,7 +6967,7 @@ void get_equil_surf_bc(double func[],
   int j, j_id, w1, dim, kdir, var, jvar;
   double phi_j;
   double Y_w; /* local concentration of current species */
-
+  double alpha_v, beta_v;
   double activity[MAX_CONC]; /* nonideal activity of species */
   double dact_dC[MAX_CONC][MAX_CONC];
   double vconv[MAX_PDIM];     /*Calculated convection velocity */
@@ -6629,7 +6981,8 @@ void get_equil_surf_bc(double func[],
 
   if (af->Assemble_LSA_Mass_Matrix)
     return;
-
+  alpha_v = T_gas;
+  beta_v = diff_gas_25;
   /*
    *  call routine to calculate surface flux of this component and it's
    *  sensitivity to all variable types
@@ -6642,7 +6995,7 @@ void get_equil_surf_bc(double func[],
     mtc = mass_tran_coeff;
   }
   mass_flux_equil_mtc(mp->mass_flux, mp->d_mass_flux, activity, dact_dC, fv->c, mode, amb_pres,
-                      wspec, mtc, d_mtc, Y_c);
+                      wspec, mtc, d_mtc, Y_c, alpha_v, beta_v);
 
   dim = pd->Num_Dim;
   Y_w = fv->c[wspec];
@@ -6755,8 +7108,7 @@ void get_equil_surf_bc(double func[],
   } /* End of if Assemble_Jacobian */
 
 } /* END of routine get_equil_surf_bc       */
-/****************************************************************************/
-/****************************************************************************/
+
 /****************************************************************************/
 /****************************************************************************
  *
@@ -6802,7 +7154,7 @@ void sus_mass_flux_surf_bc(double func[],
 
   if (mp->DensityModel == SUSPENSION) {
     if (sus_species != (int)mp->u_density[0]) {
-      GOMA_EH(-1, "YFLUX_SUS_BC and density model species # must be consistent");
+      GOMA_EH(GOMA_ERROR, "YFLUX_SUS_BC and density model species # must be consistent");
     }
 
     /*** Density ***/
@@ -6893,7 +7245,6 @@ void sus_mass_flux_surf_bc(double func[],
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-
 void compute_leak_velocity(double *vnorm,
                            NORMAL_VELOCITY_DEPENDENCE_STRUCT *d_vnorm,
                            dbl tt, /* parameter to vary time integration from
@@ -6921,9 +7272,10 @@ void compute_leak_velocity(double *vnorm,
   double k1, E1, kn1, En1, c_H2S, c_O2;
   double xbulk, d_xbulk_dC[MAX_CONC];
   double vnormal, phi_j;
+  double alpha_v = 0., beta_v = 0.;
 
   int mode;
-  double amb_pres, mtc, Y_inf;
+  double amb_pres, A, mtc, Y_inf, driving_force;
   double d_mtc[MAX_VARIABLE_TYPES + MAX_CONC];
   double activity[MAX_CONC];
   double dact_dC[MAX_CONC][MAX_CONC];
@@ -6969,8 +7321,9 @@ void compute_leak_velocity(double *vnorm,
     /* Probably need a d_StoiCoef_dC[][] for FRACTION formulations  */
     break;
   case SPECIES_MOLE_FRACTION:
-  case SPECIES_VOL_FRACTION:
     GOMA_EH(GOMA_ERROR, "Volume conversion not done for that Species Formulation");
+    break;
+  case SPECIES_VOL_FRACTION:
     break;
   case SPECIES_CONCENTRATION:
     for (i = 0; i < MAX_CONC; i++) {
@@ -7001,8 +7354,13 @@ void compute_leak_velocity(double *vnorm,
       }
       break;
     case SPECIES_MOLE_FRACTION:
-    case SPECIES_VOL_FRACTION:
       GOMA_EH(GOMA_ERROR, "BC mass fraction conversion not done for that Species Formulation");
+      break;
+    case SPECIES_VOL_FRACTION:
+      for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        xbulk -= fv->c[w];
+        d_xbulk_dC[w] = -1.0;
+      }
       break;
     case SPECIES_CONCENTRATION:
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
@@ -7053,6 +7411,8 @@ void compute_leak_velocity(double *vnorm,
        * sensitivity to all variable types
        * ACS: modified 10/99 to accommodate mass conc. formulation for YFLUX_EQUIL  */
 
+      driving_force = 1.;
+
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         wspec = fluxbc->BC_Data_Int[0];
         mode = fluxbc->BC_Data_Int[2];
@@ -7065,6 +7425,9 @@ void compute_leak_velocity(double *vnorm,
         if (mode == FLORY_CC) {
           mtc_chilton_coburn(&mtc, d_mtc, wspec, fluxbc->BC_Data_Float[1], fluxbc->BC_Data_Float[3],
                              fluxbc->BC_Data_Float[0], fluxbc->BC_Data_Float[4]);
+        } else if (mode == VLAR) {
+          alpha_v = fluxbc->BC_Data_Float[3];
+          beta_v = fluxbc->BC_Data_Float[4];
         }
 
         /* Nonideal VP Calculations based on either ANTOINE or RIEDEL models */
@@ -7085,8 +7448,10 @@ void compute_leak_velocity(double *vnorm,
         for (w = 0; w < pd->Num_Species_Eqn; w++)
           d_mtc[MAX_VARIABLE_TYPES + w] *= StoiCoef[wspec];
         mass_flux_equil_mtc(mp->mass_flux, mp->d_mass_flux, activity, dact_dC, fv->c, mode,
-                            amb_pres, wspec, mtc, d_mtc, Y_inf);
+                            amb_pres, wspec, mtc, d_mtc, Y_inf, alpha_v, beta_v);
 
+        A = mp->vapor_pressure[wspec] / amb_pres;
+        driving_force -= A * activity[wspec];
         vnormal += mp->mass_flux[wspec];
         /* This was causing compiler warnings: probably due to C[w] which should have been C[w][j]
          */
@@ -7349,7 +7714,8 @@ void compute_leak_velocity(double *vnorm,
     } /* end of the else on the if(YFLUX_H2O_CATHODE) */
 
     else if (!strcmp(fluxbc->desc->name1, "YFLUX_SULFIDATION")) {
-      if (fluxbc->BC_Data_Int[2] != ANNIHILATION_ELECTRONEUTRALITY) {
+      if (fluxbc->BC_Data_Int[2] != ANNIHILATION_ELECTRONEUTRALITY &&
+          fluxbc->BC_Data_Int[2] != ANNIHILATION_ELECTRONEUTRALITY) {
         if (pd->v[pg->imtrx][MASS_FRACTION]) {
           mode = fluxbc->BC_Data_Int[2];
           wspec = fluxbc->BC_Data_Int[0];
@@ -7381,9 +7747,6 @@ void compute_leak_velocity(double *vnorm,
           } else if (mode == GAS_DIFFUSION) {
             StoiCoef[wspec] = -1.0; /* 1 mole of Cu2S produced    */
             /* per mole of H2S consumped  */
-          } else if (mode == METAL_CORROSION_FULL) {
-            fprintf(stderr, "The full model has not yet implemented - awaits future efforts\n");
-            exit(1);
           }
 
           vnormal += molar_volume * mp->mass_flux[wspec] * StoiCoef[wspec];
@@ -7489,13 +7852,13 @@ void compute_leak_velocity(double *vnorm,
           cr->MassFluxModel == STEFAN_MAXWELL_CHARGED ||
           cr->MassFluxModel == STEFAN_MAXWELL_VOLUME) {
         if (Diffusivity())
-          GOMA_EH(-1, "Error in Diffusivity.");
+          GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
         for (w = 0; w < pd->Num_Species_Eqn; w++) {
           vnormal -= fv->snormal[p] * mp->diffusivity[w] * fv->grad_c[w][p] * StoiCoef[w];
         }
       } else if (cr->MassFluxModel == GENERALIZED_FICKIAN) {
         if (Generalized_Diffusivity())
-          GOMA_EH(-1, "Error in Diffusivity.");
+          GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
         for (w = 0; w < pd->Num_Species_Eqn; w++) {
           for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
             vnormal -=
@@ -7504,7 +7867,7 @@ void compute_leak_velocity(double *vnorm,
         }
       } else if (cr->MassFluxModel == DARCY) { /* diffusion induced convection is zero */
       } else {
-        GOMA_EH(-1, "Unimplemented mass flux constitutive relation.");
+        GOMA_EH(GOMA_ERROR, "Unimplemented mass flux constitutive relation.");
       }
     }
     if (af->Assemble_Jacobian && d_vnorm != NULL) {
@@ -7515,7 +7878,7 @@ void compute_leak_velocity(double *vnorm,
             for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
               if (cr->MassFluxModel == FICKIAN) {
                 if (Diffusivity())
-                  GOMA_EH(-1, "Error in Diffusivity.");
+                  GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
                 for (w = 0; w < pd->Num_Species_Eqn; w++) {
                   d_vnorm->X[q][i] -= fv->snormal[p] * mp->diffusivity[w] *
@@ -7525,7 +7888,7 @@ void compute_leak_velocity(double *vnorm,
                 }
               } else if (cr->MassFluxModel == GENERALIZED_FICKIAN) {
                 if (Generalized_Diffusivity())
-                  GOMA_EH(-1, "Error in Diffusivity.");
+                  GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
                 for (w = 0; w < pd->Num_Species_Eqn; w++) {
                   for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
                     d_vnorm->X[q][i] -= fv->snormal[p] * mp->diffusivity_gen_fick[w][w1] *
@@ -7545,7 +7908,7 @@ void compute_leak_velocity(double *vnorm,
               cr->MassFluxModel == STEFAN_MAXWELL_CHARGED ||
               cr->MassFluxModel == STEFAN_MAXWELL_VOLUME) {
             if (Diffusivity())
-              GOMA_EH(-1, "Error in Diffusivity.");
+              GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
             for (w = 0; w < pd->Num_Species_Eqn; w++) {
               for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
@@ -7560,7 +7923,7 @@ void compute_leak_velocity(double *vnorm,
             }
           } else if (0 && cr->MassFluxModel == GENERALIZED_FICKIAN) {
             if (Generalized_Diffusivity())
-              GOMA_EH(-1, "Error in Diffusivity.");
+              GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
             for (w = 0; w < pd->Num_Species_Eqn; w++) {
               for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
                 for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
@@ -7683,9 +8046,10 @@ void compute_leak_energy(double *enorm,
   double mass_tran_coeff, Y_c;
   double xbulk, lat_heat_bulk;
   double enormal, phi_j;
+  double alpha_v = 0., beta_v = 0.;
 
   int mode;
-  double amb_pres, mtc, Y_inf;
+  double amb_pres, A, mtc, Y_inf, driving_force;
   double d_mtc[MAX_VARIABLE_TYPES + MAX_CONC];
   double activity[MAX_CONC];
   double dact_dC[MAX_CONC][MAX_CONC];
@@ -7752,6 +8116,8 @@ void compute_leak_energy(double *enorm,
        * sensitivity to all variable types
        * ACS: modified 10/99 to accommodate mass conc. formulation for YFLUX_EQUIL  */
 
+      driving_force = 1.;
+
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         wspec = fluxbc->BC_Data_Int[0];
         mode = fluxbc->BC_Data_Int[2];
@@ -7764,6 +8130,11 @@ void compute_leak_energy(double *enorm,
         if (mode == FLORY_CC) {
           mtc_chilton_coburn(&mtc, d_mtc, wspec, fluxbc->BC_Data_Float[1], fluxbc->BC_Data_Float[3],
                              fluxbc->BC_Data_Float[0], fluxbc->BC_Data_Float[4]);
+        }
+
+        else if (mode == VLAR) {
+          alpha_v = fluxbc->BC_Data_Float[3];
+          beta_v = fluxbc->BC_Data_Float[4];
         }
         /* Shouldn't this be here, PRS 3/19/01. cf. KIN_LEAK
          *
@@ -7789,8 +8160,10 @@ void compute_leak_energy(double *enorm,
 
         /* Calculate mole flux of other components through surface */
         mass_flux_equil_mtc(mp->mass_flux, mp->d_mass_flux, activity, dact_dC, fv->c, mode,
-                            amb_pres, wspec, mtc, d_mtc, Y_inf);
+                            amb_pres, wspec, mtc, d_mtc, Y_inf, alpha_v, beta_v);
 
+        A = mp->vapor_pressure[wspec] / amb_pres;
+        driving_force -= A * activity[wspec];
         enormal +=
             mp->density * mp->latent_heat_vap[wspec] * mp->mass_flux[wspec] * StoiCoef[wspec];
 
@@ -8093,6 +8466,297 @@ void kin_bc_leak(double func[],
 } /* END of routine kin_bc_leak  */
 /******************************************************************************/
 
+void kin_bc_antoine(double func[],
+                    double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                    double x_dot[DIM], /* mesh velocity                             */
+                    dbl tt,            /* parameter to vary time integration from
+                                        * explicit (tt = 1) to implicit (tt = 0)    */
+                    dbl dt,            /* current value of the time step            */
+                    int bc_input_id,
+                    struct Boundary_Condition *BC_Types)
+
+/******************************************************************************
+ *
+ *  Function which evaluates the kinematic boundary condition n.(v -vs)=0
+ *  ALSO Function which evaluates the velo-normal boundary condition n.(v -vs)=0
+ *
+ *            Author: P. R. Schunk    (3/24/94)
+ *
+ *  With leak caused by flux of species through surface n.(v-vs)=sum(evap vol flux)
+ *			 Reviser: R. A. Cairncross (11/1/94)
+ *
+ *  With ties to equilibrium mole fraction of species by calling Raoult's law
+ *  or Flory-Huggins VLE relations.
+ *			 Reviser: A. C. Sun (9/20/98)
+ *
+ *  With leak caused by species mass flux that is given by Butler-Volmer kinetics.
+ *  Also introduced M_solid (molecular weight of solid deposit) and
+ *  rho_solid (density of solid deposit) to modify vnormal for processes
+ *  involving a moving boundary due to formation of a solid material
+ *  (as in LIGA electrodeposition).
+ *
+ *			 Reviser: K. S. Chen (11/16/2000, 11/21/2000, 10/1/2001)
+ *
+ *  With leak caused by copper sulfidation reaction with surface rate or
+ *  species mass flux given by
+ *
+ *
+ *  Simplified kinetic model:
+ *
+ *  Surface Rate or species mass flux = n.(v - vs) = k exp(-E/R/T) c_H2S c_Cu
+ *
+ *
+ *  General model:
+ *
+ *  Species mass flux = k1 exp(-E1/R/T) c_H2S c_O2**0.5 - kn1 exp(-En1/R/T) c_V c_h
+ *
+ *                        Reviser: K. S. Chen (3/20/2002)
+ *
+ *  ----------------------------------------------------------------------------
+ *  Take out all of the flux calculations and move them to compute_leak_velocity
+ *  to facilitate LS implementation of kin_leak.
+ *                        Reviser: D. Noble (5/2005)
+ *
+ *  Functions Called
+ *
+ *  compute_leak_velocity - compute summation of species fluxes.
+ *            sum_over_i(k_i*(y_i - y_inf_i))+k_n*((1-sum_over_i(y_i))-y_inf_n)
+ *
+ *  get_convection_velocity - compute the relative convective velocity.
+ *  ----------------------------------------------------------------------------
+ *******************************************************************************/
+{
+  int j, j_id;
+  int i_solv = -1, i_part = -1;
+  int var, jvar, kdir;
+  int w, dim;
+  double phi_j;
+
+  double mass_tran_coeff, p_inf;
+  double A, B, C; /*Antoine constants*/
+  double Antoine_param[6];
+  double pvap, dpvap_dT;
+  double density_tot = 0.0;
+  double phi_liq = 1.0, phi_part = 1.0;
+  double dphi_liq_dc_part = 0.0, dphi_liq_dc_solv = 0.0;
+
+  PROPERTYJAC_STRUCT *densityJac = NULL;
+
+  double vnorm; /*Calculated normal velocity */
+  NORMAL_VELOCITY_DEPENDENCE_STRUCT d_vnorm_struct;
+  NORMAL_VELOCITY_DEPENDENCE_STRUCT *d_vnorm = &d_vnorm_struct;
+
+  double vconv[MAX_PDIM];     /*Calculated convection velocity */
+  double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
+  CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
+  CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
+  int err;
+  struct Boundary_Condition *bc = NULL;
+
+  /* local contributions of boundary condition to residual and jacobian */
+
+  /***************************** EXECUTION BEGINS *******************************/
+
+  if (af->Assemble_LSA_Mass_Matrix) {
+    for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
+      var = MESH_DISPLACEMENT1 + kdir;
+      if (pd->v[pg->imtrx][var])
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
+          d_func[0][var][j] -= phi_j * fv->snormal[kdir];
+        }
+    }
+    return;
+  }
+
+  dim = pd->Num_Dim;
+
+  bc = BC_Types + bc_input_id;
+
+  /**** Get leak velocity *******/
+
+  mass_tran_coeff = bc->BC_Data_Float[0];
+  p_inf = bc->BC_Data_Float[1];
+  A = bc->BC_Data_Float[2];
+  B = bc->BC_Data_Float[3];
+  C = bc->BC_Data_Float[4];
+
+  /* Get vapor pressure from Antoine equation*/
+
+  Antoine_param[0] = 1.0; /* Convergence parameter */
+  Antoine_param[1] = A;
+  Antoine_param[2] = B;
+  Antoine_param[3] = C;
+  Antoine_param[4] = 0.0;   /* Minimum temperature */
+  Antoine_param[5] = 1.0e6; /* Maximum temperature */
+
+  err = antoine_psat(Antoine_param, &pvap, &dpvap_dT);
+  GOMA_EH(err, "Error in calculating vapor pressure from Antoine equation");
+
+  propertyJac_realloc(&densityJac, mp->Num_Species + 1);
+  density_tot = calc_density(mp, TRUE, densityJac, 0.0);
+
+  /* Calculate volume fraction of particles and solvent */
+
+  if (bc->BC_Data_Int[0] != -1) {
+    i_solv = bc->BC_Data_Int[0];
+  }
+  if (bc->BC_Data_Int[1] != -1) {
+    i_part = bc->BC_Data_Int[1];
+  }
+
+  switch (mp->Species_Var_Type) {
+  case SPECIES_VOL_FRACTION:
+  case SPECIES_UNDEFINED_FORM:
+    phi_part = fv->c[i_part];
+    phi_liq = 1.0 - phi_part;
+    dphi_liq_dc_part = -1.0;
+    dphi_liq_dc_solv = 0.0;
+    break;
+
+  case SPECIES_MASS_FRACTION:
+    phi_part = density_tot * mp->specific_volume[i_part] * fv->c[i_part];
+    phi_liq = 1.0 - phi_part;
+    dphi_liq_dc_part =
+        -densityJac->JacVector[i_part] * mp->specific_volume[i_part] * fv->c[i_part] -
+        density_tot * mp->specific_volume[i_part];
+    if (i_solv > -1) {
+      dphi_liq_dc_solv =
+          -densityJac->JacVector[i_solv] * mp->specific_volume[i_part] * fv->c[i_part];
+    } else {
+      dphi_liq_dc_solv = 0.0;
+    }
+    break;
+
+  case SPECIES_DENSITY:
+    phi_part = mp->specific_volume[i_part] * fv->c[i_part];
+    phi_liq = 1.0 - phi_part;
+    dphi_liq_dc_part = -mp->specific_volume[i_part];
+    dphi_liq_dc_solv = 0.0;
+    break;
+
+  case SPECIES_CONCENTRATION:
+    phi_part = mp->molar_volume[i_part] * fv->c[i_part];
+    phi_liq = 1.0 - phi_part;
+    dphi_liq_dc_part = -mp->molar_volume[i_part];
+    dphi_liq_dc_solv = 0.0;
+    break;
+
+  default:
+    GOMA_EH(GOMA_ERROR, "That Material Species Type is not supported");
+    break;
+  }
+
+  /* Quality control*/
+  if (phi_liq < 0.0) {
+    phi_liq = 0.0;
+    dphi_liq_dc_part = 0.0;
+    dphi_liq_dc_solv = 0.0;
+  } else if (phi_liq > 1.0) {
+    phi_liq = 1.0;
+    dphi_liq_dc_part = 0.0;
+    dphi_liq_dc_solv = 0.0;
+  }
+
+  /* Get mass transfer velocity */
+  phi_liq = 1.0;
+  dphi_liq_dc_part = 0.0;
+  dphi_liq_dc_solv = 0.0;
+  vnorm = phi_liq * mass_tran_coeff * (pvap - p_inf);
+
+  /* Get sensitivities of vnorm */
+
+  memset(d_vnorm->T, 0.0, sizeof(double) * MDE);
+  memset(d_vnorm->C, 0.0, sizeof(double) * MAX_CONC * MDE);
+
+  var = TEMPERATURE;
+  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+    phi_j = bf[var]->phi[j_id];
+    d_vnorm->T[j_id] = phi_liq * mass_tran_coeff * dpvap_dT * phi_j;
+  }
+
+  var = MASS_FRACTION;
+  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+    phi_j = bf[var]->phi[j_id];
+    d_vnorm->C[i_part][j_id] = dphi_liq_dc_part * mass_tran_coeff * (pvap - p_inf) * phi_j;
+    if (i_solv > -1) {
+      d_vnorm->C[i_solv][j_id] = dphi_liq_dc_solv * mass_tran_coeff * (pvap - p_inf) * phi_j;
+    }
+  }
+
+  /****** get the convection velocity *********/
+
+  err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
+  GOMA_EH(err, "Error in calculating effective convection velocity");
+
+  /* Calculate the residual contribution	*/
+
+  *func = -vnorm;
+  for (kdir = 0; kdir < dim; kdir++) {
+    *func += vconv[kdir] * fv->snormal[kdir];
+  }
+
+  /* Calculate the Jacobian contribution	*/
+
+  if (af->Assemble_Jacobian) {
+
+    /* sum the contributions to the global stiffness matrix */
+
+    for (jvar = 0; jvar < dim; jvar++) {
+      var = MESH_DISPLACEMENT1 + jvar;
+      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+        if (pd->v[pg->imtrx][var]) {
+          phi_j = bf[var]->phi[j_id];
+          for (kdir = 0; kdir < dim; kdir++) {
+            /*     d( )/dx        */
+            d_func[0][var][j_id] += vconv[kdir] * fv->dsnormal_dx[kdir][jvar][j_id] +
+                                    d_vconv->X[kdir][jvar][j_id] * fv->snormal[kdir];
+          }
+          d_func[0][var][j_id] += -d_vnorm->X[jvar][j_id];
+        }
+      }
+    }
+
+    for (jvar = 0; jvar < dim; jvar++) {
+      var = VELOCITY1 + jvar;
+      if (pd->v[pg->imtrx][var]) {
+        for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+          for (kdir = 0; kdir < dim; kdir++) {
+            d_func[0][var][j_id] += d_vconv->v[kdir][jvar][j_id] * fv->snormal[kdir];
+          }
+        }
+      }
+    }
+
+    var = TEMPERATURE;
+    if (pd->v[pg->imtrx][var]) {
+      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+        d_func[0][var][j_id] -= d_vnorm->T[j_id];
+        for (kdir = 0; kdir < dim; kdir++) {
+          d_func[0][var][j_id] += d_vconv->T[kdir][j_id] * fv->snormal[kdir];
+        }
+      }
+    }
+
+    var = MASS_FRACTION;
+    if (pd->v[pg->imtrx][var]) {
+      for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
+          d_func[0][MAX_VARIABLE_TYPES + w][j_id] -= d_vnorm->C[w][j_id];
+          for (kdir = 0; kdir < dim; kdir++) {
+            d_func[0][MAX_VARIABLE_TYPES + w][j_id] +=
+                d_vconv->C[kdir][w][j_id] * fv->snormal[kdir];
+          }
+        }
+      }
+    }
+  }
+
+  if (densityJac != NULL) {
+    propertyJac_destroy(&densityJac);
+  }
+
+} /* END of routine kin_bc_antoine  */
 /*****************************************************************************/
 
 void kin_bc_electrodeposition(double func[],
@@ -8933,7 +9597,7 @@ int get_convection_velocity(
             cr->MassFluxModel == FICKIAN_SHELL) /* Last modified; KSC: 9/98  and  RSL 6/29/00  */
         {
           if (Diffusivity())
-            GOMA_EH(-1, "Error in Diffusivity.");
+            GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
           /* Get diffusivity and derivatives */
 
           for (w = 0; w < pd->Num_Species_Eqn; w++) {
@@ -8944,7 +9608,7 @@ int get_convection_velocity(
         } else if (cr->MassFluxModel == GENERALIZED_FICKIAN) {
           /* diffusion induced convection */
           if (Generalized_Diffusivity())
-            GOMA_EH(-1, "Error in Diffusivity.");
+            GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
           for (w = 0; w < pd->Num_Species_Eqn; w++) {
             for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
               vconv[p] -= mp->diffusivity_gen_fick[w][w1] * fv->grad_c[w1][p];
@@ -8957,7 +9621,7 @@ int get_convection_velocity(
           }
         } else if (cr->MassFluxModel == DARCY) { /* diffusion induced convection is zero */
         } else {
-          GOMA_EH(-1, "Unimplemented mass flux constitutive relation.");
+          GOMA_EH(GOMA_ERROR, "Unimplemented mass flux constitutive relation.");
         }
       }
 
@@ -8974,7 +9638,7 @@ int get_convection_velocity(
               for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
                 if (cr->MassFluxModel == FICKIAN) {
                   if (Diffusivity())
-                    GOMA_EH(-1, "Error in Diffusivity.");
+                    GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
                   for (w = 0; w < pd->Num_Species_Eqn; w++) {
                     d_vconv->X[p][q][i] -=
@@ -8991,7 +9655,7 @@ int get_convection_velocity(
                 cr->MassFluxModel == STEFAN_MAXWELL_CHARGED ||
                 cr->MassFluxModel == STEFAN_MAXWELL_VOLUME) {
               if (Diffusivity())
-                GOMA_EH(-1, "Error in Diffusivity.");
+                GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
               for (w = 0; w < pd->Num_Species_Eqn; w++) {
                 for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
@@ -9162,7 +9826,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
    */
   if (cr->MassFluxModel == FICKIAN) {
     if (Diffusivity())
-      GOMA_EH(-1, "Error in Diffusivity.");
+      GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       err = fickian_flux(st, w);
@@ -9176,7 +9840,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
              FICKIAN_CHARGED) /* Fickian diffusion of charged species, KSC: 9/2000 */
   {
     if (Diffusivity())
-      GOMA_EH(-1, "Error in Diffusivity.");
+      GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       err = fickian_charged_flux(st, w);
@@ -9190,7 +9854,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
   } else if (cr->MassFluxModel == HYDRODYNAMIC || cr->MassFluxModel == HYDRODYNAMIC_QTENSOR ||
              cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD) {
     if (Diffusivity())
-      GOMA_EH(-1, "Error in Diffusivity.");
+      GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       switch (mp->DiffusivityModel[w]) {
@@ -9205,14 +9869,18 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         break;
 
       default:
-        GOMA_EH(-1, "Unknown Diffusivity Model.");
+        GOMA_EH(GOMA_ERROR, "Unknown Diffusivity Model.");
         break;
 
       } /* end of switch(DiffusivityModel) */
     }
+  } else if (cr->MassFluxModel == HYDRODYNAMIC_SEDIMENT) {
+    for (w = 0; w < pd->Num_Species_Eqn; w++) {
+      err = hydro_sediment_flux(st, w);
+    }
   } else if (cr->MassFluxModel == DM_SUSPENSION_BALANCE) {
     if (Diffusivity())
-      GOMA_EH(-1, "Error in Diffusivity.");
+      GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       switch (mp->DiffusivityModel[w]) {
@@ -9221,13 +9889,13 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         break;
 
       default:
-        GOMA_EH(-1, "Unknown Diffusivity Model for Suspension Balance.");
+        GOMA_EH(GOMA_ERROR, "Unknown Diffusivity Model for Suspension Balance.");
         break;
 
       } /* end of switch(DiffusivityModel) */
     }
   } else {
-    GOMA_EH(-1, "Unimplemented mass flux constitutive relation in continuous media.");
+    GOMA_EH(GOMA_ERROR, "Unimplemented mass flux constitutive relation in continuous media.");
   }
 
   /*
@@ -9868,7 +10536,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
           }
           x_mole[w] = liq_C[w] / sum_C;
         } else {
-          GOMA_EH(-1, "That species formulation not done in DROP_EVAP\n");
+          GOMA_EH(GOMA_ERROR, "That species formulation not done in DROP_EVAP\n");
         }
         x_mole[w] = MIN(x_mole[w], near_unity);
 
@@ -9879,7 +10547,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         } else if (mp->VaporPressureModel[w] == RIEDEL) {
           riedel_psat(mp->u_vapor_pressure[w], &psat[w], &dpsatdt[w]);
         } else {
-          GOMA_EH(-1, "Vapor Pressure should be ANTOINE or RIEDEL for DROP_EVAP\n");
+          GOMA_EH(GOMA_ERROR, "Vapor Pressure should be ANTOINE or RIEDEL for DROP_EVAP\n");
         }
         if (1) {
           kelvin_arg = (2 * mp->surface_tension / radius) *
@@ -10642,16 +11310,16 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
 
   volume_flag = (pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_VOLUME); /* RSL 8/24/00 */
 
-  if (pd_glob[mn]
-          ->gv[R_ENERGY]) /* if the energy-transport equation is active, get temperature from fv */
+  if (pd_glob[mn]->gv[R_ENERGY]) /* if the energy-transport equation is active, get temperature
+                                    from fv */
   {
     T = fv->T;
     if (pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_CHARGED) {
       if (mp->SolutionTemperatureModel == CONSTANT) {
         T = mp->solution_temperature;
       } else if (mp->SolutionTemperatureModel ==
-                 THERMAL_BATTERY) { /* need to get T from electrolyte_temperature() for the case of
-                                       thermal battery */
+                 THERMAL_BATTERY) { /* need to get T from electrolyte_temperature() for the case
+                                       of thermal battery */
         electrolyte_temperature(time, dt,
                                 0); /* calculate electrolyte temperature at present time */
         T = mp->electrolyte_temperature;
@@ -10678,8 +11346,8 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
       if (mp->SolutionTemperatureModel == CONSTANT) {
         T = mp->solution_temperature;
       } else if (mp->SolutionTemperatureModel ==
-                 THERMAL_BATTERY) { /* need to get T from electrolyte_temperature() for the case of
-                                       thermal battery */
+                 THERMAL_BATTERY) { /* need to get T from electrolyte_temperature() for the case
+                                       of thermal battery */
         electrolyte_temperature(time, dt,
                                 0); /* calculate electrolyte temperature at present time */
         T = mp->electrolyte_temperature;
@@ -10742,9 +11410,9 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
   c = rho / M_mix;
 
   /* In order to obtain a volume flux for use in the species balance equation, we must divide the
-     molar flux by c; the easiest way to do that is to set c = 1 here.  This will yield a flux that
-     is analogous to the one computed by the Fick's law routine; see Equation (6.23) in the GOMA
-     manual. */
+     molar flux by c; the easiest way to do that is to set c = 1 here.  This will yield a flux
+     that is analogous to the one computed by the Fick's law routine; see Equation (6.23) in the
+     GOMA manual. */
 
   if (volume_flag) /*  RSL 8/24/00  */
   {
@@ -12442,7 +13110,7 @@ int get_particle_convection_velocity(double pvconv[DIM],
         pvconv_old[p] = 0.;
         if (cr->MassFluxModel == FICKIAN) {
           if (Diffusivity())
-            GOMA_EH(-1, "Error in Diffusivity.");
+            GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
           /* Get diffusivity and derivatives */
 
           /* MMH I don't think this matters for particle phase, there is no diffusion.
@@ -12455,7 +13123,7 @@ int get_particle_convection_velocity(double pvconv[DIM],
           }
         } else if (cr->MassFluxModel == DARCY) { /* diffusion induced convection is zero */
         } else {
-          GOMA_EH(-1, "Unimplemented mass flux constitutive relation.");
+          GOMA_EH(GOMA_ERROR, "Unimplemented mass flux constitutive relation.");
         }
       }
 
@@ -12472,7 +13140,7 @@ int get_particle_convection_velocity(double pvconv[DIM],
               for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
                 if (cr->MassFluxModel == FICKIAN) {
                   if (Diffusivity())
-                    GOMA_EH(-1, "Error in Diffusivity.");
+                    GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
                   for (w = 0; w < pd->Num_Species_Eqn; w++) {
                     d_pvconv->X[p][q][i] -=
@@ -12507,7 +13175,7 @@ int get_particle_convection_velocity(double pvconv[DIM],
           if (pd->v[pg->imtrx][var]) {
             if (cr->MassFluxModel == FICKIAN) {
               if (Diffusivity())
-                GOMA_EH(-1, "Error in Diffusivity.");
+                GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
               for (w = 0; w < pd->Num_Species_Eqn; w++) {
                 for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
