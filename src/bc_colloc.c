@@ -402,6 +402,11 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
                            BC_Types[bc_input_id].len_u_BC);
               break;
 
+            case DOUBLE_FILLET_BC:
+              f_double_fillet(ielem_dim, &func, d_func, BC_Types[bc_input_id].u_BC,
+                              BC_Types[bc_input_id].len_u_BC);
+              break;
+
             case FEATURE_ROLLON_BC:
 #ifdef FEATURE_ROLLON_PLEASE
               f_feature_rollon(ielem_dim, &func, d_func, BC_Types[bc_input_id].u_BC,
@@ -1135,6 +1140,197 @@ fprintf(stderr,"circle %g %g %g %g\n",xcirc,ycirc,xcen2, ycen2);
 
 } /* END of routine f_double_rad                                             */
 /*****************************************************************************/
+
+/*****************************************************************************/
+/* This function is used to create a double fillet geometry boundary condition.
+ * It is used in the case of a die with two fillets on the edges.
+ * This is a modified version of the f_double_rad function with more bookkeeping.
+ * f_double_rad is being kept for backward compatibility.
+ *
+ * Original modifications done by Chance.
+ */
+void f_double_fillet(const int ielem_dim,
+                     double *func,
+                     double d_func[],     /* dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+                     const double *p,     /*  function parameters from data card  */
+                     const int num_const) /* number of passed parameters   */
+{
+  /**************************** EXECUTION BEGINS *******************************/
+  double xpt1, ypt1, theta1, rad1, xcen1, ycen1, alpha1;
+  double xpt2, ypt2, theta2, rad2, xcen2, ycen2, alpha2;
+  double xi1, yi1, xf1, yf1, xi2, yi2, xf2, yf2, xint, yint;
+  double s1, f1, s2, f2, th1ub;
+  double theta1m, theta2m, th1, th2, th2t, curv_mid, rad_curv;
+  double beta = 0, xcirc, ycirc, dist1, dist2, dist_mid;
+  double atol = 1.0e-9;
+  int is_curved = 0;
+
+  if (af->Assemble_LSA_Mass_Matrix)
+    return;
+
+  if (num_const < 8)
+    GOMA_EH(GOMA_ERROR, "Need at least 8 parameters for Double Rad lip geometry bc!\n");
+  xpt1 = p[0];
+  ypt1 = p[1];
+  theta1 = p[2];
+  rad1 = p[3];
+  xpt2 = p[4];
+  ypt2 = p[5];
+  theta2 = p[6];
+  rad2 = p[7];
+  if (num_const >= 8) {
+    curv_mid = p[8];
+  } else {
+    curv_mid = 0.0;
+  }
+
+  is_curved = DOUBLE_NONZERO(curv_mid);
+
+  /*  slope of middle line                */
+
+  theta1m = atan2(ypt2 - ypt1, xpt2 - xpt1);
+  theta1m = theta1m > theta1 ? theta1m : theta1m + 2 * M_PIE;
+  theta2m = atan2(ypt1 - ypt2, xpt1 - xpt2);
+  alpha1 = 0.5 * (theta1m - theta1);
+  alpha2 = 0.5 * (theta2 - theta2m);
+
+  xcen1 = xpt1 + (rad1 / sin(alpha1)) * cos(theta1 + alpha1);
+  ycen1 = ypt1 + (rad1 / sin(alpha1)) * sin(theta1 + alpha1);
+  xcen2 = xpt2 + (rad2 / sin(alpha2)) * cos(theta2m + alpha2);
+  ycen2 = ypt2 + (rad2 / sin(alpha2)) * sin(theta2m + alpha2);
+
+  if (is_curved) {
+    rad_curv = 1. / curv_mid;
+    dist_mid = sqrt(SQUARE(xpt1 - xpt2) + SQUARE(ypt1 - ypt2));
+    beta = asin(0.5 * dist_mid * curv_mid);
+    xcirc = 0.5 * (xpt1 + xpt2) + rad_curv * cos(beta) * sin(theta1m);
+    ycirc = 0.5 * (ypt1 + ypt2) - rad_curv * cos(beta) * cos(theta1m);
+    /**   Shift fillet centers based on curvature  **/
+    /*  Using approximate distance from 90 degree corner for simplicity */
+
+    dist1 = rad1 + sqrt((rad_curv - 0.5 * dist_mid) * (rad_curv + 0.5 * dist_mid - 2 * rad1)) -
+            sqrt((rad_curv - 0.5 * dist_mid) * (rad_curv + 0.5 * dist_mid));
+    dist2 = rad2 + sqrt((rad_curv - 0.5 * dist_mid) * (rad_curv + 0.5 * dist_mid - 2 * rad2)) -
+            sqrt((rad_curv - 0.5 * dist_mid) * (rad_curv + 0.5 * dist_mid));
+#if 0
+     dist1 = 0;  dist2 = 0;
+#endif
+    xcen1 -= dist1 * cos(theta1);
+    ycen1 -= dist1 * sin(theta1);
+    xcen2 -= dist2 * cos(theta2);
+    ycen2 -= dist2 * sin(theta2);
+#if 0
+fprintf(stderr,"arc distances %g %g \n",dist1,dist2);
+fprintf(stderr,"rads %g %g %g %g\n",rad1, rad2, rad_curv,beta);
+fprintf(stderr,"circle %g %g %g %g\n",xcirc,ycirc,xcen2, ycen2);
+#endif
+  }
+
+  xf1 = xpt1 + rad1 / tan(alpha1) * cos(theta1);
+  yf1 = ypt1 + rad1 / tan(alpha1) * sin(theta1);
+  xi1 = xpt1 - rad1 / tan(alpha1) * cos(theta1m - M_PIE);
+  yi1 = ypt1 - rad1 / tan(alpha1) * sin(theta1m - M_PIE);
+  xi2 = xcen2 + rad2 * cos(theta2 + 0.5 * M_PIE);
+  yi2 = ycen2 + rad2 * sin(theta2 + 0.5 * M_PIE);
+  xf2 = xpt2 + rad2 / tan(alpha2) * cos(theta2m);
+  yf2 = ypt2 + rad2 / tan(alpha2) * sin(theta2m);
+
+  s1 = atan2(yi1 - ycen1, xi1 - xcen1) > 0 ? atan2(yi1 - ycen1, xi1 - xcen1)
+                                           : atan2(yi1 - ycen1, xi1 - xcen1) + 2.0 * M_PIE;
+  f1 = atan2(yf1 - ycen1, xf1 - xcen1) > 0 ? atan2(yf1 - ycen1, xf1 - xcen1)
+                                           : atan2(yf1 - ycen1, xf1 - xcen1) + 2.0 * M_PIE;
+  s2 = atan2(yi2 - ycen2, xi2 - xcen2) > 0 ? atan2(yi2 - ycen2, xi2 - xcen2)
+                                           : atan2(yi2 - ycen2, xi2 - xcen2) + 2.0 * M_PIE;
+  f2 = atan2(yf2 - ycen2, xf2 - xcen2) > 0 ? atan2(yf2 - ycen2, xf2 - xcen2)
+                                           : atan2(yf2 - ycen2, xf2 - xcen2) + 2.0 * M_PIE;
+
+  /**   compute angle of point on curve from arc center **/
+
+  th1 = atan2(fv->x[1] - ycen1, fv->x[0] - xcen1);
+  th2 = atan2(fv->x[1] - ycen2, fv->x[0] - xcen2);
+  th2t = th2 > 0.0 ? th2 : th2 + 2 * M_PIE;
+
+  if (sqrt((theta1 - 0.5 * M_PIE) * (theta1 - 0.5 * M_PIE)) < atol ||
+      sqrt((theta1 + 0.5 * M_PIE) * (theta1 + 0.5 * M_PIE)) < atol) {
+    if (sqrt((theta2 - 0.5 * M_PIE) * (theta2 - 0.5 * M_PIE)) < atol ||
+        sqrt((theta2 + 0.5 * M_PIE) * (theta2 + 0.5 * M_PIE)) < atol) {
+      th1ub = 0.5 * M_PIE;
+    } else {
+      xint = xpt1;
+      yint = (xint - xpt2) * tan(theta2) + ypt2;
+      th1ub = atan2(ycen1 - yint, xcen1 - xint);
+    }
+  } else if (sqrt((theta2 - 0.5 * M_PIE) * (theta2 - 0.5 * M_PIE)) < atol ||
+             sqrt((theta2 + 0.5 * M_PIE) * (theta2 + 0.5 * M_PIE)) < atol) {
+    xint = xpt2;
+    yint = (xint - xpt1) * tan(theta1) + ypt1;
+    th1ub = atan2(ycen1 - yint, xcen1 - xint);
+  } else if (sqrt((theta2 - theta1) * (theta2 - theta1)) < atol) {
+    th1ub = theta1;
+  } else {
+    th1ub = theta1;
+  }
+
+  /**  use different f depending on theta  **/
+
+  if ((theta1 - 0.5 * M_PIE) <= th1 && (th1 <= th1ub)) {
+    *func = (fv->x[1] - ypt1) * cos(theta1) - (fv->x[0] - xpt1) * sin(theta1);
+    d_func[MESH_DISPLACEMENT1] = -sin(theta1);
+    d_func[MESH_DISPLACEMENT2] = cos(theta1);
+    /*fprintf(stderr,"DR case 1 %g %g %g %g %g %g\n",*func,fv->x[0],fv->x[1],th1,th2,th2t);*/
+  } else if ((theta2 - alpha2) <= th2t && (th2t - 0.5 * M_PIE) <= theta2) {
+    *func = (fv->x[1] - ypt2) * cos(theta2) - (fv->x[0] - xpt2) * sin(theta2);
+    d_func[MESH_DISPLACEMENT1] = -sin(theta2);
+    d_func[MESH_DISPLACEMENT2] = cos(theta2);
+    /*fprintf(stderr,"DR case 2 %g %g %g %g %g %g\n",*func,fv->x[0],fv->x[1],th1,th2,th2t);*/
+  } else if (theta2m <= (th1 + 0.5 * M_PIE - beta) && th1 <= (theta1 - 0.5 * M_PIE)) {
+    *func = SQUARE(fv->x[0] - xcen1) + SQUARE(fv->x[1] - ycen1) - SQUARE(rad1);
+    d_func[MESH_DISPLACEMENT1] = 2. * (fv->x[0] - xcen1);
+    d_func[MESH_DISPLACEMENT2] = 2. * (fv->x[1] - ycen1);
+    /*fprintf(stderr,"DR case 3 %g %g %g %g %g %g\n",*func,fv->x[0],fv->x[1],th1,th2,th2t);*/
+  } else if ((theta2m - 0.5 * M_PIE - beta) <= th2 &&
+             ((th1 + 0.5 * M_PIE - beta) <= theta2m ||
+              (th1 + 0.5 * M_PIE - beta) <= (theta1m - M_PIE))) {
+    if (is_curved) {
+      *func = SQUARE(fv->x[0] - xcirc) + SQUARE(fv->x[1] - ycirc) - SQUARE(rad_curv);
+      d_func[MESH_DISPLACEMENT1] = 2. * (fv->x[0] - xcirc);
+      d_func[MESH_DISPLACEMENT2] = 2. * (fv->x[1] - ycirc);
+    } else {
+      *func = (fv->x[1] - ypt1) * cos(theta1m) - (fv->x[0] - xpt1) * sin(theta1m);
+      d_func[MESH_DISPLACEMENT1] = -sin(theta1m);
+      d_func[MESH_DISPLACEMENT2] = cos(theta1m);
+    }
+    /*fprintf(stderr,"DR case 4 %g %g %g %g %g %g %g
+     * %g\n",*func,fv->x[0],fv->x[1],th1,th2,th2t,theta1m,theta2m);*/
+  } else if ((th2t - 0.5 * M_PIE) >= theta2 && ((theta2m - 0.5 * M_PIE - beta) >= th2)) {
+    *func = SQUARE(fv->x[0] - xcen2) + SQUARE(fv->x[1] - ycen2) - SQUARE(rad2);
+    d_func[MESH_DISPLACEMENT1] = 2. * (fv->x[0] - xcen2);
+    d_func[MESH_DISPLACEMENT2] = 2. * (fv->x[1] - ycen2);
+    /*fprintf(stderr,"DR case 5 %g %g %g %g %g %g\n",*func,fv->x[0],fv->x[1],th1,th2,th2t);*/
+  } else {
+    if (s2 <= th2 && th2 <= f2) {
+      *func = SQUARE(fv->x[0] - xcen2) + SQUARE(fv->x[1] - ycen2) - SQUARE(rad2);
+      d_func[MESH_DISPLACEMENT1] = 2. * (fv->x[0] - xcen2);
+      d_func[MESH_DISPLACEMENT2] = 2. * (fv->x[1] - ycen2);
+      /*fprintf(stderr,"DR case 5 %g %g %g %g %g %g\n",*func,fv->x[0],fv->x[1],th1,th2,th2t);*/
+    } else if (s1 <= th1 && th1 <= f1) {
+      *func = (fv->x[1] - ypt1) * cos(theta1m) - (fv->x[0] - xpt1) * sin(theta1m);
+      d_func[MESH_DISPLACEMENT1] = -sin(theta1m);
+      d_func[MESH_DISPLACEMENT2] = cos(theta1m);
+    } else if (f1 <= th1 && th1 <= th1ub) {
+      *func = (fv->x[1] - ypt1) * cos(theta1) - (fv->x[0] - xpt1) * sin(theta1);
+      d_func[MESH_DISPLACEMENT1] = -sin(theta1);
+      d_func[MESH_DISPLACEMENT2] = cos(theta1);
+    } else {
+      fprintf(stderr, "Double Rad case not found... %g %g %g %g %g\n", fv->x[0], fv->x[1], th1, th2,
+              th2t);
+    }
+  }
+
+  if (ielem_dim == 3)
+    d_func[MESH_DISPLACEMENT3] = 0.0;
+
+} /* END of routine f_double_fillet */
 
 #ifdef FEATURE_ROLLON_PLEASE
 #include "feature_rollon.h"

@@ -2,6 +2,19 @@ from tpl_tools.packages import packages
 from tpl_tools import utils
 import os
 
+mapvar_patch = """diff --git a/packages/seacas/libraries/exodus_for/src/addrwrap.F b/packages/seacas/libraries/exodus_for/src/addrwrap.F
+index d5ae5c7..5075a23 100644
+--- a/packages/seacas/libraries/exodus_for/src/addrwrap.F
++++ b/packages/seacas/libraries/exodus_for/src/addrwrap.F
+@@ -1436,6 +1436,8 @@ C>       INQUIRE EXODUS PARAMETERS
+
+         IDEXO4 = IDEXO
+         INFREQ4 = INFREQ
++        INTRET = 0
++        RELRET4 = 0.0
+         CALL EXINQ4 (IDEXO4, INFREQ4, INTRET, RELRET4, CHRRET, IERR4)
+         RELRET = RELRET4
+         IERR = IERR4"""
 
 class Package(packages.CMakePackage):
     def __init__(self):
@@ -24,6 +37,15 @@ class Package(packages.CMakePackage):
         builder.env["FC"] = builder._registry.get_executable("mpifort")
 
     def configure_options(self, builder):
+        with open(
+            os.path.join(
+                builder._extract_dir, builder._extracted_folder, "mapvar_iee.patch"
+            ),
+            "w",
+        ) as f:
+            f.write(mapvar_patch)
+
+        builder.run_command(["patch", "-p1", "-i", "mapvar_iee.patch"])
         if builder.build_shared:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
@@ -44,6 +66,10 @@ class Package(packages.CMakePackage):
         builder.add_option("-DCMAKE_C_COMPILER=" + CC)
         builder.add_option("-DCMAKE_CXX_COMPILER=" + CXX)
         builder.add_option("-DCMAKE_Fortran_COMPILER=" + FC)
+        builder.add_option("-DCMAKE_BUILD_TYPE=RELEASE")
+        # Mapvar does not work on multiple blocks with -O2 or higher optimization levels
+        # force -O1 optimization level for now https://github.com/sandialabs/seacas/issues/688
+        builder.add_option("-DCMAKE_Fortran_FLAGS_RELEASE_OVERRIDE=-O1")
         builder.add_option("-DPNetCDF_ROOT:PATH=" + builder.env["PNETCDF_DIR"])
         builder.add_option("-DNetCDF_ROOT:PATH=" + builder.env["NETCDF_DIR"])
         builder.add_option("-DnetCDF_ROOT:PATH=" + builder.env["NETCDF_DIR"])

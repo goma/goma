@@ -801,6 +801,7 @@
 #define PLANE_BC                   961000000
 #define FILLET_BC                  961123400
 #define DOUBLE_RAD_BC              961123500
+#define DOUBLE_FILLET_BC           961123501
 #define FEATURE_ROLLON_BC          961223400
 #define ROLL_FLUID_BC              961124500
 #define SA_WALL_FUNC_BC            961124501

@@ -101,9 +101,10 @@ def download_file(url, filename, sha256=None, verify=True):
             context = ssl.create_default_context()
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
-            with urllib.request.urlopen(url, context=context) as req, open(
-                filename, "wb"
-            ) as f:
+            with (
+                urllib.request.urlopen(url, context=context) as req,
+                open(filename, "wb") as f,
+            ):
                 shutil.copyfileobj(req, f)
 
     if os.path.isfile(filename):

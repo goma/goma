@@ -292,7 +292,34 @@ int ad_beer_belly(void) {
   }
 
   if (elem_shape == SHELL || elem_shape == TRISHELL || (mp->ehl_integration_kind == SIK_S)) {
-    GOMA_EH(GOMA_ERROR, "This is not implemented for shell elements. ad_beer_belly");
+    dim++;
+    for (j = 0; j < pdim; j++) {
+      ad_fv->J[pd->Num_Dim - 1][j] = MapBf->J[pd->Num_Dim - 1][j] = (j + 1) * 1.0;
+    }
+
+    /*Real Quick check on Jacobian to make sure this arbitrary assignment
+     *didn't screw things up. Note that the detJ in the shell case can be
+     *negative, but it is important to point out that we are not using it for
+     *for integration, but only as a crutch for inversion of J */
+    if (pd->Num_Dim == 3) {
+      ad_fv->detJ =
+          ad_fv->J[0][0] * (ad_fv->J[1][1] * ad_fv->J[2][2] - ad_fv->J[1][2] * ad_fv->J[2][1]) -
+          ad_fv->J[0][1] * (ad_fv->J[1][0] * ad_fv->J[2][2] - ad_fv->J[2][0] * ad_fv->J[1][2]) +
+          ad_fv->J[0][2] * (ad_fv->J[1][0] * ad_fv->J[2][1] - ad_fv->J[2][0] * ad_fv->J[1][1]);
+    }
+    if (pd->Num_Dim == 2) {
+      ad_fv->detJ = ad_fv->J[0][0] * ad_fv->J[1][1] - ad_fv->J[0][1] * ad_fv->J[1][0];
+    }
+
+    if (fabs(ad_fv->detJ) < 1.e-10) {
+      zero_detJ = TRUE;
+#ifdef PARALLEL
+      fprintf(stderr, "\nP_%d: Uh-oh, detJ =  %e\n", ProcID, fabs(ad_fv->detJ.val()));
+#else
+      fprintf(stderr, "\n Uh-oh, detJ =  %e\n", fabs(ad_fv->detJ));
+#endif
+      return (2);
+    }
   }
 
   /* Compute inverse of Jacobian for only the MapBf right now */
@@ -574,6 +601,63 @@ extern "C" void fill_ad_field_variables() {
         ad_fv->grad_eddy_nu[q] +=
             ADType(num_ad_variables, ad_fv->offset[SHEAR_RATE] + i, *esp->SH[i]) *
             ad_fv->basis[SHEAR_RATE].grad_phi[i][q];
+      }
+    }
+  }
+
+  if (pd->gv[SHELL_SAT_1]) {
+    ad_fv->sh_sat_1 = 0;
+    for (int i = 0; i < ei[upd->matrix_index[SHELL_SAT_1]]->dof[SHELL_SAT_1]; i++) {
+      ad_fv->sh_sat_1 +=
+          ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_1] + i, *esp->sh_sat_1[i]) *
+          bf[SHELL_SAT_1]->phi[i];
+    }
+
+    for (int q = 0; q < pd->Num_Dim; q++) {
+      ad_fv->grad_sh_sat_1[q] = 0;
+
+      for (int i = 0; i < ei[upd->matrix_index[SHELL_SAT_1]]->dof[SHELL_SAT_1]; i++) {
+        ad_fv->grad_sh_sat_1[q] +=
+            ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_1] + i, *esp->sh_sat_1[i]) *
+            ad_fv->basis[SHELL_SAT_1].grad_phi[i][q];
+      }
+    }
+  }
+
+  if (pd->gv[SHELL_SAT_2]) {
+    ad_fv->sh_sat_2 = 0;
+    for (int i = 0; i < ei[upd->matrix_index[SHELL_SAT_2]]->dof[SHELL_SAT_2]; i++) {
+      ad_fv->sh_sat_2 +=
+          ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_2] + i, *esp->sh_sat_2[i]) *
+          bf[SHELL_SAT_2]->phi[i];
+    }
+
+    for (int q = 0; q < pd->Num_Dim; q++) {
+      ad_fv->grad_sh_sat_2[q] = 0;
+
+      for (int i = 0; i < ei[upd->matrix_index[SHELL_SAT_2]]->dof[SHELL_SAT_2]; i++) {
+        ad_fv->grad_sh_sat_2[q] +=
+            ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_2] + i, *esp->sh_sat_2[i]) *
+            ad_fv->basis[SHELL_SAT_2].grad_phi[i][q];
+      }
+    }
+  }
+
+  if (pd->gv[SHELL_SAT_3]) {
+    ad_fv->sh_sat_3 = 0;
+    for (int i = 0; i < ei[upd->matrix_index[SHELL_SAT_3]]->dof[SHELL_SAT_3]; i++) {
+      ad_fv->sh_sat_3 +=
+          ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_3] + i, *esp->sh_sat_3[i]) *
+          bf[SHELL_SAT_3]->phi[i];
+    }
+
+    for (int q = 0; q < pd->Num_Dim; q++) {
+      ad_fv->grad_sh_sat_3[q] = 0;
+
+      for (int i = 0; i < ei[upd->matrix_index[SHELL_SAT_3]]->dof[SHELL_SAT_3]; i++) {
+        ad_fv->grad_sh_sat_3[q] +=
+            ADType(num_ad_variables, ad_fv->offset[SHELL_SAT_3] + i, *esp->sh_sat_3[i]) *
+            ad_fv->basis[SHELL_SAT_3].grad_phi[i][q];
       }
     }
   }
