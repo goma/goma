@@ -4189,10 +4189,9 @@ int Generalized_FV_Diffusivity(int species_no) /* current species number*/
 
   double T;
 
-  double d_Vfh_domega[MAX_CONC], d_alpha_dT[MAX_CONC], d_Dp_dT[MAX_CONC];
+  double d_alpha_dT[MAX_CONC], d_Dp_dT[MAX_CONC];
   double d_Dp_dc[MAX_CONC][MAX_CONC], d_num_dc[MAX_CONC][MAX_CONC], d_alpha_dc[MAX_CONC][MAX_CONC],
       d_Vfh_dc[MAX_CONC];
-  double d_num_domega[MAX_CONC][MAX_CONC];
   double d_omega_dc[MAX_CONC][MAX_CONC], drho_dc[MAX_CONC][MAX_CONC];
   double numerator[MAX_CONC], omega[MAX_CONC];
   double xsi[MAX_CONC][MAX_CONC];
@@ -4314,13 +4313,10 @@ int Generalized_FV_Diffusivity(int species_no) /* current species number*/
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
     V_fh_gamma += K1_gamma[w] * omega[w] * (K2mTg[w] + T);
     d_Vfh_dT += K1_gamma[w] * omega[w];
-    d_Vfh_domega[w] = K1_gamma[w] * (K2mTg[w] + T) - K1_gamma[w2] * (K2mTg[w2] + T);
     numerator[w] = omega[w2] * vs[w2] * xsi[w][w2];
     numerator[w2] += omega[w] * vs[w] * xsi[w2][w];
-    d_num_domega[w2][w] = vs[w] * xsi[w2][w] - vs[w2] * xsi[w2][w2];
     for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
       numerator[w] += omega[w1] * vs[w1] * xsi[w][w1];
-      d_num_domega[w][w1] = vs[w1] * xsi[w][w1] - vs[w2] * xsi[w][w2];
     }
   }
 
