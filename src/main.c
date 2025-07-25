@@ -565,11 +565,9 @@ int main(int argc, char **argv)
 
     if (efv->Num_external_field != 0) {
       for (i = 0; i < efv->Num_external_field; i++) {
-        if (efv->ipix[i] == 0) {
-          filenames[n_files] = malloc(sizeof(char) * MAX_FNL);
-          memcpy(filenames[n_files], efv->file_nm[i], MAX_FNL);
-          n_files++;
-        }
+        filenames[n_files] = malloc(sizeof(char) * MAX_FNL);
+        memcpy(filenames[n_files], efv->file_nm[i], MAX_FNL);
+        n_files++;
       }
     }
 
@@ -701,12 +699,6 @@ int main(int argc, char **argv)
     }
   }
 
-  if (efv->Num_external_field != 0) {
-    for (i = 0; i < efv->Num_external_field; i++) {
-      strncpy(efv->file_nm_serial[i], efv->file_nm[i], MAX_FNL);
-    }
-  }
-
   /***********************************************************************/
   /***********************************************************************/
   /***********************************************************************/
@@ -811,7 +803,7 @@ int main(int argc, char **argv)
     }
   }
 #ifdef FP_EXCEPT
-  feenableexcept((FE_OVERFLOW | FE_UNDERFLOW | FE_DIVBYZERO | FE_INVALID));
+  feenableexcept((FE_OVERFLOW | FE_DIVBYZERO | FE_INVALID));
 #endif
 
   /***********************************************************************/
