@@ -267,15 +267,16 @@ int SURFACE_VECTORS = -1;      /* vector field of normals and tangents on
                                 * surfaces, curves and vertices */
 int SHELL_NORMALS = -1;        /* vector field of smoothed normals computed from fv->sh_ang */
 int THIRD_INVAR_STRAIN = -1;
-int TIME_DERIVATIVES = -1;           /* time derivatives */
-int TOTAL_STRESS11 = -1;             /* sum over all modes for multi-mode models */
-int TOTAL_STRESS12 = -1;             /* sum over all modes for multi-mode models */
-int TOTAL_STRESS13 = -1;             /* sum over all modes for multi-mode models */
-int TOTAL_STRESS22 = -1;             /* sum over all modes for multi-mode models */
-int TOTAL_STRESS23 = -1;             /* sum over all modes for multi-mode models */
-int TOTAL_STRESS33 = -1;             /* sum over all modes for multi-mode models */
-int USER_POST = -1;                  /* a user defined function */
-int PP_Viscosity = -1;               /* Viscosity */
+int TIME_DERIVATIVES = -1; /* time derivatives */
+int TOTAL_STRESS11 = -1;   /* sum over all modes for multi-mode models */
+int TOTAL_STRESS12 = -1;   /* sum over all modes for multi-mode models */
+int TOTAL_STRESS13 = -1;   /* sum over all modes for multi-mode models */
+int TOTAL_STRESS22 = -1;   /* sum over all modes for multi-mode models */
+int TOTAL_STRESS23 = -1;   /* sum over all modes for multi-mode models */
+int TOTAL_STRESS33 = -1;   /* sum over all modes for multi-mode models */
+int USER_POST = -1;        /* a user defined function */
+int PP_Viscosity = -1;     /* Viscosity */
+int PP_Diffusivity = -1;
 int PP_FlowingLiquid_Viscosity = -1; /* Flowing Liquid Viscosity - Porous Brinkman term */
 int PP_VolumeFractionGas = -1; /* Volume fraction of gas in a foam or other two phase material */
 int ACOUSTIC_PRESSURE = -1;
@@ -1103,10 +1104,19 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[PP_VolumeFractionGas] = 1.0;
   }
 
-  if (DENSITY != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
+  if (DENSITY != -1 &&
+      (pd->e[pg->imtrx][R_MOMENTUM1] || (!pd->gv[R_MOMENTUM1] && pd->e[pg->imtrx][R_MASS]))) {
     rho = density(NULL, time);
     local_post[DENSITY] = rho;
     local_lumped[DENSITY] = 1.;
+  }
+
+  if (PP_Diffusivity != -1 && pd->e[pg->imtrx][R_MASS]) {
+    Diffusivity();
+    for (w = 0; w < pd->Num_Species_Eqn; w++) {
+      local_post[PP_Diffusivity + w] = mp->diffusivity[w];
+      local_lumped[PP_Diffusivity + w] = 1.;
+    }
   }
 
   if (HEAVISIDE != -1 && ls != NULL && pd->e[pg->imtrx][R_FILL]) {
@@ -1739,6 +1749,13 @@ static int calc_standard_fields(double **post_proc_vect,
             n[w][a] = s_terms.diff_flux[w][a];
           }
         }
+      } else if (cr->MassFluxModel == HYDRODYNAMIC_SEDIMENT) {
+        for (w = 0; w < pd->Num_Species_Eqn; w++) {
+          hydro_sediment_flux(&s_terms, w);
+          for (a = 0; a < dim; a++) {
+            n[w][a] = s_terms.diff_flux[w][a];
+          }
+        }
       } else {
         for (w = 0; w < pd->Num_Species_Eqn; w++) {
           for (a = 0; a < dim; a++) {
@@ -2228,6 +2245,7 @@ static int calc_standard_fields(double **post_proc_vect,
       }
       break;
     case SPECIES_MASS_FRACTION:
+    case SPECIES_VOL_FRACTION:
     case SPECIES_UNDEFINED_FORM:
       local_post[UNTRACKED_SPEC] = 1.0;
       for (j = 0; j < pd->Num_Species_Eqn; j++) {
@@ -7837,6 +7855,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Electric Field", &ELECTRIC_FIELD);
   iread = look_for_post_proc(ifp, "Electric Field Magnitude", &ELECTRIC_FIELD_MAG);
   iread = look_for_post_proc(ifp, "Viscosity", &PP_Viscosity);
+  iread = look_for_post_proc(ifp, "Diffusivity", &PP_Diffusivity);
   iread = look_for_post_proc(ifp, "FlowingLiquid Viscosity", &PP_FlowingLiquid_Viscosity);
   iread = look_for_post_proc(ifp, "Volume Fraction of Gas Phase", &PP_VolumeFractionGas);
   iread = look_for_post_proc(ifp, "Density", &DENSITY);
@@ -9731,7 +9750,10 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     index_post++;
   }
 
-  if (DENSITY != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+  if (DENSITY != -1 &&
+      ((Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) ||
+       (upd->matrix_index[R_MOMENTUM1] == -1 && upd->matrix_index[R_MASS] == pg->imtrx &&
+        Num_Var_In_Type[pg->imtrx][R_MASS]))) {
     set_nv_tkud(rd, index, 0, 0, -2, "RHO", "[1]", "Density", FALSE);
     index++;
     if (DENSITY == 2) {
@@ -9740,6 +9762,20 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     }
     DENSITY = index_post;
     index_post++;
+  }
+
+  if (PP_Diffusivity != -1 && (Num_Var_In_Type[pg->imtrx][R_MASS])) {
+    if (PP_Diffusivity == 2) {
+      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+    }
+    PP_Diffusivity = index_post;
+    for (w = 0; w < upd->Max_Num_Species_Eqn; w++) {
+      sprintf(species_name, "D%d", w);
+      sprintf(species_desc, "Diffusion Coefficient of %d", w);
+      set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+      index++;
+      index_post++;
+    }
   }
 
   if (HEAVISIDE != -1 && ls != NULL && Num_Var_In_Type[pg->imtrx][R_FILL]) {

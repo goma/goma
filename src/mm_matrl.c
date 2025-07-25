@@ -917,6 +917,19 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
         }
       }
       break;
+    case SPECIES_VOL_FRACTION:
+      for (w = 0; w < matrl->Num_Species; w++) {
+        rho += ((1.0 / matrl->specific_volume[w]) - (1.0 / sv_p)) * stateVector[SPECIES_UNK_0 + w];
+      }
+      rho += 1.0 / sv_p;
+
+      if (doJac) {
+        for (w = 0; w < matrl->Num_Species_Eqn; w++) {
+          drho_dc = ((1.0 / matrl->specific_volume[w]) - (1.0 / sv_p));
+          propertyJac_addEnd(densityJac, MASS_FRACTION, matID, w, drho_dc, rho);
+        }
+      }
+      break;
     default:
       GOMA_WH(-1, "SOLVENT_POLYMER defaulting to MASS_FRACTION\n");
       for (w = 0; w < matrl->Num_Species; w++) {

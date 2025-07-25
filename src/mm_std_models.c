@@ -2925,6 +2925,18 @@ int Diffusivity(void)
       err = Generalized_FV_Diffusivity(w);
       break;
 
+    case SEDIMENT:
+      err = sediment_compress_diffusivity(w, mp->u_diffusivity[w]);
+      break;
+
+    case BRUGGEMANN:
+      err = Bruggemann_diffusivity(w, mp->u_diffusivity[w]);
+      break;
+
+    case BRUGGEMANN_FREE_VOL:
+      err = Bruggemann_free_volume_diffusivity(w, mp->u_diffusivity[w]);
+      break;
+
     case TABLE: {
       struct Data_Table *table_local;
       table_local = MP_Tables[mp->diffusivity_tableid[w]];
@@ -2986,6 +2998,68 @@ int Diffusivity(void)
   return err;
 } /* end of Diffusivity() */
 
+/*
+ * int Free_Vol_Theory_Diffusivity(param)
+ *
+ *      Free Volume Theory Diffusivity Model
+ * ------------------------------------------------------------------------------
+ * This routine is responsible computing the diffusivity according to
+ * free volume theory. See Paper by Duda et al., AIChE J., Vol 28, Pg 279.
+ *
+ *     input:  mp->u_diffusivity = param[0-16]
+ *                  param[0] = Specific critical hole free volume of component 0
+ *                             required for a jump
+ *                  param[1] = Specific critical hole free volume of component 1
+ *                             required for a jump
+ *                  param[2] = K11/gamma = free volume parameter 11 divided by overlap
+ *                              factor for free volume
+ *                  param[3] =  K12/gamma = free volume parameter 12 divided by overlap
+ *                              factor for free volume
+ *                  param[4] =  K21 - T_gl = free volume parameter 21 minus glass transition
+ *                                           temperature for component 1
+ *                  param[5] =  K22 - T_2l = free volume parameter 22 minus glass transition
+ *                                           temperature for component 2
+ *                  param[6] =  chi = interaction parameter for flory-huggins theory
+ *                  param[7] = x_si= ratio of critical molar volume of solvent jumping unit
+ *                              to critical molar volume of jumping unit of polymer.
+ *                  param[8] = pre-exponential factor for diffusivity (D0)
+ *                  param[9]= critical energy per mole to overcome attractive forces
+ *                            divided by the Natural Gas law constant (K).
+ *                  param[10]= specific volume of pure component 1
+ *                  param[11]= specific volume of pure component 2
+ *
+ *                  param[12] = free volume model number
+ *                  param[12] = 0 = FV 0  D_11 = (Vrentas and Duda, 1977)
+ *                  param[12] = 1 = FV 2  (Zelinsky and Hanley , 1999)
+ *                  param[12] = 2 = FV 3   self
+ *                  param[12] = 3 = FV 4 (Alsoy and Duda, 1999)
+ *                  param[12] = 4 = FVTO (friction-based)
+ *
+ *                  param[13] = solvent molecular weight
+ *                  param[14] = polymer molecular weight
+ *                  param[15] = D_o_polymer - polymer D_o for polymer
+ *						 self-diffusion coefficient
+ *                  param[16] = E_div_R_polymer - E_activation/R - polymer
+ *						 self-diffusion model
+ *                  Note: D_o_polymer and E_div_R_polymer are used SOLELY
+ *		  		in the friction-based model !!
+ *
+ *     output:  mp->diffusivity[w]
+ *              mp->d_diffusivity[w][w1]
+ *
+ * NOTE: The diffusivity according to this theory does not approach to
+ * self-diffusivity (of solvent component) as the mixture approaches pure solvent.
+ * One can make a correction by making sure that pow((1 - vol_frac_1),2)*(1.-2.*chi*vol_frac_1)
+ * does not go to zero as vol_frac_1 -> 1.  For example, use a cutoff
+ *  if (vol_frac_1 > 0.7)  vol_frac_1 = 0.7;
+ *
+ * NOTE: This subroutine has been modified to based fv->c on species_density,
+ *       and NOT MASS_FRACTION. ACSun 5/00
+ *
+ * Modified to include 4 additional free volume models and is based on
+ * Price et al., AIChE J., Vol 49, Pg 309.  APErvin 10/03
+ * ------------------------------------------------------------------------------
+ */
 /*
  * int Free_Vol_Theory_Diffusivity(param)
  *
@@ -3232,6 +3306,7 @@ int Free_Vol_Theory_Diffusivity(int species_no, /* current species number*/
 
     Q_thermo = ((1.0 - vol_frac_1) * (1.0 - (2.0 * vol_frac_1 * chi))) +
                ((vol_frac_1 * V_10 * MW_1) / (V_20 * MW_2 * beta));
+    // Q_thermo = 1.0;
   }
 
   /* For the friction-based model  param[12] = 4 */
@@ -3269,7 +3344,7 @@ int Free_Vol_Theory_Diffusivity(int species_no, /* current species number*/
     break;
 
   default:
-    GOMA_EH(GOMA_ERROR, "Invalid Free Volume model number.");
+    GOMA_EH(-1, "Invalid Free Volume model number.");
     break;
 
   } /* end of switch(fv_model_number) */
@@ -3291,7 +3366,7 @@ int Free_Vol_Theory_Diffusivity(int species_no, /* current species number*/
         term4 = (K11_gamma * C[0] + K12_gamma * C[1]) * (term2 + term3);
 
         d_D2_D1_dT = (term4 / (pow(V_fh_gamma, 2))) + term1;
-        dA_dT = ((vol_frac_1 * MW_2 * V_20) / (MW_1 * V_10)) * d_D2_D1_dT;
+        dA_dT = ((vol_frac_1 * D2 * MW_2 * V_20) / (D1 * MW_1 * V_10)) * d_D2_D1_dT;
         d_D1_dT = (D1 * (E_div_R / T / T)) +
                   (D1 * ((C[0] * V_1s + C[1] * x_si * V_2s) / pow(V_fh_gamma, 2.0)) *
                    (K11_gamma * C[0] + K12_gamma * C[1]));
@@ -3320,6 +3395,7 @@ int Free_Vol_Theory_Diffusivity(int species_no, /* current species number*/
           d_D1_dc[w] = D_o * exponen * dexponen_dc[w];
           dQ_dc[w] = d_vol_frac_1_dc[w] * (4.0 * chi * vol_frac_1 - 2.0 * chi +
                                            (V_10 * MW_1) / (V_20 * MW_2 * beta) - 1.0);
+          // dQ_dc[w] = 0.0;
         }
 
         if (fv_model_number == 4) {
@@ -3383,6 +3459,644 @@ int Free_Vol_Theory_Diffusivity(int species_no, /* current species number*/
   propertyJac_destroy(&densityJac);
   return (0);
 }
+
+/**********************************************************************************/
+/*
+ * int sediment_compress_diffusivity(param)
+ *
+ *      Sedimentation and Compressibility Diffusivity Model
+ *
+ * ------------------------------------------------------------------------------
+ * This routine is responsible computing the diffusivity according to
+ * sedimentation and compressibility.
+ * See Russell, Saville, Schowlater "Colloidal Dispersions" Book
+ *
+ *     input:  mp->u_diffusivity = param[0-3]
+ *                  param[0] = Boltzmann constant in appropriate unit
+ *
+ *                  param[1] = Solvent viscosity
+ *
+ *                  param[2] = Particle radius
+ *
+ *                  param[3] = Maximum packing volume fraction
+ *
+ *
+ *     output:  mp->diffusivity[w]
+ *              mp->d_diffusivity[w][w1]
+ *
+ * NOTE: This subroutine is only written for volume fraction base
+ *
+ * ------------------------------------------------------------------------------
+ */
+int sediment_compress_diffusivity(int species_no, /* current species number*/
+                                  double *param)  /* free volume params from mat file */
+{
+  double T = fv->T;
+
+  double kb = param[0];      /* Boltzmann constant */
+  double visc = param[1];    /* Solvent viscosity */
+  double R = param[2];       /* Particle radius */
+  double phi_max = param[3]; /* Maximum volume fraction */
+  double nexp = param[4];    /* Sedimentation coefficient exponent */
+
+  /* Get particle volume fraction*/
+  double phi_part = fv->c[species_no];
+  double phi_adj = 0.0;
+  double dphi_part_dc_part = 1.0;
+
+  PROPERTYJAC_STRUCT *densityJac = NULL;
+  propertyJac_realloc(&densityJac, mp->Num_Species + 1);
+  double density_tot = calc_density(mp, TRUE, densityJac, 0.0);
+
+  switch (mp->Species_Var_Type) {
+  case SPECIES_VOL_FRACTION:
+  case SPECIES_UNDEFINED_FORM:
+    phi_part = fv->c[species_no];
+    dphi_part_dc_part = 1.0;
+    break;
+
+  case SPECIES_MASS_FRACTION:
+    phi_part = density_tot * mp->specific_volume[species_no] * fv->c[species_no];
+    dphi_part_dc_part = mp->specific_volume[species_no] * densityJac->JacVector[species_no];
+    break;
+
+  case SPECIES_DENSITY:
+    phi_part = mp->specific_volume[species_no] * fv->c[species_no];
+    dphi_part_dc_part = mp->specific_volume[species_no];
+    break;
+
+  case SPECIES_CONCENTRATION:
+    phi_part = mp->molar_volume[species_no] * fv->c[species_no];
+    dphi_part_dc_part = mp->molar_volume[species_no];
+    break;
+
+  default:
+    GOMA_EH(-1, "That Material Species Type is not supported");
+    break;
+  }
+
+  /* Calculate base diffusivity based on Stokes Einstein relation */
+  double Diff0 = (kb * T) / (6.0 * M_PIE * visc * R);
+  double dDiff0_dT = kb / (6.0 * M_PIE * visc * R);
+
+  /* Calculate compressibility factor */
+  double Z = 0.0;
+  double dZ_dphi_part = 0.0;
+  double d2Z_dphi_part_2 = 0.0;
+
+  if (phi_part < 0.99 * phi_max) {
+    phi_adj = phi_part;
+    Z = 1.0 / (phi_max - phi_part);
+    dZ_dphi_part = dphi_part_dc_part * 1.0 / ((phi_max - phi_part) * (phi_max - phi_part));
+    d2Z_dphi_part_2 = dphi_part_dc_part * 2.0 /
+                      ((phi_max - phi_part) * (phi_max - phi_part) * (phi_max - phi_part));
+  } else {
+    phi_adj = 0.99 * phi_max;
+    Z = 1.0 / (phi_max - phi_adj);
+    dZ_dphi_part = 0.0;
+    d2Z_dphi_part_2 = 0.0;
+  }
+
+  /* Calculate sedimentation coefficient */
+  double K = 1.0;
+  double dK_dphi_part = 0.0;
+
+  if (phi_part > 0.0) {
+    if (phi_part < 1.0) {
+      K = pow((1.0 - phi_part), nexp);
+      dK_dphi_part = (-dphi_part_dc_part) * nexp * pow((1.0 - phi_part), (nexp - 1.0));
+    } else {
+      K = 0.0;
+      dK_dphi_part = 0.0;
+    }
+  }
+
+  /* Evaluate diffusion coefficient and its sensitivities */
+  double Diff = Diff0 * K * (Z + phi_adj * dZ_dphi_part);
+  double dDiff_dphi_part = Diff0 * dK_dphi_part * (Z + phi_adj * dZ_dphi_part) +
+                           Diff0 * K * (dZ_dphi_part + dZ_dphi_part + phi_adj * d2Z_dphi_part_2);
+
+  double dDiff_dT = dDiff0_dT * K * (Z + phi_adj * dZ_dphi_part);
+
+  /* Export the diffusion coefficient and its sensitivities to the struct */
+  mp->diffusivity[species_no] = Diff;
+  mp->d_diffusivity[species_no][TEMPERATURE] = dDiff_dT;
+  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + species_no] = dDiff_dphi_part;
+
+  if (densityJac != NULL) {
+    propertyJac_destroy(&densityJac);
+  }
+
+  return (0);
+}
+/**********************************************************************************/
+
+/**********************************************************************************/
+/*
+ * int Bruggemann_diffusivity(param)
+ *
+ *      Bruggemann Diffusivity Model
+ *
+ * ------------------------------------------------------------------------------
+ * This routine is responsible computing the Bruggemann diffusivity
+ *
+ *     input:  mp->u_diffusivity = param[0-2]
+ *                  param[0] = Species index of particles
+ *
+ *                  param[1] = Diffusivity at zero particles volume fraction
+ *
+ *                  param[2] = Exponent
+ * *
+ *
+ *     output:  mp->diffusivity[w]
+ *              mp->d_diffusivity[w][w1]
+ *
+ * NOTE: This subroutine is only written for volume fraction base
+ *
+ * ------------------------------------------------------------------------------
+ */
+int Bruggemann_diffusivity(int species_no, /* current species number*/
+                           double *param)  /* params from mat file */
+{
+
+  int i_part = (int)param[0]; /* Species index of particles */
+  double Diff0 = param[1];    /* Diffusivity without particles */
+  double nexp = param[2];     /* Exponent */
+
+  /* Get particle volume fraction*/
+  PROPERTYJAC_STRUCT *densityJac = NULL;
+  double conv_factor = 1.0;
+  double phi_part = fv->c[i_part];
+
+  switch (mp->Species_Var_Type) {
+  case SPECIES_VOL_FRACTION:
+  case SPECIES_UNDEFINED_FORM:
+    conv_factor = 1.0;
+    phi_part = fv->c[i_part];
+    break;
+
+  case SPECIES_MASS_FRACTION:
+    propertyJac_realloc(&densityJac, mp->Num_Species + 1);
+    conv_factor = calc_density(mp, TRUE, densityJac, 0.0);
+    conv_factor *= mp->specific_volume[i_part];
+    phi_part = conv_factor * fv->c[i_part];
+    break;
+
+  case SPECIES_DENSITY:
+    conv_factor = mp->specific_volume[i_part];
+    phi_part = conv_factor * fv->c[i_part];
+    break;
+
+  case SPECIES_CONCENTRATION:
+    conv_factor = mp->molar_volume[i_part];
+    phi_part = conv_factor * fv->c[i_part];
+    break;
+
+  default:
+    GOMA_EH(-1, "That Material Species Type is not supported");
+    break;
+  }
+
+  /* Evaluate diffusion coefficient and its sensitivities */
+  double phi_liq = 1.0 - phi_part;
+  double Diff = Diff0;
+  double dDiff_dphi_part = 0.0;
+
+  if (phi_liq < 0.0) {
+    Diff = 0.0;
+    dDiff_dphi_part = 0.0;
+  } else if (phi_liq > 1.0) {
+    Diff = Diff0;
+    dDiff_dphi_part = 0.0;
+  } else {
+    Diff = Diff0 * pow(phi_liq, nexp);
+    dDiff_dphi_part = nexp * Diff0 * pow(phi_liq, (nexp - 1.0)) * (-conv_factor);
+  }
+
+  /* Export the diffusion coefficient and its sensitivities to the struct */
+  mp->diffusivity[species_no] = Diff;
+  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + i_part] = dDiff_dphi_part;
+
+  if (densityJac != NULL) {
+    propertyJac_destroy(&densityJac);
+  }
+
+  return (0);
+}
+/**********************************************************************************/
+
+/**********************************************************************************/
+/*
+ * int Bruggemann_free_volume_diffusivity(param)
+ *
+ *      Bruggemann Free Volume Diffusivity Model
+ *
+ * ------------------------------------------------------------------------------
+ * This routine is responsible computing the Bruggemann Free Volume diffusivity
+ *
+ *     input:  mp->u_diffusivity = param[0-11]
+ *
+ *             Bruggemann parameters
+ *
+ *                  param[0] = Species index of particles
+ *
+ *                  param[1] = Exponent
+ *
+ *             Free volume parameters
+ *
+ *                  param[2] = Specific critical hole free volume of solvent
+ *                             required for a jump
+ *                  param[3] = Specific critical hole free volume of  polymer
+ *                             required for a jump
+ *                  param[4] = K11/gamma = free volume parameter 11 divided by overlap
+ *                              factor for free volume
+ *                  param[5] =  K12/gamma = free volume parameter 12 divided by overlap
+ *                              factor for free volume
+ *                  param[6] =  K21 - T_gl = free volume parameter 21 minus glass transition
+ *                                           temperature for component solvent
+ *                  param[7] =  K22 - T_2l = free volume parameter 22 minus glass transition
+ *                                           temperature for component polymer
+ *                  param[8] =  chi = interaction parameter for flory-huggins theory
+ *                  param[9] = x_si= ratio of critical molar volume of solvent jumping unit
+ *                              to critical molar volume of jumping unit of polymer.
+ *                  param[10] = pre-exponential factor for diffusivity (D0)
+ *                  param[11] = critical energy per mole to overcome attractive forces
+ *                              divided by the Natural Gas law constant (K).
+ *
+ *
+ *     output:  mp->diffusivity[w]
+ *              mp->d_diffusivity[w][w1]
+ *
+ * NOTE: This subroutine is only written for volume fraction base
+ *
+ * ------------------------------------------------------------------------------
+ */
+int Bruggemann_free_volume_diffusivity(int species_no, /* current species number*/
+                                       double *param)  /* free volume params from mat file */
+{
+
+  /****** Extract the parameters **********/
+
+  /* Bruggemann parameters */
+  int i_part = (int)param[0]; /* Species index of particles */
+  double nexp = param[1];     /* Exponent */
+
+  /* Free volume theory parameters */
+  double V_1s = param[2];      /* solvent specific critical-hole volume */
+  double V_2s = param[3];      /* polymer specific critical-hole volume */
+  double K11_gamma = param[4]; /* solvent free volume parameter */
+  double K12_gamma = param[5]; /* polymer free volume parameter */
+  double K21mTg1 = param[6];   /* free volume/transition parameter */
+  double K22mTg2 = param[7];   /* free volume/transition parameter */
+  double chi = param[8];       /* Flory-Huggins polymer/solvent interaction parameter */
+  double x_si = param[9];      /* Ratio of solvent and polymer jumping units */
+  double D_o = param[10];      /* Binary diffusivity for solvent-polymer system */
+  double E_div_R = param[11];  /* ratio of activation energy to gas constant*/
+
+  /********* Get mass and volume fractions of each component ********/
+
+  PROPERTYJAC_STRUCT *densityJac = NULL;
+  propertyJac_realloc(&densityJac, mp->Num_Species + 1);
+  double density_tot = calc_density(mp, TRUE, densityJac, 0.0);
+
+  double phi_part = fv->c[i_part];
+  double phi_solv = fv->c[species_no];
+  double dphi_part_dc_part = 1.0;
+  double dphi_solv_dc_solv = 1.0;
+
+  double omega_part = fv->c[i_part];
+  double omega_solv = fv->c[species_no];
+  double domega_part_dc_part = 1.0;
+  double domega_solv_dc_solv = 1.0;
+
+  double drho_dc_part = 1.0;
+  double drho_dc_solv = 1.0;
+
+  switch (mp->Species_Var_Type) {
+  case SPECIES_VOL_FRACTION:
+  case SPECIES_UNDEFINED_FORM:
+    phi_part = fv->c[i_part];
+    phi_solv = fv->c[species_no];
+    dphi_part_dc_part = 1.0;
+    dphi_solv_dc_solv = 1.0;
+
+    omega_part = (1.0 / density_tot) * 1.0 / (mp->specific_volume[i_part]) * fv->c[i_part];
+    omega_solv = (1.0 / density_tot) * 1.0 / (mp->specific_volume[species_no]) * fv->c[species_no];
+    drho_dc_part = densityJac->JacVector[i_part];
+    drho_dc_solv = densityJac->JacVector[species_no];
+    domega_part_dc_part =
+        -(1.0 / density_tot / density_tot) * 1.0 / (mp->specific_volume[i_part]) * drho_dc_part;
+    domega_solv_dc_solv =
+        -(1.0 / density_tot / density_tot) * 1.0 / (mp->specific_volume[species_no]) * drho_dc_solv;
+    break;
+
+  case SPECIES_MASS_FRACTION:
+    phi_part = density_tot * mp->specific_volume[i_part] * fv->c[i_part];
+    phi_solv = density_tot * mp->specific_volume[species_no] * fv->c[species_no];
+    drho_dc_part = densityJac->JacVector[i_part];
+    drho_dc_solv = densityJac->JacVector[species_no];
+    dphi_part_dc_part = mp->specific_volume[i_part] * drho_dc_part;
+    dphi_solv_dc_solv = mp->specific_volume[species_no] * drho_dc_solv;
+
+    omega_part = fv->c[i_part];
+    omega_solv = fv->c[species_no];
+    domega_part_dc_part = 1.0;
+    domega_solv_dc_solv = 1.0;
+    break;
+
+  case SPECIES_DENSITY:
+    phi_part = mp->specific_volume[i_part] * fv->c[i_part];
+    phi_solv = mp->specific_volume[species_no] * fv->c[species_no];
+    dphi_part_dc_part = mp->specific_volume[i_part];
+    dphi_solv_dc_solv = mp->specific_volume[species_no];
+
+    omega_part = 1.0 / (density_tot)*fv->c[i_part];
+    omega_solv = 1.0 / (density_tot)*fv->c[species_no];
+    drho_dc_part = densityJac->JacVector[i_part];
+    drho_dc_solv = densityJac->JacVector[species_no];
+    domega_part_dc_part = (-1.0 / density_tot / density_tot) * drho_dc_part;
+    domega_solv_dc_solv = (-1.0 / density_tot / density_tot) * drho_dc_solv;
+
+    break;
+
+  case SPECIES_CONCENTRATION:
+    phi_part = mp->molar_volume[i_part] * fv->c[i_part];
+    phi_solv = mp->molar_volume[species_no] * fv->c[species_no];
+    dphi_part_dc_part = mp->molar_volume[i_part];
+    dphi_solv_dc_solv = mp->molar_volume[species_no];
+
+    omega_part = mp->molar_volume[i_part] * mp->molecular_weight[i_part] * fv->c[i_part];
+    omega_solv =
+        mp->molar_volume[species_no] * mp->molecular_weight[species_no] * fv->c[species_no];
+    domega_part_dc_part = mp->molar_volume[i_part] * mp->molecular_weight[i_part];
+    domega_solv_dc_solv = mp->molar_volume[species_no] * mp->molecular_weight[species_no];
+    break;
+  default:
+    GOMA_EH(-1, "That Material Species Type is not supported");
+    break;
+  }
+
+  /*********** Calculate Bruggemann contribution ********/
+
+  double phi_liq = 1.0 - phi_part;
+  double dphi_liq_dc_part = -dphi_part_dc_part;
+  double Diff_Bruggemann = 1.0;
+  double dDiff_Bruggemann_dc_part = 0.0;
+
+  if (phi_liq < 0.0) {
+    Diff_Bruggemann = 0.0;
+    dDiff_Bruggemann_dc_part = 0.0;
+  } else if (phi_liq > 1.0) {
+    Diff_Bruggemann = 1.0;
+    dDiff_Bruggemann_dc_part = 0.0;
+  } else {
+    Diff_Bruggemann = pow(phi_liq, nexp);
+    dDiff_Bruggemann_dc_part = nexp * pow(phi_liq, (nexp - 1.0)) * dphi_liq_dc_part;
+  }
+
+  /*********** Calculate Free Volume contribution ********/
+
+  double T = fv->T;
+  double phi_poly = 1.0 - (phi_part + phi_solv);
+  double dphi_poly_dc_part = -dphi_part_dc_part;
+  double dphi_poly_dc_solv = -dphi_solv_dc_solv;
+  double omega_poly = 1.0 - (omega_part + omega_solv);
+  double domega_poly_dc_part = -domega_part_dc_part;
+  double domega_poly_dc_solv = -domega_solv_dc_solv;
+
+  if ((phi_poly < 0.0) || (omega_poly < 0.0)) {
+    phi_poly = 0.0;
+    dphi_poly_dc_part = 0.0;
+    dphi_poly_dc_solv = 0.0;
+    omega_poly = 0.0;
+    domega_poly_dc_part = 0.0;
+    domega_poly_dc_solv = 0.0;
+  } else if ((phi_poly > 1.0) || (omega_poly > 1.0)) {
+    phi_poly = 1.0;
+    dphi_poly_dc_part = 0.0;
+    dphi_poly_dc_solv = 0.0;
+    omega_poly = 1.0;
+    domega_poly_dc_part = 0.0;
+    domega_poly_dc_solv = 0.0;
+  }
+
+  double V_fh_gamma =
+      K11_gamma * omega_solv * (K21mTg1 + T) + K12_gamma * omega_poly * (K22mTg2 + T);
+
+  double D_o1 = D_o * exp(-E_div_R / T);
+
+  double Diff_Free_Vol = D_o1 * phi_poly * phi_poly * (1.0 - 2.0 * chi * phi_solv) *
+                         exp(-(omega_solv * V_1s + omega_poly * x_si * V_2s) / V_fh_gamma);
+
+  double dV_fh_gamma_dT = K11_gamma * omega_solv + K12_gamma * omega_poly;
+  double dD_o1_dT = D_o * exp(-E_div_R / T) * (E_div_R / T / T);
+
+  double dDiff_Free_Vol_dT =
+      dD_o1_dT * phi_poly * phi_poly * (1.0 - 2.0 * chi * phi_solv) *
+          exp(-(omega_solv * V_1s + omega_poly * x_si * V_2s) / V_fh_gamma) +
+      D_o1 * phi_poly * phi_poly * (1.0 - 2.0 * chi * phi_solv) *
+          exp(-(omega_solv * V_1s + omega_poly * x_si * V_2s) / V_fh_gamma) *
+          ((omega_solv * V_1s + omega_poly * x_si * V_2s) / V_fh_gamma / V_fh_gamma) *
+          dV_fh_gamma_dT;
+
+  double dV_fh_gamma_dc_solv = K11_gamma * domega_solv_dc_solv * (K21mTg1 + T) +
+                               K12_gamma * domega_poly_dc_solv * (K22mTg2 + T);
+
+  double dV_fh_gamma_dc_part = K12_gamma * domega_poly_dc_part * (K22mTg2 + T);
+
+  double dDiff_Free_Vol_dc_solv =
+      2.0 * D_o1 * phi_poly * dphi_poly_dc_solv * (1.0 - 2.0 * chi * phi_solv) *
+          exp(-(omega_solv * V_1s + omega_poly * x_si * V_2s) / V_fh_gamma) +
+      D_o1 * phi_poly * phi_poly * (-2.0 * chi * dphi_solv_dc_solv) *
+          exp(-(omega_solv * V_1s + omega_poly * x_si * V_2s) / V_fh_gamma) +
+      D_o1 * phi_poly * phi_poly * (1.0 - 2.0 * chi * phi_solv) *
+          exp(-(omega_solv * V_1s + omega_poly * x_si * V_2s) / V_fh_gamma) *
+          (-(domega_solv_dc_solv * V_1s + domega_poly_dc_solv * x_si * V_2s) / V_fh_gamma +
+           (omega_solv * V_1s + omega_poly * x_si * V_2s) / V_fh_gamma / V_fh_gamma *
+               dV_fh_gamma_dc_solv);
+
+  double dDiff_Free_Vol_dc_part =
+      2.0 * D_o1 * phi_poly * dphi_poly_dc_part * (1.0 - 2.0 * chi * phi_solv) *
+          exp(-(omega_solv * V_1s + omega_poly * x_si * V_2s) / V_fh_gamma) +
+      D_o1 * phi_poly * phi_poly * (1.0 - 2.0 * chi * phi_solv) *
+          exp(-(omega_solv * V_1s + omega_poly * x_si * V_2s) / V_fh_gamma) *
+          (-(domega_poly_dc_part * x_si * V_2s) / V_fh_gamma +
+           (omega_solv * V_1s + omega_poly * x_si * V_2s) / V_fh_gamma / V_fh_gamma *
+               dV_fh_gamma_dc_part);
+
+  /*********** Export the combined diffusivity ********/
+  mp->diffusivity[species_no] = Diff_Bruggemann * Diff_Free_Vol;
+  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + i_part] =
+      dDiff_Bruggemann_dc_part * Diff_Free_Vol + Diff_Bruggemann * dDiff_Free_Vol_dc_part;
+  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + species_no] =
+      Diff_Bruggemann * dDiff_Free_Vol_dc_solv;
+  mp->d_diffusivity[species_no][TEMPERATURE] = Diff_Bruggemann * dDiff_Free_Vol_dT;
+
+  if (densityJac != NULL) {
+    propertyJac_destroy(&densityJac);
+  }
+
+  return (0);
+}
+
+/**********************************************************************************/
+
+/**********************************************************************************/
+
+int hydro_sediment_flux(struct Species_Conservation_Terms *st, int w)
+
+/***************************************************************************
+ * Function that computes the "diffusive" mass flux resulting from
+ * sedimentation and osmotic pressure gradient, i.e. hydroynamics
+ * and loads st->diff_flux[][].  Returns mass flux for species w in *st->diff_flux
+ *
+ *     Author: Kristianto Tjiptowidjojo, 02/2021
+
+ **************************************************************************/
+{
+  int w1, a, j, q, var;
+  double tmp, coeff_rho, rhoD, *phi_ptr;
+  double flux_settling[DIM] = {0.0}, dflux_settling_dC[DIM] = {0.0};
+  double K = 0.0, dK_dC = 0.0;
+
+  if (mp->SettlingModel[w] == SEDIMENT) {
+    double mult = 0.0;
+    double v_settling[DIM] = {0.0};
+    double rho_part = mp->u_settling[w][0];
+    double rho_solv = mp->u_settling[w][1];
+    double grav[DIM] = {0.0};
+    grav[0] = mp->u_settling[w][2];
+    grav[1] = mp->u_settling[w][3];
+    grav[2] = mp->u_settling[w][4];
+    double visc = mp->u_settling[w][5];
+    double R_part = mp->u_settling[w][6];
+    double nexp = mp->u_settling[w][7];
+
+    double phi_part = fv->c[w];
+    double dphi_part_dc_part = 1.0;
+
+    PROPERTYJAC_STRUCT *densityJac = NULL;
+    propertyJac_realloc(&densityJac, mp->Num_Species + 1);
+    double density_tot = calc_density(mp, TRUE, densityJac, 0.0);
+
+    /* Calculate settling velocity*/
+    mult = (2.0 / 9.0) * (R_part * R_part * (rho_part - rho_solv)) / visc;
+    v_settling[0] = mult * grav[0];
+    v_settling[1] = mult * grav[1];
+    v_settling[2] = mult * grav[2];
+
+    /* Get particles volume fraction */
+    switch (mp->Species_Var_Type) {
+    case SPECIES_VOL_FRACTION:
+    case SPECIES_UNDEFINED_FORM:
+      phi_part = fv->c[w];
+      dphi_part_dc_part = 1.0;
+      break;
+
+    case SPECIES_MASS_FRACTION:
+      phi_part = density_tot * mp->specific_volume[w] * fv->c[w];
+      dphi_part_dc_part = mp->specific_volume[w] * densityJac->JacVector[w];
+      break;
+
+    case SPECIES_DENSITY:
+      phi_part = mp->specific_volume[w] * fv->c[w];
+      dphi_part_dc_part = mp->specific_volume[w];
+      break;
+
+    case SPECIES_CONCENTRATION:
+      phi_part = mp->molar_volume[w] * fv->c[w];
+      dphi_part_dc_part = mp->molar_volume[w];
+      break;
+
+    default:
+      GOMA_EH(GOMA_ERROR, "That Material Species Type is not supported");
+      break;
+    }
+    if (phi_part > 0.0) {
+      if (phi_part < 1.0) {
+        K = pow((1.0 - phi_part), nexp);
+        dK_dC = (-dphi_part_dc_part) * nexp * pow((1.0 - phi_part), (nexp - 1.0));
+      } else {
+        K = 0.0;
+        dK_dC = 0.0;
+      }
+
+      flux_settling[0] = K * v_settling[0] * fv->c[w];
+      flux_settling[1] = K * v_settling[1] * fv->c[w];
+      flux_settling[2] = K * v_settling[2] * fv->c[w];
+
+      dflux_settling_dC[0] = dK_dC * v_settling[0] * fv->c[w] + K * v_settling[0];
+      dflux_settling_dC[1] = dK_dC * v_settling[1] * fv->c[w] + K * v_settling[1];
+      dflux_settling_dC[2] = dK_dC * v_settling[2] * fv->c[w] + K * v_settling[2];
+    }
+    if (densityJac != NULL) {
+      propertyJac_destroy(&densityJac);
+    }
+  }
+
+  /*
+   *  Get diffusivity and Jacobian dependence on the diffusivity
+   */
+  if (Diffusivity())
+    GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
+
+  /*
+   *  Add in rho or C depending upon species variable type
+   */
+  coeff_rho = 1.0;
+
+  rhoD = coeff_rho * mp->diffusivity[w];
+
+  for (a = 0; a < VIM; a++) {
+    st->diff_flux[w][a] = flux_settling[a];
+    st->diff_flux[w][a] += -rhoD * st->grad_Y[w][a];
+  }
+
+  if (af->Assemble_Jacobian) {
+
+    /* Sensitivity w.r.t. species concentration */
+    var = MASS_FRACTION;
+    phi_ptr = bf[var]->phi;
+    for (a = 0; a < VIM; a++) {
+      for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+        tmp = -coeff_rho * st->grad_Y[w][a] * mp->d_diffusivity[w][MAX_VARIABLE_TYPES + w1];
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          st->d_diff_flux_dc[w][a][w1][j] = tmp * phi_ptr[j];
+        }
+      }
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        st->d_diff_flux_dc[w][a][w][j] -= rhoD * bf[var]->grad_phi[j][a];
+        st->d_diff_flux_dc[w][a][w][j] += dflux_settling_dC[a] * phi_ptr[j];
+      }
+    }
+
+    /* Sensitivity w.r.t. mesh displacement */
+    for (q = 0; q < pd->Num_Dim; q++) {
+      var = MESH_DISPLACEMENT1 + q;
+      if (pd->v[pg->imtrx][var]) {
+        for (a = 0; a < VIM; a++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            st->d_diff_flux_dmesh[w][a][q][j] = -rhoD * fv->d_grad_c_dmesh[a][w][q][j];
+          }
+        }
+      }
+    }
+
+    /* Sensitivity w.r.t. temperature */
+    var = TEMPERATURE;
+    phi_ptr = bf[var]->phi;
+    for (a = 0; a < VIM; a++) {
+      tmp = -coeff_rho * mp->d_diffusivity[w][var] * st->grad_Y[w][a];
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        st->d_diff_flux_dT[w][a][j] = tmp * phi_ptr[j];
+      }
+    }
+  }
+
+  return (0);
+}
+
+/******************************************************************************/
 /*
  * Generalized_Diffusivity() sets the GENERALIZED FICKIAN
  * diffusivity and its derivatives for all species
@@ -3464,26 +4178,30 @@ int Generalized_Diffusivity(void) {
  *
  * --------------------------------------------------------------------------------
  */
+
 int Generalized_FV_Diffusivity(int species_no) /* current species number*/
 {
-  int w, w1, mode;
+  int fv_model_number;
+  int w, w1, w3, mode;
   int w2 = pd->Num_Species_Eqn;
 
   double activity[MAX_CONC], dcoeff[MAX_CONC][MAX_CONC], d2coeff[MAX_CONC][MAX_CONC][MAX_CONC];
 
   double T;
 
-  double d_Vfh_domega[MAX_CONC];
-  double d_num_domega[MAX_CONC][MAX_CONC];
-  double d_omega_dc[MAX_CONC][MAX_CONC];
+  double d_alpha_dT[MAX_CONC], d_Dp_dT[MAX_CONC];
+  double d_Dp_dc[MAX_CONC][MAX_CONC], d_num_dc[MAX_CONC][MAX_CONC], d_alpha_dc[MAX_CONC][MAX_CONC],
+      d_Vfh_dc[MAX_CONC];
+  double d_omega_dc[MAX_CONC][MAX_CONC], drho_dc[MAX_CONC][MAX_CONC];
   double numerator[MAX_CONC], omega[MAX_CONC];
   double xsi[MAX_CONC][MAX_CONC];
-  double vs[MAX_CONC], K1_gamma[MAX_CONC], K2mTg[MAX_CONC], Do[MAX_CONC], E_div_R[MAX_CONC];
-  double vsp, K1p_gamma, K2pmTg;
+  double sv[MAX_CONC], mw[MAX_CONC], alpha[MAX_CONC];
+  double vs[MAX_CONC], K1_gamma[MAX_CONC], K2mTg[MAX_CONC], Do[MAX_CONC], E_div_R[MAX_CONC],
+      Dp[MAX_CONC];
   double allomega = 0.;
   double V_fh_gamma = 0.;
   double d_Vfh_dT = 0.;
-  double density_tot, rho[MAX_CONC], drho_dc[MAX_CONC];
+  double density_tot, rho[MAX_CONC];
   PROPERTYJAC_STRUCT *densityJac = NULL;
   propertyJac_realloc(&densityJac, mp->Num_Species + 1);
 
@@ -3496,19 +4214,21 @@ int Generalized_FV_Diffusivity(int species_no) /* current species number*/
 
   memset(dcoeff, 0, sizeof(dbl) * MAX_CONC * MAX_CONC);
   memset(d2coeff, 0, sizeof(dbl) * MAX_CONC * MAX_CONC * MAX_CONC);
-
   /* ln(activity_coeff) is coded based on flory-huggins for now
      there may be interest to expand this to other models,
      such as UNIQUAC, NRTL, etc. */
 
   mode = FLORY;
-  act_coeff(activity, dcoeff, d2coeff, fv->c, mode, species_no);
-
+  for (w = 0; w < pd->Num_Species_Eqn; w++) {
+    act_coeff(activity, dcoeff, d2coeff, fv->c, mode, w);
+  }
   /* load up polymer FV parameters */
 
-  vsp = mp->u_diffusivity[0][1];
-  K1p_gamma = mp->u_diffusivity[0][3];
-  K2pmTg = mp->u_diffusivity[0][5];
+  fv_model_number = (int)mp->u_diffusivity[0][12];
+
+  vs[w2] = mp->u_diffusivity[0][1];
+  K1_gamma[w2] = mp->u_diffusivity[0][3];
+  K2mTg[w2] = mp->u_diffusivity[0][5];
 
   /* load up solvent FV parameters */
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
@@ -3517,8 +4237,14 @@ int Generalized_FV_Diffusivity(int species_no) /* current species number*/
     K2mTg[w] = mp->u_diffusivity[w][4];
     Do[w] = mp->u_diffusivity[w][8];
     E_div_R[w] = mp->u_diffusivity[w][9];
+    sv[w] = mp->specific_volume[w];
+    mw[w] = mp->molecular_weight[w];
   }
 
+  Do[w2] = mp->u_diffusivity[0][10];
+  E_div_R[w2] = mp->u_diffusivity[0][11];
+  sv[w2] = mp->specific_volume[w2];
+  mw[w2] = mp->molecular_weight[w2];
   T = fv->T;
 
   /* load up binary FV parameters
@@ -3530,7 +4256,9 @@ int Generalized_FV_Diffusivity(int species_no) /* current species number*/
     }
     xsi[w][w] = 1.;
     xsi[w][w2] = mp->u_diffusivity[w][7];
+    xsi[w2][w] = 1. / xsi[w][w2];
   }
+  xsi[w2][w2] = 1.;
 
   /* currently, c[] is assumed to be
      species_density, this needs to be explicitly
@@ -3539,25 +4267,28 @@ int Generalized_FV_Diffusivity(int species_no) /* current species number*/
 
   density_tot = calc_density(mp, TRUE, densityJac, 0.0);
   memset(rho, 0, sizeof(dbl) * MAX_CONC);
-  memset(drho_dc, 0, sizeof(dbl) * MAX_CONC);
+  memset(drho_dc, 0, sizeof(dbl) * MAX_CONC * MAX_CONC);
   switch (mp->Species_Var_Type) {
   case SPECIES_DENSITY:
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       rho[w] = fv->c[w];
-      drho_dc[w] = 1.0;
+      drho_dc[w][w] = 1.0;
     }
     break;
   case SPECIES_UNDEFINED_FORM:
   case SPECIES_MASS_FRACTION:
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       rho[w] = fv->c[w] * density_tot;
-      drho_dc[w] = density_tot + fv->c[w] * mp->d_density[MAX_VARIABLE_TYPES + w];
+      for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+        drho_dc[w][w1] =
+            density_tot * delta(w, w1) + fv->c[w] * mp->d_density[MAX_VARIABLE_TYPES + w1];
+      }
     }
     break;
   case SPECIES_CONCENTRATION:
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       rho[w] = fv->c[w] * mp->molecular_weight[w];
-      drho_dc[w] = mp->molecular_weight[w];
+      drho_dc[w][w] = mp->molecular_weight[w];
     }
     break;
   case SPECIES_MOLE_FRACTION:
@@ -3572,72 +4303,156 @@ int Generalized_FV_Diffusivity(int species_no) /* current species number*/
     omega[w] = rho[w] / density_tot;
     allomega += omega[w];
   }
+
+  Do[w2] *= exp(-E_div_R[w2] / T);
   omega[w2] = 1. - allomega;
 
-  numerator[species_no] = 0.;
-
+  numerator[w2] = omega[w2] * vs[w2] * xsi[w2][w2]; /* xsi[w2][w2] = 1 */
+  V_fh_gamma = K1_gamma[w2] * omega[w2] * (K2mTg[w2] + T);
+  d_Vfh_dT = K1_gamma[w2] * omega[w2];
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
     V_fh_gamma += K1_gamma[w] * omega[w] * (K2mTg[w] + T);
-    numerator[species_no] += omega[w] * vs[w] * xsi[species_no][w];
     d_Vfh_dT += K1_gamma[w] * omega[w];
+    numerator[w] = omega[w2] * vs[w2] * xsi[w][w2];
+    numerator[w2] += omega[w] * vs[w] * xsi[w2][w];
+    for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+      numerator[w] += omega[w1] * vs[w1] * xsi[w][w1];
+    }
   }
-  V_fh_gamma += K1p_gamma * omega[w2] * (K2pmTg + T);
-  numerator[species_no] += omega[w2] * vsp * xsi[species_no][w2];
-  d_Vfh_dT += K1p_gamma * omega[w2];
 
-  /* mp->diffusivity is a placeholder for calculating
-   * mutual diffusivity, which is a 2-dim matrix */
+  Dp[w2] = Do[w2] * exp(-numerator[w2] / V_fh_gamma);
+  for (w = 0; w < pd->Num_Species_Eqn; w++) {
+    Dp[w] = Do[w] * exp(-numerator[w] / V_fh_gamma);
+    alpha[w] = sv[w] * Dp[w] * (1. - Dp[w2] * sv[w2] * mw[w2] / (Dp[w] * sv[w] * mw[w]));
+  }
 
-  mp->diffusivity[species_no] = Do[species_no] * exp(-numerator[species_no] / V_fh_gamma);
+  /* mp->diffusivity_gen_fick[i][j] is the mutual diffusion
+     coefficient D_ij calculated from self-diffusion coefficients D_i  */
 
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
+    /* this only works for case Species_Density because of how dcoeff is calculated as of 01/19/22
+     * Chance Parrish*/
+    /* mp->diffusivity_gen_fick[species_no][w] = (delta(species_no,w) +
+     * dcoeff[species_no][w]*rho[species_no])*Dp[species_no];*/
     mp->diffusivity_gen_fick[species_no][w] =
-        mp->diffusivity[species_no] *
-        (fv->c[species_no] * dcoeff[species_no][w] + delta(species_no, w));
+        (delta(species_no, w) + 0. * dcoeff[species_no][w] * rho[species_no]) * Dp[species_no];
+    for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+      /* this only works for case Species_Density because of how dcoeff is calculated as of 01/19/22
+       * Chance Parrish*/
+      /*mp->diffusivity_gen_fick[species_no][w] +=
+       * alpha[w1]*rho[species_no]*(delta(w,w1)+rho[w1]*dcoeff[w1][w]);*/
+      mp->diffusivity_gen_fick[species_no][w] +=
+          -alpha[w1] * rho[species_no] * (delta(w, w1) + 0. * rho[w1] * dcoeff[w1][w]);
+    }
   }
-
+  if (fv_model_number == 1) {
+    for (w = 0; w < pd->Num_Species_Eqn; w++) {
+      mp->diffusivity_gen_fick[species_no][w] =
+          delta(species_no, w) * (mp->diffusivity_gen_fick[species_no][w]);
+    }
+  }
   if (af->Assemble_Jacobian) {
     if (pd->v[pg->imtrx][TEMPERATURE]) {
-      mp->d_diffusivity[species_no][TEMPERATURE] =
-          mp->diffusivity[species_no] * d_Vfh_dT * numerator[species_no] / pow(V_fh_gamma, 2.0);
-
+      mp->d_diffusivity[species_no][TEMPERATURE] = 0.;
+      /* As of 1/19/22, d_Dp_dT is assuming E_divR[i] = 0 Chance Parrish */
+      d_Dp_dT[w2] = numerator[w2] / V_fh_gamma / V_fh_gamma * Dp[w2] * d_Vfh_dT;
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        d_Dp_dT[w] = numerator[w] / V_fh_gamma / V_fh_gamma * Dp[w] * d_Vfh_dT;
+        d_alpha_dT[w] = d_Dp_dT[w] * alpha[w] / Dp[w] - sv[w2] * mw[w2] * d_Dp_dT[w2] / mw[w] +
+                        Dp[w2] * sv[w2] * mw[w2] / Dp[w] / mw[w] * d_Dp_dT[w];
+        /*mp->d_diffusivity_gf[species_no][w][TEMPERATURE] = (
+         * dcoeff[species_no][w]*rho[w]+delta(species_no,w) )*d_Dp_dT[w];*/
+        mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 0.;
         mp->d_diffusivity_gf[species_no][w][TEMPERATURE] =
-            mp->d_diffusivity[species_no][TEMPERATURE] *
-            (fv->c[species_no] * dcoeff[species_no][w] + delta(species_no, w));
+            (0. * dcoeff[species_no][w] * rho[w] + delta(species_no, w)) * d_Dp_dT[w];
+      }
+      for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+          /* mp->d_diffusivity_gf[species_no][w][TEMPERATURE] +=
+           * -d_alpha_dT[w1]*rho[species_no]*(delta(w,w1)+rho[w1]*dcoeff[w1][w]);*/
+          mp->d_diffusivity_gf[species_no][w][TEMPERATURE] +=
+              -d_alpha_dT[w1] * rho[species_no] * (delta(w, w1) + 0. * rho[w1] * dcoeff[w1][w]);
+        }
+      }
+      mp->d_diffusivity[species_no][TEMPERATURE] = 0.;
+      if (fv_model_number == 1) {
+        for (w = 0; w < pd->Num_Species_Eqn; w++) {
+          mp->d_diffusivity_gf[species_no][w][TEMPERATURE] =
+              delta(species_no, w) * (mp->d_diffusivity_gf[species_no][w][TEMPERATURE]);
+        }
       }
     }
-    mp->d_diffusivity[species_no][TEMPERATURE] = 0.;
 
     if (pd->v[pg->imtrx][MASS_FRACTION]) {
-
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
-        d_Vfh_domega[w] = K1_gamma[w] * (K2mTg[w] + T) - K1p_gamma * (K2pmTg + T);
-        d_num_domega[species_no][w] = vs[w] * xsi[species_no][w] - vsp * xsi[species_no][w2];
-        d_omega_dc[species_no][w] =
-            -rho[species_no] * mp->d_density[MAX_VARIABLE_TYPES + w] / SQUARE(density_tot);
-      }
-      d_omega_dc[species_no][species_no] += drho_dc[species_no] / density_tot;
-
-      for (w = 0; w < pd->Num_Species_Eqn; w++) {
-
-        mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] =
-            mp->diffusivity[species_no] * d_omega_dc[species_no][w] *
-            (-d_num_domega[species_no][w] * V_fh_gamma + d_Vfh_domega[w] * numerator[species_no]) /
-            pow(V_fh_gamma, 2.0);
-
+        d_Vfh_dc[w] = 0;
         for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
-
-          mp->d_diffusivity_gf[species_no][w1][MAX_VARIABLE_TYPES + w] =
-              (mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] * dcoeff[species_no][w1] +
-               mp->diffusivity[species_no] * d2coeff[species_no][w1][w]) *
-              fv->c[species_no];
+          d_omega_dc[w][w1] =
+              drho_dc[w][w1] / density_tot -
+              rho[w] / density_tot / density_tot * mp->d_density[MAX_VARIABLE_TYPES + w1];
         }
-        mp->d_diffusivity_gf[species_no][species_no][MAX_VARIABLE_TYPES + w] +=
-            mp->diffusivity[species_no] * dcoeff[species_no][w] +
-            mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w];
+      }
 
-        mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 0.;
+      for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        d_Dp_dc[w2][w] = 0;
+        d_num_dc[w2][w] = 0;
+        for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+          d_Vfh_dc[w] +=
+              d_omega_dc[w1][w] * (K1_gamma[w1] * (K2mTg[w1] + T) - K1_gamma[w2] * (K2mTg[w2] + T));
+          d_num_dc[w][w1] = 0.;
+          d_num_dc[w2][w] += d_omega_dc[w1][w] * (vs[w1] * xsi[w2][w1] - vs[w2] * xsi[w2][w2]);
+          for (w3 = 0; w3 < pd->Num_Species_Eqn; w3++) {
+            d_num_dc[w][w1] += d_omega_dc[w3][w1] * (vs[w3] * xsi[w][w3] - vs[w2] * xsi[w][w2]);
+          }
+        }
+      }
+      for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+          d_Dp_dc[w][w1] = Dp[w] * (-d_num_dc[w][w1] / V_fh_gamma +
+                                    numerator[w] * d_Vfh_dc[w1] / (V_fh_gamma * V_fh_gamma));
+        }
+        d_Dp_dc[w2][w] = Dp[w2] * (-d_num_dc[w2][w] / V_fh_gamma +
+                                   numerator[w2] * d_Vfh_dc[w] / (V_fh_gamma * V_fh_gamma));
+        for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+          d_alpha_dc[w][w1] = alpha[w] / Dp[w] * d_Dp_dc[w][w1] -
+                              sv[w2] * mw[w2] / mw[w] * d_Dp_dc[w2][w1] +
+                              Dp[w2] * sv[w2] * mw[w2] / (Dp[w] * mw[w]) * d_Dp_dc[w][w1];
+        }
+      }
+      for (w = 0; w < pd->Num_Species_Eqn; w++) {
+        for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+          /* mp->d_diffusivity_gf[species_no][w][MAX_VARIABLE_TYPES+w1] =
+            d_Dp_dc[species_no][w1]*(delta(species_no,w)+rho[species_no]*dcoeff[species_no][w])
+           +Dp[species_no]*(delta(species_no,w1)*dcoeff[species_no][w]+rho[species_no]*d2coeff[species_no][w][w1]);*/
+          mp->d_diffusivity_gf[species_no][w][MAX_VARIABLE_TYPES + w1] =
+              d_Dp_dc[species_no][w1] *
+                  (delta(species_no, w) + 0. * rho[species_no] * dcoeff[species_no][w]) +
+              0. * Dp[species_no] *
+                  (delta(species_no, w1) * dcoeff[species_no][w] +
+                   rho[species_no] * d2coeff[species_no][w][w1]);
+          for (w3 = 0; w3 < pd->Num_Species_Eqn; w3++) {
+            /* mp->d_diffusivity_gf[species_no][w][MAX_VARIABLE_TYPES+w1] +=
+              -( d_alpha_dc[w3][w1]*rho[species_no]*(delta(w,w3)+rho[w3]*dcoeff[w3][w])
+                +alpha[w3]*delta(species_no,w1)*(delta(w3,w)+rho[w3]*dcoeff[w3][w])
+                +alpha[w3]*rho[species_no]*(delta(w3,w1)*dcoeff[w3][w]+rho[w3]*d2coeff[w3][w][w1])
+               ); */
+            mp->d_diffusivity_gf[species_no][w][MAX_VARIABLE_TYPES + w1] += -(
+                d_alpha_dc[w3][w1] * rho[species_no] *
+                    (delta(w, w3) + 0. * rho[w3] * dcoeff[w3][w]) +
+                alpha[w3] * delta(species_no, w1) * (delta(w3, w) + 0. * rho[w3] * dcoeff[w3][w]) +
+                0. * alpha[w3] * rho[species_no] *
+                    (delta(w3, w1) * dcoeff[w3][w] + rho[w3] * d2coeff[w3][w][w1]));
+          }
+        }
+      }
+      if (fv_model_number == 1) {
+        for (w = 0; w < pd->Num_Species_Eqn; w++) {
+          for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+            mp->d_diffusivity_gf[species_no][w][MAX_VARIABLE_TYPES + w1] =
+                delta(species_no, w) *
+                (mp->d_diffusivity_gf[species_no][w][MAX_VARIABLE_TYPES + w1]);
+          }
+        }
       }
     }
   }
