@@ -401,6 +401,9 @@ struct Material_Properties {
   int len_u_reaction_rate; /* Constants for user-defined reaction-rate model*/
   dbl *u_reaction_rate;    /* Constants for user-defined reaction-rate model*/
   dbl d_reaction_rate[MAX_VARIABLE_TYPES + MAX_CONC];
+  dbl emissivity[MAX_CONC];
+  int EmissivityModel[MAX_CONC];
+  dbl d_emissivity[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
   dbl molecular_weight[MAX_CONC];
   int MolecularWeightModel[MAX_CONC];
   dbl d_molecular_weight[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
@@ -467,6 +470,13 @@ struct Material_Properties {
   int QtensorNctModel;
   dbl Qtensor_Extension_P;
   dbl Qtensor_Nct;
+
+  /* Parameters for HYDRODYNAMIC_SEDIMENT model */
+  int SettlingModel[MAX_CONC];
+  dbl SettlingSpeed[MAX_CONC];
+  int len_u_settling[MAX_CONC];
+  dbl *u_settling[MAX_CONC];
+  dbl d_settling[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
 
   /* Reference Concentration Model is defined by itself */
 
