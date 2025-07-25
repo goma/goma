@@ -696,9 +696,14 @@ int main(int argc, char **argv)
 
     if (efv->Num_external_field != 0) {
       for (i = 0; i < efv->Num_external_field; i++) {
-        strncpy(efv->file_nm_serial[i], efv->file_nm[i], MAX_FNL);
         multiname(efv->file_nm[i], ProcID, Num_Proc);
       }
+    }
+  }
+
+  if (efv->Num_external_field != 0) {
+    for (i = 0; i < efv->Num_external_field; i++) {
+      strncpy(efv->file_nm_serial[i], efv->file_nm[i], MAX_FNL);
     }
   }
 

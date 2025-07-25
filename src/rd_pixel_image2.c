@@ -100,7 +100,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   int numpix;              // Number of data points
   double resx, resy, resz; // Size of pixels/voxels in x,y,z directions
   double resolution[3];    // Array form of above (easier to pass to function)
-  int pixinterp = 1;       // Flag indicating pixel interpolation (0 - none; 1 - bi/trilinear)
+  int pixinterp = 0;       // Flag indicating pixel interpolation (0 - none; 1 - bi/trilinear)
   double x0, y0, z0;       // Coordinates of origin for pixel/voxel file
   /*  double pixorigin[3];           // Array form of above */
 
