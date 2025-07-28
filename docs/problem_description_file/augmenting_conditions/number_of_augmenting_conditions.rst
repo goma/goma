@@ -24,7 +24,7 @@ string, it will stop with an error. More than N cards is fine; the excess are ig
 is -1, Goma will read all the augmenting condition cards between this card and the
 END OF AC card.
 
---------
+---------
 Examples
 ---------
 
