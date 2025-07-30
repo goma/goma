@@ -27,23 +27,23 @@ Following is a summary of solution prediction algorithms used in Goma's continua
 +==================+==================================================================+
 | zero             | Single-parameter zeroth order continuation                       |
 |                  |                                                                  |
-|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\     |
+|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\      |
 |                  | :sub:`OLD`\ )                                                    |
 +------------------+------------------------------------------------------------------+
 | first            | Single-parameter first order continuation                        |
 |                  |                                                                  |
-|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\     |
-|                  | :sub:`OLD`\ ) + Δλ\ :sub:`s`\ ∂x/∂λ                             |
+|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\      |
+|                  | :sub:`OLD`\ ) + Δλ\ :sub:`s`\ ∂x/∂λ                              |
 +------------------+------------------------------------------------------------------+
 | hzero            | Multi-parameter zeroth order continuation                        |
 |                  |                                                                  |
-|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\     |
+|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\      |
 |                  | :sub:`OLD`\ )                                                    |
 +------------------+------------------------------------------------------------------+
 | hfirst           | Multi-parameter first order continuation                         |
 |                  |                                                                  |
-|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\     |
-|                  | :sub:`OLD`\ ) + Σ Δλ\ :sub:`j`\ ∂x/∂λ\ :sub:`j`\               |
+|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\      |
+|                  | :sub:`OLD`\ ) + Σ Δλ\ :sub:`j`\ ∂x/∂λ\ :sub:`j`\                 |
 +------------------+------------------------------------------------------------------+
 
 These algorithms are available with or without the Library of Continuation Algorithms (LOCA), which also offers algorithms for arc length continuation and bifurcation tracking, as described above. Details of these algorithms can be found in the LOCA 1.0 manual (SAND 2002-0396).
@@ -77,7 +77,35 @@ The input records above control the continuation process. Specifically, this exa
 
 There are additional input cards which are either optional or required only in certain cases; these will also be described in Section 1.2.
 
-.. include:: continuation_specifications/index.rst
+Continuation Specifications
+===============================
+
+This section of input records is used to direct all automatic continuation procedures. The entire section is completely optional. Basically, automatic continuation can be accomplished in steady state simulations (see Time Integration card) through any one or combination of parameters. These parameters can be any one or combination of the input floats required on the boundary condition cards (see Section 4.10) or material property cards (see Chapter 5). The cards in this section are used to specify the parameters that will be marched automatically, the method of marching (e.g. zero-order, first-order, multiparameter first-order, etc.), the limits of parameter values, and other sundry options. Much of this capability can now be managed from the LOCA library package (Library of Continuation Algorithms - Salinger, et al. 2002).
+
+.. toctree::
+   :maxdepth: 1
+
+   continuation_specifications/continuation
+   continuation_specifications/continuation_type
+   continuation_specifications/number_of_user_continuation_functions
+   continuation_specifications/boundary_condition_id
+   continuation_specifications/boundary_condition_data_float_tag
+   continuation_specifications/material_id
+   continuation_specifications/material_property_tag
+   continuation_specifications/material_property_tag_subindex
+   continuation_specifications/initial_parameter_value
+   continuation_specifications/final_parameter_value
+   continuation_specifications/delta_s
+   continuation_specifications/maximum_number_of_path_steps
+   continuation_specifications/maximum_path_value
+   continuation_specifications/minimum_path_step
+   continuation_specifications/maximum_path_step
+   continuation_specifications/path_step_parameter
+   continuation_specifications/path_step_error
+   continuation_specifications/continuation_printing_frequency
+   continuation_specifications/second_frequency
+   continuation_specifications/loca_method
+
 
 3.3 Single Parameter Continuation via the Command Line
 =======================================================

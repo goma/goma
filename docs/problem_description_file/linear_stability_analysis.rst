@@ -103,10 +103,43 @@ ARPACK only, <E> for eggroll only, or <AE> for both.
     Eigenvector output file= eigen.exoII <A>
     Eigen Wave Numbers= 0.0 0.1 0.2 1.0 <AE>
 
-4.2 Eigensolver Specifications
-===============================
+Eigensolver Specifications
+==========================
 
-.. include:: linear_stability/index.rst
+The ability to solve for the stability of a base flow is a very powerful tool. Often, the important 
+characteristics of a flow can be summarized in the answer to the question "is the flow stable?". 
+Although the following cards are in active use at the time of this writing, sweeping changes are 
+coming to the eigensolver sections of Goma. In particular, the old code (called "eggroll") is being 
+replaced with newer methods (in the ARPACK library), as well as being coupled to the 
+continuation and tracking algorithms (in the LOCA library).
+
+Input specifications for this section of input records is discussed in a separate, comprehensive 
+manual (Gates, et. al., 2000); an update to this manual will be completed during the fall of 2002 
+(Labreche, et. al., 2002). Either of these manuals contains a thorough discussion of how to 
+successfully compute the stability and interesting modes of an underlying base flow.
+
+.. toctree::
+   :maxdepth: 1
+
+   linear_stability/eigen_algorithm
+   linear_stability/eigen_number_of_modes
+   linear_stability/eigen_record_modes
+   linear_stability/eigen_size_of_krylov_subspace
+   linear_stability/eigen_maximum_iterations
+   linear_stability/eigen_number_of_filter_steps
+   linear_stability/eigen_recycle
+   linear_stability/eigen_tolerance
+   linear_stability/eigen_matrix_output
+   linear_stability/eigen_initial_vector_weight
+   linear_stability/eigen_initial_shifts
+   linear_stability/eigen_wave_numbers
+   linear_stability/eigen_cayley_sigma
+   linear_stability/eigen_cayley_mu
+   linear_stability/eigen_relative_tolerance
+   linear_stability/eigen_linear_solver_tolerance
+   linear_stability/eigenvalue_output_frequency
+   linear_stability/eigenvector_output_frequency
+   linear_stability/eigenvector_output_file
 
 4.3 3D of 2D Stability Analysis
 ================================

@@ -15,6 +15,3 @@ library package (Library of Continuation Algorithms - Salinger et al. 2002).
 Input specifications for this section of input records is discussed in a separate, comprehensive
 manual (Gates, et. al., 2000); an update to this manual has been completed during the summer of
 2006 (Labreche, et. al., 2006).
-
-
-..include:: automatic_continuation.rst

@@ -98,6 +98,7 @@ them again.
    problem_description_file/phase_field
    problem_description_file/turbulence
    problem_description_file/continuation
+   problem_description_file/automatic_continuation
    problem_description_file/hunting
    problem_description_file/augmenting_conditions
    problem_description_file/solver_specifications
