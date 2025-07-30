@@ -101,7 +101,7 @@ them again.
    problem_description_file/hunting
    problem_description_file/augmenting_conditions
    problem_description_file/solver_specifications
-   problem_description_file/eigensolver
+   problem_description_file/linear_stability_analysis
    problem_description_file/electromagnetic_problem_properties
    problem_description_file/boundary_conditions
    problem_description_file/rotation
