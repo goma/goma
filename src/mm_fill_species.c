@@ -634,7 +634,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
           dbl sc_val = 0;
           if (shock_capture) {
             for (p = 0; p < VIM; p++) {
-              sc_val += yzbeta * bf[eqn]->grad_phi[i][p] * fv->grad_c[w][i];
+              sc_val += yzbeta * bf[eqn]->grad_phi[i][p] * fv->grad_c[w][p];
             }
 
             sc_val *= h3 * det_J * wt;
