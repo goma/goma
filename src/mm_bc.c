@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "bc/eqn_index.h"
 #include "bc_colloc.h"
 #include "dpi.h"
 #include "el_elm.h"

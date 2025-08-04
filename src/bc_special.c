@@ -29,6 +29,7 @@
 /* GOMA include files */
 #define GOMA_BC_SPECIAL_C
 #include "ac_stability_util.h"
+#include "bc/eqn_index.h"
 #include "bc_colloc.h"
 #include "bc_contact.h"
 #include "bc_special.h"
@@ -214,6 +215,7 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
         BC_Types[bc_input_id].BC_Name == FILLET_BC ||
         BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
         BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_BC ||
+        BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_GEOM_BASED_BC ||
         BC_Types[bc_input_id].BC_Name == FEATURE_ROLLON_BC ||
         BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
         BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||
@@ -249,6 +251,7 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
           BC_Types[bc_input_id].BC_Name == FILLET_BC ||
           BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
           BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_BC ||
+          BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_GEOM_BASED_BC ||
           BC_Types[bc_input_id].BC_Name == FEATURE_ROLLON_BC ||
           BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
           BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||
@@ -373,6 +376,7 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
              BC_Types[bc_input_id].BC_Name == FILLET_BC ||
              BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
              BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_BC ||
+             BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_GEOM_BASED_BC ||
              BC_Types[bc_input_id].BC_Name == FEATURE_ROLLON_BC ||
              BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
              BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||
@@ -482,6 +486,7 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
                           BC_Types[bc_input_id].BC_Name == FILLET_BC ||
                           BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
                           BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_BC ||
+                          BC_Types[bc_input_id].BC_Name == DOUBLE_FILLET_GEOM_BASED_BC ||
                           BC_Types[bc_input_id].BC_Name == FEATURE_ROLLON_BC ||
                           BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
                           BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||
