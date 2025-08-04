@@ -50,6 +50,81 @@
 /*       Functions for solid boundary description                            */
 /*****************************************************************************/
 
+dbl fnc(const dbl x1 MAYBE_UNUSED,
+        const dbl x2 MAYBE_UNUSED,
+        const dbl x3 MAYBE_UNUSED,
+        const dbl p[] MAYBE_UNUSED,
+        const dbl time MAYBE_UNUSED) {
+
+  /* for PI use M_PIE Constant from std.h include file. */
+  /* cylinder with axis parallel to z */
+  // dbl cx = p[0], cy=p[1], r=p[2];
+  dbl f = 0;
+
+  return (f); /* Here's a good default behavior! */
+}
+
+dbl dfncd1(const dbl x1 MAYBE_UNUSED,
+           const dbl x2 MAYBE_UNUSED,
+           const dbl x3 MAYBE_UNUSED,
+           const dbl p[] MAYBE_UNUSED,
+           const dbl time MAYBE_UNUSED) {
+  /* for PI use M_PIE Constant from std.h include file. */
+  dbl f = 0;
+
+  return (f); /* Here's a good default behavior! */
+
+  /* Example code fragments:
+   *
+   *  dfdx1 = 1.0;
+   *  return(dfdx1);
+   *  f = -1;   2d fiber
+   *  f = 2.*x1;   circle
+   *  return f;
+   */
+}
+
+dbl dfncd2(const dbl x1 MAYBE_UNUSED,
+           const dbl x2 MAYBE_UNUSED,
+           const dbl x3 MAYBE_UNUSED,
+           const dbl p[] MAYBE_UNUSED,
+           const dbl time MAYBE_UNUSED) {
+  /* for PI use M_PIE Constant from std.h include file. */
+  dbl f = 0;  /* dfdx2; */
+  return (f); /* Here's a good default behavior! */
+
+  /* Example code fragments:
+   *
+   *  dfdx2 = 2*x2;
+   *  return(dfdx2);
+   *
+   *  f = 1./13 -sin(M_PIE*x2)/24. -M_PIE*x2*cos(M_PIE*x2)/24;   2d fiber
+   *  f =  2.*x2;   circle
+   *  return f;
+   */
+}
+
+dbl dfncd3(const dbl x1 MAYBE_UNUSED,
+           const dbl x2 MAYBE_UNUSED,
+           const dbl x3 MAYBE_UNUSED,
+           const dbl p[] MAYBE_UNUSED,
+           const dbl time MAYBE_UNUSED) {
+  /* for PI use M_PIE Constant from std.h include file. */
+  dbl f = 0;
+
+  f = 0.0; /* expanding sphere */
+
+  return (f); /* Here's a good default behavior! */
+
+  /* Example code fragments:
+   *
+   *
+   *  f = -(1-x3*x3/200)/50.;
+   *  f = 0.;
+   *  return f;
+   */
+}
+
 dbl velo_vary_fnc(const int velo_condition,
                   const dbl x1,
                   const dbl x2,

@@ -841,9 +841,9 @@ set(GOMA_SOURCES
     src/wr_soln.c)
 
 set(GOMA_USER_INCLUDES
-    include/user_bc.h
     include/bc/user_geom.h
     include/user_continuation.h
+    include/user_bc.h
     include/user_mp_gen.h
     include/user_mp.h
     include/user_out_hkm.h
@@ -854,9 +854,9 @@ set(GOMA_USER_INCLUDES
 
 set(GOMA_USER_SOURCES
     src/user_ac.c
-    src/user_bc.c
     src/bc/user_geom.c
     src/user_continuation.c
+    src/user_bc.c
     src/user_mp.c
     src/user_mp_gen.c
     src/user_out_hkm.c

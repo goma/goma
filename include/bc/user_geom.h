@@ -17,13 +17,6 @@
 
 #include "std.h"
 
-dbl fnc(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time);
-dbl dfncd1(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time);
-
-dbl dfncd2(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time);
-
-dbl dfncd3(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time);
-
 void fspline(int ielem_dim,
              double *func,
              double d_func[], /* dimensioned [MAX_VARIABLE_TYPES + MAX_CONC] */
