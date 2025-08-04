@@ -31,7 +31,7 @@
 #include "az_aztec.h"
 #endif
 #include "ac_stability.h"
-#include "bc/user_geom.h"
+#include "bc/geom.h"
 #include "bc_colloc.h"
 #include "density.h"
 #include "el_elm.h"

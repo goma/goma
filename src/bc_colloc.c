@@ -30,7 +30,6 @@
 #include "bc/generalized_dirichlet.h"
 #include "bc/geom.h"
 #include "bc/rotate_coordinates.h"
-#include "bc/user_geom.h"
 #include "bc_colloc.h"
 #include "bc_integ.h"
 #include "dpi.h"
