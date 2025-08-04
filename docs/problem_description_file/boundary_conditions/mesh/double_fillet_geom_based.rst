@@ -1,6 +1,6 @@
-***************
-DOUBLE_FILLET
-***************
+************************
+DOUBLE_FILLET_GEOM_BASED
+************************
 
 ::
 
@@ -17,7 +17,7 @@ geometric partitions of the die rather than angles.
 
 Definitions of the input parameters are as follows:
 
-DOUBLE_FILLET   
+DOUBLE_FILLET_GEOM_BASED
    Name of the boundary condition <bc_name>).
 SS           
    Type of boundary condition (<bc_type>), where **SS** denotes
