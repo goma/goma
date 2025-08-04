@@ -2096,7 +2096,7 @@ static void setup_Elem_BC(struct elem_side_bc_struct **elem_side_bc,
       /* More than one surface integral BC on the side of the element -
        * Add to the existing structure
        */
-      side->BC_applied += bc_type->BC_Name;
+      side->BC_applied |= bc_type->BC_Name;
       realloc_int_1(&(side->BC_input_id), side->Num_BC + 2, side->Num_BC + 1);
       side->BC_input_id[side->Num_BC] = ibc;
       side->Num_BC++;

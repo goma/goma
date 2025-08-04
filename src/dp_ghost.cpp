@@ -596,14 +596,17 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   }
 
   for (int i = 0; i < exo->num_elem_blocks; i++) {
-    int *tmp_eb_conn =
-        (int *)malloc(sizeof(int) * exo->eb_num_elems[i] * exo->eb_num_nodes_per_elem[i]);
-    memcpy(tmp_eb_conn, exo->eb_conn[i],
-           sizeof(int) * exo->eb_num_elems[i] * exo->eb_num_nodes_per_elem[i]);
-    for (int j = 0; j < exo->eb_num_elems[i] * exo->eb_num_nodes_per_elem[i]; j++) {
-      exo->eb_conn[i][j] = old_to_new_map.at(tmp_eb_conn[j]);
+    if (exo->eb_conn[i] != NULL) {
+      int *tmp_eb_conn =
+          (int *)malloc(sizeof(int) * exo->eb_num_elems[i] * exo->eb_num_nodes_per_elem[i]);
+
+      memcpy(tmp_eb_conn, exo->eb_conn[i],
+             sizeof(int) * exo->eb_num_elems[i] * exo->eb_num_nodes_per_elem[i]);
+      for (int j = 0; j < exo->eb_num_elems[i] * exo->eb_num_nodes_per_elem[i]; j++) {
+        exo->eb_conn[i][j] = old_to_new_map.at(tmp_eb_conn[j]);
+      }
+      free(tmp_eb_conn);
     }
-    free(tmp_eb_conn);
   }
 
   for (int i = 0; i < exo->num_nodes; i++) {
