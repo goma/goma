@@ -818,7 +818,7 @@
 #define KINEMATIC_ETA_BC            962000002
 #define LUB_KINEMATIC_BC            962050000
 #define KIN_LEAK_BC                 962100000
-#define KIN_ANTOINE_BC             962150000
+#define KIN_ANTOINE_BC              962150000
 #define KIN_ELECTRODEPOSITION_BC    962200000 /* RSL 5/24/02 */
 #define KINEMATIC_EDGE_BC           962400000
 #define KIN_CHEM_BC                 962500000
