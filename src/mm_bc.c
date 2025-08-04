@@ -594,7 +594,7 @@ static int set_nodal_Dirichlet_BC(int inode,
      *  struct boundary_condition is not used for this card, we can place
      *  the global node number in it.
      */
-    boundary_condition->BC_Data_Int[0] = 1000000 * inode + 1000000;
+    boundary_condition->CA_node_flag = inode+1;
     node->DBCA = 1;
 
   } else if (boundary_condition->BC_Name == SURFTANG_SCALAR_BC ||

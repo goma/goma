@@ -405,7 +405,7 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
           /* figure out which bc corresponds to this CA condition */
           j_bc_id = -1;
           for (j = 0; j < Num_BC; j++) {
-            if (BC_Types[j].BC_Data_Int[0] == 1000000 * I + 1000000 &&
+            if (BC_Types[j].CA_node_flag == I+1 &&
                 ((BC_Types[j].BC_Data_Int[2] == -1 && iapply) ||
                  BC_Types[j].BC_Data_Int[2] == ei[pg->imtrx]->elem_blk_id)) {
               sum_normal = SQUARE(BC_Types[j].BC_Data_Float[1]) +

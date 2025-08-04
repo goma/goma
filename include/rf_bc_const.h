@@ -1349,6 +1349,7 @@ struct Boundary_Condition {
                           * entry will be equal to -1.
                           */
   int BC_Data_Int[MAX_BC_INT_DATA];
+  int CA_node_flag;
   dbl BC_Data_Float[MAX_BC_FLOAT_DATA];
   int len_u_BC; /* number of elements in the user constant
                    list (0 most of the time) */
