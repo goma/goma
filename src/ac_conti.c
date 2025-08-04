@@ -1122,7 +1122,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
                        gv, rd, gvec, gvec_elem, &nprint, delta_s, theta, path1, NULL, exo, dpi);
         nprint++;
       }
-      if (Anneal_Mesh) {
+      if (Anneal_Mesh && (cont->anneal_on_print)) {
         err = anneal_mesh(x, tev, tev_post, NULL, rd, path1, exo, dpi);
         GOMA_EH(err, "anneal_mesh() bad return.");
       }

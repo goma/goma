@@ -4,11 +4,14 @@ DOUBLE_FILLET
 
 ::
 
-	BC = DOUBLE_FILLET SS <bc_id> xpt1 ypt1 theta1 r1 xpt2 ypt2 theta2 r2 curv_mid
+	BC = DOUBLE_FILLET_GEOM_BASED SS <bc_id> xpt1 ypt1 theta1 r1 xpt2 ypt2 theta2 r2 curv_mid
 
 -----------------------
 **Description / Usage**
 -----------------------
+
+This is similar to the `DOUBLE_FILLET` condition but is implemented based on
+geometric partitions of the die rather than angles.
 
 **(PCC/ROTATED MESH)**
 
@@ -41,7 +44,7 @@ curv_mid
 The following sample input card:
 ::
 
-     BC   = DOUBLE_FILLET SS 56 {xpt1} {ypt1} {theta1} {r1} {xpt2} {ypt2} {theta2} {r2} {curv_mid}
+     BC   = DOUBLE_FILLET_GEOM_BASED SS 56 {xpt1} {ypt1} {theta1} {r1} {xpt2} {ypt2} {theta2} {r2} {curv_mid}
 
 
 
