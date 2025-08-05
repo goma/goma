@@ -1205,6 +1205,10 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
                        dpi);
         nprint++;
       }
+      if (Anneal_Mesh && (cont->anneal_on_print)) {
+        err = anneal_mesh(x, tev, tev_post, NULL, rd, path1[0], exo, dpi);
+        GOMA_EH(err, "anneal_mesh() bad return.");
+      }
     }
 
     if (Output_Variable_Stats) {

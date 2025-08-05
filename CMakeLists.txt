@@ -499,61 +499,72 @@ set(MAX_NUMBER_MATLS
 list(APPEND GOMA_COMPILE_DEFINITIONS MAX_NUMBER_MATLS=${MAX_NUMBER_MATLS})
 
 set(GOMA_INCLUDES
-    include/adapt/omega_h_interface.h
-    include/adapt/resetup_problem.h
     include/ac_conti.h
     include/ac_hunt.h
     include/ac_particles.h
-    include/ac_stability.h
     include/ac_stability_util.h
+    include/ac_stability.h
     include/ac_update_parameter.h
-    include/ad_turbulence.h
-    include/ad_porous.h
     include/ad_momentum.h
+    include/ad_porous.h
     include/ad_stress.h
+    include/ad_turbulence.h
+    include/adapt/omega_h_interface.h
+    include/adapt/resetup_problem.h
+    include/base_mesh.h
     include/bc_colloc.h
     include/bc_contact.h
     include/bc_curve.h
     include/bc_dirich.h
     include/bc_integ.h
-    include/bc/rotate.h
     include/bc_special.h
     include/bc_surfacedomain.h
+    include/bc/eqn_index.h
+    include/bc/generalized_dirichlet.h
+    include/bc/geom.h
+    include/bc/rotate_coordinates.h
+    include/bc/rotate.h
+    include/brkfix/bbb.h
+    include/brkfix/exo_utils.h
+    include/brkfix/fix.h
+    include/brkfix/setup_fix_data.h
     include/decomp_interface.h
     include/density.h
     include/dp_comm.h
-    include/dpi.h
+    include/dp_ghost.h
     include/dp_map_comm_vec.h
     include/dp_types.h
     include/dp_utils.h
-    include/dp_ghost.h
     include/dp_vif.h
-    include/el_elm.h
+    include/dpi.h
     include/el_elm_info.h
+    include/el_elm.h
     include/el_geom.h
     include/el_quality.h
     include/exo_conn.h
     include/exo_struct.h
-    include/linalg/sparse_matrix.h
-    include/linalg/sparse_matrix_tpetra.h
     include/linalg/sparse_matrix_epetra.h
+    include/linalg/sparse_matrix_tpetra.h
+    include/linalg/sparse_matrix.h
+    include/load_field_variables.h
+    include/load_variable.h
+    include/loca_const.h
+    include/loca_util_const.h
     include/ls/create_facets.hpp
     include/ls/facet_reinitialization.h
     include/ls/marching_cubes.hpp
-    include/load_field_variables.h
-    include/loca_const.h
-    include/loca_util_const.h
     include/md_timer.h
     include/metis_decomp.h
     include/mm_as_alloc.h
     include/mm_as_const.h
-    include/mm_as.h
     include/mm_as_structs.h
+    include/mm_as.h
     include/mm_augc_util.h
     include/mm_bc.h
     include/mm_chemkin.h
     include/mm_dil_viscosity.h
     include/mm_elem_block_structs.h
+    include/mm_em_bc.h
     include/mm_fill_aux.h
     include/mm_fill_common.h
     include/mm_fill_continuity.h
@@ -561,10 +572,9 @@ set(GOMA_INCLUDES
     include/mm_fill_em.h
     include/mm_fill_energy.h
     include/mm_fill_fill.h
-    include/mm_fill.h
     include/mm_fill_jac.h
-    include/mm_fill_ls.h
     include/mm_fill_ls_capillary_bcs.h
+    include/mm_fill_ls.h
     include/mm_fill_momentum.h
     include/mm_fill_population.h
     include/mm_fill_porous.h
@@ -576,20 +586,20 @@ set(GOMA_INCLUDES
     include/mm_fill_solid.h
     include/mm_fill_species.h
     include/mm_fill_split.h
+    include/mm_fill_stabilization.h
     include/mm_fill_stress.h
     include/mm_fill_terms.h
     include/mm_fill_turbulent.h
     include/mm_fill_util.h
-    include/mm_fill_stabilization.h
+    include/mm_fill.h
     include/mm_flux.h
     include/mm_input.h
     include/mm_interface.h
     include/mm_more_utils.h
     include/mm_mp_const.h
-    include/mm_mp.h
     include/mm_mp_structs.h
+    include/mm_mp.h
     include/mm_names.h
-    include/mm_em_bc.h
     include/mm_ns_bc.h
     include/mm_numjac.h
     include/mm_post_def.h
@@ -601,15 +611,14 @@ set(GOMA_INCLUDES
     include/mm_shell_util.h
     include/mm_sol_nonlinear.h
     include/mm_species.h
-    include/mm_std_models.h
     include/mm_std_models_shell.h
+    include/mm_std_models.h
     include/mm_unknown_map.h
     include/mm_viscosity.h
     include/models/fluidity.h
     include/polymer_time_const.h
     include/rd_dpi.h
     include/rd_exo.h
-    include/base_mesh.h
     include/rd_mesh.h
     include/rd_pixel_image.h
     include/rf_allo.h
@@ -621,20 +630,19 @@ set(GOMA_INCLUDES
     include/rf_fem.h
     include/rf_fill_const.h
     include/rf_io_const.h
-    include/rf_io.h
     include/rf_io_structs.h
+    include/rf_io.h
     include/rf_masks.h
     include/rf_mp.h
     include/rf_node_const.h
     include/rf_pre_proc.h
     include/rf_shape.h
+    include/rf_solve_segregated.h
     include/rf_solve.h
     include/rf_solver_const.h
     include/rf_solver.h
-    include/rf_solve_segregated.h
     include/rf_util.h
     include/rf_vars_const.h
-    include/bc/rotate_coordinates.h
     include/shell_tfmp_struct.h
     include/shell_tfmp_util.h
     include/sl_amesos_interface.h
@@ -645,81 +653,87 @@ set(GOMA_INCLUDES
     include/sl_eggroll_def.h
     include/sl_eggroll.h
     include/sl_lu.h
-    include/sl_petsc.h
-    include/sl_petsc_complex.h
     include/sl_matrix_util.h
-    include/sl_stratimikos_interface.h
     include/sl_mumps.h
+    include/sl_petsc_complex.h
+    include/sl_petsc.h
+    include/sl_stratimikos_interface.h
     include/sl_umf.h
-    include/sl_util.h
     include/sl_util_structs.h
+    include/sl_util.h
     include/std.h
+    include/table.h
     include/wr_dpi.h
     include/wr_exo.h
     include/wr_side_data.h
-    include/wr_soln.h
-    include/brkfix/bbb.h
-    include/brkfix/exo_utils.h
-    include/brkfix/fix.h
-    include/brkfix/setup_fix_data.h)
+    include/wr_soln.h)
 
 set(GOMA_SOURCES
-    src/adapt/omega_h_interface.cpp
-    src/adapt/resetup_problem.c
     src/ac_conti.c
     src/ac_display_parameter.c
     src/ac_hunt.c
     src/ac_loca_interface.c
     src/ac_particles.c
-    src/ac_stability.c
     src/ac_stability_util.c
+    src/ac_stability.c
     src/ac_update_parameter.c
-    src/ad_turbulence.cpp
-    src/ad_porous.cpp
     src/ad_momentum.cpp
+    src/ad_porous.cpp
     src/ad_stress.cpp
+    src/ad_turbulence.cpp
+    src/adapt/omega_h_interface.cpp
+    src/adapt/resetup_problem.c
+    src/base_mesh.c
     src/bc_colloc.c
     src/bc_contact.c
     src/bc_curve.c
     src/bc_dirich.c
     src/bc_integ.c
-    src/bc/rotate.c
     src/bc_special.c
     src/bc_surfacedomain.c
+    src/bc/eqn_index.c
+    src/bc/generalized_dirichlet.c
+    src/bc/geom.c
+    src/bc/rotate_coordinates.c
+    src/bc/rotate.c
+    src/brkfix/bbb.c
+    src/brkfix/fix_exo_file.c
+    src/brkfix/setup_fix_data.cpp
     src/decomp_interface.c
     src/density.c
     src/dp_comm.c
+    src/dp_ghost.cpp
     src/dp_map_comm_vec.c
     src/dp_utils.c
-    src/dp_ghost.cpp
     src/dp_vif.c
     src/el_elm_info.c
     src/el_quality.c
     src/exo_conn.c
     src/globals.c
-    src/linalg/sparse_matrix.cpp
-    src/linalg/sparse_matrix_tpetra.cpp
     src/linalg/sparse_matrix_epetra.cpp
-    src/ls/create_facets.cpp
-    src/ls/facet_reinitialization.cpp
+    src/linalg/sparse_matrix_tpetra.cpp
+    src/linalg/sparse_matrix.cpp
     src/load_field_variables.c
+    src/load_variable.c
     src/loca_bord.c
     src/loca_eigen_c2f.F
     src/loca_eigen_cayley.F
     src/loca_eigenvalue.c
     src/loca_lib.c
     src/loca_util.c
+    src/ls/create_facets.cpp
+    src/ls/facet_reinitialization.cpp
     src/md_ieee.c
     src/md_timer.c
     src/metis_decomp.c
     src/mm_as_alloc.c
     src/mm_augc_util.c
-    src/mm_bc.c
     src/mm_bc_conflict.c
+    src/mm_bc.c
     src/mm_chemkin.c
     src/mm_dil_viscosity.c
+    src/mm_em_bc.c
     src/mm_fill_aux.c
-    src/mm_fill.c
     src/mm_fill_common.c
     src/mm_fill_continuity.c
     src/mm_fill_elliptic_mesh.c
@@ -728,8 +742,8 @@ set(GOMA_SOURCES
     src/mm_fill_fill.c
     src/mm_fill_interface.c
     src/mm_fill_jac.c
-    src/mm_fill_ls.c
     src/mm_fill_ls_capillary_bcs.c
+    src/mm_fill_ls.c
     src/mm_fill_momentum.c
     src/mm_fill_population.c
     src/mm_fill_porous.c
@@ -740,28 +754,28 @@ set(GOMA_SOURCES
     src/mm_fill_shell.c
     src/mm_fill_solid.c
     src/mm_fill_species.c
+    src/mm_fill_split.c
+    src/mm_fill_stabilization.c
     src/mm_fill_stress.c
     src/mm_fill_terms.c
     src/mm_fill_turbulent.c
-    src/mm_fill_split.c
     src/mm_fill_util.c
-    src/mm_fill_stabilization.c
+    src/mm_fill.c
     src/mm_flux.c
     src/mm_input_bc.c
-    src/mm_input.c
     src/mm_input_mp.c
     src/mm_input_particles.c
     src/mm_input_util.c
+    src/mm_input.c
     src/mm_interface.c
     src/mm_matrl.c
     src/mm_more_utils.c
-    src/mm_em_bc.c
     src/mm_ns_bc.c
     src/mm_numjac.c
     src/mm_placid.c
     src/mm_porous_EOS.c
-    src/mm_post_proc.c
     src/mm_post_proc_util.c
+    src/mm_post_proc.c
     src/mm_prob_def.c
     src/mm_propertyJac.c
     src/mm_qp_storage.c
@@ -770,30 +784,28 @@ set(GOMA_SOURCES
     src/mm_shell_util.c
     src/mm_sol_nonlinear.c
     src/mm_species.c
-    src/mm_std_models.c
     src/mm_std_models_shell.c
+    src/mm_std_models.c
     src/mm_unknown_map.c
     src/mm_viscosity.c
     src/models/fluidity.cpp
     src/polymer_time_const.c
     src/rd_dpi.c
     src/rd_exo.c
-    src/base_mesh.c
     src/rd_mesh.c
-    src/rd_pixel_image2.c
     src/rd_pixel_image.c
+    src/rd_pixel_image2.c
     src/rf_allo.c
     src/rf_element_storage.c
-    src/rf_node.c
     src/rf_node_vars.c
+    src/rf_node.c
     src/rf_pre_proc.c
     src/rf_setup_problem.c
     src/rf_shape.c
-    src/rf_solve.c
     src/rf_solve_segregated.c
+    src/rf_solve.c
     src/rf_util.c
     src/rf_vars.c
-    src/bc/rotate_coordinates.c
     src/shell_tfmp_util.c
     src/sl_amesos_interface.cpp
     src/sl_amesos2_interface.cpp
@@ -808,31 +820,29 @@ set(GOMA_SOURCES
     src/sl_eggrollutil.c
     src/sl_eggrollwrap.c
     src/sl_leastsquares.cpp
-    src/sl_lu.c
     src/sl_lu_fill.c
+    src/sl_lu.c
     src/sl_lustat.c
     src/sl_ma28.c
     src/sl_matrix_dump.c
-    src/sl_petsc.c
-    src/sl_petsc_pcd.c
-    src/sl_petsc_complex.c
     src/sl_matrix_util.c
+    src/sl_mumps.c
+    src/sl_petsc_complex.c
+    src/sl_petsc_pcd.c
+    src/sl_petsc.c
     src/sl_squash.c
     src/sl_stratimikos_interface.cpp
-    src/sl_mumps.c
     src/sl_umf.c
     src/sl_util.c
+    src/table.c
     src/wr_dpi.c
     src/wr_exo.c
     src/wr_side_data.c
-    src/wr_soln.c
-    src/brkfix/bbb.c
-    src/brkfix/setup_fix_data.cpp
-    src/brkfix/fix_exo_file.c)
+    src/wr_soln.c)
 
 set(GOMA_USER_INCLUDES
-    include/user_bc.h
     include/user_continuation.h
+    include/user_bc.h
     include/user_mp_gen.h
     include/user_mp.h
     include/user_out_hkm.h
@@ -843,8 +853,8 @@ set(GOMA_USER_INCLUDES
 
 set(GOMA_USER_SOURCES
     src/user_ac.c
-    src/user_bc.c
     src/user_continuation.c
+    src/user_bc.c
     src/user_mp.c
     src/user_mp_gen.c
     src/user_out_hkm.c

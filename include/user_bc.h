@@ -19,6 +19,14 @@
 #include "rf_fem_const.h"
 #include "std.h"
 
+extern dbl fnc(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time);
+
+extern dbl dfncd1(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time);
+
+extern dbl dfncd2(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time);
+
+extern dbl dfncd3(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time);
+
 extern dbl velo_vary_fnc(const int,   /* velo_condition                            */
                          const dbl,   /* x1                                        */
                          const dbl,   /* x2                                        */

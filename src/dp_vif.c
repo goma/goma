@@ -836,6 +836,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &BC_Types[i].BC_matrl_index_3, 1, MPI_INT);
     ddd_add_member(n, &BC_Types[i].BC_matrl_index_4, 1, MPI_INT);
     ddd_add_member(n, &BC_Types[i].BC_EBID_Apply, 1, MPI_INT);
+    ddd_add_member(n, &BC_Types[i].CA_node_flag, 1, MPI_INT);
     ddd_add_member(n, BC_Types[i].BC_Data_Int, MAX_BC_INT_DATA, MPI_INT);
     ddd_add_member(n, BC_Types[i].BC_Data_Float, MAX_BC_FLOAT_DATA, MPI_DOUBLE);
     ddd_add_member(n, &BC_Types[i].len_u_BC, 1, MPI_INT);
@@ -1191,6 +1192,7 @@ void noahs_ark(void) {
     ddd_add_member(n, cont->use_var_norm, MAX_VARIABLE_TYPES, MPI_INT);
     ddd_add_member(n, &cont->print_freq, 1, MPI_INT);
     ddd_add_member(n, &cont->fix_freq, 1, MPI_INT);
+    ddd_add_member(n, &cont->anneal_on_print, 1, MPI_INT);
     ddd_add_member(n, &cont->print_delt, 1, MPI_DOUBLE);
     ddd_add_member(n, &cont->print_delt2_path, 1, MPI_DOUBLE);
     ddd_add_member(n, &cont->print_delt2, 1, MPI_DOUBLE);
