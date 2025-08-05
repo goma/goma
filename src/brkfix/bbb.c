@@ -154,8 +154,8 @@ void build_big_bones(Exo_DB *p, /* EXODUS info from representative polylith */
   if (m->num_info > 0) {
     m->info = (INFO_Record *)smalloc(m->num_info * sizeof(INFO_Record));
     for (i = 0; i < m->num_info; i++) {
-      m->info[i] = (char *)smalloc((MAX_LINE_LENGTH+1) * sc);
-      strncpy(m->info[i], p->info[i], MAX_LINE_LENGTH+1);
+      m->info[i] = (char *)smalloc((MAX_LINE_LENGTH + 1) * sc);
+      strncpy(m->info[i], p->info[i], MAX_LINE_LENGTH + 1);
     }
   }
 
