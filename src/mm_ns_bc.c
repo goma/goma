@@ -21,17 +21,17 @@
 #include "mm_ns_bc.h"
 
 #include <math.h>
+#include <mm_fill_stabilization.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 /* GOMA include files */
+#include "ac_stability.h"
 #ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
 #endif
-#include "ac_stability.h"
-#include "bc/geom.h"
 #include "bc_colloc.h"
 #include "density.h"
 #include "el_elm.h"
@@ -49,7 +49,6 @@
 #include "mm_fill_rs.h"
 #include "mm_fill_solid.h"
 #include "mm_fill_species.h"
-#include "mm_fill_stabilization.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_terms.h"
 #include "mm_input.h"
@@ -76,7 +75,6 @@
 #include "rf_vars_const.h"
 #include "sl_auxutil.h"
 #include "std.h"
-#include "table.h"
 #include "user_bc.h"
 #include "user_mp.h"
 #include "wr_side_data.h"

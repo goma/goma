@@ -17,6 +17,7 @@
  */
 
 /* Standard include files */
+#include "load_field_variables.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -27,7 +28,6 @@
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "exo_struct.h"
-#include "load_field_variables.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
@@ -53,7 +53,6 @@
 #include "rf_fem_const.h"
 #include "rf_mp.h"
 #include "std.h"
-#include "table.h"
 #include "user_mp.h"
 
 #include "density.h"
@@ -11073,6 +11072,107 @@ void porous_liq_fill(double *func,
   }
   return;
 } /* end  porous_liq_pressure_fill_bc  */
+/******************************************************************************/
+/******************************************************************************/
+/******************************************************************************/
+
+double interpolate_table_sat(struct Data_Table *table, double x[DIM])
+
+{
+  int i, N, Np1, iinter, istartx, istarty, iad;
+  double func = 0, y1, y2, y3, y4, tt, uu;
+  double *t, *t2, *f;
+
+  N = table->tablelength - 1;
+  Np1 = table->tablelength;
+  t = table->t;
+  t2 = table->t2;
+  f = table->f;
+  uu = 0.0;
+
+  switch (table->interp_method) { /* switch */
+  case LINEAR:                    /* This is knucklehead linear interpolation scheme */
+    /* check if absorb or desorb */
+    if (x[1] > 0) {
+      iad = 1;
+    } else {
+      iad = 0;
+    }
+
+    if (x[0] < t[0]) {
+      table->slope[0] = (f[1 + Np1 * iad] - f[0 + Np1 * iad]) / (t[1] - t[0]);
+      func = f[0 + Np1 * iad] + (table->slope[0]) * (x[0] - t[0]);
+    }
+
+    for (i = 0; x[0] >= t[i] && i < N; i++) {
+      if (x[0] >= t[i] && x[0] < t[i + 1]) {
+        table->slope[0] = (f[i + 1 + Np1 * iad] - f[i + Np1 * iad]) / (t[i + 1] - t[i]);
+        func = f[i + Np1 * iad] + (table->slope[0]) * (x[0] - t[i]);
+      }
+    }
+    if (x[0] >= t[N]) {
+      table->slope[0] = (f[N + Np1 * iad] - f[N - 1 + Np1 * iad]) / (t[N] - t[N - 1]);
+      func = f[N + Np1 * iad] + (table->slope[0]) * (x[0] - t[N]);
+    }
+    table->slope[1] = 0.0;
+    break;
+  case BILINEAR: /* BILINEAR Interpolation Scheme */
+    /* check if absorb or desorb */
+    if (x[2] > 0) {
+      iad = 1;
+    } else {
+      iad = 0;
+    }
+
+    /*Find Interval of Different Values of Abscissa #1*/
+    iinter = 0;
+    for (i = 0; i < N; i++) {
+      if (table->t[i] != table->t[i + 1] && iinter == 0) {
+        iinter = i + 1;
+      }
+    }
+    if (iinter == 1) {
+      fprintf(stderr, " MP Interpolate Error - Need more than 1 point per set");
+      GOMA_EH(GOMA_ERROR, "Table interpolation not implemented");
+    }
+
+    istartx = iinter;
+
+    for (i = 0; t[i] <= x[0] && i < N + 1; i = i + iinter) {
+      istartx = i;
+    }
+
+    istarty = istartx;
+
+    for (i = istartx + 1; t2[i] <= x[1] && i < istartx + iinter - 1; i++) {
+      istarty = i;
+    }
+
+    y1 = f[istarty + Np1 * iad];
+    y2 = f[istarty + 1 + Np1 * iad];
+    y3 = f[istarty + 1 + iinter + Np1 * iad];
+    y4 = f[istarty + iinter + Np1 * iad];
+
+    tt = (x[1] - t2[istarty]) / (t2[istarty + 1] - t2[istarty]);
+    uu = (x[0] - t[istarty]) / (t[istarty + 1 + iinter] - t[istarty]);
+
+    func = (1. - tt) * (1. - uu) * y1 + tt * (1. - uu) * y2 + tt * uu * y3 + (1. - tt) * uu * y4;
+
+    table->slope[1] =
+        (1.0 - uu) * ((f[istarty + 1 + Np1 * iad] - f[istarty + Np1 * iad]) /
+                      (t2[istarty + 1] - t2[istarty])) +
+        uu * ((f[istarty + 1 + iinter + Np1 * iad] - f[istarty + iinter + Np1 * iad]) /
+              (t2[istarty + 1 + iinter] - t2[istarty + iinter]));
+    /* slope0 not needed */
+    table->slope[0] = (f[istarty + 1 + Np1 * iad] - f[istarty + 1 + iinter + Np1 * iad]) /
+                      (t[istarty + 1] - t[istarty + 1 + iinter]);
+    break;
+  default:
+    GOMA_EH(GOMA_ERROR, "Table interpolation order for Saturation not implemented");
+  }
+
+  return (func);
+}
 /******************************************************************************/
 /******************************************************************************/
 int evaluate_sat_hyst_criterion(int ip, int ielem, struct Porous_Media_Terms *pmt, dbl tt, dbl dt) {

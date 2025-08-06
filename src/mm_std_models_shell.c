@@ -47,7 +47,6 @@ static char rcsid[] = "$Id: mm_std_models_shell.c,v 5.31 2010-07-30 20:48:38 prs
 #include "rf_solver_const.h"
 #include "rf_vars_const.h"
 #include "std.h"
-#include "table.h"
 
 #include "mm_mp.h"
 #include "mm_mp_structs.h"

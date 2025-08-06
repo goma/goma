@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bc/eqn_index.h"
 #include "bc_colloc.h"
 #include "dpi.h"
 #include "el_elm.h"
@@ -594,7 +593,7 @@ static int set_nodal_Dirichlet_BC(int inode,
      *  struct boundary_condition is not used for this card, we can place
      *  the global node number in it.
      */
-    boundary_condition->CA_node_flag = inode + 1;
+    boundary_condition->BC_Data_Int[0] = 1000000 * inode + 1000000;
     node->DBCA = 1;
 
   } else if (boundary_condition->BC_Name == SURFTANG_SCALAR_BC ||
@@ -2096,7 +2095,7 @@ static void setup_Elem_BC(struct elem_side_bc_struct **elem_side_bc,
       /* More than one surface integral BC on the side of the element -
        * Add to the existing structure
        */
-      side->BC_applied |= bc_type->BC_Name;
+      side->BC_applied += bc_type->BC_Name;
       realloc_int_1(&(side->BC_input_id), side->Num_BC + 2, side->Num_BC + 1);
       side->BC_input_id[side->Num_BC] = ibc;
       side->Num_BC++;
