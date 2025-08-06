@@ -1782,6 +1782,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case FILLET_BC:
     case DOUBLE_RAD_BC:
     case DOUBLE_FILLET_BC:
+    case DOUBLE_FILLET_GEOM_BASED_BC:
     case ROLL_FLUID_BC:
     case SPLINEX_BC:
     case SPLINEY_BC:

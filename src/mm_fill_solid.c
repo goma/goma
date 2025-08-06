@@ -51,6 +51,7 @@
 #include "rf_node_const.h"
 #include "rf_vars_const.h"
 #include "std.h"
+#include "table.h"
 #include "user_mp.h"
 
 #define GOMA_MM_FILL_SOLID_C

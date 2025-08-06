@@ -13,7 +13,6 @@
 \************************************************************************/
 #include <string.h>
 
-#include "bc_colloc.h"
 #include "el_geom.h"
 #include "load_field_variables.h"
 #include "mm_as.h"
@@ -25,6 +24,7 @@
 #include "mm_post_def.h"
 #include "rf_fem.h"
 #include "std.h"
+#include "table.h"
 
 /***************************************************************************/
 /****************************************************************************/
