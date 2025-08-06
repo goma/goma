@@ -32,8 +32,6 @@ also available.
 
 .. include:: /problem_description_file/boundary_conditions/mesh/double_fillet.rst
 
-.. include:: /problem_description_file/boundary_conditions/mesh/double_fillet_geom_based.rst
-
 .. include:: /problem_description_file/boundary_conditions/mesh/kinematic.rst
 
 .. include:: /problem_description_file/boundary_conditions/mesh/kinematic_petrov.rst

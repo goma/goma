@@ -28,7 +28,6 @@
 /* GOMA include files */
 #include "ac_stability.h"
 #include "ac_stability_util.h"
-#include "table.h"
 #ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
 #endif

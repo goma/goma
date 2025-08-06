@@ -33,7 +33,6 @@
 #include "ac_stability.h"
 #include "ac_stability_util.h"
 #include "ad_turbulence.h"
-#include "bc/eqn_index.h"
 #include "bc_colloc.h"
 #include "bc_contact.h"
 #include "dpi.h"

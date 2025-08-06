@@ -8,11 +8,7 @@
   do {                              \
     size_t sz = size;               \
     dst = malloc(sz);               \
-    if (src == NULL) {              \
-      memset(dst, 0, sz);           \
-    } else {                        \
-      memcpy(dst, src, sz);         \
-    }                               \
+    memcpy(dst, src, sz);           \
   } while (0)
 
 static goma_error setup_base_mesh_serial(Dpi *dpi, Exo_DB *exo);

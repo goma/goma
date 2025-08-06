@@ -25,8 +25,6 @@
 
 #include "ac_stability.h"
 #include "ac_stability_util.h"
-#include "bc/eqn_index.h"
-#include "bc/generalized_dirichlet.h"
 #include "bc/rotate_coordinates.h"
 #include "bc_colloc.h"
 #include "bc_curve.h"
