@@ -632,6 +632,16 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     mat_ptr->len_u_density = num_const;
     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_density);
+  } else if (model_read == -1 && !strcmp(model_name, "CURE_SHRINKAGE")) {
+    mat_ptr->DensityModel = DENSITY_CURE_SHRINKAGE;
+    num_const = read_constants(imp, &(mat_ptr->u_density), 0);
+    if (num_const != 5) {
+      sprintf(err_msg, "Material %s - expected 5 constants for %s %s model.\n",
+              pd_glob[mn]->MaterialName, "Density", "CURE_SHRINKAGE");
+      GOMA_EH(GOMA_ERROR, err_msg);
+    }
+    mat_ptr->len_u_density = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_density);
   } else {
     sprintf(err_msg, "Material %s - unrecognized model for %s \"%s\" ???\n",
             pd_glob[mn]->MaterialName, "Density", model_name);
@@ -2142,6 +2152,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   // Set the default
   mp_glob[mn]->DilationalViscosityModel = DILVISCM_KAPPAWIPESMU;
+  SPF(es, "Dilational Viscosity = ");
   model_read = look_for_mat_proptable(
       imp, "Dilational Viscosity", &(mp_glob[mn]->DilationalViscosityModel),
       &(mp_glob[mn]->dilationalViscosity), &(mp_glob[mn]->u_dilationalViscosity),
@@ -2184,6 +2195,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   } else if (strcmp(model_name, " ")) {
     // We're here if we found the card, but couldn't read it
     GOMA_EH(model_read, "Dilational Viscosity");
+  }
+
+  if (mp_glob[mn]->DilationalViscosityModel != DILVISCM_KAPPAWIPESMU) {
+    ECHO(es, echo_file);
   }
 
   model_read = look_for_mat_prop(imp, "Dilational Viscosity Multiplier", &(i0), &(a0), NO_USER,
@@ -4899,6 +4914,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     if (pd_glob[mn]->e[imtrx][R_POR_ENERGY]) {
       have_por_energy = 1;
     }
+    if (pd_glob[mn]->e[imtrx][R_POR_SINK_MASS]) {
+      have_por_sink_mass = 1;
+    }
     if (pd_glob[mn]->e[imtrx][R_SHELL_SAT_OPEN]) {
       have_shell_sat_open = 1;
     }
@@ -6685,6 +6703,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       /*   if( have_vort_dir == 0 ) */
       /* 	    GOMA_EH(GOMA_ERROR, "SUSPENSION_BALANCE mass flux requires a vorticity vector
        * in EQ list."); */
+
+    } else if (!strcmp(model_name, "HYDRODYNAMIC_SEDIMENT")) {
+      DiffusionConstitutiveEquation = HYDRODYNAMIC_SEDIMENT;
     } else if (!strcmp(model_name, "NONE")) {
       DiffusionConstitutiveEquation = NON_DIFFUSING;
     } else {
@@ -7607,9 +7628,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         else if (!strcmp(model_name, "GENERALIZED_FREE_VOL")) {
           mat_ptr->DiffusivityModel[species_no] = GENERALIZED_FREE_VOL;
           num_const = mat_ptr->len_u_diffusivity[species_no];
-          if (num_const < 12) {
+          if (num_const < 13) {
             sr = sprintf(
-                err_msg, "Matl %s (conc %d) needs at least 12 constants for %s %s model.\n",
+                err_msg, "Matl %s (conc %d) needs at least 13 constants for %s %s model.\n",
                 pd_glob[mn]->MaterialName, species_no, "Diffusivity", "GENERALIZED_FREE_VOL");
             GOMA_EH(GOMA_ERROR, err_msg);
           }
@@ -7620,6 +7641,72 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         /* Set a constant binary diffusivity if no concentration dependency
          * is known for generalized_fickian formulation.  It is known that
          * this is a poor approximation for multicomponent case.*/
+        /*
+         * SEDIMENT is based on colloidal sedimentation model of Russel et al.
+         * The flux of particles consist of two parts:  First is Fickian diffusion, due to
+         * osmotic pressure gradient, which can be written in terms of sedimentation coefficient
+         * and compressibility factor. Second is particles settling due to gravity forces
+         * and density difference between particles and solvent.
+         *
+         *  Thus, if SEDIMENT is specified, then the following additional parameters are
+         *  looked for and must be supplied:
+         *     "Settling Velocity"
+         */
+
+        else if (!strcmp(model_name, "SEDIMENT")) {
+          mat_ptr->DiffusivityModel[species_no] = SEDIMENT;
+          num_const = mat_ptr->len_u_diffusivity[species_no];
+          if (num_const < 5) {
+            sr = sprintf(err_msg, "Matl %s (conc %d) needs at least 5 constants for %s %s model.\n",
+                         pd_glob[mn]->MaterialName, species_no, "Diffusivity", "SEDIMENT");
+            GOMA_EH(GOMA_ERROR, err_msg);
+          }
+          if (pd_glob[mn]->Num_Species_Eqn < 1) {
+            GOMA_EH(GOMA_ERROR, "SEDIMENT model is for 2 or more BULK components.");
+          }
+
+          ECHO(es, echo_file);
+        }
+
+        /*
+         * BRUGGEMANN is based on diffusion model on porous media
+         */
+
+        else if (!strcmp(model_name, "BRUGGEMANN")) {
+          mat_ptr->DiffusivityModel[species_no] = BRUGGEMANN;
+          num_const = mat_ptr->len_u_diffusivity[species_no];
+          if (num_const < 3) {
+            sr = sprintf(err_msg, "Matl %s (conc %d) needs at least 3 constant for %s %s model.\n",
+                         pd_glob[mn]->MaterialName, species_no, "Diffusivity", "BRUGGEMANN");
+            GOMA_EH(GOMA_ERROR, err_msg);
+          }
+          if (pd_glob[mn]->Num_Species_Eqn < 1) {
+            GOMA_EH(GOMA_ERROR, "BRUGGEMANN model is for 2 or more BULK components.");
+          }
+
+          ECHO(es, echo_file);
+        }
+
+        /*
+         * BRUGGEMANN_FREE_VOL is a combination of FREE_VOL and BRUGGEMANN
+         */
+
+        else if (!strcmp(model_name, "BRUGGEMANN_FREE_VOL")) {
+          mat_ptr->DiffusivityModel[species_no] = BRUGGEMANN_FREE_VOL;
+          num_const = mat_ptr->len_u_diffusivity[species_no];
+          if (num_const < 12) {
+            sr = sprintf(err_msg, "Matl %s (conc %d) needs at least 12 constant for %s %s model.\n",
+                         pd_glob[mn]->MaterialName, species_no, "Diffusivity",
+                         "BRUGGEMANN_FREE_VOL");
+            GOMA_EH(GOMA_ERROR, err_msg);
+          }
+          mat_ptr->FreeVolSolvent[species_no] = TRUE;
+          if (pd_glob[mn]->Num_Species_Eqn < 1) {
+            GOMA_EH(GOMA_ERROR, "BRUGGEMANN_FREE_VOL model is for 2 or more BULK components.");
+          }
+
+          ECHO(es, echo_file);
+        }
 
         else if (!strcmp(model_name, "GENERALIZED")) {
           mat_ptr->DiffusivityModel[species_no] = GENERALIZED;
@@ -7645,6 +7732,32 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         }
 
       } /* End of if (model_read == 0) */
+      if (DiffusionConstitutiveEquation == HYDRODYNAMIC_SEDIMENT) {
+        /*  If HYDRODYNAKIC_SEDIMENT is specified, then the following additional parameters are
+         *  looked for and must be supplied:
+         *     "Settling Velocity"
+         */
+        species_no = mat_ptr->Num_Species; /* set species number equal to max number of species
+                                        it is changed to species number of input property
+                                        by look_for_mat_prop */
+
+        model_read =
+            look_for_mat_prop(imp, "Settling Velocity", mat_ptr->SettlingModel,
+                              mat_ptr->SettlingSpeed, mat_ptr->u_settling, mat_ptr->len_u_settling,
+                              model_name, SCALAR_INPUT, &species_no, es);
+
+        if (!strcmp(model_name, "SEDIMENT")) {
+          mat_ptr->SettlingModel[species_no] = SEDIMENT;
+          num_const = read_constants(imp, mat_ptr->u_settling, species_no);
+          if (num_const < 8) {
+            sr = sprintf(err_msg, "Matl %s %s needs 8 constants for %s  model.\n",
+                         pd_glob[mn]->MaterialName, "Settling Velocity", "SEDIMENT");
+            GOMA_EH(GOMA_ERROR, err_msg);
+          }
+          mat_ptr->len_u_settling[species_no] = num_const;
+          SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_settling[species_no]);
+        }
+      } /*end of if(DiffusionConstitutiveEquation == HYDRODYNAMIC_SEDIMENT */
 
     } /*end of if(DiffusionConstitutiveEquation != STEFAN_MAXWELL &&
         DiffusionConstitutiveEquation != STEFAN_MAXWELL_CHARGED &&
@@ -7969,6 +8082,12 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     fallback_chemkin_generic_prop(&model_read, j, &(mat_ptr->MolarVolumeModel[j]), TRUE, mat_ptr);
     ECHO(es, echo_file);
 
+    model_read = look_for_species_prop(imp, "Emissivity", mat_ptr, mat_ptr->EmissivityModel,
+                                       mat_ptr->emissivity, NO_USER, NULL, model_name, SCALAR_INPUT,
+                                       &species_no, es);
+    fallback_chemkin_generic_prop(&model_read, j, &(mat_ptr->EmissivityModel[j]), TRUE, mat_ptr);
+    ECHO(es, echo_file);
+
     model_read = look_for_species_prop(imp, "Charge Number", mat_ptr, mat_ptr->ChargeNumberModel,
                                        mat_ptr->charge_number, NO_USER, NULL, model_name,
                                        SCALAR_INPUT, &species_no, es);
@@ -8013,7 +8132,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                 "Error reading non-volatile Molar Volume: e.g. CONSTANT  species_id  MV");
       } else {
         mat_ptr->molar_volume[pd_glob[mn]->Num_Species_Eqn] = mv;
-        SPF(es, "%s = %s %d %.4g", "Non-volatile Molar Volume", model_name, ii, mw);
+        SPF(es, "%s = %s %d %.4g", "Non-volatile Molar Volume", model_name, ii, mv);
       }
       ECHO(es, echo_file);
     }
@@ -8025,7 +8144,19 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                 "Error reading non-volatile Specific Volume: e.g. CONSTANT  species_id  MV");
       } else {
         mat_ptr->specific_volume[pd_glob[mn]->Num_Species_Eqn] = mv;
-        SPF(es, "%s = %s %d %.4g", "Non-volatile Specific Volume", model_name, ii, mw);
+        SPF(es, "%s = %s %d %.4g", "Non-volatile Specific Volume", model_name, ii, mv);
+      }
+      ECHO(es, echo_file);
+    }
+
+    iread = look_for_optional(imp, "Non-volatile Emissivity", input, '=');
+    if (iread != -1) {
+      if (fscanf(imp, "%s %d %lf", model_name, &ii, &mv) != 3) {
+        GOMA_EH(GOMA_ERROR,
+                "Error reading non-volatile Molar Volume: e.g. CONSTANT  species_id  MV");
+      } else {
+        mat_ptr->emissivity[pd_glob[mn]->Num_Species_Eqn] = mv;
+        SPF(es, "%s = %s %d %.4g", "Non-volatile Emissivity", model_name, ii, mv);
       }
       ECHO(es, echo_file);
     }
@@ -8820,9 +8951,61 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->u_species_source[species_no][4] = a4; /* prefactor for k2, mid T */
 
       SPF_DBL_VEC(endofstring(es), 5, mat_ptr->u_species_source[species_no]);
-    }
+    } else if (!strcmp(model_name, "EPOXY_LINEAR_EXP")) {
+      SpeciesSourceModel = EPOXY_LINEAR_EXP;
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      if (fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7) !=
+          8) {
+        sprintf(err_msg, "Matl %s needs 8 constants for %s %s model.\n", pd_glob[mn]->MaterialName,
+                "Species Source", "EPOXY_LINEAR_EXP");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
 
-    else if (!strcmp(model_name, "SSM_BOND")) {
+      mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 8, sizeof(dbl));
+
+      mat_ptr->len_u_species_source[species_no] = 8;
+
+      mat_ptr->u_species_source[species_no][0] = a0; /* prefactor for k1 */
+      mat_ptr->u_species_source[species_no][1] = a1; /* exponent for k1 */
+      mat_ptr->u_species_source[species_no][2] = a2; /* prefactor for k2 */
+      mat_ptr->u_species_source[species_no][3] = a3; /* exponent for k2 */
+      // m = A_m * T + B_m
+      mat_ptr->u_species_source[species_no][4] = a4; /* A_m */
+      mat_ptr->u_species_source[species_no][5] = a5; /* B_m */
+      // n = A_n * T + B_n
+      mat_ptr->u_species_source[species_no][6] = a6; /* A_n */
+      mat_ptr->u_species_source[species_no][7] = a7; /* B_n */
+
+      SPF_DBL_VEC(endofstring(es), 8, mat_ptr->u_species_source[species_no]);
+    } else if (!strcmp(model_name, "EPOXY_ARRHENIUS_EXP")) {
+      SpeciesSourceModel = EPOXY_ARRHENIUS_EXP;
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      if (fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7) !=
+          8) {
+        sprintf(err_msg, "Matl %s needs 8 constants for %s %s model.\n", pd_glob[mn]->MaterialName,
+                "Species Source", "EPOXY_ARRHENIUS_EXP");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+
+      mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 8, sizeof(dbl));
+
+      mat_ptr->len_u_species_source[species_no] = 8;
+
+      mat_ptr->u_species_source[species_no][0] = a0; /* prefactor for k1 */
+      mat_ptr->u_species_source[species_no][1] = a1; /* exponent for k1 */
+      mat_ptr->u_species_source[species_no][2] = a2; /* prefactor for k2 */
+      mat_ptr->u_species_source[species_no][3] = a3; /* exponent for k2 */
+      // m = A_m * exp(B_m/T)
+      mat_ptr->u_species_source[species_no][4] = a4; /* A_m */
+      mat_ptr->u_species_source[species_no][5] = a5; /* B_m */
+      // m = A_n * exp(B_n/T)
+      mat_ptr->u_species_source[species_no][6] = a6; /* A_n */
+      mat_ptr->u_species_source[species_no][7] = a7; /* B_n */
+
+      SPF_DBL_VEC(endofstring(es), 8, mat_ptr->u_species_source[species_no]);
+    } else if (!strcmp(model_name, "SSM_BOND")) {
       SpeciesSourceModel = SSM_BOND;
       model_read = 1;
       mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;

@@ -65,6 +65,12 @@ EXTERN int epoxy_species_source /* mm_std_models.c                           */
     (int,                       /* species_no - Current species number       */
      double *);                 /* param - user-defined parameter list       */
 
+int epoxy_linear_exp_species_source(int species_no, /* Current species number */
+                                    double *param); /* pointer to user-defined parameter list */
+
+int epoxy_arrhenius_exp_species_source(int species_no, /* Current species number */
+                                       double *param); /* pointer to user-defined parameter list */
+
 EXTERN int bond_species_source /* mm_std_models.c                           */
     (int,                      /* species_no - Current species number       */
      double *);                /* param - user-defined parameter list       */
@@ -110,6 +116,22 @@ EXTERN int Diffusivity      /* mm_std_models.c                           */
 EXTERN int Free_Vol_Theory_Diffusivity /* mm_std_models.c                    */
     (int,                              /* species_no - current species number       */
      double *);                        /* param - free volume params from mat file  */
+
+EXTERN int sediment_compress_diffusivity /* mm_std_models.c                    */
+    (int,                                /* species_no - current species number       */
+     double *);                          /* param - sediment params from mat file  */
+
+EXTERN int Bruggemann_diffusivity /* mm_std_models.c                    */
+    (int,                         /* species_no - current species number       */
+     double *);                   /* param - params from mat file  */
+
+EXTERN int Bruggemann_free_volume_diffusivity /* mm_std_models.c                    */
+    (int,                                     /* species_no - current species number       */
+     double *);                               /* param - params from mat file  */
+
+EXTERN int hydro_sediment_flux            /* mm_std_models.c                           */
+    (struct Species_Conservation_Terms *, /* st                            */
+     int);                                /* w - species number                        */
 
 EXTERN int hydro_flux                     /* mm_std_models.c                           */
     (struct Species_Conservation_Terms *, /* st                            */

@@ -25,6 +25,8 @@ extern "C" {
 #undef DISABLE_CPP
 }
 
+#include <cinttypes>
+
 extern "C" goma_error GomaSparseMatrix_CreateFromFormat(GomaSparseMatrix *matrix,
                                                         char *matrix_format) {
   if (strcmp(matrix_format, "tpetra") == 0) {
@@ -80,10 +82,6 @@ extern "C" goma_error GomaSparseMatrix_SetProblemGraph(
   int add_var = 0;
   NODE_INFO_STRUCT *nodeCol;
   NODAL_VARS_STRUCT *nv, *nvCol;
-  std::vector<int> inode_varType(MaxVarPerNode);
-  std::vector<int> inode_matID(MaxVarPerNode);
-  std::vector<int> inter_node_varType(MaxVarPerNode);
-  std::vector<int> inter_node_matID(MaxVarPerNode);
   int nnz = 0;
 
   GomaGlobalOrdinal NumMyRows = num_internal_dofs + num_boundary_dofs;
@@ -95,6 +93,11 @@ extern "C" goma_error GomaSparseMatrix_SetProblemGraph(
   GomaGlobalOrdinal RowOffset;
   MPI_Scan(&NumMyRows, &RowOffset, 1, MPI_GOMA_ORDINAL, MPI_SUM, MPI_COMM_WORLD);
   RowOffset -= NumMyRows;
+
+  std::vector<int> inode_varType(MaxVarPerNode);
+  std::vector<int> inode_matID(MaxVarPerNode);
+  std::vector<int> inter_node_varType(MaxVarPerNode);
+  std::vector<int> inter_node_matID(MaxVarPerNode);
 
   std::vector<GomaGlobalOrdinal> GlobalIDs(NumMyCols);
 
@@ -265,8 +268,8 @@ extern "C" goma_error GomaSparseMatrix_SetProblemGraph(
   MPI_Allreduce(&my_unknowns, &num_unknowns, 1, MPI_INT64_T, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce(&my_nnz, &num_nzz_global, 1, MPI_INT64_T, MPI_SUM, MPI_COMM_WORLD);
 
-  DPRINTF(stdout, "\n%-30s= %ld\n", "Number of unknowns", num_unknowns);
-  DPRINTF(stdout, "\n%-30s= %ld\n", "Number of matrix nonzeroes", num_nzz_global);
+  DPRINTF(stdout, "\n%-30s= %" PRId64 "\n", "Number of unknowns", num_unknowns);
+  DPRINTF(stdout, "\n%-30s= %" PRId64 "\n", "Number of matrix nonzeroes", num_nzz_global);
   return GOMA_SUCCESS;
 }
 

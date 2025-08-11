@@ -340,7 +340,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
 
     case LS_SOLID_FLUID_BC:
       overlap_bc = TRUE;
-      /* fall through */
+      FALLTHROUGH;
     case SA_WALL_FUNC_BC:
     case OMEGA_WALL_FUNC_BC:
     case PSPG_BC:
@@ -414,7 +414,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
        */
     case SURFTANG_SCALAR_BC:
       GOMA_WH(-1, "Use CAP_ENDFORCE_SCALAR for consistent sign convention");
-      /*FALLTHROUGH*/
+      FALLTHROUGH;
     case QSIDE_BC:
       /*	case TNRMLSIDE_BC:  12/6/01 */
       /*	case TSHRSIDE_BC:   ..dal   */
@@ -830,7 +830,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case LS_ADC_OLD_BC:
     case LS_ADC_BC:
       srand((long)ut()); /* Seed the random number generator  when LS_ADC is used */
-                         /* fall through */
+      FALLTHROUGH;
     case FORCE_BC:
     case FORCE_SIC_BC:
     case FORCE_RS_BC:
@@ -911,7 +911,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
        */
     case SURFTANG_BC:
       GOMA_WH(-1, "Use CAP_ENDFORCE for consistent sign convention");
-      /*FALLTHROUGH*/
+      FALLTHROUGH;
     case PLANEX_BC:
     case PLANEY_BC:
     case PLANEZ_BC:
@@ -919,7 +919,6 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case CA_EDGE_BC:
     case CA_EDGE_INT_BC:
     case CAP_ENDFORCE_BC:
-    case QRAD_BC:
     case LS_QRAD_BC:
     case SURFTANG_EDGE_BC:
     case FLOW_HYDROSTATIC_BC:
@@ -939,19 +938,58 @@ void rd_bc_specs(FILE *ifp, char *input) {
       }
       BC_Types[ibc].max_DFlt = 4;
       SPF_DBL_VEC(endofstring(echo_string), 4, BC_Types[ibc].BC_Data_Float);
-      if (BC_Types[ibc].BC_Name == QRAD_BC) {
-        if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[4]) != 1) {
-          BC_Types[ibc].BC_Data_Float[4] = 0.;
-        } else
-          SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_Data_Float[4]);
-        BC_Types[ibc].max_DFlt = 5;
-      }
-
       break;
       /*
        * Fall through for all cases which require four floating point
        * values as data input and an optional integer element block
        */
+    case QRAD_BC:
+      if (fscanf(ifp, "%lf %lf %lf %lf", &BC_Types[ibc].BC_Data_Float[0],
+                 &BC_Types[ibc].BC_Data_Float[1], &BC_Types[ibc].BC_Data_Float[2],
+                 &BC_Types[ibc].BC_Data_Float[3]) != 4) {
+        sr = sprintf(err_msg, "%s: Expected 4 flts for %s.", yo, BC_Types[ibc].desc->name1);
+        GOMA_EH(GOMA_ERROR, err_msg);
+      } else {
+        SPF_DBL_VEC(endofstring(echo_string), 4, BC_Types[ibc].BC_Data_Float);
+
+        if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[4]) != 1) {
+          BC_Types[ibc].BC_Data_Float[4] = 0.;
+        } else
+          SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_Data_Float[4]);
+        BC_Types[ibc].max_DFlt = 5;
+
+        /* Scan for the optional int. If not present, put a -1 in second data position */
+        /* This is to ensure a nonzero entry in BC_Data_Int[2] for CA */
+        /* note: optional int isn't listed in the manual. What's it for? */
+        if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1) {
+          BC_Types[ibc].BC_Data_Int[2] = 0;
+        } else {
+          SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_Data_Int[2]);
+        }
+      }
+      if (BC_Types[ibc].BC_Data_Int[2] == 2 || BC_Types[ibc].BC_Data_Int[2] == 3) {
+
+        new_BC_Desc = ((struct BC_descriptions **)realloc(
+            new_BC_Desc, (num_new_BC_Desc + 1) * sizeof(struct BC_descriptions *)));
+
+        new_BC_Desc[num_new_BC_Desc] = alloc_BC_description(BC_Types[ibc].desc);
+
+        BC_Types[ibc].desc = new_BC_Desc[num_new_BC_Desc];
+
+        BC_Types[ibc].index_dad = num_new_BC_Desc++; /* This is important to Phil */
+
+        if (num_BC_Tables == MAX_BC_TABLES) {
+          GOMA_EH(GOMA_ERROR, "Maximum TABLE_BCs exceeded .");
+        }
+
+        BC_Tables[num_BC_Tables] = setup_table_BC(ifp, input, &BC_Types[ibc], echo_string);
+
+        BC_Types[ibc].table_index = num_BC_Tables++;
+      }
+      BC_Types[ibc].max_DFlt = 4;
+
+      break;
+
     case CA_BC:
     case CA_MOMENTUM_BC:
       if (fscanf(ifp, "%lf %lf %lf %lf", &BC_Types[ibc].BC_Data_Float[0],
@@ -1073,6 +1111,32 @@ void rd_bc_specs(FILE *ifp, char *input) {
       }
       break;
 
+    case KIN_ANTOINE_BC:
+      if (fscanf(ifp, "%lf %lf %lf %lf %lf", &BC_Types[ibc].BC_Data_Float[0],
+                 &BC_Types[ibc].BC_Data_Float[1], &BC_Types[ibc].BC_Data_Float[2],
+                 &BC_Types[ibc].BC_Data_Float[3], &BC_Types[ibc].BC_Data_Float[4]) != 5)
+
+      {
+        sr = sprintf(err_msg, "%s: Expected 5 flts for %s.", yo, BC_Types[ibc].desc->name1);
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      SPF_DBL_VEC(endofstring(echo_string), 5, BC_Types[ibc].BC_Data_Float);
+      BC_Types[ibc].max_DFlt = 5;
+
+      /* Scan for the optional ints. If not present, put a -1 in its place */
+      if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1) {
+        BC_Types[ibc].BC_Data_Int[0] = -1;
+      } else {
+        SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_Data_Int[0]);
+      }
+
+      if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[1]) != 1) {
+        BC_Types[ibc].BC_Data_Int[1] = -1;
+      } else {
+        SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_Data_Int[1]);
+      }
+
+      break;
       /*
        * Fall through for all cases which require five floating point
        * values as data input
@@ -1215,6 +1279,8 @@ void rd_bc_specs(FILE *ifp, char *input) {
           BC_Types[ibc].BC_Data_Int[2] = FLORY;
         } else if (!strcmp(input, "FLORY_CC")) {
           BC_Types[ibc].BC_Data_Int[2] = FLORY_CC;
+        } else if (!strcmp(input, "VLAR")) {
+          BC_Types[ibc].BC_Data_Int[2] = VLAR;
         } else {
           GOMA_EH(GOMA_ERROR, "I don't recognize your YFLUX_EQUIL Keyword!");
         }
@@ -1242,6 +1308,15 @@ void rd_bc_specs(FILE *ifp, char *input) {
 
         SPF_DBL_VEC(endofstring(echo_string), 2, &(BC_Types[ibc].BC_Data_Float[3]));
 
+      } else if (BC_Types[ibc].BC_Data_Int[2] == VLAR) {
+        if (fscanf(ifp, "%lf %lf", &BC_Types[ibc].BC_Data_Float[3],
+                   &BC_Types[ibc].BC_Data_Float[4]) != 2) {
+          sr = sprintf(err_msg, "%s: Expected 2 additional flts for  %s.", yo,
+                       BC_Types[ibc].desc->name1);
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+
+        SPF_DBL_VEC(endofstring(echo_string), 2, &(BC_Types[ibc].BC_Data_Float[3]));
       } else {
         BC_Types[ibc].BC_Data_Float[3] = 0.;
         BC_Types[ibc].BC_Data_Float[4] = 0.;
@@ -1697,7 +1772,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
        */
     case FLOW_PRESS_USER_BC:
       GOMA_WH(-1, " FLOW_PRESS_USER is no longer used.  Use PRESSURE_USER instead.");
-      /* Fall through */
+      FALLTHROUGH;
     case UVARY_BC:
     case VVARY_BC:
     case WVARY_BC:
@@ -1706,6 +1781,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case W_PARABOLA_BC:
     case FILLET_BC:
     case DOUBLE_RAD_BC:
+    case DOUBLE_FILLET_BC:
     case ROLL_FLUID_BC:
     case SPLINEX_BC:
     case SPLINEY_BC:
@@ -2168,6 +2244,28 @@ void rd_bc_specs(FILE *ifp, char *input) {
       SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_Data_Int[0]);
       SPF_DBL_VEC(endofstring(echo_string), 2, BC_Types[ibc].BC_Data_Float);
       BC_Types[ibc].max_DFlt = 2;
+
+      break;
+
+      /*
+       * Fall through for all cases which require two integers and five
+       * floating point values as data input
+       */
+    case YFLUX_ANTOINE_BC:
+
+      if (fscanf(ifp, "%d %d %lf %lf %lf %lf %lf ", &BC_Types[ibc].BC_Data_Int[0],
+                 &BC_Types[ibc].BC_Data_Int[1], &BC_Types[ibc].BC_Data_Float[0],
+                 &BC_Types[ibc].BC_Data_Float[1], &BC_Types[ibc].BC_Data_Float[2],
+                 &BC_Types[ibc].BC_Data_Float[3], &BC_Types[ibc].BC_Data_Float[4]) != 7) {
+        sr = sprintf(err_msg, "Expected 2 ints, 5 flts for %s on %sID=%d\n",
+                     BC_Types[ibc].desc->name1, BC_Types[ibc].Set_Type, BC_Types[ibc].BC_ID);
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      BC_Types[ibc].species_eq = BC_Types[ibc].BC_Data_Int[0];
+
+      SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_Data_Int[0]);
+      SPF_DBL_VEC(endofstring(echo_string), 5, BC_Types[ibc].BC_Data_Float);
+      BC_Types[ibc].max_DFlt = 5;
 
       break;
 

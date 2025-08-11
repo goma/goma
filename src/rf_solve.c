@@ -29,7 +29,9 @@
 
 #include "ac_particles.h"
 #include "ac_stability_util.h"
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "brkfix/fix.h"
 #include "decomp_interface.h"
 #include "dp_comm.h"
@@ -121,6 +123,10 @@ int discard_previous_time_step(
     int, double *, double *, double *, double *, double *, double *, double *);
 
 static void shift_nodal_values(int, double, double *, int);
+
+#ifndef FSUB_TYPE
+#define FSUB_TYPE void
+#endif
 
 extern FSUB_TYPE dsyev_(char *JOBZ,
                         char *UPLO,
@@ -665,11 +671,13 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       ams[i] = alloc_struct_1(struct GomaLinearSolverData, 1);
     }
   }
+#ifdef GOMA_ENABLE_AZTEC
 #ifdef MPI
   AZ_set_proc_config(ams[0]->proc_config, MPI_COMM_WORLD);
 #else  /* MPI */
   AZ_set_proc_config(ams[0]->proc_config, 0);
 #endif /* MPI */
+#endif
 
   /* Allocate solution arrays on first call only */
   if (callnum == 1) {
@@ -936,8 +944,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
     log_msg("sl_init()...");
     sl_init(matrix_systems_mask, ams, exo, dpi, cx[0]);
+#ifdef GOMA_ENABLE_AZTEC
     if (nAC > 0 || nn_post_fluxes_sens > 0 || nn_post_data_sens > 0)
       ams[JAC]->options[AZ_keep_info] = 1;
+#endif
 
       /*
        * Now, just pass pointer to ams structure with all Aztec stuff
@@ -1537,6 +1547,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             case HUYGENS:
             case HUYGENS_C:
             case HUYGENS_MASS_ITER:
+            case FACET_BASED:
               Renorm_Now =
                   (ls->Force_Initial_Renorm || (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0));
 
@@ -2271,6 +2282,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           case HUYGENS:
           case HUYGENS_C:
           case HUYGENS_MASS_ITER:
+          case FACET_BASED:
             Renorm_Now =
                 (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) || ls_adc_event == TRUE;
 
@@ -2316,6 +2328,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             case HUYGENS:
             case HUYGENS_C:
             case HUYGENS_MASS_ITER:
+            case FACET_BASED:
               Renorm_Now = (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0);
 
               did_renorm =

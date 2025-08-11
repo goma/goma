@@ -17,7 +17,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "brkfix/fix.h"
 #include "dp_comm.h"
 #include "dp_utils.h"
@@ -461,9 +463,11 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
     }
   }
 
+#ifdef GOMA_ENABLE_AZTEC
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
     AZ_set_proc_config(ams[pg->imtrx]->proc_config, MPI_COMM_WORLD);
   }
+#endif
 
   /* Allocate solution arrays on first call only */
   if (callnum == 1) {
@@ -1219,6 +1223,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
             case HUYGENS:
             case HUYGENS_C:
             case HUYGENS_MASS_ITER:
+            case FACET_BASED:
               Renorm_Now =
                   (ls->Force_Initial_Renorm || (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0));
 
@@ -2436,6 +2441,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
           case HUYGENS:
           case HUYGENS_C:
           case HUYGENS_MASS_ITER:
+          case FACET_BASED:
             Renorm_Now =
                 (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) || ls_adc_event == TRUE;
 
@@ -2460,6 +2466,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
               if (delta_t_new > fabs(delta_t0))
                 delta_t_new *= tran->time_step_decelerator;
             }
+            exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], 0);
             pg->imtrx = 0;
             break;
 

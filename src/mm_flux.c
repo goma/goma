@@ -4941,6 +4941,11 @@ int compute_volume_integrand(const int quantity,
     }
   } break;
 
+  case I_TOTAL_MASS: {
+    double rho = density(NULL, time);
+    *sum += weight * det * rho;
+  } break;
+
   case I_SPECIES_SOURCE: {
     struct Species_Conservation_Terms s_terms;
     int w1, i, ie, ldof, eqn = MASS_FRACTION;

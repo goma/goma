@@ -138,6 +138,7 @@
 #define I_EM_ABSORB_CROSS_SECTION 51
 #define I_HEAT_ENERGY_NEG         52
 #define I_HEAT_ENERGY_POS         53
+#define I_TOTAL_MASS              54
 #ifdef GOMA_MM_POST_PROC_C
 struct Post_Processing_Flux_Names {
   char *name; /* flux string */
@@ -220,6 +221,7 @@ VOL_NAME_STRUCT pp_vol_names[] = {{"VOLUME", I_VOLUME},
                                   {"DISSIPATION", I_DISSIP},
                                   {"JOULE", I_JOULE},
                                   {"SPECIES_MASS", I_SPECIES_MASS},
+                                  {"TOTAL_MASS", I_TOTAL_MASS},
                                   {"HEAT_ENERGY", I_HEAT_ENERGY},
                                   {"MOMENTUMX", I_MOMX},
                                   {"MOMENTUMY", I_MOMY},
@@ -696,7 +698,8 @@ extern int THIRD_STRAINRATE_INVAR;
 extern int WALL_DISTANCE;
 extern int CONTACT_DISTANCE;
 extern int PP_FLUID_STRESS;
-extern int LUB_CONVECTION; /* Convection forces in Lubrication */
+extern int LUB_CONVECTION;   /* Convection forces in Lubrication */
+extern int PP_MESH_VELOCITY; /* Convection forces in Lubrication */
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

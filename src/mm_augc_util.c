@@ -15,11 +15,15 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ac_update_parameter.h"
+#ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
+#endif
 #include "bc_contact.h"
 #include "dp_types.h"
+#include "dp_utils.h"
 #include "dpi.h"
 #include "el_elm.h"
 #include "el_geom.h"
@@ -151,6 +155,7 @@ void load_extra_unknownsAC(int iAC,     /* ID NUMBER OF AC'S */
       case SPLINEZ_RS_BC:
       case FILLET_BC:
       case DOUBLE_RAD_BC:
+      case DOUBLE_FILLET_BC:
       case FEATURE_ROLLON_BC:
       case ROLL_FLUID_BC:
       case UVARY_BC:
@@ -916,6 +921,7 @@ void update_parameterAC(
           case SPLINEZ_RS_BC:
           case FILLET_BC:
           case DOUBLE_RAD_BC:
+          case DOUBLE_FILLET_BC:
           case FEATURE_ROLLON_BC:
           case ROLL_FLUID_BC:
           case UVARY_BC:
@@ -984,6 +990,7 @@ void update_parameterAC(
       case SPLINEZ_RS_BC:
       case FILLET_BC:
       case DOUBLE_RAD_BC:
+      case DOUBLE_FILLET_BC:
       case FEATURE_ROLLON_BC:
       case ROLL_FLUID_BC:
       case UVARY_BC:
@@ -2062,7 +2069,7 @@ int alc_aug_cond(int iAC,
     alceq_s += sv[i] * sv[i] * dx[i] * (x[i] - x_old[i]);
   }
   if (Num_Proc > 1) {
-    alceq_s = AZ_gsum_double(alceq_s, mf_args->ams->proc_config);
+    alceq_s = goma_gsum_double(alceq_s);
   }
 
   /* Construct and load total residual */

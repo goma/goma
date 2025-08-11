@@ -35,4 +35,5 @@ Level Set Specifications
    level_set/level_set_contact_tolerance
    level_set/ignore_level_set_dependencies
    level_set/force_initial_level_set_renormalization
+   level_set/level_set_freeze_interface_nodes
 

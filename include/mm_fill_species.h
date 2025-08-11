@@ -394,6 +394,17 @@ EXTERN void mass_flux_NI_surf_bc /* mm_fill_species.c - RSL 5/28/02 */
      dbl,    /* dt - current value of the time step       */
      dbl);   /* tt - parameter to vary time integration   */
 
+EXTERN void mass_flux_surf_antoine_bc /* mm_fill_species.c                         */
+    (double[],                        /* func                                      */
+     double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+     double[DIM],                  /* x_dot - mesh velocity                     */
+     dbl,                          /* tt - parameter to vary time integration
+                                    * from explicit (tt = 1) to
+                                    * implicit (tt = 0)                         */
+     dbl,                          /* dt - current value of the time step       */
+     int,                          /* bc_input_id                               */
+     struct Boundary_Condition *); /* BC_Types                            */
+
 EXTERN void current_BV2_surf_bc /* mm_fill_species.c - RSL 5/28/02 */
     (double[],                  /* func                                      */
      double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func     */
@@ -418,18 +429,19 @@ EXTERN void current_NI_surf_bc /* mm_fill_species.c - RSL 5/28/02 */
      dbl,    /* dt - current value of the time step       */
      dbl);   /* tt - parameter to vary time integration   */
 
-EXTERN void mass_flux_equil_mtc                    /* mm_fill_species.c                         */
-    (dbl[MAX_CONC],                                /* mass_flux                                 */
-     dbl[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC], /* d_mass_flux           */
-     double[MAX_CONC],                             /* activity                                  */
-     double[MAX_CONC][MAX_CONC],                   /* dact_dC                               */
-     double[MAX_CONC],                             /* y_mass - conc at boundary                 */
-     int,                                          /* mode - model to which the VLE is based    */
-     double,                                       /* amb_pres - ambient pressure               */
-     int,                                          /* wspec - species no.                       */
-     double,                                       /* mass_tran_coeff - MASS transfer coeff     */
-     double[MAX_VARIABLE_TYPES + MAX_CONC],        /* d_mtc     */
-     double);                                      /* Y_c - bulk concentration 	             */
+void mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
+                         dbl d_mass_flux[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC],
+                         double activity[MAX_CONC],
+                         double dact_dC[MAX_CONC][MAX_CONC],
+                         double y_mass[MAX_CONC], /* conc at boundary             */
+                         int mode,                /* model to which the VLE is based on        */
+                         double amb_pres,         /* ambient pressure                     */
+                         int wspec,               /* species no.                               */
+                         double mass_tran_coeff,  /* MASS transfer coeff           */
+                         double d_mtc[MAX_VARIABLE_TYPES + MAX_CONC],
+                         double Y_c,     /* bulk concentration 	                     */
+                         double alpha_v, /* alpha van laar act. coeff. model      */
+                         double beta_v); /* beta van laar act. coeff. model       */
 
 EXTERN void mtc_chilton_coburn              /* mm_fill_species.c                         */
     (double *,                              /* mtc                                 */
@@ -474,6 +486,17 @@ EXTERN void sus_mass_flux_surf_bc /* mm_fill_species.c                       */
 
 EXTERN void kin_bc_leak /* mm_fill_species.c                         */
     (double[],          /* func                                      */
+     double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+     double[DIM],                  /* x_dot - mesh velocity                     */
+     dbl,                          /* tt - parameter to vary time integration
+                                    * from explicit (tt = 1) to
+                                    * implicit (tt = 0)                         */
+     dbl,                          /* dt - current value of the time step       */
+     int,                          /* bc_input_id                               */
+     struct Boundary_Condition *); /* BC_Types                            */
+
+EXTERN void kin_bc_antoine /* mm_fill_species.c                         */
+    (double[],             /* func                                      */
      double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
      double[DIM],                  /* x_dot - mesh velocity                     */
      dbl,                          /* tt - parameter to vary time integration

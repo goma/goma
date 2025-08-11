@@ -48,7 +48,6 @@ EXTERN void shell_n_dot_curv_bc(double func[DIM],
                                 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                                 const double theta_deg,     /* contact angle (deg.) */
                                 const int ibc_flag,         /* NOBC flag from bc input  */
-                                const double penalty,       /* penalty parameter */
                                 const int bc_id,            /* BC_Name */
                                 const double time,          /* current time */
                                 const double dt,            /* current time step size */

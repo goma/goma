@@ -6,8 +6,8 @@ import os
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "scotch"
-        self.version = "7.0.4"
-        self.sha256 = "8ef4719d6a3356e9c4ca7fefd7e2ac40deb69779a5c116f44da75d13b3d2c2c3"
+        self.version = "7.0.7"
+        self.sha256 = "02084471d2ca525f8a59b4bb8c607eb5cca452d6a38cf5c89f5f92f7edc1a5b5"
         self.filename = "scotch-" + self.version + ".tar.gz"
         self.url = (
             "https://gitlab.inria.fr/scotch/scotch/-/archive/v"
@@ -19,7 +19,8 @@ class Package(packages.CMakePackage):
         self.executables = []
         self.libraries = ["scotch", "ptscotch"]
         self.includes = []
-        self.dependencies = ["openmpi", "cmake", "flex", "bison"]
+        # parmetis is a false dependency and is removed when parmetis is not available
+        self.dependencies = ["openmpi", "cmake", "flex", "bison", "parmetis"]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
@@ -39,6 +40,8 @@ class Package(packages.CMakePackage):
         builder.add_option("-DCMAKE_C_COMPILER=" + CC)
         builder.add_option("-DCMAKE_CXX_COMPILER=" + CXX)
         builder.add_option("-DCMAKE_Fortran_COMPILER=" + FC)
+        if "PARMETIS_DIR" in builder.env:
+            builder.add_option("-DSCOTCH_METIS_PREFIX=ON")
 
     def install(self, builder):
         cmake = builder._registry.get_executable("cmake")

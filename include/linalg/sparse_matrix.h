@@ -75,6 +75,9 @@ struct g_GomaSparseMatrix {
   // Zeros a global row and sets diagonal to 1.0
   goma_error (*zero_global_row_set_diag)(struct g_GomaSparseMatrix *matrix,
                                          GomaGlobalOrdinal global_row);
+  goma_error (*matrix_vector_mult)(struct g_GomaSparseMatrix *matrix,
+                                   dbl *vector_in,
+                                   dbl *vector_out);
   // delete the allocated matrix;
   goma_error (*destroy)(struct g_GomaSparseMatrix *matrix);
 };

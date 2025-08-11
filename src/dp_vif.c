@@ -103,8 +103,7 @@ void noahs_raven(void) {
    *     Therefore, just broadcast the structure.
    */
 
-  ddd_add_member2(upd, 1, sizeof(UPD_STRUCT));
-  ddd_set_commit2();
+  MPI_Bcast(upd, sizeof(UPD_STRUCT), MPI_BYTE, 0, MPI_COMM_WORLD);
 
   Noahs_Raven = ddd_alloc();
   n = Noahs_Raven;
@@ -1379,7 +1378,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &ls->Toure_Penalty, 1, MPI_INT);
     ddd_add_member(n, &ls->YZbeta, 1, MPI_INT);
     ddd_add_member(n, &ls->YZbeta_scale, 1, MPI_DOUBLE);
-    ddd_add_member(n, &ls->Huygens_Freeze_Nodes, 1, MPI_INT);
+    ddd_add_member(n, &ls->Freeze_Interface_Nodes, 1, MPI_INT);
     ddd_add_member(n, &ls->Semi_Implicit_Integration, 1, MPI_INT);
   }
 
@@ -1898,6 +1897,7 @@ void noahs_ark(void) {
     ddd_add_member(n, mp_glob[i]->SBM_Lengths, MAX_CONC, MPI_DOUBLE);
     ddd_add_member(n, mp_glob[i]->NSCoeff, MAX_CONC, MPI_DOUBLE);
     ddd_add_member(n, mp_glob[i]->cur_diffusivity, MAX_CONC, MPI_DOUBLE);
+    ddd_add_member(n, mp_glob[i]->SettlingSpeed, MAX_CONC, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->q_diffusivity[0][0], MAX_CONC * DIM, MPI_DOUBLE);
 
     ddd_add_member(n, mp_glob[i]->latent_heat_fusion, MAX_CONC, MPI_DOUBLE);
@@ -1922,6 +1922,7 @@ void noahs_ark(void) {
     ddd_add_member(n, mp_glob[i]->DiffusivityModel, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->LatentHeatFusionModel, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->LatentHeatVapModel, MAX_CONC, MPI_INT);
+    ddd_add_member(n, mp_glob[i]->SettlingModel, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->RefConcnModel, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->SpecVolExpModel, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->SpeciesSourceModel, MAX_CONC, MPI_INT);
@@ -2014,6 +2015,7 @@ void noahs_ark(void) {
     ddd_add_member(n, mp_glob[i]->len_SBM_Lengths2, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->len_u_nscoeff, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->len_u_qdiffusivity, MAX_CONC, MPI_INT);
+    ddd_add_member(n, mp_glob[i]->len_u_settling, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->len_u_species_source, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->len_u_species_vol_expansion, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->len_u_vapor_pressure, MAX_CONC, MPI_INT);
@@ -2074,6 +2076,9 @@ void noahs_ark(void) {
 
     ddd_add_member(n, &mp_glob[i]->d_diffusivity[0][0],
                    (MAX_CONC) * (MAX_VARIABLE_TYPES + MAX_CONC), MPI_DOUBLE);
+
+    ddd_add_member(n, &mp_glob[i]->d_settling[0][0], (MAX_CONC) * (MAX_VARIABLE_TYPES + MAX_CONC),
+                   MPI_DOUBLE);
 
     ddd_add_member(n, &mp_glob[i]->d_latent_heat_fusion[0][0],
                    (MAX_CONC) * (MAX_VARIABLE_TYPES + MAX_CONC), MPI_DOUBLE);
@@ -2700,6 +2705,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &CONTACT_DISTANCE, 1, MPI_INT);
   ddd_add_member(n, &PP_FLUID_STRESS, 1, MPI_INT);
   ddd_add_member(n, &LUB_CONVECTION, 1, MPI_INT);
+  ddd_add_member(n, &PP_MESH_VELOCITY, 1, MPI_INT);
   ddd_add_member(n, &USER_POST, 1, MPI_INT);
   if (len_u_post_proc > 0) {
     ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);
@@ -3107,6 +3113,8 @@ void ark_landing(void) {
       dalloc(m->len_u_nscoeff[j], m->u_nscoeff[j]);
 
       dalloc(m->len_u_qdiffusivity[j], m->u_qdiffusivity[j]);
+
+      dalloc(m->len_u_settling[j], m->u_settling[j]);
 
       dalloc(m->len_u_species_source[j], m->u_species_source[j]);
 

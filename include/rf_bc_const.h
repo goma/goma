@@ -705,9 +705,11 @@
 #define YFLUX_BV2_BC            24130000 /* RSL 3/9/01 */
 #define YFLUX_NI_BC             24120000 /* RSL 3/9/01 */
 #define YFLUX_ETCH_BC           24111111
+#define YFLUX_ANTOINE_BC        24111115
 #define RAOULT                  24300000
 #define FLORY                   24700000
 #define FLORY_CC                24800000
+#define VLAR                    24820000
 #define SHELL_CONC_LS_BC        24850000
 #define YREACT_BC               30000000
 
@@ -799,6 +801,7 @@
 #define PLANE_BC                   961000000
 #define FILLET_BC                  961123400
 #define DOUBLE_RAD_BC              961123500
+#define DOUBLE_FILLET_BC           961123501
 #define FEATURE_ROLLON_BC          961223400
 #define ROLL_FLUID_BC              961124500
 #define SA_WALL_FUNC_BC            961124501
@@ -814,6 +817,7 @@
 #define KINEMATIC_ETA_BC           962000002
 #define LUB_KINEMATIC_BC           962050000
 #define KIN_LEAK_BC                962100000
+#define KIN_ANTOINE_BC             962150000
 #define KIN_ELECTRODEPOSITION_BC   962200000 /* RSL 5/24/02 */
 #define KINEMATIC_EDGE_BC          962400000
 #define KIN_CHEM_BC                962500000

@@ -28,6 +28,7 @@
 #include "ac_stability.h"
 #include "ac_stability_util.h"
 #include "ad_momentum.h"
+#include "ad_porous.h"
 #include "ad_turbulence.h"
 #include "bc/rotate.h"
 #include "bc/rotate_coordinates.h"
@@ -2250,7 +2251,11 @@ Revised:         Summer 1998, SY Tam (UNM)
     }
 
     if ((pde[R_SHELL_SAT_1]) || (pde[R_SHELL_SAT_2]) || (pde[R_SHELL_SAT_3])) {
-      err = assemble_porous_shell_saturation(theta, delta_t, xi, exo);
+      if (upd->AutoDiff) {
+        err = ad_assemble_porous_shell_saturation(theta, delta_t, xi, exo);
+      } else {
+        err = assemble_porous_shell_saturation(theta, delta_t, xi, exo);
+      }
       GOMA_EH(err, "assemble_porous_shell_saturation");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("assemble_porous_shell_saturation");

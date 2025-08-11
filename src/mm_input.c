@@ -972,7 +972,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
       if (sscanf(third_string, "%d", &ExoTimePlane) != 1) {
         GOMA_EH(GOMA_ERROR, "Time plane for read_exoII_file option is undecipherable");
       }
-      // Fall through
+      FALLTHROUGH;
     case 2:
       Guess_Flag = 6;
       strcpy(ExoAuxFile, second_string);
@@ -2247,6 +2247,9 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       } else if (strcmp(input, "Huygens") == 0) {
         ls->Renorm_Method = HUYGENS;
         strcat(echo_string, "Huygens");
+      } else if (strcmp(input, "Facet_Based") == 0) {
+        ls->Renorm_Method = FACET_BASED;
+        strcat(echo_string, "Facet_Based");
       } else if (strcmp(input, "Huygens_Constrained") == 0) {
 
         ls->Renorm_Method = HUYGENS_C;
@@ -2866,7 +2869,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       ECHO(echo_string, echo_file);
     }
 
-    ls->Huygens_Freeze_Nodes = FALSE;
+    ls->Freeze_Interface_Nodes = FALSE;
 
     iread = look_for_optional(ifp, "Huygens Freeze Nodes", input, '=');
     if (iread == 1) {
@@ -2877,13 +2880,33 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       stringup(input);
 
       if ((strcmp(input, "ON") == 0) || (strcmp(input, "YES") == 0)) {
-        ls->Huygens_Freeze_Nodes = TRUE;
+        ls->Freeze_Interface_Nodes = TRUE;
       } else if ((strcmp(input, "OFF") == 0) || (strcmp(input, "NO") == 0)) {
-        ls->Huygens_Freeze_Nodes = FALSE;
+        ls->Freeze_Interface_Nodes = FALSE;
       } else {
         GOMA_EH(GOMA_ERROR, "Error unknown value for Huygens Freeze Nodes");
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Huygens Freeze Nodes", input);
+      ECHO(echo_string, echo_file);
+    }
+
+    iread = look_for_optional(ifp, "Level Set Freeze Interface Nodes", input, '=');
+    if (iread == 1) {
+      if (fscanf(ifp, "%s", input) != 1) {
+        GOMA_EH(GOMA_ERROR, "Error reading Level Set Freeze Interface Nodes flag.");
+      }
+      strip(input);
+      stringup(input);
+
+      if ((strcmp(input, "ON") == 0) || (strcmp(input, "YES") == 0)) {
+        ls->Freeze_Interface_Nodes = TRUE;
+      } else if ((strcmp(input, "OFF") == 0) || (strcmp(input, "NO") == 0)) {
+        ls->Freeze_Interface_Nodes = FALSE;
+      } else {
+        GOMA_EH(GOMA_ERROR, "Error unknown value for Level Set Freeze Interface Nodes");
+      }
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Level Set Freeze Interface Nodes",
+               input);
       ECHO(echo_string, echo_file);
     }
 
@@ -4210,7 +4233,7 @@ void rd_track_specs(FILE *ifp, char *input) {
                 cpcc[iCC].End_CC_Value =
                     cpcc[iCC].coeff_0 +
                     cpcc[iCC].coeff_1 * pow(EndParameterValue, cpcc[iCC].coeff_2);
-                /* fall through */
+                FALLTHROUGH;
               default:
                 DPRINTF(stderr, "%s:\tCC[%d] flag must be 0, 1, or 2\n", yo, iCC + 1);
                 exit(-1);
@@ -13491,7 +13514,7 @@ void rd_table_data(FILE *ifp, char *input, struct Data_Table *table, char *endli
   switch (table_dim) {
   case 3:
     table->t3 = (double *)smalloc(sizeof(double) * Num_Pnts);
-    /* fall through */
+    FALLTHROUGH;
   case 2:
   case 1:
     table->t2 = (double *)smalloc(sizeof(double) * Num_Pnts);
