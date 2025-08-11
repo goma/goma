@@ -1452,6 +1452,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
    *       Newtonian: mu
    *       Power Law: mu0 nexp
    *       Carreau: mu0 nexp muinf lam aexp
+   *       DP Power Law Suspension: mu0 nexp muinf
    */
   model_read = look_for_mat_prop(imp, "Liquid Constitutive Equation", &(ConstitutiveEquation),
                                  &(a0), NO_USER, NULL, model_name, NO_INPUT, &NO_SPECIES, es);
@@ -1514,6 +1515,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ConstitutiveEquation = TURBULENT_SA_DYNAMIC;
   } else if (!strcmp(model_name, "TURBULENT_K_OMEGA")) {
     ConstitutiveEquation = TURBULENT_K_OMEGA;
+  } else if (!strcmp(model_name, "DP_POWER_LAW_SUSPENSION")) {
+    ConstitutiveEquation = DP_POWER_LAW_SUSPENSION;
+  } else if (!strcmp(model_name, "DP_CARREAU_SUSPENSION")) {
+    ConstitutiveEquation = DP_CARREAU_SUSPENSION;
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognizable Constitutive Equation");
   }
@@ -1638,7 +1643,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU ||
       ConstitutiveEquation == CARREAU_WLF_CONC_PL || ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
       ConstitutiveEquation == BOND || ConstitutiveEquation == BOND_SH ||
-      ConstitutiveEquation == FOAM_EPOXY || ConstitutiveEquation == FOAM_PMDI_10) {
+      ConstitutiveEquation == FOAM_EPOXY || ConstitutiveEquation == FOAM_PMDI_10 ||
+      ConstitutiveEquation == DP_POWER_LAW_SUSPENSION || ConstitutiveEquation == DP_CARREAU_SUSPENSION ) {
     model_read =
         look_for_mat_prop(imp, "Low Rate Viscosity", &(gn_glob[mn]->mu0Model), &(gn_glob[mn]->mu0),
                           NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
@@ -1673,7 +1679,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == CARREAU_WLF || ConstitutiveEquation == SUSPENSION ||
       ConstitutiveEquation == FILLED_EPOXY || ConstitutiveEquation == HERSCHEL_BULKLEY ||
       ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU ||
-      ConstitutiveEquation == CARREAU_WLF_CONC_PL || ConstitutiveEquation == CARREAU_WLF_CONC_EXP) {
+      ConstitutiveEquation == CARREAU_WLF_CONC_PL || ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
+      ConstitutiveEquation == DP_POWER_LAW_SUSPENSION || ConstitutiveEquation == DP_CARREAU_SUSPENSION ) {
     model_read = look_for_mat_prop(imp, "Power Law Exponent", &(gn_glob[mn]->nexpModel),
                                    &(gn_glob[mn]->nexp), NO_USER, NULL, model_name, SCALAR_INPUT,
                                    &NO_SPECIES, es);
@@ -1705,7 +1712,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == CARREAU_WLF || ConstitutiveEquation == BINGHAM ||
       ConstitutiveEquation == BINGHAM_WLF || ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
       ConstitutiveEquation == CARREAU_WLF_CONC_EXP || ConstitutiveEquation == BOND_SH ||
-      ConstitutiveEquation == BOND || ConstitutiveEquation == BINGHAM_MIXED) {
+      ConstitutiveEquation == BOND || ConstitutiveEquation == BINGHAM_MIXED ||
+      ConstitutiveEquation == DP_POWER_LAW_SUSPENSION || ConstitutiveEquation == DP_CARREAU_SUSPENSION ) {
     model_read = look_for_mat_prop(imp, "High Rate Viscosity", &(gn_glob[mn]->muinfModel),
                                    &(gn_glob[mn]->muinf), NO_USER, NULL, model_name, SCALAR_INPUT,
                                    &NO_SPECIES, es);
@@ -1732,7 +1740,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
-    if (ConstitutiveEquation != BOND && ConstitutiveEquation != BINGHAM_MIXED) {
+    if (ConstitutiveEquation != BOND && ConstitutiveEquation != BINGHAM_MIXED && 
+	ConstitutiveEquation != DP_POWER_LAW_SUSPENSION ) {
       model_read =
           look_for_mat_prop(imp, "Time Constant", &(gn_glob[mn]->lamModel), &(gn_glob[mn]->lam),
                             NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
@@ -1766,7 +1775,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == CARREAU_WLF || ConstitutiveEquation == BINGHAM ||
       ConstitutiveEquation == BINGHAM_WLF || ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
       ConstitutiveEquation == CARREAU_WLF_CONC_EXP || ConstitutiveEquation == BOND_SH ||
-      ConstitutiveEquation == BOND) {
+      ConstitutiveEquation == BOND || ConstitutiveEquation == DP_POWER_LAW_SUSPENSION || 
+      ConstitutiveEquation == DP_CARREAU_SUSPENSION) {
     model_read = look_for_mat_prop(imp, "Aexp", &(gn_glob[mn]->aexpModel), &(gn_glob[mn]->aexp),
                                    NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
 
@@ -1800,7 +1810,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == SYLGARD || ConstitutiveEquation == FILLED_EPOXY ||
       ConstitutiveEquation == CARREAU_WLF_CONC_PL || ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
       ConstitutiveEquation == THERMAL || ConstitutiveEquation == BOND ||
-      ConstitutiveEquation == FOAM_EPOXY || ConstitutiveEquation == FOAM_PMDI_10) {
+      ConstitutiveEquation == FOAM_EPOXY || ConstitutiveEquation == FOAM_PMDI_10 || 
+      ConstitutiveEquation == DP_CARREAU_SUSPENSION) {
     model_read = look_for_mat_prop(imp, "Thermal Exponent", &(gn_glob[mn]->atexpModel),
                                    &(gn_glob[mn]->atexp), NO_USER, NULL, model_name, SCALAR_INPUT,
                                    &NO_SPECIES, es);
@@ -1991,7 +2002,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
 
   if (ConstitutiveEquation == SUSPENSION || ConstitutiveEquation == POWERLAW_SUSPENSION ||
-      ConstitutiveEquation == CARREAU_SUSPENSION || ConstitutiveEquation == FILLED_EPOXY) {
+      ConstitutiveEquation == CARREAU_SUSPENSION || ConstitutiveEquation == FILLED_EPOXY ||
+      ConstitutiveEquation == DP_POWER_LAW_SUSPENSION || ConstitutiveEquation == DP_CARREAU_SUSPENSION	) {
     model_read = look_for_mat_prop(imp, "Suspension Maximum Packing", &(gn_glob[mn]->maxpackModel),
                                    &(gn_glob[mn]->maxpack), NO_USER, NULL, model_name, SCALAR_INPUT,
                                    &NO_SPECIES, es);
