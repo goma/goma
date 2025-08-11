@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bc/eqn_index.h"
 #include "bc/rotate_coordinates.h"
 #include "bc_contact.h"
 #include "dp_utils.h"

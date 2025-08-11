@@ -4,7 +4,7 @@ DOUBLE_FILLET
 
 ::
 
-	BC = DOUBLE_FILLET SS <bc_id> xpt1 ypt1 theta1 r1 xpt2 ypt2 theta2 r2 curv_mid
+	BC = {SPLINE|GEOM} SS <bc_id> xpt1 ypt1 theta1 r1 xpt2 ypt2 theta2 r2 curv_mid
 
 -----------------------
 **Description / Usage**

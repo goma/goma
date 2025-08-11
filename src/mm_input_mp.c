@@ -7771,10 +7771,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     model_read = look_for_mat_prop(imp, "Species Level Set Diffusion Only", &(SpeciesOnlyDiffusion),
                                    &(a0), NO_USER, NULL, model_name, NO_INPUT, &species_no, es);
 
-    if (species_no < MAX_CONC) {
-      mat_ptr->SpeciesOnlyDiffusion[species_no] = DIFF_OFF;
-    }
-
+    mat_ptr->SpeciesOnlyDiffusion[species_no] = DIFF_OFF;
     if (model_read == -1 && !strcmp(model_name, "POSITIVE")) {
       mat_ptr->SpeciesOnlyDiffusion[species_no] = DIFF_POSITIVE;
     } else if (model_read == -1 && !strcmp(model_name, "NEGATIVE")) {

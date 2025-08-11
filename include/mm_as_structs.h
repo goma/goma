@@ -1227,7 +1227,6 @@ struct Continuation_Information {
   int use_var_norm[MAX_VARIABLE_TYPES];
   int print_freq;
   int fix_freq;
-  int anneal_on_print;
   double print_delt;
   double print_delt2_path;
   double print_delt2;
