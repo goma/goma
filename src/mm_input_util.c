@@ -362,7 +362,18 @@ int variable_string_to_int(const char *input, const char *err_string)
     var = POLYMER_STRESS23;
   else if (!strcmp(input, "POLYMER_STRESS33"))
     var = POLYMER_STRESS33;
-
+  else if (!strcmp(input, "QTENSOR11"))
+    var = QTENSOR11;
+  else if (!strcmp(input, "QTENSOR12"))
+    var = QTENSOR12;
+  else if (!strcmp(input, "QTENSOR13"))
+    var = QTENSOR13;
+  else if (!strcmp(input, "QTENSOR22"))
+    var = QTENSOR22;
+  else if (!strcmp(input, "QTENSOR23"))
+    var = QTENSOR23;
+  else if (!strcmp(input, "QTENSOR33"))
+    var = QTENSOR33;
   else if (!strcmp(input, "SOLID_DISPLACEMENT1"))
     var = SOLID_DISPLACEMENT1;
   else if (!strcmp(input, "SOLID_DISPLACEMENT2"))

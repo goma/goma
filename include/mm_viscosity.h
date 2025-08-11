@@ -92,6 +92,16 @@ EXTERN double powerlaw_suspension_viscosity /* mm_viscosity.c                   
      dbl[DIM][DIM],                         /* gamma_dot - strain rate tensor    */
      VISCOSITY_DEPENDENCE_STRUCT *);        /* d_mu - viscosity dependence       */
 
+EXTERN double dppl_suspension_viscosity     /* mm_viscosity.c                   */
+    (GEN_NEWT_STRUCT *,                     /* gn_local                          */
+     dbl[DIM][DIM],                         /* gamma_dot - strain rate tensor    */
+     VISCOSITY_DEPENDENCE_STRUCT *);        /* d_mu - viscosity dependence       */
+
+EXTERN double dpC_suspension_viscosity     /* mm_viscosity.c                   */
+    (GEN_NEWT_STRUCT *,                     /* gn_local                          */
+     dbl[DIM][DIM],                         /* gamma_dot - strain rate tensor    */
+     VISCOSITY_DEPENDENCE_STRUCT *);        /* d_mu - viscosity dependence       */
+
 EXTERN int epoxy_viscosity /* mm_viscosity.c                            */
     (int,                  /* species - species number for cure eqn     */
      dbl,                  /* mu0 - monomer reference temp viscosity    */
