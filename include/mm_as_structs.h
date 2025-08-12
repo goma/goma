@@ -1078,6 +1078,7 @@ struct External_Field_Variables {
   char name[MAX_EXTERNAL_FIELD][32];
   /* names of external field variables*/
   char file_nm[MAX_EXTERNAL_FIELD][MAX_FNL];
+  char file_nm_serial[MAX_EXTERNAL_FIELD][MAX_FNL];
   /* names of exodus or pixel files with variables */
   int i[MAX_EXTERNAL_FIELD];           /* Interpolation of variables */
   int ipix[MAX_EXTERNAL_FIELD];        /* 0 for exoII file and 1 for pix file */
