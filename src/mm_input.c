@@ -1267,7 +1267,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
     if (strcmp(input, "no") == 0) {
       efv->exit_after_pixel_map = false;
     } else if (strcmp(input, "yes") == 0) {
-      efv->exit_after_pixel_map  = true;
+      efv->exit_after_pixel_map = true;
     } else {
       GOMA_EH(GOMA_ERROR, "Bad specification for Exit after pixel map");
     }

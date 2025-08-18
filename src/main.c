@@ -550,11 +550,11 @@ int main(int argc, char **argv)
 
 #endif /* End of ifdef PARALLEL */
 
-if (efv->Num_external_field != 0) {
-  for (i = 0; i < efv->Num_external_field; i++) {
-    memcpy(efv->file_nm_serial[i], efv->file_nm[i], MAX_FNL);
+  if (efv->Num_external_field != 0) {
+    for (i = 0; i < efv->Num_external_field; i++) {
+      memcpy(efv->file_nm_serial[i], efv->file_nm[i], MAX_FNL);
+    }
   }
-}
 
 #ifdef GOMA_ENABLE_METIS
   /* Now break the exodus files */
