@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument("--resy", type=float, default=1.0, help="Y-resolution")
     parser.add_argument("--resz", type=float, default=1.0, help="Z-resolution")
     parser.add_argument(
-        "--dim", type=int, default=2, help="Dimension of the image choose 3 for shell"
+        "--dim", type=int, default=2, help="Dimension of the image, choose 3 for shell"
     )
     return parser.parse_args()
 

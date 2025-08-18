@@ -1969,6 +1969,10 @@ void init_vec(
     if (map_pix_fast_called) {
       // fix_exo_file(Num_Proc, "map_pix_fast.exoII");
     }
+    if (efv->exit_after_pixel_map == true) {
+      MPI_Finalize();
+      exit(0);
+    }
   }
 
   /*

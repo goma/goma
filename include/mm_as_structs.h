@@ -1100,6 +1100,7 @@ struct External_Field_Variables {
   char field_type[MAX_EXTERNAL_FIELD][15];
   /* type of external field to read; steady or transient */
   /* SMD 1/24/11 */
+  int exit_after_pixel_map; // stop running after we have done pixel mapping
 };
 
 /*

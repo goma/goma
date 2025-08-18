@@ -6446,7 +6446,7 @@ double load_cap_pres(int ipore, int ilnode, int ignode, double saturation)
 
     i_ext_field = mp->por_shell_cap_pres_ext_field_index[ipore];
     /* Here I assume the external field value ranges from 0 to 1 */
-    val_ext_field = *evp->external_field[i_ext_field][ilnode];
+    val_ext_field = fv->external_field[i_ext_field];
 
     sat_min_1 = mp->u_PorousShellCapPres[ipore][0];
     sat_max_1 = mp->u_PorousShellCapPres[ipore][1];
@@ -6468,6 +6468,14 @@ double load_cap_pres(int ipore, int ilnode, int ignode, double saturation)
     mexp = 1.0 - n_inv;
     m_inv = -1.0 / mexp;
 
+    dbl n_inv_1 = 1.0 / nexp_1;
+    dbl mexp_1 = 1.0 - (1.0 / nexp_1);
+    dbl m_inv_1 = -1.0 / mexp_1;
+
+    dbl n_inv_2 = 1.0 / nexp_2;
+    dbl mexp_2 = 1.0 - (1.0 / nexp_2);
+    dbl m_inv_2 = -1.0 / mexp_2;
+
     /* Normalized saturation - should be between 0 to 1 */
     sat_norm = (saturation - sat_min) / (sat_max - sat_min);
     d_sat_norm_d_saturation = 1.0 / (sat_max - sat_min);
@@ -6476,6 +6484,23 @@ double load_cap_pres(int ipore, int ilnode, int ignode, double saturation)
     d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
 
     cap_pres = con_c * pow(brack_in, n_inv);
+
+    dbl sat_norm_1 = (saturation - sat_min_1) / (sat_max_1 - sat_min_1);
+    dbl d_sat_norm_d_saturation_1 = 1.0 / (sat_max_1 - sat_min_1);
+
+    dbl sat_norm_2 = (saturation - sat_min_2) / (sat_max_2 - sat_min_2);
+    dbl d_sat_norm_d_saturation_2 = 1.0 / (sat_max_2 - sat_min_2);
+
+    dbl brack_in_1 = pow(sat_norm_1, m_inv_1) - 1.0;
+    dbl d_brack_in_d_sat_norm_1 = m_inv_1 * pow(sat_norm_1, (m_inv_1 - 1.0));
+
+    dbl brack_in_2 = pow(sat_norm_2, m_inv_2) - 1.0;
+    dbl d_brack_in_d_sat_norm_2 = m_inv_2 * pow(sat_norm_2, (m_inv_2 - 1.0));
+
+    dbl cap_pres_1 = con_c_1 * pow(brack_in_1, n_inv_1);
+    dbl cap_pres_2 = con_c_2 * pow(brack_in_2, n_inv_2);
+
+    cap_pres = cap_pres_1 + (cap_pres_2 - cap_pres_1) * val_ext_field;
 
     /*
      *  Calculate the first derivative of the capillary pressure
@@ -6487,27 +6512,13 @@ double load_cap_pres(int ipore, int ilnode, int ignode, double saturation)
      *                 saturation formulations
      *
      */
+    dbl d_1 = n_inv_1 * con_c_1 * pow(brack_in, (n_inv_1 - 1.0)) * d_brack_in_d_sat_norm_1 *
+              d_sat_norm_d_saturation_1;
+    dbl d_2 = n_inv_2 * con_c_2 * pow(brack_in, (n_inv_2 - 1.0)) * d_brack_in_d_sat_norm_2 *
+              d_sat_norm_d_saturation_2;
 
-    switch (ipore) {
-    case 0:
-      mp->d_cap_pres[SHELL_SAT_1] = n_inv * con_c * pow(brack_in, (n_inv - 1.0)) *
-                                    d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
-      break;
-
-    case 1:
-      mp->d_cap_pres[SHELL_SAT_2] = n_inv * con_c * pow(brack_in, (n_inv - 1.0)) *
-                                    d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
-      break;
-
-    case 2:
-      mp->d_cap_pres[SHELL_SAT_3] = n_inv * con_c * pow(brack_in, (n_inv - 1.0)) *
-                                    d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
-      break;
-
-    default:
-      GOMA_EH(GOMA_ERROR, "Not valid porous shell index");
-      break;
-    }
+    dbl d_cap_pres = d_1 + (d_2 - d_1) * val_ext_field;
+    mp->d_cap_pres[ipore + SHELL_SAT_1] = d_cap_pres;
   } else if (mp->PorousShellCapPresModel[ipore] == VAN_GENUCHTEN_HYST) {
     /*
      * FOR VAN_GENUCHTEN_HYST EQUATION
@@ -10677,8 +10688,8 @@ void sat_darcy_continuous_bc(double func[],
     if (mp->PorousMediaType == POROUS_SATURATED)
       factor = 1 / mp->viscosity;
 
-      /* establish attachment if this is a level set problem */
-      /* Now establish attachment and wetted */
+    /* establish attachment if this is a level set problem */
+    /* Now establish attachment and wetted */
 #if 0
     mn_liq = map_mat_index ( eb_mat_fluid );
 
