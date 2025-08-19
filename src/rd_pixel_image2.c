@@ -70,7 +70,7 @@ static double bi_interp(double xg,
                         int pixsize[]);
 
 static double
-tri_interp(double xg, double yg, double zg, double resolution[], double ***pixdata, int pixsize[]);
+tri_interp(double xg, double yg, double zg, double resolution[], double *pixdata, int pixsize[]);
 
 /*** Begin program *************************************************************/
 int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
@@ -97,7 +97,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   int pixsize[3];          // Size in each dimension
   double *pixdata;         // All data points
   double pmax, pmin;       // Max/min pixel/voxel value
-  int numpix;              // Number of data points
+  int numpix = 0;              // Number of data points
   double resx, resy, resz; // Size of pixels/voxels in x,y,z directions
   double resolution[3];    // Array form of above (easier to pass to function)
   int pixinterp = 0;       // Flag indicating pixel interpolation (0 - none; 1 - bi/trilinear)
@@ -339,7 +339,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
 
   if (ProcID != 0) {
     numpix = pixsize[0] * pixsize[1] * pixsize[2];
-    pixdata = (double *)malloc(numpix * sizeof(double));
+    pixdata = (double *)calloc(numpix, sizeof(double));
     resx = resolution[0];
     resy = resolution[1];
     resz = resolution[2];
@@ -416,7 +416,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
         if (pixsize[2] == 1) { // bilinear interpolation
           val = bi_interp(xg, yg, min_x, min_y, resolution, pixdata, pixsize);
         } else { // trilinear interpolation
-          // val = tri_interp(xg, yg, zg, resolution, pixdata, pixsize);
+          val = tri_interp(xg, yg, zg, resolution, pixdata, pixsize);
         }
       } else {
         ix = (int)((xg - x0) / resx);
@@ -817,7 +817,7 @@ static double bi_interp(double xg,
 }
 
 static double
-tri_interp(double xg, double yg, double zg, double resolution[], double ***pixdata, int pixsize[]) {
+tri_interp(double xg, double yg, double zg, double resolution[], double *pixdata, int pixsize[]) {
   /**************************************************************
   Routine for trilinear interpolation will go here. Same idea as above, but for 3D
 
@@ -829,5 +829,6 @@ tri_interp(double xg, double yg, double zg, double resolution[], double ***pixda
     dy = resolution[1];
     dz = resolution[2];
   */
+  GOMA_EH(GOMA_ERROR, "trilinear interpolation not yet implemented");
   return 0;
 }
