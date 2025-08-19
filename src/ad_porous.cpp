@@ -196,7 +196,7 @@ ADType ad_load_cap_pres(int ipore, int ilnode, int ignode, ADType saturation)
 
     i_ext_field = mp->por_shell_cap_pres_ext_field_index[ipore];
     /* Here I assume the external field value ranges from 0 to 1 */
-    val_ext_field = *evp->external_field[i_ext_field][ilnode];
+    val_ext_field = fv->external_field[i_ext_field];
 
     sat_min_1 = mp->u_PorousShellCapPres[ipore][0];
     sat_max_1 = mp->u_PorousShellCapPres[ipore][1];
@@ -225,7 +225,7 @@ ADType ad_load_cap_pres(int ipore, int ilnode, int ignode, ADType saturation)
     brack_in = pow(sat_norm, m_inv) - 1.0;
     d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
 
-    cap_pres = con_c * pow(brack_in, n_inv);
+    cap_pres = con_c * pow(std::max(brack_in, 1e-32), n_inv);
 
   } else if (mp->PorousShellCapPresModel[ipore] == VAN_GENUCHTEN_HYST) {
     /*
