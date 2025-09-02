@@ -1260,6 +1260,21 @@ void rd_genl_specs(FILE *ifp, char *input) {
   efv->Num_external_field = Num_Var_External;
   efv->Num_external_pixel_field = Num_Var_External_pix;
 
+  iread = look_forward_optional(ifp, "Exit after pixel map", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0) {
+      efv->exit_after_pixel_map = false;
+    } else if (strcmp(input, "yes") == 0) {
+      efv->exit_after_pixel_map = true;
+    } else {
+      GOMA_EH(GOMA_ERROR, "Bad specification for Exit after pixel map");
+    }
+  } else {
+    efv->exit_after_pixel_map = false;
+  }
+
   /*
    * Read export variable cards
    */
