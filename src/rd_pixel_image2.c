@@ -439,7 +439,6 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
            "the range of the voxel field (%d of %d Gauss points)\n",
            nmiss, gp_global);
   }
-  printf("P%d gp_global = %d\n", ProcID, gp_global);
 
   gp_global = 0;
   // printf("Gauss point values assigned\n");
@@ -483,7 +482,6 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
       }
     }
   }
-  printf("P%d gp_global = %d\n", ProcID, gp_global);
 
   /*************************************/
   /* Output to map_pix exoII file      */
@@ -532,7 +530,8 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   /* Timing and error estimate */
   /*****************************/
 
-  printf("Time for pixel-to-mesh processing: %6.4lf seconds\n", MPI_Wtime() - time0);
+  MPI_Barrier(MPI_COMM_WORLD);
+  P0PRINTF("Time for pixel-to-mesh processing: %6.4lf seconds\n", MPI_Wtime() - time0);
 
   pmin = 1e20;
   pmax = -1e20;

@@ -1967,9 +1967,14 @@ void init_vec(
 #endif
     }
     if (map_pix_fast_called) {
-      // fix_exo_file(Num_Proc, "map_pix_fast.exoII");
+      MPI_Barrier(MPI_COMM_WORLD);
+      if (ProcID == 0) {
+        DPRINTF(stdout, "\nFixing exodus file %s\n", "map_pix_fast.exoII");
+        fix_exo_file(Num_Proc, "map_pix_fast.exoII");
+      }
     }
     if (efv->exit_after_pixel_map == true) {
+      P0PRINTF("Exiting early due to setting Exit after pixel map = yes\n");
       MPI_Finalize();
       exit(0);
     }

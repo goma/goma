@@ -571,6 +571,8 @@ int main(int argc, char **argv)
 
     if (efv->Num_external_field != 0) {
       for (i = 0; i < efv->Num_external_field; i++) {
+        if (efv->ipix[i] == 1 || efv->ipix[i] == 2)
+          continue;
         filenames[n_files] = malloc(sizeof(char) * MAX_FNL);
         memcpy(filenames[n_files], efv->file_nm[i], MAX_FNL);
         n_files++;
