@@ -97,7 +97,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   int pixsize[3];          // Size in each dimension
   double *pixdata;         // All data points
   double pmax, pmin;       // Max/min pixel/voxel value
-  int numpix = 0;              // Number of data points
+  int numpix = 0;          // Number of data points
   double resx, resy, resz; // Size of pixels/voxels in x,y,z directions
   double resolution[3];    // Array form of above (easier to pass to function)
   int pixinterp = 0;       // Flag indicating pixel interpolation (0 - none; 1 - bi/trilinear)
