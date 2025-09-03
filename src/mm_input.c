@@ -3809,6 +3809,26 @@ void rd_track_specs(FILE *ifp, char *input) {
       }
     }
 
+    cont->anneal_on_print = 0;
+    iread = look_for_optional(ifp, "Continuation Anneal on Print", input, '=');
+    if (iread == 1) {
+      (void)read_string(ifp, input, '\n');
+      strip(input);
+      if (!strcasecmp(input, "no") || !strcasecmp(input, "false")) {
+        cont->anneal_on_print = FALSE;
+        ECHO("Continuation Anneal on Print = no", echo_file);
+      } else if (!strcasecmp(input, "yes") || !strcasecmp(input, "true")) {
+        cont->anneal_on_print = TRUE;
+        if (Anneal_Mesh == FALSE) {
+          Anneal_Mesh = TRUE;
+          GOMA_WH(GOMA_ERROR, "Turning on Anneal Mesh for Continuation Anneal on Print");
+        }
+        ECHO("Continuation Anneal on Print = yes", echo_file);
+      } else {
+        GOMA_EH(GOMA_ERROR, "Bad specification for Continuation Anneal on Print");
+      }
+    }
+
     if (Continuation == LOCA) {
 
       loca_in->Cont_Alg = CONTINUATION;
