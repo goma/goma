@@ -3636,10 +3636,10 @@ static int soln_sens(double lambda,  /*  parameter */
     if (first_linear_solver_call)
       GOMA_EH(GOMA_ERROR, "Solving for AC's BEFORE a regular solve");
 
-      /* MMH: I believe that this system will always be the same
-       * structure/system as the one used for the regular solve.  This
-       * was the behavior before I consolidated the UMFPACK and
-       * UMFPACK2F. */
+    /* MMH: I believe that this system will always be the same
+     * structure/system as the one used for the regular solve.  This
+     * was the behavior before I consolidated the UMFPACK and
+     * UMFPACK2F. */
 
 #ifdef DEBUG_SL_UMF
     printf("%s: entering SL_UMF for soln_sens solve\n", y0);

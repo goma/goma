@@ -2095,7 +2095,7 @@ int assemble_ls_momentum_source(void) {
   int eqn;
   int status = 0;
   struct Basis_Functions *bfm;
-  double(*grad_phi_i_e_a)[DIM] = NULL;
+  double (*grad_phi_i_e_a)[DIM] = NULL;
 
   double det_J;
   double h3; /* Volume element (scale factors). */

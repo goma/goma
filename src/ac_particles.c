@@ -372,9 +372,9 @@ void initialize_particles(const Exo_DB *exo,
     for (i = 0; i < Num_Proc; i++)
       total_volume += proc_volume[i];
 
-      /*
-        DPRINTF(stderr, "Total volume = %g\n", total_volume); fflush(stderr);
-      */
+    /*
+      DPRINTF(stderr, "Total volume = %g\n", total_volume); fflush(stderr);
+    */
 #endif
   }
   get_time(time_of_day);

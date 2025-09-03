@@ -420,7 +420,7 @@ int assemble_momentum(dbl time,       /* current time */
   else
     v_dot = zero;
 
-    /* for porous media stuff */
+  /* for porous media stuff */
 #ifdef DO_NO_UNROLL
   speed = 0.0;
   for (a = 0; a < WIM; a++) {
