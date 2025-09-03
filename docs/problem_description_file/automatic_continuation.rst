@@ -1,0 +1,318 @@
+Continuation Specifications
+===========================
+
+Automatic continuation refers to the family of algorithms that allow tracking steady-state solution paths as a set of one or more parameters are varied. Goma is currently capable of zero order, first order, and arc length continuation in a single parameter set, and bifurcation tracking (turning point, pitchfork, or Hopf) in two parameter sets. Continuation can be carried out in four types of parameters:
+
+**Material Properties**
+    Material Property Tags are obtained from Goma source file mm_mp_const.h. A partial list is given in the previous chapter.
+
+**Boundary Condition Floats**
+    Continuation can be carried out in any boundary condition data float, i.e., the boundary condition parameters, making continuation in any boundary data and geometry simple. The definition of a boundary condition has the form:
+
+    BC = BC_NAME BC_TYPE BC_ID DATAFLOAT1 DATAFLOAT2 . . .
+
+    An example of continuation in a boundary condition: the effect of flow rate on a flow field can be tracked by continuing in the data float that represents velocity in a Dirichlet boundary condition.
+
+**Material Property User Model Floats**
+    This option is used when the user supplies a model for a material property in the file "user_mp.c" which includes a list of one or more input data floats, and one of these floats is the desired continuation parameter.
+
+**Augmenting Conditions**
+    There are two types of augmenting condition values which can be used as continuation parameters: the constant value (e.g. flux, volume) which is to be imposed, and one of a list of optional floats which may be specified with a user-defined augmenting condition (file "user_ac.c").
+
+Following is a summary of solution prediction algorithms used in Goma's continuation schemes.
+
++------------------+------------------------------------------------------------------+
+| Continuation     | Characteristic Algorithm                                         |
+| Method           |                                                                  |
++==================+==================================================================+
+| zero             | Single-parameter zeroth order continuation                       |
+|                  |                                                                  |
+|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\      |
+|                  | :sub:`OLD`\ )                                                    |
++------------------+------------------------------------------------------------------+
+| first            | Single-parameter first order continuation                        |
+|                  |                                                                  |
+|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\      |
+|                  | :sub:`OLD`\ ) + Δλ\ :sub:`s`\ ∂x/∂λ                              |
++------------------+------------------------------------------------------------------+
+| hzero            | Multi-parameter zeroth order continuation                        |
+|                  |                                                                  |
+|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\      |
+|                  | :sub:`OLD`\ )                                                    |
++------------------+------------------------------------------------------------------+
+| hfirst           | Multi-parameter first order continuation                         |
+|                  |                                                                  |
+|                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\      |
+|                  | :sub:`OLD`\ ) + Σ Δλ\ :sub:`j`\ ∂x/∂λ\ :sub:`j`\              .  |
++------------------+------------------------------------------------------------------+
+
+These algorithms are available with or without the Library of Continuation Algorithms (LOCA), which also offers algorithms for arc length continuation and bifurcation tracking, as described above. Details of these algorithms can be found in the LOCA 1.0 manual (SAND 2002-0396).
+
+Required Specifications in the Goma Input File
+===================================================
+
+A new section must be added to the Goma input file to identify the continuation method, continuation type, the continuation parameter, and other needed data. It is required only when automatic continuation is used in the numerical model and has the following form:
+
+::
+
+    ------------------------------------------------------------
+    Continuation Specifications
+    ------------------------------------------------------------
+    Continuation = zero
+    Continuation Type = MT
+    Boundary condition ID = 4
+    Boundary condition data float tag = 0
+    Material id = 1
+    Material property tag = 1700
+    Material property tag subindex = 0
+    Initial parameter value = 0.0
+    Final parameter value = 800.0
+    delta_s = 20.0
+    Maximum number of path steps = 20
+    Minimum path step = 1.0e-05
+    Maximum path step = 100.0
+    Continuation Printing Frequency = 1
+
+The input records above control the continuation process. Specifically, this example indicates that zeroth-order continuation in material property density (tag 1700) will be simulated with Goma. (Boundary condition records must be present even though their input is ignored, and vice versa for material property records when the Continuation Type is BC.) The material subindex is not currently used. Density will be varied between 0 and 800 in material 1 using an initial path length/step size of 20.0 and minimum and maximum values of 1.0e-5 and 100.0, respectively. A maximum of 20 steps will be taken and every solution step will be written to the database. Each entry of the Continuation Specifications is discussed further in Section 3.2.
+
+There are additional input cards which are either optional or required only in certain cases; these will also be described in Section 1.2.
+
+Continuation Specification Cards
+================================
+
+This section of input records is used to direct all automatic continuation procedures. The entire section is completely optional. Basically, automatic continuation can be accomplished in steady state simulations (see Time Integration card) through any one or combination of parameters. These parameters can be any one or combination of the input floats required on the boundary condition cards (see Section 4.10) or material property cards (see Chapter 5). The cards in this section are used to specify the parameters that will be marched automatically, the method of marching (e.g. zero-order, first-order, multiparameter first-order, etc.), the limits of parameter values, and other sundry options. Much of this capability can now be managed from the LOCA library package (Library of Continuation Algorithms - Salinger, et al. 2002).
+
+.. toctree::
+   :maxdepth: 1
+
+   continuation_specifications/continuation
+   continuation_specifications/continuation_type
+   continuation_specifications/number_of_user_continuation_functions
+   continuation_specifications/boundary_condition_id
+   continuation_specifications/boundary_condition_data_float_tag
+   continuation_specifications/material_id
+   continuation_specifications/material_property_tag
+   continuation_specifications/material_property_tag_subindex
+   continuation_specifications/initial_parameter_value
+   continuation_specifications/final_parameter_value
+   continuation_specifications/delta_s
+   continuation_specifications/maximum_number_of_path_steps
+   continuation_specifications/maximum_path_value
+   continuation_specifications/minimum_path_step
+   continuation_specifications/maximum_path_step
+   continuation_specifications/continuation_printing_frequency
+   continuation_specifications/loca_method
+
+Single Parameter Continuation via the Command Line
+=======================================================
+
+After a continuation run, Goma writes a text file called goma-cl.txt that lists the command line arguments for continuing directly from the command line. This makes it easy for writing scripts that can do multiple continuation sequences without having to provide multiple input files. There may be some benefit for use with other Goma wrap-arounds such as Dakota.
+
+Continuation command line arguments take precedence over the values provided in the input file. Continuation is enabled even if Continuation = none is in the input file. For the Continuation Specifications section above (Section 3.2), goma-cl.txt contains the following after running the continuation sequence once:
+
+::
+
+    goma -a -i input -cb 0.000000e+00 -ce 8.000000e+02 \
+    -cd 2.000000e+01 -cn 20 \
+    -cm 0 -ct 2 \
+    -c_mn 1 -c_mp 1700
+
+These are the command line arguments required to replicate the main continuation commands specified in the input file. The backslashes indicate that all terms should appear on one line. All the continuation command line arguments (list by typing goma –help) are as follows:
+
+::
+
+    -cb FLT    Continuation: Start value
+    -ce FLT    Continuation: Final value
+    -cd FLT    Continuation: Path step, ds
+    -cn INT    Continuation: Max number of path steps
+    -cm INT    Continuation: Method
+    -ct INT    Continuation: Type
+    -c_bc INT  Continuation: Boundary condition ID
+    -c_df INT  Continuation: BC Data Float ID
+    -c_mn INT  Continuation: Material ID
+    -c_mp INT  Continuation: Material property ID
+
+The method and type flags are as follows: 0 for the method (cm) indicates zeroth order continuation and 1 first order continuation, while for the type, 1 indicates a boundary condition and 2 a material property. If the continuation parameter is a boundary condition data float, the Goma boundary condition and data float indices must be provided on the command line or in the input file. Similarly, if the continuation parameter is a material property, the material number and property tag must be provided on the command line or in the input file.
+
+Multi-parameter Continuation with Hunting
+==============================================
+
+If the continuation method card (Section 3.2.1) is set to hzero or hfirst, that is
+
+::
+
+    Continuation = hzero/hfirst
+
+the hunting continuation capability is used. This allows multi-parameter continuation in either boundary condition data floats or material properties or both. hzero and hfirst refer to the zeroth order and the first order methods, respectively. Both methods are enabled with a ramping feature so that all parameters can be ramped from a start to an end value in the specified number of steps. Hunting continuation can be used to continue in a single parameter instead of the standard zero and first methods. The maximum number of steps and printing frequency are specified in the Continuation Specifications section (3.2.12 and 3.2.18) described above.
+
+When the hunting capability is being used, Goma ignores the Continuation Type, Boundary condition ID, Boundary condition data float tag, Material id, Material property tag, Material property tag subindex, Initial parameter value, Final parameter value, and delta_s cards in the Continuation Specifications section. (Those input records not ignored are the Continuation, Maximum number of path steps, Minimum and Maximum path steps, and Continuation Printing Frequency.)
+
+A new section must be added to the Goma input file to identify the hunting continuation parameters, their start and end value, and step size information. It has the following form:
+
+::
+
+    ------------------------------------------------------------
+    Hunting Specifications
+    ------------------------------------------------------------
+    Number of hunting conditions = -1
+    HC = BC 4 0 1 0.0 1.0 1.0 0.0001 1000.0
+    HC = MT 1 1700 1 0.0 100.0 10.0 0.0001 1000.0
+    END OF HC
+
+In the above example, two hunting conditions are specified. One indicates continuation in a boundary condition data float and another in the density. Other entries are described in the Hunting Continuations section of the manual.
+
+
+Continuation condition (CC) cards
+=====================================
+
+Purpose
+--------------
+
+Some continuation problems involve the requirement to update a number of different conditions of the problem each time a continuation step is taken. For example, if there are three boundary condition cards which have a common float input, then each must be updated at every step. It may also be necessary to match some quantity on both sides of a material interface. Or, it may be of interest to examine the response of a system to two variables changing simultaneously, even if the physics of the problem does not demand it.
+
+Hunting conditions, as discussed in Section 3.5, provide a mechanism for fulfilling this need by providing ID and step information for each quantity to be updated (using HC cards). However, this requires the use of one of two designated Goma hunting algorithms (hzero and hfirst), which are handled separately from all other continuation algorithms. In order to have the ability to handle multiple updates per step with the more advanced algorithms in LOCA, it is necessary to integrate this feature with each of the algorithms. For many such problems, the quantities to be updated maintain a linear relationship to each other (i.e. y=mx+b) as they change, either by design or by necessity. In fact, this linear relationship is required for the hunting algorithms to work.
+
+Usage
+------------
+
+The approach taken for LOCA is to designate one of the update quantities as the "master" and place the ID and step information for it in the cards pertaining to a single continuation parameter (which the hunting algorithms require but do not use). Any other update quantities, or "continuation conditions", are considered "slaves" and identified by inserting a CC card, which need only include the necessary ID information and a means to specify the linear relationship between changes in it and changes in the "master", as described in Section 3.2. Thus, there is one fewer CC card required. A global variable indicates how many continuation conditions are in effect, so that when an update call comes from LOCA, the correct number of parameter update calls are made (even if only one).
+
+Here is how the previous example continuation section could be restated using CC cards:
+
+::
+
+    ------------------------------------------------------------
+    Continuation Specifications
+    ------------------------------------------------------------
+    Boundary condition ID = 4
+    Boundary condition data float tag= 0
+    ...
+    Initial parameter value= 0.0
+    Final parameter value= 10.0
+    delta_s= 1.0
+    Minimum path step= 0.0001
+    Maximum path step= 1000.0
+    LOCA method= zero
+    Number of continuation conditions= 2 (or -1)
+    CC = MT 1 1700 2 0.0 10.0
+    END OF CC
+
+The CC card here is set up such that MT 1 ID 1700 starts at 0.0 and changes by 10x whenever BC 4 float 0 changes by x. Note also that the number of continuation conditions is 2, but only one CC card is required because the information for the first (the "master") is taken from the preceding cards.
+
+To maintain backward compatibility, LOCA can use an existing set of hunting (HC) cards in lieu of converting them to CC cards, and will extract the information it needs properly. To do so, it is only necessary to include the card:
+
+::
+
+    Number of continuation conditions= -2
+
+which will tell the input parser to read hunting cards even if a hunting algorithm is not specified by the Continuation card.
+
+User-defined continuation conditions
+========================================
+
+Purpose
+--------------
+
+When each quantity which must be updated during continuation bears a linear (y=b+mx) relationship to the designated continuation parameter, then these relationships can be adequately specified with either HC or CC cards. The CC and TC cards can also be used to specify a two-term polynomial relationship of the type y=b+mx^n, or relationships involving the trigonometric functions (e.g. sin, cos) of an angular continuation parameter. However, some problems may require more complicated relationships between these values, such as multiple-term polynomials, exponentials, etc. In other cases, the previous solution may be required to obtain new values. Such requirements would then require a mechanism for the user to construct custom continuation conditions for the problem at hand. This mechanism is provided in the file user_continuation.c.
+
+Usage
+------------
+
+The file user_continuation.c contains two template functions for the user to supply custom continuation conditions: update_user_parameter (for the primary continuation parameter) and update_user_TP_parameter (for the second parameter used in LOCA bifurcation tracking algorithms). Detailed instructions and example entries are provided in the comments of this file.
+
+To use this feature, first identify all quantities q\ :sub:`i`\ which are to be updated at each continuation step. Then designate a single scalar continuation parameter λ such that each update quantity can be readily expressed as a function of λ (and possibly the solution), viz.
+
+q\ :sub:`i`\ = f(λ, x, ẋ, x\ :sub:`AC`\ )                             (3-3)
+
+where x is the current solution vector, xdot is its time derivative, and x_AC is the vector of extra unknowns when augmenting conditions are used. Note that λ may or may not be one of the update quantities q\ :sub:`i`\ . It may be used, for example, as a "progress parameter", as theta is for hunting, or it can be a dimensionless group (such as Reynolds number) which is based on the input quantities but may not be equal to any of them. When user-defined continuation is specified for a parameter, the parameter ID card (e.g. BCID, MTID) card inputs are not used (but must still be present). However, the step inputs (Initial and final values, starting, minimum, and maximum step size) are used for λ. All other necessary information will be placed in the relevant user continuation function and compiled into the code; no HC/CC/TC cards are needed.
+
+The procedure for supplying the continuation conditions consists of three steps for each quantity: 1) providing the necessary type and ID information, 2) defining the new value in terms of λ and the solution, and 3) pasting in a standard update call. This may be done for either or both parameters for LOCA bifurcation tracking algorithms. Once these functions are entered, it is then necessary to recompile Goma to include them. User-defined continuation is then invoked by specifying continuation type "UF" (user functions) in the input file and providing the number of continuation functions (conditions) entered for the relevant parameter. For example, to continue in web speed for a slot coater, the relevant update quantities are the two Dirichlet BC's for the web and the fluid in contact with it, and since it is necessary to vary the inflow proportionally to maintain constant downstream film thickness, each of the three floats of a GD_PARAB BC also. Thus, there are five quantities. Here is how the functions would be entered when λ is the web speed:
+
+::
+
+    {
+     static int first_cp = 1;
+     int first_tp = -1;
+     int n=0;
+     int Type, BCID, DFID, MTID, MPID, MDID;
+     double value;
+
+    /* Declare any additional variables here */
+     double f2, f3, f4;
+
+    /* If using this function, comment out this line. */
+    /*EH(-1, "No user continuation conditions entered!");*/
+
+    /* Evaluate any intermediate quantities and/or assign constants here */
+     f2 = -9.684754406;
+     f3 = 318.0179944;
+     f4 = -2486.458128;
+
+    /* Enter each continuation condition in sequence in this space */
+
+    /* Condition 0: Slip velocity */
+    /* ID's */
+     Type = BC;
+     BCID = 13;
+     DFID = 1;
+    /* Value */
+     value = lambda;
+    /* Update call - copy from example */
+     n = do_user_update(n, first_cp, first_tp, Type, BCID, DFID,
+     MTID, MPID, MDID, value, cx, exo, dpi);
+
+    /* Condition 1: Fluid velocity along web */
+    /* ID's */
+     Type = BC;
+     BCID = 14;
+     DFID = 0;
+    /* Value */
+     value = lambda;
+    /* Update call */
+     n = do_user_update(n, first_cp, first_tp, Type, BCID, DFID,
+     MTID, MPID, MDID, value, cx, exo, dpi);
+
+    /* Condition 2: Inlet velocity GD_PARAB first float */
+    /* ID's */
+     Type = BC;
+     BCID = 11;
+     DFID = 0;
+    /* Value */
+     value = f2 * lambda;
+    /* Update call */
+     n = do_user_update(n, first_cp, first_tp, Type, BCID, DFID,
+     MTID, MPID, MDID, value, cx, exo, dpi);
+
+    /* Condition 3: Inlet velocity GD_PARAB second float */
+    /* ID's */
+     Type = BC;
+     BCID = 11;
+     DFID = 1;
+    /* Value */
+     value = f3 * lambda;
+    /* Update call */
+     n = do_user_update(n, first_cp, first_tp, Type, BCID, DFID,
+     MTID, MPID, MDID, value, cx, exo, dpi);
+
+    /* Condition 4: Inlet velocity GD_PARAB third float */
+    /* ID's */
+     Type = BC;
+     BCID = 11;
+     DFID = 2;
+    /* Value */
+     value = f4 * lambda;
+    /* Update call */
+     n = do_user_update(n, first_cp, first_tp, Type, BCID, DFID,
+     MTID, MPID, MDID, value, cx, exo, dpi);
+
+    /* Done */
+     first_cp = 0;
+     return;
+    }
+
+Then, to invoke this function, include the following Continuation input cards:
+
+::
+
+    Continuation Type = UF
+    Number of user continuation functions = 5
