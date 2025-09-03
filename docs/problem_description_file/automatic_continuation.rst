@@ -1,5 +1,5 @@
-3 Automatic Continuation
-========================
+Continuation Specifications
+===========================
 
 Automatic continuation refers to the family of algorithms that allow tracking steady-state solution paths as a set of one or more parameters are varied. Goma is currently capable of zero order, first order, and arc length continuation in a single parameter set, and bifurcation tracking (turning point, pitchfork, or Hopf) in two parameter sets. Continuation can be carried out in four types of parameters:
 
@@ -43,12 +43,16 @@ Following is a summary of solution prediction algorithms used in Goma's continua
 | hfirst           | Multi-parameter first order continuation                         |
 |                  |                                                                  |
 |                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\      |
+<<<<<<< HEAD
 |                  | :sub:`OLD`\ ) + Σ Δλ\ :sub:`j`\ ∂x/∂λ\ :sub:`j`\                 |
+=======
+|                  | :sub:`OLD`\ ) + Σ Δλ\ :sub:`j`\ ∂x/∂λ\ :sub:`j`\              .  |
+>>>>>>> 4bbc88ee (some copy paste fixes)
 +------------------+------------------------------------------------------------------+
 
 These algorithms are available with or without the Library of Continuation Algorithms (LOCA), which also offers algorithms for arc length continuation and bifurcation tracking, as described above. Details of these algorithms can be found in the LOCA 1.0 manual (SAND 2002-0396).
 
-3.1 Required Specifications in the Goma Input File
+Required Specifications in the Goma Input File
 ===================================================
 
 A new section must be added to the Goma input file to identify the continuation method, continuation type, the continuation parameter, and other needed data. It is required only when automatic continuation is used in the numerical model and has the following form:
@@ -77,8 +81,8 @@ The input records above control the continuation process. Specifically, this exa
 
 There are additional input cards which are either optional or required only in certain cases; these will also be described in Section 1.2.
 
-Continuation Specifications
-===============================
+Continuation Specification Cards
+================================
 
 This section of input records is used to direct all automatic continuation procedures. The entire section is completely optional. Basically, automatic continuation can be accomplished in steady state simulations (see Time Integration card) through any one or combination of parameters. These parameters can be any one or combination of the input floats required on the boundary condition cards (see Section 4.10) or material property cards (see Chapter 5). The cards in this section are used to specify the parameters that will be marched automatically, the method of marching (e.g. zero-order, first-order, multiparameter first-order, etc.), the limits of parameter values, and other sundry options. Much of this capability can now be managed from the LOCA library package (Library of Continuation Algorithms - Salinger, et al. 2002).
 
@@ -100,14 +104,10 @@ This section of input records is used to direct all automatic continuation proce
    continuation_specifications/maximum_path_value
    continuation_specifications/minimum_path_step
    continuation_specifications/maximum_path_step
-   continuation_specifications/path_step_parameter
-   continuation_specifications/path_step_error
    continuation_specifications/continuation_printing_frequency
-   continuation_specifications/second_frequency
    continuation_specifications/loca_method
 
-
-3.3 Single Parameter Continuation via the Command Line
+Single Parameter Continuation via the Command Line
 =======================================================
 
 After a continuation run, Goma writes a text file called goma-cl.txt that lists the command line arguments for continuing directly from the command line. This makes it easy for writing scripts that can do multiple continuation sequences without having to provide multiple input files. There may be some benefit for use with other Goma wrap-arounds such as Dakota.
@@ -138,7 +138,7 @@ These are the command line arguments required to replicate the main continuation
 
 The method and type flags are as follows: 0 for the method (cm) indicates zeroth order continuation and 1 first order continuation, while for the type, 1 indicates a boundary condition and 2 a material property. If the continuation parameter is a boundary condition data float, the Goma boundary condition and data float indices must be provided on the command line or in the input file. Similarly, if the continuation parameter is a material property, the material number and property tag must be provided on the command line or in the input file.
 
-3.4 Multi-parameter Continuation with Hunting
+Multi-parameter Continuation with Hunting
 ==============================================
 
 If the continuation method card (Section 3.2.1) is set to hzero or hfirst, that is
@@ -165,10 +165,10 @@ A new section must be added to the Goma input file to identify the hunting conti
 
 In the above example, two hunting conditions are specified. One indicates continuation in a boundary condition data float and another in the density. Other entries are described below.
 
-3.5 Hunting Specifications
+Hunting Specifications
 ===========================
 
-3.5.1 Number of hunting conditions
+Number of hunting conditions
 -----------------------------------
 
 **Number of hunting conditions** = <int>
@@ -353,17 +353,17 @@ No FAQs.
 
 No References.
 
-3.6 Continuation condition (CC) cards
+Continuation condition (CC) cards
 =====================================
 
-3.6.1 Purpose
+Purpose
 --------------
 
 Some continuation problems involve the requirement to update a number of different conditions of the problem each time a continuation step is taken. For example, if there are three boundary condition cards which have a common float input, then each must be updated at every step. It may also be necessary to match some quantity on both sides of a material interface. Or, it may be of interest to examine the response of a system to two variables changing simultaneously, even if the physics of the problem does not demand it.
 
 Hunting conditions, as discussed in Section 3.5, provide a mechanism for fulfilling this need by providing ID and step information for each quantity to be updated (using HC cards). However, this requires the use of one of two designated Goma hunting algorithms (hzero and hfirst), which are handled separately from all other continuation algorithms. In order to have the ability to handle multiple updates per step with the more advanced algorithms in LOCA, it is necessary to integrate this feature with each of the algorithms. For many such problems, the quantities to be updated maintain a linear relationship to each other (i.e. y=mx+b) as they change, either by design or by necessity. In fact, this linear relationship is required for the hunting algorithms to work.
 
-3.6.2 Usage
+Usage
 ------------
 
 The approach taken for LOCA is to designate one of the update quantities as the "master" and place the ID and step information for it in the cards pertaining to a single continuation parameter (which the hunting algorithms require but do not use). Any other update quantities, or "continuation conditions", are considered "slaves" and identified by inserting a CC card, which need only include the necessary ID information and a means to specify the linear relationship between changes in it and changes in the "master", as described in Section 3.2. Thus, there is one fewer CC card required. A global variable indicates how many continuation conditions are in effect, so that when an update call comes from LOCA, the correct number of parameter update calls are made (even if only one).
@@ -398,15 +398,15 @@ To maintain backward compatibility, LOCA can use an existing set of hunting (HC)
 
 which will tell the input parser to read hunting cards even if a hunting algorithm is not specified by the Continuation card.
 
-3.7 User-defined continuation conditions
+User-defined continuation conditions
 ========================================
 
-3.7.1 Purpose
+Purpose
 --------------
 
 When each quantity which must be updated during continuation bears a linear (y=b+mx) relationship to the designated continuation parameter, then these relationships can be adequately specified with either HC or CC cards. The CC and TC cards can also be used to specify a two-term polynomial relationship of the type y=b+mx^n, or relationships involving the trigonometric functions (e.g. sin, cos) of an angular continuation parameter. However, some problems may require more complicated relationships between these values, such as multiple-term polynomials, exponentials, etc. In other cases, the previous solution may be required to obtain new values. Such requirements would then require a mechanism for the user to construct custom continuation conditions for the problem at hand. This mechanism is provided in the file user_continuation.c.
 
-3.7.2 Usage
+Usage
 ------------
 
 The file user_continuation.c contains two template functions for the user to supply custom continuation conditions: update_user_parameter (for the primary continuation parameter) and update_user_TP_parameter (for the second parameter used in LOCA bifurcation tracking algorithms). Detailed instructions and example entries are provided in the comments of this file.

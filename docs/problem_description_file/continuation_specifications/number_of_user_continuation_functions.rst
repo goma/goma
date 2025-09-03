@@ -1,4 +1,4 @@
-3.2.3 Number of user continuation functions
+Number of user continuation functions
 -------------------------------------------
 
 **Number of user continuation functions** = <integer>

@@ -1,4 +1,4 @@
-3.2.18 Continuation Printing Frequency
+Continuation Printing Frequency
 --------------------------------------
 
 **Continuation Printing Frequency** = <integer>

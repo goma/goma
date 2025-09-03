@@ -1,4 +1,4 @@
-3.2.20 LOCA method
+LOCA method
 ------------------
 
 **LOCA method** = {ss | zero | first | alc | tp | pf | hp}

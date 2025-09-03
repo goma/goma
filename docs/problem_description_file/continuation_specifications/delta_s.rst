@@ -1,4 +1,4 @@
-3.2.11 delta_s
+delta_s
 --------------
 
 **delta_s** = <float>

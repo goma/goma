@@ -1,4 +1,4 @@
-3.2.14 Minimum path step
+Minimum path step
 ------------------------
 
 **Minimum path step** = <float>

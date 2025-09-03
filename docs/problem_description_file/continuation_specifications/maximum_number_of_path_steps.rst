@@ -1,4 +1,4 @@
-3.2.12 Maximum number of path steps
+Maximum number of path steps
 -----------------------------------
 
 **Maximum number of path steps** = <integer>

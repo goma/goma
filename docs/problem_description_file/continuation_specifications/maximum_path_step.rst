@@ -1,4 +1,4 @@
-3.2.15 Maximum path step
+Maximum path step
 ------------------------
 
 **Maximum path step** = <float>

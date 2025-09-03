@@ -1,4 +1,4 @@
-3.2.6 Material id
+Material id
 -----------------
 
 **Material id** = <integer>

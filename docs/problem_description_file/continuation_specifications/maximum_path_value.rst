@@ -1,4 +1,4 @@
-3.2.13 Maximum path value
+Maximum path value
 -------------------------
 
 **Maximum path value** = N/A

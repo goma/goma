@@ -1,4 +1,4 @@
-3.2.2 Continuation Type
+Continuation Type
 -----------------------
 
 **Continuation Type** = {BC | MT | AC | UM | UF | AN}
@@ -73,7 +73,7 @@ To use the MT option, a tag for the relevant property must be defined in the fil
 
 To use the AC option, an AC card must be provided for the relevant augmenting condition in the Augmenting Conditions Specifications section.
 
-To use the UM option, a property tag must be defined (as for MT), a user model and parameter list must be specified for the relevant property in file user_mp.c and this USER model must be specified with the correct number of parameter values in the relevant material (*.mat) file.
+To use the UM option, a property tag must be defined (as for MT), a user model and parameter list must be specified for the relevant property in file user_mp.c and this USER model must be specified with the correct number of parameter values in the relevant material (\*.mat) file.
 
 To use the UF option, a list of user-defined continuation conditions (functions) must be provided in the function update_user_parameter, which is in the file user_continuation.c.
 

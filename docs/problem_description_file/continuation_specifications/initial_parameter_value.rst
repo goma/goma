@@ -1,4 +1,4 @@
-3.2.9 Initial parameter value
+Initial parameter value
 -----------------------------
 
 **Initial parameter value** = <float>

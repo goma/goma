@@ -1,4 +1,4 @@
-3.2.1 Continuation
+Continuation
 -------------------
 
 **Continuation** = {zero | first | hzero | hfirst | loca}

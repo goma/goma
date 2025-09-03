@@ -1,7 +1,5 @@
-4 Linear Stability Analysis
+Linear Stability Analysis
 ============================
-
-4 Linear Stability Analysis
 
 Stability analysis addresses the following question: After disturbing a given steady base state with 
 random disturbances, do the disturbances grow or decay in time? If the disturbances vanish and 
@@ -59,7 +57,7 @@ presentation of several considerations relevant to the use of LSA (4.5). Where n
 notations will be made in the remainder of this chapter about the applicability of inputs, features, 
 etc. to either one or both eigensolvers.
 
-4.1 Required Specifications in the Goma Input File
+Required Specifications in the Goma Input File
 ===================================================
 
 This section describes how to carry out linear stability analysis with Goma. The input information 
@@ -141,10 +139,10 @@ successfully compute the stability and interesting modes of an underlying base f
    linear_stability/eigenvector_output_frequency
    linear_stability/eigenvector_output_file
 
-4.3 3D of 2D Stability Analysis
+3D of 2D Stability Analysis
 ================================
 
-4.3.1 Theory
+Theory
 -------------
 
 For some 2D flow problems, it may be possible that the steady state flow is stable to all 
@@ -167,7 +165,7 @@ the augmented eigensystem is assembled using a two-pass approach for both the Ja
 mass matrix. All of the necessary factors are included with the basis and weight functions, to 
 minimize intrusion on the assembly equations.
 
-4.3.2 Usage
+Usage
 ------------
 
 The 3D of 2D stability algorithm is accessed by the user similarly to basic stability analysis, and 
@@ -195,10 +193,10 @@ each of these files will contain eigenvectors for the same mode/wavenumber combi
 continuation step. If the run was done in parallel, it will be necessary to run fix for any file you 
 wish to view.
 
-4.4 Examples
+Examples
 =============
 
-4.4.1 Stability of the lid driven cavity problem at Re = 1
+Stability of the lid driven cavity problem at Re = 1
 -----------------------------------------------------------
 
 The relevant sections of the input file to carry out linear stability analysis are as follows:
@@ -303,7 +301,7 @@ corresponds to -9.219072e+01 +3.614838e-01 i whereas
 LSA_3_of_5_out.exoII corresponds to -9.219072e+01 -3.614838e-01 i in this 
 example. A velocity vector plot of the leading mode is shown in Figure 4.1.
 
-4.4.2 3D of 2D stability of the lid driven cavity problem at Re=1
+3D of 2D stability of the lid driven cavity problem at Re=1
 ------------------------------------------------------------------
 
 To access the 3D of 2D stability algorithm for this problem, the previous input file is modified 
@@ -336,7 +334,7 @@ wavenumber is zero (or infinite wavelength), the standard 2D stability results s
 -- comparison of the first set of eigenvalues with those found in Example 4.4.1 reveals that this is 
 the case.
 
-4.4.3 Stability of the lid driven cavity with continuation in Re
+Stability of the lid driven cavity with continuation in Re
 ----------------------------------------------------------------
 
 To perform continuation with stepwise stability analysis, it is necessary to switch from eggroll to 
@@ -380,7 +378,7 @@ continuation steps taken, and the time stamp for each step is the corresponding 
 also that the computed eigenvalues for the first step agree with those found in Example 4.4.1 
 (with eggroll).
 
-4.5 User Guidance
+User Guidance
 ==================
 
 Linear stability analysis of the solution of a previously unstudied process can be quite difficult 
@@ -388,7 +386,7 @@ without some fortuitous choices in the LSA setup. Experience will erase the unce
 user requires a jump off point. To this end, the following guidance is provided; included are some 
 do's and don'ts in problem setup.
 
-4.5.1 User Boundary Conditions
+User Boundary Conditions
 --------------------------------
 
 In general, a LSA should not be performed if user-specified boundary conditions have been used 
@@ -400,7 +398,7 @@ matrix. This can lead to unexpected complications: one would not normally consid
 conditions should not be used, unless the user is aware of, and can implement, the appropriate 
 time derivatives in the user function necessary to construct the correct matrix.
 
-4.5.2 Leading Eigenvalue
+Leading Eigenvalue
 -------------------------
 
 The LSA reports a Leading Eigenvalue and a list of values up to the Number of Modes (Section 
@@ -418,7 +416,7 @@ it detects an eigenvalue to the right of (larger than) the primary shift paramet
 happens, just increase sigma and try again. Another way to decrease the effect of spurious modes 
 (for either method) is to increase the Krylov subspace size.
 
-4.5.3 Selecting Initial Shifts (eggroll)
+Selecting Initial Shifts (eggroll)
 -----------------------------------------
 
 The eggroll eigensolver is very sensitive to the user-supplied shifts (Section 2.2.9). The guidance 
@@ -449,7 +447,7 @@ The decay (or growth in unstable solutions) is given by :math:`e^{\lambda_i t}`.
 estimate of the leading eigenvalue can be made to guide the trial and error search referred to in the 
 above paragraph.
 
-4.5.4 Selecting Initial Shifts (ARPACK)
+Selecting Initial Shifts (ARPACK)
 ----------------------------------------
 
 The two Cayley shift parameters, σ and μ, are specified using the Eigen Cayley Sigma and 

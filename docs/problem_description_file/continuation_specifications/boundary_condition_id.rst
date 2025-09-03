@@ -1,4 +1,4 @@
-3.2.4 Boundary condition ID
+Boundary condition ID
 ----------------------------
 
 **Boundary condition ID** = <integer>

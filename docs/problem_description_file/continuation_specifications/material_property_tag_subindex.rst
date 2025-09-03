@@ -1,4 +1,4 @@
-3.2.8 Material property tag subindex
+Material property tag subindex
 ------------------------------------
 
 **Material property tag subindex** = <integer>
@@ -16,7 +16,7 @@ Consider a case where the desired continuation parameter is the temperature depe
     sigma = param[0] - param[1] * T;
     dsigma_dT = -param[1];
 
-Here, the continuation parameter would be param[1]. To employ this model, the *.mat file would include the card:
+Here, the continuation parameter would be param[1]. To employ this model, the \*.mat file would include the card:
 
 ::
 
@@ -30,7 +30,7 @@ To specify param[1] as the continuation parameter, use:
 
 **Technical Discussion**
 
-The number of floats assigned for a given user property model is determined by counting the number supplied with the property model card in the *.mat file. If N floats are given there, then they are assigned indices from 0 to N-1 in the param[] array. Accordingly, the subindex number must not exceed N-1, or an error will occur.
+The number of floats assigned for a given user property model is determined by counting the number supplied with the property model card in the \*.mat file. If N floats are given there, then they are assigned indices from 0 to N-1 in the param[] array. Accordingly, the subindex number must not exceed N-1, or an error will occur.
 
 **Theory**
 

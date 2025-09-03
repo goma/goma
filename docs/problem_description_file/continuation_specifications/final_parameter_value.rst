@@ -1,4 +1,4 @@
-3.2.10 Final parameter value
+Final parameter value
 ----------------------------
 
 **Final parameter value** = <float>

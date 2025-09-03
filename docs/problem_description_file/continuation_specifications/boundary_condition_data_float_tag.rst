@@ -1,4 +1,4 @@
-3.2.5 Boundary condition data float tag
+Boundary condition data float tag
 ---------------------------------------
 
 **Boundary condition data float tag** = <integer>

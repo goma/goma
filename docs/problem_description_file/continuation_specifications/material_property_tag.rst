@@ -1,4 +1,4 @@
-3.2.7 Material property tag
+Material property tag
 ---------------------------
 
 **Material property tag** = <integer>
@@ -21,7 +21,7 @@ If the continuation parameter is heat capacity (TAGC_HEAT_CAPACITY = 1600), use:
 
 **Technical Discussion**
 
-Although a card for the chosen material property is still required in the *.mat file for the relevant material, the property value specified there is overwritten by the continuation parameter.
+Although a card for the chosen material property is still required in the \*.mat file for the relevant material, the property value specified there is overwritten by the continuation parameter.
 
 **Theory**
 
