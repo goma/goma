@@ -420,6 +420,14 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define SHOCK                15
 #define PIECEWISE            16
 #define CHAPMAN_GAS          17
+#define SEDIMENT                                                    \
+  18 /* Sedimentation model to account for hydrodynamic interaction \
+        and osmotic pressure gradient */
+#define BRUGGEMANN                                                       \
+  19 /* Bruggmeman diffusion model accounting for effective diffusion in \
+       porous media */
+#define BRUGGEMANN_FREE_VOL \
+  20 /* Combination of Bruggmeman porous media and solvent-polymer free volume diffusion models*/
 
 /* Types of vapor or gas pressure relations */
 #define KELVIN       3
@@ -524,7 +532,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define POWERLAW_DARCY_FICKIAN   20 /*PRS for P&G */
 #define HYDRODYNAMIC_QTENSOR     21
 #define HYDRODYNAMIC_QTENSOR_OLD 22
-#define FICKIAN_SHELL            23 /* Shell version of Fickian diffusion equation */
+#define HYDRODYNAMIC_SEDIMENT    23
+#define FICKIAN_SHELL            24 /* Shell version of Fickian diffusion equation */
 /* surface tension laws */
 #define DILATION        3
 #define GIBBS_ISOTHERM  35
