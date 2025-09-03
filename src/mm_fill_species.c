@@ -7275,7 +7275,7 @@ void compute_leak_velocity(double *vnorm,
   double alpha_v = 0., beta_v = 0.;
 
   int mode;
-  double amb_pres, A, mtc, Y_inf, driving_force;
+  double amb_pres, mtc, Y_inf;
   double d_mtc[MAX_VARIABLE_TYPES + MAX_CONC];
   double activity[MAX_CONC];
   double dact_dC[MAX_CONC][MAX_CONC];
@@ -7411,8 +7411,6 @@ void compute_leak_velocity(double *vnorm,
        * sensitivity to all variable types
        * ACS: modified 10/99 to accommodate mass conc. formulation for YFLUX_EQUIL  */
 
-      driving_force = 1.;
-
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         wspec = fluxbc->BC_Data_Int[0];
         mode = fluxbc->BC_Data_Int[2];
@@ -7450,11 +7448,7 @@ void compute_leak_velocity(double *vnorm,
         mass_flux_equil_mtc(mp->mass_flux, mp->d_mass_flux, activity, dact_dC, fv->c, mode,
                             amb_pres, wspec, mtc, d_mtc, Y_inf, alpha_v, beta_v);
 
-        A = mp->vapor_pressure[wspec] / amb_pres;
-        driving_force -= A * activity[wspec];
         vnormal += mp->mass_flux[wspec];
-        /* This was causing compiler warnings: probably due to C[w] which should have been C[w][j]
-         */
         var = MASS_FRACTION;
         if (pd->v[pg->imtrx][var]) {
           for (w = 0; w < pd->Num_Species_Eqn; w++) {
@@ -8049,7 +8043,7 @@ void compute_leak_energy(double *enorm,
   double alpha_v = 0., beta_v = 0.;
 
   int mode;
-  double amb_pres, A, mtc, Y_inf, driving_force;
+  double amb_pres, mtc, Y_inf;
   double d_mtc[MAX_VARIABLE_TYPES + MAX_CONC];
   double activity[MAX_CONC];
   double dact_dC[MAX_CONC][MAX_CONC];
@@ -8116,8 +8110,6 @@ void compute_leak_energy(double *enorm,
        * sensitivity to all variable types
        * ACS: modified 10/99 to accommodate mass conc. formulation for YFLUX_EQUIL  */
 
-      driving_force = 1.;
-
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         wspec = fluxbc->BC_Data_Int[0];
         mode = fluxbc->BC_Data_Int[2];
@@ -8162,8 +8154,6 @@ void compute_leak_energy(double *enorm,
         mass_flux_equil_mtc(mp->mass_flux, mp->d_mass_flux, activity, dact_dC, fv->c, mode,
                             amb_pres, wspec, mtc, d_mtc, Y_inf, alpha_v, beta_v);
 
-        A = mp->vapor_pressure[wspec] / amb_pres;
-        driving_force -= A * activity[wspec];
         enormal +=
             mp->density * mp->latent_heat_vap[wspec] * mp->mass_flux[wspec] * StoiCoef[wspec];
 

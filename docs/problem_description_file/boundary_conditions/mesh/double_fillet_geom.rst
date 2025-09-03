@@ -1,10 +1,10 @@
-***************
-DOUBLE_FILLET
-***************
+******************
+DOUBLE_FILLET_GEOM
+******************
 
 ::
 
-	BC = DOUBLE_FILLET SS <bc_id> xpt1 ypt1 theta1 r1 xpt2 ypt2 theta2 r2 curv_mid
+	BC = DOUBLE_FILLET_GEOM SS <bc_id> xpt1 ypt1 theta1 r1 xpt2 ypt2 theta2 r2 curv_mid
 
 -----------------------
 **Description / Usage**
@@ -41,13 +41,16 @@ curv_mid
 The following sample input card:
 ::
 
-     BC   = DOUBLE_FILLET SS 56 {xpt1} {ypt1} {theta1} {r1} {xpt2} {ypt2} {theta2} {r2} {curv_mid}
+     BC   = DOUBLE_FILLET_GEOM SS 56 {xpt1} {ypt1} {theta1} {r1} {xpt2} {ypt2} {theta2} {r2} {curv_mid}
 
 
 
 -------------------------
 **Technical Discussion**
 -------------------------
+
+This is similar to the *DOUBLE_FILLET* boundary condition but uses a more geometry based approach
+to define the boundary condition.
 
 This condition, like *DISTNG, PLANE*, and others that can be applied to geometry, is
 applied to the normal component of the mesh motion equations along a boundary in
