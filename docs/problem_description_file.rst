@@ -97,10 +97,6 @@ them again.
    problem_description_file/level_set
    problem_description_file/phase_field
    problem_description_file/turbulence
-<<<<<<< HEAD
-   problem_description_file/continuation
-=======
->>>>>>> 4bbc88ee (some copy paste fixes)
    problem_description_file/automatic_continuation
    problem_description_file/hunting
    problem_description_file/augmenting_conditions

@@ -43,11 +43,7 @@ Following is a summary of solution prediction algorithms used in Goma's continua
 | hfirst           | Multi-parameter first order continuation                         |
 |                  |                                                                  |
 |                  | x\ :sup:`PREDICTED`\ (λ\ :sub:`NEW`\ ) = x\ :sup:`OLD`\ (λ\      |
-<<<<<<< HEAD
-|                  | :sub:`OLD`\ ) + Σ Δλ\ :sub:`j`\ ∂x/∂λ\ :sub:`j`\                 |
-=======
 |                  | :sub:`OLD`\ ) + Σ Δλ\ :sub:`j`\ ∂x/∂λ\ :sub:`j`\              .  |
->>>>>>> 4bbc88ee (some copy paste fixes)
 +------------------+------------------------------------------------------------------+
 
 These algorithms are available with or without the Library of Continuation Algorithms (LOCA), which also offers algorithms for arc length continuation and bifurcation tracking, as described above. Details of these algorithms can be found in the LOCA 1.0 manual (SAND 2002-0396).
