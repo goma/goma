@@ -92,6 +92,12 @@ void f_double_fillet(const int ielem_dim,
                      const double *p,      /*  function parameters from data card  */
                      const int num_const); /* number of passed parameters   */
 
+void f_double_fillet_geom(const int ielem_dim,
+                          double *func,
+                          double d_func[],      /* dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+                          const double *p,      /*  function parameters from data card  */
+                          const int num_const); /* number of passed parameters   */
+
 #ifdef FEATURE_ROLLON_PLEASE
 EXTERN void f_feature_rollon(const int, /* ielem_dim */
                              double *,  /* func */

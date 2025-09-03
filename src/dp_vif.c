@@ -605,6 +605,9 @@ void noahs_ark(void) {
 
   if (efv->ev != T_NOTHING) {
     ddd_add_member(n, &efv->TALE, 1, MPI_INT);
+    ddd_add_member(n, &efv->ipix, MAX_EXTERNAL_FIELD, MPI_INT);
+    ddd_add_member(n, &efv->ipix_matid, MAX_EXTERNAL_FIELD, MPI_INT);
+    ddd_add_member(n, &efv->exit_after_pixel_map, 1, MPI_INT);
     for (i = 0; i < efv->Num_external_field; i++) {
       ddd_add_member(n, efv->name[i], 20, MPI_CHAR);
       ddd_add_member(n, efv->file_nm[i], MAX_FNL, MPI_CHAR);
@@ -1191,6 +1194,7 @@ void noahs_ark(void) {
     ddd_add_member(n, cont->use_var_norm, MAX_VARIABLE_TYPES, MPI_INT);
     ddd_add_member(n, &cont->print_freq, 1, MPI_INT);
     ddd_add_member(n, &cont->fix_freq, 1, MPI_INT);
+    ddd_add_member(n, &cont->anneal_on_print, 1, MPI_INT);
     ddd_add_member(n, &cont->print_delt, 1, MPI_DOUBLE);
     ddd_add_member(n, &cont->print_delt2_path, 1, MPI_DOUBLE);
     ddd_add_member(n, &cont->print_delt2, 1, MPI_DOUBLE);

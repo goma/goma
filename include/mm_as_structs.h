@@ -1078,6 +1078,7 @@ struct External_Field_Variables {
   char name[MAX_EXTERNAL_FIELD][32];
   /* names of external field variables*/
   char file_nm[MAX_EXTERNAL_FIELD][MAX_FNL];
+  char file_nm_serial[MAX_EXTERNAL_FIELD][MAX_FNL];
   /* names of exodus or pixel files with variables */
   int i[MAX_EXTERNAL_FIELD];           /* Interpolation of variables */
   int ipix[MAX_EXTERNAL_FIELD];        /* 0 for exoII file and 1 for pix file */
@@ -1099,6 +1100,7 @@ struct External_Field_Variables {
   char field_type[MAX_EXTERNAL_FIELD][15];
   /* type of external field to read; steady or transient */
   /* SMD 1/24/11 */
+  int exit_after_pixel_map; // stop running after we have done pixel mapping
 };
 
 /*
@@ -1227,6 +1229,7 @@ struct Continuation_Information {
   int use_var_norm[MAX_VARIABLE_TYPES];
   int print_freq;
   int fix_freq;
+  int anneal_on_print;
   double print_delt;
   double print_delt2_path;
   double print_delt2;

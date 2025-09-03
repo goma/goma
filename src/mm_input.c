@@ -1260,6 +1260,21 @@ void rd_genl_specs(FILE *ifp, char *input) {
   efv->Num_external_field = Num_Var_External;
   efv->Num_external_pixel_field = Num_Var_External_pix;
 
+  iread = look_forward_optional(ifp, "Exit after pixel map", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0) {
+      efv->exit_after_pixel_map = false;
+    } else if (strcmp(input, "yes") == 0) {
+      efv->exit_after_pixel_map = true;
+    } else {
+      GOMA_EH(GOMA_ERROR, "Bad specification for Exit after pixel map");
+    }
+  } else {
+    efv->exit_after_pixel_map = false;
+  }
+
   /*
    * Read export variable cards
    */
@@ -3791,6 +3806,26 @@ void rd_track_specs(FILE *ifp, char *input) {
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Continuation Fix Frequency",
                  cont->fix_freq);
         ECHO(echo_string, echo_file);
+      }
+    }
+
+    cont->anneal_on_print = 0;
+    iread = look_for_optional(ifp, "Continuation Anneal on Print", input, '=');
+    if (iread == 1) {
+      (void)read_string(ifp, input, '\n');
+      strip(input);
+      if (!strcasecmp(input, "no") || !strcasecmp(input, "false")) {
+        cont->anneal_on_print = FALSE;
+        ECHO("Continuation Anneal on Print = no", echo_file);
+      } else if (!strcasecmp(input, "yes") || !strcasecmp(input, "true")) {
+        cont->anneal_on_print = TRUE;
+        if (Anneal_Mesh == FALSE) {
+          Anneal_Mesh = TRUE;
+          GOMA_WH(GOMA_ERROR, "Turning on Anneal Mesh for Continuation Anneal on Print");
+        }
+        ECHO("Continuation Anneal on Print = yes", echo_file);
+      } else {
+        GOMA_EH(GOMA_ERROR, "Bad specification for Continuation Anneal on Print");
       }
     }
 

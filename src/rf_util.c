@@ -13,6 +13,7 @@
 \************************************************************************/
 
 /* Needed to declare POSIX function drand48 */
+#include "brkfix/fix.h"
 #include "rf_solve.h"
 #define _XOPEN_SOURCE
 
@@ -1920,6 +1921,7 @@ void init_vec(
 
   if (efv->ev) {
     k = 0;
+    int map_pix_fast_called = 0;
     for (w = 0; w < efv->Num_external_field; w++) {
       if (efv->i[w] == I_TABLE) {
         ext_Tables[k] = setup_table_external(efv->file_nm[w], ext_table, efv->name[w]);
@@ -1952,6 +1954,7 @@ void init_vec(
         {
           DPRINTF(stderr, "\nMapping pixel image to mesh with 'fast' algorithm...");
           err = rd_image_to_mesh2(w, exo);
+          map_pix_fast_called = 1;
         } else {
           GOMA_EH(-1, "something wrong with efv->ipix");
         }
@@ -1962,6 +1965,18 @@ void init_vec(
         GOMA_EH(-1, "External fields can only be imported in LIBRARY_MODE!");
       }
 #endif
+    }
+    if (map_pix_fast_called) {
+      MPI_Barrier(MPI_COMM_WORLD);
+      if (ProcID == 0) {
+        DPRINTF(stdout, "\nFixing exodus file %s\n", "map_pix_fast.exoII");
+        fix_exo_file(Num_Proc, "map_pix_fast.exoII");
+      }
+    }
+    if (efv->exit_after_pixel_map == true) {
+      P0PRINTF("Exiting early due to setting Exit after pixel map = yes\n");
+      MPI_Finalize();
+      exit(0);
     }
   }
 
