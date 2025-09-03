@@ -332,7 +332,7 @@ int turning_point_alg(
   for (i = 0; i < cgi->numUnks; i++)
     c[i] += dt_p * d[i] + (AGS_option - 1) * y[i];
 
-    /* dt_p change meaning from Beta to alpha here */
+  /* dt_p change meaning from Beta to alpha here */
 
 #ifdef SCALE_TP
   dt_p = dt_p * d_big + c_big; /*SCALED*/
@@ -344,7 +344,7 @@ int turning_point_alg(
   for (i = 0; i < cgi->numUnks; i++)
     delta_x[i] -= dt_p * b[i];
 
-    /*dt_p change meaning from alpha to dt_p here */
+  /*dt_p change meaning from alpha to dt_p here */
 
 #ifdef SCALE_TP
   dt_p = a_big + dt_p * b_big; /*SCALED*/

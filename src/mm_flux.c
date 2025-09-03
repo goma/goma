@@ -2151,7 +2151,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
             if (J_AC != NULL) {
               int dir, sp = species_id;
               double d_term = 0, d_term1 = 0, d_term2 = 0, d_term3 = 0;
-              double(*d_diff)[MAX_VARIABLE_TYPES + MAX_CONC] = mp->d_diffusivity;
+              double (*d_diff)[MAX_VARIABLE_TYPES + MAX_CONC] = mp->d_diffusivity;
 
               switch (quantity) {
                 /* FORCE_X, FORCE_Y, FORCE_Z */
@@ -4219,7 +4219,7 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
       int Use_Subelement_Integration = FALSE;
 
       double wt, xi[3];
-      double(*s)[DIM] = NULL, *weight = NULL;
+      double (*s)[DIM] = NULL, *weight = NULL;
 
       ei[pg->imtrx]->ielem = elem;
 

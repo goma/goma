@@ -10677,8 +10677,8 @@ void sat_darcy_continuous_bc(double func[],
     if (mp->PorousMediaType == POROUS_SATURATED)
       factor = 1 / mp->viscosity;
 
-      /* establish attachment if this is a level set problem */
-      /* Now establish attachment and wetted */
+    /* establish attachment if this is a level set problem */
+    /* Now establish attachment and wetted */
 #if 0
     mn_liq = map_mat_index ( eb_mat_fluid );
 

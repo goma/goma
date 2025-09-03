@@ -2585,8 +2585,8 @@ static int Hrenorm_constrain(Exo_DB *exo,
 #ifdef PARALLEL
       if (Num_Proc > 1)
         external = ext_dof[k];
-        /* when accumulating the dot products it is important not to add the
-         * external dofs */
+      /* when accumulating the dot products it is important not to add the
+       * external dofs */
 #endif
 
       if (!external) {
@@ -2846,8 +2846,8 @@ int generate_facet_list(
     safe_free((void *)*owning_elem);
   }
 
-  *point0 = (double(*)[DIM])smalloc(DIM * num_facets * sizeof(double));
-  *point1 = (double(*)[DIM])smalloc(DIM * num_facets * sizeof(double));
+  *point0 = (double (*)[DIM])smalloc(DIM * num_facets * sizeof(double));
+  *point1 = (double (*)[DIM])smalloc(DIM * num_facets * sizeof(double));
   *owning_elem = (int *)smalloc(num_facets * sizeof(int));
 
   count = 0;
@@ -4180,7 +4180,7 @@ void iso_contour_on_side(double isoval,
       double xi_p[DIM];
 
       *ip_total = 1;
-      *s = (double(*)[DIM])smalloc(DIM * sizeof(double));
+      *s = (double (*)[DIM])smalloc(DIM * sizeof(double));
       *wt = (double *)smalloc(sizeof(double));
       *wt[0] = 1.0;
 
@@ -6721,7 +6721,7 @@ void divide_search_grid(SGRID *parent, int max_level) {
 static void find_grid_LS_value(SGRID *grid) {
   int i, j;
   int num_fcns, num_verts;
-  double(*phi)[MDE];
+  double (*phi)[MDE];
 
   num_verts = grid->num_verts;
   num_fcns = grid->tree->num_fcns;
@@ -6989,28 +6989,28 @@ NTREE *create_shape_fcn_tree(int max_level) {
   switch (tree->dim) {
     int j;
   case 2:
-    tree->xi = (double(*)[DIM])smalloc(sizeof(double) * 4 * DIM);
-    tree->phi = (double(*)[MDE])smalloc(sizeof(double) * 4 * MDE);
+    tree->xi = (double (*)[DIM])smalloc(sizeof(double) * 4 * DIM);
+    tree->phi = (double (*)[MDE])smalloc(sizeof(double) * 4 * MDE);
 
     for (j = 0; j < 4; j++) {
       find_nodal_stu(j, ei[pg->imtrx]->ielem_type, tree->xi[j], tree->xi[j] + 1, tree->xi[j] + 2);
     }
 
-    tree->s = (double(*)[DIM])smalloc(sizeof(double) * 9 * DIM);
+    tree->s = (double (*)[DIM])smalloc(sizeof(double) * 9 * DIM);
     tree->wt = (double *)smalloc(sizeof(double) * 9);
 
     break;
 
   case 3:
 
-    tree->xi = (double(*)[DIM])smalloc(sizeof(double) * 8 * DIM);
-    tree->phi = (double(*)[MDE])smalloc(sizeof(double) * 8 * MDE);
+    tree->xi = (double (*)[DIM])smalloc(sizeof(double) * 8 * DIM);
+    tree->phi = (double (*)[MDE])smalloc(sizeof(double) * 8 * MDE);
 
     for (j = 0; j < 8; j++) {
       find_nodal_stu(j, ei[pg->imtrx]->ielem_type, tree->xi[j], tree->xi[j] + 1, tree->xi[j] + 2);
     }
 
-    tree->s = (double(*)[DIM])smalloc(sizeof(double) * 8 * DIM);
+    tree->s = (double (*)[DIM])smalloc(sizeof(double) * 8 * DIM);
     tree->wt = (double *)smalloc(sizeof(double) * 8);
 
     break;
@@ -7093,8 +7093,9 @@ static void divide_shape_fcn_tree(NTREE *parent, int max_level) {
       parent->subtrees[index]->num_subtrees = 0;
       parent->subtrees[index]->subtrees = NULL;
 
-      parent->subtrees[index]->xi = (double(*)[DIM])smalloc(num_verts * (int)sizeof(double) * DIM);
-      parent->subtrees[index]->phi = (double(*)[MDE])smalloc(num_verts * (int)sizeof(double) * MDE);
+      parent->subtrees[index]->xi = (double (*)[DIM])smalloc(num_verts * (int)sizeof(double) * DIM);
+      parent->subtrees[index]->phi =
+          (double (*)[MDE])smalloc(num_verts * (int)sizeof(double) * MDE);
 
       load_subtree_coords(index, parent->subtrees[index], subtree_xi);
 
@@ -7104,7 +7105,7 @@ static void divide_shape_fcn_tree(NTREE *parent, int max_level) {
         if (parent->dim == 2)
           num_gpts = (parent->subtrees[index]->level < 8) ? 4 : 1;
 
-        parent->subtrees[index]->s = (double(*)[DIM])smalloc(num_gpts * DIM * sizeof(double));
+        parent->subtrees[index]->s = (double (*)[DIM])smalloc(num_gpts * DIM * sizeof(double));
         parent->subtrees[index]->wt = (double *)smalloc(num_gpts * sizeof(double));
 
         find_tree_integration_pts(parent->subtrees[index], num_gpts);
@@ -7927,7 +7928,7 @@ int get_subgrid_integration_pts(
     safe_free((void *)*weight);
   }
 
-  *s = (double(*)[DIM])smalloc(DIM * num_gpts * sizeof(double));
+  *s = (double (*)[DIM])smalloc(DIM * num_gpts * sizeof(double));
 
   *weight = (double *)smalloc(num_gpts * sizeof(double));
 
@@ -8622,7 +8623,7 @@ void gather_subelement_descriptions(Integ_Elem_Desc_List *list, Integ_Elem *e) {
 
     s = (Integ_Elem_Desc *)smalloc(sizeof(Integ_Elem_Desc));
     s->num_nodes = e->num_local_nodes;
-    s->x = (double(*)[DIM])smalloc(sizeof(double) * s->num_nodes * DIM);
+    s->x = (double (*)[DIM])smalloc(sizeof(double) * s->num_nodes * DIM);
     for (i = 0; i < s->num_nodes; i++) {
       map_local_coordinates(e->xi[i], s->x[i]);
     }
@@ -8821,7 +8822,7 @@ int get_facet_integration_pts(double (**s)[DIM], double **weight, Exo_DB *exo) {
 
   surf = list->start;
 
-  *s = (double(*)[DIM])smalloc(DIM * num_gpts * sizeof(double));
+  *s = (double (*)[DIM])smalloc(DIM * num_gpts * sizeof(double));
   *weight = (double *)smalloc(num_gpts * sizeof(double));
 
   /* process each facet */
@@ -9171,7 +9172,7 @@ int get_subelement_integration_pts(
     *ip_sign = NULL;
   }
 
-  *s = (double(*)[DIM])smalloc(DIM * num_gpts * sizeof(double));
+  *s = (double (*)[DIM])smalloc(DIM * num_gpts * sizeof(double));
 
   *weight = (double *)smalloc(num_gpts * sizeof(double));
 
@@ -9271,13 +9272,13 @@ void gather_subelement_facets(struct LS_Surf_List *list, Integ_Elem *e) {
 
 Integ_Elem *create_integ_elements(double isoval) {
   Integ_Elem *e;
-  double(*xi)[DIM];
+  double (*xi)[DIM];
   int i;
   int side_ids[4] = {0, 1, 2, 3};
 
   e = (Integ_Elem *)smalloc(sizeof(Integ_Elem));
 
-  xi = (double(*)[DIM])smalloc(sizeof(double) * ei[pg->imtrx]->num_local_nodes * DIM);
+  xi = (double (*)[DIM])smalloc(sizeof(double) * ei[pg->imtrx]->num_local_nodes * DIM);
 
   for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
     find_nodal_stu(i, ei[pg->imtrx]->ielem_type, &xi[i][0], &xi[i][1], &xi[i][2]);
@@ -9483,7 +9484,7 @@ void build_integ_element(Integ_Elem *e,
   e->ielem_type = ielem_type;
   e->num_local_nodes = elem_info(NNODES, ielem_type);
 
-  e->xi = (double(*)[DIM])smalloc(sizeof(double) * e->num_local_nodes * DIM);
+  e->xi = (double (*)[DIM])smalloc(sizeof(double) * e->num_local_nodes * DIM);
   e->f = (double *)smalloc(sizeof(double) * e->num_local_nodes);
   for (i = 0; i < e->num_local_nodes; i++) {
     e->xi[i][0] = xi[i][0];

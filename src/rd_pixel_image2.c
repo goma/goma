@@ -95,7 +95,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
   int ipix_blkid = 0;      // Block ID to be filled
   int pixdim;              // Dimensionality (2 or 3)
   int pixsize[3];          // Size in each dimension
-  double *pixdata;         // All data points
+  double *pixdata = NULL;  // All data points
   double pmax, pmin;       // Max/min pixel/voxel value
   int numpix = 0;          // Number of data points
   double resx, resy, resz; // Size of pixels/voxels in x,y,z directions
