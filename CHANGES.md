@@ -1,3 +1,55 @@
+## Changes in version 7.10.0
+
+### Highlights
+
+* MUMPS solver is available directly
+* Advanced capabilities manual is included in sphinx documentation
+* Fluidity thixotropy model
+* Work was done to support Trilinos removing Epetra based packages
+* Logarithmic interpolation of level set properties is now available in general level set fields
+
+### Included pull requests
+* Gas egress by @rbsecor in https://github.com/goma/goma/pull/494
+* Add logarithmic interpolation of properties across level set interface by @tjiptowi in https://github.com/goma/goma/pull/497
+* Update github workflows and tpl packages by @wortiz in https://github.com/goma/goma/pull/498
+* Add RPATH to CMAKE packages by default, fix no parmetis build by @wortiz in https://github.com/goma/goma/pull/499
+* Add Fluidity model to species by @wortiz in https://github.com/goma/goma/pull/500
+* Add Herschel Bulkley Papanastasiou model by @wortiz in https://github.com/goma/goma/pull/501
+* Add some more options for Herschel Bulkley regularization by @wortiz in https://github.com/goma/goma/pull/502
+* tiny fix for documentation examples by @wortiz in https://github.com/goma/goma/pull/503
+* 2D Moving wall shear-thnning lubrication by @rbsecor in https://github.com/goma/goma/pull/496
+* ls interface print for 3d by @wortiz in https://github.com/goma/goma/pull/504
+* bugfix for printing wrong number of unknowns (tpetra/epetra) by @wortiz in https://github.com/goma/goma/pull/505
+* Disable ls->Contact_Tolerance by default and bug fix for replacing Strong BC's instead of penalty by @wortiz in https://github.com/goma/goma/pull/506
+* update for clang-format-18 by @wortiz in https://github.com/goma/goma/pull/507
+* add missing POR_SINK_MASS check by @wortiz in https://github.com/goma/goma/pull/510
+* Native MUMPS interface by @wortiz in https://github.com/goma/goma/pull/511
+* add guard for no mumps solver by @wortiz in https://github.com/goma/goma/pull/512
+* Compiler warning cleanup by @wortiz in https://github.com/goma/goma/pull/513
+* some tpl updates by @wortiz in https://github.com/goma/goma/pull/508
+* Read element variables from multiblock materials by @wortiz in https://github.com/goma/goma/pull/514
+* small bugfix for stratimikos when using augmenting conditions by @wortiz in https://github.com/goma/goma/pull/516
+* Lub_curv BC cleanup by @rbsecor in https://github.com/goma/goma/pull/517
+* Update some TPLs and fixes for GCC 15 and building static libraries by @wortiz in https://github.com/goma/goma/pull/518
+* Lubrication dynamic_contact_angle by @rbsecor in https://github.com/goma/goma/pull/519
+* Improved facet based reinitialization of level sets by @wortiz in https://github.com/goma/goma/pull/509
+* Add a cure shrinkage model to goma  by @wortiz in https://github.com/goma/goma/pull/521
+* Making Aztec/Amesos/Epetra optional for upcoming releases of Trilinos by @wortiz in https://github.com/goma/goma/pull/488
+* Autodiff version of porous shell saturation equations by @wortiz in https://github.com/goma/goma/pull/522
+* Add a patch for mapvar IEEE_DENORMAL issues until next SEACAS release by @wortiz in https://github.com/goma/goma/pull/525
+* Update mesh equation example in docs by @wortiz in https://github.com/goma/goma/pull/524
+* force O1 optimization for SEACAS fortran by @wortiz in https://github.com/goma/goma/pull/527
+* add DOUBLE_FILLET boundary condition by @wortiz in https://github.com/goma/goma/pull/528
+* Trying to merge Chance's drying work by @wortiz in https://github.com/goma/goma/pull/515
+* Add augmenting continuation cards to docs by @wortiz in https://github.com/goma/goma/pull/531
+* Remove some set but unused variables by @wortiz in https://github.com/goma/goma/pull/533
+* Add DOUBLE_FILLET_GEOM_BASED, move functions out of bc_colloc.c by @wortiz in https://github.com/goma/goma/pull/534
+* Revert "Add DOUBLE_FILLET_GEOM_BASED, move functions out of bc_colloc.c" by @wortiz in https://github.com/goma/goma/pull/535
+* Update SEACAS package, patch is upstreamed by @wortiz in https://github.com/goma/goma/pull/537
+* Pixel to mesh fixes by @wortiz in https://github.com/goma/goma/pull/529
+* DOUBLE_FILLET_GEOM and option to anneal every continuation print for remeshing scripts by @wortiz in https://github.com/goma/goma/pull/541
+* More advanced capability manual being added to main docs by @wortiz in https://github.com/goma/goma/pull/542
+
 ## Changes in version 7.9.0
 * Add Giesekus model to SQRT_CONF by @wortiz in https://github.com/goma/goma/pull/486
 * Add skip ssl check to Goma tpl build script by @wortiz in https://github.com/goma/goma/pull/487

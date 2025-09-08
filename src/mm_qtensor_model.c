@@ -2041,7 +2041,7 @@ void find_eigenvector(dbl AA[3][3], dbl lambda, dbl *v, int print) {
     A[p[2]][0] = 0.0;
     for (i = 1; i < 3; i++)
       A[p[2]][i] -= m13 * A[p[0]][i];
-      /* Zero out below 1,1 */
+    /* Zero out below 1,1 */
 #ifdef DEBUG_DIAGONALIZATION
     if (print) {
       printf("A - lambda*I = \n");

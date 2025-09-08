@@ -87,7 +87,7 @@ void grad_vector_fv_fill(double ***base,
   int r, i;
 
   double base_off;
-  double(*grad_phiv_off)[DIM];
+  double (*grad_phiv_off)[DIM];
 
   memset(grad_val, 0, DIM * DIM * sizeof(double));
 

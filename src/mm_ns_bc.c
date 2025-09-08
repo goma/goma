@@ -13866,7 +13866,9 @@ void discontinuous_velocity(double func[DIM],
           for (p = 0; p < pd->Num_Dim; p++)
             for (j = 0; j < MDE; j++) {
               {
-                { d_diffusion_flux_dx[w][p][j] = 0.; }
+                {
+                  d_diffusion_flux_dx[w][p][j] = 0.;
+                }
               }
             }
         for (p = 0; p < pd->Num_Dim; p++) {

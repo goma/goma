@@ -1528,7 +1528,7 @@ int apply_sharp_integrated_bc(double x[],            /* Solution vector for the 
 {
   int ip, ip_total;
   double *wt, weight;
-  double(*s)[DIM];
+  double (*s)[DIM];
   double xi[DIM];
 
   double fmin, fmax, fplus, fminus;

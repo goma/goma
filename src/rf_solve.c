@@ -949,11 +949,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       ams[JAC]->options[AZ_keep_info] = 1;
 #endif
 
-      /*
-       * Now, just pass pointer to ams structure with all Aztec stuff
-       * bundled inside. At the other end, extract "ija" and "a" as
-       * appropriate, but the other items are there now, too.
-       */
+    /*
+     * Now, just pass pointer to ams structure with all Aztec stuff
+     * bundled inside. At the other end, extract "ija" and "a" as
+     * appropriate, but the other items are there now, too.
+     */
 
 #ifdef PARALLEL
 
@@ -1751,8 +1751,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
 #ifdef LASER_RAYTRACE
       if (ls != NULL) {
-        double(*point0)[DIM] = NULL;
-        double(*point1)[DIM] = NULL;
+        double (*point0)[DIM] = NULL;
+        double (*point1)[DIM] = NULL;
         int *owning_elem = NULL;
         int facet, num_facets;
 
