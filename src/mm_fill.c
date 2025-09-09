@@ -2249,7 +2249,7 @@ Revised:         Summer 1998, SY Tam (UNM)
 #ifdef GOMA_ENABLE_SACADO
         err = ad_assemble_porous_shell_saturation(theta, delta_t, xi, exo);
 #else
-        GOMA_EH(GOMA_ERROR, "Sacado must be enabled for autodiff");
+        GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
 #endif
       } else {
         err = assemble_porous_shell_saturation(theta, delta_t, xi, exo);
@@ -2446,7 +2446,8 @@ Revised:         Summer 1998, SY Tam (UNM)
 #ifdef GOMA_ENABLE_SACADO
           err = ad_assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
 #else
-          GOMA_EH(GOMA_ERROR, "Sacado must be enabled for autodiff");
+          GOMA_EH(GOMA_ERROR,
+                  "AutoDiff assembly enabled but Goma not compiled with Sacado support");
 #endif
         } else {
           err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
@@ -2648,7 +2649,8 @@ Revised:         Summer 1998, SY Tam (UNM)
 #ifdef GOMA_ENABLE_SACADO
           err = ad_assemble_continuity(time_value, theta, delta_t, &pg_data);
 #else
-          GOMA_EH(GOMA_ERROR, "Sacado must be enabled for autodiff");
+          GOMA_EH(GOMA_ERROR,
+                  "AutoDiff assembly enabled but Goma not compiled with Sacado support");
 #endif
         } else {
           err = assemble_continuity(time_value, theta, delta_t, &pg_data);

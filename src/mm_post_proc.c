@@ -968,7 +968,7 @@ static int calc_standard_fields(double **post_proc_vect,
 #ifdef GOMA_ENABLE_SACADO
       mu = ad_viscosity_wrap(gn);
 #else
-      GOMA_EH(GOMA_ERROR, "AutoDiff requires Sacado support");
+      GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
 #endif
     } else {
       for (a = 0; a < VIM; a++) {
