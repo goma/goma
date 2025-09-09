@@ -1,4 +1,5 @@
 #include "ad_turbulence.h"
+#ifdef GOMA_ENABLE_SACADO
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,4 +37,5 @@ void ad_fluid_stress(ADType Pi[DIM][DIM]);
 int ad_momentum_source_term(ADType f[DIM], /* Body force. */
                             dbl time);
 ADType ad_viscosity(struct Generalized_Newtonian *gn_local, ADType gamma_dot[DIM][DIM]);
+#endif
 #endif

@@ -36,6 +36,7 @@ jobs:
         cd build
         make -j 2
         ./goma -v
+        ./goma -v |grep "GOMA_ENABLE_SACADO.*=.*yes"
     - name: Goma Unit Tests
       run: |
         . /opt/goma-libs/config.sh
@@ -43,3 +44,16 @@ jobs:
         cd build
         make -j2 
         ctest --output-on-failure -j 2
+    - name: Goma configure without Sacado
+      run: |
+        . /opt/goma-libs/config.sh
+        cmake -DCMAKE_BUILD_TYPE=Release -Bbuild-no-sacado -DENABLE_TESTING=ON -DENABLE_SACADO=OFF
+    - name: Build Goma without Sacado
+      run: |
+        . /opt/goma-libs/config.sh
+        cp scripts/gcc-warnings.json "$HOME/"
+        echo "::add-matcher::$HOME/gcc-warnings.json"
+        cd build
+        make -j 2
+        ./goma -v
+        ./goma -v |grep "GOMA_ENABLE_SACADO.*=.*no"

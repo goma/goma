@@ -1,4 +1,5 @@
 #define GOMA_AD_MOMENTUM_CPP
+#ifdef GOMA_ENABLE_SACADO
 #include <Sacado.hpp>
 
 #include "ad_momentum.h"
@@ -1461,3 +1462,4 @@ int ad_assemble_continuity(dbl time_value, /* current time */
   } /* End of if assemble Jacobian */
   return 0;
 }
+#endif

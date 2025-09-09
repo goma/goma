@@ -373,16 +373,25 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
             } break;
 
             case SA_WALL_FUNC_BC:
+#ifdef GOMA_ENABLE_SACADO
               memset(kfunc, 0, DIM * sizeof(double));
               ad_sa_wall_func(kfunc, d_kfunc);
               func = kfunc[0];
               d_func[EDDY_NU] = 1.0;
+#else
+              GOMA_EH(GOMA_ERROR, "SA_WALL_FUNC requires Sacado support");
+#endif
               break;
             case OMEGA_WALL_FUNC_BC:
+#ifdef GOMA_ENABLE_SACADO
               memset(kfunc, 0, DIM * sizeof(double));
               ad_omega_wall_func(kfunc, d_kfunc);
               func = kfunc[0];
               d_func[TURB_OMEGA] = 1.0;
+#else
+              GOMA_EH(GOMA_ERROR, "OMEGA_WALL_FUNC requires Sacado support");
+#endif
+
               break;
 
             case PLANEX_BC:
