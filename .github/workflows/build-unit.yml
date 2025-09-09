@@ -53,7 +53,7 @@ jobs:
         . /opt/goma-libs/config.sh
         cp scripts/gcc-warnings.json "$HOME/"
         echo "::add-matcher::$HOME/gcc-warnings.json"
-        cd build
+        cd build-no-sacado
         make -j 2
         ./goma -v
         ./goma -v |grep "GOMA_ENABLE_SACADO.*=.*no"
