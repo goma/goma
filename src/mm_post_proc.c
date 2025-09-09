@@ -964,6 +964,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
 #if 1
   if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    mu = 0;
     if (upd->AutoDiff) {
 #ifdef GOMA_ENABLE_SACADO
       mu = ad_viscosity_wrap(gn);
