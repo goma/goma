@@ -1,3 +1,4 @@
+#ifdef GOMA_ENABLE_SACADO
 #include <Sacado.hpp>
 
 #include "ad_momentum.h"
@@ -793,3 +794,5 @@ int ad_assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration f
 
   return (status);
 }
+
+#endif

@@ -14156,6 +14156,12 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_APREPRO_LIB", "no");
 #endif
 
+#ifdef GOMA_ENABLE_SACADO
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_SACADO", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_SACADO", "no");
+#endif
+
 #ifdef HAVE_PARPACK
   fprintf(echo_file, "%-30s= %s\n", "HAVE_PARPACK", "yes");
 #else

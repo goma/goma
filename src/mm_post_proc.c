@@ -965,7 +965,11 @@ static int calc_standard_fields(double **post_proc_vect,
 #if 1
   if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
     if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
       mu = ad_viscosity_wrap(gn);
+#else
+      GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
     } else {
       for (a = 0; a < VIM; a++) {
         for (b = 0; b < VIM; b++) {
@@ -994,7 +998,11 @@ static int calc_standard_fields(double **post_proc_vect,
       for (mode = 0; mode < vn->modes; mode++) {
         /* get polymer viscosity */
         if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
           mup = ad_viscosity_wrap(ve[mode]->gn);
+#else
+          GOMA_EH(GOMA_ERROR, "AutoDiff requires Sacado support");
+#endif
         } else {
           mup = viscosity(ve[mode]->gn, gamma, NULL);
         }
