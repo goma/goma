@@ -1,5 +1,6 @@
 #ifndef GOMA_ENABLE_SACADO
 extern "C" {
+#include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "std.h"
 }

@@ -99,6 +99,7 @@ extern "C" goma_error aprepro_parse_goma_augc(struct AC_Information *ac, double 
       case FILLET_BC:
       case DOUBLE_RAD_BC:
       case DOUBLE_FILLET_BC:
+      case DOUBLE_FILLET_GEOM_BC:
       case FEATURE_ROLLON_BC:
       case ROLL_FLUID_BC:
       case UVARY_BC:

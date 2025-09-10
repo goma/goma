@@ -1560,7 +1560,11 @@ Revised:         Summer 1998, SY Tam (UNM)
     }
 
     if (pde[R_SHEAR_RATE] && pd->gv[R_TURB_OMEGA]) {
+#ifdef GOMA_ENABLE_SACADO
       err = ad_assemble_invariant(theta, delta_t);
+#else
+      err = assemble_invariant(theta, delta_t);
+#endif
 
       GOMA_EH(err, "assemble_invariant");
 #ifdef CHECK_FINITE
@@ -2242,7 +2246,11 @@ Revised:         Summer 1998, SY Tam (UNM)
 
     if ((pde[R_SHELL_SAT_1]) || (pde[R_SHELL_SAT_2]) || (pde[R_SHELL_SAT_3])) {
       if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
         err = ad_assemble_porous_shell_saturation(theta, delta_t, xi, exo);
+#else
+        GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
       } else {
         err = assemble_porous_shell_saturation(theta, delta_t, xi, exo);
       }
@@ -2435,7 +2443,12 @@ Revised:         Summer 1998, SY Tam (UNM)
 #endif
       } else {
         if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
           err = ad_assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
+#else
+          GOMA_EH(GOMA_ERROR,
+                  "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
         } else {
           err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
         }
@@ -2633,7 +2646,12 @@ Revised:         Summer 1998, SY Tam (UNM)
           return -1;
       } else {
         if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
           err = ad_assemble_continuity(time_value, theta, delta_t, &pg_data);
+#else
+          GOMA_EH(GOMA_ERROR,
+                  "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
         } else {
           err = assemble_continuity(time_value, theta, delta_t, &pg_data);
         }
@@ -4297,7 +4315,11 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
 #endif
     } else if (vn->evssModel == SQRT_CONF) {
       if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
         err = ad_assemble_stress_sqrt_conf(theta, delta_t, &pg_data);
+#else
+        GOMA_EH(GOMA_ERROR, "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
       } else {
         err = assemble_stress_sqrt_conf(theta, delta_t, &pg_data);
       }
