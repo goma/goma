@@ -1526,7 +1526,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->Rst_diffusion, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->Rst_func_supg, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->Rst_epsilon, 1, MPI_DOUBLE);
-    ddd_add_member(n, &mp_glob[i]->Rst_radius_model, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->Rst_radius_model, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->Mwt_func, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->SAwt_func, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->viscosity, 1, MPI_DOUBLE);
