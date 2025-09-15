@@ -2095,7 +2095,7 @@ int assemble_ls_momentum_source(void) {
   int eqn;
   int status = 0;
   struct Basis_Functions *bfm;
-  double (*grad_phi_i_e_a)[DIM] = NULL;
+  double(*grad_phi_i_e_a)[DIM] = NULL;
 
   double det_J;
   double h3; /* Volume element (scale factors). */
@@ -12800,7 +12800,9 @@ int assemble_poynting(double time, /* present time value */
 
   dbl det_J;
 
-  dbl d_det_J_dmeshbj; /* for specified (b,j) mesh dof */
+  dbl d_det_J_dmeshbj;        /* for specified (b,j) mesh dof */
+  dbl dgrad_phi_i_dmesh[DIM]; /* ditto.  */
+
   dbl wt;
 
   const double *hsquared = pg_data->hsquared;
@@ -12819,6 +12821,8 @@ int assemble_poynting(double time, /* present time value */
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
   struct Species_Conservation_Terms s_terms;
   double d_drop_source[MAX_CONC];
+  int DROP_EVAP_RADIUS = TRUE;
+  double epsilon = 1.0e-12;
   /*
    *    Radiative transfer equation variables - connect to input file someday
    */
@@ -12911,6 +12915,8 @@ int assemble_poynting(double time, /* present time value */
     Beers_Law = 0;
     P = fv->restime;
     diff_const = mp->Rst_diffusion;
+    epsilon = mp->Rst_epsilon;
+    DROP_EVAP_RADIUS = (int)mp->Rst_radius_model;
     for (i = 0; i < dim; i++) {
       v_grad[i] = fv->grad_restime[i];
     }
@@ -12944,20 +12950,24 @@ int assemble_poynting(double time, /* present time value */
             init_radius = mp->u_species_source[w][1];
             num_density = mp->u_species_source[w][2];
             P = MAX(DBL_SMALL, fv->restime);
-/**  Droplet radius or volume formulation **/
-#if 1
-            denom = MAX(DBL_SMALL, num_density * 4 * M_PIE * CUBE(init_radius) * SQUARE(P));
-#else
-            denom = MAX(DBL_SMALL, num_density * (4. / 3.) * M_PIE * CUBE(init_radius));
-#endif
+            P = MIN(1. / DBL_SEMI_SMALL, fv->restime);
+            /**  Droplet radius or volume formulation **/
+            if (DROP_EVAP_RADIUS) {
+              denom = MAX(DBL_SMALL,
+                          num_density * 4 * M_PIE * (CUBE(init_radius) + epsilon) * SQUARE(P));
+            } else {
+              denom =
+                  MAX(DBL_SMALL, num_density * (4. / 3.) * M_PIE * (CUBE(init_radius) + epsilon));
+            }
+            time_source -= mp->molar_volume[w] * s_terms.MassSource[w] / denom;
+if(isnan(time_source)) fprintf(stderr,"src nan %g %g %g\n",time_source, s_terms.MassSource[w], denom);
+            if (P > DBL_SMALL && P < 1. / DBL_SEMI_SMALL) {
+              /*  Deriv. of time_source wrt restime */
+              d_time_source += mp->molar_volume[w] * s_terms.MassSource[w] / denom * 2. / P;
+            }
+            /*  Deriv. of time_source wrt MassSource term */
+            d_drop_source[w] = mp->Rst_func * mp->molar_volume[w] / denom;
           }
-          time_source -= mp->molar_volume[w] * s_terms.MassSource[w] / denom;
-#if 1
-          if (P > DBL_SMALL) {
-            d_time_source += mp->molar_volume[w] * s_terms.MassSource[w] / denom * 2. / P;
-          }
-#endif
-          d_drop_source[w] = mp->Rst_func * mp->molar_volume[w] / denom;
         }
         time_source *= mp->Rst_func;
         d_time_source *= mp->Rst_func;
@@ -12989,7 +12999,7 @@ int assemble_poynting(double time, /* present time value */
           continue;
       }
       phi_i = bf[eqn]->phi[i];
-      wt_func = (1. - mp->Rst_func_supg) * phi_i;
+      wt_func = phi_i;
       /* add Petrov-Galerkin terms as necessary */
       if (petrov) {
         for (p = 0; p < dim; p++) {
@@ -12999,28 +13009,32 @@ int assemble_poynting(double time, /* present time value */
 
       advection = 0.;
       if ((pd->e[pg->imtrx][eqn] & T_ADVECTION) && !Beers_Law) {
-        source = -time_source;
         for (p = 0; p < dim; p++) {
-          grad_phi_i[p] = bf[var]->grad_phi[i][p];
           advection += wt_func * vconv[p] * v_grad[p];
-          advection += diff_const * grad_phi_i[p] * v_grad[p];
         }
-        advection += wt_func * source;
-
-        advection *= det_J * wt;
-        advection *= h3;
-        advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+        advection *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
       }
+
       diffusion = 0.;
-      if ((pd->e[pg->imtrx][eqn] & T_DIFFUSION) && Beers_Law) {
-
-        diffusion += phi_i * (mucos * grad_P + Psign * alpha * P);
-        diffusion *= det_J * wt;
-        diffusion *= h3;
-        diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+      if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+        if (Beers_Law) {
+          diffusion += phi_i * (mucos * grad_P + Psign * alpha * P);
+        } else {
+          for (p = 0; p < VIM; p++) {
+            grad_phi_i[p] = bf[var]->grad_phi[i][p];
+            diffusion += diff_const * hsquared[p] * grad_phi_i[p] * v_grad[p];
+          }
+        }
+        diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
       }
 
-      lec->R[LEC_R_INDEX(peqn, i)] += diffusion + advection;
+      source = 0.;
+      if ((pd->e[pg->imtrx][eqn] & T_SOURCE) && !Beers_Law) {
+        source = -phi_i * time_source;
+      }
+      source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+      lec->R[LEC_R_INDEX(peqn, i)] += diffusion + advection + source;
     }
   }
 
@@ -13041,10 +13055,10 @@ int assemble_poynting(double time, /* present time value */
           continue;
       }
       phi_i = bf[eqn]->phi[i];
-      wt_func = (1. - mp->Rst_func_supg) * phi_i;
+      wt_func = phi_i;
       if (petrov) {
         for (p = 0; p < dim; p++) {
-          wt_func += h_elem_inv * vconv[p] * bf[eqn]->grad_phi[i][p];
+          wt_func += mp->Rst_func_supg * h_elem_inv * vconv[p] * bf[eqn]->grad_phi[i][p];
         }
       }
 
@@ -13073,31 +13087,37 @@ int assemble_poynting(double time, /* present time value */
           if ((pd->e[pg->imtrx][eqn] & T_ADVECTION) && !Beers_Law) {
             for (p = 0; p < dim; p++) {
               advection += wt_func * vconv[p] * grad_phi_j[p];
-              advection += diff_const * grad_phi_i[p] * grad_phi_j[p];
             }
-            if (explicit_deriv) {
-              for (w = 0; w < pd->Num_Species_Eqn; w++) {
-                advection += wt_func * d_drop_source[w] * s_terms.d_MassSource_drst[w][j];
-              }
-              advection -= wt_func * d_time_source * phi_j;
-            }
-
-            advection *= det_J * wt;
-            advection *= h3;
-            advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+            advection *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
           }
           diffusion = 0.;
-          if ((pd->e[pg->imtrx][eqn] & T_DIFFUSION) && Beers_Law) {
-            for (p = 0; p < VIM; p++) {
-              diffusion += grad_phi_j[p] * svect[p];
+          if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+            if (Beers_Law) {
+              for (p = 0; p < VIM; p++) {
+                diffusion += grad_phi_j[p] * svect[p];
+              }
+              diffusion *= phi_i * mucos;
+              diffusion += phi_i * Psign * alpha * phi_j;
+            } else {
+              for (p = 0; p < dim; p++) {
+                diffusion += diff_const * hsquared[p] * grad_phi_i[p] * grad_phi_j[p];
+              }
             }
-            diffusion *= phi_i * mucos;
-            diffusion += phi_i * Psign * alpha * phi_j;
             diffusion *= h3 * det_J * wt;
             diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
           }
 
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion + advection;
+          source = 0.;
+          if ((pd->e[pg->imtrx][eqn] & T_SOURCE) && !Beers_Law) {
+            if (explicit_deriv) {
+              for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                source -= phi_i * d_drop_source[w] * s_terms.d_MassSource_drst[w][j];
+              }
+            }
+          }
+          source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion + advection + source;
         }
       }
       /*
@@ -13114,28 +13134,23 @@ int assemble_poynting(double time, /* present time value */
           }
 
           advection = diffusion = 0;
-          if ((pd->e[pg->imtrx][eqn] & T_ADVECTION) && !Beers_Law) {
-            /*	             advection += (diff_const/fv->T)*grad_phi_i[p]*v_grad[p];  */
-            if (explicit_deriv) {
-              for (w = 0; w < pd->Num_Species_Eqn; w++) {
-                advection += wt_func * d_drop_source[w] * s_terms.d_MassSource_dT[w][j];
-              }
-            } else {
-              advection += -wt_func * d_time_source * phi_j;
-            }
-
-            advection *= det_J * wt;
-            advection *= h3;
-            advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-          }
           if ((pd->e[pg->imtrx][eqn] & T_DIFFUSION) && Beers_Law) {
             diffusion = phi_i * d_alpha->T[j] * P;
-            diffusion *= det_J * wt;
-            diffusion *= h3;
+            diffusion *= det_J * wt * h3;
             diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
           }
 
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion + advection;
+          source = 0.;
+          if ((pd->e[pg->imtrx][eqn] & T_SOURCE) && !Beers_Law) {
+            if (explicit_deriv) {
+              for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                source -= phi_i * d_drop_source[w] * s_terms.d_MassSource_dT[w][j];
+              }
+            }
+          }
+          source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion + advection + source;
         }
       }
 
@@ -13153,20 +13168,6 @@ int assemble_poynting(double time, /* present time value */
           }
 
           advection = diffusion = 0;
-          if ((pd->e[pg->imtrx][eqn] & T_ADVECTION) && !Beers_Law) {
-            if (explicit_deriv) {
-              advection = 0;
-              for (w = 0; w < pd->Num_Species_Eqn; w++) {
-                advection += wt_func * d_drop_source[w] * s_terms.d_MassSource_dP[w][j];
-              }
-            } else {
-              advection = -wt_func * d_time_source * phi_j;
-            }
-
-            advection *= det_J * wt;
-            advection *= h3;
-            advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-          }
           if ((pd->e[pg->imtrx][eqn] & T_DIFFUSION) && Beers_Law) {
             diffusion = phi_i * d_alpha->T[j] * P;
             diffusion *= det_J * wt;
@@ -13174,7 +13175,19 @@ int assemble_poynting(double time, /* present time value */
             diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
           }
 
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion + advection;
+          source = 0;
+          if ((pd->e[pg->imtrx][eqn] & T_SOURCE) && !Beers_Law) {
+            if (explicit_deriv) {
+              source = 0;
+              for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                source -= phi_i * d_drop_source[w] * s_terms.d_MassSource_dP[w][j];
+              }
+            } else {
+              source = -phi_i * d_time_source * phi_j;
+            }
+            source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+          }
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion + advection + source;
         }
       }
       /*
@@ -13190,6 +13203,9 @@ int assemble_poynting(double time, /* present time value */
             dh3dmesh_bj = fv->dh3dq[b] * bf[var]->phi[j];
 
             d_det_J_dmeshbj = bf[eqn]->d_det_J_dm[b][j];
+            for (p = 0; p < dim; p++) {
+              dgrad_phi_i_dmesh[p] = bf[var]->d_grad_phi_dmesh[i][p][b][j];
+            }
 
             advection = diffusion = 0;
 
@@ -13210,27 +13226,46 @@ int assemble_poynting(double time, /* present time value */
              *	diff_c = Int(...grad_phi_i.q h3 d(|Jv|)/dmesh)
              *	diff_d = Int(...grad_phi_i.q dh3/dmesh |Jv|  )
              */
-            if ((pd->e[pg->imtrx][eqn] & T_DIFFUSION) && Beers_Law) {
-              diff_b = 0.;
-              for (p = 0; p < VIM; p++) {
-                diff_b += svect[p] * fv->d_grad_poynt_dmesh[light_eqn][p][b][j];
+            if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+              if (Beers_Law) {
+                diff_b = 0.;
+                for (p = 0; p < VIM; p++) {
+                  diff_b += svect[p] * fv->d_grad_poynt_dmesh[light_eqn][p][b][j];
+                }
+                diff_b *= mucos;
+                diff_b += Psign * d_alpha->X[b][j] * P;
+                diff_b *= phi_i * det_J * h3 * wt;
+
+                diff_c = phi_i * (mucos * grad_P + Psign * alpha * P);
+                diff_c *= d_det_J_dmeshbj * h3 * wt;
+
+                diff_d = phi_i * (mucos * grad_P + Psign * alpha * P);
+                diff_d *= det_J * dh3dmesh_bj * wt;
+
+                diffusion = diff_b + diff_c + diff_d;
+              } else {
+                diff_b = 0.;
+                for (p = 0; p < VIM; p++) {
+                  grad_phi_i[p] = bf[var]->grad_phi[i][p];
+                  diff_b += diff_const * hsquared[p] * dgrad_phi_i_dmesh[p] * v_grad[p];
+                  diff_b +=
+                      diff_const * hsquared[p] * grad_phi_i[p] * fv->d_grad_restime_dmesh[p][b][j];
+                }
+                diff_b *= wt * det_J * h3;
+                diff_c = 0.;
+                for (p = 0; p < VIM; p++) {
+                  grad_phi_i[p] = bf[var]->grad_phi[i][p];
+                  diff_c += diff_const * hsquared[p] * grad_phi_i[p] * v_grad[p];
+                }
+                diff_c *= wt * (d_det_J_dmeshbj * h3 + det_J * dh3dmesh_bj);
+                diffusion = diff_b + diff_c;
               }
-              diff_b *= mucos;
-              diff_b += Psign * d_alpha->X[b][j] * P;
-              diff_b *= phi_i * det_J * h3 * wt;
-
-              diff_c = phi_i * (mucos * grad_P + Psign * alpha * P);
-              diff_c *= d_det_J_dmeshbj * h3 * wt;
-
-              diff_d = phi_i * (mucos * grad_P + Psign * alpha * P);
-              diff_d *= det_J * dh3dmesh_bj * wt;
-
-              diffusion = diff_b + diff_c + diff_d;
-
               diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
             }
 
-            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion + advection;
+            source = 0;
+
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion + advection + source;
           }
         }
       }
@@ -13253,16 +13288,16 @@ int assemble_poynting(double time, /* present time value */
 
               lec->J[LEC_J_INDEX(peqn, MAX_PROB_VAR + w, i, j)] += diffusion;
             }
-            if ((pd->e[pg->imtrx][eqn] & T_DIFFUSION) && !Beers_Law) {
-              advection = 0;
+
+            source = 0;
+            if ((pd->e[pg->imtrx][eqn] & T_SOURCE) && !Beers_Law) {
+              source = 0;
               for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
-                advection += wt_func * d_drop_source[w] * s_terms.d_MassSource_dc[w][w1][j];
+                source += -phi_i * d_drop_source[w] * s_terms.d_MassSource_dc[w][w1][j];
               }
 
-              advection *= det_J * wt;
-              advection *= h3;
-              advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-              lec->J[LEC_J_INDEX(peqn, MAX_PROB_VAR + w, i, j)] += advection;
+              source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+              lec->J[LEC_J_INDEX(peqn, MAX_PROB_VAR + w, i, j)] += source;
             }
           }
         }
@@ -13284,9 +13319,7 @@ int assemble_poynting(double time, /* present time value */
                 advection += wt_func * phi_j * v_grad[p];
               }
 
-              advection *= det_J * wt;
-              advection *= h3;
-              advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+              advection *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
               d_wt_func = h_elem_inv * d_vconv->v[b][b][j] * grad_phi_i[b] +
                           h_elem_inv_deriv * vconv[b] * grad_phi_i[b];
@@ -13296,8 +13329,7 @@ int assemble_poynting(double time, /* present time value */
                 advection_b += vconv[p] * v_grad[p];
               }
 
-              advection_b *= d_wt_func * det_J * wt;
-              advection_b *= h3;
+              advection_b *= d_wt_func * det_J * wt * h3;
               advection_b *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
               lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection + advection_b;
@@ -13313,7 +13345,11 @@ int assemble_poynting(double time, /* present time value */
 
 void restime_nobc_surf(
 
-    double func[MAX_PDIM], double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE])
+    double func[MAX_PDIM],
+    double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+    const double time,         /* current time */
+    const double hsquared[DIM] /* Element scales */
+    )
 /******************************************************************************
  *
  *  Function which calculates the surface integral for the "no bc" restime boundary
@@ -13347,7 +13383,7 @@ void restime_nobc_surf(
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         for (p = 0; p < dim; p++) {
-          d_func[0][var][j] += fv->snormal[p] * diff_const * bf[var]->grad_phi[j][p];
+          d_func[0][var][j] -= fv->snormal[p] * diff_const * hsquared[p] * bf[var]->grad_phi[j][p];
           /*		  d_func[0][var][j] +=
            * fv->snormal[p]*diff_const*(-1./fv->restime)*v_grad[p];  */
         }
@@ -13359,8 +13395,9 @@ void restime_nobc_surf(
         var = MESH_DISPLACEMENT1 + b;
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           for (p = 0; p < dim; p++) {
-            d_func[0][var][j] += diff_const * (fv->snormal[p] * fv->d_grad_restime_dmesh[p][b][j] +
-                                               v_grad[p] * fv->dsnormal_dx[p][b][j]);
+            d_func[0][var][j] -= diff_const * hsquared[p] *
+                                 (fv->snormal[p] * fv->d_grad_restime_dmesh[p][b][j] +
+                                  v_grad[p] * fv->dsnormal_dx[p][b][j]);
           }
         }
       }
@@ -13369,7 +13406,7 @@ void restime_nobc_surf(
 
   /* Calculate the residual contribution	     			     */
   for (p = 0; p < dim; p++) {
-    *func += fv->snormal[p] * diff_const * v_grad[p];
+    *func -= fv->snormal[p] * diff_const * hsquared[p] * v_grad[p];
   }
 
   return;
