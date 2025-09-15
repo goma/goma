@@ -10475,7 +10475,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         /* moles of non-volatile per mm^3 of droplet volume */
         conc_nv = (1. - solvent_volfrac) / mp->molar_volume[pd->Num_Species_Eqn];
         sum_C0 += conc_nv;
-        pres_conv = mp->u_vapor_pressure[w][0];
+        pres = pres_conv = mp->u_vapor_pressure[w][0];
         if (DROP_EVAP_RADIUS) {
           if (pd->gv[RESTIME]) {
             if (fv->restime > DBL_SMALL) {

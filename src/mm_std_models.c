@@ -2967,9 +2967,9 @@ int Diffusivity(void)
                                   &mp->d_diffusivity[w][FILL]);
       break;
     case CHAPMAN_GAS:
-      if (pd->gv[TEMPERATURE]) {
-        /* The assumption here would be that we are using an absolute temperature 
+      /* The assumption here would be that we are using an absolute temperature
            scale, so let's make sure it's positive  */
+      if (pd->gv[TEMPERATURE]) {
         T = MAX(fv->T, 1.);
       } else {
         T = upd->Process_Temperature;
