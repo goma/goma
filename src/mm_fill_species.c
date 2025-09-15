@@ -10596,15 +10596,6 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
 
         tmp = gas_conc * 4 * M_PIE * radius * mp->diffusivity[w] * num_density;
         s = tmp * log((1 - y_mole[w]) / (1 - activity[w])) * rad_ratio;
-/*        if (isnan(s)) {
-          fprintf(stderr, "drop_evap nan %g %g %g %g %g %g %g\n", s, tmp, y_mole[w], activity[w],
-                  rad_ratio, C[w], gas_conc);
-          fprintf(stderr, "I nan %g %g %g %g\n", gas_conc, radius, mp->diffusivity[w], num_density);
-          fprintf(stderr, "diffusivity %g %g %g %g %g %g\n", mp->diffusivity[w],
-                  mp->molecular_weight[w], mp->u_diffusivity[w][0], mp->u_diffusivity[w][1], fv->P,
-                  fv->T);
-          fprintf(stderr, "II nan %g %g %g %g\n", fv->P, pres_conv, R_gas, temp);
-        }  */
         for (j = 0; j < pd->Num_Species_Eqn; j++) {
           dsdC[j] = -dy_dC[w][j] / (1. - y_mole[w]) * tmp * rad_ratio;
         }

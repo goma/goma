@@ -2095,7 +2095,7 @@ int assemble_ls_momentum_source(void) {
   int eqn;
   int status = 0;
   struct Basis_Functions *bfm;
-  double(*grad_phi_i_e_a)[DIM] = NULL;
+  double (*grad_phi_i_e_a)[DIM] = NULL;
 
   double det_J;
   double h3; /* Volume element (scale factors). */
@@ -12960,7 +12960,6 @@ int assemble_poynting(double time, /* present time value */
                   MAX(DBL_SMALL, num_density * (4. / 3.) * M_PIE * (CUBE(init_radius) + epsilon));
             }
             time_source -= mp->molar_volume[w] * s_terms.MassSource[w] / denom;
-if(isnan(time_source)) fprintf(stderr,"src nan %g %g %g\n",time_source, s_terms.MassSource[w], denom);
             if (P > DBL_SMALL && P < 1. / DBL_SEMI_SMALL) {
               /*  Deriv. of time_source wrt restime */
               d_time_source += mp->molar_volume[w] * s_terms.MassSource[w] / denom * 2. / P;
