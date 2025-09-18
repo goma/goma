@@ -994,6 +994,14 @@ void update_MT_parameter(double lambda, /* Parameter value */
     mp_glob[mn]->Rst_diffusion = lambda;
     break;
 
+  case TAGC_RST_FUNC_2:
+    mp_glob[mn]->Rst_func_supg = lambda;
+    break;
+
+  case TAGC_RST_FUNC_3:
+    mp_glob[mn]->Rst_epsilon = lambda;
+    break;
+
   case TAGC_HEAT_SOURCE_0:
     mp_glob[mn]->u_heat_source[0] = lambda;
     break;
@@ -1948,6 +1956,14 @@ void retrieve_MT_parameter(double *lambda, /* Parameter value */
 
   case TAGC_RST_FUNC_1:
     *lambda = mp_glob[mn]->Rst_diffusion;
+    break;
+
+  case TAGC_RST_FUNC_2:
+    *lambda = mp_glob[mn]->Rst_func_supg;
+    break;
+
+  case TAGC_RST_FUNC_3:
+    *lambda = mp_glob[mn]->Rst_epsilon;
     break;
 
   case TAGC_HEAT_SOURCE_0:
