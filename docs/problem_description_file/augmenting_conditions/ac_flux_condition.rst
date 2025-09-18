@@ -92,18 +92,18 @@ FC
     See below for a detailed description of each of these 
     constraints.
 
-[species_id]
-    This is an integer parameter that identifies the species 
-    component that is evaluated in the SPECIES_FLUX 
-    constraint. When other flux constraints are used this 
-    parameter should not appear.
-
 <side set>
     An integer parameter that identifies the side set over 
     which the flux condition will be integrated. Those 
     elements that belong to <mat_id> and have faces 
     included in <side set> will be evaluated in the 
     integration.
+
+[species_id]
+    This is an integer parameter that identifies the species 
+    component that is evaluated in the SPECIES_FLUX 
+    constraint. When other flux constraints are used this 
+    parameter should not appear.
 
 <flux_value>
     A float parameter that specifies the value that is 
