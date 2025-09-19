@@ -15276,6 +15276,9 @@ void qrad_surf(double func[DIM],
     }
   }
 
+  if (densityJac != NULL) {
+    propertyJac_destroy(&densityJac);
+  }
   return;
 } /* END of routine qrad_surf */
 

@@ -1130,6 +1130,20 @@ int assemble_energy(
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += source;
         }
       }
+
+      var = RESTIME;
+      if (pd->v[pg->imtrx][var]) {
+        pvar = upd->vp[pg->imtrx][var];
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          source = 0.;
+          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+            source += phi_i * d_h->rst[j] * det_J * wt;
+            source *= h3;
+            source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+          }
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += source;
+        }
+      }
     }
   }
 

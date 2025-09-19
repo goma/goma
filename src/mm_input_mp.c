@@ -3951,20 +3951,31 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->Rst_func = 1.;
       mat_ptr->Rst_func_supg = 0.;
     }
-    if (fscanf(imp, "%lg %lg %lg", &mat_ptr->Rst_func, &mat_ptr->Rst_diffusion,
-               &mat_ptr->Rst_func_supg) != 3) {
+    if (fscanf(imp, "%lg", &mat_ptr->Rst_func) != 1) {
       mat_ptr->Rst_func = 1.;
+    }
+    if (fscanf(imp, "%lg", &mat_ptr->Rst_diffusion) != 1) {
       mat_ptr->Rst_diffusion = 1. / LITTLE_PENALTY;
+    }
+    if (fscanf(imp, "%lg", &mat_ptr->Rst_func_supg) != 1) {
       mat_ptr->Rst_func_supg = 0.;
     }
+    if (fscanf(imp, "%lg", &mat_ptr->Rst_epsilon) != 1) {
+      mat_ptr->Rst_epsilon = 0.;
+    }
+    if (fscanf(imp, "%d", &mat_ptr->Rst_radius_model) != 1) {
+      mat_ptr->Rst_radius_model = 0;
+    }
 
-    SPF(endofstring(es), " %.4g %.4g %.4g", mat_ptr->Rst_func, mat_ptr->Rst_diffusion,
-        mat_ptr->Rst_func_supg);
+    SPF(endofstring(es), " %.4g %.4g %.4g %.4g %d", mat_ptr->Rst_func, mat_ptr->Rst_diffusion,
+        mat_ptr->Rst_func_supg, mat_ptr->Rst_epsilon, mat_ptr->Rst_radius_model);
   } else {
     mat_ptr->Rst_funcModel = CONSTANT;
     mat_ptr->Rst_func = 1.;
     mat_ptr->Rst_diffusion = 1. / LITTLE_PENALTY;
     mat_ptr->Rst_func_supg = 0.;
+    mat_ptr->Rst_epsilon = 0.;
+    mat_ptr->Rst_radius_model = 0;
     SPF(es, "\t(%s = %s)", search_string, "CONSTANT");
   }
   ECHO(es, echo_file);

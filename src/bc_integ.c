@@ -1536,11 +1536,11 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           break;
 
         case RESTIME_GRADSIC_BC:
-          func[0] = -bc->BC_Data_Float[0];
+          func[0] = bc->BC_Data_Float[0];
           // to add in normal gradient term
           FALLTHROUGH;
         case RESTIME_NOBC_BC:
-          restime_nobc_surf(func, d_func);
+          restime_nobc_surf(func, d_func, time_intermediate, pg_data->hsquared);
           break;
 
         case T_CONTACT_RESIS_BC:

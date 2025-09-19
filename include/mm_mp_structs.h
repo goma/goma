@@ -173,11 +173,16 @@ struct Material_Properties {
   int Ewt_funcModel;
   int Energy_Div_Term;
   dbl Ewt_func;
+  int thermal_cond_external_field;
+
+  /*  Residence time field variables for the DROP_EVAP model
+       (i.e., following droplet evaporation for aerosol jet printing*/
   int Rst_funcModel;
   dbl Rst_func;
   dbl Rst_diffusion;
   dbl Rst_func_supg;
-  int thermal_cond_external_field;
+  dbl Rst_epsilon; /* droplet radius regularization*/
+  int Rst_radius_model;
 
   dbl electrical_conductivity; /* Yeah, you could make this a tensor... */
   dbl d_electrical_conductivity[MAX_VARIABLE_TYPES + MAX_CONC];

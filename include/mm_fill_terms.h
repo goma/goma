@@ -113,7 +113,10 @@ EXTERN int assemble_poynting /* mm_fill_terms.c                           */
      const int);
 
 EXTERN void restime_nobc_surf /* mm_fill_terms.c                           */
-    (double func[MAX_PDIM], double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]);
+    (double func[MAX_PDIM],
+     double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+     const double,                /* current time */
+     const double hsquared[DIM]); /* Element scales */
 
 EXTERN int assemble_acoustic_reynolds_stress /* mm_fill_terms.c */
     (double,                                 /* time */
