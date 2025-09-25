@@ -39,6 +39,7 @@
 
 #define NLS_FULL_STEP 0
 #define NLS_BACKTRACK 1
+#define NLS_BACKTRACK_MESH 2
 /*
  * Kinds of solvers available...
  */

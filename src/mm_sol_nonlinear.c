@@ -16,6 +16,7 @@
  * FLUX AND/OR DATA PARAMETER AND/OR CONTINUATION PARAMETER
  */
 
+#include "rf_vars_const.h"
 #ifdef GOMA_ENABLE_AZTEC
 #include <az_aztec_defs.h>
 #endif
@@ -2325,6 +2326,240 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       free(xdot_save);
 
 #endif
+    } else if (Newton_Line_Search_Type == NLS_BACKTRACK_MESH) {
+#ifndef GOMA_ENABLE_AZTEC
+      GOMA_EH(GOMA_ERROR, "Newton Line Search with Backtracking requires Aztec");
+#else
+
+      int *variable_types = calloc(numProcUnknowns, sizeof(int));
+      for (int i = 0; i < NumUnknowns[pg->imtrx]; i++) {
+        int guess = 0;
+        int idof = 0;
+        VARIABLE_DESCRIPTION_STRUCT *vd =
+            Index_Solution_Inv(i, &guess, NULL, NULL, &idof, pg->imtrx);
+        if (vd == NULL) {
+          GOMA_EH(GOMA_ERROR, "problem from Index_Solution_Inv");
+        }
+        variable_types[i] = vd->Variable_Type;
+      }
+      dbl damp = 1.0;
+      dbl reduction_factor = 0.5;
+      dbl min_damp = Line_Search_Minimum_Damping;
+      dbl *w = alloc_dbl_1(numProcUnknowns, 0.0);
+      dbl *R = alloc_dbl_1(numProcUnknowns, 0.0);
+      dbl *x_save = alloc_dbl_1(numProcUnknowns, 0.0);
+      dcopy1(numProcUnknowns, x, x_save);
+      dbl *xdot_save = alloc_dbl_1(numProcUnknowns, 0.0);
+      dcopy1(numProcUnknowns, xdot, xdot_save);
+
+      double bt_st = MPI_Wtime();
+
+      int save_jacobian = af->Assemble_Jacobian;
+      int save_residual = af->Assemble_Residual;
+      af->Assemble_Jacobian = FALSE;
+      af->Assemble_Residual = TRUE;
+      dbl r_check = L2_norm(resid_vector, NumUnknowns[pg->imtrx]);
+      dbl g_check_mesh = L2_norm_mesh(resid_vector, variable_types, NumUnknowns[pg->imtrx]);
+      g_check_mesh = MAX(g_check_mesh, r_check);
+      dbl mesh_corrections[10] = {1.0, 0.5, 0.2, 0.1};
+      dbl mesh_correction_tolerances[10] = {1.0e-5, 1.0e-4, 1e-3, 1.0e100};
+      int n_mesh_corrections = 4;
+
+      dbl mesh_damp = 1.0;
+      for (int mi = 0; mi < n_mesh_corrections; mi++) {
+        if (g_check_mesh < mesh_correction_tolerances[mi]) {
+          mesh_damp = mesh_corrections[mi];
+          break;
+        }
+      }
+      // mesh_damp = MIN(mesh_damp, damp);
+      for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
+        switch (variable_types[i]) {
+        case MESH_DISPLACEMENT1:
+        case MESH_DISPLACEMENT2:
+        case MESH_DISPLACEMENT3:
+          x[i] -= mesh_damp * delta_x[i];
+          break;
+        default:
+          x[i] -= damp * delta_x[i];
+          break;
+        }
+      }
+
+      exchange_dof(cx, dpi, x, pg->imtrx);
+      if (pd->TimeIntegration != STEADY) {
+        for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
+          switch (variable_types[i]) {
+          case MESH_DISPLACEMENT1:
+          case MESH_DISPLACEMENT2:
+          case MESH_DISPLACEMENT3:
+            xdot[i] -= mesh_damp * delta_x[i] * (1.0 + 2 * theta) / delta_t;
+            break;
+          default:
+            xdot[i] -= damp * delta_x[i] * (1.0 + 2 * theta) / delta_t;
+            break;
+          }
+        }
+        exchange_dof(cx, dpi, xdot, pg->imtrx);
+      }
+
+      exchange_dof(cx, dpi, R, pg->imtrx);
+      err = matrix_fill_full(ams, x, R, x_old, x_older, xdot, xdot_old, x_update, &delta_t, &theta,
+                             First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo, dpi,
+                             &num_total_nodes, &h_elem_avg, &U_norm, NULL);
+
+      vector_scaling(NumUnknowns[pg->imtrx], R, scale);
+      dbl g_check = L2_norm(R, NumUnknowns[pg->imtrx]);
+      dbl best_damp = damp;
+      dbl best_norm = g_check;
+      r_check = 0.5 * (r_check * r_check);
+      dbl slope = 0;
+      if (strcmp(Matrix_Format, "msr") == 0) {
+        AZ_MATRIX *Amat =
+            AZ_matrix_create(ams->data_org[AZ_N_internal] + ams->data_org[AZ_N_border]);
+        AZ_set_MSR(Amat, ams->bindx, ams->val, ams->data_org, 0, NULL, AZ_LOCAL);
+        AZ_MSR_matvec_mult(delta_x, w, Amat, ams->proc_config);
+      } else if (strcmp(Matrix_Format, "tpetra") == 0) {
+        GomaSparseMatrix matrix = (GomaSparseMatrix)ams->GomaMatrixData;
+        matrix->matrix_vector_mult(matrix, delta_x, w);
+      } else {
+        GOMA_EH(GOMA_ERROR, "Newton Line Search with Backtracking requires MSR matrix format");
+      }
+      for (int i = 0; i < numProcUnknowns; i++) {
+        slope += w[i] * R[i];
+      }
+      MPI_Allreduce(MPI_IN_PLACE, &slope, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      if (slope > 0) {
+        slope = -slope;
+      } else if (slope == 0) {
+        slope = -1;
+      }
+      int skip = FALSE;
+      // Skip if converged
+      if (best_norm < Epsilon[pg->imtrx][0]) {
+        skip = TRUE;
+      }
+      double last = bt_st;
+      double curr = MPI_Wtime();
+      P0PRINTF("\nNewton Line Search: lambda=%f lambda_mesh=%f L2=%e L2_mesh=%e %g\n", damp, mesh_damp, best_norm, g_check_mesh, curr - last);
+      dbl mesh_damp_best = mesh_damp;
+
+      while (!skip) {
+        damp *= reduction_factor;
+        if (damp < min_damp) {
+          break;
+        }
+        dbl mesh_damp = 1.0;
+      g_check_mesh = MAX(g_check_mesh, g_check);
+        for (int mi = 0; mi < n_mesh_corrections; mi++) {
+          if (g_check_mesh < mesh_correction_tolerances[mi]) {
+            mesh_damp = mesh_corrections[mi];
+            break;
+          }
+        }
+        // mesh_damp = MIN(mesh_damp, damp);
+        init_vec_value(R, 0.0, numProcUnknowns);
+        for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
+          switch (variable_types[i]) {
+          case MESH_DISPLACEMENT1:
+          case MESH_DISPLACEMENT2:
+          case MESH_DISPLACEMENT3:
+          x[i] = x_save[i] - mesh_damp * delta_x[i];
+          break;
+          default:
+          x[i] = x_save[i] - damp * delta_x[i];
+          break;
+          }
+        }
+        exchange_dof(cx, dpi, x, pg->imtrx);
+        if (pd->TimeIntegration != STEADY) {
+          for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
+          switch (variable_types[i]) {
+          case MESH_DISPLACEMENT1:
+          case MESH_DISPLACEMENT2:
+          case MESH_DISPLACEMENT3:
+            xdot[i] = xdot_save[i] - mesh_damp * delta_x[i] * (1.0 + 2 * theta) / delta_t;
+          break;
+          default:
+            xdot[i] = xdot_save[i] - damp * delta_x[i] * (1.0 + 2 * theta) / delta_t;
+            break;
+          }
+          }
+          exchange_dof(cx, dpi, xdot, pg->imtrx);
+        }
+        err = matrix_fill_full(ams, x, R, x_old, x_older, xdot, xdot_old, x_update, &delta_t,
+                               &theta, First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo, dpi,
+                               &num_total_nodes, &h_elem_avg, &U_norm, NULL);
+        exchange_dof(cx, dpi, R, pg->imtrx);
+        vector_scaling(NumUnknowns[pg->imtrx], R, scale);
+
+        g_check = L2_norm(R, NumUnknowns[pg->imtrx]);
+        g_check_mesh = L2_norm_mesh(R, variable_types, NumUnknowns[pg->imtrx]);
+        last = curr;
+        curr = MPI_Wtime();
+        P0PRINTF("Newton Line Search: lambda=%f lambda_mesh=%f L2=%e L2_mesh=%e %g\n", damp, mesh_damp, g_check, g_check_mesh, curr - last);
+        if (isnan(g_check)) {
+          break;
+        }
+
+        if (g_check < best_norm) {
+          best_damp = damp;
+          mesh_damp_best = mesh_damp;
+          best_norm = g_check;
+        }
+        if (best_norm < Epsilon[pg->imtrx][0]) {
+          break;
+        }
+        g_check = 0.5 * (g_check * g_check);
+
+        if (g_check <= r_check + 0.5 * slope * damp) {
+          P0PRINTF("Newton Line Search: STOP reached lambda=%f, %e <= %e\n", damp, g_check,
+                   r_check + 0.5 * slope * damp);
+          break;
+        }
+      }
+
+      curr = MPI_Wtime();
+      P0PRINTF("Newton Line Search: best damping factor: lambda=%f lambda_mesh=%f L2=%e L2_mesh=%e %g\n", best_damp, mesh_damp_best,
+               best_norm, g_check_mesh, curr - bt_st);
+      fflush(stdout);
+      for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
+          switch (variable_types[i]) {
+          case MESH_DISPLACEMENT1:
+          case MESH_DISPLACEMENT2:
+          case MESH_DISPLACEMENT3:
+        x[i] = x_save[i] - mesh_damp_best * delta_x[i];
+        break;
+          default:
+        x[i] = x_save[i] - best_damp * delta_x[i];
+          break;
+          }
+      }
+      exchange_dof(cx, dpi, x, pg->imtrx);
+      if (pd->TimeIntegration != STEADY) {
+        for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
+          switch (variable_types[i]) {
+          case MESH_DISPLACEMENT1:
+          case MESH_DISPLACEMENT2:
+          case MESH_DISPLACEMENT3:
+          xdot[i] = xdot_save[i] - (mesh_damp_best * delta_x[i] * (1.0 + 2 * theta) / delta_t);
+          break;
+          default:
+          xdot[i] = xdot_save[i] - (best_damp * delta_x[i] * (1.0 + 2 * theta) / delta_t);
+          break;
+          }
+        }
+        exchange_dof(cx, dpi, xdot, pg->imtrx);
+      }
+
+      af->Assemble_Jacobian = save_jacobian;
+      af->Assemble_Residual = save_residual;
+      free(w);
+      free(R);
+      free(x_save);
+      free(xdot_save);
+
+#endif
     } else if (Newton_Line_Search_Type == NLS_FULL_STEP) {
       for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
         x[i] -= damp_factor * var_damp[idv[pg->imtrx][i][0]] * delta_x[i];
@@ -2974,6 +3209,32 @@ double L2_norm(double *vector, int nloc) {
   local_value = 0.;
   for (i = 0; i < nloc; i++, vector++) {
     local_value += (*vector) * (*vector);
+  }
+
+#ifdef PARALLEL
+  MPI_Allreduce(&local_value, &global_value, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  local_value = global_value;
+#endif /* PARALLEL */
+
+  return (sqrt(local_value));
+}
+
+double L2_norm_mesh(double *vector, int *variable_types, int nloc) {
+  int i;
+  double local_value;
+#ifdef PARALLEL
+  double global_value;
+#endif /* PARALLEL */
+
+  local_value = 0.;
+  for (i = 0; i < nloc; i++, vector++) {
+    switch (variable_types[i]) {
+    case R_MESH1:
+    case R_MESH2:
+    case R_MESH3:
+      local_value += (*vector) * (*vector);
+      break;
+    }
   }
 
 #ifdef PARALLEL

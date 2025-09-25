@@ -6692,13 +6692,15 @@ void rd_solver_specs(FILE *ifp, char *input) {
       Newton_Line_Search_Type = NLS_FULL_STEP;
     } else if (strcmp("BACKTRACK", ls_type) == 0) {
       Newton_Line_Search_Type = NLS_BACKTRACK;
+    } else if (strcmp("BACKTRACK_MESH", ls_type) == 0) {
+      Newton_Line_Search_Type = NLS_BACKTRACK_MESH;
     } else {
       GOMA_EH(GOMA_ERROR, "Unknown Newton line search type: %s", ls_type);
     }
   }
   ECHO(echo_string, echo_file);
 
-  Line_Search_Minimum_Damping = 0.005;
+  Line_Search_Minimum_Damping = 0.05;
   lsread = look_for_optional_string(ifp, "Line search minimum damping", ls_type, MAX_CHAR_IN_INPUT);
   if (lsread >= 1) {
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Line search minimum damping", ls_type);
