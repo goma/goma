@@ -6738,6 +6738,65 @@ void rd_solver_specs(FILE *ifp, char *input) {
 
   ECHO(echo_string, echo_file);
 
+  iread = look_for_optional(ifp, "Mesh correction damping", input, '=');
+  if (iread == 1) {
+    int num_const = read_constants(ifp, &(upd->mesh_correction_damping), -1);
+    upd->n_mesh_corrections = num_const;
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", "Mesh correction damping");
+    for (i = 0; i < num_const; i++)
+      SPF(endofstring(echo_string), " %.4g", upd->mesh_correction_damping[i]);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->n_mesh_corrections = 0;
+  }
+  iread = look_for_optional(ifp, "Mesh correction tolerance", input, '=');
+  if (iread == 1) {
+    int num_const = read_constants(ifp, &(upd->mesh_correction_tolerances), -1);
+    if (num_const != upd->n_mesh_corrections) {
+      GOMA_EH(
+          GOMA_ERROR,
+          "Number of mesh correction tolerances must match number of Mesh correction tolerance");
+    }
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", "Mesh correction tolerance");
+    for (i = 0; i < num_const; i++)
+      SPF(endofstring(echo_string), " %.4g", upd->mesh_correction_tolerances[i]);
+    ECHO(echo_string, echo_file);
+  }
+
+  if (Newton_Line_Search_Type == NLS_BACKTRACK_MESH && upd->n_mesh_corrections < 1) {
+    GOMA_WH(
+        GOMA_ERROR,
+        "You have selected the BACKTRACK_MESH backtracking line search, but have not specified any "
+        "mesh correction dampings.");
+    upd->n_mesh_corrections = 3;
+    upd->mesh_correction_damping = malloc(upd->n_mesh_corrections * sizeof(double));
+    upd->mesh_correction_tolerances = malloc(upd->n_mesh_corrections * sizeof(double));
+    upd->mesh_correction_damping[0] = 0.5;
+    upd->mesh_correction_damping[1] = 0.2;
+    upd->mesh_correction_damping[2] = 0.1;
+    upd->mesh_correction_tolerances[0] = 1e-5;
+    upd->mesh_correction_tolerances[1] = 1e-3;
+    upd->mesh_correction_tolerances[2] = 1e-1;
+    GOMA_WH(GOMA_ERROR,
+            "Defaulting to %d mesh correction dampings of %g %g %g and tolerances of %g %g %g",
+            upd->n_mesh_corrections, upd->mesh_correction_damping[0],
+            upd->mesh_correction_damping[1], upd->mesh_correction_damping[2],
+            upd->mesh_correction_tolerances[0], upd->mesh_correction_tolerances[1],
+            upd->mesh_correction_tolerances[2]);
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", "Mesh correction damping");
+    for (i = 0; i < upd->n_mesh_corrections; i++)
+      SPF(endofstring(echo_string), " %.4g", upd->mesh_correction_damping[i]);
+    ECHO(echo_string, echo_file);
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", "Mesh correction tolerance");
+    for (i = 0; i < upd->n_mesh_corrections; i++)
+      SPF(endofstring(echo_string), " %.4g", upd->mesh_correction_tolerances[i]);
+    ECHO(echo_string, echo_file);
+  }
+
   /* initialize variable specific damping */
   for (k = 0; k < MAX_VARIABLE_TYPES; k++) {
     var_damp[k] = 1.;

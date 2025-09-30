@@ -284,8 +284,7 @@ static int classic_damp_factor(dbl L2_norm,
                                int *print_damp_factor,
                                int *print_visc_sens,
                                int *include_visc_sens,
-                               dbl *damp_factor
-                               ) {
+                               dbl *damp_factor) {
   if ((damp_factor1 <= 1. && damp_factor1 >= 0.) && (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
       (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
     *print_damp_factor = TRUE;
@@ -388,13 +387,13 @@ static int backtracking_mesh_damp_factor(struct GomaLinearSolverData *ams,
   dbl r_check = L2_norm_in;
   dbl g_check_mesh = L2_norm_mesh(resid_vector, variable_types, NumUnknowns[pg->imtrx]);
   g_check_mesh = MAX(g_check_mesh, r_check);
-  dbl mesh_corrections[10] = {1.0, 0.5, 0.2, 0.1};
-  dbl mesh_correction_tolerances[10] = {1.0e-5, 1.0e-4, 1e-3, 1.0e100};
-  int n_mesh_corrections = 4;
+  dbl *mesh_corrections = upd->mesh_correction_damping;
+  dbl *mesh_correction_tolerances = upd->mesh_correction_tolerances;
+  int n_mesh_corrections = upd->n_mesh_corrections;
 
   dbl mesh_damp = 1.0;
-  for (int mi = 0; mi < n_mesh_corrections; mi++) {
-    if (g_check_mesh < mesh_correction_tolerances[mi]) {
+  for (int mi = n_mesh_corrections - 1; mi >= 0; mi--) {
+    if (g_check_mesh > mesh_correction_tolerances[mi]) {
       mesh_damp = mesh_corrections[mi];
       break;
     }
@@ -450,9 +449,8 @@ static int backtracking_mesh_damp_factor(struct GomaLinearSolverData *ams,
       break;
     }
     dbl mesh_damp = 1.0;
-    g_check_mesh = MAX(g_check_mesh, g_check);
-    for (int mi = 0; mi < n_mesh_corrections; mi++) {
-      if (g_check_mesh < mesh_correction_tolerances[mi]) {
+    for (int mi = n_mesh_corrections - 1; mi >= 0; mi--) {
+      if (g_check_mesh > mesh_correction_tolerances[mi]) {
         mesh_damp = mesh_corrections[mi];
         break;
       }
@@ -723,12 +721,11 @@ static int determine_damp_factor(struct GomaLinearSolverData *ams,
                                  int *include_visc_sens,
                                  dbl *damp_factor,
                                  dbl *mesh_damp_factor) {
-                                  goma_error err;
+  goma_error err;
   switch (Newton_Line_Search_Type) {
   case NLS_FULL_STEP:
-    err =
-        classic_damp_factor(L2_norm, visc_sens_flag, visc_sens_factor, inewton, print_damp_factor,
-                            print_visc_sens, include_visc_sens, damp_factor);
+    err = classic_damp_factor(L2_norm, visc_sens_flag, visc_sens_factor, inewton, print_damp_factor,
+                              print_visc_sens, include_visc_sens, damp_factor);
     *mesh_damp_factor = *damp_factor;
 
     if (err != GOMA_SUCCESS) {
@@ -736,12 +733,12 @@ static int determine_damp_factor(struct GomaLinearSolverData *ams,
     }
     break;
   case NLS_BACKTRACK:
-    err = backtracking_damp_factor(
-        ams, x, resid_vector, x_old, x_older, xdot, xdot_old, x_update, delta_x, scale, ptr_delta_t,
-        ptr_theta, first_elem_side_BC_array, ptr_time_value, exo, dpi, ptr_num_total_nodes,
-        ptr_h_elem_avg, ptr_U_norm, estifmint, numProcUnknowns, cx, inewton, L2_norm,
-        visc_sens_flag, visc_sens_factor, print_damp_factor, print_visc_sens, include_visc_sens,
-        damp_factor);
+    err = backtracking_damp_factor(ams, x, resid_vector, x_old, x_older, xdot, xdot_old, x_update,
+                                   delta_x, scale, ptr_delta_t, ptr_theta, first_elem_side_BC_array,
+                                   ptr_time_value, exo, dpi, ptr_num_total_nodes, ptr_h_elem_avg,
+                                   ptr_U_norm, estifmint, numProcUnknowns, cx, inewton, L2_norm,
+                                   visc_sens_flag, visc_sens_factor, print_damp_factor,
+                                   print_visc_sens, include_visc_sens, damp_factor);
     *mesh_damp_factor = *damp_factor;
     if (err != GOMA_SUCCESS) {
       return err;

@@ -85,9 +85,9 @@ EXTERN double L2_norm /* mm_sol_nonlinear.c */
      int);            /* nloc */
 
 EXTERN double L2_norm_mesh /* mm_sol_nonlinear.c */
-    (double *,        /* vector */
-     int *,          /* variable_types */
-     int);            /* nloc */
+    (double *,             /* vector */
+     int *,                /* variable_types */
+     int);                 /* nloc */
 
 EXTERN double L2_norm_diff /* mm_sol_nonlinear.c */
     (double *,             /* vector 1 */
