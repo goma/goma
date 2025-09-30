@@ -465,7 +465,7 @@ static int backtracking_mesh_damp_factor(struct GomaLinearSolverData *ams,
     update_unknowns_mesh(numProcUnknowns, x_tmp, xdot_tmp, delta_x, variable_types, dpi, cx, theta,
                          delta_t, damp, mesh_damp);
 
-    matrix_fill_full(ams, x, R, x_old, x_older, xdot, xdot_old, x_update, &delta_t, &theta,
+    matrix_fill_full(ams, x_tmp, R, x_old, x_older, xdot_tmp, xdot_old, x_update, &delta_t, &theta,
                      First_Elem_Side_BC_Array[pg->imtrx], ptr_time_value, exo, dpi,
                      ptr_num_total_nodes, ptr_h_elem_avg, ptr_U_norm, NULL);
     exchange_dof(cx, dpi, R, pg->imtrx);
@@ -499,8 +499,7 @@ static int backtracking_mesh_damp_factor(struct GomaLinearSolverData *ams,
     g_check = 0.5 * (g_check * g_check);
 
     if (g_check <= r_check + 0.5 * slope * damp) {
-      P0PRINTF("Newton Line Search: STOP reached lambda=%f, %e <= %e\n", damp, g_check,
-               r_check + 0.5 * slope * damp);
+      P0PRINTF("  STOP -- %.2e < %.2e\n", g_check, r_check + 0.5 * slope * damp);
       break;
     }
   }
