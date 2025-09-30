@@ -437,13 +437,17 @@ static int backtracking_mesh_damp_factor(struct GomaLinearSolverData *ams,
   if (best_norm < Epsilon[pg->imtrx][0]) {
     skip = TRUE;
   }
+  int step = 0;
   double last = bt_st;
   double curr = MPI_Wtime();
-  P0PRINTF("\nNewton Line Search: lambda=%f lambda_mesh=%f L2=%e L2_mesh=%e %g\n", damp, mesh_damp,
-           best_norm, g_check_mesh, curr - last);
+  P0PRINTF("\nNLS Step  lambda  lambda_mesh      L_2    L_2(mesh)  time (s)\n");
+  P0PRINTF("   %3d    %.4lf     %.4lf     %.2e  %.2e   %.2e\n", step, damp, mesh_damp, best_norm, g_check_mesh, curr - last);
+  // P0PRINTF("\nNewton Line Search: lambda=%f lambda_mesh=%f L2=%e L2_mesh=%e %g\n", damp, mesh_damp,
+  //          best_norm, g_check_mesh, curr - last);
   dbl mesh_damp_best = mesh_damp;
 
   while (!skip) {
+    step++;
     damp *= reduction_factor;
     if (damp < min_damp) {
       break;
@@ -467,12 +471,19 @@ static int backtracking_mesh_damp_factor(struct GomaLinearSolverData *ams,
     exchange_dof(cx, dpi, R, pg->imtrx);
     vector_scaling(NumUnknowns[pg->imtrx], R, scale);
 
+    MPI_Allreduce(&neg_elem_volume, &neg_elem_volume_global, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+    if (neg_elem_volume_global) {
+      P0PRINTF("Negative element volume detected in line search!\n");
+      neg_elem_volume = FALSE;
+      neg_elem_volume_global = FALSE;
+      continue;
+    }
+
     g_check = L2_norm(R, NumUnknowns[pg->imtrx]);
     g_check_mesh = L2_norm_mesh(R, variable_types, NumUnknowns[pg->imtrx]);
     last = curr;
     curr = MPI_Wtime();
-    P0PRINTF("Newton Line Search: lambda=%f lambda_mesh=%f L2=%e L2_mesh=%e %g\n", damp, mesh_damp,
-             g_check, g_check_mesh, curr - last);
+  P0PRINTF("   %3d    %.4lf     %.4lf     %.2e  %.2e   %.2e\n", step, damp, mesh_damp, g_check, g_check_mesh, curr - last);
     if (isnan(g_check)) {
       break;
     }
@@ -495,9 +506,8 @@ static int backtracking_mesh_damp_factor(struct GomaLinearSolverData *ams,
   }
 
   curr = MPI_Wtime();
-  P0PRINTF(
-      "Newton Line Search: best damping factor: lambda=%f lambda_mesh=%f L2=%e L2_mesh=%e %g\n",
-      best_damp, mesh_damp_best, best_norm, g_check_mesh, curr - bt_st);
+      P0PRINTF("  --------------------------------------------------------------\n");
+      P0PRINTF("  BEST    %.4lf     %.4lf     %.2e  %.2e   %.2e\n", best_damp, mesh_damp_best, best_norm, g_check_mesh, curr - bt_st);
   fflush(stdout);
 
   *damp_factor = best_damp;

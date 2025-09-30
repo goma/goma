@@ -6777,8 +6777,8 @@ void rd_solver_specs(FILE *ifp, char *input) {
     upd->mesh_correction_damping[1] = 0.2;
     upd->mesh_correction_damping[2] = 0.1;
     upd->mesh_correction_tolerances[0] = 1e-5;
-    upd->mesh_correction_tolerances[1] = 1e-3;
-    upd->mesh_correction_tolerances[2] = 1e-1;
+    upd->mesh_correction_tolerances[1] = 1e-4;
+    upd->mesh_correction_tolerances[2] = 1e-3;
     GOMA_WH(GOMA_ERROR,
             "Defaulting to %d mesh correction dampings of %g %g %g and tolerances of %g %g %g",
             upd->n_mesh_corrections, upd->mesh_correction_damping[0],
