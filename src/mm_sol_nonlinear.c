@@ -429,7 +429,6 @@ static int perform_mesh_backtrack_line_search(struct GomaLinearSolverData *ams,
         break;
       }
     }
-    // mesh_damp = MIN(mesh_damp, damp);
     init_vec_value(R, 0.0, numProcUnknowns);
     for (int j = 0; j < NumUnknowns[pg->imtrx]; j++) {
       switch (variable_types[j]) {
@@ -467,6 +466,7 @@ static int perform_mesh_backtrack_line_search(struct GomaLinearSolverData *ams,
 
     g_check = L2_norm(R, NumUnknowns[pg->imtrx]);
     g_check_mesh = L2_norm_mesh(R, variable_types, NumUnknowns[pg->imtrx]);
+    // mesh_damp = MIN(mesh_damp, damp);
     last = curr;
     curr = MPI_Wtime();
     P0PRINTF("  |    %3d    %.4lf     %.4lf     %.2e  %.2e   %.2e |\n", step, damp, mesh_damp, g_check,
