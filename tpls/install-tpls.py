@@ -7,6 +7,7 @@ import os
 import sys
 import argparse
 import pathlib
+import time
 
 
 default_packages = [
@@ -247,9 +248,15 @@ if __name__ == "__main__":
 
     logger.log("Install order: {}".format(install_order))
 
+    start_time = time.perf_counter()
+    package_timings = {}
+
     for p in install_order:
         pm = importlib.import_module("tpl_tools." + ".".join(["packages", p]))
         pc = pm.Package()
+        # default to 0 for skipped packages
+        package_timings[p] = 0.0
+        package_start_time = time.perf_counter()
         if getattr(args, pc.name.replace("-", "_") + "_dir"):
             package_dir = getattr(args, pc.name + "_dir")
 
@@ -306,6 +313,19 @@ if __name__ == "__main__":
                 )
                 exit(1)
             build.register()
+        package_end_time = time.perf_counter()
+        package_timings[p] = package_end_time - package_start_time
+        print(p, "took {:.2f} seconds".format(package_timings[p]))
+
+    end_time = time.perf_counter()
+    total_time = end_time - start_time
+
+    logger.log("All packages built and installed to {}".format(install_dir))
+    logger.log("Total time to build all packages: {:.2f} seconds".format(total_time))
+    logger.log("Time to build individual packages:")
+    for p in package_timings.keys():
+        logger.log("\t{}: {:.2f} seconds".format(p, package_timings[p]))
+
     tpl_registry.config.write_config(
         os.path.join(install_dir, "config.sh"), "bash", args.write_dynamic_library_path
     )
