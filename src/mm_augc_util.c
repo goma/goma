@@ -748,6 +748,10 @@ void load_extra_unknownsAC(int iAC,     /* ID NUMBER OF AC'S */
       xa[iAC] = mp_glob[mn]->Rst_func_supg;
       break;
 
+    case TAGC_RST_FUNC_3:
+      xa[iAC] = mp_glob[mn]->Rst_epsilon;
+      break;
+
     case TAGC_HEAT_SOURCE_0:
       xa[iAC] = mp_glob[mn]->u_heat_source[0];
       break;
@@ -1565,6 +1569,10 @@ void update_parameterAC(
 
     case TAGC_RST_FUNC_2:
       mp_glob[mn]->Rst_func_supg = lambda;
+      break;
+
+    case TAGC_RST_FUNC_3:
+      mp_glob[mn]->Rst_epsilon = lambda;
       break;
 
     case TAGC_HEAT_SOURCE_0:

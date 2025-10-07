@@ -1473,6 +1473,22 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
             } /* for(j) .... */
           } /* if ( e[eqn], v[var]) .... */
 
+          var = RESTIME;
+          if (pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var]) {
+            pvar = upd->vp[pg->imtrx][var];
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              phi_j = bf[var]->phi[j];
+              source = 0.;
+              if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+                source += s_terms.d_MassSource_drst[w][j];
+                source *= det_J * h3 * wt * wt_func;
+                source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
+              }
+
+              lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] += source;
+            } /* for(j) .... */
+          } /* if ( e[eqn], v[var]) .... */
+
           /*
            * J_s_V  sensitivity of species equation w.r.t. voltage -- RSL 4/4/00
            */
@@ -10437,9 +10453,11 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         double y_mole[MAX_CONC], dy_dC[MAX_CONC][MAX_CONC], x_mole[MAX_CONC], sum_invmv = 0;
         double C[MAX_CONC], activity[MAX_CONC], solvent_volfrac = 0, conc_nv, dact_dr[MAX_CONC];
         double pres_conv, dy_dP = 0, dy_dT = 0, dsdP = 0, pres, near_unity = 0.999999,
-                          evap_frac[MAX_CONC];
+                          evap_frac[MAX_CONC], temp = 1.;
         int mode = RAOULT;
         double sum_C = 0, sum_C0 = 0, R_gas = 0.08205, Rgas_cgs = 83.137E+06;
+        int DROP_EVAP_RADIUS = TRUE;
+        int KELVIN_EQUATION = FALSE;
         double kelvin = 1, kelvin_arg = 0, d_kelvin = 0, kelvin_argmax = 5.;
 
         param = mp->u_species_source[w];
@@ -10457,22 +10475,22 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         /* moles of non-volatile per mm^3 of droplet volume */
         conc_nv = (1. - solvent_volfrac) / mp->molar_volume[pd->Num_Species_Eqn];
         sum_C0 += conc_nv;
-        pres_conv = mp->u_vapor_pressure[w][0];
-#if 1
-        if (pd->gv[RESTIME]) {
-          if (fv->restime > DBL_SMALL) {
-            rad_ratio = fv->restime;
-            d_ratio = 1.;
+        pres = pres_conv = mp->u_vapor_pressure[w][0];
+        if (DROP_EVAP_RADIUS) {
+          if (pd->gv[RESTIME]) {
+            if (fv->restime > DBL_SMALL) {
+              rad_ratio = fv->restime;
+              d_ratio = 1.;
+            }
+          }
+        } else {
+          if (pd->gv[RESTIME]) {
+            if (fv->restime > DBL_SMALL) {
+              rad_ratio = cbrt(fv->restime);
+              d_ratio = rad_ratio / (3. * fv->restime);
+            }
           }
         }
-#else
-        if (pd->gv[RESTIME]) {
-          if (fv->restime > DBL_SMALL) {
-            rad_ratio = cbrt(fv->restime);
-            d_ratio = rad_ratio / (3. * fv->restime);
-          }
-        }
-#endif
 
         s = 0;
         dsdT = 0;
@@ -10483,12 +10501,18 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
           C[i] = MAX(DBL_SMALL, fv->c[i]);
         }
 
-        if (pd->gv[PRESSURE] && fv->P > 0.9 * pres_conv) {
-          gas_conc = fv->P / (pres_conv * R_gas * fv->T);
+        /* The assumption here would be that we are using an absolute temperature
+           scale, so let's make sure it's positive  */
+        gas_conc = amb_pres / (1000 * Rgas_cgs * 298.);
+        if (pd->gv[PRESSURE] && pd->gv[TEMPERATURE]) {
           pres = fv->P;
-        } else {
-          gas_conc = amb_pres / (1000 * Rgas_cgs * fv->T);
-          pres = pres_conv;
+          temp = MAX(temp, fv->T);
+          if (fv->P > 0.9 * pres_conv) {
+            gas_conc = pres / (pres_conv * R_gas * temp);
+          } else {
+            gas_conc = amb_pres / (1000 * Rgas_cgs * temp);
+            pres = pres_conv;
+          }
         }
 
         if (mp->Species_Var_Type == SPECIES_MOLE_FRACTION) {
@@ -10501,7 +10525,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         } else if (mp->Species_Var_Type == SPECIES_CONCENTRATION) {
           y_mole[w] = MIN(C[w] / gas_conc, near_unity);
           dy_dP = -y_mole[w] / pres;
-          dy_dT = y_mole[w] / fv->T;
+          dy_dT = y_mole[w] / temp;
           for (j = 0; j < pd->Num_Species_Eqn; j++) {
             dy_dC[w][j] = delta(w, j) / gas_conc;
           }
@@ -10539,9 +10563,9 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         } else {
           GOMA_EH(GOMA_ERROR, "Vapor Pressure should be ANTOINE or RIEDEL for DROP_EVAP\n");
         }
-        if (1) {
+        if (KELVIN_EQUATION) {
           kelvin_arg = (2 * mp->surface_tension / radius) *
-                       (mp->molar_volume[w] / (R_gas * fv->T) / pres_conv);
+                       (mp->molar_volume[w] / (R_gas * temp) / pres_conv);
           kelvin_arg /= rad_ratio;
           if (kelvin_arg > kelvin_argmax) {
             kelvin = exp(kelvin_argmax);
@@ -10553,7 +10577,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         }
         mp->vapor_pressure[w] = psat[w] * kelvin;
         dpsatdt[w] *= kelvin;
-        dpsatdt[w] += psat[w] * d_kelvin * (-1. / fv->T);
+        dpsatdt[w] += psat[w] * d_kelvin * (-1. / temp);
 
         A = mp->vapor_pressure[w] / pres;
 
@@ -10579,13 +10603,13 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         if (pd->gv[PRESSURE] && fv->P > 0.9 * pres_conv) {
           dsdP = s / pres + tmp * rad_ratio *
                                 (-activity[w] / pres / (1 - activity[w]) - dy_dP / (1 - y_mole[w]));
-          dsdT = s * (-1. / fv->T) +
+          dsdT = s * (-1. / temp) +
                  tmp * rad_ratio *
                      (dpsatdt[w] / pres * x_mole[w] / (1 - activity[w]) - dy_dT / (1 - y_mole[w]));
         } else {
-          dsdT = s * (-1. / fv->T) + tmp * rad_ratio *
-                                         (dpsatdt[w] / pres_conv * x_mole[w] / (1 - activity[w]) -
-                                          dy_dT / (1 - y_mole[w]));
+          dsdT = s * (-1. / temp) + tmp * rad_ratio *
+                                        (dpsatdt[w] / pres_conv * x_mole[w] / (1 - activity[w]) -
+                                         dy_dT / (1 - y_mole[w]));
         }
         dsdrst =
             tmp * log((1 - y_mole[w]) / (1 - activity[w])) * d_ratio + tmp * rad_ratio * dact_dr[w];
