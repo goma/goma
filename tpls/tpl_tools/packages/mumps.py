@@ -50,11 +50,20 @@ class Package(packages.GenericPackage):
             f.write("LMETIS    = -L$(LPARMETISDIR) -lparmetis -L$(LMETISDIR) -lmetis\n")
             f.write("SCOTCHDIR = " + builder.env["SCOTCH_DIR"] + "\n")
             f.write("ISCOTCH = -I" + builder.env["SCOTCH_DIR"] + "/include\n")
-            f.write(
-                "LSCOTCH = -L"
-                + builder.env["SCOTCH_DIR"]
-                + "/lib -lptesmumps -lptscotch -lptscotcherr -lscotch -lscotcherr\n"
-            )
+            use_lib64 = False
+            if os.path.exists(os.path.join(builder.env["SCOTCH_DIR"], "lib64")):
+                use_lib64 = True
+                f.write(
+                    "LSCOTCH = -L"
+                    + builder.env["SCOTCH_DIR"]
+                    + "/lib64 -lptesmumps -lptscotch -lptscotcherr -lscotch -lscotcherr\n"
+                )
+            else:
+                f.write(
+                    "LSCOTCH = -L"
+                    + builder.env["SCOTCH_DIR"]
+                    + "/lib -lptesmumps -lptscotch -lptscotcherr -lscotch -lscotcherr\n"
+                )
             f.write("ORDERINGSF  = -Dpord -Dmetis -Dptscotch")
             if "PARMETIS_DIR" in builder.env:
                 f.write(" -Dparmetis\n")
@@ -71,13 +80,22 @@ class Package(packages.GenericPackage):
                     f.write("SONAME = -install_name\n")
                 else:
                     f.write("SONAME = -soname\n")
-                f.write(
-                    "SHARED_OPT = -shared -Wl,-rpath,"
-                    + builder.install_dir()
-                    + "/lib -Wl,-rpath,"
-                    + builder.env["SCOTCH_DIR"]
-                    + "/lib"
-                )
+                if use_lib64:
+                    f.write(
+                        "SHARED_OPT = -shared -Wl,-rpath,"
+                        + builder.install_dir()
+                        + "/lib64 -Wl,-rpath,"
+                        + builder.env["SCOTCH_DIR"]
+                        + "/lib64"
+                    )
+                else:
+                    f.write(
+                        "SHARED_OPT = -shared -Wl,-rpath,"
+                        + builder.install_dir()
+                        + "/lib -Wl,-rpath,"
+                        + builder.env["SCOTCH_DIR"]
+                        + "/lib"
+                    )
                 if "PARMETIS_DIR" in builder.env:
                     f.write(" -Wl,-rpath," + builder.env["PARMETIS_DIR"] + "/lib")
                 f.write(" -Wl,-rpath," + builder.env["METIS_DIR"] + "/lib\n")

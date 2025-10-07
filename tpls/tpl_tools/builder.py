@@ -149,7 +149,11 @@ class Builder(object):
             with open(logfile, "r") as f:
                 for line in f:
                     sys.stderr.write(line)
-            raise RuntimeError("Command resulted in a non-zero error code")
+            raise RuntimeError(
+                "Command resulted in a non-zero error code: {} RETURNED: {}".format(
+                    command, cmd.returncode
+                )
+            )
 
     def check(self, skip_named_install=False):
         self.logger.log("Checking install of {}".format(self._package.name))
