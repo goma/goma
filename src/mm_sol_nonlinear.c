@@ -291,8 +291,8 @@ static int perform_mesh_backtrack_line_search(struct GomaLinearSolverData *ams,
                                               double *h_elem_avg,
                                               double *U_norm,
                                               int numProcUnknowns,
-                                            dbl *damp_factor,
-                                          dbl *damp_factor_mesh) {
+                                              dbl *damp_factor,
+                                              dbl *damp_factor_mesh) {
 #ifndef GOMA_ENABLE_AZTEC
   GOMA_EH(GOMA_ERROR, "Newton Line Search with Backtracking requires Aztec");
   return -1;
@@ -411,8 +411,8 @@ static int perform_mesh_backtrack_line_search(struct GomaLinearSolverData *ams,
   P0PRINTF("  +---------------------------------------------------------------+\n");
   P0PRINTF("  | NLS Step  lambda  lambda_mesh      L_2    L_2(mesh)  time (s) |\n");
 
-  P0PRINTF("  |    %3d    %.4lf     %.4lf     %.2e  %.2e   %.2e |\n", step, damp, mesh_damp, best_norm,
-           g_check_mesh, curr - last);
+  P0PRINTF("  |    %3d    %.4lf     %.4lf     %.2e  %.2e   %.2e |\n", step, damp, mesh_damp,
+           best_norm, g_check_mesh, curr - last);
   dbl mesh_damp_best = mesh_damp;
 
   while (!skip) {
@@ -469,8 +469,8 @@ static int perform_mesh_backtrack_line_search(struct GomaLinearSolverData *ams,
     // mesh_damp = MIN(mesh_damp, damp);
     last = curr;
     curr = MPI_Wtime();
-    P0PRINTF("  |    %3d    %.4lf     %.4lf     %.2e  %.2e   %.2e |\n", step, damp, mesh_damp, g_check,
-             g_check_mesh, curr - last);
+    P0PRINTF("  |    %3d    %.4lf     %.4lf     %.2e  %.2e   %.2e |\n", step, damp, mesh_damp,
+             g_check, g_check_mesh, curr - last);
     if (isnan(g_check)) {
       break;
     }
@@ -486,7 +486,8 @@ static int perform_mesh_backtrack_line_search(struct GomaLinearSolverData *ams,
     g_check = 0.5 * (g_check * g_check);
 
     if (g_check <= r_check + 0.5 * slope * damp) {
-      P0PRINTF("  |  backtrack limit reached:  %.2e < %.2e                |\n", g_check, r_check + 0.5 * slope * damp);
+      P0PRINTF("  |  backtrack limit reached:  %.2e < %.2e                |\n", g_check,
+               r_check + 0.5 * slope * damp);
       break;
     }
   }
@@ -2491,7 +2492,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
      *   UPDATE GOMA UNKNOWNS
      *
      *******************************************************************/
-     dbl damp_factor_mesh = damp_factor;
+    dbl damp_factor_mesh = damp_factor;
     if (Newton_Line_Search_Type == NLS_BACKTRACK) {
 #ifndef GOMA_ENABLE_AZTEC
       GOMA_EH(GOMA_ERROR, "Newton Line Search with Backtracking requires Aztec");
@@ -2634,11 +2635,11 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
 #endif
     } else if (Newton_Line_Search_Type == NLS_BACKTRACK_MESH) {
-      err = perform_mesh_backtrack_line_search(ams, x, xdot, delta_x, x_old, x_older, xdot_old,
-                                               x_update, &delta_t, &theta, resid_vector, scale, exo,
-                                               dpi, cx, &time_value, &num_total_nodes, &h_elem_avg,
-                                               &U_norm, numProcUnknowns, &damp_factor, &damp_factor_mesh);
-      if (DOUBLE_NONZERO(fabs(damp_factor_mesh-1)) || DOUBLE_NONZERO(fabs(damp_factor-1))) {
+      err = perform_mesh_backtrack_line_search(
+          ams, x, xdot, delta_x, x_old, x_older, xdot_old, x_update, &delta_t, &theta, resid_vector,
+          scale, exo, dpi, cx, &time_value, &num_total_nodes, &h_elem_avg, &U_norm, numProcUnknowns,
+          &damp_factor, &damp_factor_mesh);
+      if (DOUBLE_NONZERO(fabs(damp_factor_mesh - 1)) || DOUBLE_NONZERO(fabs(damp_factor - 1))) {
         print_damp_factor = TRUE;
       }
     } else if (Newton_Line_Search_Type == NLS_FULL_STEP) {
@@ -2930,7 +2931,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
     /* print damping factor and/or viscosity sens message here */
     if (print_damp_factor && Newton_Line_Search_Type == NLS_BACKTRACK_MESH) {
-      DPRINTF(stdout, " Invoking damping factor %f mesh damping %f\n", damp_factor, damp_factor_mesh);
+      DPRINTF(stdout, " Invoking damping factor %f mesh damping %f\n", damp_factor,
+              damp_factor_mesh);
     } else if (print_damp_factor) {
       DPRINTF(stdout, " Invoking damping factor %f\n", damp_factor);
     }
