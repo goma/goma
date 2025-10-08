@@ -50,6 +50,7 @@ report by Schunk, et al. (2002) for an overview and further usage tips.
    solver_specifications/modified_newton_tolerance
    solver_specifications/jacobian_reform_time_stride
    solver_specifications/newton_line_search_type
+   solver_specifications/line_search_minimum_damping
    solver_specifications/newton_correction_factor
    solver_specifications/mesh_correction_damping
    solver_specifications/mesh_correction_tolerance

@@ -6714,6 +6714,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
     ECHO(echo_string, echo_file);
   }
 
+  if (Newton_Line_Search_Type == NLS_FULL_STEP) {
   look_for(ifp, "Newton correction factor", input, '=');
   if (fscanf(ifp, "%le", &damp_factor1) != 1) {
     GOMA_EH(GOMA_ERROR, "error reading Newton correction factor, expected at least one float");
@@ -6735,8 +6736,15 @@ void rd_solver_specs(FILE *ifp, char *input) {
       GOMA_EH(GOMA_ERROR, "All damping factors must be in the range 0 <= fact <=1");
     }
   }
-
   ECHO(echo_string, echo_file);
+} else {
+    damp_factor1 = 1.;
+    damp_factor2 = -1.;
+    damp_factor3 = -1.;
+    custom_tol1 = -1.;
+    custom_tol2 = -1.;
+    custom_tol3 = -1.;
+  }
 
   iread = look_for_optional(ifp, "Mesh correction damping", input, '=');
   if (iread == 1) {
