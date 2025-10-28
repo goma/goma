@@ -643,6 +643,10 @@ double viscosity(struct Generalized_Newtonian *gn_local,
     mu = carreau_suspension_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == POWERLAW_SUSPENSION) {
     mu = powerlaw_suspension_viscosity(gn_local, gamma_dot, d_mu);
+  } else if (gn_local->ConstitutiveEquation == DP_POWER_LAW_SUSPENSION) {
+    mu = dppl_suspension_viscosity(gn_local, gamma_dot, d_mu);
+  } else if (gn_local->ConstitutiveEquation == DP_CARREAU_SUSPENSION) {
+    mu = dpC_suspension_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == HERSCHEL_BULKLEY) {
     mu = herschel_bulkley_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
@@ -1762,7 +1766,7 @@ int fill_viscosity(dbl *param) /* ptr to the user-defined parameter list    */
  *      Date: 11/26/96
  *   Revised: 3/24/97 RRR
  *            1/21/2010 KT -> Add capability for dealing with shell particle concentration
- *
+ *	      6/23/2025 LCW -> Added deformable particle viscosity model
  *
  *****************************************************************************/
 int suspension_viscosity(int species, /* species for solid volume fraction track */
@@ -1939,15 +1943,15 @@ double carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   species = gn_local->sus_species_no;
 
   if (DOUBLE_NONZERO(gammadot)) {
-    val2 = pow(lambda * gammadot, aexp);
+    val2 = pow(lambda * gammadot, aexp); // For Carreau, aexp = 2, lambda = k in slides and is the relaxation time constant [s]
   } else {
     val2 = 0.;
   }
-  val = pow(1. + val2, (nexp - 1.) / aexp);
-  mu_car = muinf + (mu0 - muinf) * val;
+  val = pow(1. + val2, (nexp - 1.) / aexp); // (1+(k*gam_dot)^2)^( (n-1)/2 )
+  mu_car = muinf + (mu0 - muinf) * val;  
 
   if (nexp_species > 0.0 || (C[species] > 0.0 && C[species] < (maxpack - .01))) {
-    mu_sus = pow(1.0 - C[species] / maxpack, nexp_species);
+    mu_sus = pow(1.0 - C[species] / maxpack, nexp_species);//  (1-phi/phi_max)^(-2.4)
     /* dmu/dc */
     mp->d_viscosity[MAX_VARIABLE_TYPES + species] =
         -mu_car * mu_sus * nexp_species / (maxpack - C[species]);
@@ -1965,7 +1969,7 @@ double carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
     mu_sus = pow(0.01 / maxpack, nexp_species);
   }
 
-  mu = mu_car * mu_sus;
+  mu = mu_car * mu_sus; // [(1-phi/phi_max)^(-2.4)] * [muinf + (mu0 - muinf)*(1+(k*gam_dot)^2)^( (n-1)/2 )]
   mp->viscosity = mu;
 
   if (DOUBLE_NONZERO(gammadot)) {
@@ -2104,6 +2108,7 @@ double powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   val = pow(gammadot + offset, nexp - 1.);
   mu_car = mu0 * val;
 
+
   if (nexp_species > 0.0 || (C[species] > 0.0 && C[species] < (maxpack - .01))) {
     mu_sus = pow(1.0 - C[species] / maxpack, nexp_species);
     /* dmu/dc */
@@ -2117,9 +2122,7 @@ double powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
         pow(1.0 - C[species] / maxpack, nexp_species - 2.) / maxpack / maxpack;
   } else if (C[species] <= 0.) {
     mu_sus = 1.;
-  }
-
-  else if (C[species] >= (maxpack - .01)) {
+  } else if (C[species] >= (maxpack - .01)) {
     mu_sus = pow(0.01 / maxpack, nexp_species);
   }
 
@@ -2175,6 +2178,351 @@ double powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
 
   return (mu);
 } /* end of powerlaw_suspension_viscosity */
+
+/*
+ *
+ *  Deformable-particle viscosity model
+ *  Based on the Pries et al. (1992) form of suspension viscosity 
+ *  The intrinsic viscosity is now a function of shear rate, representing deformable particles 
+ *  	--->This particular viscosity model uses a <<power-law>> form for the intrinsic viscosity
+ *
+ *  Created: 6/23/2025 LCW  
+ *
+ */
+
+double dppl_suspension_viscosity(struct Generalized_Newtonian *gn_local,
+                                     dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+                                     VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
+  int ii, jj; /* loop variables */
+  int var, var_offset; /* variables for the final concentration deriviative */
+
+  int mdofs = 0, vdofs; /* variables for the mesh and velocity deriviatives, respectively */
+
+  dbl C[MAX_CONC]; /* Convenient local variables */
+  dbl mu = 0.;
+  dbl mu_in, mu_sus = 0; /* intrinsic viscosity and the overall suspension viscosity */
+  
+  dbl offset; /* For avoiding division by 0 when shear-rate (gammadot) -> 0 */
+
+  dbl gammadot; /* strain rate invariant */
+
+  dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
+                               wrt velocity */
+  dbl d_gd_dmesh[DIM][MDE]; /* derivative of strain rate invariant
+                               wrt mesh */
+  
+  /* parameters for deformable particle power law intrinsic viscosity suspension model */
+  dbl mu0; 	     /* zero shear-rate viscosity */
+  dbl nexp_species;  /* exponent for constitutive equation */
+  dbl mu_in0;        /* "zero" shear-rate [intrinsic viscosity] index -> equivalent to the consistency index K */
+  dbl maxpack; /* maximum particle volume fraction is 1 for deformable red blood cells, Chien 1970 */
+  dbl a; /* viscosity ratio scaling factor */
+  dbl b; /* deformability index */
+
+  int species; /* species number for solid volume fraction tracking */
+
+  /* Change to shear rate equation rather that the calc_shearrate */
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+
+  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
+  if (fabs(gammadot) <= 1.0e-7) {
+    gammadot = .0001;
+  }
+
+  if (pd->e[pg->imtrx][R_MESH1]) {
+    mdofs = ei[pg->imtrx]->dof[R_MESH1];
+  }
+
+  /* initialize everything */
+
+  mp->d_viscosity[TEMPERATURE] = 0.0;
+  mp->d2_viscosity[TEMPERATURE] = 0.0;
+  mp->d_viscosity[PRESSURE] = 0.0;
+  mp->d2_viscosity[PRESSURE] = 0.0;
+
+  for (ii = 0; ii < DIM; ii++) {
+    mp->d_viscosity[VELOCITY1 + ii] = 0.0;
+    mp->d2_viscosity[VELOCITY1 + ii] = 0.0;
+    mp->d_viscosity[MESH_DISPLACEMENT1 + ii] = 0.0;
+    mp->d2_viscosity[MESH_DISPLACEMENT1 + ii] = 0.0;
+  }
+  for (jj = 0; jj < pd->Num_Species_Eqn; jj++) {
+    mp->d_viscosity[MAX_VARIABLE_TYPES + jj] = 0.0;
+    mp->d2_viscosity[MAX_VARIABLE_TYPES + jj] = 0.0;
+    C[jj] = fv->c[jj];
+  }
+
+  b = gn_local->nexp; /* Power Law Exponent */
+  a = gn_local->muinf; /* High Rate Viscosity */
+  mu_in0 = gn_local->aexp; /* Aexp */
+  mu0 = gn_local->mu0; /* Low Rate Viscosity */
+  maxpack = gn_local->maxpack;
+
+  nexp_species = gn_local->atexp; /* Unused in this viscosity model */
+  species = gn_local->sus_species_no;
+  offset = 0.00001;
+
+   
+  /* For the shear rate-dependent intrinsic viscosity */
+  mu_in = mu_in0 * pow( gammadot + offset, b ); /* [mu] = [mu0]gam_dot^b */
+
+  if (nexp_species > 0.0 || (C[species] > 0.0 && C[species] < (maxpack - 0.01))) {
+    mu_sus = 1 + a*( pow( 1 - C[species], -mu_in) - 1); // mu_s = 1 + a[(1-phi)^(-[mu]) - 1]
+	
+    /* dmu/dc */
+    mp->d_viscosity[MAX_VARIABLE_TYPES + species] = mu0*a*mu_in*pow(1-C[species], -mu_in-1 );
+
+    /* d2mu/dc2 .... */
+    mp->d2_viscosity[MAX_VARIABLE_TYPES + species] = mu0*a*mu_in*(mu_in + 1)*pow(1-C[species], -mu_in-2 );
+ 
+  } else if (C[species] <= 0.) {
+    mu_sus = 1.;
+  } else if (C[species] >= (maxpack - 0.01)) {
+    mu_sus = 1 + a*( pow( 0.01, -mu_in) - 1);
+  }
+
+ 
+  mu = mu0*mu_sus;
+  mp->viscosity = mu;
+ 
+  /* TODO:
+   * Change to shear0rate equation rather that the calc_shearrate because it smooths the shear-rate
+   */
+
+  /* dmu/dG and d2mu/dG2 */
+  
+  if (d_mu != NULL && (C[species] > 0.0 && C[species] < (maxpack - 0.01)) ) {
+    d_mu->gd = -mu0*b*mu_in0*log(1-C[species])*( mu_sus - 1 + a )*pow(gammadot + offset,b-1);
+    mp->d2_viscosity[MAX_VARIABLE_TYPES + MAX_CONC] = ( b/(gammadot+offset) - log(1-C[species])*mu_in0*b*pow(gammadot+offset, b-1))*mp->d_viscosity[MAX_VARIABLE_TYPES + species];
+    mp->d2_viscosity[SHEAR_RATE] = -mu0*b*mu_in0*log(1-C[species])*( d_mu->gd/mu0 * pow(gammadot+offset,b-1) + (b-1)*(mu_sus-1+a)*pow(gammadot + offset,b-2));
+  } else if (d_mu != NULL && (C[species] <= 0.)) {
+    d_mu->gd = 0.0;
+    mp->d2_viscosity[MAX_VARIABLE_TYPES + MAX_CONC] = 0.0;
+    mp->d2_viscosity[SHEAR_RATE] = 0.0;
+  } else if (d_mu != NULL && C[species] >= (maxpack - 0.01)) {
+    d_mu->gd = -mu0*b*mu_in0*log(0.01)*( mu_sus - 1 + a )*pow(gammadot + offset,b-1);
+    mp->d2_viscosity[MAX_VARIABLE_TYPES + MAX_CONC] =  ( b/(gammadot+offset) - log( 0.01 )*mu_in0*b*pow(gammadot+offset, b-1))*mu0*a*mu_in*pow(0.01, -mu_in-1 );;
+    mp->d2_viscosity[SHEAR_RATE] = -mu0*b*mu_in0*log(0.01)*( d_mu->gd/mu0 * pow(gammadot+offset,b-1) + (b-1)*(mu_sus-1+a)*pow(gammadot + offset,b-2));
+  }
+
+  /* dmu/dmesh */
+  if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
+   for (ii = 0; ii < VIM; ii++) {
+     for (jj = 0; jj < mdofs; jj++) {
+       if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
+         d_mu->X[ii][jj] = d_mu->gd * d_gd_dmesh[ii][jj];
+       } else {
+          /* printf("\ngammadot is zero in viscosity function");*/
+         d_mu->X[ii][jj] = 0.0;
+        }
+      }
+    }
+  }
+
+  
+  /* dmu/dv */
+  if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    for (ii = 0; ii < VIM; ii++) {
+      for (jj = 0; jj < vdofs; jj++) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
+          d_mu->v[ii][jj] = d_mu->gd * d_gd_dv[ii][jj];
+        } else {
+          d_mu->v[ii][jj] = 0.0;
+        }
+      }
+    }
+  }  
+
+  /* dmu/dc */
+  var = MASS_FRACTION;
+  if (d_mu != NULL && pd->v[pg->imtrx][var]) {
+    var_offset = MAX_VARIABLE_TYPES + species;
+    for (jj = 0; jj < ei[pg->imtrx]->dof[var]; jj++) {
+      d_mu->C[species][jj] = mp->d_viscosity[var_offset] * bf[var]->phi[jj];
+    }
+  }
+
+  return (mu);
+} /* end of dppl_suspension_viscosity */
+
+/*
+ *
+ *  Deformable-particle viscosity model
+ *  Based on the Pries et al. (1992) form of suspension viscosity
+ *  The intrinsic viscosity is now a function of shear rate, representing deformable particles
+ *      --->This particular viscosity model uses a <<Carreau>> form for the intrinsic viscosity
+ *
+ *  Created: 7/15/2025 LCW
+ *
+ */
+
+double dpC_suspension_viscosity(struct Generalized_Newtonian *gn_local,
+                                     dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+                                     VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
+  int ii, jj; /* loop variables */
+  int var, var_offset; /* variables for the final concentration deriviative */
+
+  int mdofs = 0, vdofs; /* variables for the mesh and velocity deriviatives, respectively */
+
+  dbl C[MAX_CONC]; /* Convenient local variables */
+  dbl mu = 0.;
+  dbl mu_in, mu_sus = 0; /* intrinsic viscosity and the overall suspension viscosity */
+  dbl dmuin_dgd = 0; /* derivative of the intrinsic viscosity wrt gammadot, for cleaner code */
+
+  dbl offset; /* For avoiding division by 0 when shear-rate (gammadot) -> 0 */
+
+  dbl gammadot; /* strain rate invariant */
+
+  dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
+                               wrt velocity */
+  dbl d_gd_dmesh[DIM][MDE]; /* derivative of strain rate invariant
+                               wrt mesh */
+
+  /* parameters for deformable particle power law intrinsic viscosity suspension model */
+  dbl mu0;           /* zero shear-rate viscosity */
+  dbl mu_in0;        /* zero shear-rate [intrinsic viscosity] */
+  dbl mu_ininf;      /* infinite shear-rate [intrinsic viscosity] */
+  dbl maxpack; 	     /* maximum particle volume fraction is 1 for deformable red blood cells, Chien 1970 */
+  dbl a;             /* viscosity ratio scaling factor */
+  dbl lam;	     /* time-constant lambda */
+  dbl n;             /* deformability index */
+
+  int species; /* species number for solid volume fraction tracking */
+
+  /* Change to shear rate equation rather that the calc_shearrate */
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+
+  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
+  if (fabs(gammadot) <= 1.0e-7) {
+    gammadot = .0001;
+  }
+
+  if (pd->e[pg->imtrx][R_MESH1]) {
+    mdofs = ei[pg->imtrx]->dof[R_MESH1];
+  }
+
+  /* initialize everything */
+
+  mp->d_viscosity[TEMPERATURE] = 0.0;
+  mp->d2_viscosity[TEMPERATURE] = 0.0;
+  mp->d_viscosity[PRESSURE] = 0.0;
+  mp->d2_viscosity[PRESSURE] = 0.0;
+
+  for (ii = 0; ii < DIM; ii++) {
+    mp->d_viscosity[VELOCITY1 + ii] = 0.0;
+    mp->d2_viscosity[VELOCITY1 + ii] = 0.0;
+    mp->d_viscosity[MESH_DISPLACEMENT1 + ii] = 0.0;
+    mp->d2_viscosity[MESH_DISPLACEMENT1 + ii] = 0.0;
+  }
+  for (jj = 0; jj < pd->Num_Species_Eqn; jj++) {
+    mp->d_viscosity[MAX_VARIABLE_TYPES + jj] = 0.0;
+    mp->d2_viscosity[MAX_VARIABLE_TYPES + jj] = 0.0;
+    C[jj] = fv->c[jj];
+  }
+
+  n = gn_local->nexp;         /* Power Law Exponent */
+  a = gn_local->muinf;        /* High Rate Viscosity */
+  mu_in0 = gn_local->aexp;    /* Aexp */
+  mu_ininf = gn_local->atexp; /* Thermoal Exponent */
+  mu0 = gn_local->mu0;        /* Low Rate Viscosity */
+  lam = gn_local->lam;        /* Time constant */
+  dbl lam2 = pow(lam,2);      /* time-constant squared, for cleaner code and reduced FLOPs */
+  maxpack = gn_local->maxpack;
+  species = gn_local->sus_species_no;
+  offset = 0.00001;
+
+
+
+
+   /* For the shear rate-dependent intrinsic viscosity */
+  mu_in = mu_ininf + (mu_in0 - mu_ininf)* pow( 1+pow(lam*gammadot,2), (n-1)/2 ); /* [mu] = [muinf] + ([mu0] - [muinf])*[1+(lam*gammadot)^2]^[(n-1)/2] */
+  dmuin_dgd = (n-1)*(mu_in0 - mu_ininf)*lam2*gammadot*pow( 1+pow(lam*gammadot,2), (n-3)/2 ); /* d[mu]/dgammadot = (n-1)([mu0] - [muinf])*lam^2*gammadot*[1+(lam*gammadot)^2]^[(n-3)/2] */
+
+
+  if ( C[species] > 0.0 && C[species] < (maxpack - 0.01)  ) {
+    mu_sus = 1 + a*( pow( 1 - C[species], -mu_in) - 1); // mu_s = 1 + a[(1-phi)^(-[mu]) - 1]
+
+    /* dmu/dc */
+    mp->d_viscosity[MAX_VARIABLE_TYPES + species] = mu0*a*mu_in*pow(1-C[species], -mu_in-1 );
+
+    /* d2mu/dc2 .... */
+    mp->d2_viscosity[MAX_VARIABLE_TYPES + species] = mu0*a*mu_in*(mu_in + 1)*pow(1-C[species], -mu_in-2 );
+
+  } else if (C[species] <= 0.) {
+    mu_sus = 1.;
+  } else if (C[species] >= (maxpack - 0.01)) {
+    mu_sus = 1 + a*( pow( 0.01, -mu_in) - 1);
+  }
+
+
+  mu = mu0*mu_sus;
+  mp->viscosity = mu;
+   
+
+ /* TODO:   
+  * 2. Code the derivatives wrt shear rate 
+  * 3. Compile and run 
+  */
+
+  /* dmu/dG and d2mu/dG2 */
+
+  if (d_mu != NULL && (C[species] > 0.0 && C[species] < (maxpack - 0.01)) ) {
+    d_mu->gd = -mu0*log(1-C[species])*(mu_sus-1+a)*dmuin_dgd;
+    mp->d2_viscosity[MAX_VARIABLE_TYPES + MAX_CONC] = mu0*dmuin_dgd*( (mu_sus-1+a)/(1-C[species]) - log(1-C[species])* d_mu->gd/mu0 ) ; 
+    mp->d2_viscosity[SHEAR_RATE] = d_mu->gd*(  (d_mu->gd/mu0)/(mu_sus-1+a) + 1/(gammadot+offset) + (n-3)*lam2*gammadot/(1+lam2*pow(gammadot,2)) );
+  } else if (d_mu != NULL && (C[species] <= 0.)) {
+    d_mu->gd = 0.0;
+    mp->d2_viscosity[MAX_VARIABLE_TYPES + MAX_CONC] = 0.0;
+    mp->d2_viscosity[SHEAR_RATE] = 0.0;
+  } else if (d_mu != NULL && C[species] >= (maxpack - 0.01)) {
+    d_mu->gd = -mu0*log(0.01)*(mu_sus-1+a)*dmuin_dgd;
+    mp->d2_viscosity[MAX_VARIABLE_TYPES + MAX_CONC] = mu0*dmuin_dgd*( 100*(mu_sus-1+a) - log( 0.01 ) * d_mu->gd/mu0 );
+    mp->d2_viscosity[SHEAR_RATE] = d_mu->gd*(  (d_mu->gd/mu0)/(mu_sus-1+a) + 1/(gammadot+offset) + (n-3)*lam2*gammadot/(1+lam2*pow(gammadot,2)) );
+  }
+
+  /* dmu/dmesh */
+  if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
+   for (ii = 0; ii < VIM; ii++) {
+     for (jj = 0; jj < mdofs; jj++) {
+       if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
+         d_mu->X[ii][jj] = d_mu->gd * d_gd_dmesh[ii][jj];
+       } else {
+          /* printf("\ngammadot is zero in viscosity function");*/
+         d_mu->X[ii][jj] = 0.0;
+        }
+      }
+    }
+  }
+
+
+  /* dmu/dv */
+  if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    for (ii = 0; ii < VIM; ii++) {
+      for (jj = 0; jj < vdofs; jj++) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
+          d_mu->v[ii][jj] = d_mu->gd * d_gd_dv[ii][jj];
+        } else {
+          d_mu->v[ii][jj] = 0.0;
+        }
+      }
+    }
+  }
+
+  /* dmu/dc */
+  var = MASS_FRACTION;
+  if (d_mu != NULL && pd->v[pg->imtrx][var]) {
+    var_offset = MAX_VARIABLE_TYPES + species;
+    for (jj = 0; jj < ei[pg->imtrx]->dof[var]; jj++) {
+      d_mu->C[species][jj] = mp->d_viscosity[var_offset] * bf[var]->phi[jj];
+    }
+  }
+
+  return (mu);
+} /* end of dpC_suspension_viscosity */
+
+
+
+
 
 /*
  *

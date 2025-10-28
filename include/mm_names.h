@@ -7610,6 +7610,12 @@ struct Equation_Names EQ_Name[] = {
     {"R_EDDY_NU", "EDDY_NU", R_EDDY_NU},
     {"R_TURB_K", "TURB_K", R_TURB_K},
     {"R_TURB_OMEGA", "TURB_OMEGA", R_TURB_OMEGA},
+    {"R_QTENSOR11", "QTENSOR11", QTENSOR11},
+    {"R_QTENSOR12", "QTENSOR12", QTENSOR12},
+    {"R_QTENSOR13", "QTENSOR13", QTENSOR13},
+    {"R_QTENSOR22", "QTENSOR22", QTENSOR22},
+    {"R_QTENSOR23", "QTENSOR23", QTENSOR23},
+    {"R_QTENSOR33", "QTENSOR33", QTENSOR33},
 
     /*
      *  Note -> these entries must remain until we get rid
@@ -7912,6 +7918,12 @@ struct Equation_Names Var_Name[] = {
     {"EDDY_NU", "EDDY_NU", EDDY_NU},          // 214
     {"TURB_K", "TURB_K", TURB_K},             // 215
     {"TURB_OMEGA", "TURB_OMEGA", TURB_OMEGA}, // 215
+    {"QTENSOR11", "Q11", QTENSOR11}, 
+    {"QTENSOR12", "Q12", QTENSOR12},
+    {"QTENSOR13", "Q13", QTENSOR13},
+    {"QTENSOR22", "Q22", QTENSOR22},
+    {"QTENSOR23", "Q23", QTENSOR23},
+    {"QTENSOR33", "Q33", QTENSOR33},
 
     {"MESH_POSITION1", "X", MESH_POSITION1},
     {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 218 */
@@ -8185,6 +8197,12 @@ struct Equation_Names Exo_Var_Names[] = {
     {"Eddy Turbulence Viscosity.", "EDDY_NU", EDDY_NU},
     {"Turbulent K", "TURB_K", TURB_K},
     {"Turbulent OMEGA", "TURB_OMEGA", TURB_OMEGA},
+    {"Q Tensor 11", "QXX", QTENSOR11},
+    {"Q Tensor 12", "QXY", QTENSOR12},
+    {"Q Tensor 13", "QXZ", QTENSOR13},
+    {"Q Tensor 22", "QYY", QTENSOR22},
+    {"Q Tensor 23", "QYZ", QTENSOR23},
+    {"Q Tensor 33", "QZZ", QTENSOR33},
 };
 
 int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);
@@ -8494,6 +8512,12 @@ struct Equation_Names Var_Units[] = {
     {"EDDY_NU", "[1]", EDDY_NU},
     {"TURB_K", "[1]", TURB_K},
     {"TURB_OMEGA", "[1]", TURB_OMEGA},
+    {"QTENSOR11", "[1]", QTENSOR11},
+    {"QTENSOR12", "[1]", QTENSOR12},
+    {"QTENSOR13", "[1]", QTENSOR13},
+    {"QTENSOR22", "[1]", QTENSOR22},
+    {"QTENSOR23", "[1]", QTENSOR23},
+    {"QTENSOR33", "[1]", QTENSOR33},
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);

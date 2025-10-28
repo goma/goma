@@ -522,6 +522,13 @@
 #define EDDY_NU            214
 #define TURB_K             215
 #define TURB_OMEGA         216
+#define QTENSOR11          217
+#define QTENSOR12          218
+#define QTENSOR13          219
+#define QTENSOR22          220
+#define QTENSOR23          221
+#define QTENSOR33          222
+
 /*
  * define a variable to hold an external field which will be
  * held fixed in the problem but parametered by the basis functions
@@ -930,7 +937,13 @@
 #define R_EDDY_NU      214
 #define R_TURB_K       215
 #define R_TURB_OMEGA   216
-#define V_LAST         217
+#define R_QTENSOR11    217
+#define R_QTENSOR12    218
+#define R_QTENSOR13    219
+#define R_QTENSOR22    220
+#define R_QTENSOR23    221
+#define R_QTENSOR33    222
+#define V_LAST         223
 
 /* MMH
  * This is used for those parts of the code that want to ensure
