@@ -480,7 +480,7 @@ static int perform_backtrack_line_search(struct GomaLinearSolverData *ams,
     P0PRINTF("  |    %3d    %.4lf  %.2e  %.2e |\n", step, damp, g_check, curr - last);
   }
 
-  dbl mesh_damp_best = mesh_damp;
+  dbl best_mesh_damp = mesh_damp;
 
   while (!skip) {
     step++;
@@ -531,7 +531,7 @@ static int perform_backtrack_line_search(struct GomaLinearSolverData *ams,
 
     if (g_check < best_norm) {
       best_damp = damp;
-      mesh_damp_best = mesh_damp;
+      best_mesh_damp = mesh_damp;
       best_norm = g_check;
     }
     if (best_norm < Epsilon[pg->imtrx][0]) {
@@ -540,8 +540,13 @@ static int perform_backtrack_line_search(struct GomaLinearSolverData *ams,
     g_check = 0.5 * (g_check * g_check);
 
     if (g_check <= r_check + 0.5 * slope * damp) {
-      P0PRINTF("  |  backtrack limit reached:  %.2e < %.2e                |\n", g_check,
-               r_check + 0.5 * slope * damp);
+      if (line_search_type == NLS_BACKTRACK_MESH) {
+        P0PRINTF("  |   backtrack limit reached:  %.2e < %.2e               |\n", g_check,
+                 r_check + 0.5 * slope * damp);
+      } else {
+        P0PRINTF("  |   backtrack limit reached:           |\n  |        %.2e < %.2e           |\n",
+                 g_check, r_check + 0.5 * slope * damp);
+      }
       break;
     }
   }
@@ -550,7 +555,7 @@ static int perform_backtrack_line_search(struct GomaLinearSolverData *ams,
   if (line_search_type == NLS_BACKTRACK_MESH) {
     P0PRINTF("  |---------------------------------------------------------------|\n");
 
-    P0PRINTF("  | BEST      %.4lf     %.4lf     %.2e  %.2e   %.2e |\n", best_damp, mesh_damp_best,
+    P0PRINTF("  | BEST      %.4lf     %.4lf     %.2e  %.2e   %.2e |\n", best_damp, best_mesh_damp,
              best_norm, g_check_mesh, curr - bt_st);
     P0PRINTF("  +---------------------------------------------------------------+\n");
   } else {
@@ -559,16 +564,16 @@ static int perform_backtrack_line_search(struct GomaLinearSolverData *ams,
     P0PRINTF("  +--------------------------------------+\n");
   }
   fflush(stdout);
-  update_problem_unknowns(line_search_type, dpi, cx, variable_types, delta_x, damp, mesh_damp, x,
-                          x_save, NumUnknowns[pg->imtrx]);
+  update_problem_unknowns(line_search_type, dpi, cx, variable_types, delta_x, best_damp,
+                          best_mesh_damp, x, x_save, NumUnknowns[pg->imtrx]);
   if (pd->TimeIntegration != STEADY) {
     update_problem_unknowns_dot(line_search_type, delta_t, theta, dpi, cx, variable_types, delta_x,
-                                damp, mesh_damp, xdot, xdot_save, NumUnknowns[pg->imtrx]);
+                                best_damp, best_mesh_damp, xdot, xdot_save, NumUnknowns[pg->imtrx]);
   }
 
   *damp_factor = best_damp;
   if (line_search_type == NLS_BACKTRACK_MESH) {
-    *damp_factor_mesh = mesh_damp_best;
+    *damp_factor_mesh = best_mesh_damp;
   } else {
     *damp_factor_mesh = best_damp;
   }
