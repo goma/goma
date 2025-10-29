@@ -66,6 +66,8 @@ struct GomaLinearSolverData;
 #define LS_SURF_ISOSURFACE 7
 #define LS_SURF_USER       8
 #define LS_SURF_ARC        9
+#define LS_SURF_ELLIPSOID  10
+
 
 #define LS_EVOLVE_ADVECT_EXPLICIT 0 /* Subcycled advection equation */
 #define LS_EVOLVE_ADVECT_COUPLED  1 /* Fully coupled advection equation */
