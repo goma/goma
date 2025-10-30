@@ -69,54 +69,60 @@ object option, i.e., the “{object_name} {float list}” part of **SURF**
 
 .. tabularcolumns:: |l|L|
 
-=========================================== ============================================================
-**PLANE** <nx. <ny> <nz> <d>                 This card constructs a planar interface surface. The float
-                                             values <nx>, <ny>, <nz> define a vector normal to this
-                                             plane with the restriction that the sign of the vector must
-                                             be such that it points from the negative side of the
-                                             interface to the positive side of the interface. The float
-                                             value <d> effectively represents the distance of the
-                                             plane from the origin. Its value must be set, however, so
-                                             that the dot product of any position vector to a point on
-                                             the desired plane and the vector (nx,ny,nz) must be equal to 
-                                             <d> (it is a property of planes that this number
-                                             is independent of the point on the plane that is chosen).
-**CIRCLE** <cx> <cy> <radius>                This card constructs a circular interface surface in a
-                                             two-dimensional domain. The float values <cx> <cy>
-                                             identify the coordinates of the center of the circle. The
-                                             float value <radius> establishes the radius of the curve.
-                                             By definition, points interior to the circle are assigned
-                                             negative level set function values.
-**SPHERE** <cx> <cy> <cz> <radius>           This card constructs a spherical interface surface in a
-                                             three-dimensional domain. The float values <cx> <cy>
-                                             *<cz>* identify the coordinates of the center of the circle.
-                                             The float value <radius> establishes the radius of the
-                                             sphere. By definition, points interior to the sphere are
-                                             assigned negative level set function values.
-**ELLIPSOID** <cx> <cy> <cz> <rx> <ry> <rz>  This card constructs an ellipsoid interface surface in a
-                                             three-dimensional domain. The float values <cx> <cy>
-                                             <cz> identify the coordinates of the center of the ellipsoid.
-                                             The float values <rx> <ry> <rz>  establish the radii of the
-                                             ellipsoid in the x, y, and z axes. By definition, points 
-                                             interior to the sphere are assigned negative level set 
-                                             function values.
-SS {ss_id}                                   This card uses an existing sideset in the problem as a
-                                             defined geometric object for construction of an
-                                             interface. The parameter <ss_id> identifies this sideset.
-**USER** {user-defined float list}           This card indicates the user has defined an object
-                                             function using the supplied parameter float list that
-                                             returns a signed distance value when supplied with the
-                                             coordinates of a point in space. This object function
-                                             should appear in the function call *user_init_object* in the
-                                             file **user_pre.c.**
-**SM_object** {object_type} {object_name}    This card allows the user to initialize the level set
-                                             location by using a piece of solid model geometry. The
-                                             solid model object_type can be either **FACE** or **BODY.**
-                                             A 2D initialization uses the boundary of the specified
-                                             FACE (or surface) as the 0 level set. A 3D initialization
-                                             uses the boundary of the specified BODY (or volume)
-                                             as the 0 level set.
-=========================================== ===============================================================
++----------------------------------------------+---------------------------------------------------------------+
+| **PLANE** <nx. <ny> <nz> <d>                 | This card constructs a planar interface surface. The float    |
+|                                              | values <nx>, <ny>, <nz> define a vector normal to this        |
+|                                              | plane with the restriction that the sign of the vector must   |
+|                                              | be such that it points from the negative side of the          |
+|                                              | interface to the positive side of the interface. The float    |
+|                                              | value <d> effectively represents the distance of the          |
+|                                              | plane from the origin. Its value must be set, however, so     |
+|                                              | that the dot product of any position vector to a point on     |
+|                                              | the desired plane and the vector (nx,ny,nz) must be equal to  |
+|                                              | <d> (it is a property of planes that this number              |
+|                                              | is independent of the point on the plane that is chosen).     |
++----------------------------------------------+---------------------------------------------------------------+
+| **CIRCLE** <cx> <cy> <radius>                | This card constructs a circular interface surface in a        |
+|                                              | two-dimensional domain. The float values <cx> <cy>            |
+|                                              | identify the coordinates of the center of the circle. The     |
+|                                              | float value <radius> establishes the radius of the curve.     |
+|                                              | By definition, points interior to the circle are assigned     |
+|                                              | negative level set function values.                           |
++----------------------------------------------+---------------------------------------------------------------+
+| **SPHERE** <cx> <cy> <cz> <radius>           | This card constructs a spherical interface surface in a       |
+|                                              | three-dimensional domain. The float values <cx> <cy>          |
+|                                              | *<cz>* identify the coordinates of the center of the circle.  |
+|                                              | The float value <radius> establishes the radius of the        |
+|                                              | sphere. By definition, points interior to the sphere are      |
+|                                              | assigned negative level set function values.                  |
++----------------------------------------------+---------------------------------------------------------------+
+| **ELLIPSOID** <cx> <cy> <cz> <rx> <ry> <rz>  | This card constructs an ellipsoid interface surface in a      |
+|                                              | three-dimensional domain. The float values <cx> <cy>          |
+|                                              | <cz> identify the coordinates of the center of the ellipsoid. |
+|                                              | The float values <rx> <ry> <rz>  establish the radii of the   |
+|                                              | ellipsoid in the x, y, and z axes. By definition, points      |
+|                                              | interior to the sphere are assigned negative level set        |
+|                                              | function values.                                              |
++----------------------------------------------+---------------------------------------------------------------+
+| SS {ss_id}                                   | This card uses an existing sideset in the problem as a        |
+|                                              | defined geometric object for construction of an               |
+|                                              | interface. The parameter <ss_id> identifies this sideset.     |
++----------------------------------------------+---------------------------------------------------------------+
+| **USER** {user-defined float list}           | This card indicates the user has defined an object            |
+|                                              | function using the supplied parameter float list that         |
+|                                              | returns a signed distance value when supplied with the        |
+|                                              | coordinates of a point in space. This object function         |
+|                                              | should appear in the function call *user_init_object* in the  |
+|                                              | file **user_pre.c.**                                          |
++----------------------------------------------+---------------------------------------------------------------+
+| **SM_object** {object_type} {object_name}    | This card allows the user to initialize the level set         |
+|                                              | location by using a piece of solid model geometry. The        |
+|                                              | solid model object_type can be either **FACE** or **BODY.**   |
+|                                              | A 2D initialization uses the boundary of the specified        |
+|                                              | FACE (or surface) as the 0 level set. A 3D initialization     |
+|                                              | uses the boundary of the specified BODY (or volume)           |
+|                                              | as the 0 level set.                                           |
++----------------------------------------------+---------------------------------------------------------------+
 
 ------------
 Examples
