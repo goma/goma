@@ -69,7 +69,7 @@ object option, i.e., the “{object_name} {float list}” part of **SURF**
 
 .. tabularcolumns:: |l|L|
 
-========================================= ============================================================
+=========================================== ============================================================
 **PLANE** <nx. <ny> <nz> <d>                 This card constructs a planar interface surface. The float
                                              values <nx>, <ny>, <nz> define a vector normal to this
                                              plane with the restriction that the sign of the vector must
@@ -116,7 +116,7 @@ SS {ss_id}                                   This card uses an existing sideset 
                                              FACE (or surface) as the 0 level set. A 3D initialization
                                              uses the boundary of the specified BODY (or volume)
                                              as the 0 level set.
-========================================= ============================================================
+=========================================== ===============================================================
 
 ------------
 Examples

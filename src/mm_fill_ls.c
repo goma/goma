@@ -1225,10 +1225,9 @@ void find_surf_closest_point(struct LS_Surf *surf, double *x, Exo_DB *exo, doubl
     radius[1] = sign * s->r[1];
     radius[2] = sign * s->r[2];
 
-
     distance = (r[0] - c[0]) * (r[0] - c[0]) +
-               ((radius[0]*radius[0])/(radius[1]*radius[1])) * (r[1] - c[1]) * (r[1] - c[1]) +
-               ((radius[0]*radius[0])/(radius[2]*radius[2])) * (r[2] - c[2]) * (r[2] - c[2]);
+               ((radius[0] * radius[0]) / (radius[1] * radius[1])) * (r[1] - c[1]) * (r[1] - c[1]) +
+               ((radius[0] * radius[0]) / (radius[2] * radius[2])) * (r[2] - c[2]) * (r[2] - c[2]);
 
     cp->distance = sign * (sqrt(distance) - radius[0]);
 
@@ -1237,7 +1236,6 @@ void find_surf_closest_point(struct LS_Surf *surf, double *x, Exo_DB *exo, doubl
   }
 
   break;
-
 
   case LS_SURF_FACET: {
     int a;
@@ -3104,8 +3102,8 @@ void print_surf_list(struct LS_Surf_List *list, double time) {
 
       fprintf(f, "ELLIPSOID %d\t %f\t %f\t %f\t %f\t %f\t %f\n", i, s->center[0], s->center[1],
               s->center[2], s->r[0], s->r[1], s->r[2]);
-      fprintf(g, "ELLIPSOID %f\t %d\t %f\t %f\t %f\t %f\t %f\t %f\n", time, i, s->center[0], s->center[1],
-              s->center[2], s->r[0], s->r[1], s->r[2]);
+      fprintf(g, "ELLIPSOID %f\t %d\t %f\t %f\t %f\t %f\t %f\t %f\n", time, i, s->center[0],
+              s->center[1], s->center[2], s->r[0], s->r[1], s->r[2]);
     }
 
     break;
