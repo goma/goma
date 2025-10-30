@@ -26,10 +26,6 @@ class Package(packages.CMakePackage):
     def configure_options(self, builder):
         if builder.build_shared:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
-            builder.add_option("-DCMAKE_C_FLAGS:BOOL=-fPIC -fPIE -std=c11")
-            builder.add_option("-DCMAKE_CXX_FLAGS:BOOL=-fPIC -fPIE")
-            builder.add_option("-DCMAKE_Fortran_FLAGS:BOOL=-fPIC -fPIE")
-            builder.add_option("-DCMAKE_EXE_LINKER_FLAGS=-fPIE")
         else:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
         builder.add_option("-DTPL_ENABLE_Netcdf:BOOL=ON")
