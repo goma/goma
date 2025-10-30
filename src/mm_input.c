@@ -6692,13 +6692,15 @@ void rd_solver_specs(FILE *ifp, char *input) {
       Newton_Line_Search_Type = NLS_FULL_STEP;
     } else if (strcmp("BACKTRACK", ls_type) == 0) {
       Newton_Line_Search_Type = NLS_BACKTRACK;
+    } else if (strcmp("BACKTRACK_MESH", ls_type) == 0) {
+      Newton_Line_Search_Type = NLS_BACKTRACK_MESH;
     } else {
       GOMA_EH(GOMA_ERROR, "Unknown Newton line search type: %s", ls_type);
     }
   }
   ECHO(echo_string, echo_file);
 
-  Line_Search_Minimum_Damping = 0.005;
+  Line_Search_Minimum_Damping = 0.05;
   lsread = look_for_optional_string(ifp, "Line search minimum damping", ls_type, MAX_CHAR_IN_INPUT);
   if (lsread >= 1) {
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Line search minimum damping", ls_type);
@@ -6712,29 +6714,98 @@ void rd_solver_specs(FILE *ifp, char *input) {
     ECHO(echo_string, echo_file);
   }
 
-  look_for(ifp, "Newton correction factor", input, '=');
-  if (fscanf(ifp, "%le", &damp_factor1) != 1) {
-    GOMA_EH(GOMA_ERROR, "error reading Newton correction factor, expected at least one float");
-  }
-
-  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Newton correction factor", damp_factor1);
-
-  if (fscanf(ifp, "%le %le %le %le %le", &custom_tol1, &damp_factor2, &custom_tol2, &damp_factor3,
-             &custom_tol3) != 5) {
-    damp_factor2 = damp_factor3 = -1.;
-    custom_tol1 = custom_tol2 = custom_tol3 = -1;
-    rewind(ifp); /* Added to make ibm happy when single relaxation value input. dal/1-6-99 */
-  } else {
-    if ((damp_factor1 <= 1. && damp_factor1 >= 0.) && (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
-        (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
-      SPF(endofstring(echo_string), " %.4g %.4g %.4g %.4g %.4g", custom_tol1, damp_factor2,
-          custom_tol2, damp_factor3, custom_tol3);
-    } else {
-      GOMA_EH(GOMA_ERROR, "All damping factors must be in the range 0 <= fact <=1");
+  if (Newton_Line_Search_Type == NLS_FULL_STEP) {
+    look_for(ifp, "Newton correction factor", input, '=');
+    if (fscanf(ifp, "%le", &damp_factor1) != 1) {
+      GOMA_EH(GOMA_ERROR, "error reading Newton correction factor, expected at least one float");
     }
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Newton correction factor",
+             damp_factor1);
+
+    if (fscanf(ifp, "%le %le %le %le %le", &custom_tol1, &damp_factor2, &custom_tol2, &damp_factor3,
+               &custom_tol3) != 5) {
+      damp_factor2 = damp_factor3 = -1.;
+      custom_tol1 = custom_tol2 = custom_tol3 = -1;
+      rewind(ifp); /* Added to make ibm happy when single relaxation value input. dal/1-6-99 */
+    } else {
+      if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
+          (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
+          (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
+        SPF(endofstring(echo_string), " %.4g %.4g %.4g %.4g %.4g", custom_tol1, damp_factor2,
+            custom_tol2, damp_factor3, custom_tol3);
+      } else {
+        GOMA_EH(GOMA_ERROR, "All damping factors must be in the range 0 <= fact <=1");
+      }
+    }
+    ECHO(echo_string, echo_file);
+  } else {
+    damp_factor1 = 1.;
+    damp_factor2 = -1.;
+    damp_factor3 = -1.;
+    custom_tol1 = -1.;
+    custom_tol2 = -1.;
+    custom_tol3 = -1.;
   }
 
-  ECHO(echo_string, echo_file);
+  iread = look_for_optional(ifp, "Mesh correction damping", input, '=');
+  if (iread == 1) {
+    int num_const = read_constants(ifp, &(upd->mesh_correction_damping), -1);
+    upd->n_mesh_corrections = num_const;
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", "Mesh correction damping");
+    for (i = 0; i < num_const; i++)
+      SPF(endofstring(echo_string), " %.4g", upd->mesh_correction_damping[i]);
+    ECHO(echo_string, echo_file);
+  } else {
+    upd->n_mesh_corrections = 0;
+  }
+  iread = look_for_optional(ifp, "Mesh correction tolerance", input, '=');
+  if (iread == 1) {
+    int num_const = read_constants(ifp, &(upd->mesh_correction_tolerances), -1);
+    if (num_const != upd->n_mesh_corrections) {
+      GOMA_EH(
+          GOMA_ERROR,
+          "Number of mesh correction tolerances must match number of Mesh correction tolerance");
+    }
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", "Mesh correction tolerance");
+    for (i = 0; i < num_const; i++)
+      SPF(endofstring(echo_string), " %.4g", upd->mesh_correction_tolerances[i]);
+    ECHO(echo_string, echo_file);
+  }
+
+  if (Newton_Line_Search_Type == NLS_BACKTRACK_MESH && upd->n_mesh_corrections < 1) {
+    GOMA_WH(
+        GOMA_ERROR,
+        "You have selected the BACKTRACK_MESH backtracking line search, but have not specified any "
+        "mesh correction dampings.");
+    upd->n_mesh_corrections = 3;
+    upd->mesh_correction_damping = malloc(upd->n_mesh_corrections * sizeof(double));
+    upd->mesh_correction_tolerances = malloc(upd->n_mesh_corrections * sizeof(double));
+    upd->mesh_correction_damping[0] = 0.5;
+    upd->mesh_correction_damping[1] = 0.2;
+    upd->mesh_correction_damping[2] = 0.1;
+    upd->mesh_correction_tolerances[0] = 1e-5;
+    upd->mesh_correction_tolerances[1] = 1e-4;
+    upd->mesh_correction_tolerances[2] = 1e-3;
+    GOMA_WH(GOMA_ERROR,
+            "Defaulting to %d mesh correction dampings of %g %g %g and tolerances of %g %g %g",
+            upd->n_mesh_corrections, upd->mesh_correction_damping[0],
+            upd->mesh_correction_damping[1], upd->mesh_correction_damping[2],
+            upd->mesh_correction_tolerances[0], upd->mesh_correction_tolerances[1],
+            upd->mesh_correction_tolerances[2]);
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", "Mesh correction damping");
+    for (i = 0; i < upd->n_mesh_corrections; i++)
+      SPF(endofstring(echo_string), " %.4g", upd->mesh_correction_damping[i]);
+    ECHO(echo_string, echo_file);
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", "Mesh correction tolerance");
+    for (i = 0; i < upd->n_mesh_corrections; i++)
+      SPF(endofstring(echo_string), " %.4g", upd->mesh_correction_tolerances[i]);
+    ECHO(echo_string, echo_file);
+  }
 
   /* initialize variable specific damping */
   for (k = 0; k < MAX_VARIABLE_TYPES; k++) {
