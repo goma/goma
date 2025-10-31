@@ -103,6 +103,9 @@ object option, i.e., the “{object_name} {float list}” part of **SURF**
 |                                              | ellipsoid in the x, y, and z axes. By definition, points      |
 |                                              | interior to the sphere are assigned negative level set        |
 |                                              | function values.                                              |
+|                                              |                                                               |
+|                                              | *WARNING* this is not exact and should be used with           | 
+|                                              | cauting, though appears to work well with Renormalization     |
 +----------------------------------------------+---------------------------------------------------------------+
 | SS {ss_id}                                   | This card uses an existing sideset in the problem as a        |
 |                                              | defined geometric object for construction of an               |
