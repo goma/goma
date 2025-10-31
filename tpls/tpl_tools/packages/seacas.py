@@ -2,11 +2,12 @@ from tpl_tools.packages import packages
 from tpl_tools import utils
 import os
 
+
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "seacas"
-        self.version = "v2025-08-19"
-        self.sha256 = "f745ca9a57bfd7f771632fb5f154eb38ed3260e1430d968f2db725f8d8ee8545"
+        self.version = "v2025-10-14"
+        self.sha256 = "f9351a8f1a555a015020f249b1e5c26a282fbb6e274f9b71eb38720d61267dda"
         self.filename = "seacas-" + self.version + ".tar.gz"
         self.url = (
             "https://github.com/sandialabs/seacas/archive/" + self.version + ".tar.gz"

@@ -5,8 +5,8 @@ import os
 class Package(packages.AutotoolsPackage):
     def __init__(self):
         self.name = "cmake"
-        self.version = "3.31.6"
-        self.sha256 = "653427f0f5014750aafff22727fb2aa60c6c732ca91808cfb78ce22ddd9e55f0"
+        self.version = "3.31.9"
+        self.sha256 = "5d4fdec04247ca8a8e8f63692f0d0f1e9d6d082a2bdd008dff8ab3ba7215aa83"
         self.filename = "cmake-" + self.version + ".tar.gz"
         self.compression = "gz"
         self.url = (
