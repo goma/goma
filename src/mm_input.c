@@ -14526,6 +14526,23 @@ void read_surface_objects(FILE *ifp, char *input, struct LS_Surf_List *list, int
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t\t%s = %s %.4g %.4g %.4g %.4g", "SURF",
                "SPHERE", s->center[0], s->center[1], s->center[2], s->r);
       ECHO(echo_string, echo_file);
+    } else if (strcmp(name, "ELLIPSOID") == 0) {
+      struct LS_Surf_Ellipsoid_Data *s;
+
+      surf = create_surf(LS_SURF_ELLIPSOID);
+      append_surf(list, surf);
+      s = (struct LS_Surf_Ellipsoid_Data *)surf->data;
+
+      if (fscanf(ifp, "%lf %lf %lf %lf %lf %lf", &(s->center[0]), &(s->center[1]), &(s->center[2]),
+                 &(s->r[0]), &(s->r[1]), &(s->r[2])) != 6) {
+        GOMA_EH(GOMA_ERROR,
+                "ELLIPSOID Level Set initialization objects requires 6 float constants.");
+      }
+
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t\t%s = %s %.4g %.4g %.4g %.4g %.4g %.4g",
+               "SURF", "ELLIPSOID", s->center[0], s->center[1], s->center[2], s->r[0], s->r[1],
+               s->r[2]);
+      ECHO(echo_string, echo_file);
     } else if (strcmp(name, "FACET_LIST") == 0) {
       int i, num, num_points, inflection;
       double r[3] = {0., 0., 0.};
@@ -14715,6 +14732,14 @@ echo_surface_objects( struct LS_Surf_List *list )
 	  {
 	    struct LS_Surf_Sphere_Data *s = (struct LS_Surf_Sphere_Data *) surf->data;
 	    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s %f %f %f %f","SPHERE", s->center[0], s->center[1], s->center[2], s->r ); ECHO(echo_string,echo_file);
+	  }
+	  break;
+
+	case LS_SURF_ELLIPSOID:
+	  {
+	    struct LS_Surf_Ellipsoid_Data *s = (struct LS_Surf_Ellipsoid_Data *) surf->data;
+	    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s %f %f %f %f %f %f","ELLIPSOID", s->center[0], s->center[1], s->center[2], s->r[0], s->r[1], s->r[2] );
+            ECHO(echo_string,echo_file);
 	  }
 	  break;
 

@@ -2836,6 +2836,11 @@ struct LS_Surf_Sphere_Data {
   double r;
 };
 
+struct LS_Surf_Ellipsoid_Data {
+  double center[3];
+  double r[3];
+};
+
 struct LS_Surf_Arc_Data {
   double center[3];
   double r;

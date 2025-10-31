@@ -1215,6 +1215,28 @@ void find_surf_closest_point(struct LS_Surf *surf, double *x, Exo_DB *exo, doubl
 
   break;
 
+  case LS_SURF_ELLIPSOID: {
+    struct LS_Surf_Ellipsoid_Data *s = (struct LS_Surf_Ellipsoid_Data *)surf->data;
+    int sign = ((s->r[0] < 0.) ? -1 : 1);
+    double *c = s->center;
+    double radius[DIM];
+    double distance;
+    radius[0] = sign * s->r[0];
+    radius[1] = sign * s->r[1];
+    radius[2] = sign * s->r[2];
+
+    distance = (r[0] - c[0]) * (r[0] - c[0]) +
+               ((radius[0] * radius[0]) / (radius[1] * radius[1])) * (r[1] - c[1]) * (r[1] - c[1]) +
+               ((radius[0] * radius[0]) / (radius[2] * radius[2])) * (r[2] - c[2]) * (r[2] - c[2]);
+
+    cp->distance = sign * (sqrt(distance) - radius[0]);
+
+    /* NOTE: it makes no sense to try to interpolate quantities here */
+
+  }
+
+  break;
+
   case LS_SURF_FACET: {
     int a;
     double ray[2], d[2], ray_normal[2], fraction;
@@ -1802,6 +1824,12 @@ static void ddd_add_surf(DDD pkg, struct LS_Surf *surf) {
 
     ddd_add_member(pkg, s->center, 3, MPI_DOUBLE);
     ddd_add_member(pkg, &(s->r), 1, MPI_DOUBLE);
+  } break;
+  case LS_SURF_ELLIPSOID: {
+    struct LS_Surf_Ellipsoid_Data *s = (struct LS_Surf_Ellipsoid_Data *)surf->data;
+
+    ddd_add_member(pkg, s->center, 3, MPI_DOUBLE);
+    ddd_add_member(pkg, s->r, 3, MPI_DOUBLE);
   } break;
   case LS_SURF_ARC: {
     struct LS_Surf_Arc_Data *s = (struct LS_Surf_Arc_Data *)surf->data;
@@ -3069,6 +3097,17 @@ void print_surf_list(struct LS_Surf_List *list, double time) {
 
     break;
 
+    case LS_SURF_ELLIPSOID: {
+      struct LS_Surf_Ellipsoid_Data *s = (struct LS_Surf_Ellipsoid_Data *)surf->data;
+
+      fprintf(f, "ELLIPSOID %d\t %f\t %f\t %f\t %f\t %f\t %f\n", i, s->center[0], s->center[1],
+              s->center[2], s->r[0], s->r[1], s->r[2]);
+      fprintf(g, "ELLIPSOID %f\t %d\t %f\t %f\t %f\t %f\t %f\t %f\n", time, i, s->center[0],
+              s->center[1], s->center[2], s->r[0], s->r[1], s->r[2]);
+    }
+
+    break;
+
     case LS_SURF_FACET: {
       struct LS_Surf_Facet_Data *s = (struct LS_Surf_Facet_Data *)surf->data;
 
@@ -3792,6 +3831,10 @@ struct LS_Surf *create_surf(int type)
   case LS_SURF_CIRCLE:
   case LS_SURF_SPHERE: {
     surf->data = (void *)smalloc(sizeof(struct LS_Surf_Sphere_Data));
+  } break;
+
+  case LS_SURF_ELLIPSOID: {
+    surf->data = (void *)smalloc(sizeof(struct LS_Surf_Ellipsoid_Data));
   } break;
 
   case LS_SURF_FACET: {
