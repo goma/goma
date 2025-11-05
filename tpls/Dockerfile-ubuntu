@@ -3,9 +3,9 @@ FROM ubuntu:24.04
 RUN apt-get update && apt-get install -y git build-essential m4 zlib1g-dev libx11-dev gfortran pkg-config autoconf python3-dev python3-pip vim tmux nano gdb valgrind libssl-dev curl
 RUN apt-get autoremove && apt-get clean
 
-RUN git clone https://github.com/goma/goma /opt/goma
+COPY . /opt/goma
 
-RUN PYTHONUNBUFFERED=1 /opt/goma/tpls/install-tpls.py --cc=gcc --cxx=g++ --fc=gfortran --build-shared --download-dir=/tmp/downloads -j 32 --extract-dir=/tmp/extract /opt/goma-libs
+RUN PYTHONUNBUFFERED=1 /opt/goma/install-tpls.py --cc=gcc --cxx=g++ --fc=gfortran --build-shared --download-dir=/tmp/downloads -j 32 --extract-dir=/tmp/extract /opt/goma-libs
 
 RUN rm -r /opt/goma
 RUN rm -r /tmp/downloads

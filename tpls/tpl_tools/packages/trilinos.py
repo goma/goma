@@ -42,6 +42,7 @@ class Package(packages.CMakePackage):
     def configure_options(self, builder):
         if builder.build_shared:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
+            builder.add_option("-DCMAKE_POSITION_INDEPENDENT_CODE=ON")
         else:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
         CC = builder.env["CC"]

@@ -30,13 +30,17 @@ class Package(packages.CMakePackage):
         ext = ".a"
         if builder.build_shared:
             ext = ".so"
+        libdir = 'lib'
+        if os.path.exists(os.path.join(builder.install_dir(), "lib64/libblas" + ext)):
+            libdir = 'lib64'
+
         registry.set_environment_variable(
             "BLAS_LIBRARIES",
-            os.path.join(builder.install_dir(), "lib/libblas" + ext),
+            os.path.join(builder.install_dir(), libdir+"/libblas" + ext),
         )
         registry.set_environment_variable(
             "LAPACK_LIBRARIES",
-            os.path.join(builder.install_dir(), "lib/liblapack" + ext),
+            os.path.join(builder.install_dir(), libdir+"/liblapack" + ext),
         )
         registry.prepend_environment_variable(
             "CMAKE_PREFIX_PATH", builder.install_dir()

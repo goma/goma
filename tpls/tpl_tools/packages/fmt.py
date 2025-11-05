@@ -4,8 +4,8 @@ from tpl_tools.packages import packages
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "fmt"
-        self.version = "11.1.4"
-        self.sha256 = "ac366b7b4c2e9f0dde63a59b3feb5ee59b67974b14ee5dc9ea8ad78aa2c1ee1e"
+        self.version = "11.2.0"
+        self.sha256 = "bc23066d87ab3168f27cef3e97d545fa63314f5c79df5ea444d41d56f962c6af"
         self.filename = "fmt-" + self.version + ".tar.gz"
         self.url = (
             "https://github.com/fmtlib/fmt/archive/refs/tags/"

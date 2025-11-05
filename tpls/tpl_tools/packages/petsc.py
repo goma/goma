@@ -5,11 +5,11 @@ import os
 class Package(packages.AutotoolsPackage):
     def __init__(self):
         self.name = "petsc"
-        self.version = "3.23.3"
-        self.sha256 = "b548e4b05a84044410eeca9dbbeb4fb3baf8965be96c9802a8310aa07e13c987"
+        self.version = "3.24.0"
+        self.sha256 = "0ccb90cdcbe91f64ebce16b7180b04dd405f8e5a059f8172f42df439719a5628"
         self.filename = "petsc-" + self.version + ".tar.gz"
         self.url = (
-            "https://gitlab.com/petsc/petsc/-/archive/v3.23.3/petsc-v"
+            "https://gitlab.com/petsc/petsc/-/archive/v" + self.version + "/petsc-v"
             + self.version
             + ".tar.gz"
         )

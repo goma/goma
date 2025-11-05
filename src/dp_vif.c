@@ -1043,6 +1043,8 @@ void noahs_ark(void) {
   ddd_add_member(n, &(upd->solver_info->cntl), 7, MPI_DOUBLE);
   ddd_add_member(n, &(upd->solver_info->cntl_user_set), 7, MPI_INT);
 
+  ddd_add_member(n, &upd->n_mesh_corrections, 1, MPI_INT);
+
   for (i = 0; i < upd->Num_Mat; i++) {
     int imtrx;
     ddd_add_member(n, &pd_glob[i]->Num_EQ, MAX_NUM_MATRICES, MPI_INT);
@@ -2847,6 +2849,11 @@ void ark_landing(void) {
         (int *)malloc(upd->turbulent_info->num_side_sets * sizeof(int));
   }
 
+  if (upd->n_mesh_corrections > 0) {
+    upd->mesh_correction_damping = (double *)malloc(upd->n_mesh_corrections * sizeof(double));
+    upd->mesh_correction_tolerances = (double *)malloc(upd->n_mesh_corrections * sizeof(double));
+  }
+
   /* Particle variable-lengthed output variable lists. */
   for (i = 0; i < Particle_Number_Sample_Types; i++) {
     if (Particle_Number_Output_Variables[i])
@@ -3571,6 +3578,11 @@ void noahs_dove(void) {
   if (upd->turbulent_info->num_side_sets > 0) {
     ddd_add_member(n, upd->turbulent_info->side_set_ids, upd->turbulent_info->num_side_sets,
                    MPI_INT);
+  }
+
+  if (upd->n_mesh_corrections > 0) {
+    ddd_add_member(n, upd->mesh_correction_damping, upd->n_mesh_corrections, MPI_DOUBLE);
+    ddd_add_member(n, upd->mesh_correction_tolerances, upd->n_mesh_corrections, MPI_DOUBLE);
   }
 
   for (i = 0; i < Num_BC; i++) {
