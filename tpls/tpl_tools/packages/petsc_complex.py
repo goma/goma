@@ -10,7 +10,9 @@ class Package(packages.AutotoolsPackage):
         self.sha256 = "0ccb90cdcbe91f64ebce16b7180b04dd405f8e5a059f8172f42df439719a5628"
         self.filename = "petsc-" + self.version + ".tar.gz"
         self.url = (
-            "https://gitlab.com/petsc/petsc/-/archive/v3.23.3/petsc-v"
+            "https://gitlab.com/petsc/petsc/-/archive/v"
+            + self.version
+            + "/petsc-v"
             + self.version
             + ".tar.gz"
         )
