@@ -22,6 +22,9 @@ RUN { \
     } > /entrypoint.sh \
 && chmod a+x /entrypoint.sh
 
+RUN echo ". /opt/rh/gcc-toolset-13/enable" > /etc/profile.d/goma-libs.sh
+RUN cat /opt/goma-libs/config.sh >> /etc/profile.d/goma-libs.sh
+
 ENV OMPI_MCA_btl "^vader"
 ENV OMPI_MCA_btl_base_warn_component_unuse "0"
 ENV OMPI_ALLOW_RUN_AS_ROOT 1
