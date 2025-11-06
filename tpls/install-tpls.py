@@ -33,6 +33,7 @@ default_packages = [
     "suitesparse",
     "trilinos",
     "hypre",
+    "strumpack",
     "petsc",
     "petsc_complex",
     "sparse",
