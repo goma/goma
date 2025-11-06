@@ -13,7 +13,15 @@ class Package(packages.CMakePackage):
         )
         self.libraries = ["strumpack"]
         self.includes = ["StrumpackConfig.h"]
-        self.dependencies = ["cmake", "metis", "scotch", "parmetis", "openmpi"]
+        self.dependencies = [
+            "cmake",
+            "metis",
+            "scotch",
+            "parmetis",
+            "openmpi",
+            "lapack",
+            "scalapack",
+        ]
 
     def set_environment(self, builder):
         builder.env = builder._registry.get_environment().copy()
