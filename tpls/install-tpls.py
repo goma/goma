@@ -47,7 +47,6 @@ if __name__ == "__main__":
     CC = os.environ.get("CC")
     CXX = os.environ.get("CXX")
     FC = os.environ.get("FC")
-    tpl_registry = Registry()
     parser = argparse.ArgumentParser(
         description="""Third party library installer for the finite element code Goma"""
     )
@@ -151,13 +150,27 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    install_dir = os.path.abspath(os.path.expanduser(args.INSTALL_DIR))
+    download_dir = os.path.join(install_dir, "downloads")
+    if args.download_dir:
+        download_dir = os.path.abspath(os.path.expanduser(args.download_dir))
+    extract_dir = os.path.join(install_dir, "sources")
+    if args.extract_dir:
+        extract_dir = os.path.abspath(os.path.expanduser(args.extract_dir))
+    log_dir = os.path.join(install_dir, "logs")
+    if args.log_dir:
+        log_dir = os.path.abspath(os.path.expanduser(args.log_dir))
+    mkdir_p(log_dir)
+    logger = utils.PrintAndFileLogger(os.path.join(log_dir, "install-tpls.log"))
     if not args.petsc_complex:
         packages.remove("petsc_complex")
 
     if not args.enable_parmetis:
-        print("ParMETIS has been disabled ")
-        print("\tDisabling ParMETIS")
-        print("\tDisabling SuperLU_DIST as Trilinos requires it be built with ParMETIS")
+        logger.log("ParMETIS has been disabled ")
+        logger.log("\tDisabling ParMETIS")
+        logger.log(
+            "\tDisabling SuperLU_DIST as Trilinos requires it be built with ParMETIS"
+        )
         packages.remove("parmetis")
         packages.remove("superlu_dist")
 
@@ -166,21 +179,7 @@ if __name__ == "__main__":
     else:
         packages.remove("lapack")
 
-    install_dir = os.path.abspath(os.path.expanduser(args.INSTALL_DIR))
-    download_dir = os.path.join(install_dir, "downloads")
-    if args.download_dir:
-        download_dir = os.path.abspath(os.path.expanduser(args.download_dir))
-    extract_dir = os.path.join(install_dir, "sources")
-    if args.extract_dir:
-        extract_dir = os.path.abspath(os.path.expanduser(args.extract_dir))
-
     jobs = args.jobs
-
-    log_dir = os.path.join(install_dir, "logs")
-    if args.log_dir:
-        log_dir = os.path.abspath(os.path.expanduser(args.log_dir))
-    mkdir_p(log_dir)
-    logger = utils.PrintAndFileLogger(os.path.join(log_dir, "install-tpls.log"))
 
     if args.cc:
         if CC:
@@ -207,23 +206,24 @@ if __name__ == "__main__":
             )
         FC = str(args.fc)
 
+    tpl_registry = Registry(logger)
     if CC:
         tpl_registry.set_environment_variable("CC", CC)
     else:
-        print("C compiler not set, defaulting to gcc, set with --cc")
+        logger.log("C compiler not set, defaulting to gcc, set with --cc")
         tpl_registry.set_environment_variable("CC", "gcc")
 
     if CXX:
         tpl_registry.set_environment_variable("CXX", CXX)
     else:
-        print("C++ compiler not set, defaulting to g++, set with --cxx")
+        logger.log("C++ compiler not set, defaulting to g++, set with --cxx")
         tpl_registry.set_environment_variable("CXX", "g++")
 
     if FC:
         tpl_registry.set_environment_variable("FC", FC)
         tpl_registry.set_environment_variable("F77", FC)
     else:
-        print("Fortran compiler not set, defaulting to gfortan, set with --fc")
+        logger.log("Fortran compiler not set, defaulting to gfortan, set with --fc")
         tpl_registry.set_environment_variable("FC", "gfortran")
         tpl_registry.set_environment_variable("F77", "gfortran")
 
@@ -286,7 +286,7 @@ if __name__ == "__main__":
             if build.check(True):
                 build.logger.log("Package {} found at {}".format(pc.name, package_dir))
             else:
-                print(
+                logger.log(
                     "Package {} not found check directory or let script build".format(
                         pc.name
                     ),
@@ -319,7 +319,7 @@ if __name__ == "__main__":
             build.build()
             build.install()
             if not build.check():
-                print(
+                logger.log(
                     "Package {} not built, contact Goma developers".format(pc.name),
                     file=sys.stderr,
                 )
@@ -327,7 +327,7 @@ if __name__ == "__main__":
             build.register()
         package_end_time = time.perf_counter()
         package_timings[p] = package_end_time - package_start_time
-        print(p, "took {:.2f} seconds".format(package_timings[p]))
+        logger.log(p, "took {:.2f} seconds".format(package_timings[p]))
 
     end_time = time.perf_counter()
     total_time = end_time - start_time
