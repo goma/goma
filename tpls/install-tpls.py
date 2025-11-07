@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from tpl_tools.builder import Builder
 from tpl_tools.registry import Registry
+from tpl_tools.builder import mkdir_p
 import importlib
 import tpl_tools.utils as utils
 import os
@@ -47,7 +48,6 @@ if __name__ == "__main__":
     CXX = os.environ.get("CXX")
     FC = os.environ.get("FC")
     tpl_registry = Registry()
-    logger = utils.PrintLogger()
     parser = argparse.ArgumentParser(
         description="""Third party library installer for the finite element code Goma"""
     )
@@ -71,6 +71,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--extract-dir", help="Extract and Build location", type=pathlib.Path
+    )
+    parser.add_argument(
+        "--log-dir", help="Directory location for logs", type=pathlib.Path
     )
     parser.add_argument(
         "--build-shared",
@@ -173,6 +176,12 @@ if __name__ == "__main__":
 
     jobs = args.jobs
 
+    log_dir = os.path.join(install_dir, "logs")
+    if args.log_dir:
+        log_dir = os.path.abspath(os.path.expanduser(args.log_dir))
+    mkdir_p(log_dir)
+    logger = utils.PrintAndFileLogger(os.path.join(log_dir, "install-tpls.log"))
+
     if args.cc:
         if CC:
             logger.log(
@@ -270,6 +279,7 @@ if __name__ == "__main__":
                 logger,
                 tpl_registry,
                 args.enable_shared,
+                log_dir=log_dir,
                 prebuilt=True,
                 skip_ssl_verify=args.skip_ssl_verify,
             )
@@ -294,6 +304,7 @@ if __name__ == "__main__":
                 logger,
                 tpl_registry,
                 args.enable_shared,
+                log_dir=log_dir,
                 skip_ssl_verify=args.skip_ssl_verify,
             )
 
