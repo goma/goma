@@ -69,7 +69,7 @@ class Package(packages.AutotoolsPackage):
             )
         configure_options.append("--with-metis=1")
         configure_options.append("--with-metis-dir=" + builder.env["METIS_DIR"])
-        configure_options.append("--with-cmake=1" + builder.env["CMAKE_DIR"])
+        configure_options.append("--with-cmake=1")
         configure_options.append("--with-cmake-dir=" + builder.env["CMAKE_DIR"])
         configure_options.append("--with-ptscotch=1")
         configure_options.append("--with-ptscotch-dir=" + builder.env["SCOTCH_DIR"])
