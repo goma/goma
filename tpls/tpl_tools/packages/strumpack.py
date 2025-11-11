@@ -34,6 +34,7 @@ class Package(packages.CMakePackage):
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=ON")
         else:
             builder.add_option("-DBUILD_SHARED_LIBS:BOOL=OFF")
+        builder.add_option("-DSTRUMPACK_USE_OPENMP:BOOL=OFF")
 
     def register(self, builder):
         registry = builder._registry
