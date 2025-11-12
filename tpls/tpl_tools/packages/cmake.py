@@ -32,5 +32,8 @@ class Package(packages.AutotoolsPackage):
             os.path.join(builder.install_dir(), "bin", "cmake")
         )
         registry.prepend_environment_variable(
+            "CMAKE_DIR", os.path.join(builder.install_dir())
+        )
+        registry.prepend_environment_variable(
             "PATH", os.path.join(builder.install_dir(), "bin")
         )

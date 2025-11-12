@@ -6,7 +6,7 @@ RUN dnf install -y git patch gcc-toolset-14 m4 make bzip2 tar zlib-devel openssl
 COPY . /opt/goma
 
 RUN . /opt/rh/gcc-toolset-14/enable && \
-    PYTHONUNBUFFERED=1 /opt/goma/install-tpls.py --cc=gcc --cxx=g++ --fc=gfortran --download-dir=/tmp/downloads -j 32 --extract-dir=/tmp/extract /opt/goma-libs
+    PYTHONUNBUFFERED=1 /opt/goma/install-tpls.py --cc=gcc --cxx=g++ --fc=gfortran --build-static --download-dir=/tmp/downloads -j 32 --extract-dir=/tmp/extract /opt/goma-libs
 
 RUN rm -r /opt/goma
 RUN rm -r /tmp/downloads

@@ -9,12 +9,14 @@ class Package(packages.AutotoolsPackage):
         self.sha256 = "0ccb90cdcbe91f64ebce16b7180b04dd405f8e5a059f8172f42df439719a5628"
         self.filename = "petsc-" + self.version + ".tar.gz"
         self.url = (
-            "https://gitlab.com/petsc/petsc/-/archive/v" + self.version + "/petsc-v"
+            "https://gitlab.com/petsc/petsc/-/archive/v"
+            + self.version
+            + "/petsc-v"
             + self.version
             + ".tar.gz"
         )
         self.includes = ["petsc"]
-        self.libraries = ["petsc", "strumpack"]
+        self.libraries = ["petsc"]
         self.dependencies = [
             "openmpi",
             "scalapack",
@@ -23,6 +25,7 @@ class Package(packages.AutotoolsPackage):
             "scotch",
             "parmetis",
             "hypre",
+            "strumpack",
         ]
 
     def set_environment(self, builder):
@@ -51,7 +54,8 @@ class Package(packages.AutotoolsPackage):
         else:
             configure_options.append("--with-shared-libraries=0")
         configure_options.append("--with-debugging=0")
-        configure_options.append("--download-strumpack")
+        configure_options.append("--with-strumpack")
+        configure_options.append("--with-strumpack-dir=" + builder.env["STRUMPACK_DIR"])
         configure_options.append("--with-scalapack=1")
         configure_options.append("--with-scalapack-dir=" + builder.env["SCALAPACK_DIR"])
         if "PARMETIS_DIR" in builder.env:
@@ -65,6 +69,8 @@ class Package(packages.AutotoolsPackage):
             )
         configure_options.append("--with-metis=1")
         configure_options.append("--with-metis-dir=" + builder.env["METIS_DIR"])
+        # I think there should be no cmake packages since we build them all first
+        configure_options.append("--with-cmake=0")
         configure_options.append("--with-ptscotch=1")
         configure_options.append("--with-ptscotch-dir=" + builder.env["SCOTCH_DIR"])
         configure_options.append("--with-blas-lib=" + builder.env["BLAS_LIBRARIES"])
