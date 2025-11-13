@@ -84,9 +84,10 @@ class Config(object):
 
 
 class Registry(object):
-    def __init__(self):
+    def __init__(self, logger=None):
         self.executables = {}
         self.package_locations = {}
+        self.logger = logger
         self.environment = os.environ.copy()
         self.config = Config()
 
@@ -94,7 +95,10 @@ class Registry(object):
         if os.path.isfile(exe_path):
             name = os.path.basename(exe_path)
             self.executables[name] = exe_path
-            print("Registering {}:{}".format(name, exe_path))
+            if self.logger:
+                self.logger.log("Registering {}:{}".format(name, exe_path))
+            else:
+                print("Registering {}:{}".format(name, exe_path))
         else:
             raise ValueError("exe not a file {}".format(exe_path))
 

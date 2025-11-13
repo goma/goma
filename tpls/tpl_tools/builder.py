@@ -32,6 +32,7 @@ class Builder(object):
         logger,
         registry,
         build_shared,
+        log_dir=None,
         prebuilt=False,
         skip_ssl_verify=False,
     ):
@@ -43,6 +44,7 @@ class Builder(object):
         self._extract_dir = extract_dir
         self._extracted_folder = None
         self._install_dir = install_dir
+        self._log_dir = log_dir
         self.logger = logger
         self._jobs = jobs
         self._registry = registry
@@ -131,7 +133,7 @@ class Builder(object):
         self.logger.log("Running command: {}".format(" ".join(command)))
         cwd = os.path.join(self._extract_dir, self._extracted_folder)
         self.logger.log("In directory: {}".format(cwd))
-        log_directory = os.path.join(self._install_dir, "logs")
+        log_directory = self._log_dir
         mkdir_p(log_directory)
         logfile = self._package.name + "-" + self._package.version
         if command_id:

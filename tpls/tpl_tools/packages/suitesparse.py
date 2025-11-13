@@ -31,6 +31,7 @@ class Package(packages.CMakePackage):
         builder.add_option(
             "-DSUITESPARSE_ENABLE_PROJECTS=suitesparse_config;amd;camd;ccolamd;colamd;cholmod;umfpack"
         )
+        builder.add_option("-DSUITESPARSE_USE_OPENMP=OFF")
 
     def register(self, builder):
         registry = builder._registry

@@ -118,6 +118,18 @@ def download_file(url, filename, sha256=None, verify=True):
         return False
 
 
+class PrintAndFileLogger(object):
+    def __init__(self, filepath):
+        self.file = open(filepath, "a")
+
+    def log(self, *args):
+        print(*args)
+        print(*args, file=self.file)
+
+    def __del__(self):
+        self.file.close()
+
+
 class PrintLogger(object):
     def __init__(self):
         return
