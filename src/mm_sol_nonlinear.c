@@ -267,6 +267,7 @@ assemble_prefill(struct GomaLinearSolverData *ams, double x[], Exo_DB *exo, Dpi 
 
 */
 
+#ifdef GOMA_ENABLE_AZTEC
 static void update_problem_unknowns(int line_search_type,
                                     Dpi *dpi,
                                     Comm_Ex *cx,
@@ -330,6 +331,7 @@ static void update_problem_unknowns_dot(int line_search_type,
   }
   exchange_dof(cx, dpi, xdot, pg->imtrx);
 }
+#endif
 
 /*
  * Perform backtracking line search algorithm.
