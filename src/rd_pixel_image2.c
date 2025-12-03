@@ -56,6 +56,7 @@
 #include "std.h"
 #include "wr_exo.h"
 #include <mpi.h>
+#include <string.h>
 
 #define INDEX3D(i, j, k, sizes) (i * sizes[1] * sizes[2] + j * sizes[2] + k)
 
