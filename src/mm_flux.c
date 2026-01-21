@@ -8573,6 +8573,52 @@ static int load_fv_grads_sens(void) {
     }
   }
 
+  v = QTENSOR11;
+  if (pd->v[pg->imtrx][v]) {
+    dofs = ei[pg->imtrx]->dof[v];
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (r = 0; r < VIM; r++) {
+          fv_sens->grad_Q[r][p][q] = 0.;
+          for (i = 0; i < dofs; i++) {
+            fv_sens->grad_Q[r][p][q] += *esp_old->Q[p][q][i] * bf[v]->grad_phi[i][r];
+          }
+        }
+      }
+    }
+
+    /*
+     * div(G) - this is a vector!
+     */
+    for (r = 0; r < VIM; r++) {
+      fv_sens->div_Q[r] = 0.;
+    }
+
+    for (r = 0; r < dim; r++) {
+      for (q = 0; q < dim; q++) {
+        fv_sens->div_Q[r] += fv_sens->grad_Q[q][q][r];
+      }
+    }
+
+    if (pd->CoordinateSystem != CARTESIAN) {
+      for (s = 0; s < VIM; s++) {
+        for (r = 0; r < VIM; r++) {
+          for (p = 0; p < VIM; p++) {
+            fv_sens->div_Q[s] += fv_sens->Q[p][s] * fv_sens->grad_e[p][r][s];
+          }
+        }
+      }
+
+      for (s = 0; s < VIM; s++) {
+        for (r = 0; r < VIM; r++) {
+          for (q = 0; q < VIM; q++) {
+            fv_sens->div_Q[s] += fv_sens->Q[r][q] * fv_sens->grad_e[q][r][s];
+          }
+        }
+      }
+    }
+  }
+
   return (status);
 } /*  end of load_fv_grads_sens  */
 

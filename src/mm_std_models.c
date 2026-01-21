@@ -4603,7 +4603,8 @@ int hydro_flux(struct Species_Conservation_Terms *st,
   mu = viscosity(gn, gamma_dot, d_mu);
 
   if (gn->ConstitutiveEquation == SUSPENSION || gn->ConstitutiveEquation == CARREAU_SUSPENSION ||
-      gn->ConstitutiveEquation == POWERLAW_SUSPENSION) {
+      gn->ConstitutiveEquation == POWERLAW_SUSPENSION || gn->ConstitutiveEquation == DP_POWER_LAW_SUSPENSION || 
+      gn->ConstitutiveEquation == DP_CARREAU_SUSPENSION) {
     mu0 = gn->mu0; /* viscosity of pure fluid */
     rel_mu_denom = (1.0 - Y[w] / maxpack);
     if (rel_mu_denom <= 0)
@@ -4813,8 +4814,10 @@ int hydro_flux(struct Species_Conservation_Terms *st,
      the R-Z formula.  Also, a BISECTION version for
      each formula is coded. ACSun 9/98 CAR 10/98*/
 
-  if (Y[w] >= maxpack)
+  if (Y[w] >= maxpack){
     Y[w] = maxpack;
+  }
+
   if (mp->GravDiffType[w] == RICHARDSON_ZAKI) {
     f = pow(1. - Y[w], rzexp);
     df_dmu = 0.;
@@ -5061,7 +5064,35 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
 
   dim = pd->Num_Dim;
 
+  dbl d_lift_dgd, d_lift_dc;
+  dbl lift_dir[DIM], lift_coeff, h, radius_p, L_char;
+  dbl dist_lift;
+
+  /* Set up some convenient local variables and pointers */
+  Y = fv->c;
+  grad_Y = fv->grad_c;
+
+  dim = pd->Num_Dim;
+
+  radius_p = mp->SBM_Lengths2[0][0]; L_char = mp->SBM_Lengths2[0][1]; 
+
+  h = fv->external_field[0];
+  lift_dir[0] = fv->external_field[1];
+  lift_dir[1] = fv->external_field[2];
+  lift_dir[2] = fv->external_field[3];
+
+  if (h < 1.e-3) {
+    dist_lift = 1.e-3;
+  } else {
+    dist_lift = h;
+  }
+  
   /* Compute gamma_dot[][] */
+
+  /* Disallowing negative volume fractions */
+  /* if (Y[w] < 0.) {
+     Y[w] = 0.0;
+  } */
 
   /* Compute gammadot, grad(gammadot), gamma_dot[][], d_gd_dG, and d_grad_gd_dG */
 
@@ -5078,7 +5109,8 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
   mu = viscosity(gn, gamma_dot, d_mu);
 
   if (gn->ConstitutiveEquation == SUSPENSION || gn->ConstitutiveEquation == CARREAU_SUSPENSION ||
-      gn->ConstitutiveEquation == POWERLAW_SUSPENSION || gn->ConstitutiveEquation == FILLED_EPOXY) {
+      gn->ConstitutiveEquation == POWERLAW_SUSPENSION || gn->ConstitutiveEquation == FILLED_EPOXY ||
+      gn->ConstitutiveEquation == DP_POWER_LAW_SUSPENSION || gn->ConstitutiveEquation == DP_CARREAU_SUSPENSION ) {
     maxpack = gn->maxpack;
     mu0 = gn->mu0; /* viscosity of pure fluid */
   } else {
@@ -5119,7 +5151,7 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
     }
   } else if (mp->FickDiffType[w] == EXP_DECAY) {
     for (a = 0; a < dim; a++) {
-      Dd[a] = mp->u_fdiffusivity[w][0] * exp(-mp->u_fdiffusivity[w][1] * Y[w]);
+      Dd[a] = mp->u_fdiffusivity[w][0] * exp( -mp->u_fdiffusivity[w][1] * Y[w] );
       dDd_dy[a] = -mp->u_fdiffusivity[w][1] * Dd[a];
     }
   }
@@ -5131,7 +5163,8 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
      the R-Z formula.  */
 
   if (Y[w] >= maxpack)
-    Y[w] = maxpack;
+    Y[w] = maxpack; 
+
   if (mp->GravDiffType[w] == RICHARDSON_ZAKI) {
     if (Y[w] / maxpack < 0.95) {
       f = pow(1. - Y[w], rzexp) / mu0;
@@ -5168,9 +5201,40 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
   // dM_dmu = Dg * df_dmu;
   dM_dmu = 0.;
 
+  double h_0 = 0.0023; // 1e-6 0.0023
+  dbl lift_pow = 1.00;
+ 
+  lift_coeff = 3. * mu0 * gammadot * 1.2 * Y[w] / (4. * M_PIE * pow(dist_lift, lift_pow));
+  d_lift_dgd = 0;
+  if (DOUBLE_NONZERO(gammadot))
+     d_lift_dgd = lift_coeff / gammadot;
+     d_lift_dc = 0;
+  if (DOUBLE_NONZERO(Y[w]))
+     d_lift_dc = lift_coeff / Y[w];
+  
+  if (dist_lift <= (h_0)) {
+     lift_coeff = 3. * mu0 * gammadot * 1.2 * Y[w] / (4. * M_PIE * pow(h_0, lift_pow));
+     //lift_coeff = 3. * mu0 * gammadot * 1.2 * Y[w] / (4. * M_PIE * pow(dist_lift + h_0, lift_pow));
+     lift_coeff *= 0.50; /* Modulates the plateau amplitude */
+     if (DOUBLE_NONZERO(gammadot))
+       d_lift_dgd = lift_coeff / gammadot;
+       d_lift_dc = 0;
+     if (DOUBLE_NONZERO(Y[w]))
+       d_lift_dc = lift_coeff / Y[w];
+  } 
+
+   
+  if( Y[w] < 0. ){
+     lift_coeff = 0; //0.5*(tanh(50*( (dist_lift - h_0)/L_char) + 1);
+     d_lift_dgd = 0; //gammadot;
+     d_lift_dc  = 0; // Y[w]; /* fv->c[w] = 0.; // Attempt to disallow negative concentrations */ 
+  } 
+  
+  /* lift_coeff *= 0.98 // Attempt to modulate the plateau amplitude */ 
   /* assemble residual */
   for (a = 0; a < dim; a++) {
     st->diff_flux[w][a] = -M * div_tau_p[a];
+    st->diff_flux[w][a] += M * lift_coeff * lift_dir[a];
     st->diff_flux[w][a] += M * Y[w] * mp->momentum_source[a] * del_rho;
     st->diff_flux[w][a] += -Dd[a] * grad_Y[w][a];
   }
@@ -5181,8 +5245,7 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
     for (a = 0; a < dim && pd->v[pg->imtrx][var]; a++) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 
-        c_term = -dM_dy * bf[var]->phi[j] * div_tau_p[a];
-
+        c_term = -dM_dy * bf[var]->phi[j] * (div_tau_p[a] - lift_coeff * lift_dir[a]);
         c_term += -M * d_div_tau_p_dy[a][w][j];
 
         mu_term = -dM_dmu * d_mu->C[w][j] * div_tau_p[a];
@@ -5254,7 +5317,7 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
         for (p = 0; p < VIM; p++) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             c_term = -M * d_div_tau_p_dv[a][p][j];
-
+            c_term += M * d_lift_dgd * d_gd_dv[p][j] * lift_dir[a];
             mu_term = 0.;
 
             st->d_diff_flux_dv[w][a][p][j] = c_term + mu_term;
@@ -5347,7 +5410,7 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
 
   for (a = 0; a < VIM; a++) {
     for (b = 0; b < VIM; b++) {
-      gamma_dot[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+      gamma_dot[a][b] = fv_old->grad_v[a][b] + fv_old->grad_v[b][a];
     }
   }
 
@@ -5359,7 +5422,8 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
   mu = viscosity(gn, gamma_dot, NULL);
 
   if (gn->ConstitutiveEquation == SUSPENSION || gn->ConstitutiveEquation == CARREAU_SUSPENSION ||
-      gn->ConstitutiveEquation == POWERLAW_SUSPENSION || gn->ConstitutiveEquation == FILLED_EPOXY) {
+      gn->ConstitutiveEquation == POWERLAW_SUSPENSION || gn->ConstitutiveEquation == FILLED_EPOXY ||
+      gn->ConstitutiveEquation == DP_POWER_LAW_SUSPENSION || gn->ConstitutiveEquation == DP_CARREAU_SUSPENSION) {
     maxpack = gn->maxpack;
     mu0 = gn->mu0; /* viscosity of pure fluid */
   } else {
@@ -5396,7 +5460,14 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
   }
   memset(tau_p, 0, DIM * DIM * sizeof(dbl));
 
-  if (cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD) {
+  if (pd->gv[QTENSOR11]) {
+    for (int i = 0; i < VIM; i++) {
+      for (int j = 0; j < VIM; j++) {
+        qtensor[i][j] = fv->Q[i][j];
+      }
+    }
+  }
+  else if (cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD) {
     /* Get Q tensor */
     for (a = 0; a < VIM; a++) {
       vort_dir_local[a] = 0.0;
@@ -5430,7 +5501,7 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
     tau_p[a][a] +=
         cp * Y[w] * fv->P; /* suspension pressure adds an isotropic term on the diagonal */
     for (b = 0; b < VIM; b++) {
-      tau_p[a][b] += mu0 * pp * gammadot * qtensor[a][b];
+      tau_p[a][b] += mu0 * pp * fv->SH * qtensor[a][b];
     }
   }
 
@@ -5450,7 +5521,7 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
           for (b = 0; b < VIM; b++) {
             for (p = 0; p < VIM; p++) {
               for (j = 0; j < dofs; j++) {
-                d_tau_p_dv[a][b][p][j] = mu0 * pp * d_gd_dv[p][j] * qtensor[a][b];
+                d_tau_p_dv[a][b][p][j] = 0 * mu0 * pp * d_gd_dv[p][j] * qtensor[a][b];
               }
             }
           }
@@ -5466,7 +5537,7 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
           for (b = 0; b < VIM; b++) {
             for (p = 0; p < dim; p++) {
               for (j = 0; j < dofs; j++) {
-                d_tau_p_dmesh[a][b][p][j] = mu0 * pp * d_gd_dmesh[p][j] * qtensor[a][b];
+                d_tau_p_dmesh[a][b][p][j] = 0 * mu0 * pp * d_gd_dmesh[p][j] * qtensor[a][b];
               }
             }
           }
@@ -5611,8 +5682,17 @@ int divergence_particle_stress(
     grad_mu[a] += dmu_dY[w] * fv->grad_c[w][a];
   }
 
-  /* assume a diagonal Q tensor */
+  dbl div_qtensor[DIM] = {0.};
   memset(qtensor, 0, DIM * DIM * sizeof(dbl));
+  if (pd->gv[QTENSOR11]) {
+    for (int i = 0; i < VIM; i++) {
+      div_qtensor[i] = fv->div_Q[i];
+      for (int j = 0; j < VIM; j++) {
+        qtensor[i][j] = fv->Q[i][j];
+      }
+    }
+  } else {
+  /* assume a diagonal Q tensor */
   for (a = 0; a < DIM; a++) {
     qtensor[a][a] = mp->u_qdiffusivity[w][a];
   }
@@ -5657,9 +5737,11 @@ int divergence_particle_stress(
 
   memset(qtensor, 0, DIM * DIM * sizeof(dbl));
   rotate_tensor(Q_prime, qtensor, R, 0);
+  }
 
   if (gn->ConstitutiveEquation == SUSPENSION || gn->ConstitutiveEquation == CARREAU_SUSPENSION ||
-      gn->ConstitutiveEquation == POWERLAW_SUSPENSION || gn->ConstitutiveEquation == FILLED_EPOXY) {
+      gn->ConstitutiveEquation == POWERLAW_SUSPENSION || gn->ConstitutiveEquation == FILLED_EPOXY ||
+      gn->ConstitutiveEquation == DP_POWER_LAW_SUSPENSION || gn->ConstitutiveEquation == DP_CARREAU_SUSPENSION) {
     maxpack = gn->maxpack;
     mu0 = gn->mu0; /* viscosity of pure fluid */
   } else {
@@ -5706,7 +5788,8 @@ int divergence_particle_stress(
   for (a = 0; a < WIM; a++) {
     for (b = 0; b < WIM; b++) {
       div_tau_p[a] +=
-          mu0 * qtensor[a][b] * (pp * grad_gd[b] + (gammadot + gamma_nl) * d_pp_dy * grad_Y[w][b]);
+          mu0 * qtensor[a][b] * (pp * grad_gd[b] + (gammadot + gamma_nl) * d_pp_dy * grad_Y[w][b])
+          + mu0 * div_qtensor[b] * (gammadot + gamma_nl) * pp;
     }
   }
 
@@ -5727,7 +5810,8 @@ int divergence_particle_stress(
                 mu0 * qtensor[a][b] *
                 (d_pp_dy * bf[var]->phi[j] * grad_gd[b] +
                  (gammadot + gamma_nl) * d_pp2_dy2 * bf[var]->phi[j] * grad_Y[w][b] +
-                 (gammadot + gamma_nl) * d_pp_dy * bf[var]->grad_phi[j][b]);
+                 (gammadot + gamma_nl) * d_pp_dy * bf[var]->grad_phi[j][b])
+          + mu0 * fv->div_Q[b] * (gammadot + gamma_nl) * d_pp_dy * bf[var]->phi[j];
           }
         }
       }
@@ -6239,7 +6323,8 @@ dbl solidification_permeability(dbl h_elem_avg, /* average element size */
   mu0 = gn->mu0;
 
   if (gn->ConstitutiveEquation == SUSPENSION || gn->ConstitutiveEquation == CARREAU_SUSPENSION ||
-      gn->ConstitutiveEquation == POWERLAW_SUSPENSION || gn->ConstitutiveEquation == FILLED_EPOXY) {
+      gn->ConstitutiveEquation == POWERLAW_SUSPENSION || gn->ConstitutiveEquation == FILLED_EPOXY ||
+      gn->ConstitutiveEquation == DP_POWER_LAW_SUSPENSION || gn->ConstitutiveEquation == DP_CARREAU_SUSPENSION) {
     maxpack = gn->maxpack;
   } else {
     maxpack = .68;

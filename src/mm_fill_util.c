@@ -1963,7 +1963,7 @@ int load_bf_grad(void)
          * variable.  I had one, but it is not presently being used.
          */
 
-        if (bfv->interpolation != I_N1 && (pd->gv[EM_E1_REAL] || CURL_V != -1)) {
+        if (bfv->interpolation != I_N1 && (pd->gv[EM_E1_REAL] || pd->gv[QTENSOR11] || CURL_V != -1)) {
           siz = DIM * DIM * MDE * sizeof(double);
           memset(&(bfv->curl_phi_e[0][0][0]), 0, siz);
 

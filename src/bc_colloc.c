@@ -3024,6 +3024,35 @@ int load_variable(double *x_var,       /* variable value */
     var = EDDY_NU;
     *d_x_var = 1.;
     break;
+  case QTENSOR11:
+    *x_var = fv->Q[0][0];
+    var = QTENSOR11;
+    *d_x_var = 1.;
+    break;
+  case QTENSOR12:
+    *x_var = fv->Q[0][1];
+    var = QTENSOR12;
+    *d_x_var = 1.;
+    break;
+  case QTENSOR13:
+    *x_var = fv->Q[0][2];
+    var = QTENSOR13;
+    *d_x_var = 1.;
+    break;
+  case QTENSOR22:
+    *x_var = fv->Q[1][1];
+    var = QTENSOR22;
+    *d_x_var = 1.;
+    break;
+  case QTENSOR23:
+    *x_var = fv->Q[1][2];
+    var = QTENSOR23;
+    *d_x_var = 1.;
+    break;
+  case QTENSOR33:
+    *x_var = fv->Q[2][2];
+    var = QTENSOR33;
+    break;
   case TURB_K:
     *x_var = fv->turb_k;
     var = TURB_K;

@@ -404,6 +404,12 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 //!               Assume that kappa comes from bubble theory
 #define DILVISCM_KAPPABUBBLES 13
 
+/*
+ * Deformable Particle Suspension Viscosity Models
+ */
+#define DP_POWER_LAW_SUSPENSION 2525
+#define DP_CARREAU_SUSPENSION 25250
+
 /* types of diffusion coefficient relations */
 #define POROUS               3
 #define HYDRO                4

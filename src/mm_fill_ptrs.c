@@ -1930,6 +1930,38 @@ int load_elem_dofptr(const int ielem,
     }
   }
 
+  int R_Q[DIM][DIM];
+  R_Q[0][0] = QTENSOR11;
+  R_Q[0][1] = QTENSOR12;
+  R_Q[0][2] = QTENSOR13;
+  R_Q[1][0] = QTENSOR12;
+  R_Q[1][1] = QTENSOR22;
+  R_Q[1][2] = QTENSOR23;
+  R_Q[2][0] = QTENSOR13;
+  R_Q[2][1] = QTENSOR23;
+  R_Q[2][2] = QTENSOR33;
+  eqn = R_QTENSOR11;
+  if (upd->ep[pg->imtrx][eqn] >= 0) {
+    /* This should loop through all the velocity gradient
+     * components of the tensor
+     */
+    for (b = 0; b < VIM; b++) {
+      for (c = 0; c < VIM; c++) {
+        eqn = R_Q[b][c];
+        if (upd->ep[pg->imtrx][eqn] >= 0) {
+          load_varType_Interpolation_ptrs(eqn, esp->Q[b][c], esp_old->Q[b][c], esp_dot->Q[b][c]);
+        } else {
+          dofs = ei[pg->imtrx]->dof[R_QTENSOR11];
+          for (i = 0; i < dofs; i++) {
+            esp->Q[b][c][i] = p0;
+            esp_old->Q[b][c][i] = p0;
+            esp_dot->Q[b][c][i] = p0;
+          }
+        }
+      }
+    }
+  }
+
   eqn = R_POR_LIQ_PRES;
   if (upd->ep[pg->imtrx][eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->p_liq, esp_old->p_liq, esp_dot->p_liq);
@@ -2833,6 +2865,40 @@ int load_elem_dofptr_all(const int ielem, const Exo_DB *exo) {
         }
       }
     }
+
+  int R_Q[DIM][DIM];
+  R_Q[0][0] = QTENSOR11;
+  R_Q[0][1] = QTENSOR12;
+  R_Q[0][2] = QTENSOR13;
+  R_Q[1][0] = QTENSOR12;
+  R_Q[1][1] = QTENSOR22;
+  R_Q[1][2] = QTENSOR23;
+  R_Q[2][0] = QTENSOR13;
+  R_Q[2][1] = QTENSOR23;
+  R_Q[2][2] = QTENSOR33;
+    eqn = QTENSOR11;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      /* This should loop through all the velocity gradient
+       * components of the tensor
+       */
+      for (b = 0; b < VIM; b++) {
+        for (c = 0; c < VIM; c++) {
+          eqn = R_Q[b][c];
+          if (upd->ep[imtrx][eqn] >= 0) {
+            load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->Q[b][c], esp_old->Q[b][c],
+                                                esp_dot->Q[b][c]);
+          } else {
+            dofs = ei[imtrx]->dof[R_QTENSOR11];
+            for (i = 0; i < dofs; i++) {
+              esp->Q[b][c][i] = p0;
+              esp_old->Q[b][c][i] = p0;
+              esp_dot->Q[b][c][i] = p0;
+            }
+          }
+        }
+      }
+    }
+
 
     eqn = R_POR_LIQ_PRES;
     if (upd->ep[imtrx][eqn] >= 0) {
