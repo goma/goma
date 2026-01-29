@@ -629,6 +629,8 @@ double viscosity(struct Generalized_Newtonian *gn_local,
     }
   } else if (gn_local->ConstitutiveEquation == POWER_LAW) {
     mu = power_law_viscosity(gn_local, gamma_dot, d_mu);
+  } else if (gn_local->ConstitutiveEquation == POWER_LAW_ARRHENIUS) {
+    mu = power_law_arrhenius_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == CARREAU) {
     mu = carreau_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == BINGHAM) {
@@ -2032,6 +2034,107 @@ double carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
 
   return (mu);
 } /* end of carreau_suspension_viscosity */
+
+double power_law_arrhenius_viscosity(struct Generalized_Newtonian *gn_local,
+                                     dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+                                     VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
+
+  int a, b;
+  int mdofs = 0, vdofs;
+
+  int i, j;
+
+  dbl gammadot; /* strain rate invariant */
+
+  dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
+                               wrt velocity */
+  dbl d_gd_dmesh[DIM][MDE]; /* derivative of strain rate invariant
+                               wrt mesh */
+
+  dbl val;
+  dbl mu0;
+  dbl nexp;
+  dbl offset;
+  dbl mu = 0.;
+
+  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
+
+  if (pd->e[pg->imtrx][R_MESH1]) {
+    mdofs = ei[pg->imtrx]->dof[R_MESH1];
+  }
+
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+
+  /* calculate power law viscosity
+     mu = mu0 * (offset + gammadot)**(nexp-1))                 */
+  mu0 = gn_local->mu0;
+  nexp = gn_local->nexp;
+  offset = 0.00001;
+
+  dbl temp = fv->T;
+
+  if (!(DOUBLE_NONZERO(temp))) {
+    GOMA_EH(GOMA_ERROR, "Field temperature is zero in power law arrhenius viscosity model.");
+  }
+
+  dbl temp_coeff = (1 / temp);
+  dbl Ea = gn_local->atexp;
+  dbl arr_coeff = exp(Ea * temp_coeff);
+  dbl d_arr_coeff_dT = -arr_coeff * Ea / (temp * temp);
+
+  val = pow(gammadot + offset, nexp - 1.);
+  mu = mu0 * val;
+
+  dbl mu_save = mu;
+  mu *= arr_coeff;
+  /*
+   * d( mu )/dmesh
+   */
+
+  val = pow(gammadot + offset, nexp - 2.);
+
+  if (d_mu != NULL) {
+    d_mu->gd = mu0 * (nexp - 1.0) * val;
+  }
+
+  if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
+    for (b = 0; b < VIM; b++) {
+      for (j = 0; j < mdofs; j++) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
+
+          d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
+
+        } else {
+          /* printf("\ngammadot is zero in viscosity function");*/
+          d_mu->X[b][j] = 0.0;
+        }
+      }
+    }
+  }
+
+  /*
+   * d( mu )/dv
+   */
+  if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    for (a = 0; a < VIM; a++) {
+      for (i = 0; i < vdofs; i++) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
+          d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
+        } else {
+          d_mu->v[a][i] = 0.0;
+        }
+      }
+    }
+  }
+  if (d_mu != NULL && pd->e[pg->imtrx][TEMPERATURE]) {
+    int var = TEMPERATURE;
+    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+      d_mu->T[j] = d_arr_coeff_dT * mu_save * bf[var]->phi[j];
+    }
+  }
+
+  return (mu);
+}
 
 /* powerlaw_suspension viscosity model */
 
