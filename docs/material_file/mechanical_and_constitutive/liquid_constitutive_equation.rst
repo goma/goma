@@ -32,20 +32,39 @@ NEWTONIAN
     :math:`\mu`, where :math:`\mu` is the viscosity in the chosen units for the problem and is     
     entered with the *Viscosity* card.                                                             
 POWER_LAW
-    For a power law model. This model requires two parameters. The first, μ0, is the zero          
-    strain-rate limit of the viscosity and is entered with the *Low Rate Viscosity* card. The      
-    second, n, is the exponent on the strain rate which can take on any value between 1 (Newtonian)
-    and 0 (infinitely shear thinning). n is entered with the *Power Law Exponent* card. The form of
-    the equation is                                                                                
+    For a power law model. This model requires two parameters. The first, μ0, is
+    the zero strain-rate limit of the viscosity and is entered with the
+    *Low Rate Viscosity* card. The second, n, is the exponent on the strain
+    rate which can take on any value between 1 (Newtonian) and 0 (infinitely
+    shear thinning). n is entered with the *Power Law Exponent* card. The form
+    of the equation is
     
     .. math::
 
        \mu = \mu_0 \dot{\gamma}^{n-1}
                                                                                                    
                                                                                                    
-    where is the second invariant of the shear-rate tensor. To obtain solutions with the power law 
+    where, :math:`\dot{\gamma}` is the second invariant of the shear-rate tensor. To obtain solutions with the power law 
     model, it is best to start with a Newtonian initial guess since the viscosity becomes infinite 
     at zero shear-rate.                                                                            
+POWER_LAW_ARRHENIUS
+    For a power law model. This model requires two parameters. The first, μ0, is
+    the zero strain-rate limit of the viscosity and is entered with the
+    *Low Rate Viscosity* card. The second, n, is the exponent on the strain
+    rate which can take on any value between 1 (Newtonian) and 0 (infinitely
+    shear thinning). n is entered with the *Power Law Exponent* card.  The
+    Arrhenius temperature dependence :math:`\frac{E}{R}` is included via the
+    Thermal Exponent card.  The form of the equation is:
+    
+    .. math::
+
+       \mu = \mu_0 e^{\frac{E}{RT}}\dot{\gamma}^{n-1}
+                                                                                                   
+                                                                                                   
+    where, :math:`\dot{\gamma}` is the second invariant of the shear-rate
+    tensor. To obtain solutions with the power law model, it is best to start
+    with a Newtonian initial guess since the viscosity becomes infinite at zero
+    shear-rate.
 CARREAU              
     For a Carreau-Yasuda strain-rate thinning or thickening relation. This option requires five    
     floating point values. The first, μ0, is the zero strain-rate limit of the viscosity and is    
@@ -366,6 +385,16 @@ The following is a sample card setting the liquid constitutive equation type to
    Liquid Constitutive Equation = POWER_LAW
    Low Rate Viscosity= CONSTANT 1.
    Power Law Exponent= CONSTANT 1.
+
+The following is a sample card setting the liquid constitutive equation type to
+**POWER_LAW_ARRHENIUS** and demonstrates the required cards:
+
+::
+
+   Liquid Constitutive Equation = POWER_LAW_ARRHENIUS
+   Low Rate Viscosity= CONSTANT 1.
+   Power Law Exponent= CONSTANT 0.5
+   Thermal Exponent = CONSTANT {Ea/R}
 
 The following is a sample card setting the liquid constitutive equation type to
 **CARREAU** and demonstrates the required cards:

@@ -342,6 +342,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define HERSCHEL_BULKLEY_PAPANASTASIOU 56 /* Herschel_bulkley model - power-law + yield stress */
 #define EPOXY_LINEAR_EXP               57
 #define EPOXY_ARRHENIUS_EXP            58
+
+#define POWER_LAW_ARRHENIUS 4
+
 /*
  *  Heat source modeling
  *
