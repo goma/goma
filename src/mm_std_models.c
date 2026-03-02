@@ -5860,8 +5860,11 @@ int antoine_psat(double param[], double *f, double *dfdt)
 
   /* calculate the vapor pressure based on Antoine relation */
 
-  if (T <= TMIN || T >= TMAX) {
-    *f = CONV * 0.1;
+  if (T < TMIN) {
+    *f = CONV * exp(A - B / (TMIN + C));
+    *dfdt = 0.0;
+  } else if (T > TMAX) {
+    *f = CONV * exp(A - B / (TMAX + C));
     *dfdt = 0.0;
   } else {
     *f = CONV * exp(A - B / (T + C));

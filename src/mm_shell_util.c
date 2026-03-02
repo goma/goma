@@ -1970,6 +1970,7 @@ void shell_determinant_and_normal(
     switch (ei[pg->imtrx]->ielem_shape) {
     case SHELL:
     case TRISHELL:
+    case TRIANGLE:
       /* if (id_side == 5 )
         {
           T[0][0] =  1.; T[0][1] =  0.; T[0][2] =  0.;

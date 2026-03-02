@@ -3753,9 +3753,17 @@ double newshape(const double xi[],       /* local coordinates    */
 
   case TRIANGLE:
     if (interpolation == I_Q1) {
-      value = shape(s, t, u, LINEAR_TRI, Iquant, Inode);
+      if (Iquant < 3) {
+        value = shape(s, t, u, LINEAR_TRI, Iquant, Inode);
+      } else {
+        value = 0;
+      }
     } else if (interpolation == I_Q2) {
-      value = shape(s, t, u, QUAD_TRI, Iquant, Inode);
+      if (Iquant < 3) {
+        value = shape(s, t, u, QUAD_TRI, Iquant, Inode);
+      } else {
+        value = 0;
+      }
     } else {
       GOMA_EH(GOMA_ERROR, "Don't recognize this basis type for triangles");
     }
@@ -5554,6 +5562,6 @@ goma_error zero_strong_resid_side(struct Local_Element_Contributions *lec,
       }
     }
   }
-
   return GOMA_SUCCESS;
 }
+
