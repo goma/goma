@@ -3759,7 +3759,7 @@ double newshape(const double xi[],       /* local coordinates    */
         value = 0;
       }
     } else if (interpolation == I_Q2) {
-      if (Iquant < 3) {
+      if (Iquant < 6) {
         value = shape(s, t, u, QUAD_TRI, Iquant, Inode);
       } else {
         value = 0;
