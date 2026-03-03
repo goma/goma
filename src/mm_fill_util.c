@@ -5564,4 +5564,3 @@ goma_error zero_strong_resid_side(struct Local_Element_Contributions *lec,
   }
   return GOMA_SUCCESS;
 }
-
