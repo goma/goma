@@ -16,6 +16,7 @@
  * FLUX AND/OR DATA PARAMETER AND/OR CONTINUATION PARAMETER
  */
 
+#include "mm_as_const.h"
 #include "rf_vars_const.h"
 #ifdef GOMA_ENABLE_AZTEC
 #include <az_aztec_defs.h>
@@ -2768,8 +2769,27 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
       /* Now element vars */
       for (i = 0; i < tev; i++) {
-        extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo, 0);
-        wr_elem_result_exo(exo, ExoFileOut, gvec_elem, i, *nprint + 1, time_value, rd);
+        bool is_P1 = FALSE;
+        int dof = 0;
+        for (int eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
+          int mn = Matilda[eb_index];
+          if (exo->eb_num_elems[eb_index] > 0) {
+            if (pd_glob[mn]->i[upd->matrix_index[rd->evtype[i]]][rd->evtype[i]] == I_P1) {
+              dof = MAX(getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1), dof);
+              is_P1 = TRUE;
+            }
+          }
+        }
+        if (is_P1) {
+          for (int k = 0; k < dof; k++) {
+            extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo, k);
+            wr_elem_result_exo(exo, ExoFileOut, gvec_elem, i, *nprint + 1, time_value, rd);
+            i++;
+          }
+        } else {
+          extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo, 0);
+          wr_elem_result_exo(exo, ExoFileOut, gvec_elem, i, *nprint + 1, time_value, rd);
+        }
       }
       /* Add additional user-specified post processing variables */
       if (tev_post > 0) {
