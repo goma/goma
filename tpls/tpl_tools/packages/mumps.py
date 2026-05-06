@@ -8,8 +8,8 @@ import sys
 class Package(packages.GenericPackage):
     def __init__(self):
         self.name = "mumps"
-        self.version = "5.8.0"
-        self.sha256 = "d762eb8b1d9843a0993b8cfc137d043d04c7c51877ad37c94560433a474340a0"
+        self.version = "5.9.0"
+        self.sha256 = "02c6efdb91749ec0f82351d40f3f860547272a1eb1d899126a4265b4d6bcc4ca"
         self.filename = "mumps-" + self.version + ".tar.gz"
         self.url = "https://mumps-solver.org/MUMPS_" + self.version + ".tar.gz"
         self.libraries = ["dmumps", "zmumps"]
