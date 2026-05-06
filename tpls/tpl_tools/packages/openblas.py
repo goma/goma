@@ -7,8 +7,8 @@ import sys
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "openblas"
-        self.version = "0.3.30"
-        self.sha256 = "27342cff518646afb4c2b976d809102e368957974c250a25ccc965e53063c95d"
+        self.version = "0.3.33"
+        self.sha256 = "6761af1d9f5d353ab4f0b7497be2643313b36c8f31caec0144bfef198e71e6ab"
         self.filename = "OpenBLAS" + self.version + ".tar.gz"
         self.compression = "gz"
         self.url = (

@@ -10,7 +10,6 @@ import argparse
 import pathlib
 import time
 
-
 default_packages = [
     "cmake",
     "openmpi",
@@ -130,7 +129,11 @@ if __name__ == "__main__":
         dest="write_dynamic_library_path",
         action="store_true",
     )
-    parser.set_defaults(write_dynamic_library_path=False)
+    if sys.platform == "darwin":
+        parser.set_defaults(write_dynamic_library_path=True)
+    else:
+        parser.set_defaults(write_dynamic_library_path=False)
+
     parser.add_argument(
         "--install-complex-petsc",
         help="Install a complex version of petsc alongside the regular",
