@@ -9,8 +9,11 @@ Most of the documentation can be found at [https://www.gomafem.com/documentation
 
 ## License
 
+Goma is licensed under the GPLv2 open source license. 
+
 See [LICENSE](LICENSE) file. 
 and are noted at the top of the cmake file.
+
 
 ### Third party library licenses
 
@@ -23,10 +26,10 @@ See licenses at https://gitlab.com/libeigen/eigen
 
 FindMETIS.cmake
 
-* @copyright (c) 2009-2014 The University of Tennessee and The University
-  of Tennessee Research Foundation. All rights reserved.
-* @copyright (c) 2012-2014 Inria. All rights reserved.
-* @copyright (c) 2012-2014 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria, Univ. Bordeaux. All rights reserved.
+    @copyright (c) 2009-2014 The University of Tennessee and The University
+    of Tennessee Research Foundation. All rights reserved.
+    @copyright (c) 2012-2014 Inria. All rights reserved.
+    @copyright (c) 2012-2014 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria, Univ. Bordeaux. All rights reserved.
 
 
 FindUMFPACK.cmake
@@ -34,9 +37,9 @@ FindUMFPACK.cmake
 
 #### nanoflann is included under the BSD license, please see `nanoflann.hpp`
 
- * Copyright 2008-2009  Marius Muja (mariusm@cs.ubc.ca). All rights reserved.
- * Copyright 2008-2009  David G. Lowe (lowe@cs.ubc.ca). All rights reserved.
- * Copyright 2011-2022  Jose Luis Blanco (joseluisblancoc@gmail.com).
+    Copyright 2008-2009  Marius Muja (mariusm@cs.ubc.ca). All rights reserved.
+    Copyright 2008-2009  David G. Lowe (lowe@cs.ubc.ca). All rights reserved.
+    Copyright 2011-2022  Jose Luis Blanco (joseluisblancoc@gmail.com).
 
 ## Major Changes
 
@@ -64,6 +67,8 @@ For more information on build options see:
     spack info goma
 
 For more information on using spack see the [spack documentation](https://spack.readthedocs.io/en/latest/).
+
+Some people find spack difficult to use so a third party library script to build dependencies is provided in the `tpls` folder for more information see the [BUILD.md](./BUILD.md) and [tpls/README.md](./tpls/README.md)
 
 
 ## Third party libraries
