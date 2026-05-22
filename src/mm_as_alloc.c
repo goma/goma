@@ -940,14 +940,24 @@ int assembly_alloc(Exo_DB *exo)
 
     /* POLYMER STRESS for all modes */
     if (Num_Var_In_Type[imtrx][POLYMER_STRESS11]) {
-      esp->S = (dbl *****)array_alloc(4, MAX_MODES, VIM, VIM, MDE, sizeof(dbl *));
-      (void)memset(esp->S[0][0][0], 0, MAX_MODES * VIM * VIM * MDE * sizeof(dbl *));
+      int sdim = VIM;
+      for (int i = 0; i < upd->Total_Num_Matrices; i++) {
+        if (Num_Var_In_Type[i][FILM_HEIGHT])
+          sdim = 3;
+      }
+      esp->S = (dbl *****)array_alloc(4, MAX_MODES, sdim, sdim, MDE, sizeof(dbl *));
+      (void)memset(esp->S[0][0][0], 0, MAX_MODES * sdim * sdim * MDE * sizeof(dbl *));
     }
 
     /* VELOCITY_GRADIENT */
     if (Num_Var_In_Type[imtrx][VELOCITY_GRADIENT11]) {
-      esp->G = (dbl ****)array_alloc(3, VIM, VIM, MDE, sizeof(dbl *));
-      (void)memset(esp->G[0][0], 0, VIM * VIM * MDE * sizeof(dbl *));
+      int sdim = VIM;
+      for (int i = 0; i < upd->Total_Num_Matrices; i++) {
+        if (Num_Var_In_Type[i][FILM_HEIGHT])
+          sdim = 3;
+      }
+      esp->G = (dbl ****)array_alloc(3, sdim, sdim, MDE, sizeof(dbl *));
+      (void)memset(esp->G[0][0], 0, sdim * sdim * MDE * sizeof(dbl *));
     }
 
     /* POTENTIAL */
@@ -1238,6 +1248,9 @@ int assembly_alloc(Exo_DB *exo)
     }
     if (Num_Var_In_Type[imtrx][TURB_OMEGA]) {
       esp->turb_omega = (dbl **)alloc_ptr_1(MDE);
+    }
+    if (Num_Var_In_Type[imtrx][FILM_HEIGHT]) {
+      esp->film_height = (dbl **)alloc_ptr_1(MDE);
     }
 
   } /* End of loop over matrices */

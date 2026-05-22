@@ -489,6 +489,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
         case KINEMATIC_BC:
         case KINEMATIC_XI_BC:
         case KINEMATIC_ETA_BC:
+        case KINEMATIC_ZETA_BC:
         case VELO_NORMAL_BC:
         case VELO_NORMAL_LS_BC:
         case VELO_NORMAL_LS_PETROV_BC: {
@@ -516,6 +517,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
 
         case ELLIPTIC_XI_REGULARIZATION_BC:
         case ELLIPTIC_ETA_REGULARIZATION_BC:
+        case ELLIPTIC_ZETA_REGULARIZATION_BC:
           assemble_essential_elliptic_mesh(func, d_func, bc->BC_Name, bc->BC_Data_Float[0]);
           break;
 
@@ -2106,7 +2108,8 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                       phi_i = bf[eqn]->dphidxi[ldof_eqn][i_basis];
                       weight *= phi_i;
                     } else if (bc->BC_Name == ELLIPTIC_XI_REGULARIZATION_BC ||
-                               bc->BC_Name == ELLIPTIC_ETA_REGULARIZATION_BC) {
+                               bc->BC_Name == ELLIPTIC_ETA_REGULARIZATION_BC ||
+                               bc->BC_Name == ELLIPTIC_ZETA_REGULARIZATION_BC) {
                       i_basis = (bc->BC_Name - ELLIPTIC_XI_REGULARIZATION_BC);
                       phi_i = bf[eqn]->dphidxi[ldof_eqn][i_basis];
                       weight *= phi_i;

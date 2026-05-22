@@ -735,6 +735,8 @@ int variable_string_to_int(const char *input, const char *err_string)
     var = TURB_K;
   else if (!strcmp(input, "TURB_OMEGA"))
     var = TURB_OMEGA;
+  else if (!strcmp(input, "FILM_HEIGHT"))
+    var = FILM_HEIGHT;
 
   /*
    * Kluge to break up large if block. Problems with HP compiler!

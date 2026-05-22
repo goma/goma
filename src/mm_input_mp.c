@@ -767,6 +767,96 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
+  if (ElasticConstitutiveEquation == ELLIPTIC) {
+    elc_glob[mn]->fxi = 1.0;
+    elc_glob[mn]->fxi_model = CONSTANT;
+    model_read =
+        look_for_mat_prop(imp, "Elliptic fxi", &(elc_glob[mn]->fxi_model), &(elc_glob[mn]->fxi),
+                          &(elc_glob[mn]->u_fxi), &(elc_glob[mn]->len_u_fxi), model_name,
+                          SCALAR_INPUT, &NO_SPECIES, es);
+    if (model_read == -1) {
+      if (!strcmp(model_name, "SIMPLE_ABS")) {
+        elc_glob[mn]->fxi_model = ELLIPTIC_SIMPLE_ABS;
+        elc_glob[mn]->len_u_fxi = read_constants(imp, &(elc_glob[mn]->u_fxi), NO_SPECIES);
+
+        if (elc_glob[mn]->len_u_fxi != 6) {
+          GOMA_EH(GOMA_ERROR, "Elliptic fxi model SIMPLE_ABS expects 6 constants");
+        }
+        SPF_DBL_VEC(endofstring(es), elc_glob[mn]->len_u_fxi, elc_glob[mn]->u_fxi);
+      } else if (!strcmp(model_name, "DUAL_ABS")) {
+        elc_glob[mn]->fxi_model = ELLIPTIC_DUAL_ABS;
+        elc_glob[mn]->len_u_fxi = read_constants(imp, &(elc_glob[mn]->u_fxi), NO_SPECIES);
+
+        if (elc_glob[mn]->len_u_fxi != 5) {
+          GOMA_EH(GOMA_ERROR, "Elliptic fxi model DUAL_ABS expects 5 constants");
+        }
+        SPF_DBL_VEC(endofstring(es), elc_glob[mn]->len_u_fxi, elc_glob[mn]->u_fxi);
+      } else {
+        elc_glob[mn]->fxi = 1.0;
+        elc_glob[mn]->fxi_model = CONSTANT;
+      }
+    }
+    ECHO(es, echo_file);
+    elc_glob[mn]->geta = 1.0;
+    elc_glob[mn]->geta_model = CONSTANT;
+    model_read =
+        look_for_mat_prop(imp, "Elliptic geta", &(elc_glob[mn]->geta_model), &(elc_glob[mn]->geta),
+                          &(elc_glob[mn]->u_geta), &(elc_glob[mn]->len_u_geta), model_name,
+                          SCALAR_INPUT, &NO_SPECIES, es);
+    if (model_read == -1) {
+      if (!strcmp(model_name, "SIMPLE_ABS")) {
+        elc_glob[mn]->geta_model = ELLIPTIC_SIMPLE_ABS;
+        elc_glob[mn]->len_u_geta = read_constants(imp, &(elc_glob[mn]->u_geta), NO_SPECIES);
+
+        if (elc_glob[mn]->len_u_geta != 6) {
+          GOMA_EH(GOMA_ERROR, "Elliptic geta model SIMPLE_ABS expects 6 constants");
+        }
+        SPF_DBL_VEC(endofstring(es), elc_glob[mn]->len_u_geta, elc_glob[mn]->u_geta);
+      } else if (!strcmp(model_name, "DUAL_ABS")) {
+        elc_glob[mn]->geta_model = ELLIPTIC_DUAL_ABS;
+        elc_glob[mn]->len_u_geta = read_constants(imp, &(elc_glob[mn]->u_geta), NO_SPECIES);
+
+        if (elc_glob[mn]->len_u_geta != 5) {
+          GOMA_EH(GOMA_ERROR, "Elliptic geta model DUAL_ABS expects 5 constants");
+        }
+        SPF_DBL_VEC(endofstring(es), elc_glob[mn]->len_u_geta, elc_glob[mn]->u_geta);
+      } else {
+        elc_glob[mn]->geta = 1.0;
+        elc_glob[mn]->geta_model = CONSTANT;
+      }
+    }
+    ECHO(es, echo_file);
+    elc_glob[mn]->hzeta = 1.0;
+    elc_glob[mn]->hzeta_model = CONSTANT;
+    model_read =
+        look_for_mat_prop(imp, "Elliptic hzeta", &(elc_glob[mn]->hzeta_model),
+                          &(elc_glob[mn]->hzeta), &(elc_glob[mn]->u_hzeta),
+                          &(elc_glob[mn]->len_u_hzeta), model_name, SCALAR_INPUT, &NO_SPECIES, es);
+    if (model_read == -1) {
+      if (!strcmp(model_name, "SIMPLE_ABS")) {
+        elc_glob[mn]->hzeta_model = ELLIPTIC_SIMPLE_ABS;
+        elc_glob[mn]->len_u_hzeta = read_constants(imp, &(elc_glob[mn]->u_hzeta), NO_SPECIES);
+
+        if (elc_glob[mn]->len_u_hzeta != 6) {
+          GOMA_EH(GOMA_ERROR, "Elliptic hzeta model SIMPLE_ABS expects 6 constants");
+        }
+        SPF_DBL_VEC(endofstring(es), elc_glob[mn]->len_u_hzeta, elc_glob[mn]->u_hzeta);
+      } else if (!strcmp(model_name, "DUAL_ABS")) {
+        elc_glob[mn]->hzeta_model = ELLIPTIC_DUAL_ABS;
+        elc_glob[mn]->len_u_hzeta = read_constants(imp, &(elc_glob[mn]->u_hzeta), NO_SPECIES);
+
+        if (elc_glob[mn]->len_u_hzeta != 5) {
+          GOMA_EH(GOMA_ERROR, "Elliptic hzeta model DUAL_ABS expects 5 constants");
+        }
+        SPF_DBL_VEC(endofstring(es), elc_glob[mn]->len_u_hzeta, elc_glob[mn]->u_hzeta);
+      } else {
+        elc_glob[mn]->hzeta = 1.0;
+        elc_glob[mn]->hzeta_model = CONSTANT;
+      }
+    }
+    ECHO(es, echo_file);
+  }
+
   /* An optional additional type of mesh motion which includes an inertial term in the
      momentum equation */
 
@@ -1483,6 +1573,12 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ConstitutiveEquation = CARREAU;
   } else if (!strcmp(model_name, "CARREAU_SUSPENSION")) {
     ConstitutiveEquation = CARREAU_SUSPENSION;
+  } else if (!strcmp(model_name, "CARREAU_ARRHENIUS")) {
+    ConstitutiveEquation = CARREAU_ARRHENIUS;
+  } else if (!strcmp(model_name, "ARRHENIUS")) {
+    ConstitutiveEquation = ARRHENIUS_SIMPLE;
+  } else if (!strcmp(model_name, "ARRHENIUS_ADVANCED")) {
+    ConstitutiveEquation = ARRHENIUS_ADVANCED;
   } else if (!strcmp(model_name, "SUSPENSION")) {
     ConstitutiveEquation = SUSPENSION;
   } else if (!strcmp(model_name, "EPOXY")) {
@@ -1641,14 +1737,15 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
   }
 
-  if (ConstitutiveEquation == POWER_LAW || ConstitutiveEquation == POWER_LAW_ARRHENIUS ||
-      ConstitutiveEquation == POWERLAW_SUSPENSION || ConstitutiveEquation == CARREAU ||
+  if (ConstitutiveEquation == POWER_LAW || ConstitutiveEquation == POWERLAW_SUSPENSION ||
+      ConstitutiveEquation == POWER_LAW_ARRHENIUS || ConstitutiveEquation == CARREAU ||
       ConstitutiveEquation == CARREAU_SUSPENSION || ConstitutiveEquation == BINGHAM ||
       ConstitutiveEquation == BINGHAM_WLF || ConstitutiveEquation == CARREAU_WLF ||
-      ConstitutiveEquation == SUSPENSION || ConstitutiveEquation == EPOXY ||
-      ConstitutiveEquation == SYLGARD || ConstitutiveEquation == FILLED_EPOXY ||
-      ConstitutiveEquation == THERMAL || ConstitutiveEquation == CURE ||
-      ConstitutiveEquation == HERSCHEL_BULKLEY ||
+      ConstitutiveEquation == SUSPENSION || ConstitutiveEquation == CARREAU_ARRHENIUS ||
+      ConstitutiveEquation == ARRHENIUS_ADVANCED || ConstitutiveEquation == ARRHENIUS_SIMPLE ||
+      ConstitutiveEquation == EPOXY || ConstitutiveEquation == SYLGARD ||
+      ConstitutiveEquation == FILLED_EPOXY || ConstitutiveEquation == THERMAL ||
+      ConstitutiveEquation == CURE || ConstitutiveEquation == HERSCHEL_BULKLEY ||
       ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU ||
       ConstitutiveEquation == CARREAU_WLF_CONC_PL || ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
       ConstitutiveEquation == BOND || ConstitutiveEquation == BOND_SH ||
@@ -1681,12 +1778,42 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
   }
 
-  if (ConstitutiveEquation == POWER_LAW || ConstitutiveEquation == POWER_LAW_ARRHENIUS ||
-      ConstitutiveEquation == POWERLAW_SUSPENSION || ConstitutiveEquation == CARREAU ||
+  if (ConstitutiveEquation == ARRHENIUS_ADVANCED) {
+    model_read = look_for_mat_prop(imp, "Arrhenius Viscosity a", &(gn_glob[mn]->arrhenius_aModel),
+                                   &(gn_glob[mn]->arrhenius_a), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (model_read == -1) {
+      GOMA_EH(model_read, "Arrhenius Viscosity a");
+    }
+
+    ECHO(es, echo_file);
+    model_read = look_for_mat_prop(imp, "Arrhenius Viscosity c", &(gn_glob[mn]->arrhenius_cModel),
+                                   &(gn_glob[mn]->arrhenius_c), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (model_read == -1) {
+      GOMA_EH(model_read, "Arrhenius Viscosity c");
+    }
+
+    ECHO(es, echo_file);
+    model_read = look_for_mat_prop(imp, "Arrhenius Viscosity d", &(gn_glob[mn]->arrhenius_dModel),
+                                   &(gn_glob[mn]->arrhenius_d), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (model_read == -1) {
+      GOMA_EH(model_read, "Arrhenius Viscosity d");
+    }
+
+    ECHO(es, echo_file);
+  }
+
+  if (ConstitutiveEquation == POWER_LAW || ConstitutiveEquation == POWERLAW_SUSPENSION ||
+      ConstitutiveEquation == POWER_LAW_ARRHENIUS || ConstitutiveEquation == CARREAU ||
       ConstitutiveEquation == CARREAU_SUSPENSION || ConstitutiveEquation == BINGHAM ||
       ConstitutiveEquation == BINGHAM_WLF || ConstitutiveEquation == CARREAU_WLF ||
-      ConstitutiveEquation == SUSPENSION || ConstitutiveEquation == FILLED_EPOXY ||
-      ConstitutiveEquation == HERSCHEL_BULKLEY ||
+      ConstitutiveEquation == CARREAU_ARRHENIUS || ConstitutiveEquation == SUSPENSION ||
+      ConstitutiveEquation == FILLED_EPOXY || ConstitutiveEquation == HERSCHEL_BULKLEY ||
       ConstitutiveEquation == HERSCHEL_BULKLEY_PAPANASTASIOU ||
       ConstitutiveEquation == CARREAU_WLF_CONC_PL || ConstitutiveEquation == CARREAU_WLF_CONC_EXP) {
     model_read = look_for_mat_prop(imp, "Power Law Exponent", &(gn_glob[mn]->nexpModel),
@@ -1717,10 +1844,11 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
 
   if (ConstitutiveEquation == CARREAU || ConstitutiveEquation == CARREAU_SUSPENSION ||
-      ConstitutiveEquation == CARREAU_WLF || ConstitutiveEquation == BINGHAM ||
-      ConstitutiveEquation == BINGHAM_WLF || ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
-      ConstitutiveEquation == CARREAU_WLF_CONC_EXP || ConstitutiveEquation == BOND_SH ||
-      ConstitutiveEquation == BOND || ConstitutiveEquation == BINGHAM_MIXED) {
+      ConstitutiveEquation == CARREAU_ARRHENIUS || ConstitutiveEquation == CARREAU_WLF ||
+      ConstitutiveEquation == BINGHAM || ConstitutiveEquation == BINGHAM_WLF ||
+      ConstitutiveEquation == CARREAU_WLF_CONC_PL || ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
+      ConstitutiveEquation == BOND_SH || ConstitutiveEquation == BOND ||
+      ConstitutiveEquation == BINGHAM_MIXED) {
     model_read = look_for_mat_prop(imp, "High Rate Viscosity", &(gn_glob[mn]->muinfModel),
                                    &(gn_glob[mn]->muinf), NO_USER, NULL, model_name, SCALAR_INPUT,
                                    &NO_SPECIES, es);
@@ -1778,10 +1906,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
 
   if (ConstitutiveEquation == CARREAU || ConstitutiveEquation == CARREAU_SUSPENSION ||
-      ConstitutiveEquation == CARREAU_WLF || ConstitutiveEquation == BINGHAM ||
-      ConstitutiveEquation == BINGHAM_WLF || ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
-      ConstitutiveEquation == CARREAU_WLF_CONC_EXP || ConstitutiveEquation == BOND_SH ||
-      ConstitutiveEquation == BOND) {
+      ConstitutiveEquation == CARREAU_ARRHENIUS || ConstitutiveEquation == CARREAU_WLF ||
+      ConstitutiveEquation == BINGHAM || ConstitutiveEquation == BINGHAM_WLF ||
+      ConstitutiveEquation == CARREAU_WLF_CONC_PL || ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
+      ConstitutiveEquation == BOND_SH || ConstitutiveEquation == BOND) {
     model_read = look_for_mat_prop(imp, "Aexp", &(gn_glob[mn]->aexpModel), &(gn_glob[mn]->aexp),
                                    NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
 
@@ -1810,8 +1938,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
 
   if (ConstitutiveEquation == BINGHAM || ConstitutiveEquation == BINGHAM_WLF ||
-      ConstitutiveEquation == POWER_LAW_ARRHENIUS || ConstitutiveEquation == POWERLAW_SUSPENSION ||
-      ConstitutiveEquation == CARREAU_SUSPENSION || ConstitutiveEquation == CARREAU_WLF ||
+      ConstitutiveEquation == POWERLAW_SUSPENSION || ConstitutiveEquation == CARREAU_SUSPENSION ||
+      ConstitutiveEquation == POWER_LAW_ARRHENIUS || ConstitutiveEquation == CARREAU_ARRHENIUS ||
+      ConstitutiveEquation == ARRHENIUS_SIMPLE || ConstitutiveEquation == CARREAU_WLF ||
       ConstitutiveEquation == EPOXY || ConstitutiveEquation == SYLGARD ||
       ConstitutiveEquation == FILLED_EPOXY || ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
       ConstitutiveEquation == CARREAU_WLF_CONC_EXP || ConstitutiveEquation == THERMAL ||
@@ -1840,6 +1969,34 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     } else {
       GOMA_EH(model_read, "Thermal Exponent");
+    }
+    ECHO(es, echo_file);
+  }
+
+  if (ConstitutiveEquation == CARREAU_ARRHENIUS) {
+    model_read = look_for_mat_prop(imp, "Temperature Shift", &(gn_glob[mn]->T_shift_Model),
+                                   &(gn_glob[mn]->T_shift), NO_USER, NULL, model_name, SCALAR_INPUT,
+                                   &NO_SPECIES, es);
+
+    if (model_read == -1 && !strcmp(model_name, "NO_MODEL")) {
+      gn_glob[mn]->T_shift_Model = NO_MODEL;
+
+      num_const = read_constants(imp, &(gn_glob[mn]->u_T_shift), 0);
+
+      if (num_const < 3) {
+        sr = sprintf(err_msg, "Matl %s expected at least 3 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Temperature Shift", "LEVEL_SET");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+
+      gn_glob[mn]->len_u_T_shift = num_const;
+      SPF_DBL_VEC(endofstring(es), num_const, gn_glob[mn]->u_T_shift);
+
+      if (gn_glob[mn]->u_T_shift[2] == 0.0)
+        gn_glob[mn]->u_T_shift[2] = ls->Length_Scale / 2.0;
+
+    } else {
+      GOMA_EH(model_read, "Temperature Shift");
     }
     ECHO(es, echo_file);
   }
@@ -2419,6 +2576,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       vn_glob[mn]->evssModel = LOG_CONF_TRANSIENT_GRADV;
     } else if (!strcmp(model_name, "LOG_CONF_GRADV")) {
       vn_glob[mn]->evssModel = LOG_CONF_GRADV;
+    } else if (!strcmp(model_name, "EVSS_FILM_HEIGHT")) {
+      vn_glob[mn]->evssModel = EVSS_FILM_HEIGHT;
+    } else if (!strcmp(model_name, "EVSS_FILM_HEIGHT_SQRT_CONF")) {
+      vn_glob[mn]->evssModel = EVSS_FILM_HEIGHT_SQRT_CONF;
     } else {
       if (vn_glob[mn]->ConstitutiveEquation == PTT ||
           vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT)
@@ -8785,6 +8946,22 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_heat_source);
   } else if (!strcmp(model_name, "FOAM_PMDI_10")) {
     HeatSourceModel = HS_FOAM_PMDI_10;
+    model_read = 1;
+    mat_ptr->HeatSourceModel = HeatSourceModel;
+
+    num_const = read_constants(imp, &(mat_ptr->u_heat_source), NO_SPECIES);
+    mat_ptr->len_u_heat_source = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_heat_source);
+  } else if (!strcmp(model_name, "FILM_CAST")) {
+    HeatSourceModel = HS_FILM_CAST;
+    model_read = 1;
+    mat_ptr->HeatSourceModel = HeatSourceModel;
+
+    num_const = read_constants(imp, &(mat_ptr->u_heat_source), NO_SPECIES);
+    mat_ptr->len_u_heat_source = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_heat_source);
+  } else if (!strcmp(model_name, "FILM_CAST_VISC_DISS")) {
+    HeatSourceModel = HS_FILM_CAST_VISC_DISS;
     model_read = 1;
     mat_ptr->HeatSourceModel = HeatSourceModel;
 

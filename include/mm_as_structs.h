@@ -570,9 +570,10 @@ struct Element_Variable_Pointers {
   dbl *sh_sat_2[MDE];   /* Porous shell saturation layer 2 */
   dbl *sh_sat_3[MDE];   /* Porous shell saturation layer 3 */
 
-  dbl *eddy_nu[MDE];    /* Eddy viscosity for turbulent flow */
-  dbl *turb_k[MDE];     /* Eddy viscosity for turbulent flow */
-  dbl *turb_omega[MDE]; /* Eddy viscosity for turbulent flow */
+  dbl *eddy_nu[MDE];     /* Eddy viscosity for turbulent flow */
+  dbl *turb_k[MDE];      /* Eddy viscosity for turbulent flow */
+  dbl *turb_omega[MDE];  /* Eddy viscosity for turbulent flow */
+  dbl *film_height[MDE]; /* Film height for casting flow */
 };
 
 /*___________________________________________________________________________*/
@@ -699,9 +700,10 @@ struct Element_Stiffness_Pointers {
   dbl **sh_sat_2; /* Porous shell saturation layer 2 */
   dbl **sh_sat_3; /* Porous shell saturation layer 3 */
 
-  dbl **eddy_nu;    /* Eddy viscosity for turbulent flow */
-  dbl **turb_k;     /* Eddy viscosity for turbulent flow */
-  dbl **turb_omega; /* Eddy viscosity for turbulent flow */
+  dbl **eddy_nu;     /* Eddy viscosity for turbulent flow */
+  dbl **turb_k;      /* Eddy viscosity for turbulent flow */
+  dbl **turb_omega;  /* Eddy viscosity for turbulent flow */
+  dbl **film_height; /* Film height for film casting flow */
 
   /*
    * These are for debugging purposes...
@@ -1759,9 +1761,11 @@ struct Field_Variables {
   dbl sh_sat_2;   /* Porous shell saturation layer 2 */
   dbl sh_sat_3;   /* Porous shell saturation layer 3 */
 
-  dbl eddy_nu;                     /* Eddy viscosity for turbulent flow */
-  dbl turb_k;                      /* Eddy viscosity for turbulent flow */
-  dbl turb_omega;                  /* Eddy viscosity for turbulent flow */
+  dbl eddy_nu;     /* Eddy viscosity for turbulent flow */
+  dbl turb_k;      /* Eddy viscosity for turbulent flow */
+  dbl turb_omega;  /* Eddy viscosity for turbulent flow */
+  dbl film_height; /* Film height for film casting flow */
+
   dbl wall_distance;               /* Distance to nearest wall */
   dbl multi_contact_line_distance; /* Distance to multi contact line points */
 
@@ -1815,6 +1819,7 @@ struct Field_Variables {
   dbl grad_eddy_nu[DIM];       /* Gradient of Eddy viscosity */
   dbl grad_turb_k[DIM];        /* Gradient of Eddy viscosity */
   dbl grad_turb_omega[DIM];    /* Gradient of Eddy viscosity */
+  dbl grad_film_height[DIM];   /* Gradient of film height */
   dbl grad_wall_distance[DIM]; /* Distance to nearest wall */
 
   /*
@@ -2157,6 +2162,7 @@ struct Diet_Field_Variables {
   dbl eddy_nu;    /* Eddy viscosity for turbulent flow */
   dbl turb_k;     /* Eddy viscosity for turbulent flow */
   dbl turb_omega; /* Eddy viscosity for turbulent flow */
+  dbl film_height;
 
   dbl grad_em_er[DIM][DIM]; /* EM wave Fields */
   dbl grad_em_ei[DIM][DIM]; /* EM wave Fields */

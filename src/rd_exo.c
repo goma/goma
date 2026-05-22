@@ -663,7 +663,7 @@ int rd_exo(Exo_DB *x, /* def'd in exo_struct.h */
     if (x->ns_num_props > 0) {
       x->ns_prop_name = (char **)smalloc(x->ns_num_props * spc);
       for (i = 0; i < x->ns_num_props; i++) {
-        x->ns_prop_name[i] = (char *)smalloc(MAX_STR_LENGTH * sc);
+        x->ns_prop_name[i] = (char *)calloc(MAX_STR_LENGTH, sc);
       }
       status = ex_get_prop_names(x->exoid, EX_NODE_SET, x->ns_prop_name);
       GOMA_EH(status, "ex_get_prop_names(EX_NODE_SET)");
@@ -686,7 +686,7 @@ int rd_exo(Exo_DB *x, /* def'd in exo_struct.h */
     if (x->ss_num_props > 0) {
       x->ss_prop_name = (char **)smalloc(x->ss_num_props * spc);
       for (i = 0; i < x->ss_num_props; i++) {
-        x->ss_prop_name[i] = (char *)smalloc(MAX_STR_LENGTH * sc);
+        x->ss_prop_name[i] = (char *)calloc(MAX_STR_LENGTH, sc);
       }
       status = ex_get_prop_names(x->exoid, EX_SIDE_SET, x->ss_prop_name);
       GOMA_EH(status, "ex_get_prop_names(EX_SIDE_SET)");
@@ -709,7 +709,7 @@ int rd_exo(Exo_DB *x, /* def'd in exo_struct.h */
     if (x->eb_num_props > 0) {
       x->eb_prop_name = (char **)smalloc(x->eb_num_props * spc);
       for (i = 0; i < x->eb_num_props; i++) {
-        x->eb_prop_name[i] = (char *)smalloc(MAX_STR_LENGTH * sc);
+        x->eb_prop_name[i] = (char *)calloc(MAX_STR_LENGTH, sc);
       }
       status = ex_get_prop_names(x->exoid, EX_ELEM_BLOCK, x->eb_prop_name);
       GOMA_EH(status, "ex_get_prop_names(EX_ELEM_BLOCK)");

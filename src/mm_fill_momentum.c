@@ -4024,3 +4024,620 @@ int momentum_source_term(dbl f[DIM], /* Body force. */
 
   return (status);
 }
+
+int assemble_momentum_film_cast(dbl time,       /* current time */
+                                dbl tt,         /* parameter to vary time integration from
+                                                   explicit (tt = 1) to implicit (tt = 0) */
+                                dbl dt,         /* current time step size */
+                                dbl h_elem_avg, /* average global element size for PSPG*/
+                                const PG_DATA *pg_data,
+                                double xi[DIM], /* Local stu coordinates */
+                                const Exo_DB *exo) {
+
+  int eqn = VELOCITY1;
+  /*
+   * Residuals_________________________________________________________________
+   */
+  dbl rho = density(NULL, time);
+  dbl d_area = bf[eqn]->detJ * fv->wt * fv->h3;
+
+  dbl f[DIM];
+  MOMENTUM_SOURCE_DEPENDENCE_STRUCT d_momentum_source;
+  momentum_source_term(f, &d_momentum_source, time);
+
+  dbl Pi[DIM][DIM];
+  dbl gamma[DIM][DIM];
+  for (int a = 0; a < 2; a++) {
+    for (int b = 0; b < 2; b++) {
+      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+    }
+  }
+  VISCOSITY_DEPENDENCE_STRUCT d_mu;
+  dbl mu = viscosity(gn, gamma, &d_mu);
+
+  dbl p = -2 * mu * (fv->grad_v[0][0] + fv->grad_v[1][1]);
+
+  dbl d_p_v[DIM][MDE];
+  dbl d_p_x[DIM][MDE];
+
+  for (int b = 0; b < 2; b++) {
+    for (int j = 0; j < ei[pg->imtrx]->dof[VELOCITY1]; j++) {
+      dbl div_bj = 0;
+      for (int p = 0; p < 2; p++) {
+        div_bj += bf[VELOCITY1 + b]->grad_phi_e[j][b][p][p];
+      }
+      d_p_v[b][j] = -2 * mu * div_bj - 2 * d_mu.v[b][j] * (fv->grad_v[0][0] + fv->grad_v[1][1]);
+
+      d_p_x[b][j] = -2 * mu * fv->d_div_v_dmesh[b][j] -
+                    2 * d_mu.X[b][j] * (fv->grad_v[0][0] + fv->grad_v[1][1]);
+    }
+  }
+
+  for (int a = 0; a < 2; a++) {
+    for (int b = 0; b < 2; b++) {
+      // Pi[a][b] = fv->film_height * (delta(a, b) * p - mu * gamma[a][b]);
+      Pi[a][b] = mu * gamma[a][b] - p * delta(a, b);
+    }
+  }
+  STRESS_DEPENDENCE_STRUCT d_Pi;
+
+  for (int p = 0; p < 2; p++) {
+    for (int q = 0; q < 2; q++) {
+      for (int b = 0; b < 2; b++) {
+        for (int j = 0; j < ei[pg->imtrx]->dof[VELOCITY1]; j++) {
+          /* grad_phi_e cannot be the same for all
+           * velocities for 3d stab of 2d flow!!
+           * Compare with the old way in the CYLINDRICAL
+           * chunk below... */
+          d_Pi.v[p][q][b][j] = -d_p_v[b][j] * (delta(p, q)) +
+                               mu * (bf[VELOCITY1 + q]->grad_phi_e[j][b][p][q] +
+                                     bf[VELOCITY1 + p]->grad_phi_e[j][b][q][p]) +
+                               d_mu.v[b][j] * gamma[p][q];
+        }
+        for (int j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
+          d_Pi.X[p][q][b][j] =
+              -d_p_x[b][j] * (delta(p, q)) +
+              mu * (fv->d_grad_v_dmesh[p][q][b][j] + fv->d_grad_v_dmesh[q][p][b][j]) +
+              d_mu.X[b][j] * gamma[p][q];
+        }
+      }
+      for (int j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+        /* grad_phi_e cannot be the same for all
+         * velocities for 3d stab of 2d flow!!
+         * Compare with the old way in the CYLINDRICAL
+         * chunk below... */
+        dbl d_p = -2 * d_mu.T[j] * (fv->grad_v[0][0] + fv->grad_v[1][1]) * (delta(p, q));
+        d_Pi.T[p][q][j] = d_mu.T[j] * gamma[p][q] - d_p;
+      }
+    }
+  }
+  int mass_on = pd->e[pg->imtrx][eqn] & T_MASS && (pd->TimeIntegration != STEADY);
+  int advection_on = pd->e[pg->imtrx][eqn] & T_ADVECTION;
+  int diffusion_on = pd->e[pg->imtrx][eqn] & T_DIFFUSION;
+  int source_on = pd->e[pg->imtrx][eqn] & T_SOURCE;
+
+  dbl mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+  dbl advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+  dbl diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+  dbl source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+  if (af->Assemble_Residual) {
+    /*
+     * Assemble each component "a" of the momentum equation...
+     */
+    for (int a = 0; a < 2; a++) {
+      int eqn = R_MOMENTUM1 + a;
+      int peqn = upd->ep[pg->imtrx][eqn];
+
+      /*
+       * In the element, there will be contributions to this many equations
+       * based on the number of degrees of freedom...
+       */
+
+      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+        int ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+        if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
+          /*
+           *  Here is where we figure out whether the row is to placed in
+           *  the normal spot (e.g., ii = i), or whether a boundary condition
+           *  require that the volumetric contribution be stuck in another
+           *  ldof pertaining to the same variable type.
+           */
+          int ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+          dbl phi_i = bf[eqn]->phi[i];
+          /* only use Petrov Galerkin on advective term - if required */
+          dbl wt_func = phi_i;
+
+          dbl mass = 0.;
+          if (mass_on) {
+            mass = rho * fv->film_height * fv_dot->v[a] + rho * fv_dot->film_height * fv->v[a];
+            mass *= -wt_func * d_area;
+            mass *= mass_etm;
+          }
+
+          dbl advection = 0.;
+          if (advection_on) {
+            for (int p = 0; p < 2; p++) {
+              advection += (fv->v[p] - fv_dot->x[p]) * fv->grad_v[p][a];
+            }
+            advection *= rho * fv->film_height;
+            advection *= -wt_func * d_area;
+            advection *= advection_etm;
+          }
+
+          dbl diffusion = 0.;
+          if (diffusion_on) {
+            for (int p = 0; p < 2; p++) {
+              for (int q = 0; q < 2; q++) {
+                diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * Pi[q][p];
+              }
+            }
+            diffusion *= -d_area * fv->film_height;
+            diffusion *= diffusion_etm;
+          }
+
+          /*
+           * Source term...
+           */
+          dbl source = 0.0;
+          if (source_on) {
+            source += fv->film_height * f[a];
+            source *= wt_func * d_area;
+            source *= source_etm;
+          }
+
+          /*
+           * Add contributions to this residual (globally into Resid, and
+           * locally into an accumulator)
+           */
+
+          /*lec->R[LEC_R_INDEX(peqn,ii)] += mass + advection + porous + diffusion + source;*/
+          lec->R[LEC_R_INDEX(peqn, ii)] += mass + advection + diffusion + source;
+        } /*end if (active_dofs) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+    }
+  }
+
+  /*
+   * Jacobian terms...
+   */
+
+  if (af->Assemble_Jacobian) {
+    for (int a = 0; a < 2; a++) {
+      int eqn = R_MOMENTUM1 + a;
+      int peqn = upd->ep[pg->imtrx][eqn];
+
+      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+        dbl phi_i = bf[eqn]->phi[i];
+        /* only use Petrov Galerkin on advective term - if required */
+        dbl wt_func = phi_i;
+        int ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+        if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
+          int ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+          int var = FILM_HEIGHT;
+          if (pd->v[pg->imtrx][var]) {
+            int pvar = upd->vp[pg->imtrx][var];
+            for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+
+              dbl mass = 0.;
+              if (mass_on) {
+                mass = rho * bf[var]->phi[j] * fv_dot->v[a] +
+                       rho * ((1 + 2 * tt) / dt) * bf[var]->phi[j] * fv->v[a];
+                mass *= -wt_func * d_area;
+                mass *= mass_etm;
+              }
+
+              dbl advection = 0.;
+              if (advection_on) {
+                for (int p = 0; p < 2; p++) {
+                  advection += (fv->v[p] - fv_dot->x[p]) * fv->grad_v[p][a];
+                }
+                advection *= rho * bf[var]->phi[j];
+                advection *= -wt_func * d_area;
+                advection *= advection_etm;
+              }
+
+              dbl diffusion = 0.;
+              if (diffusion_on) {
+                for (int p = 0; p < 2; p++) {
+                  for (int q = 0; q < 2; q++) {
+                    diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * Pi[q][p];
+                  }
+                }
+                diffusion *= -d_area * bf[var]->phi[j];
+                diffusion *= diffusion_etm;
+              }
+
+              /*
+               * Source term...
+               */
+              dbl source = 0.0;
+              if (source_on) {
+                source += bf[var]->phi[j] * f[a];
+                source *= wt_func * d_area;
+                source *= source_etm;
+              }
+              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += mass + advection + diffusion + source;
+            }
+          }
+
+          var = TEMPERATURE;
+          if (pd->v[pg->imtrx][var]) {
+            int pvar = upd->vp[pg->imtrx][var];
+            for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+
+              dbl diffusion = 0.;
+              if (diffusion_on) {
+                for (int p = 0; p < 2; p++) {
+                  for (int q = 0; q < 2; q++) {
+                    diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * d_Pi.T[q][p][j];
+                  }
+                }
+                diffusion *= -d_area;
+                diffusion *= diffusion_etm;
+              }
+              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += diffusion;
+            }
+          }
+
+          for (int b = 0; b < 2; b++) {
+            int var = VELOCITY1 + b;
+            /* Sensitivity w.r.t. velocity */
+            if (pd->v[pg->imtrx][var]) {
+              int pvar = upd->vp[pg->imtrx][var];
+
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                dbl mass = 0.;
+                if (mass_on) {
+                  mass = bf[var]->phi[j] * (delta(a, b)) *
+                         (rho * fv->film_height * (1 + 2 * tt) / dt + rho * fv_dot->film_height);
+                  mass *= -wt_func * d_area;
+                  mass *= mass_etm;
+                }
+
+                dbl advection = 0.;
+                if (advection_on) {
+                  advection += bf[var]->phi[j] * fv->grad_v[b][a];
+                  for (int p = 0; p < 2; p++) {
+                    advection += (fv->v[p] - fv_dot->x[p]) * bf[var]->grad_phi_e[j][b][p][a];
+                  }
+                  advection *= rho * fv->film_height;
+                  advection *= -wt_func * d_area;
+                  advection *= advection_etm;
+                }
+
+                dbl diffusion = 0.;
+                if (diffusion_on) {
+                  for (int p = 0; p < 2; p++) {
+                    for (int q = 0; q < 2; q++) {
+                      diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * d_Pi.v[q][p][b][j];
+                    }
+                  }
+                  diffusion *= -d_area * fv->film_height;
+                  diffusion *= diffusion_etm;
+                }
+
+                /*
+                 * Source term...
+                 */
+                dbl source = 0.0;
+                if (source_on) {
+                  source += fv->film_height * d_momentum_source.v[a][b][j];
+                  source *= wt_func * d_area;
+                  source *= source_etm;
+                }
+
+                lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += mass + advection + diffusion + source;
+              } /* End of loop over j */
+            } /* End of if the variale is active */
+          }
+          for (int b = 0; b < 2; b++) {
+            int var = MESH_DISPLACEMENT1 + b;
+            /* Sensitivity w.r.t. velocity */
+            if (pd->v[pg->imtrx][var]) {
+              int pvar = upd->vp[pg->imtrx][var];
+
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+
+                dbl d_d_area = bf[eqn]->d_det_J_dm[b][j] * fv->wt * fv->h3;
+                // J = &(lec->J[LEC_J_INDEX(peqn, pvar, ii, 0)]);
+                dbl mass = 0.;
+                if (mass_on) {
+                  mass =
+                      rho * fv->film_height * fv_dot->v[a] + rho * fv_dot->film_height * fv->v[a];
+                  mass *= -wt_func * d_d_area;
+                  mass *= mass_etm;
+                }
+
+                dbl advection = 0.;
+                if (advection_on) {
+                  dbl advection_a = 0.;
+                  for (int p = 0; p < 2; p++) {
+                    advection_a += (fv->v[p] - fv_dot->x[p]) * fv->d_grad_v_dmesh[p][a][b][j];
+                  }
+                  advection_a *= -wt_func * rho * d_area;
+
+                  dbl advection_b = 0.;
+                  for (int p = 0; p < 2; p++) {
+                    advection_b += (fv->v[p] - fv_dot->x[p]) * fv->grad_v[p][a];
+                  }
+                  dbl advection_c = 0.;
+                  for (int p = 0; p < 2; p++) {
+                    advection_c += (-(1. + 2. * tt) * bf[var]->phi[j] / dt * (double)delta(p, b)) *
+                                   fv->grad_v[p][a];
+                  }
+                  advection *= (advection_a + advection_c) * rho * fv->film_height;
+                  advection *= -wt_func * d_area;
+                  advection += advection_b * rho * fv->film_height * -wt_func * d_d_area;
+                  advection *= advection_etm;
+                }
+
+                dbl diffusion = 0.;
+                if (diffusion_on) {
+                  dbl diffusion_b = 0.;
+                  for (int p = 0; p < 2; p++) {
+                    for (int q = 0; q < 2; q++) {
+                      diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * Pi[q][p];
+                      diffusion_b += bf[eqn]->grad_phi_e[i][a][p][q] * d_Pi.X[q][p][b][j] +
+                                     bf[eqn]->d_grad_phi_e_dmesh[i][a][p][q][b][j] * Pi[q][p];
+                    }
+                  }
+                  diffusion *= -d_d_area * fv->film_height;
+                  diffusion_b *= -d_area * fv->film_height;
+                  diffusion += diffusion_b;
+                  diffusion *= diffusion_etm;
+                }
+
+                /*
+                 * Source term...
+                 */
+                dbl source = 0.0;
+                if (source_on) {
+                  dbl source_b = fv->film_height * f[a];
+                  source += fv->film_height * d_momentum_source.X[a][b][j];
+                  source_b *= wt_func * d_d_area;
+                  source *= wt_func * d_area;
+                  source += source_b;
+                  source *= source_etm;
+                }
+
+                lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += mass + advection + diffusion + source;
+              } /* End of loop over j */
+            } /* End of if the variale is active */
+          }
+
+        } /* end of if(active_dofs) */
+      } /* End of loop over i */
+    } /* End of if assemble Jacobian */
+  }
+  return 0;
+}
+
+int assemble_film_height(dbl time, /* current time */
+                         dbl tt,
+                         dbl dt,
+                         const PG_DATA *pg_data) {
+
+  int a;
+
+  int eqn;
+  int peqn, pvar;
+
+  int i, j;
+  int status;
+
+  dbl det_J;
+  dbl h3;
+  dbl wt;
+  dbl d_area;
+
+  /*
+   * Galerkin weighting functions...
+   */
+
+  dbl phi_i;
+
+  status = 0;
+
+  /*
+   * Unpack variables from structures for local convenience...
+   */
+
+  eqn = R_FILM_HEIGHT;
+  peqn = upd->ep[pg->imtrx][eqn];
+
+  dbl div_v = 0;
+
+  for (a = 0; a < 2; a++) {
+    div_v += fv->grad_v[a][a];
+  }
+  // div_v -= (ad_fv->grad_v[0][0] + ad_fv->grad_v[1][1]);
+
+  /*
+   * Bail out fast if there's nothing to do...
+   */
+
+  if (!pd->e[pg->imtrx][eqn]) {
+    return (status);
+  }
+
+  SUPG_terms supg_terms;
+  supg_tau_shakib(&supg_terms, 2, dt, 1e-9, eqn);
+
+  wt = fv->wt;
+  det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
+  h3 = fv->h3;           /* Differential volume element (scales). */
+
+  d_area = wt * det_J * h3;
+  if (af->Assemble_Residual) {
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+      phi_i = bf[eqn]->phi[i];
+      dbl wt_func = phi_i;
+      for (int a = 0; a < 2; a++) {
+        wt_func += supg_terms.supg_tau * fv->v[a] * bf[eqn]->grad_phi[i][a];
+      }
+
+      /*
+       *  Mass Terms: drhodt terms (usually though problem dependent)
+       */
+
+      dbl mass = 0.0;
+      if (pd->TimeIntegration != STEADY) {
+        mass = fv_dot->film_height * wt_func * d_area;
+      }
+
+      /*
+       *  Advection:
+       *    This term refers to the standard del dot v .
+       *
+       *    int (phi_i div_v d_omega)
+       *
+       *   Note density is not multiplied into this term normally
+       */
+      dbl advection = 0.0;
+      if (pd->gv[VELOCITY1]) /* then must be solving fluid mechanics in this material */
+      {
+
+        /*
+         * Standard incompressibility constraint means we have
+         * a solenoidal velocity field
+         */
+
+        for (int a = 0; a < 2; a++) {
+          advection += (fv->v[a] - fv_dot->x[a]) * fv->grad_film_height[a];
+        }
+        advection += div_v * fv->film_height;
+        advection *= wt_func * d_area;
+      }
+
+      /*
+       *  Add up the individual contributions and sum them into the local element
+       *  contribution for the total continuity equation for the ith local unknown
+       */
+      lec->R[LEC_R_INDEX(peqn, i)] += advection + mass;
+    }
+  }
+  if (af->Assemble_Jacobian) {
+    eqn = R_FILM_HEIGHT;
+    peqn = upd->ep[pg->imtrx][eqn];
+
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+      /* Sensitivity w.r.t. velocity */
+      phi_i = bf[eqn]->phi[i];
+      dbl wt_func = phi_i;
+      for (int a = 0; a < 2; a++) {
+        wt_func += supg_terms.supg_tau * fv->v[a] * bf[eqn]->grad_phi[i][a];
+      }
+      for (int b = 0; b < 2; b++) {
+        int var = VELOCITY1 + b;
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+
+            dbl div_phi_j_e_b = 0.;
+            for (int p = 0; p < 2; p++) {
+              div_phi_j_e_b += bf[var]->grad_phi_e[j][b][p][p];
+            }
+            dbl d_wt_func = 0;
+            for (int a = 0; a < 2; a++) {
+              d_wt_func += supg_terms.supg_tau * bf[var]->phi[j] * bf[eqn]->grad_phi[i][a] +
+                           supg_terms.d_supg_tau_dv[b][j] * fv->v[a] * bf[eqn]->grad_phi[i][a];
+            }
+
+            dbl mass = 0.0;
+            if (pd->TimeIntegration != STEADY) {
+              mass = fv_dot->film_height * d_wt_func * d_area;
+            }
+
+            dbl advection = 0.0;
+            dbl advection_b = 0.0;
+            if (pd->gv[VELOCITY1]) /* then must be solving fluid mechanics in this material */
+            {
+              for (int a = 0; a < 2; a++) {
+                advection += (bf[var]->phi[j] * delta(a, b)) * fv->grad_film_height[a];
+                advection_b += (fv->v[a] - fv_dot->x[a]) * fv->grad_film_height[a];
+              }
+              advection += div_phi_j_e_b * fv->film_height;
+              advection_b += div_v * fv->film_height;
+              advection_b *= d_wt_func * d_area;
+              advection *= wt_func * d_area;
+              advection += advection_b;
+            }
+
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + advection;
+          } /* End of loop over j */
+        } /* End of if the variale is active */
+      }
+      for (int b = 0; b < 2; b++) {
+        int var = MESH_DISPLACEMENT1 + b;
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            dbl d_d_area = bf[eqn]->d_det_J_dm[b][j] * fv->wt * fv->h3;
+            dbl d_wt_func = 0;
+            for (int a = 0; a < 2; a++) {
+              d_wt_func += supg_terms.supg_tau * fv->v[a] * bf[eqn]->d_grad_phi_dmesh[i][a][b][j] +
+                           supg_terms.d_supg_tau_dX[b][j] * fv->v[a] * bf[eqn]->grad_phi[i][a];
+            }
+
+            dbl mass = 0.0;
+            if (pd->TimeIntegration != STEADY) {
+              mass = fv_dot->film_height * (d_wt_func * d_area + wt_func * d_d_area);
+            }
+
+            dbl advection = 0.0;
+            dbl advection_b = 0.0;
+            if (pd->gv[VELOCITY1]) /* then must be solving fluid mechanics in this material */
+            {
+              for (int a = 0; a < 2; a++) {
+                advection += (fv->v[a] - fv_dot->x[a]) * (*esp->film_height[i]) *
+                             bf[eqn]->d_grad_phi_dmesh[i][a][b][j];
+                if (pd->TimeIntegration != STEADY) {
+                  advection += (delta(a, b) * (-(1 + 2 * tt) / dt)) * bf[var]->phi[j] *
+                               fv->grad_film_height[a];
+                }
+                advection_b += (fv->v[a] - fv_dot->x[a]) * fv->grad_film_height[a];
+              }
+              advection += fv->d_div_v_dmesh[b][j] * fv->film_height;
+              advection_b += div_v * fv->film_height;
+              advection_b *= (wt_func * d_d_area + d_wt_func * d_area);
+              advection *= wt_func * d_area;
+              advection += advection_b;
+            }
+
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + advection;
+          }
+        }
+      }
+
+      int var = FILM_HEIGHT;
+      if (pd->v[pg->imtrx][var]) {
+        int pvar = upd->vp[pg->imtrx][var];
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          dbl mass = 0.0;
+          if (pd->TimeIntegration != STEADY) {
+            mass = (1 + 2 * tt) * (bf[eqn]->phi[j] / dt) * wt_func * d_area;
+          }
+
+          dbl advection = 0.0;
+          if (pd->gv[VELOCITY1]) /* then must be solving fluid mechanics in this material */
+          {
+
+            for (int a = 0; a < 2; a++) {
+              advection += (fv->v[a] - fv_dot->x[a]) * bf[eqn]->grad_phi[j][a];
+            }
+            advection += div_v * bf[eqn]->phi[j];
+            advection *= wt_func * d_area;
+          }
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + advection;
+        }
+      }
+
+    } /* End of loop over i */
+  } /* End of if assemble Jacobian */
+  return 0;
+}

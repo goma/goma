@@ -31,6 +31,7 @@ extern "C" {
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
+#include "mm_fill_energy.h"
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
 #include "rf_fem.h"
@@ -156,12 +157,19 @@ static int ad_calc_sa_S(scalar &S,                /* strain rate invariant */
 int ad_calc_shearrate(ADType &gammadot,             /* strain rate invariant */
                       ADType gamma_dot[DIM][DIM]) { /* strain rate tensor */
   gammadot = 0.;
+  int vdim = VIM;
+  if (pd->gv[FILM_HEIGHT])
+    vdim = 3;
   /* get gamma_dot invariant for viscosity calculations */
-  for (int a = 0; a < VIM; a++) {
-    for (int b = 0; b < VIM; b++) {
+  for (int a = 0; a < vdim; a++) {
+    for (int b = 0; b < vdim; b++) {
       gammadot += gamma_dot[a][b] * gamma_dot[b][a];
     }
   }
+  // if (pd->gv[FILM_HEIGHT]) {
+  //   gammadot += -(ad_fv->grad_v[0][0] + ad_fv->grad_v[1][1])  * -(ad_fv->grad_v[0][0] +
+  //   ad_fv->grad_v[1][1]);
+  // }
 
   gammadot = sqrt(0.5 * fabs(gammadot) + 1e-14);
   return 0;
@@ -747,6 +755,35 @@ extern "C" void fill_ad_field_variables() {
       }
     }
   }
+  if (pd->gv[FILM_HEIGHT]) {
+    ad_fv->film_height = 0;
+    ad_fv->film_height_dot = 0;
+    for (int i = 0; i < ei[upd->matrix_index[FILM_HEIGHT]]->dof[FILM_HEIGHT]; i++) {
+      ad_fv->film_height +=
+          ADType(num_ad_variables, ad_fv->offset[FILM_HEIGHT] + i, *esp->film_height[i]) *
+          bf[FILM_HEIGHT]->phi[i];
+
+      if (pd->TimeIntegration != STEADY) {
+        ADType ednudot =
+            ADType(num_ad_variables, ad_fv->offset[FILM_HEIGHT] + i, *esp_dot->film_height[i]);
+        ednudot.fastAccessDx(ad_fv->offset[FILM_HEIGHT] + i) =
+            (1. + 2. * tran->current_theta) / tran->delta_t;
+        ad_fv->film_height_dot += ednudot * bf[FILM_HEIGHT]->phi[i];
+      } else {
+        ad_fv->film_height_dot = 0;
+      }
+    }
+
+    for (int q = 0; q < pd->Num_Dim; q++) {
+      ad_fv->grad_film_height[q] = 0;
+
+      for (int i = 0; i < ei[upd->matrix_index[FILM_HEIGHT]]->dof[FILM_HEIGHT]; i++) {
+        ad_fv->grad_film_height[q] +=
+            ADType(num_ad_variables, ad_fv->offset[FILM_HEIGHT] + i, *esp->film_height[i]) *
+            ad_fv->basis[FILM_HEIGHT].grad_phi[i][q];
+      }
+    }
+  }
 
   if (pd->gv[PRESSURE]) {
     ad_fv->P = 0;
@@ -763,14 +800,30 @@ extern "C" void fill_ad_field_variables() {
     }
   }
 
+  if (pd->gv[TEMPERATURE]) {
+    ad_fv->T = 0;
+    for (int i = 0; i < ei[upd->matrix_index[TEMPERATURE]]->dof[TEMPERATURE]; i++) {
+      ad_fv->T += set_ad_or_dbl(*esp->T[i], TEMPERATURE, i) * bf[TEMPERATURE]->phi[i];
+    }
+  }
+
   if (pd->gv[POLYMER_STRESS11]) {
     int v_s[MAX_MODES][DIM][DIM];
     stress_eqn_pointer(v_s);
+    int sdim = VIM;
+    if (pd->gv[FILM_HEIGHT])
+      sdim = 3;
     for (int mode = 0; mode < vn->modes; mode++) {
-      for (int p = 0; p < VIM; p++) {
-        for (int q = 0; q < VIM; q++) {
+      for (int p = 0; p < sdim; p++) {
+        for (int q = 0; q < sdim; q++) {
           ad_fv->S[mode][p][q] = 0;
           ad_fv->S_dot[mode][p][q] = 0;
+        }
+      }
+    }
+    for (int mode = 0; mode < vn->modes; mode++) {
+      for (int p = 0; p < sdim; p++) {
+        for (int q = 0; q < sdim; q++) {
           if (p <= q) {
             int v = v_s[mode][p][q];
             if (pd->gv[v]) {
@@ -794,20 +847,22 @@ extern "C" void fill_ad_field_variables() {
             ad_fv->S[mode][q][p] = ad_fv->S[mode][p][q];
             ad_fv->S_dot[mode][q][p] = ad_fv->S_dot[mode][p][q];
           }
-          for (int r = 0; r < VIM; r++) {
+          for (int r = 0; r < sdim; r++) {
             ad_fv->grad_S[mode][r][p][q] = 0.;
             int v = v_s[mode][p][q];
-            int dofs = ei[upd->matrix_index[v]]->dof[v];
+            if (pd->gv[v]) {
+              int dofs = ei[upd->matrix_index[v]]->dof[v];
 
-            for (int i = 0; i < dofs; i++) {
-              if (p <= q) {
-                ad_fv->grad_S[mode][r][p][q] +=
-                    ADType(num_ad_variables, ad_fv->offset[v] + i, *esp->S[mode][p][q][i]) *
-                    ad_fv->basis[v].grad_phi[i][r];
-              } else {
-                ad_fv->grad_S[mode][r][p][q] +=
-                    ADType(num_ad_variables, ad_fv->offset[v] + i, *esp->S[mode][q][p][i]) *
-                    ad_fv->basis[v].grad_phi[i][r];
+              for (int i = 0; i < dofs; i++) {
+                if (p <= q) {
+                  ad_fv->grad_S[mode][r][p][q] +=
+                      ADType(num_ad_variables, ad_fv->offset[v] + i, *esp->S[mode][p][q][i]) *
+                      ad_fv->basis[v].grad_phi[i][r];
+                } else {
+                  ad_fv->grad_S[mode][r][p][q] +=
+                      ADType(num_ad_variables, ad_fv->offset[v] + i, *esp->S[mode][q][p][i]) *
+                      ad_fv->basis[v].grad_phi[i][r];
+                }
               }
             }
           }
@@ -822,7 +877,7 @@ extern "C" void fill_ad_field_variables() {
       }
     }
   }
-  for (int p = 0; pd->gv[VELOCITY_GRADIENT11] && p < VIM; p++) {
+  for (int p = 0; pd->gv[VELOCITY_GRADIENT11] && p < 3; p++) {
     int v_g[DIM][DIM];
     v_g[0][0] = VELOCITY_GRADIENT11;
     v_g[0][1] = VELOCITY_GRADIENT12;
@@ -833,10 +888,10 @@ extern "C" void fill_ad_field_variables() {
     v_g[2][0] = VELOCITY_GRADIENT31;
     v_g[2][1] = VELOCITY_GRADIENT32;
     v_g[2][2] = VELOCITY_GRADIENT33;
-    for (int q = 0; q < VIM; q++) {
+    for (int q = 0; q < 3; q++) {
       int v = v_g[p][q];
+      ad_fv->G[p][q] = 0;
       if (pd->gv[v]) {
-        ad_fv->G[p][q] = 0;
         int dofs = ei[upd->matrix_index[v]]->dof[v];
         for (int i = 0; i < dofs; i++) {
           ad_fv->G[p][q] +=
@@ -844,16 +899,18 @@ extern "C" void fill_ad_field_variables() {
         }
       }
     }
-    for (int p = 0; p < VIM; p++) {
-      for (int q = 0; q < VIM; q++) {
+    for (int p = 0; p < 3; p++) {
+      for (int q = 0; q < 3; q++) {
         int v = v_g[p][q];
         for (int r = 0; r < VIM; r++) {
           ad_fv->grad_G[r][p][q] = 0.0;
-          int dofs = ei[upd->matrix_index[v]]->dof[v];
-          for (int i = 0; i < dofs; i++) {
-            ad_fv->grad_G[r][p][q] +=
-                ADType(num_ad_variables, ad_fv->offset[v] + i, *esp->G[p][q][i]) *
-                bf[v]->grad_phi[i][r];
+          if (pd->gv[v]) {
+            int dofs = ei[upd->matrix_index[v]]->dof[v];
+            for (int i = 0; i < dofs; i++) {
+              ad_fv->grad_G[r][p][q] +=
+                  ADType(num_ad_variables, ad_fv->offset[v] + i, *esp->G[p][q][i]) *
+                  bf[v]->grad_phi[i][r];
+            }
           }
         }
       }
@@ -3493,5 +3550,53 @@ int ad_assemble_invariant(double tt, /* parameter to vary time integration from
   return (status);
 
 } /* END of assemble_invariant */
+
+extern "C" dbl visc_diss_heat_source_film_use_ad(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl scale) {
+  ADType h = 0;
+  ADType gamma_dot[DIM][DIM];
+  for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 2; j++) {
+      gamma_dot[i][j] = ad_fv->grad_v[i][j] + ad_fv->grad_v[j][i];
+    }
+  }
+  gamma_dot[2][2] = 2.0 * (-ad_fv->grad_v[0][0] - ad_fv->grad_v[1][1]);
+
+  ADType gammadot;
+  ad_calc_shearrate(gammadot, gamma_dot);
+
+  ADType mu = ad_viscosity(gn, gamma_dot);
+
+  for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 2; j++) {
+      h += mu * gamma_dot[j][i] * ad_fv->grad_v[i][j];
+    }
+  }
+  h += mu * gamma_dot[2][2] * (-ad_fv->grad_v[0][0] - ad_fv->grad_v[1][1]);
+  h = mu * gammadot * gammadot;
+  h *= scale; // ad_fv->film_height;
+
+  dbl alpha = mp->u_heat_source[0];
+  dbl T_alpha = mp->u_heat_source[1];
+  h += -alpha * (ad_fv->T - T_alpha) / ad_fv->film_height;
+
+  for (int j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+    d_h->T[j] = h.dx(ad_fv->offset[TEMPERATURE] + j);
+  }
+
+  for (int j = 0; j < ei[pg->imtrx]->dof[FILM_HEIGHT]; j++) {
+    d_h->film_height[j] = h.dx(ad_fv->offset[FILM_HEIGHT] + j);
+  }
+
+  for (int b = 0; b < pd->Num_Dim; b++) {
+    for (int j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + b]; j++) {
+      d_h->X[b][j] = h.dx(ad_fv->offset[MESH_DISPLACEMENT1 + b] + j);
+    }
+    for (int j = 0; j < ei[pg->imtrx]->dof[VELOCITY1 + b]; j++) {
+      d_h->v[b][j] = h.dx(ad_fv->offset[VELOCITY1 + b] + j);
+    }
+  }
+
+  return h.val();
+}
 #endif
 #endif

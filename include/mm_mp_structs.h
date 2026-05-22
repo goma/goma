@@ -1120,6 +1120,10 @@ struct Generalized_Newtonian {
   int atexpModel;
   int len_u_atexp;
   dbl *u_atexp;
+  dbl T_shift;
+  int T_shift_Model;
+  int len_u_T_shift;
+  dbl *u_T_shift;
   /* CARREAU_WLF viscosity model  */
   dbl wlfc2;
   int wlfc2Model;
@@ -1164,6 +1168,12 @@ struct Generalized_Newtonian {
   int thixoModel;
   int len_u_thixo;
   dbl *u_thixo_factor;
+  dbl arrhenius_a;
+  int arrhenius_aModel;
+  dbl arrhenius_c;
+  int arrhenius_cModel;
+  dbl arrhenius_d;
+  int arrhenius_dModel;
 };
 typedef struct Generalized_Newtonian GEN_NEWT_STRUCT;
 typedef struct PolymerTimeConstants {
@@ -1328,6 +1338,21 @@ struct Elastic_Constitutive {
   int v_mesh_sfs_model; /* Looks as if this ought to be an int - pas */
   int len_u_v_mesh_sfs;
   dbl *u_v_mesh_sfs;
+
+  int fxi_model;
+  dbl fxi;
+  dbl *u_fxi;
+  int len_u_fxi;
+
+  int geta_model;
+  dbl geta;
+  dbl *u_geta;
+  int len_u_geta;
+
+  int hzeta_model;
+  dbl hzeta;
+  dbl *u_hzeta;
+  int len_u_hzeta;
 
   dbl thermal_expansion; /*  thermo-elasticity properties   */
   int thermal_expansion_model;

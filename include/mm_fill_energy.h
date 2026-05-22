@@ -60,6 +60,7 @@ struct heat_source_dependence {
   double EM_ER[DIM][MDE];             /* time-harmonic electromagnetic dependence */
   double EM_EI[DIM][MDE];             /* time-harmonic electromagnetic dependence */
   double rst[MDE];                    /* residence time field dependence  */
+  double film_height[MDE];            /* film height dependence  */
 };
 typedef struct heat_source_dependence HEAT_SOURCE_DEPENDENCE_STRUCT;
 

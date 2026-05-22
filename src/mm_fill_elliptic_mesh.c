@@ -14,53 +14,27 @@
 
 #include "mm_fill_elliptic_mesh.h"
 
-#include "std.h"
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#ifdef GOMA_ENABLE_AZTEC
-#include "az_aztec.h"
-#endif
 #include "el_elm.h"
-#include "el_geom.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "mm_fill_ptrs.h"
-#include "mm_fill_rs.h"
-#include "mm_fill_shell.h"
-#include "mm_fill_solid.h"
-#include "mm_fill_species.h"
-#include "mm_fill_terms.h"
-#include "mm_fill_util.h"
 #include "mm_mp.h"
-#include "mm_mp_const.h"
-#include "mm_mp_structs.h"
-#include "mm_post_def.h"
-#include "mm_shell_util.h"
-#include "mm_std_models.h"
-#include "mm_std_models_shell.h"
-#include "mm_viscosity.h"
-#include "rf_allo.h"
-#include "rf_bc.h"
 #include "rf_bc_const.h"
-#include "rf_fem.h"
 #include "rf_fem_const.h"
-#include "rf_fill_const.h"
-#include "rf_io.h"
-#include "rf_io_const.h"
-#include "rf_masks.h"
-#include "rf_mp.h"
-#include "rf_node_const.h"
-#include "rf_solver.h"
-#include "rf_solver_const.h"
-#include "rf_vars_const.h"
-#include "sl_util.h"
 #include "std.h"
-#include "user_mp.h"
+#include <math.h>
+
+double elliptic_simple_abs_model(dbl xi, dbl xi_0, dbl a, dbl b, dbl c, dbl d, dbl e) {
+  dbl x = fabs(xi - xi_0);
+  return e + a / (b + c * x) + d * x;
+}
+
+double elliptic_dual_abs_model(dbl xi, dbl xi_0, dbl a, dbl b, dbl c, dbl d) {
+  dbl x = fabs(xi) - fabs(xi_0);
+  return d + a / (b + c * x);
+}
 
 int assemble_elliptic_mesh(void) {
   const int dim = pd->Num_Dim;
@@ -82,38 +56,176 @@ int assemble_elliptic_mesh(void) {
 
   // J[0][0] = dx/dxi
   // J[1][0] = dx/deta
+  // J[2][0] = dx/dzeta
   // J[0][1] = dy/dxi
   // J[1][1] = dy/deta
+  // J[2][1] = dy/dzeta
+  // J[0][2] = dz/dxi
+  // J[1][2] = dz/deta
+  // J[2][2] = dz/dzeta
 
   dbl S[DIM] = {0};
   dbl d_S_dmesh[DIM][DIM][MDE] = {{{0}}};
   dbl T[DIM] = {0};
   dbl d_T_dmesh[DIM][DIM][MDE] = {{{0}}};
-  dbl Snum = (SQUARE(bf[eqn]->J[0][0]) + SQUARE(bf[eqn]->J[0][1]));
-  dbl Sden = (SQUARE(bf[eqn]->J[1][0]) + SQUARE(bf[eqn]->J[1][1]));
-  S[0] = sqrt(Snum / Sden);
-  S[1] = sqrt(Sden / Snum);
-  T[0] = log(Snum);
-  T[1] = log(Sden);
-  for (int b = 0; b < dim; b++) {
-    for (int m = 0; m < ei[pg->imtrx]->dof[R_MESH1 + b]; m++) {
-      dbl dSnum = 2.0 * (bf[eqn]->dJ[0][0][b][m] * bf[eqn]->J[0][0] +
-                         bf[eqn]->dJ[0][1][b][m] * bf[eqn]->J[0][1]);
-      dbl dSden = 2.0 * (bf[eqn]->dJ[1][0][b][m] * bf[eqn]->J[1][0] +
-                         bf[eqn]->dJ[1][1][b][m] * bf[eqn]->J[1][1]);
-      d_S_dmesh[0][b][m] = S[0] * dSnum / (2 * Snum) - S[0] * dSden / (2 * Sden);
-      d_S_dmesh[1][b][m] = S[1] * dSden / (2 * Sden) - S[1] * dSnum / (2 * Snum);
-      d_T_dmesh[0][b][m] = dSnum / Snum;
-      d_T_dmesh[1][b][m] = dSden / Sden;
+  if (dim == 2 || dim == 3) {
+    dbl Snum = (SQUARE(bf[eqn]->J[0][0]) + SQUARE(bf[eqn]->J[0][1]));
+    dbl Sden = (SQUARE(bf[eqn]->J[1][0]) + SQUARE(bf[eqn]->J[1][1]));
+    S[0] = sqrt(Snum / Sden);
+    S[1] = sqrt(Sden / Snum);
+    T[0] = log(Snum);
+    T[1] = log(Sden);
+    for (int b = 0; b < dim; b++) {
+      for (int m = 0; m < ei[pg->imtrx]->dof[R_MESH1 + b]; m++) {
+        dbl dSnum = 2.0 * (bf[eqn]->dJ[0][0][b][m] * bf[eqn]->J[0][0] +
+                           bf[eqn]->dJ[0][1][b][m] * bf[eqn]->J[0][1]);
+        dbl dSden = 2.0 * (bf[eqn]->dJ[1][0][b][m] * bf[eqn]->J[1][0] +
+                           bf[eqn]->dJ[1][1][b][m] * bf[eqn]->J[1][1]);
+        d_S_dmesh[0][b][m] = S[0] * dSnum / (2 * Snum) - S[0] * dSden / (2 * Sden);
+        d_S_dmesh[1][b][m] = S[1] * dSden / (2 * Sden) - S[1] * dSnum / (2 * Snum);
+        d_T_dmesh[0][b][m] = dSnum / Snum;
+        d_T_dmesh[1][b][m] = dSden / Sden;
+      }
     }
+  } else {
+    GOMA_EH(GOMA_ERROR, "Unknown mesh dimension for elliptic mesh");
   }
+  // } else if (dim == 3) {
+  //   dbl Snum = (SQUARE(bf[eqn]->J[0][0]) + SQUARE(bf[eqn]->J[0][1]));
+  //   dbl Sden = (SQUARE(bf[eqn]->J[1][0]) + SQUARE(bf[eqn]->J[1][1]));
+  //   dbl Sxy = sqrt(Snum / Sden);
+  //   dbl d_Sxy_dmesh[DIM][MDE] = {{0.}};
+  //   T[0] = log((SQUARE(bf[eqn]->J[0][0]) + SQUARE(bf[eqn]->J[0][1]) + SQUARE(bf[eqn]->J[0][2])));
+  //   for (int b = 0; b < dim; b++) {
+  //     for (int m = 0; m < ei[pg->imtrx]->dof[R_MESH1 + b]; m++) {
+  //       dbl dSnum = 2.0 * (bf[eqn]->dJ[0][0][b][m] * bf[eqn]->J[0][0] +
+  //                          bf[eqn]->dJ[0][1][b][m] * bf[eqn]->J[0][1]);
+  //       dbl dSden = 2.0 * (bf[eqn]->dJ[1][0][b][m] * bf[eqn]->J[1][0] +
+  //                          bf[eqn]->dJ[1][1][b][m] * bf[eqn]->J[1][1]);
+  //       d_Sxy_dmesh[b][m] = Sxy * dSnum / (2 * Snum) - Sxy * dSden / (2 * Sden);
+  //       d_T_dmesh[0][b][m] = 2.0 *
+  //                            (bf[eqn]->dJ[0][0][b][m] * bf[eqn]->J[0][0] +
+  //                             bf[eqn]->dJ[0][1][b][m] * bf[eqn]->J[0][1] +
+  //                             bf[eqn]->dJ[0][2][b][m] * bf[eqn]->J[0][2]) /
+  //                            T[0];
+  //     }
+  //   }
+  //
+  //   Snum = (SQUARE(bf[eqn]->J[1][2]) + SQUARE(bf[eqn]->J[1][1]));
+  //   Sden = (SQUARE(bf[eqn]->J[2][1]) + SQUARE(bf[eqn]->J[2][2]));
+  //   dbl Syz = sqrt(Snum / Sden);
+  //   T[1] = log((SQUARE(bf[eqn]->J[1][0]) + SQUARE(bf[eqn]->J[1][1])) + SQUARE(bf[eqn]->J[1][2]));
+  //   dbl d_Syz_dmesh[DIM][MDE] = {{0.}};
+  //   for (int b = 0; b < dim; b++) {
+  //     for (int m = 0; m < ei[pg->imtrx]->dof[R_MESH1 + b]; m++) {
+  //       dbl dSnum = 2.0 * (bf[eqn]->dJ[1][2][b][m] * bf[eqn]->J[1][2] +
+  //                          bf[eqn]->dJ[1][1][b][m] * bf[eqn]->J[1][1]);
+  //       dbl dSden = 2.0 * (bf[eqn]->dJ[2][1][b][m] * bf[eqn]->J[2][1] +
+  //                          bf[eqn]->dJ[2][2][b][m] * bf[eqn]->J[2][2]);
+  //       d_Syz_dmesh[b][m] = Syz * dSnum / (2 * Snum) - Syz * dSden / (2 * Sden);
+  //       d_T_dmesh[1][b][m] = 2.0 *
+  //                            (bf[eqn]->dJ[1][0][b][m] * bf[eqn]->J[1][0] +
+  //                             bf[eqn]->dJ[1][1][b][m] * bf[eqn]->J[1][1] +
+  //                             bf[eqn]->dJ[1][2][b][m] * bf[eqn]->J[1][2]) /
+  //                            T[1];
+  //     }
+  //   }
+  //
+  //   Snum = (SQUARE(bf[eqn]->J[2][2]) + SQUARE(bf[eqn]->J[2][0]));
+  //   Sden = (SQUARE(bf[eqn]->J[0][2]) + SQUARE(bf[eqn]->J[0][0]));
+  //   dbl Szx = sqrt(Snum / Sden);
+  //   T[2] = log((SQUARE(bf[eqn]->J[2][0]) + SQUARE(bf[eqn]->J[2][1]) + SQUARE(bf[eqn]->J[2][2])));
+  //   dbl d_Szx_dmesh[DIM][MDE] = {{0.}};
+  //   for (int b = 0; b < dim; b++) {
+  //     for (int m = 0; m < ei[pg->imtrx]->dof[R_MESH1 + b]; m++) {
+  //       dbl dSnum = 2.0 * (bf[eqn]->dJ[2][2][b][m] * bf[eqn]->J[2][2] +
+  //                          bf[eqn]->dJ[2][0][b][m] * bf[eqn]->J[2][0]);
+  //       dbl dSden = 2.0 * (bf[eqn]->dJ[0][2][b][m] * bf[eqn]->J[0][2] +
+  //                          bf[eqn]->dJ[0][0][b][m] * bf[eqn]->J[0][0]);
+  //       d_Szx_dmesh[b][m] = Szx * dSnum / (2 * Snum) - Szx * dSden / (2 * Sden);
+  //       d_T_dmesh[2][b][m] = 2.0 *
+  //                            (bf[eqn]->dJ[2][0][b][m] * bf[eqn]->J[2][0] +
+  //                             bf[eqn]->dJ[2][1][b][m] * bf[eqn]->J[2][1] +
+  //                             bf[eqn]->dJ[2][2][b][m] * bf[eqn]->J[2][2]) /
+  //                            T[2];
+  //     }
+  //   }
+  //
+  //   // assemble components
+  //   S[0] = Sxy + Szx;
+  //   S[1] = 1 / Sxy + Syz;
+  //   S[2] = 1 / Szx + 1 / Syz;
+  //
+  //   for (int b = 0; b < dim; b++) {
+  //     for (int m = 0; m < ei[pg->imtrx]->dof[R_MESH1 + b]; m++) {
+  //       d_S_dmesh[0][b][m] = d_Sxy_dmesh[b][m] + d_Szx_dmesh[b][m];
+  //       d_S_dmesh[1][b][m] = d_Syz_dmesh[b][m];
+  //       if (fabs(d_Sxy_dmesh[b][m]) > 0) {
+  //         d_S_dmesh[1][b][m] += 1 / (d_Sxy_dmesh[b][m] + 1e-32);
+  //       }
+  //       d_S_dmesh[2][b][m] = 0;
+  //       if (fabs(d_Szx_dmesh[b][m]) > 0) {
+  //         d_S_dmesh[2][b][m] += 1 / (d_Szx_dmesh[b][m] + 1e-32);
+  //       }
+  //       if (fabs(d_Syz_dmesh[b][m]) > 0) {
+  //         d_S_dmesh[2][b][m] += 1 / (d_Syz_dmesh[b][m]+1e-32);
+  //       }
+  //     }
+  //   }
+  //
 
-  dbl eps_s = 1;
+  dbl eps_s = 1.2;
 
   dbl fxi = 1.0;
+  if (elc_glob[ei[pg->imtrx]->mn]->fxi_model == CONSTANT) {
+    fxi = elc_glob[ei[pg->imtrx]->mn]->fxi;
+  } else if (elc_glob[ei[pg->imtrx]->mn]->fxi_model == ELLIPTIC_SIMPLE_ABS) {
+    fxi = elliptic_simple_abs_model(
+        fv->x0[0], elc_glob[ei[pg->imtrx]->mn]->u_fxi[0], elc_glob[ei[pg->imtrx]->mn]->u_fxi[1],
+        elc_glob[ei[pg->imtrx]->mn]->u_fxi[2], elc_glob[ei[pg->imtrx]->mn]->u_fxi[3],
+        elc_glob[ei[pg->imtrx]->mn]->u_fxi[4], elc_glob[ei[pg->imtrx]->mn]->u_fxi[5]);
+  } else if (elc_glob[ei[pg->imtrx]->mn]->fxi_model == ELLIPTIC_DUAL_ABS) {
+    fxi = elliptic_dual_abs_model(
+        fv->x0[0], elc_glob[ei[pg->imtrx]->mn]->u_fxi[0], elc_glob[ei[pg->imtrx]->mn]->u_fxi[1],
+        elc_glob[ei[pg->imtrx]->mn]->u_fxi[2], elc_glob[ei[pg->imtrx]->mn]->u_fxi[3],
+        elc_glob[ei[pg->imtrx]->mn]->u_fxi[4]);
+  } else {
+    GOMA_EH(GOMA_ERROR, "Unknown Elliptic fxi model");
+  }
   dbl geta = 1.0;
+  if (elc_glob[ei[pg->imtrx]->mn]->geta_model == CONSTANT) {
+    geta = elc_glob[ei[pg->imtrx]->mn]->geta;
+  } else if (elc_glob[ei[pg->imtrx]->mn]->geta_model == ELLIPTIC_SIMPLE_ABS) {
+    geta = elliptic_simple_abs_model(
+        fv->x0[1], elc_glob[ei[pg->imtrx]->mn]->u_geta[0], elc_glob[ei[pg->imtrx]->mn]->u_geta[1],
+        elc_glob[ei[pg->imtrx]->mn]->u_geta[2], elc_glob[ei[pg->imtrx]->mn]->u_geta[3],
+        elc_glob[ei[pg->imtrx]->mn]->u_geta[4], elc_glob[ei[pg->imtrx]->mn]->u_geta[5]);
+  } else if (elc_glob[ei[pg->imtrx]->mn]->geta_model == ELLIPTIC_DUAL_ABS) {
+    geta = elliptic_dual_abs_model(
+        fv->x0[1], elc_glob[ei[pg->imtrx]->mn]->u_geta[0], elc_glob[ei[pg->imtrx]->mn]->u_geta[1],
+        elc_glob[ei[pg->imtrx]->mn]->u_geta[2], elc_glob[ei[pg->imtrx]->mn]->u_geta[3],
+        elc_glob[ei[pg->imtrx]->mn]->u_geta[4]);
+  } else {
+    GOMA_EH(GOMA_ERROR, "Unknown Elliptic geta model");
+  }
+  dbl hzeta = 1.0;
+  if (elc_glob[ei[pg->imtrx]->mn]->hzeta_model == CONSTANT) {
+    hzeta = elc_glob[ei[pg->imtrx]->mn]->hzeta;
+  } else if (elc_glob[ei[pg->imtrx]->mn]->hzeta_model == ELLIPTIC_SIMPLE_ABS) {
+    hzeta = elliptic_simple_abs_model(
+        fv->x0[2], elc_glob[ei[pg->imtrx]->mn]->u_hzeta[0], elc_glob[ei[pg->imtrx]->mn]->u_hzeta[1],
+        elc_glob[ei[pg->imtrx]->mn]->u_hzeta[2], elc_glob[ei[pg->imtrx]->mn]->u_hzeta[3],
+        elc_glob[ei[pg->imtrx]->mn]->u_hzeta[4], elc_glob[ei[pg->imtrx]->mn]->u_hzeta[5]);
+  } else if (elc_glob[ei[pg->imtrx]->mn]->hzeta_model == ELLIPTIC_DUAL_ABS) {
+    hzeta = elliptic_dual_abs_model(
+        fv->x0[2], elc_glob[ei[pg->imtrx]->mn]->u_hzeta[0], elc_glob[ei[pg->imtrx]->mn]->u_hzeta[1],
+        elc_glob[ei[pg->imtrx]->mn]->u_hzeta[2], elc_glob[ei[pg->imtrx]->mn]->u_hzeta[3],
+        elc_glob[ei[pg->imtrx]->mn]->u_hzeta[4]);
+  } else {
+    GOMA_EH(GOMA_ERROR, "Unknown Elliptic hzeta model");
+  }
 
-  dbl sc[DIM] = {fxi, geta};
+  dbl sc[DIM] = {fxi, geta, hzeta};
 
   /*
    * Residuals_________________________________________________________________
@@ -138,21 +250,16 @@ int assemble_elliptic_mesh(void) {
       for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
         dbl diffusion = 0.;
         if (diffusion_on) {
-          /*
-           * use pseudo cartesian arbitrary mesh motion
-           */
           for (int p = 0; p < dim; p++) {
             diffusion += (S[a] + eps_s) * bf[eqn]->d_phi[i][p] * bf[eqn]->B[p][a];
           }
           diffusion *= bf[eqn]->detJ * wt;
-
           diffusion *= diffusion_etm;
         }
 
         dbl source = 0.;
         if (source_on) {
           source = -sc[a] * T[a] * bf[eqn]->dphidxi[i][a] * wt;
-          /* Source term only applies in Lagrangian mesh motion */
 
           source *= source_etm;
         }
@@ -248,23 +355,44 @@ void assemble_essential_elliptic_mesh(dbl func[DIM],
 
   dbl fxi = 1.0;
   dbl geta = 1.0;
+  dbl hzeta = 1.0;
 
   dbl T[DIM] = {0};
   dbl d_T_dmesh[DIM][DIM][MDE] = {{{0}}};
-  dbl Snum = (SQUARE(bf[eqn]->J[0][0]) + SQUARE(bf[eqn]->J[0][1]));
-  dbl Sden = (SQUARE(bf[eqn]->J[1][0]) + SQUARE(bf[eqn]->J[1][1]));
-  T[0] = log(Snum);
-  T[1] = log(Sden);
-  for (int b = 0; b < pd->Num_Dim; b++) {
-    for (int m = 0; m < ei[pg->imtrx]->dof[R_MESH1 + b]; m++) {
-      dbl dSnum = 2.0 * (bf[eqn]->dJ[0][0][b][m] * bf[eqn]->J[0][0] +
-                         bf[eqn]->dJ[0][1][b][m] * bf[eqn]->J[0][1]);
-      dbl dSden = 2.0 * (bf[eqn]->dJ[1][0][b][m] * bf[eqn]->J[1][0] +
-                         bf[eqn]->dJ[1][1][b][m] * bf[eqn]->J[1][1]);
-      d_T_dmesh[0][b][m] = dSnum / Snum;
-      d_T_dmesh[1][b][m] = dSden / Sden;
+  if (pd->Num_Dim == 2) {
+    dbl Snum = (SQUARE(bf[eqn]->J[0][0]) + SQUARE(bf[eqn]->J[0][1]));
+    dbl Sden = (SQUARE(bf[eqn]->J[1][0]) + SQUARE(bf[eqn]->J[1][1]));
+    T[0] = log(Snum);
+    T[1] = log(Sden);
+    for (int b = 0; b < pd->Num_Dim; b++) {
+      for (int m = 0; m < ei[pg->imtrx]->dof[R_MESH1 + b]; m++) {
+        dbl dSnum = 2.0 * (bf[eqn]->dJ[0][0][b][m] * bf[eqn]->J[0][0] +
+                           bf[eqn]->dJ[0][1][b][m] * bf[eqn]->J[0][1]);
+        dbl dSden = 2.0 * (bf[eqn]->dJ[1][0][b][m] * bf[eqn]->J[1][0] +
+                           bf[eqn]->dJ[1][1][b][m] * bf[eqn]->J[1][1]);
+        d_T_dmesh[0][b][m] = dSnum / Snum;
+        d_T_dmesh[1][b][m] = dSden / Sden;
+      }
+    }
+  } else if (pd->Num_Dim == 3) {
+    for (int a = 0; a < pd->Num_Dim; a++) {
+      dbl inner = 0;
+      for (int b = 0; b < pd->Num_Dim; b++) {
+        inner += SQUARE(bf[eqn]->J[a][b]);
+      }
+
+      T[a] = log(inner);
+      dbl inv = 1 / T[a];
+      for (int b = 0; b < pd->Num_Dim; b++) {
+        for (int r = 0; r < pd->Num_Dim; r++) {
+          for (int m = 0; m < ei[pg->imtrx]->dof[R_MESH1 + b]; m++) {
+            d_T_dmesh[0][b][m] += inv * 2.0 * bf[eqn]->dJ[a][b][r][m] * bf[eqn]->J[a][b];
+          }
+        }
+      }
     }
   }
+
   switch (bc_name) {
   case ELLIPTIC_XI_REGULARIZATION_BC: {
     func[0] = -M * fxi * T[0] / fv->sdet;
@@ -278,12 +406,24 @@ void assemble_essential_elliptic_mesh(dbl func[DIM],
     }
   } break;
   case ELLIPTIC_ETA_REGULARIZATION_BC: {
+
     func[0] = -M * geta * T[1] / fv->sdet;
     for (int b = 0; b < pd->Num_Dim; b++) {
       int var = MESH_DISPLACEMENT1 + b;
       for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         d_func[0][var][j] = -M * geta * d_T_dmesh[1][b][j] / fv->sdet +
-                            M * fxi * T[1] * fv->dsurfdet_dx[b][j] / (fv->sdet * fv->sdet);
+                            M * geta * T[1] * fv->dsurfdet_dx[b][j] / (fv->sdet * fv->sdet);
+      }
+    }
+  } break;
+  case ELLIPTIC_ZETA_REGULARIZATION_BC: {
+
+    func[0] = -M * hzeta * T[2] / fv->sdet;
+    for (int b = 0; b < pd->Num_Dim; b++) {
+      int var = MESH_DISPLACEMENT1 + b;
+      for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        d_func[0][var][j] = -M * hzeta * d_T_dmesh[2][b][j] / fv->sdet +
+                            M * hzeta * T[2] * fv->dsurfdet_dx[b][j] / (fv->sdet * fv->sdet);
       }
     }
   } break;

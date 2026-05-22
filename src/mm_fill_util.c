@@ -4598,6 +4598,10 @@ int calc_shearrate(dbl *gammadot,           /* strain rate invariant */
     }
   }
 
+  if (pd->gv[FILM_HEIGHT]) {
+    *gammadot += -(fv->grad_v[0][0] + fv->grad_v[1][1]) * -(fv->grad_v[0][0] + fv->grad_v[1][1]);
+  }
+
   *gammadot = sqrt(0.5 * fabs(*gammadot));
 
   /* get stuff for Jacobian entries */

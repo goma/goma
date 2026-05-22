@@ -1844,11 +1844,11 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->len_u_cap_pres, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->len_u_tau_y, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->len_u_atexp, 1, MPI_INT);
+    ddd_add_member(n, &gn_glob[i]->len_u_T_shift, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->len_u_mu0, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->len_u_nexp, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->len_u_muinf, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->len_u_aexp, 1, MPI_INT);
-    ddd_add_member(n, &gn_glob[i]->len_u_atexp, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->len_u_wlfc2, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->len_u_tau_y, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->len_u_lam, 1, MPI_INT);
@@ -2317,6 +2317,8 @@ void noahs_ark(void) {
       ddd_add_member(n, &ve_glob[i][mode]->gn->aexpModel, 1, MPI_INT);
       ddd_add_member(n, &ve_glob[i][mode]->gn->atexp, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->gn->atexpModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->gn->T_shift, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->gn->T_shift_Model, 1, MPI_INT);
       ddd_add_member(n, &ve_glob[i][mode]->gn->tau_y, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->gn->tau_yModel, 1, MPI_INT);
       ddd_add_member(n, &ve_glob[i][mode]->gn->fexp, 1, MPI_DOUBLE);
@@ -2345,6 +2347,12 @@ void noahs_ark(void) {
       ddd_add_member(n, &ve_glob[i][mode]->gn->diff, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->gn->DilVisc0, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->gn->DilViscModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->gn->arrhenius_a, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->gn->arrhenius_aModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->gn->arrhenius_c, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->gn->arrhenius_cModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->gn->arrhenius_d, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->gn->arrhenius_dModel, 1, MPI_INT);
 
       ddd_add_member(n, &ve_glob[i][mode]->time_const_st->ConstitutiveEquation, 1, MPI_INT);
       ddd_add_member(n, &ve_glob[i][mode]->time_const_st->lambda0, 1, MPI_DOUBLE);
@@ -2404,6 +2412,8 @@ void noahs_ark(void) {
     ddd_add_member(n, &gn_glob[i]->aexpModel, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->atexp, 1, MPI_DOUBLE);
     ddd_add_member(n, &gn_glob[i]->atexpModel, 1, MPI_INT);
+    ddd_add_member(n, &gn_glob[i]->T_shift, 1, MPI_DOUBLE);
+    ddd_add_member(n, &gn_glob[i]->T_shift_Model, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->wlfc2, 1, MPI_DOUBLE);
     ddd_add_member(n, &gn_glob[i]->wlfc2Model, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->tau_y, 1, MPI_DOUBLE);
@@ -2435,6 +2445,12 @@ void noahs_ark(void) {
     ddd_add_member(n, &gn_glob[i]->DilViscModel, 1, MPI_INT);
     ddd_add_member(n, &gn_glob[i]->thixo_factor, 1, MPI_DOUBLE);
     ddd_add_member(n, &gn_glob[i]->thixoModel, 1, MPI_INT);
+    ddd_add_member(n, &gn_glob[i]->arrhenius_a, 1, MPI_DOUBLE);
+    ddd_add_member(n, &gn_glob[i]->arrhenius_aModel, 1, MPI_INT);
+    ddd_add_member(n, &gn_glob[i]->arrhenius_c, 1, MPI_DOUBLE);
+    ddd_add_member(n, &gn_glob[i]->arrhenius_cModel, 1, MPI_INT);
+    ddd_add_member(n, &gn_glob[i]->arrhenius_d, 1, MPI_DOUBLE);
+    ddd_add_member(n, &gn_glob[i]->arrhenius_dModel, 1, MPI_INT);
 
     /*
      * Finally, the elastic constitutive models for solids and pseudosolids
@@ -2498,8 +2514,19 @@ void noahs_ark(void) {
 
     ddd_add_member(n, elc_glob[i]->v_mesh_sfs, DIM, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->v_mesh_sfs_model, 1, MPI_INT);
-
     ddd_add_member(n, &elc_glob[i]->len_u_v_mesh_sfs, 1, MPI_INT);
+
+    ddd_add_member(n, &elc_glob[i]->fxi, 1, MPI_DOUBLE);
+    ddd_add_member(n, &elc_glob[i]->fxi_model, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->len_u_fxi, 1, MPI_INT);
+
+    ddd_add_member(n, &elc_glob[i]->geta, 1, MPI_DOUBLE);
+    ddd_add_member(n, &elc_glob[i]->geta_model, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->len_u_geta, 1, MPI_INT);
+
+    ddd_add_member(n, &elc_glob[i]->hzeta, 1, MPI_DOUBLE);
+    ddd_add_member(n, &elc_glob[i]->hzeta_model, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->len_u_hzeta, 1, MPI_INT);
 
     ddd_add_member(n, &elc_glob[i]->thermal_expansion, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->thermal_expansion_model, 1, MPI_INT);
@@ -3059,6 +3086,8 @@ void ark_landing(void) {
 
     dalloc(gn_glob[i]->len_u_atexp, gn_glob[i]->u_atexp);
 
+    dalloc(gn_glob[i]->len_u_T_shift, gn_glob[i]->u_T_shift);
+
     dalloc(gn_glob[i]->len_u_wlfc2, gn_glob[i]->u_wlfc2);
 
     dalloc(gn_glob[i]->len_u_lam, gn_glob[i]->u_lam);
@@ -3210,6 +3239,10 @@ void ark_landing(void) {
     dalloc(e->len_u_lame_TempShift, e->u_lame_TempShift);
 
     dalloc(e->len_u_v_mesh_sfs, e->u_v_mesh_sfs);
+
+    dalloc(e->len_u_fxi, e->u_fxi);
+    dalloc(e->len_u_geta, e->u_geta);
+    dalloc(e->len_u_hzeta, e->u_hzeta);
 
     dalloc(e->len_u_thermal_expansion, e->u_thermal_expansion);
 
@@ -3371,6 +3404,8 @@ void noahs_dove(void) {
 
     crdv(gn_glob[i]->len_u_atexp, gn_glob[i]->u_atexp);
 
+    crdv(gn_glob[i]->len_u_T_shift, gn_glob[i]->u_T_shift);
+
     crdv(gn_glob[i]->len_u_wlfc2, gn_glob[i]->u_wlfc2);
 
     crdv(gn_glob[i]->len_u_lam, gn_glob[i]->u_lam);
@@ -3524,6 +3559,10 @@ void noahs_dove(void) {
     crdv(e->len_u_lame_TempShift, e->u_lame_TempShift);
 
     crdv(e->len_u_v_mesh_sfs, e->u_v_mesh_sfs);
+
+    crdv(e->len_u_fxi, e->u_fxi);
+    crdv(e->len_u_geta, e->u_geta);
+    crdv(e->len_u_hzeta, e->u_hzeta);
 
     crdv(e->len_u_thermal_expansion, e->u_thermal_expansion);
 

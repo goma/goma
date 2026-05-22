@@ -4128,6 +4128,16 @@ struct BC_descriptions BC_Desc[] = {
      {1, 1, 1, 0, 0, 1, 1, 1, 0, 0},
      SINGLE_PHASE,
      DVI_SINGLE_PHASE_DB},
+    {"ELLIPTIC_ZETA_REGULARIZATION",
+     "ELLIPTIC_ZETA_REGULARIZATION_BC",
+     WEAK_INT_SURF,
+     ELLIPTIC_ZETA_REGULARIZATION_BC,
+     R_MESH3,
+     SCALAR,
+     NO_ROT,
+     {1, 1, 1, 0, 0, 1, 1, 1, 0, 0},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
     {"KIN_LEAK",
      "KIN_LEAK_BC",
      STRONG_INT_SURF,
@@ -4203,6 +4213,16 @@ struct BC_descriptions BC_Desc[] = {
      STRONG_INT_SURF,
      KINEMATIC_ETA_BC,
      R_MESH2,
+     SCALAR,
+     NO_ROT,
+     {1, 1, 1, 0, 0, 1, 1, 1, 0, 0},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+    {"KINEMATIC_ZETA",
+     "KINEMATIC_ZETA_BC",
+     STRONG_INT_SURF,
+     KINEMATIC_ZETA_BC,
+     R_MESH3,
      SCALAR,
      NO_ROT,
      {1, 1, 1, 0, 0, 1, 1, 1, 0, 0},
@@ -7335,6 +7355,21 @@ struct BC_descriptions BC_Desc[] = {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1},
      SINGLE_PHASE,
      DVI_SINGLE_PHASE_DB},
+    {"R_FILM_HEIGHT",
+     "FILM_HEIGHT",
+     DIRICHLET,
+     FILM_HEIGHT_BC,
+     R_FILM_HEIGHT,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
 
 };
 
@@ -7610,6 +7645,7 @@ struct Equation_Names EQ_Name[] = {
     {"R_EDDY_NU", "EDDY_NU", R_EDDY_NU},
     {"R_TURB_K", "TURB_K", R_TURB_K},
     {"R_TURB_OMEGA", "TURB_OMEGA", R_TURB_OMEGA},
+    {"R_FILM_HEIGHT", "FILM_HEIGHT", R_FILM_HEIGHT},
 
     /*
      *  Note -> these entries must remain until we get rid
@@ -7909,9 +7945,10 @@ struct Equation_Names Var_Name[] = {
     {"USTAR", "USX", USTAR},
     {"VSTAR", "USY", VSTAR},
     {"WSTAR", "USZ", WSTAR},
-    {"EDDY_NU", "EDDY_NU", EDDY_NU},          // 214
-    {"TURB_K", "TURB_K", TURB_K},             // 215
-    {"TURB_OMEGA", "TURB_OMEGA", TURB_OMEGA}, // 215
+    {"EDDY_NU", "EDDY_NU", EDDY_NU},             // 214
+    {"TURB_K", "TURB_K", TURB_K},                // 215
+    {"TURB_OMEGA", "TURB_OMEGA", TURB_OMEGA},    // 216
+    {"FILM_HEIGHT", "FILM_HEIGHT", FILM_HEIGHT}, // 217
 
     {"MESH_POSITION1", "X", MESH_POSITION1},
     {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 218 */
@@ -8185,6 +8222,7 @@ struct Equation_Names Exo_Var_Names[] = {
     {"Eddy Turbulence Viscosity.", "EDDY_NU", EDDY_NU},
     {"Turbulent K", "TURB_K", TURB_K},
     {"Turbulent OMEGA", "TURB_OMEGA", TURB_OMEGA},
+    {"Film Height", "FILM_HEIGHT", FILM_HEIGHT},
 };
 
 int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);
@@ -8494,6 +8532,8 @@ struct Equation_Names Var_Units[] = {
     {"EDDY_NU", "[1]", EDDY_NU},
     {"TURB_K", "[1]", TURB_K},
     {"TURB_OMEGA", "[1]", TURB_OMEGA},
+    {"Film Height", "[1]", FILM_HEIGHT},
+
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);

@@ -95,7 +95,10 @@
                                    /* lagged (explicit) terms for eigen-decomp parts grad(v) form*/
 #define SQRT_CONF 9                /* Log-conformation tensor formulation using */
                                    /* lagged (explicit) terms for eigen-decomp parts grad(v) form*/
-#define CONF 10                    /* Log-conformation tensor formulation using */
+#define CONF                       10 /* Log-conformation tensor formulation using */
+#define EVSS_FILM_HEIGHT           11
+#define EVSS_FILM_HEIGHT_SQRT_CONF 12
+
 /* Discontinuous Galerkin viscoelastic jacobian options */
 #define EXPLICIT_DG 1
 #define FULL_DG     2
@@ -522,6 +525,7 @@
 #define EDDY_NU            214
 #define TURB_K             215
 #define TURB_OMEGA         216
+#define FILM_HEIGHT        217
 /*
  * define a variable to hold an external field which will be
  * held fixed in the problem but parametered by the basis functions
@@ -930,7 +934,8 @@
 #define R_EDDY_NU      214
 #define R_TURB_K       215
 #define R_TURB_OMEGA   216
-#define V_LAST         217
+#define R_FILM_HEIGHT  217
+#define V_LAST         218
 
 /* MMH
  * This is used for those parts of the code that want to ensure

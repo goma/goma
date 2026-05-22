@@ -13,6 +13,7 @@ momentum conservation equations.
    :maxdepth: 1
 
    mechanical_and_constitutive/solid_constitutive_equation
+   mechanical_and_constitutive/elliptic_fxi_geta_hzeta
    mechanical_and_constitutive/plasticity_equation
    mechanical_and_constitutive/convective_lagrangian_velocity
    mechanical_and_constitutive/lame_mu

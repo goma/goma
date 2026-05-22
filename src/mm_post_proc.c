@@ -2611,7 +2611,7 @@ static int calc_standard_fields(double **post_proc_vect,
     // printf("%lf", mu);
     for (a = 0; a < Num_Dim; a++) {
       for (b = 0; b < Num_Dim; b++) {
-        local_post[VISCOUS_STRESS + a * Num_Dim + b] = mu * gamma[a][b];
+        local_post[VISCOUS_STRESS + a * Num_Dim + b] = fv->grad_v[a][b];
         local_lumped[VISCOUS_STRESS + a * Num_Dim + b] = 1.;
       }
     }
@@ -4819,6 +4819,14 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
          */
         err = load_fv_grads();
         GOMA_EH(err, "load_fv_grads");
+        if (upd->AutoDiff) {
+#ifdef GOMA_ENABLE_SACADO
+          fill_ad_field_variables();
+#else
+          GOMA_EH(GOMA_ERROR,
+                  "AutoDiff assembly enabled but Goma not compiled with Sacado support");
+#endif
+        }
 
         /*
          * Load up porous media variables and properties, if needed

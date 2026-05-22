@@ -37,6 +37,55 @@ extern "C" {
 #include "std.h"
 #include "user_mp.h"
 }
+
+/* This routine calculates the adaptive viscosity from Sun et al., 1999.
+ * The adaptive viscosity term multiplies the continuous and discontinuous
+ * shear-rate, so it should cancel out and not affect the
+ * solution, other than increasing the stability of the
+ * algorithm in areas of high shear and stress.
+ */
+ADType ad_numerical_viscosity(ADType s[DIM][DIM], /* total stress */
+                              ADType gamma_cont[DIM][DIM],
+                              int sdim) /* continuous shear rate */
+{
+  int a, b;
+  ADType s_dbl_dot_s;
+  ADType g_dbl_dot_g;
+  ADType eps2;
+  ADType eps; /* should migrate this to input deck */
+
+  ADType mun;
+
+  eps = vn->eps;
+
+  eps2 = eps / 2.;
+
+  s_dbl_dot_s = 0.;
+  for (a = 0; a < sdim; a++) {
+    for (b = 0; b < sdim; b++) {
+      s_dbl_dot_s += s[a][b] * s[a][b];
+    }
+  }
+
+  g_dbl_dot_g = 0.;
+  for (a = 0; a < VIM; a++) {
+    for (b = 0; b < VIM; b++) {
+      g_dbl_dot_g += gamma_cont[a][b] * gamma_cont[a][b];
+    }
+  }
+
+  mun = (sqrt(1. + eps2 * s_dbl_dot_s)) / sqrt(1. + eps2 * g_dbl_dot_g);
+
+  return (mun);
+}
+
+ADType ad_arrhenius_simple_viscosity(struct Generalized_Newtonian *gn_local,
+                                     ADType gamma_dot[DIM][DIM]);
+
+ADType ad_carreau_arrhenius_viscosity(struct Generalized_Newtonian *gn_local,
+                                      ADType gamma_dot[DIM][DIM]);
+ADType ad_arrhenius_viscosity(struct Generalized_Newtonian *gn_local, ADType gamma_dot[DIM][DIM]);
+
 ADType ad_ls_modulate_property(
     const ADType &p1, const ADType &p2, double width, double pm_minus, double pm_plus) {
   ADType p_plus, p_minus, p;
@@ -199,6 +248,12 @@ ADType ad_viscosity(struct Generalized_Newtonian *gn_local, ADType gamma_dot[DIM
     mu = ad_sa_viscosity(gn_local);
   } else if (gn_local->ConstitutiveEquation == BINGHAM) {
     mu = ad_bingham_viscosity(gn_local, gamma_dot);
+  } else if (gn_local->ConstitutiveEquation == CARREAU_ARRHENIUS) {
+    mu = ad_carreau_arrhenius_viscosity(gn_local, gamma_dot);
+  } else if (gn_local->ConstitutiveEquation == ARRHENIUS_ADVANCED) {
+    mu = ad_arrhenius_viscosity(gn_local, gamma_dot);
+  } else if (gn_local->ConstitutiveEquation == ARRHENIUS_SIMPLE) {
+    mu = ad_arrhenius_simple_viscosity(gn_local, gamma_dot);
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognized viscosity model for non-Newtonian fluid");
   }
@@ -569,15 +624,20 @@ int ad_assemble_momentum(dbl time,       /* current time */
 
 void ad_ve_polymer_stress(ADType gamma[DIM][DIM], ADType stress[DIM][DIM]) {
 #if 1
+  int sdim = VIM;
+  if (pd->gv[FILM_HEIGHT]) {
+    sdim = 3;
+  }
 
   dbl dgamma[DIM][DIM];
-  for (int i = 0; i < VIM; i++) {
-    for (int j = 0; j < VIM; j++) {
+  for (int i = 0; i < sdim; i++) {
+    for (int j = 0; j < sdim; j++) {
       stress[i][j] = 0;
       dgamma[i][j] = gamma[i][j].val();
     }
   }
   switch (vn->evssModel) {
+  case EVSS_FILM_HEIGHT_SQRT_CONF:
   case SQRT_CONF: {
     for (int mode = 0; mode < vn->modes; mode++) {
       /* get polymer viscosity */
@@ -586,8 +646,8 @@ void ad_ve_polymer_stress(ADType gamma[DIM][DIM], ADType stress[DIM][DIM]) {
 
       ADType bdotb[DIM][DIM];
       ADType b[DIM][DIM];
-      for (int ii = 0; ii < VIM; ii++) {
-        for (int jj = 0; jj < VIM; jj++) {
+      for (int ii = 0; ii < sdim; ii++) {
+        for (int jj = 0; jj < sdim; jj++) {
           if (ii <= jj) {
             b[ii][jj] = ad_fv->S[mode][ii][jj];
             b[jj][ii] = b[ii][jj];
@@ -595,10 +655,10 @@ void ad_ve_polymer_stress(ADType gamma[DIM][DIM], ADType stress[DIM][DIM]) {
         }
       }
 
-      ad_tensor_dot(b, b, bdotb, VIM);
+      ad_tensor_dot(b, b, bdotb, sdim);
 
-      for (int ii = 0; ii < VIM; ii++) {
-        for (int jj = 0; jj < VIM; jj++) {
+      for (int ii = 0; ii < sdim; ii++) {
+        for (int jj = 0; jj < sdim; jj++) {
           stress[ii][jj] += -(mup / lambda) * (delta(ii, jj) - bdotb[ii][jj]);
         }
       }
@@ -608,8 +668,8 @@ void ad_ve_polymer_stress(ADType gamma[DIM][DIM], ADType stress[DIM][DIM]) {
   default: // Regular stress formulations
   {
     for (int mode = 0; mode < vn->modes; mode++) {
-      for (int i = 0; i < VIM; i++) {
-        for (int j = 0; j < VIM; j++) {
+      for (int i = 0; i < sdim; i++) {
+        for (int j = 0; j < sdim; j++) {
           stress[i][j] += ad_fv->S[mode][i][j];
         }
       }
@@ -646,7 +706,7 @@ void ad_fluid_stress(ADType Pi[DIM][DIM]) {
 
   /* numerical "adaptive" viscosity and derivatives */
 
-  ADType mu_num;
+  ADType mu_num = 0.0;
   if (pd->gv[TEMPERATURE]) {
     GOMA_EH(GOMA_ERROR, "Temperature not yet implemented ad_fluid_stress");
   }
@@ -715,16 +775,18 @@ void ad_fluid_stress(ADType Pi[DIM][DIM]) {
      */
 
     mu_num = 1;
-    // if (DOUBLE_NONZERO(vn->eps)) {
-    //   for (int mode = 0; mode < vn->modes; mode++) {
-    //     for (a = 0; a < VIM; a++) {
-    //       for (b = 0; b < VIM; b++) {
-    //         s[a][b] += fv->S[mode][a][b];
-    //       }
-    //     }
-    //   }
+    if (DOUBLE_NONZERO(vn->eps)) {
+      ADType s[DIM][DIM] = {{0.}};
+      for (int mode = 0; mode < vn->modes; mode++) {
+        for (int a = 0; a < VIM; a++) {
+          for (int b = 0; b < VIM; b++) {
+            s[a][b] += fv->S[mode][a][b];
+          }
+        }
+      }
 
-    //   mu_num = numerical_viscosity(s, gamma_cont, d_mun_dS, d_mun_dG);
+      mu_num = ad_numerical_viscosity(s, gamma_cont, VIM);
+    }
 
     mu = mu_num * mus;
 
@@ -1462,4 +1524,614 @@ int ad_assemble_continuity(dbl time_value, /* current time */
   } /* End of if assemble Jacobian */
   return 0;
 }
-#endif
+
+int ad_assemble_momentum_film_cast(dbl time,       /* current time */
+                                   dbl tt,         /* parameter to vary time integration from
+                                                      explicit (tt = 1) to implicit (tt = 0) */
+                                   dbl dt,         /* current time step size */
+                                   dbl h_elem_avg, /* average global element size for PSPG*/
+                                   const PG_DATA *pg_data,
+                                   double xi[DIM], /* Local stu coordinates */
+                                   const Exo_DB *exo) {
+
+  int eqn = VELOCITY1;
+  /*
+   * Residuals_________________________________________________________________
+   */
+  std::vector<std::vector<ADType>> resid(WIM);
+  for (int a = 0; a < WIM; a++) {
+    resid[a].resize(ei[pg->imtrx]->dof[eqn + a]);
+    for (int i = 0; i < ei[pg->imtrx]->dof[eqn + a]; i++) {
+      resid[a][i] = 0;
+    }
+  }
+  dbl rho = density(NULL, time);
+  ADType d_area = ad_fv->detJ * fv->wt * fv->h3;
+
+  ADType f[DIM];
+  ad_momentum_source_term(f, time);
+  ADType grad_v[DIM][DIM];
+  for (int a = 0; a < 3; a++) {
+    for (int b = 0; b < 3; b++) {
+      if (a < 2 || b < 2) {
+        grad_v[a][b] = ad_fv->grad_v[a][b];
+      } else {
+        grad_v[a][b] = 0.;
+      }
+    }
+  }
+
+  grad_v[2][2] = -(grad_v[0][0] + grad_v[1][1]);
+
+  ADType Pi[DIM][DIM];
+  ADType gamma[DIM][DIM];
+  ADType gamma_cont[DIM][DIM];
+  ADType stress[DIM][DIM];
+  for (int a = 0; a < 3; a++) {
+    for (int b = 0; b < 3; b++) {
+      gamma[a][b] = grad_v[a][b] + grad_v[b][a];
+    }
+  }
+
+  for (int a = 0; a < 3; a++) {
+    for (int b = 0; b < 3; b++) {
+      gamma_cont[a][b] = ad_fv->G[a][b] + ad_fv->G[b][a];
+      stress[a][b] = 0.;
+    }
+  }
+  ad_ve_polymer_stress(gamma, stress);
+
+  ADType mu = ad_viscosity(gn, gamma);
+  dbl evss_f = 0.0;
+
+  ADType mu_num = 1.0;
+  if (DOUBLE_NONZERO(vn->eps)) {
+    mu_num = ad_numerical_viscosity(stress, gamma_cont, 2);
+  }
+
+  ADType mup = 0;
+  if (pd->gv[VELOCITY_GRADIENT11]) {
+    for (int mode = 0; mode < vn->modes; mode++) {
+      evss_f = 1.0;
+      ADType mup_mode = ad_viscosity(ve[mode]->gn, gamma);
+      mup += mup_mode;
+    }
+  }
+
+  ADType p = -2 * mu * (ad_fv->grad_v[0][0] + ad_fv->grad_v[1][1]) + stress[2][2];
+
+  for (int a = 0; a < 2; a++) {
+    for (int b = 0; b < 2; b++) {
+      // Pi[a][b] = ad_fv->film_height * (delta(a, b) * p - mu * gamma[a][b]);
+      Pi[a][b] = (mu + evss_f * mup) * mu_num * gamma[a][b] -
+                 evss_f * mu_num * mup * gamma_cont[a][b] - p * delta(a, b) + stress[a][b];
+    }
+  }
+
+  if (af->Assemble_Residual) {
+    /*
+     * Assemble each component "a" of the momentum equation...
+     */
+    for (int a = 0; a < WIM; a++) {
+      int eqn = R_MOMENTUM1 + a;
+      int peqn = upd->ep[pg->imtrx][eqn];
+
+      int mass_on = pd->e[pg->imtrx][eqn] & T_MASS;
+      int advection_on = pd->e[pg->imtrx][eqn] & T_ADVECTION;
+      int diffusion_on = pd->e[pg->imtrx][eqn] & T_DIFFUSION;
+      int source_on = pd->e[pg->imtrx][eqn] & T_SOURCE;
+
+      dbl mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+      dbl advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+      dbl diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+      dbl source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+      /*
+       * In the element, there will be contributions to this many equations
+       * based on the number of degrees of freedom...
+       */
+
+      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+        int ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+        if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
+          /*
+           *  Here is where we figure out whether the row is to placed in
+           *  the normal spot (e.g., ii = i), or whether a boundary condition
+           *  require that the volumetric contribution be stuck in another
+           *  ldof pertaining to the same variable type.
+           */
+          int ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+          dbl phi_i = bf[eqn]->phi[i];
+          /* only use Petrov Galerkin on advective term - if required */
+          ADType wt_func = phi_i;
+
+          ADType mass = 0.;
+          if (mass_on) {
+            mass = rho * ad_fv->film_height * ad_fv->v_dot[a];
+            //  rho * ad_fv->film_height_dot * ad_fv->v[a];
+            mass *= -wt_func * d_area;
+            mass *= mass_etm;
+          }
+
+          ADType advection = 0.;
+          if (advection_on) {
+            for (int p = 0; p < WIM; p++) {
+              advection += (ad_fv->v[p] - ad_fv->x_dot[p]) * ad_fv->grad_v[p][a];
+            }
+            advection *= rho * ad_fv->film_height;
+            advection *= -wt_func * d_area;
+            advection *= advection_etm;
+          }
+
+          ADType diffusion = 0.;
+          if (diffusion_on) {
+            for (int p = 0; p < VIM; p++) {
+              for (int q = 0; q < VIM; q++) {
+                diffusion += ad_fv->basis[eqn].grad_phi_e[i][a][p][q] * Pi[q][p];
+              }
+            }
+            diffusion *= -d_area * ad_fv->film_height;
+            diffusion *= diffusion_etm;
+          }
+
+          /*
+           * Source term...
+           */
+          ADType source = 0.0;
+          if (source_on) {
+            source += ad_fv->film_height * f[a];
+            source *= wt_func * d_area;
+            source *= source_etm;
+          }
+
+          /*
+           * Add contributions to this residual (globally into Resid, and
+           * locally into an accumulator)
+           */
+
+          /*lec->R[LEC_R_INDEX(peqn,ii)] += mass + advection + porous + diffusion + source;*/
+          lec->R[LEC_R_INDEX(peqn, ii)] +=
+              mass.val() + advection.val() + diffusion.val() + source.val();
+          resid[a][ii] += mass + advection + diffusion + source;
+        } /*end if (active_dofs) */
+      } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+    }
+  }
+
+  /*
+   * Jacobian terms...
+   */
+
+  if (af->Assemble_Jacobian) {
+    for (int a = 0; a < WIM; a++) {
+      int eqn = R_MOMENTUM1 + a;
+      int peqn = upd->ep[pg->imtrx][eqn];
+
+      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+        int ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+        int ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+        if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
+          ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+          for (int var = V_FIRST; var < V_LAST; var++) {
+
+            /* Sensitivity w.r.t. velocity */
+            if (pd->v[pg->imtrx][var]) {
+              int pvar = upd->vp[pg->imtrx][var];
+
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                // J = &(lec->J[LEC_J_INDEX(peqn, pvar, ii, 0)]);
+                lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += resid[a][ii].dx(ad_fv->offset[var] + j);
+
+              } /* End of loop over j */
+            } /* End of if the variale is active */
+          }
+
+        } /* end of if(active_dofs) */
+      } /* End of loop over i */
+    } /* End of if assemble Jacobian */
+  }
+  return 0;
+}
+
+int ad_assemble_film_height(dbl time, /* current time */
+                            dbl tt,
+                            dbl dt,
+                            const PG_DATA *pg_data) {
+
+  int a;
+
+  int eqn;
+  int peqn, pvar;
+
+  int i, j;
+  int status;
+
+  ADType det_J;
+  dbl h3;
+  dbl wt;
+  ADType d_area;
+
+  /*
+   * Galerkin weighting functions...
+   */
+
+  dbl phi_i;
+
+  status = 0;
+
+  /*
+   * Unpack variables from structures for local convenience...
+   */
+
+  eqn = R_FILM_HEIGHT;
+  peqn = upd->ep[pg->imtrx][eqn];
+
+  ADType div_v = 0;
+
+  for (a = 0; a < 2; a++) {
+    div_v += ad_fv->grad_v[a][a];
+  }
+  // div_v -= (ad_fv->grad_v[0][0] + ad_fv->grad_v[1][1]);
+
+  /*
+   * Bail out fast if there's nothing to do...
+   */
+
+  if (!pd->e[pg->imtrx][eqn]) {
+    return (status);
+  }
+
+  ADType supg_tau = 0;
+  ad_supg_tau_shakib(supg_tau, 2, dt, 1e-9, eqn);
+
+  wt = fv->wt;
+  det_J = ad_fv->detJ; /* Really, ought to be mesh eqn. */
+  h3 = fv->h3;         /* Differential volume element (scales). */
+
+  d_area = wt * det_J * h3;
+  std::vector<ADType> resid(ei[pg->imtrx]->dof[eqn]);
+  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+    resid[i] = 0;
+  }
+  if (af->Assemble_Residual) {
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+      phi_i = bf[eqn]->phi[i];
+      ADType wt_func = phi_i;
+      for (int a = 0; a < 2; a++) {
+        wt_func += supg_tau * (ad_fv->v[a] - ad_fv->x_dot[a]) * ad_fv->basis[eqn].grad_phi[i][a];
+      }
+
+      /*
+       *  Mass Terms: drhodt terms (usually though problem dependent)
+       */
+
+      ADType mass = 0.0;
+      mass = ad_fv->film_height_dot * wt_func * d_area;
+
+      /*
+       *  Advection:
+       *    This term refers to the standard del dot v .
+       *
+       *    int (phi_i div_v d_omega)
+       *
+       *   Note density is not multiplied into this term normally
+       */
+      ADType advection = 0.0;
+      if (pd->gv[VELOCITY1]) /* then must be solving fluid mechanics in this material */
+      {
+
+        /*
+         * Standard incompressibility constraint means we have
+         * a solenoidal velocity field
+         */
+
+        for (int a = 0; a < 2; a++) {
+          advection += (ad_fv->v[a] - ad_fv->x_dot[a]) * ad_fv->grad_film_height[a];
+        }
+        advection += div_v * ad_fv->film_height;
+        advection *= wt_func * d_area;
+      }
+
+      ADType diffusion = 0.0;
+      for (int a = 0; a < 2; a++) {
+        diffusion += ad_fv->basis[eqn].grad_phi[i][a] * ad_fv->grad_film_height[a];
+      }
+      diffusion *= 1e-5 * d_area;
+
+      /*
+       *  Add up the individual contributions and sum them into the local element
+       *  contribution for the total continuity equation for the ith local unknown
+       */
+      lec->R[LEC_R_INDEX(peqn, i)] += advection.val() + mass.val() + diffusion.val();
+      resid[i] = advection + mass + diffusion;
+    }
+  }
+  if (af->Assemble_Jacobian) {
+    eqn = R_FILM_HEIGHT;
+    peqn = upd->ep[pg->imtrx][eqn];
+
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+      /* Sensitivity w.r.t. velocity */
+      for (int var = V_FIRST; var < V_LAST; var++) {
+        if (pd->v[pg->imtrx][var]) {
+          pvar = upd->vp[pg->imtrx][var];
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += resid[i].dx(ad_fv->offset[var] + j);
+          } /* End of loop over j */
+        } /* End of if the variale is active */
+      }
+
+    } /* End of loop over i */
+  } /* End of if assemble Jacobian */
+  return 0;
+}
+ADType ad_carreau_arrhenius_viscosity(struct Generalized_Newtonian *gn_local,
+                                      ADType gamma_dot[DIM][DIM]) { /* strain rate tensor */
+
+  ADType gammadot; /* strain rate invariant */
+
+  ADType val, val1, val2;
+  ADType mu = 0.;
+  ADType mu0;
+  ADType muinf;
+  ADType nexp;
+  ADType aexp;
+  ADType lambda;
+
+  ad_calc_shearrate(gammadot, gamma_dot);
+
+  mu0 = gn_local->mu0;
+  nexp = gn_local->nexp;
+  muinf = gn_local->muinf;
+  aexp = gn_local->aexp;
+  lambda = gn_local->lam;
+
+  ADType T;
+  if (pd->gv[TEMPERATURE]) {
+    T = ad_fv->T;
+  } else {
+    T = upd->Process_Temperature;
+  }
+
+  dbl T_alpha = mp->reference[TEMPERATURE];
+  dbl T_shift = gn_local->T_shift;
+  dbl atexp = gn_local->atexp;
+
+  ADType hscale;
+  if (gn_local->T_shift_Model == NO_MODEL) {
+    hscale = exp(atexp / (T - T_shift));
+  } else {
+    hscale = exp(atexp / (T - T_shift) - atexp / (T_alpha - T_shift));
+  }
+
+  if (DOUBLE_NONZERO(gammadot)) {
+    val2 = pow(lambda * gammadot, aexp);
+  } else {
+    val2 = 0.;
+  }
+  val = pow(1. + val2, (nexp - 1.) / aexp);
+  mu = hscale * (muinf + (mu0 - muinf) * val);
+
+  /* gammadot = 0.0; */
+  /* this effectively turns off the viscosity Jac terms */
+
+  if (DOUBLE_NONZERO(gammadot)) {
+    val = pow(lambda * gammadot, aexp - 1.);
+  } else {
+    val = 0.;
+  }
+  val1 = pow(1. + val2, (nexp - 1. - aexp) / aexp);
+
+  return (mu);
+}
+
+ADType ad_arrhenius_viscosity(struct Generalized_Newtonian *gn_local, ADType gamma_dot[DIM][DIM]) {
+
+  dbl a, c, d;
+
+  a = gn_local->arrhenius_a;
+  c = gn_local->arrhenius_c;
+  d = gn_local->arrhenius_d;
+  dbl eta0 = gn_local->mu0;
+
+  ADType T;
+  if (pd->gv[TEMPERATURE]) {
+    T = ad_fv->T;
+  } else {
+    T = upd->Process_Temperature;
+  }
+
+  dbl T_alpha = mp->reference[TEMPERATURE];
+  dbl T_shift = gn_local->T_shift;
+
+  ADType Tpow = pow(T - T_shift, -d);
+  ADType Tpown1 = pow(T - T_shift, -d - 1);
+  dbl Tapow = pow(T_alpha - T_shift, -d);
+  ADType comp = -a * (T - T_alpha) + c * (Tpow - Tapow);
+  ADType mu = eta0 * exp(comp);
+
+  return (mu);
+}
+ADType ad_arrhenius_simple_viscosity(struct Generalized_Newtonian *gn_local,
+                                     ADType gamma_dot[DIM][DIM]) {
+
+  dbl eta0 = gn_local->mu0;
+  dbl atexp = gn_local->atexp;
+
+  ADType T;
+  if (pd->gv[TEMPERATURE]) {
+    T = ad_fv->T;
+  } else {
+    T = upd->Process_Temperature;
+  }
+
+  dbl T_alpha = mp->reference[TEMPERATURE];
+
+  ADType mu = eta0 * exp((1 / T - 1 / T_alpha) * atexp);
+
+  return (mu);
+}
+
+extern "C" int ad_assemble_film_height_grad_v(void) {
+
+  int eqn = VELOCITY_GRADIENT11;
+  int v_g[DIM][DIM];
+  if (pd->gv[VELOCITY_GRADIENT11]) {
+    v_g[0][0] = VELOCITY_GRADIENT11;
+    v_g[0][1] = VELOCITY_GRADIENT12;
+    v_g[1][0] = VELOCITY_GRADIENT21;
+    v_g[1][1] = VELOCITY_GRADIENT22;
+    v_g[0][2] = VELOCITY_GRADIENT13;
+    v_g[1][2] = VELOCITY_GRADIENT23;
+    v_g[2][0] = VELOCITY_GRADIENT31;
+    v_g[2][1] = VELOCITY_GRADIENT32;
+    v_g[2][2] = VELOCITY_GRADIENT33;
+  }
+
+  /*
+   * Residuals_________________________________________________________________
+   */
+  std::vector<std::vector<std::vector<ADType>>> resid(3);
+  for (int a = 0; a < 3; a++) {
+    resid[a].resize(3);
+    for (int b = 0; b < 3; b++) {
+      eqn = v_g[a][b];
+      resid[a][b].resize(ei[pg->imtrx]->dof[eqn]);
+      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+        resid[a][b][i] = 0;
+      }
+    }
+  }
+  ADType grad_v[DIM][DIM];
+  for (int a = 0; a < 3; a++) {
+    for (int b = 0; b < 3; b++) {
+      if (a < 2 || b < 2) {
+        grad_v[a][b] = ad_fv->grad_v[a][b];
+      } else {
+        grad_v[a][b] = 0.;
+      }
+    }
+  }
+
+  grad_v[2][2] = -(grad_v[0][0] + grad_v[1][1]);
+
+  if (af->Assemble_Residual) {
+    /*
+     * Assemble each component "a" of the momentum equation...
+     */
+    for (int a = 0; a < 3; a++) {
+      for (int b = 0; b < 3; b++) {
+        if ((a == 2 || b == 2) && a != b)
+          continue;
+        int eqn = v_g[a][b];
+        int peqn = upd->ep[pg->imtrx][eqn];
+
+        int advection_on = pd->e[pg->imtrx][eqn] & T_ADVECTION;
+        int source_on = pd->e[pg->imtrx][eqn] & T_SOURCE;
+
+        dbl advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+        dbl source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+        /*
+         * In the element, there will be contributions to this many equations
+         * based on the number of degrees of freedom...
+         */
+
+        for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+          int ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+          if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
+            /*
+             *  Here is where we figure out whether the row is to placed in
+             *  the normal spot (e.g., ii = i), or whether a boundary condition
+             *  require that the volumetric contribution be stuck in another
+             *  ldof pertaining to the same variable type.
+             */
+            int ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+            dbl phi_i = bf[eqn]->phi[i];
+            /* only use Petrov Galerkin on advective term - if required */
+            ADType wt_func = phi_i;
+
+            ADType advection = 0.;
+            if (advection_on) {
+              advection -= grad_v[a][b];
+              advection *= -wt_func * ad_fv->detJ * fv->wt * fv->h3;
+              advection *= advection_etm;
+            }
+
+            ADType diffusion = 0.;
+            for (int p = 0; p < VIM; p++) {
+              diffusion += ad_fv->basis[eqn].grad_phi_e[i][p][a][b] * ad_fv->grad_G[p][a][b];
+            }
+            diffusion *= 1e-7 * -ad_fv->detJ * fv->wt * fv->h3;
+
+            /*
+             * Source term...
+             */
+            ADType source = 0.0;
+            if (source_on) {
+              source += ad_fv->G[a][b];
+              source *= -wt_func * ad_fv->detJ * fv->wt * fv->h3;
+              source *= source_etm;
+            }
+
+            /*
+             * Add contributions to this residual (globally into Resid, and
+             * locally into an accumulator)
+             */
+
+            /*lec->R[LEC_R_INDEX(peqn,ii)] += mass + advection + porous + diffusion + source;*/
+            lec->R[LEC_R_INDEX(peqn, ii)] += advection.val() + source.val() + diffusion.val();
+            resid[a][b][ii] += advection + source + diffusion;
+          } /*end if (active_dofs) */
+        } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
+      }
+    }
+  }
+
+  /*
+   * Jacobian terms...
+   */
+
+  if (af->Assemble_Jacobian) {
+    for (int a = 0; a < 3; a++) {
+      for (int b = 0; b < 3; b++) {
+        int eqn = v_g[a][b];
+        int peqn = upd->ep[pg->imtrx][eqn];
+
+        for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+          int ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+          int ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+          if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
+            ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+            for (int var = V_FIRST; var < V_LAST; var++) {
+
+              /* Sensitivity w.r.t. velocity */
+              if (pd->v[pg->imtrx][var]) {
+                int pvar = upd->vp[pg->imtrx][var];
+
+                for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  // J = &(lec->J[LEC_J_INDEX(peqn, pvar, ii, 0)]);
+                  lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] +=
+                      resid[a][b][ii].dx(ad_fv->offset[var] + j);
+
+                } /* End of loop over j */
+              } /* End of if the variale is active */
+            }
+
+          } /* end of if(active_dofs) */
+        } /* End of loop over i */
+      } /* End of if assemble Jacobian */
+    }
+  }
+  return 0;
+}
+
+#endif // GOMA_ENABLE_SACADO

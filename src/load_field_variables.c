@@ -23,7 +23,9 @@
 #include "mm_fill_stress.h"
 #include "mm_mp.h"
 #include "mm_post_def.h"
+#include "rf_bc_const.h"
 #include "rf_fem.h"
+#include "rf_fem_const.h"
 #include "std.h"
 
 /***************************************************************************/
@@ -835,6 +837,14 @@ int load_fv(void)
                    ei[upd->matrix_index[v]]->dof[v], &(fv->turb_omega), &(fv_dot->turb_omega),
                    &(fv_old->turb_omega));
     stateVector[TURB_OMEGA] = fv->turb_omega;
+  }
+
+  if (pdgv[FILM_HEIGHT]) {
+    v = FILM_HEIGHT;
+    scalar_fv_fill(esp->film_height, esp_dot->film_height, esp_old->film_height, bf[v]->phi,
+                   ei[upd->matrix_index[v]]->dof[v], &(fv->film_height), &(fv_dot->film_height),
+                   &(fv_old->film_height));
+    stateVector[FILM_HEIGHT] = fv->film_height;
   }
 
   if (pdgv[TURB_K]) {
@@ -2125,6 +2135,21 @@ int load_fv_grads(void)
   } else if (zero_unused_grads && upd->vp[pg->imtrx][TEMPERATURE] == -1) {
     for (p = 0; p < VIM; p++)
       fv->grad_T[p] = 0.0;
+  }
+
+  if (pd->gv[FILM_HEIGHT]) {
+    v = FILM_HEIGHT;
+    for (p = 0; p < VIM; p++)
+      fv->grad_film_height[p] = 0.0;
+    dofs = ei[upd->matrix_index[v]]->dof[v];
+    for (p = 0; p < VIM; p++) {
+      for (i = 0; i < dofs; i++) {
+        fv->grad_film_height[p] += *esp->film_height[i] * bf[v]->grad_phi[i][p];
+      }
+    }
+  } else if (zero_unused_grads && upd->vp[pg->imtrx][FILM_HEIGHT] == -1) {
+    for (p = 0; p < VIM; p++)
+      fv->grad_film_height[p] = 0.0;
   }
 
   /*

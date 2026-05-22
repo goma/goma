@@ -8907,6 +8907,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         ce = set_eqn(R_TURB_K, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "turb_omega")) {
         ce = set_eqn(R_TURB_OMEGA, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "film_height")) {
+        ce = set_eqn(R_FILM_HEIGHT, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "shell_diff_flux")) {
         ce = set_eqn(R_SHELL_DIFF_FLUX, mtrx_index0, pd_ptr);
         pd_ptr->Do_Surf_Geometry = 1;
@@ -9412,6 +9414,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         cv = set_var(TURB_K, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "TURB_OMEGA")) {
         cv = set_var(TURB_OMEGA, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "FILM_HEIGHT")) {
+        cv = set_var(FILM_HEIGHT, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "APR")) {
         cv = set_var(ACOUS_PREAL, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "API")) {
@@ -10241,6 +10245,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       case R_EDDY_NU:
       case R_TURB_K:
       case R_TURB_OMEGA:
+      case R_FILM_HEIGHT:
 
         if (fscanf(ifp, "%lf %lf %lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),

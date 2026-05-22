@@ -54,6 +54,11 @@ EXTERN double carreau_viscosity      /* mm_viscosity.c                          
      dbl[DIM][DIM],                  /* gamma_dot - strain rate tensor    */
      VISCOSITY_DEPENDENCE_STRUCT *); /* d_mu - viscosity dependence       */
 
+EXTERN double carreau_arrhenius_viscosity /* mm_viscosity.c                            */
+    (GEN_NEWT_STRUCT *,                   /* gn_local                          */
+     dbl[DIM][DIM],                       /* gamma_dot - strain rate tensor    */
+     VISCOSITY_DEPENDENCE_STRUCT *);      /* d_mu - viscosity dependence       */
+
 EXTERN double bingham_viscosity      /* mm_viscosity.c                            */
     (GEN_NEWT_STRUCT *,              /* gn_local                          */
      dbl[DIM][DIM],                  /* gamma_dot - strain rate tensor    */
@@ -171,6 +176,13 @@ EXTERN void copy_pF_to_F(int);
 
 EXTERN double flowing_liquid_viscosity /* mm_viscosity.c                            */
     (VISCOSITY_DEPENDENCE_STRUCT *);   /* d_flow_vis - flowing liquid viscosity sensitivity   */
+
+double arrhenius_advanced_viscosity(struct Generalized_Newtonian *gn_local,
+                                    dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+                                    VISCOSITY_DEPENDENCE_STRUCT *d_mu);
+double arrhenius_simple_viscosity(struct Generalized_Newtonian *gn_local,
+                                  dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+                                  VISCOSITY_DEPENDENCE_STRUCT *d_mu);
 
 double power_law_arrhenius_viscosity(struct Generalized_Newtonian *gn_local,
                                      dbl gamma_dot[DIM][DIM], /* strain rate tensor */

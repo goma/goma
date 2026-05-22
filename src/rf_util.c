@@ -887,6 +887,7 @@ double time_step_control(const double delta_t,
   /*    Err_norm      += ecp[EXT_VELOCITY];  */
   Err_norm += ecp[TURB_K];
   Err_norm += ecp[TURB_OMEGA];
+  Err_norm += ecp[FILM_HEIGHT];
 
   num_unknowns += ncp[ACOUS_PREAL];
   num_unknowns += ncp[ACOUS_PIMAG];
@@ -898,6 +899,7 @@ double time_step_control(const double delta_t,
   /*    num_unknowns += ncp[EXT_VELOCITY];  */
   num_unknowns += ncp[TURB_K];
   num_unknowns += ncp[TURB_OMEGA];
+  num_unknowns += ncp[FILM_HEIGHT];
 
 #if 0 /* ------------------- maybe someday you'll want these, too... -----*/
   if (use_var_norm["index for shear rate equation"] ) {
@@ -957,6 +959,7 @@ double time_step_control(const double delta_t,
   e_extv = ecp[EXT_VELOCITY];
   e_int = ecp[LIGHT_INTP] + ecp[LIGHT_INTM] + ecp[LIGHT_INTD] + ecp[RESTIME];
   double e_turb = ecp[TURB_K] + ecp[TURB_OMEGA] + ecp[EDDY_NU];
+  double e_film_height = ecp[FILM_HEIGHT];
 
   e_d = sqrt(e_d * scaling);
   e_v = sqrt(e_v * scaling);
@@ -980,6 +983,7 @@ double time_step_control(const double delta_t,
   }
   e_int = sqrt(e_int * scaling);
   e_turb = sqrt(e_turb * scaling);
+  e_film_height = sqrt(e_film_height * scaling);
 
   /*
    * Print out the breakdown of contributions as well as the user specified
@@ -1049,6 +1053,9 @@ double time_step_control(const double delta_t,
     if (rheo_present) {
       DPRINTF(stdout, ", %7.1e", e_rheo);
     }
+    if (ncp[FILM_HEIGHT]) {
+      DPRINTF(stdout, ", %7.1e", e_film_height);
+    }
     if (ncp[TURB_K] || ncp[TURB_OMEGA] || ncp[EDDY_NU]) {
       DPRINTF(stdout, ", %7.1e", e_turb);
     }
@@ -1107,6 +1114,9 @@ double time_step_control(const double delta_t,
     }
     if (ncp[TURB_K] || ncp[TURB_OMEGA] || ncp[EDDY_NU]) {
       DPRINTF(stdout, ", %7.1e", e_turb);
+    }
+    if (ncp[FILM_HEIGHT]) {
+      DPRINTF(stdout, ", %7.1e", e_film_height);
     }
 
     if (ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]) {
@@ -1247,6 +1257,9 @@ double time_step_control(const double delta_t,
   }
   if (ncp[TURB_K] || ncp[TURB_OMEGA] || ncp[EDDY_NU]) {
     DPRINTF(stdout, ",   %1d TURB", 1);
+  }
+  if (ncp[FILM_HEIGHT]) {
+    DPRINTF(stdout, ", %1d FIL_H", 1);
   }
   if (nAC > 0) {
     DPRINTF(stdout, ",   %1d AC ", use_var_norm[9]);

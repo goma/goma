@@ -1874,15 +1874,23 @@ int load_elem_dofptr(const int ielem,
   if (upd->ep[pg->imtrx][eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->turb_omega, esp_old->turb_omega, esp_dot->turb_omega);
   }
+  eqn = R_FILM_HEIGHT;
+  if (upd->ep[pg->imtrx][eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->film_height, esp_old->film_height,
+                                    esp_dot->film_height);
+  }
 
   eqn = R_STRESS11;
   if (upd->ep[pg->imtrx][eqn] >= 0) {
     /* This should loop through all the stress variables
      * for all the modes.
      */
+    int sdim = VIM;
+    if (pd->gv[FILM_HEIGHT])
+      sdim = 3;
     for (mode = 0; mode < vn->modes; mode++) {
-      for (b = 0; b < VIM; b++) {
-        for (c = 0; c < VIM; c++) {
+      for (b = 0; b < sdim; b++) {
+        for (c = 0; c < sdim; c++) {
           if (b <= c) {
             eqn = R_s[mode][b][c];
             if (upd->ep[pg->imtrx][eqn] >= 0) {
@@ -1913,8 +1921,8 @@ int load_elem_dofptr(const int ielem,
     /* This should loop through all the velocity gradient
      * components of the tensor
      */
-    for (b = 0; b < VIM; b++) {
-      for (c = 0; c < VIM; c++) {
+    for (b = 0; b < 3; b++) {
+      for (c = 0; c < 3; c++) {
         eqn = R_g[b][c];
         if (upd->ep[pg->imtrx][eqn] >= 0) {
           load_varType_Interpolation_ptrs(eqn, esp->G[b][c], esp_old->G[b][c], esp_dot->G[b][c]);
@@ -2778,14 +2786,23 @@ int load_elem_dofptr_all(const int ielem, const Exo_DB *exo) {
                                           esp_dot->turb_omega);
     }
 
+    eqn = R_FILM_HEIGHT;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->film_height, esp_old->film_height,
+                                          esp_dot->film_height);
+    }
+
     eqn = R_STRESS11;
     if (upd->ep[imtrx][eqn] >= 0) {
       /* This should loop through all the stress variables
        * for all the modes.
        */
+      int sdim = VIM;
+      if (pd->gv[FILM_HEIGHT])
+        sdim = 3;
       for (mode = 0; mode < vn->modes; mode++) {
-        for (b = 0; b < VIM; b++) {
-          for (c = 0; c < VIM; c++) {
+        for (b = 0; b < sdim; b++) {
+          for (c = 0; c < sdim; c++) {
             if (b <= c) {
               eqn = R_s[mode][b][c];
               if (upd->ep[imtrx][eqn] >= 0) {

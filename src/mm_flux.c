@@ -7443,6 +7443,15 @@ static int load_fv_sens(void) {
     }
   }
 
+  v = FILM_HEIGHT;
+  fv_sens->film_height = 0.;
+  if (pd->v[pg->imtrx][v]) {
+    dofs = ei[pg->imtrx]->dof[v];
+    for (i = 0; i < dofs; i++) {
+      fv_sens->film_height += *esp_old->film_height[i] * bf[v]->phi[i];
+    }
+  }
+
   /*
    * Acoustic Pressure
    */

@@ -40,6 +40,7 @@ struct AD_Field_Variables {
   ADType div_S[MAX_MODES][DIM];
   ADType grad_SH[DIM];
   ADType P;
+  ADType T;
   ADType SH;
   ADType grad_P[DIM];
   ADType eddy_nu;
@@ -50,6 +51,9 @@ struct AD_Field_Variables {
   ADType grad_turb_k[DIM];
   ADType turb_omega;
   ADType turb_omega_dot;
+  ADType film_height;
+  ADType film_height_dot;
+  ADType grad_film_height[DIM];
   ADType grad_turb_omega[DIM];
   ADType sh_sat_1;
   ADType sh_sat_1_dot;
@@ -78,6 +82,7 @@ extern "C" {
 #endif
 
 #include "mm_as_structs.h"
+#include "mm_fill_energy.h"
 #include "mm_fill_stabilization.h"
 #include "mm_mp_structs.h"
 #include "std.h"
@@ -130,6 +135,7 @@ int ad_assemble_invariant(double tt,  /* parameter to vary time integration from
                           double dt); /*  time step size                          */
 void ad_omega_wall_func(double func[DIM], double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]);
 
+dbl visc_diss_heat_source_film_use_ad(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl scale);
 #ifdef __cplusplus
 }
 #endif

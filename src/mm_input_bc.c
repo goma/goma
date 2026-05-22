@@ -422,9 +422,11 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case CURRENT_SIC_BC:
     case ELLIPTIC_XI_REGULARIZATION_BC:
     case ELLIPTIC_ETA_REGULARIZATION_BC:
+    case ELLIPTIC_ZETA_REGULARIZATION_BC:
     case KINEMATIC_BC:
     case KINEMATIC_XI_BC:
     case KINEMATIC_ETA_BC:
+    case KINEMATIC_ZETA_BC:
     case LUB_KINEMATIC_BC:
     case KIN_LEAK_HEAT_BC:
     case KINEMATIC_PETROV_BC:
@@ -577,6 +579,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case U_BC:
     case V_BC:
     case W_BC:
+    case FILM_HEIGHT_BC:
     case USTAR_BC:
     case VSTAR_BC:
     case WSTAR_BC:

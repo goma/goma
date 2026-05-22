@@ -633,6 +633,12 @@ double viscosity(struct Generalized_Newtonian *gn_local,
     mu = power_law_arrhenius_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == CARREAU) {
     mu = carreau_viscosity(gn_local, gamma_dot, d_mu);
+  } else if (gn_local->ConstitutiveEquation == CARREAU_ARRHENIUS) {
+    mu = carreau_arrhenius_viscosity(gn_local, gamma_dot, d_mu);
+  } else if (gn_local->ConstitutiveEquation == ARRHENIUS_SIMPLE) {
+    mu = arrhenius_simple_viscosity(gn_local, gamma_dot, d_mu);
+  } else if (gn_local->ConstitutiveEquation == ARRHENIUS_ADVANCED) {
+    mu = arrhenius_advanced_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == BINGHAM) {
     mu = bingham_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == BINGHAM_WLF) {
@@ -740,6 +746,74 @@ double viscosity(struct Generalized_Newtonian *gn_local,
     }
     mu *= thixotropic;
   }
+  return (mu);
+}
+
+double arrhenius_simple_viscosity(struct Generalized_Newtonian *gn_local,
+                                  dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+                                  VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
+
+  dbl eta0 = gn_local->mu0;
+
+  dbl T;
+  if (pd->gv[TEMPERATURE]) {
+    T = fv->T;
+  } else {
+    T = upd->Process_Temperature;
+  }
+
+  dbl T_alpha = mp->reference[TEMPERATURE];
+
+  dbl atexp = gn_local->atexp;
+
+  dbl mu = eta0 * exp(atexp * (1 / T - 1 / T_alpha));
+
+  dbl d_mu_dT = mu * (-atexp / (T * T));
+
+  if (d_mu != NULL) {
+    for (int j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+      d_mu->T[j] = d_mu_dT * bf[TEMPERATURE]->phi[j];
+    }
+  }
+
+  return (mu);
+}
+
+double arrhenius_advanced_viscosity(struct Generalized_Newtonian *gn_local,
+                                    dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+                                    VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
+
+  dbl a, c, d;
+
+  a = gn_local->arrhenius_a;
+  c = gn_local->arrhenius_c;
+  d = gn_local->arrhenius_d;
+  dbl eta0 = gn_local->mu0;
+
+  dbl T;
+  if (pd->gv[TEMPERATURE]) {
+    T = fv->T;
+  } else {
+    T = upd->Process_Temperature;
+  }
+
+  dbl T_alpha = mp->reference[TEMPERATURE];
+  dbl T_shift = gn_local->T_shift;
+
+  dbl Tpow = pow(T - T_shift, -d);
+  dbl Tpown1 = pow(T - T_shift, -d - 1);
+  dbl Tapow = pow(T_alpha - T_shift, -d);
+  dbl comp = -a * (T - T_alpha) + c * (Tpow - Tapow);
+  dbl mu = eta0 * exp(comp);
+
+  dbl d_mu_dT = mu * (-a - c * d * Tpown1);
+
+  if (d_mu != NULL) {
+    for (int j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+      d_mu->T[j] = d_mu_dT * bf[TEMPERATURE]->phi[j];
+    }
+  }
+
   return (mu);
 }
 
@@ -1111,6 +1185,197 @@ double carreau_viscosity(struct Generalized_Newtonian *gn_local,
         } else {
           d_mu->v[a][i] = 0.0;
         }
+      }
+    }
+  }
+  return (mu);
+}
+
+double carreau_arrhenius_viscosity(struct Generalized_Newtonian *gn_local,
+                                   dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+                                   VISCOSITY_DEPENDENCE_STRUCT *d_mu) {
+
+  int a, b;
+  int mdofs = 0, vdofs;
+
+  int i, j;
+
+  dbl gammadot; /* strain rate invariant */
+
+  dbl d_gd_dv[DIM][MDE];    /* derivative of strain rate invariant
+                               wrt velocity */
+  dbl d_gd_dmesh[DIM][MDE]; /* derivative of strain rate invariant
+                               wrt mesh */
+
+  dbl val, val1, val2;
+  dbl mu = 0.;
+  dbl mu0;
+  dbl muinf;
+  dbl nexp;
+  dbl aexp;
+  dbl lambda;
+
+  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
+
+  if (pd->e[pg->imtrx][R_MESH1]) {
+    mdofs = ei[pg->imtrx]->dof[R_MESH1];
+  }
+
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+
+  mu0 = gn_local->mu0;
+  nexp = gn_local->nexp;
+  muinf = gn_local->muinf;
+  aexp = gn_local->aexp;
+  lambda = gn_local->lam;
+
+  if (gn_local->mu0Model == LEVEL_SET) {
+    if (d_mu != NULL) {
+      level_set_property(gn_local->u_mu0[0], gn_local->u_mu0[1], gn_local->u_mu0[2], &mu0, d_mu->F);
+    } else {
+      level_set_property(gn_local->u_mu0[0], gn_local->u_mu0[1], gn_local->u_mu0[2], &mu0, NULL);
+    }
+  }
+
+  if (gn_local->nexpModel == LEVEL_SET) {
+    if (d_mu != NULL) {
+      level_set_property(gn_local->u_nexp[0], gn_local->u_nexp[1], gn_local->u_nexp[2], &nexp,
+                         d_mu->F);
+    } else {
+      level_set_property(gn_local->u_nexp[0], gn_local->u_nexp[1], gn_local->u_nexp[2], &nexp,
+                         NULL);
+    }
+  }
+
+  if (gn_local->muinfModel == LEVEL_SET) {
+    if (d_mu != NULL) {
+      level_set_property(gn_local->u_muinf[0], gn_local->u_muinf[1], gn_local->u_muinf[2], &muinf,
+                         d_mu->F);
+    } else {
+      level_set_property(gn_local->u_muinf[0], gn_local->u_muinf[1], gn_local->u_muinf[2], &muinf,
+                         NULL);
+    }
+  }
+
+  if (gn_local->aexpModel == LEVEL_SET) {
+    if (d_mu != NULL) {
+      level_set_property(gn_local->u_aexp[0], gn_local->u_aexp[1], gn_local->u_aexp[2], &aexp,
+                         d_mu->F);
+    } else {
+      level_set_property(gn_local->u_aexp[0], gn_local->u_aexp[1], gn_local->u_aexp[2], &aexp,
+                         NULL);
+    }
+  }
+
+  if (gn_local->lamModel == LEVEL_SET) {
+    if (d_mu != NULL) {
+      level_set_property(gn_local->u_lam[0], gn_local->u_lam[1], gn_local->u_lam[2], &lambda,
+                         d_mu->F);
+    } else {
+      level_set_property(gn_local->u_lam[0], gn_local->u_lam[1], gn_local->u_lam[2], &lambda, NULL);
+    }
+  }
+
+  dbl T;
+  if (pd->gv[TEMPERATURE]) {
+    T = fv->T;
+  } else {
+    T = upd->Process_Temperature;
+  }
+
+  dbl T_alpha = mp->reference[TEMPERATURE];
+  dbl T_shift = gn_local->T_shift;
+  dbl atexp = gn_local->atexp;
+  if (gn_local->atexpModel == LEVEL_SET) {
+    if (d_mu != NULL) {
+      int err = level_set_property(gn_local->u_atexp[0], gn_local->u_atexp[1], gn_local->u_atexp[2],
+                                   &atexp, d_mu->F);
+      GOMA_EH(err, "level_set_property() failed for atexp.");
+    } else {
+      int err = level_set_property(gn_local->u_atexp[0], gn_local->u_atexp[1], gn_local->u_atexp[2],
+                                   &atexp, NULL);
+      GOMA_EH(err, "level_set_property() failed for atexp.");
+    }
+  }
+  if (gn_local->T_shift_Model == LEVEL_SET) {
+    if (d_mu != NULL) {
+      int err = level_set_property(gn_local->u_T_shift[0], gn_local->u_T_shift[1],
+                                   gn_local->u_T_shift[2], &T_shift, d_mu->F);
+      GOMA_EH(err, "level_set_property() failed for T_shift.");
+    } else {
+      int err = level_set_property(gn_local->u_T_shift[0], gn_local->u_T_shift[1],
+                                   gn_local->u_T_shift[2], &T_shift, NULL);
+      GOMA_EH(err, "level_set_property() failed for T_shift.");
+    }
+  }
+
+  dbl hscale;
+  dbl d_hscale_dT;
+  if (gn_local->T_shift_Model == NO_MODEL) {
+    hscale = exp(atexp / (T - T_shift));
+    d_hscale_dT = (-atexp / ((T - T_shift) * (T - T_shift))) * hscale;
+  } else {
+    hscale = exp(atexp / (T - T_shift) - atexp / (T_alpha - T_shift));
+    d_hscale_dT = (-atexp / ((T - T_shift) * (T - T_shift))) * hscale;
+  }
+
+  if (DOUBLE_NONZERO(gammadot)) {
+    val2 = pow(lambda * gammadot, aexp);
+  } else {
+    val2 = 0.;
+  }
+  val = pow(1. + val2, (nexp - 1.) / aexp);
+  mu = hscale * (muinf + (mu0 - muinf) * val);
+
+  /* gammadot = 0.0; */
+  /* this effectively turns off the viscosity Jac terms */
+
+  if (DOUBLE_NONZERO(gammadot)) {
+    val = pow(hscale * lambda * gammadot, aexp - 1.);
+  } else {
+    val = 0.;
+  }
+  val1 = pow(1. + val2, (nexp - 1. - aexp) / aexp);
+
+  if (d_mu != NULL)
+    d_mu->gd = hscale * (mu0 - muinf) * (nexp - 1.) * lambda * val * val1;
+
+  /*
+   * d( mu )/dmesh
+   */
+  if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
+    for (b = 0; b < VIM; b++) {
+      for (j = 0; j < mdofs; j++) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
+          d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
+        } else {
+          /* printf("\ngammadot is zero in viscosity function");*/
+          d_mu->X[b][j] = 0.0;
+        }
+      }
+    }
+  }
+
+  /*
+   * d( mu )/dv
+   */
+  if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    for (a = 0; a < VIM; a++) {
+      for (i = 0; i < vdofs; i++) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
+          d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
+        } else {
+          d_mu->v[a][i] = 0.0;
+        }
+      }
+    }
+  }
+  if (d_mu != NULL && pd->e[pg->imtrx][TEMPERATURE]) {
+    for (i = 0; i < vdofs; i++) {
+      if (Include_Visc_Sens) {
+        d_mu->T[i] = mu / hscale * d_hscale_dT * bf[TEMPERATURE]->phi[i];
+      } else {
+        d_mu->T[i] = 0.0;
       }
     }
   }

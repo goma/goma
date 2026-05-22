@@ -92,6 +92,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define HS_FOAM_PBE             24
 #define HS_FOAM_PMDI_10         25
 #define VARIABLE_DENSITY_NO_GAS 26 /* Drying of Polymeric Film */
+#define HS_FILM_CAST            27
+#define HS_FILM_CAST_VISC_DISS  28
 
 /* MMH */
 /* #define  SUSPENSION_PM xxx Defiend below. */
@@ -102,6 +104,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 /*#define  POROUS_UNSATURATED      5 */
 /*#define  POROUS_TWO_PHASE        6 */
 /*#define  POROUS_BRINKMAN         7 */
+// ELLIPTIC MESH
+#define ELLIPTIC_SIMPLE_ABS 2
+#define ELLIPTIC_DUAL_ABS   3
 
 /* Types of media */
 #define CONTINUOUS               0
@@ -342,8 +347,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define HERSCHEL_BULKLEY_PAPANASTASIOU 56 /* Herschel_bulkley model - power-law + yield stress */
 #define EPOXY_LINEAR_EXP               57
 #define EPOXY_ARRHENIUS_EXP            58
-
-#define POWER_LAW_ARRHENIUS 4
+#define POWER_LAW_ARRHENIUS            59 /*  Power law viscosity with arrhenius temperature dependence */
+#define CARREAU_ARRHENIUS              60 /*  Carreau viscosity with arrhenius temperature dependence */
+#define ARRHENIUS_SIMPLE               61 /*  Arrhenius temperature dependence viscosity model */
+#define ARRHENIUS_ADVANCED             62 /*  Arrhenius temperature dependence viscosity model */
 
 /*
  *  Heat source modeling

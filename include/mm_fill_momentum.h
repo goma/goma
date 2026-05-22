@@ -56,4 +56,18 @@ int momentum_source_term /* mm_fill_terms.c                           */
     (dbl[DIM],           /* f - Body force.                           */
      MOMENTUM_SOURCE_DEPENDENCE_STRUCT *,
      double);
+
+int assemble_momentum_film_cast(dbl time,       /* current time */
+                                dbl tt,         /* parameter to vary time integration from
+                                                   explicit (tt = 1) to implicit (tt = 0) */
+                                dbl dt,         /* current time step size */
+                                dbl h_elem_avg, /* average global element size for PSPG*/
+                                const PG_DATA *pg_data,
+                                double xi[DIM], /* Local stu coordinates */
+                                const Exo_DB *exo);
+
+int assemble_film_height(dbl time, /* current time */
+                         dbl tt,
+                         dbl dt,
+                         const PG_DATA *pg_data);
 #endif /* GOMA_MM_FILL_MOMENTUM_H */
