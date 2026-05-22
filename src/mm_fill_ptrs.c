@@ -1921,8 +1921,11 @@ int load_elem_dofptr(const int ielem,
     /* This should loop through all the velocity gradient
      * components of the tensor
      */
-    for (b = 0; b < 3; b++) {
-      for (c = 0; c < 3; c++) {
+    int sdim = VIM;
+    if (pd->gv[FILM_HEIGHT])
+      sdim = 3;
+    for (b = 0; b < sdim; b++) {
+      for (c = 0; c < sdim; c++) {
         eqn = R_g[b][c];
         if (upd->ep[pg->imtrx][eqn] >= 0) {
           load_varType_Interpolation_ptrs(eqn, esp->G[b][c], esp_old->G[b][c], esp_dot->G[b][c]);
