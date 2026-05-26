@@ -2625,9 +2625,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
 
     strcpy(search_string, "Polymer Shock Capturing");
-    model_read =
-        look_for_mat_prop(imp, search_string, &(vn_glob[mn]->shockcaptureModel), &(vn_glob[mn]->shockcapture),
-                          NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+    model_read = look_for_mat_prop(imp, search_string, &(vn_glob[mn]->shockcaptureModel),
+                                   &(vn_glob[mn]->shockcapture), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
     if (strncmp(model_name, " ", 1) != 0) {
       if (!strcmp(model_name, "NONE")) {
         vn_glob[mn]->shockcaptureModel = SC_NONE;
@@ -2647,6 +2647,11 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         if (err != 1) {
           GOMA_EH(GOMA_ERROR, "Expected to read one double for Polymer Shock Capturing = YZBETA");
         }
+        SPF(endofstring(es), " %.4g", vn_glob[mn]->shockcapture);
+      } else if (!strcmp(model_name, "CONSTANT")) {
+        vn_glob[mn]->shockcaptureModel = SC_CONSTANT;
+        // the scanf is taken care of in the look_for_mat_prop call
+        // err = fscanf(imp, "%lg", &(vn_glob[mn]->shockcapture));
         SPF(endofstring(es), " %.4g", vn_glob[mn]->shockcapture);
       } else {
         GOMA_EH(GOMA_ERROR, "Syntax error or invalid model for %s\n", search_string);
@@ -8528,10 +8533,16 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
 
     ECHO(es, echo_file);
+  }
 
-    model_read = look_for_mat_prop(imp, "Film Height Diffusivity", &(mat_ptr->film_height_diffusivityModel),
-                                   &(mat_ptr->film_height_diffusivity), NO_USER, NULL, model_name,
-                                   SCALAR_INPUT, &NO_SPECIES, es);
+  if (pd_glob[mn]->gv[FILM_HEIGHT]) {
+
+    mat_ptr->film_height_diffusivity = 0.;
+    mat_ptr->film_height_diffusivityModel = CONSTANT;
+    model_read =
+        look_for_mat_prop(imp, "Film Height Diffusivity", &(mat_ptr->film_height_diffusivityModel),
+                          &(mat_ptr->film_height_diffusivity), NO_USER, NULL, model_name,
+                          SCALAR_INPUT, &NO_SPECIES, es);
   }
 
   /*

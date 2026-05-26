@@ -1799,6 +1799,10 @@ int ad_assemble_film_height(dbl time, /* current time */
   dbl mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
   dbl advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
   dbl diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+  dbl diffusivity = 0.;
+  if (mp->film_height_diffusivityModel == CONSTANT) {
+    diffusivity = mp->film_height_diffusivity;
+  }
   if (af->Assemble_Residual) {
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
@@ -1845,7 +1849,7 @@ int ad_assemble_film_height(dbl time, /* current time */
       for (int a = 0; a < 2; a++) {
         diffusion += ad_fv->basis[eqn].grad_phi[i][a] * ad_fv->grad_film_height[a];
       }
-      diffusion *= 1e-5 * d_area;
+      diffusion *= diffusivity * d_area;
       diffusion *= diffusion_etm;
 
       /*

@@ -1218,7 +1218,7 @@ extern "C" int ad_assemble_film_height_stress(dbl tt, /* parameter to vary time 
 
               ADType diffusion = 0.;
               if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-                if (vn->shockcaptureModel == CONSTANT) {
+                if (vn->shockcaptureModel == SC_CONSTANT) {
                   for (int w = 0; w < dim; w++) {
                     diffusion += grad_S[w][ii][jj] * ad_fv->basis[eqn].grad_phi[i][w];
                   }
@@ -1765,7 +1765,7 @@ ad_assemble_film_height_sqrt_conf_stress(dbl tt, /* parameter to vary time integ
                     diffusion += tau_dcdd * gs_inner_dot[w] * ad_fv->basis[eqn].grad_phi[i][w];
                   }
                   diffusion *= dcdd_factor * det_J * wt * h3;
-                } else if (vn->shockcaptureModel == CONSTANT) {
+                } else if (vn->shockcaptureModel == SC_CONSTANT) {
                   for (int w = 0; w < dim; w++) {
                     diffusion += grad_b[w][ii][jj] * ad_fv->basis[eqn].grad_phi[i][w];
                   }
