@@ -1579,6 +1579,8 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->moment_growth_model, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->moment_growth_scale, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_growth_reference_pressure, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->film_height_diffusivityModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->film_height_diffusivity, 1, MPI_DOUBLE);
 
     ddd_add_member(n, &mp_glob[i]->CapStress, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->ConductivityModel, 1, MPI_INT);

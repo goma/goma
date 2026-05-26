@@ -377,6 +377,9 @@ struct Material_Properties {
   int MomentDiffusivityModel;
   dbl MomentDiffusivity;
 
+  int film_height_diffusivityModel;
+  dbl film_height_diffusivity;
+
   int MomentSecondLevelSetDiffusivityModel;
   dbl MomentSecondLevelSetDiffusivity;
 

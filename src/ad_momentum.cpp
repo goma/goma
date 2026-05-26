@@ -1796,6 +1796,9 @@ int ad_assemble_film_height(dbl time, /* current time */
   for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
     resid[i] = 0;
   }
+  dbl mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+  dbl advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+  dbl diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
   if (af->Assemble_Residual) {
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
@@ -1811,6 +1814,7 @@ int ad_assemble_film_height(dbl time, /* current time */
 
       ADType mass = 0.0;
       mass = ad_fv->film_height_dot * wt_func * d_area;
+      mass *= mass_etm;
 
       /*
        *  Advection:
@@ -1834,6 +1838,7 @@ int ad_assemble_film_height(dbl time, /* current time */
         }
         advection += div_v * ad_fv->film_height;
         advection *= wt_func * d_area;
+        advection *= advection_etm;
       }
 
       ADType diffusion = 0.0;
@@ -1841,6 +1846,7 @@ int ad_assemble_film_height(dbl time, /* current time */
         diffusion += ad_fv->basis[eqn].grad_phi[i][a] * ad_fv->grad_film_height[a];
       }
       diffusion *= 1e-5 * d_area;
+      diffusion *= diffusion_etm;
 
       /*
        *  Add up the individual contributions and sum them into the local element

@@ -2626,7 +2626,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     strcpy(search_string, "Polymer Shock Capturing");
     model_read =
-        look_for_mat_prop(imp, search_string, &(mat_ptr->Ewt_funcModel), &(mat_ptr->Ewt_func),
+        look_for_mat_prop(imp, search_string, &(vn_glob[mn]->shockcaptureModel), &(vn_glob[mn]->shockcapture),
                           NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
     if (strncmp(model_name, " ", 1) != 0) {
       if (!strcmp(model_name, "NONE")) {
@@ -8528,6 +8528,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
 
     ECHO(es, echo_file);
+
+    model_read = look_for_mat_prop(imp, "Film Height Diffusivity", &(mat_ptr->film_height_diffusivityModel),
+                                   &(mat_ptr->film_height_diffusivity), NO_USER, NULL, model_name,
+                                   SCALAR_INPUT, &NO_SPECIES, es);
   }
 
   /*
