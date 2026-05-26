@@ -138,6 +138,81 @@ CARREAU_WLF
     transition between μ0 and μinf takes place and is entered with the *Time Constant* card. a, is 
     a dimensionless parameter that describes the transition between the low-rate and the power-law 
     region and is entered with the *Aexp* card.                                                    
+
+CARREAU_ARRHENIUS
+    An extension of the Carreau-Yasuda model to incorporate a temperature-dependent shift in       
+    shear-rate according to an Arrhenius type relation. The form
+    of the equation is                                                                             
+                                                                                                   
+    .. math::
+
+       \mu = a_T \left[\mu_0 + (\mu_{\infty} - \mu_0) (1 + (a_T\lambda \dot{\gamma})^a)^{(n-1)/a}\right]
+                                                                                                   
+    where :math:`a_T` is another form of the temperature-dependent shift factor:                   
+
+    When `T_shift` is set to `NO_MODEL`
+   
+    .. math::
+      
+       a_T = exp\left[\frac{A_T}{T - T_{shift}}\right]
+   
+    Otherwise:
+
+    .. math::
+      
+       a_T = exp\left[\frac{A_T}{T - T_{shift}}\right - \frac{A_T}{T_{ref} - T_{shift}}]
+                                                                                                   
+    Here :math:`A_T` is a thermal exponential factor (can be Arrhenius) and is
+    input by the *Thermal Exponent* card; :math:`T_{shift}` is the temperature
+    shift parameter and is input by the *Temperature Shift* card,
+    :math:`T_{ref}` is the reference temperature and is input by the *Reference
+    Temperature* card. μ0, is the zero strain-rate limit of the viscosity and is
+    entered with the *Low Rate Viscosity*    card. n, is the exponent on the
+    strain rate which can take on any value between 1 (Newtonian)  and 0
+    (infinitely shear thinning) and is entered with the *Power Law Exponent*
+    card. :math:`μ_{inf}`, is the high-strain-rate limit to the viscosity and is
+    entered with the
+    *High Rate Viscosity* card. λ, is the time constant reflecting the
+    *strain-rate at which the
+    transition between μ0 and μinf takes place and is entered with the *Time
+    Constant* card. a, is a dimensionless parameter that describes the
+    transition between the low-rate and the power-law region and is entered with
+    the *Aexp* card.                                                    
+
+ARRHENIUS
+
+    .. math::
+
+       \mu = \mu_0 a_T
+
+    .. math::
+      
+       a_T = exp\left[\frac{A_T}{T - T_{shift}}\right - \frac{A_T}{T_{ref} - T_{shift}}]
+
+    Here :math:`A_T` is a thermal exponential factor (can be Arrhenius) and is
+    input by the *Thermal Exponent* card; :math:`T_{shift}` is the temperature
+    shift parameter and is input by the *Temperature Shift* card,
+    :math:`T_{ref}` is the reference temperature and is input by the *Reference
+    Temperature* card. μ0, is the zero strain-rate limit of the viscosity and is
+    entered with the *Low Rate Viscosity* card.
+
+ARRHENIUS_ADVANCED
+
+    .. math::
+
+       \mu = \mu_0 a_T
+
+    .. math::
+      
+       a_T = exp\left[-a\left(T-T_{ref}\right) + c \left(\frac{1}{(T-T_{shift})^d} - \frac{1}{(T_{ref}-T_{shift})^d}\right)\right]
+
+    Here :math:`A_T` is a thermal exponential factor (can be Arrhenius) and is
+    input by the *Thermal Exponent* card; :math:`T_{shift}` is the temperature
+    shift parameter and is input by the *Temperature Shift* card,
+    :math:`T_{ref}` is the reference temperature and is input by the *Reference
+    Temperature* card. μ0, is the zero strain-rate limit of the viscosity and is
+    entered with the *Low Rate Viscosity* card. The additional parameters a, c and d are entered with the *Arrhenius Advanced a*, *Arrhenius Advanced c* and *Arrhenius Advanced d* cards, respectively.
+
 CURE
     For a model to increase the viscosity with the extent of reaction. The Cure model can be used  
     to represent polymerizing systems whose viscosity depends on the extent of reaction. The form  
