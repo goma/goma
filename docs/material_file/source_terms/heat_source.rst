@@ -13,80 +13,94 @@
 This required card is used to specify the model for the source term on the energy
 equation. Definitions of the input parameters are as follows:
 
-+--------------------------+-------------------------------------------------------------------------------------+
-|{model_name}              |Name of the model for the source term on the energy equation. The permissible values |
-|                          |are                                                                                  |
-|                          |                                                                                     |
-|                          | * **CONSTANT**                                                                      |
-|                          | * **USER**                                                                          |
-|                          | * **USER_GEN**                                                                      |
-|                          | * **JOULE**                                                                         |
-|                          | * **EPOXY**                                                                         |
-|                          | * **VISC_DISS**                                                                     |
-|                          | * **BUTLER_VOLMER**                                                                 |
-|                          | * **ELECTRODE_KINETICS**                                                            |
-+--------------------------+-------------------------------------------------------------------------------------+
-|<float_list>              |One or more floating point numbers (<float1> through <floatn>) whose values are      |
-|                          |determined by the selection for {model_name}. Note that not all models have a        |
-|                          |<float_list>.                                                                        |
-+--------------------------+-------------------------------------------------------------------------------------+
+{model_name}              
+	Name of the model for the source term on the energy equation. The
+	permissible values are
+                                                                                                               
+	* **CONSTANT**                                                                      
+	* **USER**                                                                          
+	* **USER_GEN**                                                                      
+	* **JOULE**                                                                         
+	* **EPOXY**                                                                         
+	* **VISC_DISS**                                                                     
+	* **BUTLER_VOLMER**                                                                 
+	* **ELECTRODE_KINETICS**                                                            
+<float_list>
+	One or more floating point numbers (<float1> through <floatn>) whose values are      
+	determined by the selection for {model_name}. Note that not all models have a        
+	<float_list>.                                                                        
 
 Source-term model choices and their parameters are discussed below. WARNING:
 make sure the equation term multipliers for the source terms are set to unity (see the
 Equation Cards segment in the previous chapter).
 
-+--------------------------+-------------------------------------------------------------------------------------+
-|**CONSTANT** <float1>     |The constant source model adds a constant homogenous source term [E/L3t] to the heat |
-|                          |equations. The <float_list> has a single value: <float1> - Heat source.              |
-+--------------------------+-------------------------------------------------------------------------------------+
-|**USER** <float1>...      |The **USER** option indicates that a user-defined model has been introduced into the |
-|<floatn>                  |usr_heat_source routine in the user_mp.c file. The <float_list> is of arbitrary      |
-|                          |length subject to the user’s requirements to parameterize the model.                 |
-+--------------------------+-------------------------------------------------------------------------------------+
-|**USER_GEN** <float1>...  |The **USER_GEN** option provides a user-defined model with low-level, general        |
-|<floatn>                  |capabilities. For this option one must make the appropriate modifications to the     |
-|                          |routine usr_heat_source_gen in the user_mp_gen.c file. The difference between the    |
-|                          |**USER** and **USER_GEN** capabilities is described at the beginning of this chapter.|
-+--------------------------+-------------------------------------------------------------------------------------+
-|**JOULE**                 |The **JOULE** model is used to specify a Joule heating source term. No input is      |
-|                          |required for this model as the sole independent parameter of the model for the       |
-|                          |voltage equation is the “Electrical Conductivity”, which is specified in the material|
-|                          |file.                                                                                |
-+--------------------------+-------------------------------------------------------------------------------------+
-|**EPOXY** <float1>        |The **EPOXY** model is used to specify the heat generated by an epoxy curing         |
-|                          |reaction. The single input value is the:                                             |
-|                          |                                                                                     |
-|                          | * <float1> - heat of reaction due to curing                                         |
-+--------------------------+-------------------------------------------------------------------------------------+
-|**VISC_DISS** <float>     |The **VISC_DISS** model is used to specify the heat generated by viscous dissipation.|
-|                          |The <float_list> has a single value:                                                 |
-|                          |                                                                                     |
-|                          | * <float1> - A multiplier to facilitate different unit combinations. Selection of   |
-|                          |   this option activates its use.                                                    |
-+--------------------------+-------------------------------------------------------------------------------------+
-|**BUTLER_VOLMER**         |The **BUTLER_VOLMER** model is used to specify the current source or sink due to a   |
-|<integer> <float1>        |homogeneuous electrochemical reaction involving a single species (e.g., the hydrogen |
-|<float2> <float3> <float4>|oxidation and oxygen reduction reactions in a hydrogen-feuled polymerelectrolyte-    |
-|<float5> <float6> <float7>|membrane fuel cell), which is computed using the Butler-Volmer kinetic model (as     |
-|<float8>                  |described in the Theory section of the **BUTLER_VOLMER** current source card). This  |
-|                          |is due to that the voltage equation is used to solve for the electrical potential in |
-|                          |the liquid electrolyte phase whereas the energy equation is utilized to solve for the|
-|                          |electrical potential in the solid-electrode phase such that the electrode potential  |
-|                          |unknowns is represented by the temperature unknown. Parameters required for this     |
-|                          |**BUTLER_VOLMER** heat source model are the same as those for the **BUTLER_VOLMER**  |
-|                          |current source model; accordingly, detailed description of the model parameters can  |
-|                          |be found in the Current Source section of this manual.                               |
-+--------------------------+-------------------------------------------------------------------------------------+
-|**ELECTRODE_KINETICS**    |The **ELECTRODE_KINETICS** model is used to specify the current generated or consumed|
-|                          |in the solid electrode phase in electrochemical processes involving concentrated     |
-|                          |electrolyte solution and multiple species as in thermal batteries. As in the         |
-|                          |case of the **BUTLER_VOLMER** model, this is due to that the voltage equation is used|
-|                          |to solve for the electrical potential in the liquid electrolyte phase whereas the    |
-|                          |energy equation is utilized to solve for the electrical potential in the solid-      |
-|                          |electrode phase such that the electrode potential unknowns is represented by the     |
-|                          |temperature unknown. The {model_name} **ELECTRODE_KINETICS** toggles on the option in|
-|                          |the equation assembly; no parameters are required.                                   |
-+--------------------------+-------------------------------------------------------------------------------------+
+**CONSTANT** <float1>     
+	The constant source model adds a constant homogenous source term [E/L3t] to
+	the heat equations. The <float_list> has a single value: <float1> - Heat
+	source.              
+**USER** <float1>...<floatn>     
+	The **USER** option indicates that a user-defined model has been introduced
+	into the usr_heat_source routine in the user_mp.c file. The <float_list> is
+	of arbitrary length subject to the user’s requirements to parameterize
+	the model.                 
+**USER_GEN** <float1>...<floatn>
+    The **USER_GEN** option provides a user-defined model with low-level, general
+    capabilities. For this option one must make the appropriate modifications to
+    the routine usr_heat_source_gen in the user_mp_gen.c file. The difference
+    between the    
+    **USER** and **USER_GEN** capabilities is described at the beginning of this
+    *chapter.
+**JOULE**
+	The **JOULE** model is used to specify a Joule heating source term. No input
+	is required for this model as the sole independent parameter of the
+	model for the voltage equation is the “Electrical Conductivity”, which
+	is specified in the material file.
+**EPOXY** <float1>
+	The **EPOXY** model is used to specify the heat generated by an epoxy curing
+	reaction. The single input value is the:
+    * <float1> - heat of reaction due to curing                                         
+**VISC_DISS** <float>
+    The **VISC_DISS** model is used to specify the heat generated by viscous
+    dissipation.  The <float_list> has a single value:
+    
+	* <float1> - A multiplier to facilitate different unit combinations.
+	   Selection of this option activates its use.
+**FILM_CAST** <float1> <float2>
+    The **FILM_CAST** model is used to specify the heat generated by viscous dissipation.
+	The film cast models are effectivly a `QCONV` BC, in the `VISC_DISS` model an additional viscous dissipation is added.
+    The <float_list> has a three values:                                                 
+    * <float1>  *h*, heat transfer coefficient.
+    * <float2>  :math:`T_s`, sink temperature. 
+**FILM_CAST_VISC_DISS** <float1> <float2> <float3>     
+    The **FILM_CAST_VISC_DISS** model is used to specify the heat generated by viscous dissipation.
+	The film cast models are effectivly a `QCONV` BC, in the `VISC_DISS` model an additional viscous dissipation is added.
+    The <float_list> has a three values:                                                 
+    * <float1>  *h*, heat transfer coefficient.
+    * <float2>  :math:`T_s`, sink temperature. 
+    * <float3> - A multiplier to facilitate different unit combinations. Selection of   
+      this option activates its use.                                                    
+**BUTLER_VOLMER** <integer> <float1> <float2> <float3> <float4> <float5> <float6> <float7> <float8>                  
+	The **BUTLER_VOLMER** model is used to specify the current source or sink
+	due to a   homogeneuous electrochemical reaction involving a single species
+	(e.g., the hydrogen oxidation and oxygen reduction reactions in a
+	hydrogen-feuled polymerelectrolyte-    membrane fuel cell), which is
+	computed using the Butler-Volmer kinetic model (as     described in the
+	Theory section of the **BUTLER_VOLMER** current source card). This  is due
+	to that the voltage equation is used to solve for the electrical potential
+	in the liquid electrolyte phase whereas the energy equation is utilized to
+	solve for the electrical potential in the solid-electrode phase such that
+	the electrode potential  
+**ELECTRODE_KINETICS**    
+	The **ELECTRODE_KINETICS** model is used to specify the current generated or
+	in the solid electrode phase in electrochemical processes involving
+	concentrated electrolyte solution and multiple species as in thermal
+	batteries. As in the case of the **BUTLER_VOLMER** model, this is due to
+	that the voltage equation is to solve for the electrical potential in the
+	liquid electrolyte phase whereas the energy equation is utilized to solve
+	for the electrical potential in the solid electrode phase such that the
+	electrode potential unknowns is represented by the temperature unknown. The
+	{model_name} **ELECTRODE_KINETICS** toggles on the option the equation
+	assembly; no parameters are required
 
 ------------
 **Examples**
