@@ -21,6 +21,9 @@ DCDD
 YZBETA
    YZBETA shock capturing term is used (currently only in SQRT_CONF)
    * <float1> the scaling value of the shock capturing term
+CONSTANT
+   Constant numerical diffusion, currently only in FILM_HEIGHT_EVSS and FILM_HEIGHT_EVSS_SQRT_CONF
+   * <float1> the value of the constant diffusivity
 
 Currently only available for log-conformation / sqrt-conformation formulations.
 
