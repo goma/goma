@@ -1473,7 +1473,7 @@ ad_assemble_film_height_sqrt_conf_stress(dbl tt, /* parameter to vary time integ
   dbl beta[2] = {1.0, 2.0};
   if (vn->shockcaptureModel == SC_YZBETA) {
     yzbeta_factor = vn->shockcapture;
-  } else if (vn->shockcaptureModel == SC_DCDD) {
+  } else if (vn->shockcaptureModel == SC_DCDD || vn->shockcaptureModel == SC_CONSTANT) {
   } else if (vn->shockcaptureModel != SC_NONE) {
     GOMA_EH(GOMA_ERROR, "Unknown shock capture model, only YZBETA supported for SQRT_CONF");
   }
