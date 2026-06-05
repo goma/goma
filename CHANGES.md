@@ -1,6 +1,20 @@
 ## Changes in version 7.11.0
 
-* 
+* fix for DOUBLE_FILLET_GEOM with CA conditions by @wortiz in https://github.com/goma/goma/pull/546
+* Adjust location of species id card in AC FC SPECIES_FLUX by @wortiz in https://github.com/goma/goma/pull/548
+* Aerosol Jet Printing update by @rbsecor in https://github.com/goma/goma/pull/547
+* Simple backtracking + Mesh damping by @wortiz in https://github.com/goma/goma/pull/551
+* Added "ELLIPSOID" option in level set surface initialization by @tjiptowi in https://github.com/goma/goma/pull/553
+* TPL script: Update OpenBLAS to use CMake and print time taken by @wortiz in https://github.com/goma/goma/pull/550
+* More TPL updates by @wortiz in https://github.com/goma/goma/pull/554
+* Bugfix for Trilinos 17 by @wortiz in https://github.com/goma/goma/pull/555
+* Add a simple Arrhenius power law model by @wortiz in https://github.com/goma/goma/pull/556
+* Triangle fix by @rbsecor in https://github.com/goma/goma/pull/559
+* fix for element variables with write intermediate by @wortiz in https://github.com/goma/goma/pull/561
+* gcc warning fix by @wortiz in https://github.com/goma/goma/pull/563
+* Some TPL updates by @wortiz in https://github.com/goma/goma/pull/564
+* Documention cleanup by @wortiz in https://github.com/goma/goma/pull/565
+* Film casting model 2.5D by @wortiz in https://github.com/goma/goma/pull/566
 
 ## Changes in version 7.10.1
 
