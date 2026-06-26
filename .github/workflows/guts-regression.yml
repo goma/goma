@@ -38,9 +38,9 @@ jobs:
         . /etc/profile.d/goma-libs.sh
         export OMPI_MCA_btl_base_warn_component_unused='0'
         cd guts
-        python3 scripts/guts.py -g ../build/goma -v --json guts/results.json
+        python3 scripts/guts.py -g ../build/goma -v --json results.json
 
     - name: Check GUTS Summary
       if: always()
       run: |
-        python3 guts/scripts/check_summary.py results.json
+        python3 guts/scripts/check_summary.py guts/results.json
