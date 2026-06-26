@@ -1,4 +1,4 @@
-FROM rockylinux:8.9
+FROM rockylinux:9
 
 RUN dnf update -y
 RUN dnf install -y git patch gcc-toolset-13 m4 make bzip2 tar zlib-devel openssl-devel pkgconfig python3-devel findutils
