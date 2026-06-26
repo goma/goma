@@ -1,0 +1,46 @@
+name: GUTS Regression Tests
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  guts:
+    name: guts regression netlib
+    runs-on: ubuntu-latest
+    container: westonortiz/goma-libs:netlib-latest
+
+    defaults:
+      run:
+        shell: bash -l -e {0}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: CMake Configure Goma
+      run: |
+        . /etc/profile.d/goma-libs.sh
+        cmake -DCMAKE_BUILD_TYPE=Release -Bbuild .
+
+    - name: Build Goma
+      run: |
+        . /etc/profile.d/goma-libs.sh
+        cd build
+        make -j 2
+        ./goma -v
+
+    - name: Run GUTS
+      run: |
+        . /etc/profile.d/goma-libs.sh
+        export OMPI_MCA_btl_base_warn_component_unused='0'
+        cd guts
+        python3 scripts/guts.py -g ../build/goma -v --json results.json
+
+    - name: Check GUTS Summary
+      if: always()
+      run: |
+        python3 guts/scripts/check_summary.py results.json
