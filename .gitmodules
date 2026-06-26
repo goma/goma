@@ -1,0 +1,3 @@
+[submodule "guts"]
+	path = guts
+	url = https://github.com/goma/guts
