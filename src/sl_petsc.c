@@ -1283,7 +1283,7 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
     CHKERRQ(err);
   }
 
-  PetscMatrixData *matrix_data = calloc(1,sizeof(struct PetscMatrixData));
+  PetscMatrixData *matrix_data = calloc(1, sizeof(struct PetscMatrixData));
 
   ams->PetscMatrixData = (void *)matrix_data;
 
