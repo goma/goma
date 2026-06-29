@@ -11,13 +11,15 @@ jobs:
     name: guts regression netlib
     runs-on: ubuntu-latest
     container: westonortiz/goma-libs:netlib-latest
+    env:
+      PYTHONUNBUFFERED: "1"
 
     defaults:
       run:
         shell: bash -l -e {0}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         submodules: true
 
