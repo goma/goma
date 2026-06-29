@@ -129,7 +129,9 @@ int setup_pd(void) {
             (ce == R_ENORM) || (ce == R_EXT_VELOCITY) || (ce == R_VORT_DIR1) ||
             (ce == R_VORT_DIR2) || (ce == R_VORT_DIR3) || (ce == R_NORMAL1) || (ce == R_NORMAL2) ||
             (ce == R_NORMAL3) || (ce == R_SHELL_SHEAR_TOP) || (ce == R_SHELL_SHEAR_BOT) ||
-            (ce == R_EM_CONT_REAL) || (ce == R_EM_CONT_IMAG) || (ce == R_SHELL_CROSS_SHEAR)) {
+            (ce == QTENSOR11) || (ce == QTENSOR12) || (ce == QTENSOR13) || (ce == QTENSOR22) ||
+            (ce == QTENSOR23) || (ce == QTENSOR33) || (ce == R_EM_CONT_REAL) ||
+            (ce == R_EM_CONT_IMAG) || (ce == R_SHELL_CROSS_SHEAR)) {
           if (pd_glob[mn]->etm[imtrx][ce][(LOG2_ADVECTION)] != 0.) {
             pd_glob[mn]->e[imtrx][ce] |= T_ADVECTION;
           }

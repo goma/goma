@@ -117,6 +117,8 @@ EXTERN int bias_eigenvector_to(dbl *,  /* eigenvector  */
 
 EXTERN void assemble_qtensor(dbl *);
 
+EXTERN int assemble_qtensor_full_fill(void);
+
 EXTERN void assemble_new_qtensor /* Ryan's qtensor */
     (dbl *);
 

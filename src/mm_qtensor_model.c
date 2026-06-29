@@ -3175,6 +3175,267 @@ int bias_eigenvector_to(dbl *v, dbl *target) {
   return retval;
 }
 
+int assemble_qtensor_full_fill(void) {
+  int dim;
+  int p, q, a, b;
+
+  int eqn, var;
+  int peqn, pvar;
+  int i, j;
+  int status;
+
+  dbl h3;          /* Volume element (scale factors). */
+  dbl dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
+
+  dbl grad_v[DIM][DIM];
+  dbl g[DIM][DIM]; /* velocity gradient tensor */
+
+  dbl det_J; /* determinant of element Jacobian */
+
+  dbl d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
+
+  dbl advection;
+  dbl advection_a, advection_b;
+  dbl source;
+
+  /*
+   *
+   * Note how carefully we avoid refering to d(phi[i])/dx[j] and refer instead
+   * to the j-th component of grad_phi[j][i] so that this vector can be loaded
+   * up with components that may be different in non Cartesian coordinate
+   * systems.
+   *
+   * We will, however, insist on *orthogonal* coordinate systems, even if we
+   * might permit them to be curvilinear.
+   *
+   * Assume all components of velocity are interpolated with the same kind
+   * of basis function.
+   */
+
+  /*
+   * Galerkin weighting functions for i-th and a-th momentum residuals
+   * and some of their derivatives...
+   */
+
+  /*
+   * Petrov-Galerkin weighting functions for i-th and ab-th stress residuals
+   * and some of their derivatives...
+   */
+
+  dbl wt_func;
+
+  /*
+   * Interpolation functions for variables and some of their derivatives.
+   */
+
+  dbl phi_j;
+
+  dbl wt;
+
+  /* Variables for stress */
+
+  status = 0;
+
+  /*
+   * Unpack variables from structures for local convenience...
+   */
+
+  dim = pd->Num_Dim;
+
+  eqn = R_QTENSOR11;
+
+  /*
+   * Bail out fast if there's nothing to do...
+   */
+
+  if (!pd->e[pg->imtrx][eqn]) {
+    return 0;
+  }
+
+  wt = fv->wt;
+
+  det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
+
+  h3 = fv->h3; /* Differential volume element (scales). */
+
+  /* load eqn and variable number in tensor form */
+  // flow direction
+  dbl v_flow[3] = {0.};
+  dbl v_mag = 0;
+  for (int i = 0; i < WIM; i++) {
+    v_mag += fv->v[i] * fv->v[i];
+  }
+  v_mag = sqrt(v_mag);
+  if (v_mag > 1e-16) {
+  for (int i = 0; i < WIM; i++) {
+    v_flow[i] = fv->v[i] / v_mag;
+  }
+  }
+
+  // vorticity direction
+  dbl v_vort[3];
+  dbl cmag = 0;
+  for (int i = 0; i < DIM; i++) {
+    cmag += fv->curl_v[i] * fv->curl_v[i];
+  }
+  cmag = sqrt(cmag);
+  if (cmag > 1e-16) {
+  for (int i = 0; i < DIM; i++) {
+    v_vort[i] = fv->curl_v[i] / cmag;
+  }
+  }
+
+  // default to cartesian when v_mag or cmag is zero
+  if (v_mag < 1e-16 || cmag < 1e-16) {
+    v_flow[0] = 1.0;
+    v_flow[1] = 0.0;
+    v_flow[2] = 0.0;
+    v_vort[0] = 0.0;
+    v_vort[1] = 0.0;
+    v_vort[2] = 1.0;
+  }
+
+  // compression direction
+  dbl v_norm[3];
+  cross_really_simple_vectors(v_flow, v_vort, v_norm);
+
+  dbl beta[DIM][DIM];
+  for (int i = 0; i < DIM; i++) {
+    beta[i][0] = v_flow[i];
+    beta[i][1] = v_norm[i];
+    beta[i][2] = v_vort[i];
+  }
+
+  dbl qtensor[DIM][DIM];
+  dbl Q_FA[DIM];
+  Q_FA[0] = 1.0;
+  Q_FA[1] = 0.6;
+  Q_FA[2] = 0.5;
+
+  // beta * Q_FA * beta^T
+  for (int i = 0; i < DIM; i++) {
+    for (int j = 0; j < DIM; j++) {
+      qtensor[i][j] = 0.0;
+      for (int k = 0; k < DIM; k++) {
+        qtensor[i][j] += beta[i][k] * Q_FA[k] * beta[j][k];
+      }
+    }
+  }
+  int R_Q[DIM][DIM];
+  R_Q[0][0] = QTENSOR11;
+  R_Q[0][1] = QTENSOR12;
+  R_Q[0][2] = QTENSOR13;
+  R_Q[1][0] = QTENSOR12;
+  R_Q[1][1] = QTENSOR22;
+  R_Q[1][2] = QTENSOR23;
+  R_Q[2][0] = QTENSOR13;
+  R_Q[2][1] = QTENSOR23;
+  R_Q[2][2] = QTENSOR33;
+
+  /*
+   * Residuals_________________________________________________________________
+   */
+
+  if (af->Assemble_Residual) {
+    /*
+     * Assemble each component "ab" of the velocity gradient equation...
+     */
+    for (a = 0; a < VIM; a++) {
+      for (b = a; b < VIM; b++) {
+        eqn = R_Q[a][b];
+        /*
+         * In the element, there will be contributions to this many equations
+         * based on the number of degrees of freedom...
+         */
+
+        for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+          wt_func = bf[eqn]->phi[i]; /* add Petrov-Galerkin terms as necessary */
+
+          advection = 0.;
+
+          if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+              advection -= qtensor[a][b];
+              advection *= wt_func * det_J * wt * h3;
+              advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+            }
+
+
+          dbl diffusion = 0;
+          for (int q = 0; q < VIM; q++) {
+            diffusion += bf[eqn]->grad_phi[i][q] * 1e-6 * fv->grad_Q[q][a][b];
+          }
+
+          /*
+           * Source term...
+           */
+
+          source = 0;
+
+          if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+            source += fv->Q[a][b];
+            source *= wt_func * det_J * h3 * wt;
+            source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+          }
+
+          lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][eqn], i)] += advection + source + diffusion;
+        }
+      }
+    }
+  }
+
+  /*
+   * Jacobian terms...
+   */
+
+  if (af->Assemble_Jacobian) {
+    for (a = 0; a < VIM; a++) {
+      for (b = a; b < VIM; b++) {
+        eqn = R_Q[a][b];
+        peqn = upd->ep[pg->imtrx][eqn];
+
+        for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+          wt_func = bf[eqn]->phi[i]; /* add Petrov-Galerkin terms as necessary */
+
+          /*
+           * J_G_G
+           */
+
+          for (p = 0; p < VIM; p++) {
+            for (q = p; q < VIM; q++) {
+              var = R_Q[p][q];
+
+              if (pd->v[pg->imtrx][var]) {
+                pvar = upd->vp[pg->imtrx][var];
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+          dbl diffusion = 0;
+          for (int r = 0; r < VIM; r++) {
+            diffusion += bf[eqn]->grad_phi[i][r] * 1e-6 * bf[var]->grad_phi[j][r] * delta(a,p) * delta(b,q);
+          }
+                  source = 0.;
+
+                  if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+                    if ((a == p) && (b == q)) {
+                      source = phi_j * det_J * h3 * wt_func * wt *
+                               pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+                    }
+                  }
+
+                  lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += source + diffusion;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+
 /*****************************************************************************/
 /* END of file mm_qtensor_model.c */
 /*****************************************************************************/

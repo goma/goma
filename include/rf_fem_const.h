@@ -527,6 +527,12 @@
 #define TURB_K             215
 #define TURB_OMEGA         216
 #define FILM_HEIGHT        217
+#define QTENSOR11          218
+#define QTENSOR12          219
+#define QTENSOR13          220
+#define QTENSOR22          221
+#define QTENSOR23          222
+#define QTENSOR33          223
 /*
  * define a variable to hold an external field which will be
  * held fixed in the problem but parametered by the basis functions
@@ -936,7 +942,13 @@
 #define R_TURB_K       215
 #define R_TURB_OMEGA   216
 #define R_FILM_HEIGHT  217
-#define V_LAST         218
+#define R_QTENSOR11    218
+#define R_QTENSOR12    219
+#define R_QTENSOR13    220
+#define R_QTENSOR22    221
+#define R_QTENSOR23    222
+#define R_QTENSOR33    223
+#define V_LAST         224
 
 /* MMH
  * This is used for those parts of the code that want to ensure
