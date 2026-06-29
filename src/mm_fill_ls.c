@@ -3021,25 +3021,25 @@ void print_surf_list(struct LS_Surf_List *list, double time) {
 
 #ifdef PARALLEL
   if (Num_Proc > 1) {
-    sprintf(filename1, "level_set%d_of_%d.dat", ProcID + 1, Num_Proc);
-    sprintf(filename2, "level_set_all%d_of_%d.dat", ProcID + 1, Num_Proc);
+    snprintf(filename1, sizeof(filename1), "level_set%d_of_%d.dat", ProcID + 1, Num_Proc);
+    snprintf(filename2, sizeof(filename2), "level_set_all%d_of_%d.dat", ProcID + 1, Num_Proc);
   } else {
-    sprintf(filename1, "level_set.dat");
-    sprintf(filename2, "level_set_all.dat");
+    snprintf(filename1, sizeof(filename1), "level_set.dat");
+    snprintf(filename2, sizeof(filename2), "level_set_all.dat");
   }
 #else
-  sprintf(filename1, "level_set.dat");
-  sprintf(filename2, "level_set_all.dat");
+  snprintf(filename1, sizeof(filename1), "level_set.dat");
+  snprintf(filename2, sizeof(filename2), "level_set_all.dat");
 #endif
 
   if ((f = fopen(filename1, "w")) == NULL) {
-    sprintf(err_msg, "Error opening %s\n", filename1);
+    snprintf(err_msg, sizeof(err_msg), "Error opening %s\n", filename1);
     GOMA_EH(GOMA_ERROR, err_msg);
   }
 
   if (g == NULL) {
     if ((g = fopen(filename2, "w")) == NULL) {
-      sprintf(err_msg, "Error opening %s\n", filename2);
+      snprintf(err_msg, sizeof(err_msg), "Error opening %s\n", filename2);
       GOMA_EH(GOMA_ERROR, err_msg);
     }
   }
