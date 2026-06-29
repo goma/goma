@@ -1958,6 +1958,7 @@ void noahs_ark(void) {
     ddd_add_member(n, mp_glob[i]->FickDiffType, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->CurvDiffType, MAX_CONC, MPI_INT);
     ddd_add_member(n, mp_glob[i]->QTensorDiffType, MAX_CONC, MPI_INT);
+    ddd_add_member(n, mp_glob[i]->qtensor_rotate, MAX_CONC, MPI_INT);
 
     /*
      * Material property constants that are vectors over the porous phases

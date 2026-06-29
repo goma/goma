@@ -5423,6 +5423,53 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
     }
   }
 
+  // match divergence particle stress rotation
+  if (mp->qtensor_rotate[w]) {
+    dbl v_bias[DIM];
+    dbl vort_bias[DIM];
+    dbl vy_bias[DIM];
+    dbl Q_prime[DIM][DIM];
+    dbl R[DIM][DIM];
+    for (a = 0; a < VIM; a++) {
+      vort_dir_local[a] = 0.0;
+    }
+    find_super_special_eigenvector(gamma_dot, vort_dir_local, v1, v2, v3, &tmp, print);
+
+    memset(v_bias, 0, DIM * sizeof(dbl));
+    memset(vort_bias, 0, DIM * sizeof(dbl));
+    memset(vy_bias, 0, DIM * sizeof(dbl));
+
+    v_bias[0] = 1.;
+    vy_bias[1] = 1.;
+    vort_bias[2] = 1.;
+
+    bias_eigenvector_to(v1, v_bias);
+    bias_eigenvector_to(v2, vy_bias);
+
+    v3[0] = v2[1] * v1[2] - v2[2] * v1[1];
+    v3[1] = v2[2] * v1[0] - v2[0] * v1[2];
+    v3[2] = v2[0] * v1[1] - v2[1] * v1[0];
+
+    memset(Q_prime, 0, sizeof(dbl) * DIM * DIM);
+
+    Q_prime[0][0] = (qtensor[0][0] + qtensor[1][1]) / 2.;
+    Q_prime[0][2] = (-qtensor[0][0] + qtensor[1][1]) / 2.;
+    Q_prime[1][1] = qtensor[2][2];
+    Q_prime[2][0] = (-qtensor[0][0] + qtensor[1][1]) / 2.;
+    Q_prime[2][2] = (qtensor[0][0] + qtensor[1][1]) / 2.;
+
+    memset(R, 0, DIM * DIM * sizeof(dbl));
+
+    for (a = 0; a < DIM; a++) {
+      R[a][0] = v2[a];
+      R[a][1] = v3[a];
+      R[a][2] = v1[a];
+    }
+
+    memset(qtensor, 0, DIM * DIM * sizeof(dbl));
+    rotate_tensor(Q_prime, qtensor, R, 0);
+  }
+
   dbl cp;
   cp = 0.;
   memset(tau_p, 0, DIM * DIM * sizeof(dbl));
@@ -5655,8 +5702,10 @@ int divergence_particle_stress(
     R[a][2] = v1[a];
   }
 
-  memset(qtensor, 0, DIM * DIM * sizeof(dbl));
-  rotate_tensor(Q_prime, qtensor, R, 0);
+  if (mp->qtensor_rotate[w]) {
+    memset(qtensor, 0, DIM * DIM * sizeof(dbl));
+    rotate_tensor(Q_prime, qtensor, R, 0);
+  }
 
   if (gn->ConstitutiveEquation == SUSPENSION || gn->ConstitutiveEquation == CARREAU_SUSPENSION ||
       gn->ConstitutiveEquation == POWERLAW_SUSPENSION || gn->ConstitutiveEquation == FILLED_EPOXY) {

@@ -7256,6 +7256,11 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   */
 
+  // set some defaults
+  for (j = 0; j < mat_ptr->Num_Species; j++) {
+    mat_ptr->qtensor_rotate[j] = 1;
+  }
+
   for (j = 0; j < mat_ptr->Num_Species; j++) {
     if (DiffusionConstitutiveEquation != STEFAN_MAXWELL &&
         DiffusionConstitutiveEquation != STEFAN_MAXWELL_CHARGED &&
@@ -7637,6 +7642,27 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           species_no = mat_ptr->Num_Species; /* set species number equal to max number of species
                                                 it is changed to species number of input property
                                                 by look_for_mat_prop */
+
+          iread = look_for_optional(imp, "Q Tensor Diffusivity rotate", input, '=');
+          if (iread != -1) {
+            char str[MAX_LINE_LENGTH];
+            if (fscanf(imp, "%s %d %s", model_name, &ii, str) != 3) {
+              GOMA_EH(GOMA_ERROR, "Error reading Q Tensor Diffusivity rotate");
+            } else {
+              strip(str);
+              stringup(str);
+              if (strcmp(str, "YES") == 0) {
+                mat_ptr->qtensor_rotate[ii] = 1;
+              } else if (strcmp(str, "NO") == 0) {
+                mat_ptr->qtensor_rotate[ii] = 0;
+              } else {
+                GOMA_EH(GOMA_ERROR,
+                        "Unknown option for Q Tensor Diffusivity rotate, expected YES | NO");
+              }
+              SPF(es, "%s = %s %d %s", "Q Tensor Diffusivity rotate", model_name, ii, str);
+            }
+            ECHO(es, echo_file);
+          }
 
           model_read = look_for_mat_prop(imp, "Gravity-based Diffusivity", mat_ptr->GravDiffType,
                                          mat_ptr->g_diffusivity, mat_ptr->u_gdiffusivity, NULL,

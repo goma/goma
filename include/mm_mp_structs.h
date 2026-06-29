@@ -454,6 +454,7 @@ struct Material_Properties {
   int len_SBM_Lengths2[MAX_CONC];   /*this is currently defined for MPI*/
   int len_u_cdiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
   int len_u_qdiffusivity[MAX_CONC]; /*this is currently defined for MPI*/
+  int qtensor_rotate[MAX_CONC];     /*this is currently defined for MPI*/
   int len_u_nscoeff[MAX_CONC];
 
   dbl gam_diffusivity[MAX_CONC]; /* Kc from shear-gradient term */
