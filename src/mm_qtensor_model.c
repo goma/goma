@@ -3267,9 +3267,9 @@ int assemble_qtensor_full_fill(void) {
   }
   v_mag = sqrt(v_mag);
   if (v_mag > 1e-16) {
-  for (int i = 0; i < WIM; i++) {
-    v_flow[i] = fv->v[i] / v_mag;
-  }
+    for (int i = 0; i < WIM; i++) {
+      v_flow[i] = fv->v[i] / v_mag;
+    }
   }
 
   // vorticity direction
@@ -3280,9 +3280,9 @@ int assemble_qtensor_full_fill(void) {
   }
   cmag = sqrt(cmag);
   if (cmag > 1e-16) {
-  for (int i = 0; i < DIM; i++) {
-    v_vort[i] = fv->curl_v[i] / cmag;
-  }
+    for (int i = 0; i < DIM; i++) {
+      v_vort[i] = fv->curl_v[i] / cmag;
+    }
   }
 
   // default to cartesian when v_mag or cmag is zero
@@ -3355,11 +3355,10 @@ int assemble_qtensor_full_fill(void) {
           advection = 0.;
 
           if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
-              advection -= qtensor[a][b];
-              advection *= wt_func * det_J * wt * h3;
-              advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-            }
-
+            advection -= qtensor[a][b];
+            advection *= wt_func * det_J * wt * h3;
+            advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+          }
 
           dbl diffusion = 0;
           for (int q = 0; q < VIM; q++) {
@@ -3410,10 +3409,11 @@ int assemble_qtensor_full_fill(void) {
                 for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                   phi_j = bf[var]->phi[j];
 
-          dbl diffusion = 0;
-          for (int r = 0; r < VIM; r++) {
-            diffusion += bf[eqn]->grad_phi[i][r] * 1e-6 * bf[var]->grad_phi[j][r] * delta(a,p) * delta(b,q);
-          }
+                  dbl diffusion = 0;
+                  for (int r = 0; r < VIM; r++) {
+                    diffusion += bf[eqn]->grad_phi[i][r] * 1e-6 * bf[var]->grad_phi[j][r] *
+                                 delta(a, p) * delta(b, q);
+                  }
                   source = 0.;
 
                   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
@@ -3434,7 +3434,6 @@ int assemble_qtensor_full_fill(void) {
   }
   return 0;
 }
-
 
 /*****************************************************************************/
 /* END of file mm_qtensor_model.c */

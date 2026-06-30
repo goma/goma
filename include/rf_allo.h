@@ -55,7 +55,7 @@
 #define alloc_short_1(arg1, arg2)       alloc_short_1_FL((arg1), (arg2), __FILE__, __LINE__)
 #define alloc_dbl_1(arg1, arg2)         alloc_dbl_1_FL((arg1), (arg2), __FILE__, __LINE__)
 #define alloc_void_struct_1(arg1, arg2) alloc_void_struct_1_FL((arg1), (arg2), __FILE__, __LINE__)
-#define alloc_struct_1(x, num)          (x *)alloc_void_struct_1_FL(sizeof(x), (num), __FILE__, __LINE__)
+#define alloc_struct_1(x, num) (x *)alloc_void_struct_1_FL(sizeof(x), (num), __FILE__, __LINE__)
 
 #define zeroStructures(xptr, num)       zero_structure((void *)(xptr), sizeof((*xptr)), (num))
 #define realloc_ptr_1(arg1, arg2, arg3) realloc_ptr_1_FL((arg1), (arg2), (arg3), __FILE__, __LINE__)

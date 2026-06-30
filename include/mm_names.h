@@ -7955,7 +7955,7 @@ struct Equation_Names Var_Name[] = {
     {"TURB_K", "TURB_K", TURB_K},                // 215
     {"TURB_OMEGA", "TURB_OMEGA", TURB_OMEGA},    // 216
     {"FILM_HEIGHT", "FILM_HEIGHT", FILM_HEIGHT}, // 217
-    {"QTENSOR11", "Q11", QTENSOR11}, // 215
+    {"QTENSOR11", "Q11", QTENSOR11},             // 215
     {"QTENSOR12", "Q12", QTENSOR12},
     {"QTENSOR13", "Q13", QTENSOR13},
     {"QTENSOR22", "Q22", QTENSOR22},

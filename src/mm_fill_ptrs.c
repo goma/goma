@@ -2886,16 +2886,16 @@ int load_elem_dofptr_all(const int ielem, const Exo_DB *exo) {
       }
     }
 
-  int R_Q[DIM][DIM];
-  R_Q[0][0] = QTENSOR11;
-  R_Q[0][1] = QTENSOR12;
-  R_Q[0][2] = QTENSOR13;
-  R_Q[1][0] = QTENSOR12;
-  R_Q[1][1] = QTENSOR22;
-  R_Q[1][2] = QTENSOR23;
-  R_Q[2][0] = QTENSOR13;
-  R_Q[2][1] = QTENSOR23;
-  R_Q[2][2] = QTENSOR33;
+    int R_Q[DIM][DIM];
+    R_Q[0][0] = QTENSOR11;
+    R_Q[0][1] = QTENSOR12;
+    R_Q[0][2] = QTENSOR13;
+    R_Q[1][0] = QTENSOR12;
+    R_Q[1][1] = QTENSOR22;
+    R_Q[1][2] = QTENSOR23;
+    R_Q[2][0] = QTENSOR13;
+    R_Q[2][1] = QTENSOR23;
+    R_Q[2][2] = QTENSOR33;
     eqn = QTENSOR11;
     if (upd->ep[imtrx][eqn] >= 0) {
       /* This should loop through all the velocity gradient
@@ -2918,7 +2918,6 @@ int load_elem_dofptr_all(const int ielem, const Exo_DB *exo) {
         }
       }
     }
-
 
     eqn = R_POR_LIQ_PRES;
     if (upd->ep[imtrx][eqn] >= 0) {

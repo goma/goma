@@ -347,10 +347,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define HERSCHEL_BULKLEY_PAPANASTASIOU 56 /* Herschel_bulkley model - power-law + yield stress */
 #define EPOXY_LINEAR_EXP               57
 #define EPOXY_ARRHENIUS_EXP            58
-#define POWER_LAW_ARRHENIUS            59 /*  Power law viscosity with arrhenius temperature dependence */
-#define CARREAU_ARRHENIUS              60 /*  Carreau viscosity with arrhenius temperature dependence */
-#define ARRHENIUS_SIMPLE               61 /*  Arrhenius temperature dependence viscosity model */
-#define ARRHENIUS_ADVANCED             62 /*  Arrhenius temperature dependence viscosity model */
+#define POWER_LAW_ARRHENIUS 59 /*  Power law viscosity with arrhenius temperature dependence */
+#define CARREAU_ARRHENIUS   60 /*  Carreau viscosity with arrhenius temperature dependence */
+#define ARRHENIUS_SIMPLE    61 /*  Arrhenius temperature dependence viscosity model */
+#define ARRHENIUS_ADVANCED  62 /*  Arrhenius temperature dependence viscosity model */
 
 /*
  *  Heat source modeling
@@ -596,7 +596,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define ANNIHILATION                             916
 #define NET_CHARGE                               917 /* refer to F multiplied by sum of ci zi   */
 #define SOLID_DIFFUSION_ELECTRONEUTRALITY_LINEAR 918
-#define DEBYE_HUCKEL                             919 /* Debye-Huckel linearization approximation for potential */
+#define DEBYE_HUCKEL 919 /* Debye-Huckel linearization approximation for potential */
 
 /* Butler-Volmer kinetic and electro-osmotic transport models: KSC 4/20/2006 */
 #define BUTLER_VOLMER  920

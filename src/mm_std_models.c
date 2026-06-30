@@ -5089,8 +5089,6 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
   lift_dir[2] = 0;
 #endif
 
-
-
   /* Compute gamma_dot[][] */
 
   /* Compute gammadot, grad(gammadot), gamma_dot[][], d_gd_dG, and d_grad_gd_dG */
@@ -5462,8 +5460,7 @@ int particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress 
         qtensor[i][j] = fv->Q[i][j];
       }
     }
-  }
-  else if (cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD) {
+  } else if (cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD) {
     /* Get Q tensor */
     for (a = 0; a < VIM; a++) {
       vort_dir_local[a] = 0.0;
@@ -5688,51 +5685,51 @@ int divergence_particle_stress(
       }
     }
   } else {
-  /* assume a diagonal Q tensor */
-  for (a = 0; a < DIM; a++) {
-    qtensor[a][a] = mp->u_qdiffusivity[w][a];
-  }
+    /* assume a diagonal Q tensor */
+    for (a = 0; a < DIM; a++) {
+      qtensor[a][a] = mp->u_qdiffusivity[w][a];
+    }
 
-  /* Solve for the eigenvalues of gamma_dot   */
+    /* Solve for the eigenvalues of gamma_dot   */
 
-  for (a = 0; a < VIM; a++) {
-    vort_dir_local[a] = 0.0;
-  }
-  find_super_special_eigenvector(gamma_dot, vort_dir_local, v1, v2, v3, &tmp, print);
+    for (a = 0; a < VIM; a++) {
+      vort_dir_local[a] = 0.0;
+    }
+    find_super_special_eigenvector(gamma_dot, vort_dir_local, v1, v2, v3, &tmp, print);
 
-  memset(v_bias, 0, DIM * sizeof(dbl));
-  memset(vort_bias, 0, DIM * sizeof(dbl));
-  memset(vy_bias, 0, DIM * sizeof(dbl));
+    memset(v_bias, 0, DIM * sizeof(dbl));
+    memset(vort_bias, 0, DIM * sizeof(dbl));
+    memset(vy_bias, 0, DIM * sizeof(dbl));
 
-  v_bias[0] = 1.;
-  vy_bias[1] = 1.;
-  vort_bias[2] = 1.;
+    v_bias[0] = 1.;
+    vy_bias[1] = 1.;
+    vort_bias[2] = 1.;
 
-  bias_eigenvector_to(v1, v_bias);
-  bias_eigenvector_to(v2, vy_bias);
+    bias_eigenvector_to(v1, v_bias);
+    bias_eigenvector_to(v2, vy_bias);
 
-  v3[0] = v2[1] * v1[2] - v2[2] * v1[1];
-  v3[1] = v2[2] * v1[0] - v2[0] * v1[2];
-  v3[2] = v2[0] * v1[1] - v2[1] * v1[0];
+    v3[0] = v2[1] * v1[2] - v2[2] * v1[1];
+    v3[1] = v2[2] * v1[0] - v2[0] * v1[2];
+    v3[2] = v2[0] * v1[1] - v2[1] * v1[0];
 
-  memset(Q_prime, 0, sizeof(dbl) * DIM * DIM);
+    memset(Q_prime, 0, sizeof(dbl) * DIM * DIM);
 
-  Q_prime[0][0] = (qtensor[0][0] + qtensor[1][1]) / 2.;
-  Q_prime[0][2] = (-qtensor[0][0] + qtensor[1][1]) / 2.;
-  Q_prime[1][1] = qtensor[2][2];
-  Q_prime[2][0] = (-qtensor[0][0] + qtensor[1][1]) / 2.;
-  Q_prime[2][2] = (qtensor[0][0] + qtensor[1][1]) / 2.;
+    Q_prime[0][0] = (qtensor[0][0] + qtensor[1][1]) / 2.;
+    Q_prime[0][2] = (-qtensor[0][0] + qtensor[1][1]) / 2.;
+    Q_prime[1][1] = qtensor[2][2];
+    Q_prime[2][0] = (-qtensor[0][0] + qtensor[1][1]) / 2.;
+    Q_prime[2][2] = (qtensor[0][0] + qtensor[1][1]) / 2.;
 
-  memset(R, 0, DIM * DIM * sizeof(dbl));
+    memset(R, 0, DIM * DIM * sizeof(dbl));
 
-  for (a = 0; a < DIM; a++) {
-    R[a][0] = v2[a];
-    R[a][1] = v3[a];
-    R[a][2] = v1[a];
-  }
+    for (a = 0; a < DIM; a++) {
+      R[a][0] = v2[a];
+      R[a][1] = v3[a];
+      R[a][2] = v1[a];
+    }
 
-  memset(qtensor, 0, DIM * DIM * sizeof(dbl));
-  rotate_tensor(Q_prime, qtensor, R, 0);
+    memset(qtensor, 0, DIM * DIM * sizeof(dbl));
+    rotate_tensor(Q_prime, qtensor, R, 0);
   }
 
   if (gn->ConstitutiveEquation == SUSPENSION || gn->ConstitutiveEquation == CARREAU_SUSPENSION ||
@@ -5783,8 +5780,8 @@ int divergence_particle_stress(
   for (a = 0; a < WIM; a++) {
     for (b = 0; b < WIM; b++) {
       div_tau_p[a] +=
-          mu0 * qtensor[a][b] * (pp * grad_gd[b] + (gammadot + gamma_nl) * d_pp_dy * grad_Y[w][b])
-          + mu0 * div_qtensor[b] * (gammadot + gamma_nl) * pp;
+          mu0 * qtensor[a][b] * (pp * grad_gd[b] + (gammadot + gamma_nl) * d_pp_dy * grad_Y[w][b]) +
+          mu0 * div_qtensor[b] * (gammadot + gamma_nl) * pp;
     }
   }
 
@@ -5803,10 +5800,10 @@ int divergence_particle_stress(
           for (b = 0; b < WIM; b++) {
             d_div_tau_p_dy[a][w][j] +=
                 mu0 * qtensor[a][b] *
-                (d_pp_dy * bf[var]->phi[j] * grad_gd[b] +
-                 (gammadot + gamma_nl) * d_pp2_dy2 * bf[var]->phi[j] * grad_Y[w][b] +
-                 (gammadot + gamma_nl) * d_pp_dy * bf[var]->grad_phi[j][b])
-          + mu0 * fv->div_Q[b] * (gammadot + gamma_nl) * d_pp_dy * bf[var]->phi[j];
+                    (d_pp_dy * bf[var]->phi[j] * grad_gd[b] +
+                     (gammadot + gamma_nl) * d_pp2_dy2 * bf[var]->phi[j] * grad_Y[w][b] +
+                     (gammadot + gamma_nl) * d_pp_dy * bf[var]->grad_phi[j][b]) +
+                mu0 * fv->div_Q[b] * (gammadot + gamma_nl) * d_pp_dy * bf[var]->phi[j];
           }
         }
       }
