@@ -5063,7 +5063,6 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
 
   dbl d_lift_dgd, d_lift_dc;
   dbl lift_dir[DIM], lift_coeff, h, radius_p;
-  dbl dist_lift;
 
   /* Set up some convenient local variables and pointers */
   Y = fv->c;
@@ -5073,16 +5072,24 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
 
   radius_p = mp->SBM_Lengths2[0][0];
 
+#if GOMA_SUSPENSION_LIFT
+  dbl dist_lift;
   h = fv->external_field[0];
   lift_dir[0] = fv->external_field[1];
   lift_dir[1] = fv->external_field[2];
   lift_dir[2] = fv->external_field[3];
-
   if (h < 1.e-3) {
     dist_lift = 1.e-3;
   } else {
     dist_lift = h;
   }
+#else
+  lift_dir[0] = 0;
+  lift_dir[1] = 0;
+  lift_dir[2] = 0;
+#endif
+
+
 
   /* Compute gamma_dot[][] */
 
@@ -5191,6 +5198,7 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
   // dM_dmu = Dg * df_dmu;
   dM_dmu = 0.;
 
+#if GOMA_SUSPENSION_LIFT
   dbl lift_pow = 1.2;
   lift_coeff = 3. * mu0 * gammadot * 1.2 * Y[w] / (4. * M_PIE * pow(dist_lift, lift_pow));
   d_lift_dgd = 0;
@@ -5207,6 +5215,11 @@ int suspension_balance(struct Species_Conservation_Terms *st, int w) /* species 
     if (DOUBLE_NONZERO(Y[w]))
       d_lift_dc = lift_coeff / Y[w];
   }
+#else
+  lift_coeff = 0;
+  d_lift_dc = 0;
+  d_lift_dgd = 0;
+#endif
 
   // if( Y[w] < 1.e-2 )
   //   {
