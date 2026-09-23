@@ -597,7 +597,7 @@ int suspend_momentum_source(dbl f[DIM], /* Body force. */
     }
   }
 
-  if (pd->v[pg->imtrx][MASS_FRACTION]) {
+  if (pd->v[pg->imtrx][MASS_FRACTION] && df != NULL) {
     var = MASS_FRACTION;
     for (a = 0; a < DIM; a++) {
       eqn = R_MOMENTUM1 + a;

@@ -2466,7 +2466,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
               if (delta_t_new > fabs(delta_t0))
                 delta_t_new *= tran->time_step_decelerator;
             }
-            exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], 0);
+            exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
             pg->imtrx = 0;
             break;
 

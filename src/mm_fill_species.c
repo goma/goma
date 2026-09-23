@@ -9485,7 +9485,7 @@ int get_convection_velocity(
       vconv[p] = fv->v[p];
       if (pd->TimeIntegration != STEADY) {
         vconv_old[p] = fv_old->v[p];
-        if (pd->v[pg->imtrx][R_MESH1]) {
+        if (pd->gv[R_MESH1]) {
           vconv[p] -= fv_dot->x[p];
           vconv_old[p] -= fv_dot_old->x[p];
         }
