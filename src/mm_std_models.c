@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+* Copyright (c) 2026 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -597,7 +597,7 @@ int suspend_momentum_source(dbl f[DIM], /* Body force. */
     }
   }
 
-  if (pd->v[pg->imtrx][MASS_FRACTION]) {
+  if (pd->v[pg->imtrx][MASS_FRACTION] && df != NULL) {
     var = MASS_FRACTION;
     for (a = 0; a < DIM; a++) {
       eqn = R_MOMENTUM1 + a;
