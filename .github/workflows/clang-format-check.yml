@@ -13,6 +13,6 @@ jobs:
           sudo apt update && sudo apt install clang-format-21
     - name: Run clang-format style check for C/C++
       run: |
-          clang-format-20 --version
+          clang-format-21 --version
           CLANG_FORMAT=clang-format-21 scripts/run-clang-format.sh
           git diff --exit-code
