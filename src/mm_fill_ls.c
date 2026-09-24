@@ -118,7 +118,7 @@ static void initialize_sign(int, double *, Exo_DB *);
 
 static double initial_level_set(double, double, double);
 
-static double gradient_norm_err(dbl *, Exo_DB *, Dpi *, dbl);
+static double gradient_norm_err(dbl *, dbl *, Exo_DB *, Dpi *, dbl);
 
 static int Hrenorm_simplemass(Exo_DB *exo,
                               Comm_Ex *cx,
@@ -498,6 +498,7 @@ int
 
 
 huygens_renormalization ( double *x,
+                          double *xdot,
 		const int num_total_nodes,
 		Exo_DB *exo,
 		Comm_Ex *cx,
@@ -519,7 +520,7 @@ huygens_renormalization ( double *x,
     renorm_width = ls->Control_Width * global_h_elem_siz(x, x_old_static, xdot_static, x, exo, dpi);
   }
 
-  ls_err = gradient_norm_err(x, exo, dpi, renorm_width);
+  ls_err = gradient_norm_err(x, xdot, exo, dpi, renorm_width);
 
   if (Renorm_Now || ls_err > tolerance) {
     /* Let's make a note of why we're renormalizing. */
@@ -744,7 +745,7 @@ static double initial_level_set(double x, double y, double z) {
   return (0);
 }
 
-static double gradient_norm_err(double *x, Exo_DB *exo, Dpi *dpi, double range)
+static double gradient_norm_err(double *x, double *xdot, Exo_DB *exo, Dpi *dpi, double range)
 
 {
 
@@ -762,11 +763,11 @@ static double gradient_norm_err(double *x, Exo_DB *exo, Dpi *dpi, double range)
 
     if (pd_glob[mn]->e[pg->imtrx][ls->var])
       grad_err += evaluate_volume_integral(exo, dpi, I_MAG_GRAD_FILL_ERROR, NULL, blk_id, 0, NULL,
-                                           &params, 1, NULL, x, x, 0.0, 0.0, 0);
+                                           &params, 1, NULL, x, xdot, 0.0, 0.0, 0);
 
     if (pd_glob[mn]->e[pg->imtrx][ls->var])
       area += evaluate_volume_integral(exo, dpi, I_LS_ARC_LENGTH, NULL, blk_id, 0, NULL, &params, 1,
-                                       NULL, x, x, 0.0, 0.0, 0);
+                                       NULL, x, xdot, 0.0, 0.0, 0);
   }
 
   if (fabs(area) > 0.005 * area_scale)

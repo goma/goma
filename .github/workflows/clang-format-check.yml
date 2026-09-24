@@ -10,9 +10,9 @@ jobs:
       run: |
           wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository 'deb http://apt.llvm.org/noble/ llvm-toolchain-noble-20 main'
-          sudo apt update && sudo apt install clang-format-20
+          sudo apt update && sudo apt install clang-format-21
     - name: Run clang-format style check for C/C++
       run: |
           clang-format-20 --version
-          CLANG_FORMAT=clang-format-20 scripts/run-clang-format.sh
+          CLANG_FORMAT=clang-format-21 scripts/run-clang-format.sh
           git diff --exit-code

@@ -1227,8 +1227,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
               Renorm_Now =
                   (ls->Force_Initial_Renorm || (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0));
 
-              did_renorm = huygens_renormalization(x[pg->imtrx], num_total_nodes, exo,
-                                                   cx[pg->imtrx], dpi, num_fill_unknowns,
+              did_renorm = huygens_renormalization(x[pg->imtrx], xdot[pg->imtrx], num_total_nodes,
+                                                   exo, cx[pg->imtrx], dpi, num_fill_unknowns,
                                                    numProcUnknowns[pg->imtrx], time1, Renorm_Now);
 
               break;
@@ -2446,9 +2446,9 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
                 (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) || ls_adc_event == TRUE;
 
             pg->imtrx = Fill_Matrix;
-            did_renorm = huygens_renormalization(x[pg->imtrx], num_total_nodes, exo, cx[pg->imtrx],
-                                                 dpi, num_fill_unknowns, numProcUnknowns[pg->imtrx],
-                                                 time2, Renorm_Now);
+            did_renorm = huygens_renormalization(x[pg->imtrx], xdot[pg->imtrx], num_total_nodes,
+                                                 exo, cx[pg->imtrx], dpi, num_fill_unknowns,
+                                                 numProcUnknowns[pg->imtrx], time2, Renorm_Now);
             if (did_renorm) {
               exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
 
