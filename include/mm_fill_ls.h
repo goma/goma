@@ -69,8 +69,8 @@ EXTERN int apply_strong_fill_ca_bc(double[],     /* afill - Jacobian matrix fill
                                    const double,    /* contact angle */
                                    const Exo_DB *); /* exo - ptr to basic exodus ii mesh info */
 
-EXTERN int
-huygens_renormalization(double *, const int, Exo_DB *, Comm_Ex *, Dpi *, int, int, double, int);
+EXTERN int huygens_renormalization(
+    double *, double *, const int, Exo_DB *, Comm_Ex *, Dpi *, int, int, double, int);
 
 EXTERN void surf_based_initialization(
     double *, double *, double *, Exo_DB *, int, struct LS_Surf_List *, double, double, double);

@@ -1552,8 +1552,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
                   (ls->Force_Initial_Renorm || (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0));
 
               did_renorm =
-                  huygens_renormalization(x, num_total_nodes, exo, cx[0], dpi, num_fill_unknowns,
-                                          numProcUnknowns, time1, Renorm_Now);
+                  huygens_renormalization(x, xdot, num_total_nodes, exo, cx[0], dpi,
+                                          num_fill_unknowns, numProcUnknowns, time1, Renorm_Now);
 
 #ifndef PHASE_COUPLED_FILL
               if (did_renorm) {
@@ -2287,8 +2287,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
                 (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) || ls_adc_event == TRUE;
 
             did_renorm =
-                huygens_renormalization(x, num_total_nodes, exo, cx[0], dpi, num_fill_unknowns,
-                                        numProcUnknowns, time2, Renorm_Now);
+                huygens_renormalization(x, xdot, num_total_nodes, exo, cx[0], dpi,
+                                        num_fill_unknowns, numProcUnknowns, time2, Renorm_Now);
             if (did_renorm) {
               exchange_dof(cx[0], dpi, x, 0);
             }
@@ -2332,8 +2332,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               Renorm_Now = (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0);
 
               did_renorm =
-                  huygens_renormalization(x, num_total_nodes, exo, cx[0], dpi, num_fill_unknowns,
-                                          numProcUnknowns, time2, Renorm_Now);
+                  huygens_renormalization(x, xdot, num_total_nodes, exo, cx[0], dpi,
+                                          num_fill_unknowns, numProcUnknowns, time2, Renorm_Now);
               if (did_renorm) {
                 exchange_dof(cx[0], dpi, x, 0);
               }

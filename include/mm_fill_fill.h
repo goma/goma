@@ -200,8 +200,8 @@ EXTERN int elem_on_isosurface(int, double[], const Exo_DB *, int, double);
 
 EXTERN int current_elem_on_isosurface(int, double);
 
-EXTERN int
-huygens_renormalization(double *, const int, Exo_DB *, Comm_Ex *, Dpi *, int, int, double, int);
+EXTERN int huygens_renormalization(
+    double *, double *, const int, Exo_DB *, Comm_Ex *, Dpi *, int, int, double, int);
 
 EXTERN void surf_based_initialization(
     double *, double *, double *, Exo_DB *, int, struct LS_Surf_List *, double, double, double);
