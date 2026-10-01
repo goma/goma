@@ -932,6 +932,7 @@ struct Uniform_Problem_Description {
   double *mesh_correction_tolerances;
   dbl Residual_Relative_Tol[MAX_NUM_MATRICES];
   solver_information *solver_info;
+  int fpe_enabled;
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/
