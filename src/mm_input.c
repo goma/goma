@@ -11623,6 +11623,11 @@ void usage(const int exit_flag) {
   fprintf(stdout, "\t-bc_list                        List BC tags for continuation\n");
   fprintf(stdout, "\t-wr_int                         Turn Write Intermediate Results On\n");
   fprintf(stdout, "\t-time_pl INT                    read_exoII_file time plane (default last)\n");
+#if defined(__linux__)
+#ifndef DISABLE_GNU_EXTENSIONS
+  fprintf(stdout, "\t-fpe                            Turn on floating point exceptions (linux)");
+#endif
+#endif
   fprintf(stdout, "\t-v          --version           Print code version and exit\n");
 
   exit(exit_flag);
@@ -12057,6 +12062,10 @@ void translate_command_line(int argc, char *argv[], struct Command_line_command 
         (*nclc)++;
         istr++;
         clc[*nclc]->type = WRITE_INTERMEDIATE;
+      } else if (strcmp(argv[istr], "-fpe") == 0) {
+        (*nclc)++;
+        istr++;
+        clc[*nclc]->type = CL_FPE_ENABLED;
       }
       /*
        * OPTION -time_pl: SPECIFY EXOII FILE STEP NUMBER TO READ
@@ -12202,6 +12211,7 @@ void apply_command_line(struct Command_line_command **clc, int nclc)
   static char b[] = "                               ->";
   int i;
 
+  upd->fpe_enabled = 0;
   for (i = 0; i < nclc; i++) {
     if (clc[i]->type == CONTIN_FILE) {
       fprintf(stdout, "%s%40s= %s\n%s%40s= %s\n", a, "GUESS file", Init_GuessFile, b, "GUESS file",
@@ -12301,6 +12311,9 @@ void apply_command_line(struct Command_line_command **clc, int nclc)
     } else if (clc[i]->type == WRITE_INTERMEDIATE) {
       fprintf(stdout, "Write Intermediate Solutions request.\n\n");
       Write_Intermediate_Solutions = TRUE;
+    } else if (clc[i]->type == CL_FPE_ENABLED) {
+      fprintf(stdout, "Enabling floating point exceptions.\n\n");
+      upd->fpe_enabled = 1;
     } else if (clc[i]->type == EXOII_TIME_PLANE) {
       fprintf(stdout, "Exodus Time Plane = %d\n\n", clc[i]->i_val);
       ExoTimePlane = clc[i]->i_val;

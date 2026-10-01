@@ -24,9 +24,11 @@
 #include <sunmath.h>
 #endif
 
-#ifdef FP_EXCEPT
+#if defined(__linux__)
+#ifndef DISABLE_GNU_EXTENSIONS
 #define __USE_GNU
 #include <fenv.h>
+#endif
 #endif
 
 #ifdef PARALLEL
@@ -513,6 +515,18 @@ int main(int argc, char **argv)
 
   MPI_Bcast(MPI_BOTTOM, 1, Noahs_Raven->new_type, 0, MPI_COMM_WORLD);
 
+#endif
+
+  // We can enable floating point exceptions on all processors here
+#if defined(__linux__)
+#ifndef DISABLE_GNU_EXTENSIONS
+  if (upd->fpe_enabled) {
+    feenableexcept((FE_OVERFLOW | FE_DIVBYZERO | FE_INVALID));
+  }
+#endif
+#endif
+
+#ifdef PARALLEL
   /*
    * Get the other processors ready to handle ark data.
    */
