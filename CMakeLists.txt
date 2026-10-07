@@ -510,9 +510,11 @@ set(GOMA_INCLUDES
     include/ad/turbulence.h
     include/ad/porous.h
     include/ad/momentum.h
+    include/ad/stabilization.h
     include/ad/stress.h
-    include/ad/util.h
     include/ad/structs.h
+    include/ad/util.h
+    include/ad/viscosity.h
     include/bc_colloc.h
     include/bc_contact.h
     include/bc_curve.h
@@ -680,7 +682,9 @@ set(GOMA_SOURCES
     src/ad/porous.cpp
     src/ad/momentum.cpp
     src/ad/stress.cpp
+    src/ad/stabilization.cpp
     src/ad/util.cpp
+    src/ad/viscosity.cpp
     src/bc_colloc.c
     src/bc_contact.c
     src/bc_curve.c

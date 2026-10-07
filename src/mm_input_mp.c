@@ -5787,7 +5787,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->len_u_saturation = num_const;
       SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_saturation);
     } else if (model_read == -1 && !strcmp(model_name, "TANH")) {
-      mat_ptr->SaturationModel = TANH;
+      mat_ptr->SaturationModel = SAT_TANH;
       num_const = read_constants(imp, &(mat_ptr->u_saturation), NO_SPECIES);
       if (num_const < 4) {
         sr = sprintf(err_msg, "Matl %s expected at least 4 constants for %s %s model.\n",
@@ -6564,7 +6564,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                      SCALAR_INPUT, &porous_shell_no, es);
 
       if (model_read == -1 && !strcmp(model_name, "ATANH")) {
-        mat_ptr->PorousShellCapPresModel[ipore] = ATANH;
+        mat_ptr->PorousShellCapPresModel[ipore] = CAP_ATANH;
         num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres, porous_shell_no);
         if (num_const < 4) {
           sr = sprintf(err_msg, "Matl %s expected at least 4 constants for %s %s model.\n",
@@ -6573,7 +6573,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         }
         mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
       } else if (model_read == -1 && !strcmp(model_name, "SINH")) {
-        mat_ptr->PorousShellCapPresModel[ipore] = SINH;
+        mat_ptr->PorousShellCapPresModel[ipore] = CAP_SINH;
         num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres, porous_shell_no);
         if (num_const < 4) {
           sr = sprintf(err_msg, "Matl %s expected at least 4 constants for %s %s model.\n",

@@ -15,15 +15,38 @@
 
 #include "ad/util.h"
 #include "ad/structs.h"
-#include "mm_as.h"
 #include "el_elm_info.h"
-#include "rf_fem.h"
-#include "mm_eh.h"
-#include "mm_mp.h"
-#include "mm_as_const.h"
 #include "el_geom.h"
+#include "mm_as.h"
+#include "mm_as_const.h"
+#include "mm_eh.h"
 #include "mm_fill_stress.h"
+#include "mm_mp.h"
+#include "rf_fem.h"
 
+// GLOBAL
+AD_Field_Variables *ad_fv = NULL;
+
+int ad_calc_shearrate(ADType &gammadot,             /* strain rate invariant */
+                      ADType gamma_dot[DIM][DIM]) { /* strain rate tensor */
+  gammadot = 0.;
+  int vdim = VIM;
+  if (pd->gv[FILM_HEIGHT])
+    vdim = 3;
+  /* get gamma_dot invariant for viscosity calculations */
+  for (int a = 0; a < vdim; a++) {
+    for (int b = 0; b < vdim; b++) {
+      gammadot += gamma_dot[a][b] * gamma_dot[b][a];
+    }
+  }
+  // if (pd->gv[FILM_HEIGHT]) {
+  //   gammadot += -(ad_fv->grad_v[0][0] + ad_fv->grad_v[1][1])  * -(ad_fv->grad_v[0][0] +
+  //   ad_fv->grad_v[1][1]);
+  // }
+
+  gammadot = sqrt(0.5 * fabs(gammadot) + 1e-14);
+  return 0;
+}
 int ad_beer_belly(void) {
   if (ad_fv == NULL) {
     ad_fv = new AD_Field_Variables();

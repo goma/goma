@@ -455,7 +455,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define PSD_SEXP               7
 #define K_TENSOR               8
 #define SOLIDIFICATION         9 /* permeability that slows down velocity for phase change  */
-#define TANH                   10
+#define SAT_TANH                   10
 #define TANH_HYST              11
 #define KOZENY_CARMAN          12
 #define SINK_MASS_PERM         13
@@ -468,8 +468,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define VAN_GENUCHTEN_EXTERNAL 23
 #define LEVER                  24
 #define SATURATION             25
-#define ATANH                  26
-#define SINH                   27
+#define CAP_ATANH                  26
+#define CAP_SINH                   27
 #define VAN_GENUCHTEN_HYST     28
 #define VAN_GENUCHTEN_HYST_EXT 29
 

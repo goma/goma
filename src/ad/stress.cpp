@@ -16,7 +16,8 @@
 #include <Sacado.hpp>
 
 #include "ad/momentum.h"
-#include "ad/turbulence.h"
+#include "ad/stabilization.h"
+#include "ad/stress.h"
 
 extern "C" {
 

@@ -97,7 +97,7 @@ ADType ad_load_cap_pres(int ipore, int ilnode, int ignode, ADType saturation)
   /**********************************************************************
    *                   ATANH MODEL FOR CAPILLARY PRESSURE
    **********************************************************************/
-  if (mp->PorousShellCapPresModel[ipore] == ATANH) {
+  if (mp->PorousShellCapPresModel[ipore] == CAP_ATANH) {
     /*
      * FOR ATANH EQUATION
      *  mp->u_saturation[0] is the irreduceable water saturation
@@ -134,7 +134,7 @@ ADType ad_load_cap_pres(int ipore, int ilnode, int ignode, ADType saturation)
     cap_pres = con_d / (con_c - atanh(sat_clip));
     mp->cap_pres = cap_pres.val();
 
-  } else if (mp->PorousShellCapPresModel[ipore] == SINH) {
+  } else if (mp->PorousShellCapPresModel[ipore] == CAP_SINH) {
     /*
      * FOR SINH EQUATION
      *  mp->u_saturation[0] is the irreducable water saturation
