@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+* Copyright (c) 2026 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -58,10 +58,10 @@ extern struct Variable_Initialization Var_init_mat[MAX_NUMBER_MATLS][MAX_VARIABL
  */
 /*      mm_matrl.c */
 
-extern void matrl_prop_print(MATRL_PROP_STRUCT *, int);
-extern int goma_mat_prop_init(MATRL_PROP_STRUCT *, int, PROBLEM_DESCRIPTION_STRUCT *);
-extern double calc_density(MATRL_PROP_STRUCT *, int, PROPERTYJAC_STRUCT *, double time);
-extern double calc_concentration(MATRL_PROP_STRUCT *, int, PROPERTYJAC_STRUCT *);
-extern void load_properties(MATRL_PROP_STRUCT *, double);
+GOMA_EXTERN void matrl_prop_print(MATRL_PROP_STRUCT *, int);
+GOMA_EXTERN int goma_mat_prop_init(MATRL_PROP_STRUCT *, int, PROBLEM_DESCRIPTION_STRUCT *);
+GOMA_EXTERN double calc_density(MATRL_PROP_STRUCT *, int, PROPERTYJAC_STRUCT *, double time);
+GOMA_EXTERN double calc_concentration(MATRL_PROP_STRUCT *, int, PROPERTYJAC_STRUCT *);
+GOMA_EXTERN void load_properties(MATRL_PROP_STRUCT *, double);
 
 #endif

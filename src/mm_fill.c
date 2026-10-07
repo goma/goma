@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+* Copyright (c) 2026 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -27,10 +27,10 @@
 
 #include "ac_stability.h"
 #include "ac_stability_util.h"
-#include "ad_momentum.h"
-#include "ad_porous.h"
-#include "ad_stress.h"
-#include "ad_turbulence.h"
+#include "ad/momentum.h"
+#include "ad/porous.h"
+#include "ad/stress.h"
+#include "ad/turbulence.h"
 #include "bc/rotate.h"
 #include "bc/rotate_coordinates.h"
 #include "bc_colloc.h"

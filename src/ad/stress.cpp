@@ -1,13 +1,26 @@
+/************************************************************************ *
+* Goma - Multiphysics finite element software                             *
+* Sandia National Laboratories                                            *
+*                                                                         *
+* Copyright (c) 2026 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
+*                                                                         *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
+*                                                                         *
+* This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
+\************************************************************************/
+
 #ifdef GOMA_ENABLE_SACADO
 #include <Sacado.hpp>
 
-#include "ad_momentum.h"
-#include "ad_turbulence.h"
+#include "ad/momentum.h"
+#include "ad/turbulence.h"
 
 extern "C" {
 
 /* GOMA include files */
-#include "ad_turbulence.h"
 #include "density.h"
 #include "el_elm.h"
 #include "exo_struct.h"

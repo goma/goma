@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+* Copyright (c) 2026 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -19,11 +19,25 @@
 #ifndef GOMA_RF_GOMA_H
 #define GOMA_RF_GOMA_H
 
+#ifdef __cplusplus
+#define GOMA_EXTERN_C_BEGIN extern "C" {
+#define GOMA_EXTERN_C_END   }
+#define GOMA_EXTERN extern "C"
+#else
+#define GOMA_EXTERN_C_BEGIN
+#define GOMA_EXTERN_C_END
+#define GOMA_EXTERN
+#endif
+
+GOMA_EXTERN_C_BEGIN
+
 #include <ctype.h>
 #include <math.h>
 #include <stdlib.h> /* WEXITSTATUS */
 
 #include "rf_mp.h"
+
+GOMA_EXTERN_C_END
 
 #define HAVE_AZTEC 1
 #ifndef GOMA_HAVE_BLAS
@@ -438,7 +452,6 @@ typedef int Strcpy_rtn;
  *      u_int
  *      u_long
  */
-#include <sys/types.h>
 
 /*
  *  There are several machine/compiler cases where u_int and u_long are not defined

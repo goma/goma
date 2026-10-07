@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+* Copyright (c) 2026 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -15,43 +15,31 @@
 #ifndef GOMA_EL_ELM_INFO_H
 #define GOMA_EL_ELM_INFO_H
 
-#include "dp_vif.h"
 #include "el_elm.h"
 #include "std.h"
-#ifdef EXTERN
-#undef EXTERN
-#endif
 
-#ifdef GOMA_EL_ELM_INFO_C
-#define EXTERN /* do nothing */
-#endif
-
-#ifndef GOMA_EL_ELM_INFO_C
-#define EXTERN extern
-#endif
-
-EXTERN int elem_info(const int,  /* info                                      */
+GOMA_EXTERN int elem_info(const int,  /* info                                      */
                      const int); /* ielem_type                                */
 
-extern int dof_lnode_interp_type(const int,  /* n                                         */
+GOMA_EXTERN int dof_lnode_interp_type(const int,  /* n                                         */
                                  const int,  /* Element_Type                              */
                                  const int,  /* interp_type                               */
                                  const int); /* edge                                      */
 
-EXTERN int type2shape(const int); /* element_type                              */
+GOMA_EXTERN int type2shape(const int); /* element_type                              */
 
-EXTERN int shape2sides(const int); /* element_shape                             */
+GOMA_EXTERN int shape2sides(const int); /* element_shape                             */
 
-EXTERN int getdofs(const int,  /* element_shape                             */
+GOMA_EXTERN int getdofs(const int,  /* element_shape                             */
                    const int); /* interpolation                             */
 
-EXTERN void find_stu(const int, /* iquad - current GQ index                  */
+GOMA_EXTERN void find_stu(const int, /* iquad - current GQ index                  */
                      const int, /* ielem_type - element type                 */
                      dbl *,     /* s - local                                 */
                      dbl *,     /* t - GQ coordinates                        */
                      dbl *);    /* u - (returned)                            */
 
-EXTERN void find_surf_st(const int,   /* iquad - current GQ index                  */
+GOMA_EXTERN void find_surf_st(const int,   /* iquad - current GQ index                  */
                          const int,   /* ielem_type - element type                 */
                          const int,   /* iside - current side of element           */
                          const int,   /* dim - dimension of element                */
@@ -61,7 +49,7 @@ EXTERN void find_surf_st(const int,   /* iquad - current GQ index               
                          double *,    /* t -                                       */
                          double *);   /* u -                                       */
 
-EXTERN int find_edge_s(const int,   /* iquad - current GQ index                  */
+GOMA_EXTERN int find_edge_s(const int,   /* iquad - current GQ index                  */
                        const int,   /* ielem_type - element type                 */
                        const int,   /* iedge - current edge of element           */
                        const int,   /* dim - dimensions of element               */
@@ -69,7 +57,7 @@ EXTERN int find_edge_s(const int,   /* iquad - current GQ index                 
                                      * integral (these are returned)             */
                        double *);   /* s                                         */
 
-EXTERN void find_surf_center_st(const int,   /* ielem_type - element type                 */
+GOMA_EXTERN void find_surf_center_st(const int,   /* ielem_type - element type                 */
                                 const int,   /* iside - current side of element           */
                                 const int,   /* dim - dimensions of element               */
                                 double[DIM], /* xi - (returned) local GQ coordinates for
@@ -77,19 +65,19 @@ EXTERN void find_surf_center_st(const int,   /* ielem_type - element type       
                                 double *,    /* s - Gaussian-quadrature points (s, t)     */
                                 double *);   /* t                                         */
 
-EXTERN void find_nodal_stu(const int, /* inode - current node index                */
+GOMA_EXTERN void find_nodal_stu(const int, /* inode - current node index                */
                            const int, /* ielem_type - element type                 */
                            double *,  /* s - local GQ coordinates                  */
                            double *,  /* t - (returned                             */
                            double *); /* u - values )                              */
 
-EXTERN double Gq_weight(const int,  /* iquad - current GQ index                  */
+GOMA_EXTERN double Gq_weight(const int,  /* iquad - current GQ index                  */
                         const int); /* ielem_type - element type                 */
 
-EXTERN double Gq_surf_weight(const int,  /* iquad - current GQ index                  */
+GOMA_EXTERN double Gq_surf_weight(const int,  /* iquad - current GQ index                  */
                              const int); /* ielem_type - element type                 */
 
-EXTERN double Gq_edge_weight(const int,  /* iquad - current GQ index                  */
+GOMA_EXTERN double Gq_edge_weight(const int,  /* iquad - current GQ index                  */
                              const int); /* ielem_type - element type                 */
 
 /*
@@ -121,13 +109,13 @@ static inline int in_list(const int value, const int start, const int end, const
 /*****************************************************************************/
 /*****************************************************************************/
 
-EXTERN int get_type(char[],     /* string - EXODUS name of parent element    */
+GOMA_EXTERN int get_type(char[],     /* string - EXODUS name of parent element    */
                     const int,  /* nodes - number of nodes in this element   */
                     const int); /* attrs - number of attributes in element   */
 
-EXTERN int centroid_node(int); /* elem_type                                 */
+GOMA_EXTERN int centroid_node(int); /* elem_type                                 */
 
-EXTERN int load_surf_st(int,         /* ielem_type */
+GOMA_EXTERN int load_surf_st(int,         /* ielem_type */
                         int,         /* id_side */
                         int,         /* dim */
                         double[DIM], /* xi  */

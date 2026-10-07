@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+* Copyright (c) 2026 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -12,6 +12,7 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
+#include "std.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +29,6 @@
 #include "rf_io.h"
 #include "rf_io_const.h"
 #include "rf_mp.h"
-#include "std.h"
 #ifdef PRINT_STACK_TRACE_ON_EH
 #include <execinfo.h>
 
