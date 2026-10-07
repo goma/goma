@@ -18,7 +18,6 @@
 #ifdef GOMA_ENABLE_SACADO
 
 #ifdef __cplusplus
-#include <Sacado.hpp>
 #include "ad/structs.h"
 
 extern "C" {

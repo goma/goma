@@ -15,21 +15,14 @@
 
 #include <cstddef>
 #ifdef GOMA_ENABLE_SACADO
-#include "Sacado.hpp"
 
 #include "ad/turbulence.h"
 #include "ad/stabilization.h"
 #include "ad/viscosity.h"
-extern "C" {
-#include "mm_fill_stabilization.h"
-/* GOMA include files */
+#include "ad/structs.h"
 #include "mm_eh.h"
-#include "mm_fill_stress.h"
-#define GOMA_AD_TURBULENCE_CPP
 #include "density.h"
 #include "el_elm.h"
-#include "el_elm_info.h"
-#include "el_geom.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
@@ -39,7 +32,6 @@ extern "C" {
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "std.h"
-}
 
 
 /*  _______________________________________________________________________  */
