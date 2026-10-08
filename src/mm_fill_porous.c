@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) Goma Developers, National Technology & Engineering        *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -5512,7 +5512,7 @@ double load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
   /**********************************************************************
    *                   TANH MODEL FOR SATURATION
    **********************************************************************/
-  else if (mp->SaturationModel == SAT_TANH) {
+  else if (mp->SaturationModel == TANH) {
     /*
      * FOR TANH EQUATION
      *  mp->u_saturation[0] is the irreduceable water saturation
@@ -6219,7 +6219,7 @@ double load_cap_pres(int ipore, int ilnode, int ignode, double saturation)
   /**********************************************************************
    *                   ATANH MODEL FOR CAPILLARY PRESSURE
    **********************************************************************/
-  if (mp->PorousShellCapPresModel[ipore] == CAP_ATANH) {
+  if (mp->PorousShellCapPresModel[ipore] == ATANH) {
     /*
      * FOR ATANH EQUATION
      *  mp->u_saturation[0] is the irreduceable water saturation
@@ -6294,7 +6294,7 @@ double load_cap_pres(int ipore, int ilnode, int ignode, double saturation)
       GOMA_EH(GOMA_ERROR, "Not valid porous shell index");
       break;
     }
-  } else if (mp->PorousShellCapPresModel[ipore] == CAP_SINH) {
+  } else if (mp->PorousShellCapPresModel[ipore] == SINH) {
     /*
      * FOR SINH EQUATION
      *  mp->u_saturation[0] is the irreducable water saturation

@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) Goma Developers, National Technology & Engineering        *
+* Copyright (c) 2023 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -39,7 +39,7 @@ struct density_dependence {
 };
 typedef struct density_dependence DENSITY_DEPENDENCE_STRUCT; /* struct for d_rho */
 
-GOMA_EXTERN double density        /* mm_fill_terms.c                           */
+double density                    /* mm_fill_terms.c                           */
     (DENSITY_DEPENDENCE_STRUCT *, /* density dependence */
      double);
 #endif // GOMA_DENSITY_H

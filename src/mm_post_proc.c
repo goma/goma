@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) Goma Developers, National Technology & Engineering        *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -17,9 +17,8 @@
  */
 
 /* Standard include files */
-#define GOMA_MM_POST_PROC_C
 
-#include "ad/turbulence.h"
+#include "ad_turbulence.h"
 #include "load_field_variables.h"
 #include "mm_fill_em.h"
 #include "mm_fill_momentum.h"
@@ -30,13 +29,13 @@
 #include <string.h>
 #include <strings.h> /* strcasecmp and strncasecmp moved here for POSIX.1 */
 
-#include "dp_comm.h"
+#define GOMA_MM_POST_PROC_C
 #include "mm_post_def.h"
 #include "mm_post_proc.h"
 /* GOMA include files */
 #include "ac_particles.h"
-#include "ad/momentum.h"
-#include "ad/turbulence.h"
+#include "ad_momentum.h"
+#include "ad_turbulence.h"
 #include "bc/rotate.h"
 #include "bc_contact.h"
 #include "density.h"

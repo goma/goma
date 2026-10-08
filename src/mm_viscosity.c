@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) Goma Developers, National Technology & Engineering        *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -23,7 +23,7 @@
 #include <stdlib.h>
 
 /* GOMA include files */
-#include "ad/turbulence.h"
+#include "ad_turbulence.h"
 #include "density.h"
 #include "el_elm.h"
 #include "mm_as.h"

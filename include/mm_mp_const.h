@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) Goma Developers, National Technology & Engineering        *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -455,7 +455,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define PSD_SEXP               7
 #define K_TENSOR               8
 #define SOLIDIFICATION         9 /* permeability that slows down velocity for phase change  */
-#define SAT_TANH               10
+#define TANH                   10
 #define TANH_HYST              11
 #define KOZENY_CARMAN          12
 #define SINK_MASS_PERM         13
@@ -468,8 +468,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define VAN_GENUCHTEN_EXTERNAL 23
 #define LEVER                  24
 #define SATURATION             25
-#define CAP_ATANH              26
-#define CAP_SINH               27
+#define ATANH                  26
+#define SINH                   27
 #define VAN_GENUCHTEN_HYST     28
 #define VAN_GENUCHTEN_HYST_EXT 29
 

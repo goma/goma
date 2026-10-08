@@ -2,7 +2,7 @@
  * Goma - Multiphysics finite element software                             *
  * Sandia National Laboratories                                            *
  *                                                                         *
- * Copyright (c) Goma                                                 *
+ * Copyright (c) 2019 GOMA                                                 *
  *                                                                         *
  * Authors: Robert Secor and Andrew Cochrane                               *
  *                                                                         *

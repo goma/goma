@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) Goma Developers, National Technology & Engineering        *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -27,7 +27,6 @@
 #define GOMA_H_RF_FEM
 
 #include "rf_fem_const.h" /* In case you have not already done so. */
-#include "std.h"
 /*   max number of Interface Sources */
 #ifndef MAX_INTERFACE
 #define MAX_INTERFACE 5

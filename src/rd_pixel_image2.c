@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) Goma Developers, National Technology & Engineering        *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -32,7 +32,6 @@
 
 #include "ac_conti.h"
 #include "brkfix/fix.h"
-#include "dp_comm.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
