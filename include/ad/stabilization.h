@@ -14,8 +14,8 @@
 
 #ifndef GOMA_AD_STABILIZATION_H
 #define GOMA_AD_STABILIZATION_H
-#include "std.h"
 #include "mm_fill_stabilization.h"
+#include "std.h"
 #ifdef __cplusplus
 #include "ad/structs.h"
 void ad_supg_tau_shakib(ADType &supg_tau, int dim, dbl dt, ADType diffusivity, int interp_eqn);

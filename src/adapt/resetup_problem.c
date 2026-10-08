@@ -12,7 +12,6 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
-
 #include "adapt/resetup_problem.h"
 
 #include <mm_bc.h>

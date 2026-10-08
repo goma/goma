@@ -18,7 +18,7 @@
 GOMA_EXTERN void fill_ad_field_variables();
 #ifdef __cplusplus
 #include "ad/structs.h"
-int ad_calc_shearrate(ADType &gammadot,             /* strain rate invariant */
+int ad_calc_shearrate(ADType &gammadot,            /* strain rate invariant */
                       ADType gamma_dot[DIM][DIM]); /* strain rate tensor */
 #endif
 

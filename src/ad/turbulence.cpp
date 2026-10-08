@@ -16,23 +16,22 @@
 #include <cstddef>
 #ifdef GOMA_ENABLE_SACADO
 
-#include "ad/turbulence.h"
 #include "ad/stabilization.h"
-#include "ad/viscosity.h"
 #include "ad/structs.h"
-#include "mm_eh.h"
+#include "ad/turbulence.h"
+#include "ad/viscosity.h"
 #include "density.h"
 #include "el_elm.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
+#include "mm_eh.h"
 #include "mm_fill_energy.h"
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "std.h"
-
 
 /*  _______________________________________________________________________  */
 
@@ -144,7 +143,6 @@ static int ad_calc_sa_S(scalar &S,                /* strain rate invariant */
   return 0;
 }
 
-
 extern "C" void ad_sa_wall_func(double func[DIM],
                                 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]) {
   // kind of hacky, near wall velocity is velocity at central node
@@ -245,7 +243,6 @@ extern "C" void ad_omega_wall_func(double func[DIM],
     d_func[0][TURB_OMEGA][j] = r.dx(ad_fv->offset[TURB_OMEGA] + j);
   }
 }
-
 
 /* assemble_spalart_allmaras -- assemble terms (Residual & Jacobian) for conservation
  *                              of eddy viscosity for Spalart Allmaras turbulent flow model

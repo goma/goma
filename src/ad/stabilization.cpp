@@ -15,8 +15,6 @@
 #include "ad/viscosity.h"
 #include "mm_fill_stabilization.h"
 /* GOMA include files */
-#include "mm_eh.h"
-#include "mm_fill_stress.h"
 #include "density.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
@@ -24,7 +22,9 @@
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
+#include "mm_eh.h"
 #include "mm_fill_energy.h"
+#include "mm_fill_stress.h"
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
 #include "rf_fem.h"

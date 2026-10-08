@@ -26,8 +26,8 @@
 #ifndef GOMA_H_RF_FEM
 #define GOMA_H_RF_FEM
 
-#include "std.h"
 #include "rf_fem_const.h" /* In case you have not already done so. */
+#include "std.h"
 /*   max number of Interface Sources */
 #ifndef MAX_INTERFACE
 #define MAX_INTERFACE 5

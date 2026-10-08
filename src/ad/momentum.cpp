@@ -17,8 +17,8 @@
 #include <Sacado.hpp>
 
 #include "ad/momentum.h"
-#include "ad/stress.h"
 #include "ad/stabilization.h"
+#include "ad/stress.h"
 #include "ad/viscosity.h"
 
 extern "C" {
@@ -52,7 +52,6 @@ extern "C" {
 #include "std.h"
 #include "user_mp.h"
 }
-
 
 /* ad_assemble_momentum -- assemble terms (Residual &| Jacobian) for momentum eqns
  *

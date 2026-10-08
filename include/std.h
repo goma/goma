@@ -22,7 +22,7 @@
 #ifdef __cplusplus
 #define GOMA_EXTERN_C_BEGIN extern "C" {
 #define GOMA_EXTERN_C_END   }
-#define GOMA_EXTERN extern "C"
+#define GOMA_EXTERN         extern "C"
 #else
 #define GOMA_EXTERN_C_BEGIN
 #define GOMA_EXTERN_C_END

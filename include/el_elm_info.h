@@ -19,66 +19,66 @@
 #include "std.h"
 
 GOMA_EXTERN int elem_info(const int,  /* info                                      */
-                     const int); /* ielem_type                                */
+                          const int); /* ielem_type                                */
 
 GOMA_EXTERN int dof_lnode_interp_type(const int,  /* n                                         */
-                                 const int,  /* Element_Type                              */
-                                 const int,  /* interp_type                               */
-                                 const int); /* edge                                      */
+                                      const int,  /* Element_Type                              */
+                                      const int,  /* interp_type                               */
+                                      const int); /* edge                                      */
 
 GOMA_EXTERN int type2shape(const int); /* element_type                              */
 
 GOMA_EXTERN int shape2sides(const int); /* element_shape                             */
 
 GOMA_EXTERN int getdofs(const int,  /* element_shape                             */
-                   const int); /* interpolation                             */
+                        const int); /* interpolation                             */
 
 GOMA_EXTERN void find_stu(const int, /* iquad - current GQ index                  */
-                     const int, /* ielem_type - element type                 */
-                     dbl *,     /* s - local                                 */
-                     dbl *,     /* t - GQ coordinates                        */
-                     dbl *);    /* u - (returned)                            */
+                          const int, /* ielem_type - element type                 */
+                          dbl *,     /* s - local                                 */
+                          dbl *,     /* t - GQ coordinates                        */
+                          dbl *);    /* u - (returned)                            */
 
 GOMA_EXTERN void find_surf_st(const int,   /* iquad - current GQ index                  */
-                         const int,   /* ielem_type - element type                 */
-                         const int,   /* iside - current side of element           */
-                         const int,   /* dim - dimension of element                */
-                         double[DIM], /* xi - (returned) local GQ coordinates for
-                                       * surface integral                          */
-                         double *,    /* s - Gaussian-quadrature points (s, t)     */
-                         double *,    /* t -                                       */
-                         double *);   /* u -                                       */
+                              const int,   /* ielem_type - element type                 */
+                              const int,   /* iside - current side of element           */
+                              const int,   /* dim - dimension of element                */
+                              double[DIM], /* xi - (returned) local GQ coordinates for
+                                            * surface integral                          */
+                              double *,    /* s - Gaussian-quadrature points (s, t)     */
+                              double *,    /* t -                                       */
+                              double *);   /* u -                                       */
 
 GOMA_EXTERN int find_edge_s(const int,   /* iquad - current GQ index                  */
-                       const int,   /* ielem_type - element type                 */
-                       const int,   /* iedge - current edge of element           */
-                       const int,   /* dim - dimensions of element               */
-                       double[DIM], /* xi - local GQ coordinates for surface
-                                     * integral (these are returned)             */
-                       double *);   /* s                                         */
+                            const int,   /* ielem_type - element type                 */
+                            const int,   /* iedge - current edge of element           */
+                            const int,   /* dim - dimensions of element               */
+                            double[DIM], /* xi - local GQ coordinates for surface
+                                          * integral (these are returned)             */
+                            double *);   /* s                                         */
 
 GOMA_EXTERN void find_surf_center_st(const int,   /* ielem_type - element type                 */
-                                const int,   /* iside - current side of element           */
-                                const int,   /* dim - dimensions of element               */
-                                double[DIM], /* xi - (returned) local GQ coordinates for
-                                              * surface integral                          */
-                                double *,    /* s - Gaussian-quadrature points (s, t)     */
-                                double *);   /* t                                         */
+                                     const int,   /* iside - current side of element           */
+                                     const int,   /* dim - dimensions of element               */
+                                     double[DIM], /* xi - (returned) local GQ coordinates for
+                                                   * surface integral                          */
+                                     double *,    /* s - Gaussian-quadrature points (s, t)     */
+                                     double *);   /* t                                         */
 
 GOMA_EXTERN void find_nodal_stu(const int, /* inode - current node index                */
-                           const int, /* ielem_type - element type                 */
-                           double *,  /* s - local GQ coordinates                  */
-                           double *,  /* t - (returned                             */
-                           double *); /* u - values )                              */
+                                const int, /* ielem_type - element type                 */
+                                double *,  /* s - local GQ coordinates                  */
+                                double *,  /* t - (returned                             */
+                                double *); /* u - values )                              */
 
 GOMA_EXTERN double Gq_weight(const int,  /* iquad - current GQ index                  */
-                        const int); /* ielem_type - element type                 */
+                             const int); /* ielem_type - element type                 */
 
 GOMA_EXTERN double Gq_surf_weight(const int,  /* iquad - current GQ index                  */
-                             const int); /* ielem_type - element type                 */
+                                  const int); /* ielem_type - element type                 */
 
 GOMA_EXTERN double Gq_edge_weight(const int,  /* iquad - current GQ index                  */
-                             const int); /* ielem_type - element type                 */
+                                  const int); /* ielem_type - element type                 */
 
 /*
  *        This function searches an integer vector, ivector[i:iend-1],
@@ -110,16 +110,16 @@ static inline int in_list(const int value, const int start, const int end, const
 /*****************************************************************************/
 
 GOMA_EXTERN int get_type(char[],     /* string - EXODUS name of parent element    */
-                    const int,  /* nodes - number of nodes in this element   */
-                    const int); /* attrs - number of attributes in element   */
+                         const int,  /* nodes - number of nodes in this element   */
+                         const int); /* attrs - number of attributes in element   */
 
 GOMA_EXTERN int centroid_node(int); /* elem_type                                 */
 
 GOMA_EXTERN int load_surf_st(int,         /* ielem_type */
-                        int,         /* id_side */
-                        int,         /* dim */
-                        double[DIM], /* xi  */
-                        double,      /* s  */
-                        double);     /* t  */
+                             int,         /* id_side */
+                             int,         /* dim */
+                             double[DIM], /* xi  */
+                             double,      /* s  */
+                             double);     /* t  */
 
 #endif /* GOMA_EL_ELM_INFO_H */

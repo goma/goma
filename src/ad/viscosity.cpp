@@ -13,16 +13,16 @@
 \************************************************************************/
 
 #include "ad/viscosity.h"
-#include "ad/util.h"
 #include "ad/turbulence.h"
+#include "ad/util.h"
 /* GOMA include files */
-#include "mm_eh.h"
-#include "mm_fill_stress.h"
 #include "density.h"
 #include "el_elm.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
+#include "mm_eh.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_stress.h"
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
 #include "rf_fem.h"

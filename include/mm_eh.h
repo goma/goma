@@ -29,7 +29,6 @@ typedef int goma_error;
 #include <stdarg.h> /* for var args... */
 #include <stdbool.h>
 
-
 /* Needed to use mm_eh without std.h */
 #ifndef MAX_CHAR_ERR_MSG
 #define MAX_CHAR_ERR_MSG 1024
@@ -47,15 +46,15 @@ goma_eh(const int error_flag, const char *file, const int line, const char *form
 GOMA_EXTERN void
 goma_wh(const int error_flag, const char *const file, const int line, const char *format, ...);
 
-GOMA_EXTERN void save_place  /* mm_eh.c                                   */
-    (const int,         /* severity                                  */
-     const char *const, /* routine_name                              */
-     const char *const, /* file_name                                 */
-     const int);        /* line_number                               */
+GOMA_EXTERN void save_place /* mm_eh.c                                   */
+    (const int,             /* severity                                  */
+     const char *const,     /* routine_name                              */
+     const char *const,     /* file_name                                 */
+     const int);            /* line_number                               */
 
 GOMA_EXTERN void logprintf /* mm_eh.c                                   */
-    (const char *,    /* format                                    */
-     ...);            /* var args */
+    (const char *,         /* format                                    */
+     ...);                 /* var args */
 
 GOMA_EXTERN void smooth_stop_with_msg(const char *msg);
 

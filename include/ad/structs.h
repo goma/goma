@@ -19,8 +19,8 @@
 #ifdef __cplusplus
 #include <Sacado.hpp>
 extern "C" {
-    #include "mm_mp_const.h"
-    #include "el_elm.h"
+#include "el_elm.h"
+#include "mm_mp_const.h"
 }
 using ADType = Sacado::Fad::DFad<double>;
 struct AD_Basis {

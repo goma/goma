@@ -39,7 +39,7 @@ struct density_dependence {
 };
 typedef struct density_dependence DENSITY_DEPENDENCE_STRUCT; /* struct for d_rho */
 
-GOMA_EXTERN double density                    /* mm_fill_terms.c                           */
+GOMA_EXTERN double density        /* mm_fill_terms.c                           */
     (DENSITY_DEPENDENCE_STRUCT *, /* density dependence */
      double);
 #endif // GOMA_DENSITY_H
