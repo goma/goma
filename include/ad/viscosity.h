@@ -13,6 +13,7 @@
 \************************************************************************/
 #ifndef GOMA_AD_VISCOSITY_H
 #define GOMA_AD_VISCOSITY_H
+#ifdef GOMA_ENABLE_SACADO
 
 #include "mm_as_structs.h"
 #include "std.h"
@@ -45,4 +46,5 @@ ADType ad_bingham_viscosity(struct Generalized_Newtonian *gn_local, ADType gamma
 ADType ad_viscosity(struct Generalized_Newtonian *gn_local, ADType gamma_dot[DIM][DIM]);
 #endif
 
+#endif // GOMA_ENABLE_SACADO
 #endif

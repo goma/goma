@@ -83,6 +83,6 @@ struct AD_Field_Variables {
 extern AD_Field_Variables *ad_fv;
 #endif
 
-#endif
+#endif // GOMA_ENABLE_SACADO
 
 #endif // GOMA_AD_STRUCTS_H

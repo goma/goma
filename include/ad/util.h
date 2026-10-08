@@ -13,6 +13,7 @@
 \************************************************************************/
 #ifndef GOMA_AD_UTIL_H
 #define GOMA_AD_UTIL_H
+#ifdef GOMA_ENABLE_SACADO
 
 #include "std.h"
 GOMA_EXTERN void fill_ad_field_variables();
@@ -22,4 +23,5 @@ int ad_calc_shearrate(ADType &gammadot,            /* strain rate invariant */
                       ADType gamma_dot[DIM][DIM]); /* strain rate tensor */
 #endif
 
-#endif
+#endif // GOMA_ENABLE_SACADO
+#endif // GOMA_AD_UTIL_H

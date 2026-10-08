@@ -12,6 +12,7 @@
 * This software is distributed under the GNU General Public License.      *
 * See LICENSE file.                                                       *
 \************************************************************************/
+#ifdef GOMA_ENABLE_SACADO
 
 #include "ad/util.h"
 #include "ad/structs.h"
@@ -830,3 +831,4 @@ extern "C" void fill_ad_field_variables() {
   }
 #endif
 }
+#endif // GOMA_ENABLE_SACADO

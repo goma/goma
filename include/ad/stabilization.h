@@ -14,6 +14,7 @@
 
 #ifndef GOMA_AD_STABILIZATION_H
 #define GOMA_AD_STABILIZATION_H
+#ifdef GOMA_ENABLE_SACADO
 #include "mm_fill_stabilization.h"
 #include "std.h"
 #ifdef __cplusplus
@@ -22,4 +23,5 @@ void ad_supg_tau_shakib(ADType &supg_tau, int dim, dbl dt, ADType diffusivity, i
 void ad_get_metric_tensor(ADType B[DIM][DIM], int dim, int element_type, ADType G[DIM][DIM]);
 void ad_only_tau_momentum_shakib(ADType &tau, int dim, dbl dt, int pspg_scale);
 #endif
+#endif // GOMA_ENABLE_SACADO
 #endif
