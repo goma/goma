@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+* Copyright (c) Goma Developers, National Technology & Engineering        *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -19,28 +19,15 @@
 #ifndef GOMA_MM_EH_H
 #define GOMA_MM_EH_H
 
-#ifdef EXTERN
-#undef EXTERN
-#endif
-
-#ifdef GOMA_MM_EH_C
-#define EXTERN /* do nothing */
-#endif
-
-#ifndef GOMA_MM_EH_C
-#define EXTERN extern
-#endif
-
 typedef int goma_error;
 #define GOMA_ERROR   -1
 #define GOMA_SUCCESS 0
 #define GOMA_DEBUG   1
+#include "std.h"
 
 #include <mpi.h>
 #include <stdarg.h> /* for var args... */
 #include <stdbool.h>
-
-#include "std.h"
 
 /* Needed to use mm_eh without std.h */
 #ifndef MAX_CHAR_ERR_MSG
@@ -53,23 +40,23 @@ typedef int goma_error;
  */
 extern char Err_Msg[MAX_CHAR_ERR_MSG];
 
-EXTERN void
+GOMA_EXTERN void
 goma_eh(const int error_flag, const char *file, const int line, const char *format, ...);
 
-EXTERN void
+GOMA_EXTERN void
 goma_wh(const int error_flag, const char *const file, const int line, const char *format, ...);
 
-EXTERN void save_place  /* mm_eh.c                                   */
-    (const int,         /* severity                                  */
-     const char *const, /* routine_name                              */
-     const char *const, /* file_name                                 */
-     const int);        /* line_number                               */
+GOMA_EXTERN void save_place /* mm_eh.c                                   */
+    (const int,             /* severity                                  */
+     const char *const,     /* routine_name                              */
+     const char *const,     /* file_name                                 */
+     const int);            /* line_number                               */
 
-EXTERN void logprintf /* mm_eh.c                                   */
-    (const char *,    /* format                                    */
-     ...);            /* var args */
+GOMA_EXTERN void logprintf /* mm_eh.c                                   */
+    (const char *,         /* format                                    */
+     ...);                 /* var args */
 
-EXTERN void smooth_stop_with_msg(const char *msg);
+GOMA_EXTERN void smooth_stop_with_msg(const char *msg);
 
 /* This macro expands to a function call to the error handler eh() with
  * four arguments:

@@ -18,7 +18,7 @@
 
 /* Standard include files */
 
-#include "ad_turbulence.h"
+#include "ad/turbulence.h"
 #include "load_field_variables.h"
 #include "mm_fill_em.h"
 #include "mm_fill_momentum.h"
@@ -34,11 +34,12 @@
 #include "mm_post_proc.h"
 /* GOMA include files */
 #include "ac_particles.h"
-#include "ad_momentum.h"
-#include "ad_turbulence.h"
+#include "ad/momentum.h"
+#include "ad/turbulence.h"
 #include "bc/rotate.h"
 #include "bc_contact.h"
 #include "density.h"
+#include "dp_comm.h"
 #include "dpi.h"
 #include "el_elm.h"
 #include "el_elm_info.h"

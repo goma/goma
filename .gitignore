@@ -41,4 +41,4 @@ cmake-debug
 /cmake-variants.json
 .vscode/
 compile_commands.json
-
+CMakeUserPresets.json

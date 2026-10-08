@@ -11,14 +11,15 @@
 * This software is distributed under the GNU General Public License.      *
 * See LICENSE file.                                                       *
 \************************************************************************/
-
-#include "ad/turbulence.h"
 #ifdef GOMA_ENABLE_SACADO
+#include "ad/structs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "exo_struct.h"
+#include "mm_as_structs.h"
 #include "std.h"
 
 int ad_assemble_momentum(dbl time,       /* current time */

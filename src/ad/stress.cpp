@@ -13,11 +13,10 @@
 \************************************************************************/
 
 #ifdef GOMA_ENABLE_SACADO
-#include <Sacado.hpp>
 
+#include "ad/stress.h"
 #include "ad/momentum.h"
 #include "ad/stabilization.h"
-#include "ad/stress.h"
 
 extern "C" {
 

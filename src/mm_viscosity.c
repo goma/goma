@@ -23,7 +23,7 @@
 #include <stdlib.h>
 
 /* GOMA include files */
-#include "ad_turbulence.h"
+#include "ad/turbulence.h"
 #include "density.h"
 #include "el_elm.h"
 #include "mm_as.h"

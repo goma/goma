@@ -14,7 +14,6 @@
 
 #define GOMA_AD_MOMENTUM_CPP
 #ifdef GOMA_ENABLE_SACADO
-#include <Sacado.hpp>
 
 #include "ad/momentum.h"
 #include "ad/stabilization.h"
