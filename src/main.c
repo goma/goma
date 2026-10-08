@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2026 Goma Developers, National Technology & Engineering   *
+* Copyright (c) Goma Developers, National Technology & Engineering        *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -203,7 +203,7 @@ static char *legal_notice[] = {
     "* Goma - Multiphysics finite element software                            *\n",
     "* Sandia National Laboratories                                           *\n",
     "*                                                                        *\n",
-    "* Copyright (c) 2026 Goma Developers, National Technology & Engineering  *\n",
+    "* Copyright (c) Goma Developers, National Technology & Engineering  *\n",
     "*               Solutions of Sandia, LLC (NTESS)                         *\n",
     "*                                                                        *\n",
     "* Under the terms of Contract DE-NA0003525, the U.S. Government retains  *\n",

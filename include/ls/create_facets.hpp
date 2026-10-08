@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2026 Goma Developers                                      *
+* Copyright (c) Goma Developers                                      *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
 * certain rights in this software.                                        *
