@@ -11,7 +11,7 @@
 * This software is distributed under the GNU General Public License.      *
 * See LICENSE file.                                                       *
 \************************************************************************/
-
+#ifdef GOMA_ENABLE_SACADO
 #include "ad/viscosity.h"
 #include "ad/turbulence.h"
 #include "ad/util.h"
@@ -335,3 +335,4 @@ ADType ad_viscosity(struct Generalized_Newtonian *gn_local, ADType gamma_dot[DIM
   }
   return (mu);
 }
+#endif // GOMA_ENABLE_SACADO
