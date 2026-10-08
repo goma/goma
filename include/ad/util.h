@@ -19,8 +19,23 @@
 GOMA_EXTERN void fill_ad_field_variables();
 #ifdef __cplusplus
 #include "ad/structs.h"
+#include "mm_as.h"
 int ad_calc_shearrate(ADType &gammadot,            /* strain rate invariant */
                       ADType gamma_dot[DIM][DIM]); /* strain rate tensor */
+
+inline ADType set_ad_or_dbl(dbl val, int eqn, int dof) {
+  ADType tmp;
+  if (ad_fv->total_ad_variables > 0 && af->Assemble_Jacobian == TRUE) {
+    if (pd->gv[eqn]) {
+      tmp = ADType(ad_fv->total_ad_variables, ad_fv->offset[eqn] + dof, val);
+    } else {
+      tmp = val;
+    }
+  } else {
+    tmp = val;
+  }
+  return tmp;
+}
 #endif
 
 #endif // GOMA_ENABLE_SACADO

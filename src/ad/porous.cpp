@@ -14,11 +14,9 @@
 
 #ifdef GOMA_ENABLE_SACADO
 
-#include <ad/turbulence.h>
-
-#include <ad/porous.h>
-
-extern "C" {
+#include "ad/porous.h"
+#include "ad/structs.h"
+#include "ad/util.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_mp.h"
@@ -26,21 +24,6 @@ extern "C" {
 #include "mm_std_models_shell.h"
 #include "rf_allo.h"
 #include "rf_fem_const.h"
-}
-
-static inline ADType set_ad_or_dbl(dbl val, int eqn, int dof) {
-  ADType tmp;
-  if (ad_fv->total_ad_variables > 0 && af->Assemble_Jacobian == TRUE) {
-    if (pd->gv[eqn]) {
-      tmp = ADType(ad_fv->total_ad_variables, ad_fv->offset[eqn] + dof, val);
-    } else {
-      tmp = val;
-    }
-  } else {
-    tmp = val;
-  }
-  return tmp;
-}
 
 ADType ad_load_cap_pres(int ipore, int ilnode, int ignode, ADType saturation)
 

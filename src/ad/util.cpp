@@ -381,20 +381,6 @@ int ad_load_bf_grad(void) {
   return (status);
 }
 
-static inline ADType set_ad_or_dbl(dbl val, int eqn, int dof) {
-  ADType tmp;
-  if (ad_fv->total_ad_variables > 0 && af->Assemble_Jacobian == TRUE) {
-    if (pd->gv[eqn]) {
-      tmp = ADType(ad_fv->total_ad_variables, ad_fv->offset[eqn] + dof, val);
-    } else {
-      tmp = val;
-    }
-  } else {
-    tmp = val;
-  }
-  return tmp;
-}
-
 extern "C" void fill_ad_field_variables() {
   if (ad_fv == NULL) {
     ad_fv = new AD_Field_Variables();
