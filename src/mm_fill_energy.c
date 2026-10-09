@@ -14,7 +14,7 @@
 
 #include "mm_fill_energy.h"
 #include "ac_particles.h"
-#include "ad_turbulence.h"
+#include "ad/turbulence.h"
 #ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
 #endif

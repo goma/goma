@@ -32,6 +32,7 @@
 
 #include "ac_conti.h"
 #include "brkfix/fix.h"
+#include "dp_comm.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"

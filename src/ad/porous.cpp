@@ -1,10 +1,22 @@
+/************************************************************************ *
+* Goma - Multiphysics finite element software                             *
+* Sandia National Laboratories                                            *
+*                                                                         *
+* Copyright (c) Goma Developers, National Technology & Engineering        *
+*               Solutions of Sandia, LLC (NTESS)                          *
+*                                                                         *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
+*                                                                         *
+* This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
+\************************************************************************/
+
 #ifdef GOMA_ENABLE_SACADO
 
-#include <ad_turbulence.h>
-
-#include <ad_porous.h>
-
-extern "C" {
+#include "ad/porous.h"
+#include "ad/structs.h"
+#include "ad/util.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_mp.h"
@@ -12,21 +24,6 @@ extern "C" {
 #include "mm_std_models_shell.h"
 #include "rf_allo.h"
 #include "rf_fem_const.h"
-}
-
-static inline ADType set_ad_or_dbl(dbl val, int eqn, int dof) {
-  ADType tmp;
-  if (ad_fv->total_ad_variables > 0 && af->Assemble_Jacobian == TRUE) {
-    if (pd->gv[eqn]) {
-      tmp = ADType(ad_fv->total_ad_variables, ad_fv->offset[eqn] + dof, val);
-    } else {
-      tmp = val;
-    }
-  } else {
-    tmp = val;
-  }
-  return tmp;
-}
 
 ADType ad_load_cap_pres(int ipore, int ilnode, int ignode, ADType saturation)
 
@@ -83,7 +80,7 @@ ADType ad_load_cap_pres(int ipore, int ilnode, int ignode, ADType saturation)
   /**********************************************************************
    *                   ATANH MODEL FOR CAPILLARY PRESSURE
    **********************************************************************/
-  if (mp->PorousShellCapPresModel[ipore] == ATANH) {
+  if (mp->PorousShellCapPresModel[ipore] == CAP_ATANH) {
     /*
      * FOR ATANH EQUATION
      *  mp->u_saturation[0] is the irreduceable water saturation
@@ -120,7 +117,7 @@ ADType ad_load_cap_pres(int ipore, int ilnode, int ignode, ADType saturation)
     cap_pres = con_d / (con_c - atanh(sat_clip));
     mp->cap_pres = cap_pres.val();
 
-  } else if (mp->PorousShellCapPresModel[ipore] == SINH) {
+  } else if (mp->PorousShellCapPresModel[ipore] == CAP_SINH) {
     /*
      * FOR SINH EQUATION
      *  mp->u_saturation[0] is the irreducable water saturation

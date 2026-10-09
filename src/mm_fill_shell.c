@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+* Copyright (c) Goma Developers, National Technology & Engineering        *
 *               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
 * Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
@@ -12153,7 +12153,7 @@ int assemble_porous_shell_open(dbl tt,           // Time integration form
 
   /* --- Calculate equation components ---------------------------------------*/
 
-  if (mp->SaturationModel != SHELL_TANH && mp->SaturationModel != TANH &&
+  if (mp->SaturationModel != SHELL_TANH && mp->SaturationModel != SAT_TANH &&
       mp->SaturationModel != TANH_EXTERNAL && mp->SaturationModel != TANH_HYST) {
     GOMA_EH(GOMA_ERROR, "Pacito problema: Only shell_tanh and tanh and tanh_external and tanh_hyst "
                         " models available for shell open pore. ");
@@ -12931,7 +12931,7 @@ int assemble_porous_shell_open_2(dbl tt,           // Time integration form
 
   /* --- Calculate equation components ---------------------------------------*/
 
-  if (mp->SaturationModel != SHELL_TANH && mp->SaturationModel != TANH &&
+  if (mp->SaturationModel != SHELL_TANH && mp->SaturationModel != SAT_TANH &&
       mp->SaturationModel != TANH_EXTERNAL && mp->SaturationModel != TANH_HYST) {
     GOMA_EH(GOMA_ERROR,
             "Pacito problema: Only shell_tanh, tanh, tanh_external, and tanh_hyst model available "

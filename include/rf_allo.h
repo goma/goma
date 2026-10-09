@@ -19,19 +19,10 @@
 #ifndef GOMA_RF_ALLO_H
 #define GOMA_RF_ALLO_H
 
-#ifdef EXTERN
-#undef EXTERN
-#endif
-
 #include <stdlib.h>
 
 #include "mm_eh.h"
-
-#ifndef GOMA_RF_ALLO_C
-#define EXTERN extern
-#else
-#define EXTERN
-#endif
+#include "std.h"
 
 /*
  *  These are a poor man's way of specifying whether a value should be
@@ -78,33 +69,33 @@
 /*
  * Prototypes for functions in rf_allo.c
  */
-EXTERN double *array_alloc(int,  /* numdim - number of dimensions */
-                           ...); /* all remaing varargs, last 2 are file:line */
+GOMA_EXTERN double *array_alloc(int,  /* numdim - number of dimensions */
+                                ...); /* all remaing varargs, last 2 are file:line */
 
-EXTERN void *safe_malloc(const int,    /* numbytes */
-                         const char *, /* filename */
-                         const int);   /* line */
+GOMA_EXTERN void *safe_malloc(const int,    /* numbytes */
+                              const char *, /* filename */
+                              const int);   /* line */
 
-EXTERN void safe_free(void *); /* ptr to block being freed */
+GOMA_EXTERN void safe_free(void *); /* ptr to block being freed */
 
-extern void safer_free(void **);
-extern int *alloc_int_1_FL(const int, const int, const char *, const int);
-extern short int *alloc_short_1_FL(const int, const int, const char *, const int);
-extern double *alloc_dbl_1_FL(const int, const double, const char *, const int);
-extern void *alloc_void_struct_1_FL(const size_t, const int, const char *, const int);
-extern void zero_structure(void *, const size_t, const int);
-extern void **alloc_ptr_1_FL(const int, const char *, const int);
-extern void realloc_ptr_1_FL(void ***, const int, const int, const char *, const int);
-extern void ***alloc_ptr_2_FL(const int, const int, const char *, const int);
-extern int **alloc_int_2_FL(const int, const int, const int, const char *, const int);
-extern double **alloc_dbl_2_FL(const int, const int, const double, const char *, const int);
-extern char **alloc_VecFixedStrings(const int, const int);
-extern char *alloc_copy_string_FL(const char *, const char *, const int);
+GOMA_EXTERN void safer_free(void **);
+GOMA_EXTERN int *alloc_int_1_FL(const int, const int, const char *, const int);
+GOMA_EXTERN short int *alloc_short_1_FL(const int, const int, const char *, const int);
+GOMA_EXTERN double *alloc_dbl_1_FL(const int, const double, const char *, const int);
+GOMA_EXTERN void *alloc_void_struct_1_FL(const size_t, const int, const char *, const int);
+GOMA_EXTERN void zero_structure(void *, const size_t, const int);
+GOMA_EXTERN void **alloc_ptr_1_FL(const int, const char *, const int);
+GOMA_EXTERN void realloc_ptr_1_FL(void ***, const int, const int, const char *, const int);
+GOMA_EXTERN void ***alloc_ptr_2_FL(const int, const int, const char *, const int);
+GOMA_EXTERN int **alloc_int_2_FL(const int, const int, const int, const char *, const int);
+GOMA_EXTERN double **alloc_dbl_2_FL(const int, const int, const double, const char *, const int);
+GOMA_EXTERN char **alloc_VecFixedStrings(const int, const int);
+GOMA_EXTERN char *alloc_copy_string_FL(const char *, const char *, const int);
 
-extern void realloc_int_1_FL(int **, const int, const int, const char *, const int);
-extern void realloc_dbl_1_FL(double **, const int, const int, const char *, const int);
-extern void *
+GOMA_EXTERN void realloc_int_1_FL(int **, const int, const int, const char *, const int);
+GOMA_EXTERN void realloc_dbl_1_FL(double **, const int, const int, const char *, const int);
+GOMA_EXTERN void *
 realloc_void_struct_1_FL(void *, const size_t, const int, const int, const char *, const int);
-extern void checkFinite(double tmp);
+GOMA_EXTERN void checkFinite(double tmp);
 
 #endif

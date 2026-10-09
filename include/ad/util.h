@@ -11,35 +11,32 @@
 * This software is distributed under the GNU General Public License.      *
 * See LICENSE file.                                                       *
 \************************************************************************/
+#ifndef GOMA_AD_UTIL_H
+#define GOMA_AD_UTIL_H
+#ifdef GOMA_ENABLE_SACADO
 
-#ifndef GOMA_DENSITY_H
-#define GOMA_DENSITY_H
-
-#include "el_elm.h"
-#include "exo_struct.h"
-#include "mm_as_structs.h"
-#include "mm_elem_block_structs.h"
-#include "mm_fill_common.h"
-#include "mm_mp_const.h"
-#include "rf_bc_const.h"
-#include "rf_fem_const.h"
-#include "rf_io_const.h"
-#include "rf_vars_const.h"
-#include "sl_util_structs.h"
 #include "std.h"
-#include <stdbool.h>
+GOMA_EXTERN void fill_ad_field_variables();
+#ifdef __cplusplus
+#include "ad/structs.h"
+#include "mm_as.h"
+int ad_calc_shearrate(ADType &gammadot,            /* strain rate invariant */
+                      ADType gamma_dot[DIM][DIM]); /* strain rate tensor */
 
-struct density_dependence {
-  double T[MDE];
-  double C[MAX_CONC][MDE];
-  double F[MDE];
-  double pf[MAX_PHASE_FUNC][MDE]; /* phase function */
-  double moment[MAX_MOMENTS][MDE];
-  double rho[MDE];
-};
-typedef struct density_dependence DENSITY_DEPENDENCE_STRUCT; /* struct for d_rho */
+inline ADType set_ad_or_dbl(dbl val, int eqn, int dof) {
+  ADType tmp;
+  if (ad_fv->total_ad_variables > 0 && af->Assemble_Jacobian == TRUE) {
+    if (pd->gv[eqn]) {
+      tmp = ADType(ad_fv->total_ad_variables, ad_fv->offset[eqn] + dof, val);
+    } else {
+      tmp = val;
+    }
+  } else {
+    tmp = val;
+  }
+  return tmp;
+}
+#endif
 
-GOMA_EXTERN double density        /* mm_fill_terms.c                           */
-    (DENSITY_DEPENDENCE_STRUCT *, /* density dependence */
-     double);
-#endif // GOMA_DENSITY_H
+#endif // GOMA_ENABLE_SACADO
+#endif // GOMA_AD_UTIL_H

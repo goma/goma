@@ -12,34 +12,16 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
-#ifndef GOMA_DENSITY_H
-#define GOMA_DENSITY_H
-
-#include "el_elm.h"
-#include "exo_struct.h"
-#include "mm_as_structs.h"
-#include "mm_elem_block_structs.h"
-#include "mm_fill_common.h"
-#include "mm_mp_const.h"
-#include "rf_bc_const.h"
-#include "rf_fem_const.h"
-#include "rf_io_const.h"
-#include "rf_vars_const.h"
-#include "sl_util_structs.h"
+#ifndef GOMA_AD_STABILIZATION_H
+#define GOMA_AD_STABILIZATION_H
+#ifdef GOMA_ENABLE_SACADO
+#include "mm_fill_stabilization.h"
 #include "std.h"
-#include <stdbool.h>
-
-struct density_dependence {
-  double T[MDE];
-  double C[MAX_CONC][MDE];
-  double F[MDE];
-  double pf[MAX_PHASE_FUNC][MDE]; /* phase function */
-  double moment[MAX_MOMENTS][MDE];
-  double rho[MDE];
-};
-typedef struct density_dependence DENSITY_DEPENDENCE_STRUCT; /* struct for d_rho */
-
-GOMA_EXTERN double density        /* mm_fill_terms.c                           */
-    (DENSITY_DEPENDENCE_STRUCT *, /* density dependence */
-     double);
-#endif // GOMA_DENSITY_H
+#ifdef __cplusplus
+#include "ad/structs.h"
+void ad_supg_tau_shakib(ADType &supg_tau, int dim, dbl dt, ADType diffusivity, int interp_eqn);
+void ad_get_metric_tensor(ADType B[DIM][DIM], int dim, int element_type, ADType G[DIM][DIM]);
+void ad_only_tau_momentum_shakib(ADType &tau, int dim, dbl dt, int pspg_scale);
+#endif
+#endif // GOMA_ENABLE_SACADO
+#endif

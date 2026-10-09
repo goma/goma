@@ -1,4 +1,3 @@
-#include <cstddef>
 #ifdef GOMA_ENABLE_STRATIMIKOS
 
 #ifdef GOMA_ENABLE_CPP_FILESYSTEM

@@ -1,10 +1,25 @@
-#include "ad_turbulence.h"
+/************************************************************************ *
+* Goma - Multiphysics finite element software                             *
+* Sandia National Laboratories                                            *
+*                                                                         *
+* Copyright (c) Goma Developers, National Technology & Engineering        *
+*               Solutions of Sandia, LLC (NTESS)                          *
+*                                                                         *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
+*                                                                         *
+* This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
+\************************************************************************/
 #ifdef GOMA_ENABLE_SACADO
+#include "ad/structs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "exo_struct.h"
+#include "mm_as_structs.h"
 #include "std.h"
 
 int ad_assemble_momentum(dbl time,       /* current time */

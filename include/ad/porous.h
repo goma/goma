@@ -12,34 +12,30 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
-#ifndef GOMA_DENSITY_H
-#define GOMA_DENSITY_H
+#ifndef GOMA_AD_POROUS_H
+#define GOMA_AD_POROUS_H
 
-#include "el_elm.h"
-#include "exo_struct.h"
+#ifdef GOMA_ENABLE_SACADO
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mm_as_structs.h"
-#include "mm_elem_block_structs.h"
-#include "mm_fill_common.h"
-#include "mm_mp_const.h"
-#include "rf_bc_const.h"
-#include "rf_fem_const.h"
-#include "rf_io_const.h"
-#include "rf_vars_const.h"
-#include "sl_util_structs.h"
+#include "mm_fill_stabilization.h"
+#include "mm_mp_structs.h"
 #include "std.h"
-#include <stdbool.h>
 
-struct density_dependence {
-  double T[MDE];
-  double C[MAX_CONC][MDE];
-  double F[MDE];
-  double pf[MAX_PHASE_FUNC][MDE]; /* phase function */
-  double moment[MAX_MOMENTS][MDE];
-  double rho[MDE];
-};
-typedef struct density_dependence DENSITY_DEPENDENCE_STRUCT; /* struct for d_rho */
+int ad_assemble_porous_shell_saturation(dbl tt,           // Time integration form
+                                        dbl dt,           // Time step size
+                                        dbl xi[DIM],      // Current coordinates
+                                        const Exo_DB *exo // ExoII handle
+);
 
-GOMA_EXTERN double density        /* mm_fill_terms.c                           */
-    (DENSITY_DEPENDENCE_STRUCT *, /* density dependence */
-     double);
-#endif // GOMA_DENSITY_H
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif // GOMA_AD_POROUS_H

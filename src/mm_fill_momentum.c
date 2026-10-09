@@ -6,7 +6,7 @@
 /* GOMA include files */
 #define GOMA_MM_FILL_MOMENTUM_C
 #include "ac_particles.h"
-#include "ad_turbulence.h"
+#include "ad/turbulence.h"
 #ifdef GOMA_ENABLE_AZTEC
 #include "az_aztec.h"
 #endif
