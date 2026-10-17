@@ -52,7 +52,7 @@ The details of each model option are given below:
 |                                                                                   |:math:`G=G_0+\frac{0.1}{((r/r_0)^3+0.1/G_1)}`                                                      |
 |                                                                                   |                                                                                                   |
 |                                                                                   |*r* is the distance from the fixed point, :math:`r_0` is a decay length, :math:`G_0` is the        |
-|                                                                                   | modulus far from the contact line, and :math:`G_0 + G_1` is the modulus at the contact line.      |
+|                                                                                   |modulus far from the contact line, and :math:`G_0 + G_1` is the modulus at the contact line.       |
 |                                                                                   |                                                                                                   |
 |                                                                                   |The {float_list} contains four values for this model, where:                                       |
 |                                                                                   |                                                                                                   |
@@ -66,7 +66,7 @@ The details of each model option are given below:
 |                                                                                   |:math:`G=G_0+\frac{0.1}{((r/r_0)^3+0.1/G_1)}`                                                      |
 |                                                                                   |                                                                                                   |
 |                                                                                   |*r* is the distance from the fixed point, :math:`r_0` is a decay length, :math:`G_0` is the        |
-|                                                                                   | modulus far from the contact line, and :math:`G_0 + G_1` is the modulus at the contact line.      |
+|                                                                                   |modulus far from the contact line, and :math:`G_0 + G_1` is the modulus at the contact line.       |
 |                                                                                   |                                                                                                   |
 |                                                                                   |The {float_list} contains four values for this model, where:                                       |
 |                                                                                   |                                                                                                   |
