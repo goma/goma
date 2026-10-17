@@ -160,7 +160,7 @@ CARREAU_ARRHENIUS
 
     .. math::
       
-       a_T = exp\left[\frac{A_T}{T - T_{shift}}\right - \frac{A_T}{T_{ref} - T_{shift}}]
+       a_T = exp\left[\frac{A_T}{T - T_{shift}} - \frac{A_T}{T_{ref} - T_{shift}}\right]
                                                                                                    
     Here :math:`A_T` is a thermal exponential factor (can be Arrhenius) and is
     input by the *Thermal Exponent* card; :math:`T_{shift}` is the temperature
@@ -187,7 +187,7 @@ ARRHENIUS
 
     .. math::
       
-       a_T = exp\left[\frac{A_T}{T - T_{shift}}\right - \frac{A_T}{T_{ref} - T_{shift}}]
+       a_T = exp\left[\frac{A_T}{T - T_{shift}} - \frac{A_T}{T_{ref} - T_{shift}}\right]
 
     Here :math:`A_T` is a thermal exponential factor (can be Arrhenius) and is
     input by the *Thermal Exponent* card; :math:`T_{shift}` is the temperature
@@ -386,7 +386,6 @@ HERSCHEL_BULKLEY
     regularization. It is set to 1e-5 by default.
 
 HERSCHEL_BULKLEY_PAPANASTASIOU
-    
     See Regularization Model card for more options
 
     This is a variant on the power law model that includes a yield stress. It
