@@ -51,9 +51,9 @@ Following are two sample cards:
 
 Specifically, the species mass flux is given by
 
-.. figure:: /figures/136_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot\boldsymbol{J}_i+\boldsymbol{n}\cdot(\boldsymbol{v}-\boldsymbol{v}_m)c_i=k_i(c_i-c_i^\infty)
 
 where *n* is the unit vector normal to the boundary, :math:`J_i` is mass flux of species *i*, *v* is the
 fluid velocity, :math:`v_m` is the mesh displacement velocity, :math:`k_i` is mass transfer coefficient of
@@ -112,41 +112,41 @@ Concerning the units of the mass transfer coefficient on the *YFLUX* boundary
 condition, the above discussion now sets those. *Goma* clearly needs the flux in the
 following form:
 
-.. figure:: /figures/137_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot D\nabla Y=K\cdot(y_i-y_i^\infty)
 
 and dimensionally for the left hand side
 
-.. figure:: /figures/138_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   (L^2/t)\cdot(1/L)=L/t
 
 where D is in units :math:`L^2` /t , the gradient operator has units of 1/L so K HAS to be in units
 of L/t (period!) because :math:`y_i` is a fraction.
 
 So, if you want a formulation as follows:
 
-.. figure:: /figures/139_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot D\nabla Y=\hat{K}(p_i-p_i^\infty)
 
 then K’s units will have to accommodate for the relationship between :math:`p_i` and :math:`y_i` in the
 liquid, hopefully a linear one as in Raoult’s law, i.e. if :math:`p_i` = :math:`P_V`:math:`y_i` where :math:`P_v` is the vapor
 pressure, then
 
-.. figure:: /figures/140_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot D\nabla Y=KP_V(y_i-y_i^\infty)
 
 and so K on the *YFLUX* command has to be :math:`KP_v` ....and so on.
 
 Finally, you will note, since we do not multiply through by density, you will have to
 take care of that, i. e., in the Price paper he gives K in units of t/L. So, that must be converted as follows:
 
-.. figure:: /figures/141_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   K_{price}(P_V/\rho)=K_{goma}:\quad(t/L)(M/Lt^2)(L^3/M)=L/t
 
 This checks out!
 
@@ -156,5 +156,3 @@ This checks out!
 
 Price, P. E., Jr., S. Wang, I. H. Romdhane, 1997. “Extracting Effective Diffusion
 Parameters from Drying Experiments”, AIChE Journal, 43, 8, 1925-1934.
-
-.. TODO - Lines 54, 120, 126, 135, 143, and 152 all contain picture that need to be changed into the correct equations. 

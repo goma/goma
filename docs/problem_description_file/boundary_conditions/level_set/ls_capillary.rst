@@ -53,9 +53,9 @@ applied solely via this boundary condition. An additional divergence of stress t
 term :math:`\Delta` ⋅ :math:`T_{cap}` is added to the fluid momentum equation. Following Jacqmin the
 form of this tensor is
 
-.. figure:: /figures/199_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   T_{cap}=\sigma(I-\boldsymbol{n}\boldsymbol{n})\delta_\alpha(\phi)/|\nabla\phi|
 
 where s is the (isotropic) surface tension, I is the identity tensor, *n* is the vector normal
 to the interface and :math:`\zeta_a` ( :math:`\phi` ) is the smoothed Dirac delta function. The surface tension
@@ -65,9 +65,9 @@ material file.
 The actual implementation in Goma integrates the divergence term by parts so the
 expression that is added to the weak form of the momentum equation is:
 
-.. figure:: /figures/200_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int(\nabla N_j\cdot T_{cap})\,d\Omega
 
 This fact introduces the issue of integration error into the problem. As obvious above,
 this source term involves the non-linear Dirac delta function factor. Conventional
@@ -96,7 +96,4 @@ negative or positive side of the interface curve, respectively.
 **References**
 --------------
 
-No References. 
-
-..
-	TODO - Lines 56 and 68 have pictures that need to be exhanged with equations.
+No References.

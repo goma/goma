@@ -56,11 +56,8 @@ Following is a sample card:
 The MELT_TURB model warrants further discussion. The functional form of the heat
 transfer coefficient H is
 
-.. figure:: /figures/491_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   H=0.0735\rho C_pc_f^{1/2}u_{wall}\left(\frac{\mu C_p}{K}\right)
 
 Here cf is the coefficient of friction, which for now is taken as 8./Re.
-
-
-

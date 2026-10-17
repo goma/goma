@@ -14,9 +14,9 @@ This card is used to specify the coefficient for the shear-rate gradient term wh
 **HYDRO** is specified in the *Diffusivity* card. Definitions of the input parameters follow
 for the {model_name} options **CONSTANT** and **LINEAR** based on the model:
 
-.. figure:: /figures/447_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   D_c=1.4k_cC_i
 
 +----------------------+-------------------------------------------------------------------------------------+
 |**CONSTANT**          |Name of the model for constant shear rate diffusivity.                               |

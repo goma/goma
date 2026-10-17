@@ -62,9 +62,9 @@ are reversed on the second card. These conditions apply a thermal contact resist
 
 The mathematical form of the boundary condition.
 
-.. figure:: /figures/134_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \left.\boldsymbol{n}\cdot\boldsymbol{q}\right|_a=R^{-1}(T_a-T_b)=\boldsymbol{n}\cdot\boldsymbol{q}_b
 
 The flux into the interface from material “a” is equivalent to that into material “b”, both equal to the temperature jump across the interface times the contact resistance 
 :math:`R^{-1}`.
@@ -74,8 +74,3 @@ sides of the interface. Look up any special commands in your mesh generator to m
 sure this occurs. In CUBIT, for example, you have to add “wrt volume 1 2” like
 qualifiers on the side set command. The reason for the “double application” of this
 condition is to pick up the all the terms from both sides of the interface with the proper sign. The nodes at the interface have two temperatures, one from each side, and so two weak form applications of this equation are required, one from each side.
-
-
-
-
-.. TODO -Line 65 has a picture that needs to be changed out with the correct equation.

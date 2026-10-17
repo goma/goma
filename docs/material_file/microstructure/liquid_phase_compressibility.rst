@@ -58,17 +58,17 @@ applied to a liquid layer being forced into a rigid porous matrix. The capacitan
 as the saturation level approaches 1.0 (S->1) in the porous Darcy flow equation appears
 in *Goma* as
 
-.. figure:: /figures/406_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \frac{dC_{ls}}{dt}\Rightarrow\frac{d(\phi\rho_{ls})}{dt}=\phi\left(\frac{d\rho_{ls}}{dt}\right)\cong\phi\frac{d\rho_{ls}}{dP_{liq}}\frac{dP_{liq}}{dt}
 
 Here is the liquid solvent concentration (in both gas and liquid phases), φ is the
 porosity, ρls and is the liquid phase density. Here we employ the linearized density
 model:
 
-.. figure:: /figures/407_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho_{ls}=\rho_{ls}^0(1+(\beta_{ls})(p_{liq}-p_{liq}^0))
 
 where βls is the coefficient of compressibility entered on this card, viz. dρls ⁄ dPliq
 defined above, p0liq is the reference liquid pressure (see Liquid phase reference

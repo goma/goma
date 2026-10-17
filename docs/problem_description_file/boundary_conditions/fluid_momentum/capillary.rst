@@ -63,9 +63,9 @@ pressure of 10.0 is applied from the surrounding environment.
   tension-related forces. This boundary condition permits application of such forces.
   The forces on the fluid at the free-surface are set via the following relation:
 
-.. figure:: /figures/101_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \left.\boldsymbol{n}\cdot\boldsymbol{T}\right|_{fluid}=-\boldsymbol{n}P_{ex}+2H\sigma\boldsymbol{n}+\nabla_s\cdot\boldsymbol{\sigma}
 
 where *n* is the outward normal to the surface, *T* is the fluid stress tensor, 
 :math:`P_{ex}` is the
@@ -89,8 +89,3 @@ is the surface divergence operator defined as :math:`\Delta_s^f` = (I â€“ nn) â‹
 
 * The optional (integer) element block ID corresponds to the material numbers given
   in the *Problem Description* section of the input file.
-
-
-
-
-.. TODO - Line 66 has a photo that needs to be replaced with the real equation.

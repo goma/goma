@@ -54,33 +54,33 @@ background fluid material ID is 2.
 
 In this work, the governing equations consist of a fluid momentum balance:
 
-.. figure:: /figures/188_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_V\phi_v^i\left[\rho_f\frac{D\boldsymbol{v}}{Dt}+\nabla\cdot\boldsymbol{\tau}+\rho_f\boldsymbol{F}\right]dV-\int_\Gamma\phi_k^i\boldsymbol{\gamma}\,d\Gamma=0
 
 a mass balance:
 
-.. figure:: /figures/189_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_V\phi_c^i[\nabla\cdot\boldsymbol{v}]\,dV=0
 
 and a solid momentum balance:
 
-.. figure:: /figures/190_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_S\phi_x^i[\rho_s\ddot{\boldsymbol{x}}+\nabla\cdot\boldsymbol{\sigma}+\rho_s\boldsymbol{F}]\,dV+\int_\Gamma\phi_k^i\boldsymbol{\gamma}\,d\Gamma=0
 
 The kinematic constraint at the fluid-solid interface is:
 
-.. figure:: /figures/191_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_\Gamma\phi_\gamma^i[\dot{\boldsymbol{x}}-\boldsymbol{v}]\,d\Gamma=0
 
 and the level set function is evaluated at each fluid mesh node by:
 
-.. figure:: /figures/192_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   f=\Theta\lVert\boldsymbol{x}_i-\boldsymbol{x}_s\rVert
 
 The first four equations are written in a Galerkin/Finite form, with :math:`\phi_i` representing the
 weighting functions at node *i*. The first three equations are enforced at all nodes *i* that

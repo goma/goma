@@ -41,14 +41,11 @@ This condition applies a particles volume flux of 0.0 at nodeset 100.
 
 The actual weighted residual equation that is applied to node on the surface is
 
-.. figure:: /figures/248_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int\phi_i\left\{\boldsymbol{n}\cdot\left[\frac{h^3}{3\mu}(-\nabla_{II}p)+\boldsymbol{U}_Bh\right]-q\right\}\,d\Gamma=0
 
 where :math:`\phi_i` is the finite element trial function, **n** is the outward-pointing normal to
 the surface, and q is the volumetric flux specified in the <float1>. Careful attention should be given for the sign of q. The **sign convention** is that q is **positive** when the flow is **exiting** the boundary and **negative** when **entering** the boundary.
 
 The condition replaces the residual equation shell_filmp at the boundary.
-
-
-

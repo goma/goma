@@ -43,9 +43,9 @@ density is given in the technical discussion.
 In saturated flow cases, viz. for *Media Type* selection *POROUS_SATURATED*, the total
 solvent density is
 
-.. figure:: /figures/325_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho_T=\rho_l\phi
 
 where :math:`\rho_1` is the pure liquid density and :math:`\phi` is the porosity. Here we have assumed that no liquid solvent is adsorbed into the solid struts (currently the assumption used
 throughout *Goma*).
@@ -53,9 +53,9 @@ throughout *Goma*).
 For partially saturated flows, viz. for *Media Type* selection *POROUS_UNSATURATED*
 or *POROUS_TWO_PHASE*, the total density is given by
 
-.. figure:: /figures/326_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho_T=\rho_l\phi SX_{ls}+\rho_{gv}(1-S)\phi
 
 where :math:`\rho_{gv}` is the density of solvent vapor in the total gas-solvent vapor mixture (see
 *Density of solvents in gas phase in porous media card*), *S* is the saturation (see *Porous
@@ -73,6 +73,3 @@ density of the solid in the gas (**Rho_Total_solid**) is zero (0).
 
 GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
 September 1, 2002, P. R. Schunk
-
-.. 
-	TODO - Lines 46 and 56 are photos that need to be swapped with the equations.

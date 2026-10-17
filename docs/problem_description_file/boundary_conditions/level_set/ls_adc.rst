@@ -41,7 +41,6 @@ An example:
 
    BC = LS_ADC SS 10 15.0   0.2   100.0
 
-
 -------------------------
 **Technical Discussion**
 -------------------------
@@ -87,9 +86,10 @@ following requirements:
 * A random number in the range (0,1) determined by the standard C rand()
   function is less than a probability, *P*, given by
 
-.. figure:: /figures/195_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   P=\begin{cases}N_ch^2\Delta t\exp\left(1-\left(\frac{d}{\alpha_c}\right)^2\right),&d>\alpha_c\\
+   N_ch^2\Delta t,&d\leq\alpha_c\end{cases}
 
 where *d* is the average distance of the interface to the sideset in that element, Dt is the
 time step size, and *h* is the side length of the element (Note for 2D problems :math:`h^2` is
@@ -128,7 +128,4 @@ regular basis as then the mass loss might be more significant.
 **References**
 --------------
 
-No References. 
-
-..
-	TODO - Line 90 has a picture that needs to be exhanged with an equation.
+No References.

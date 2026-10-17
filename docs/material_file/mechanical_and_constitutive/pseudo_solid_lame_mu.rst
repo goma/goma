@@ -47,9 +47,7 @@ The details of each model option are:
 |                                                    |nonlinear elastic model, as described on the Solid Constitutive Equation card. This card  |
 |                                                    |is required together with Pseudo-Solid Lame Mu and Pseudo-Solid Lame Lambda cards.        |
 |                                                    |                                                                                          |
-|                                                    |.. figure:: /figures/375_goma_physics.png                                                 |
-|                                                    |   :align: center                                                                         |
-|                                                    |   :width: 90%                                                                            |
+|                                                    |:math:`G=G_0+\frac{0.1}{((r/r_0)^3+0.1/G_1)}`                                             |
 |                                                    |                                                                                          |
 |                                                    |*r* is the distance from the fixed point, :math:`r_0` is a decay length, :math:`G_0` is   |
 |                                                    |the modulus far from the contact line, and :math:`G_0`+`r_0` is the modulus at the contact|
@@ -94,4 +92,3 @@ CAPABILITY and its applicability to coating with/on deformable media, August 6,
 Sackinger, P. A., Schunk, P. R. and Rao, R. R. 1995. "A Newton-Raphson Pseudo-Solid
 Domain Mapping Technique for Free and Moving Boundary Problems: A Finite
 Element Implementation", J. Comp. Phys., 125 (1996) 83-103.
-

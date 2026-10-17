@@ -68,9 +68,9 @@ in the porous phase (denoted by the integer 0), the vapor form of which has a de
 
 The functional form of this boundary condition is
 
-.. figure:: /figures/116_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot(\boldsymbol{v}_g\rho_{g_i}+\boldsymbol{v}_l\rho_{l_i}+\boldsymbol{J}_{g_i}+\boldsymbol{J}_{l_i})=\boldsymbol{n}\cdot(\boldsymbol{v}-\boldsymbol{v}_m)
 
 Here, the left hand side is the total flux of liquid solvent, in both gas and liquid phases.
 The first two terms are the Darcy pressure driven contributions, and the second two
@@ -89,5 +89,3 @@ since 1995.
 
 GTM-028.0: Modeling Drying of Dip-Coated Films with Strongly-Coupled Gas Phase
 Natural Convection, R. A. Cairncross, 1999.
-
-.. TODO - Line 71 have photos that needs to be replaced with the real equation.

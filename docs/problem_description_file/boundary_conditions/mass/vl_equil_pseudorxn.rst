@@ -62,25 +62,25 @@ The *VL_EQUIL_PSEUDORXN* boundary condition uses the following equations
 representing a kinetic approach to equilibrium expressed by Raoult’s law, relating
 species *k* on the liquid side to species *k* on the gas side.
 
-.. figure:: /figures/159_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-.. figure:: /figures/160_goma_physics.png
-	:align: center
-	:width: 90%
+   \boldsymbol{n}_l\cdot[\rho^lY_k^l(\boldsymbol{u}^l-\boldsymbol{u}_s)+\boldsymbol{j}_{kl}^l]=-W_k^lS_k^l
+
+.. math::
+
+   \boldsymbol{n}_g\cdot[\rho^gY_k^g(\boldsymbol{u}^g-\boldsymbol{u}_s)+\boldsymbol{j}_{kl}^g]=-W_k^gS_k^g
 
 where
 
-.. figure:: /figures/161_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   S_k^l=k^f[C_k^g-K_k^cC_k^l]\quad\text{and}\quad S_k^g=-S_k^l
 
 and where
 
-.. figure:: /figures/162_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   K_k^c=\frac{p_k^v}{RT}\frac{1}{C^l}
 
 The usage of the same index, *k*, on either side of the interface is deliberate and
 represents a stoichiometric limitation to this type of boundary condition.
@@ -108,8 +108,3 @@ relative to the mass averaged velocity. :math:`u_s` is the velocity of the inter
 value of :math:`k^f` that would lead to good numerical behavior would be 100 cm 
 :math:`s^{-1}`,
 equivalent to a reaction with a reactive sticking coefficient of 0.01 at 1 atm and 300 K for a molecule whose molecular weight is near to :math:`N_2` or :math:`H_2S`.
-
-
-
-
-.. TODO - Lines 65, 69, 75, and 81 have photos that need to be replaced with the proper equations.

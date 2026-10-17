@@ -37,12 +37,6 @@ This example card requests that vorticity vectors be written to the EXODUS II fi
 
 The vorticity vector function, :math:`\underline\omega` , is defined in terms of the velocity :math:`\underline\upsilon` as:
 
-.. figure:: /figures/336_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-
-
-
-.. 
-	TODO - Line 40 is a photo that needs to be replaced with the correct equation. 
+   \boldsymbol{\omega}=\nabla\times\boldsymbol{v}

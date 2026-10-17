@@ -35,18 +35,12 @@ Following is a sample card:
 
 The second invariant is computed in *Goma* as
 
-.. figure:: /figures/323_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   II_E=\frac12(E_{ij}E_{ij}-E_{ii}E_{jj})
 
 Here Einstein’s summation convention applies, viz.
 
-.. figure:: /figures/324_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-
-
-
-.. 
-	TODO - Lines 38 and 44 are photos that need to be swapped with the equations.
+   E_{ij}E_{ij}=\sum_i\sum_j E_{ij}E_{ij}

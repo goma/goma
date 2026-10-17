@@ -73,9 +73,9 @@ For concentrated electrolyte solutions in which Stefan-Maxwell flux equations ar
 employed to relate species fluxes to concentrations and their gradients, the electrical
 conductivity is given by (Chen et al. 2000, Schunk et al. 2000):
 
-.. figure:: /figures/399_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \kappa=\frac{F^2}{RT}\sum_{i=1}^n\sum_{k=2}^n z_i z_k(-b_{ik}^{-1})x_k
 
 where i = m(i' – 1) + 1 and k = m(k' – 1) + 1, m is dimension of the problem (m = 2
 for a 2-D problem), and is species mole fraction. The tedious definition of can
@@ -86,9 +86,9 @@ For dilute electrolyte solutions in which Fick’s first law is used to relate t
 species to its concentration gradient, the electrical conductivity is given by (Chen,
 2000; Schunk, et. al., 2000):
 
-.. figure:: /figures/400_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \kappa=\sum_{i=1}^{n-1}\frac{F^2}{RT}z_i^2D_ic_i
 
 where ci is the molar concentration and zi is the charge number of species i,
 respectively; and n is the total number of species present in the electrolyte solution.

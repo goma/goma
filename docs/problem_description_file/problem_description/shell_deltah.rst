@@ -58,9 +58,9 @@ This applies the equation with all terms activated.
 
 The equation solved is as follows:
 
-.. figure:: /figures/319_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho E_0\frac{d\delta h}{dt}=H_{trans}(T-T_0)
 
 where :math:`E_0` is the enthalpy, including the effect of phase change through the latent heat material property specified in the material file. :math:`H_{trans}` is a heat transfer coefficient and is set in the material file as that due to melting/sliding contact (see material file section on MELTING_CONTACT). dh is the unknown.
 
@@ -70,9 +70,3 @@ where :math:`E_0` is the enthalpy, including the effect of phase change through 
 
 * This equation is required to couple with SH_TEMP to solve for the local
   temperature. f
-
-
-
-
-..
-	TODO - Line 61 contains a photo that needs to be written as an equation.

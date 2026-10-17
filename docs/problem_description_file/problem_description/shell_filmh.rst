@@ -63,9 +63,9 @@ This applies the film flow equation with all terms activated.
 
 The equation solved is as follows:
 
-.. figure:: /figures/314_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   p+\sigma\nabla_{II}^2h=0
 
 * The diffusion multiplier activates the capillary pressure term.
 
@@ -76,9 +76,3 @@ The equation solved is as follows:
   terms need to be activated.
 
 * This equation has to be used with the equation describing SHELL_FILMP.
-
-
-
-
-..
-	TODO - Line 66 contains a photo that needs to be written as an equation.

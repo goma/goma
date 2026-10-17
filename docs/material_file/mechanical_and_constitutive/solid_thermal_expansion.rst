@@ -41,23 +41,23 @@ When solid materials expand due to temperature changes, the strain field is comp
 of two components, the strain due to the stress field and the strain due to thermal
 expansion:
 
-.. figure:: /figures/370_goma_physics.png                                                          
-   :align: center                                                                                  
-   :width: 90%
+.. math::
+
+   \boldsymbol{\varepsilon}=\boldsymbol{\varepsilon}^{(S)}+\boldsymbol{\varepsilon}^{(T)}
 
 The strain due to thermal expansion is given by
 
-.. figure:: /figures/371_goma_physics.png                                                          
-   :align: center                                                                                  
-   :width: 90%
+.. math::
+
+   \boldsymbol{\varepsilon}^{(T)}=\alpha(T-T_0)\boldsymbol{\delta}
 
 where :math:`\alpha` is the linear thermal expansion coefficient :math:`T_0` and is the reference temperature
 (see Solid Reference Temperature card). As a result, the solid constitutive relation
 contains an extra term:
 
-.. figure:: /figures/372_goma_physics.png                                                          
-   :align: center                                                                                  
-   :width: 90%
+.. math::
+
+   \boldsymbol{\sigma}=2\mu\boldsymbol{\varepsilon}+\lambda\operatorname{tr}(\boldsymbol{\varepsilon})\boldsymbol{\delta}-2\mu\alpha(T-T_0)\boldsymbol{\delta}
 
 Note, the linear thermal expansion coefficient is presumed to be independent of strain
 and the Lame constants are presumed to be independent of temperature. (Model is
@@ -76,6 +76,3 @@ For a discussion of linear thermoelasticity, see (Section 6.2)
 
 Malvern, L. E., 1969, Introduction to the Mechanics of a Continuous Medium,
 Prentice-Hall
-
-.. 
-	TODO - Lines 44, 50, and 58 are photos that need to be replaced with the correct equations. 

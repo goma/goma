@@ -59,9 +59,9 @@ For electrochemical reactions such as the hydrogen-oxidation reaction (HOR), sur
 overpotential is relatively small such that the Butler-Volmer kinetic model can be
 linearized to yield a simplified equation for computing current density:
 
-.. figure:: /figures/186_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   j=ai_0H\left(\frac{c}{c_{ref}}\right)^\beta(\alpha_a+\alpha_c)\frac{F(V-\Phi-U_0)}{RT}
 
 where *j* is current density in units of A/ :math:`cm^2`; :math:`ai_0` denotes the product of interfacial area
 per unit volume by exchange current density, which has units of A/ :math:`cm^3`; *H* is the
@@ -83,8 +83,3 @@ J. Newman, Electrochemical Systems, 2nd Edition, Prentice-Hall, NJ (1991).
 K. S. Chen and M. A. Hickner, “Modeling PEM fuel cell performance using the finiteelement
 method and a fully-coupled implicit solution scheme via Newton’s technique”,
 in ASME Proceedings of FUELCELL2006-97032 (2006).
-
-
-
-
-

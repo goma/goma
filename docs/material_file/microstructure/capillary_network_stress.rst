@@ -51,9 +51,9 @@ The following is a sample input card:
 Basically, this card sets the functional form of the capillary stress contribution to the
 composite effective stress in a porous medium. The constitutive equation is as follows:
 
-.. figure:: /figures/408_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{\sigma}=-\boldsymbol{I}F(p_{liq},p_{gas},S,\phi,K_{solid})+\boldsymbol{\sigma}_{network}
 
 where ˜network is the drained network stress that would result in the absence of any
 pore fluid (gas or liquid). The function F depends on the model type specified on this
@@ -63,15 +63,15 @@ follows for different transfer mechanisms:
 
 * **WETTING**: The assumption here is that a thin liquid layer covers all surfaces.
 
-.. figure:: /figures/409_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   F=(1-(1-S)\phi)p_{liq}+(1-S)\phi p_{gas}
 
 * **PARTIALLY_WETTING**: The most commonly used model.
 
-.. figure:: /figures/410_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   F=Sp_{liq}+(1-S)p_{gas}
 
 * **COMPRESSIBLE**: If the solid struts are also significantly compressible, viz. the
   solid bulk modulus Ks is of the same order of magnitude as the network skeleton

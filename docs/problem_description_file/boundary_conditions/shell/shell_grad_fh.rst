@@ -42,16 +42,11 @@ This condition applies a film slope of 0.0 at nodeset 100.
 * he actual weighted residual equation that is applied to node on the surface 
   is
 
-.. figure:: /figures/250_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int\phi_i[\boldsymbol{n}\cdot\nabla_{II}h-\Sigma]\,d\Gamma=0
 
 where :math:`\phi_i` is the finite element trial function, **n** is the outward-pointing normal to
 the surface, :math:`\Sigma` and is the slope specified in the <float1>.
 
 * The condition replaces the residual equation shell_filmh at the boundary.
-
-
-
-
-.. TODO - Line 45 has an image that needs to be replaced with the equation. 

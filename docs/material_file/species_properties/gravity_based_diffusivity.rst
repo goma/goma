@@ -50,18 +50,18 @@ serve to slow the terminal velocity of all the particles relative to the Stokes 
 The terminal velocity is then corrected by what is known as the hindered settling
 function. If a **CONSTANT** model is chosen, the form of this function is
 
-.. figure:: /figures/452_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   f(\phi)=\frac{(1-\phi)}{\eta(\phi)}\qquad\eta(\phi)=\frac{\mu(\phi)}{\mu_0}
 
 where φ is the volume fraction of suspension, η(φ) is the relative viscosity of the
 mixture, μ0 is the viscosity of the pure fluid.
 
 On the other hand if **RICHARDSON_ZAKI** is chosen for the function,
 
-.. figure:: /figures/453_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   f(\phi)=(1-\phi)^n
 
 where n is the exponent specified by the user. n=5.1 has been found to fit well for
 suspensions of monodisperse spherical particles at low Reynolds number by Garside

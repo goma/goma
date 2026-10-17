@@ -29,9 +29,9 @@ Currently two models for {model_name} are permissible:
 |                          | * <float3> is the particles radii R.                                                |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/489_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   D=\frac{k_BT}{6\pi\mu R}
 
 ------------
 **Examples**
@@ -55,6 +55,3 @@ Viscosity dependence of diffusion coefficient can be exploited to relate particl
 concentration (or volume fraction in this case) to diffusion coefficient by employing
 SUSPENSION viscosity model in the material file. See SUSPENSION viscosity model for
 further detail
-
-
-

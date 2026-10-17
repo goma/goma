@@ -64,9 +64,9 @@ weight function:
 
 The surface charge conservation equation implemented is:
 
-.. figure:: /figures/302_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_S\left(\frac{\partial\sigma}{\partial t}-D_s\nabla_s^2\sigma+\varepsilon\boldsymbol{n}\cdot\boldsymbol{E}\right)ds=0
 
 where :math:`\sigma` is the surface charge unknown, :math:`D_s` is the surface diffusion coefficient, 
 e is the electrical permittivity, :math:`\underline{n}` is the unit normal vector to the surface, and 
@@ -88,6 +88,3 @@ SURFACE_ELECTRIC_FIELD_BC boundary condition.
 --------------
 
 Notz, Patrick K. Ph.D. thesis. Purdue University, 2000.
-
-..
-	TODO - Line 67 contains a photo that needs to be written as an equation. 

@@ -56,9 +56,9 @@ sets the total gas-solvent mass flux, in the gas phase only, to 200.0 along the 
 
 This boundary condition is of the mathematical form:
 
-.. figure:: /figures/173_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho_g^T\boldsymbol{n}\cdot(\boldsymbol{v}_s)\phi-\left(-\frac{\rho_gkk_g}{\mu_g}\nabla p_g\right)=const
 
 where :math:`v_s` is the user supplied convection velocity of the stress-free state as defined on
 the *Convective Lagrangian Velocity* card (this is usually zero except in advanced
@@ -68,9 +68,3 @@ and hence depends on the local saturation), :math:`p_g` is the pure gas density,
 is the gas-phase pressure, and the other quantities on the second term help define the
 Darcy velocity. The *const* quantity is the input parameter described above (<float1>).
 Note that this sets the flux relative to the boundary motion to the *const* value, but by virtue of the Galerkin weak form this condition is automatically applied with *const = 0* if no boundary condition is applied at the boundary.
-
-
-
-
-..
-	TODO - Line 59 has a photo that needs to be changed into an equation.

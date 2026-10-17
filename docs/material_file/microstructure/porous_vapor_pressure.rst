@@ -75,17 +75,17 @@ The **KELVIN** option is used to include the effect of vapor-pressure lowering t
 results in equilibrium over high curvature menisci, i.e., small pores. The equation form
 of this is:
 
-.. figure:: /figures/421_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   p_v=p_v^*\exp\left[-\frac{p_cM_w}{\rho_lRT}\right]
 
 The **FLAT** option requires the same parameters but leaves out the exponential function.
 The constants are still needed so that the gas-phase concentration can be calculated
 with the ideal gas law. The functional form is
 
-.. figure:: /figures/422_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho_{gv}=\frac{M_wp_v}{RT}S
 
 where S is the local saturation, and ρgv is the gas phase density of vapor. This model is
 ad-hoc but nonetheless leads to some interesting results. It basically says that as

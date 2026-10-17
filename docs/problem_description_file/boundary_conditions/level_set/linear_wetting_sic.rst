@@ -55,24 +55,24 @@ contact line for level set interface tracking problems. The boundary condition u
 form of the Navier-Stokes slip condition to impose a boundary shear stress term to the
 momentum equation:
 
-.. figure:: /figures/233_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \hat{\boldsymbol{n}}\hat{\boldsymbol{t}}:T=-\frac{1}{\beta}\left(-\tau\frac{\partial\hat{\boldsymbol{v}}}{\partial t}+\hat{\boldsymbol{v}}_s-\hat{\boldsymbol{v}}+f(F)V_{wet}\hat{\boldsymbol{t}}\right)\cdot\hat{\boldsymbol{t}}
 
 where :math:`\vec{n}` and :math:`\vec{t}` are the normal and tangent boundary vectors, respectively, :math:`\beta` is the
 “slipping” parameter which in this context is used actually as a penalty parameter,
 :math:`\vec{v}_s` is the substrate velocity, :math:`\tau` is a stabilization parameter, 
 :math:`V_{wet}` is the wetting velocity given by the following relation
 
-.. figure:: /figures/234_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   V_{wet}=\frac{1}{c_T}(\cos(\theta)-\cos(\theta_s))
 
 The masking function f(F) is given by the following relation as well:
 
-.. figure:: /figures/235_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   f(F)=\delta_\alpha(F)=\frac12\left(1+\cos\left(\frac{\pi F}{\alpha}\right)\right)
 
 where :math:`\alpha` is the width of the interfacial region near the contact line itself. It has the
 effect of “turning off” the wetting velocity at points on the boundary away from the
@@ -81,9 +81,9 @@ interface.
 This constraint is then introduced into the fluid momentum equation via the weak
 natural boundary condition term:
 
-.. figure:: /figures/236_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int N_j\hat{\boldsymbol{n}}\hat{\boldsymbol{t}}:T\,d\Gamma
 
 When applying this boundary condition, the user should choose a value for 
 :math:`\beta` which is
@@ -117,6 +117,4 @@ should endeavor to keep :math:`\tau` as small as possible if not in fact equal t
 **References**
 --------------
 
-No References. 
-
-.. TODO -Lines 58, 67, 73 and 84 have pictures that need to be swapped with the correct equations.
+No References.

@@ -14,9 +14,9 @@ This card is used to specify Dr when the model in the *Diffusivity* card is **HY
 Definitions of the input parameters follow for the {model_name} options **CONSTANT**
 and **LINEAR** based on the model:
 
-.. figure:: /figures/448_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   D_r=1.4k_rC_i
 
 +----------------------+-------------------------------------------------------------------------------------+
 |**CONSTANT**          |Name of the model for a constant curvature diffusivity.                              |

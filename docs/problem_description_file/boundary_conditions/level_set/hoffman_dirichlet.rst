@@ -67,18 +67,18 @@ VELO_THETA_HOFFMAN card.
 Derivation of this boundary condition starts with a relation that represents the Hoffman
 wetting correlation
 
-.. figure:: /figures/241_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   Ca\equiv\frac{\mu V_w}{\sigma}=g_{Hoff}(\theta)-g_{Hoff}(\theta_s)
 
 See VELO_THETA_HOFFMAN for details of the Hoffman function g. Note that the
 convention for contact angles in this relation is that values of :math:`\theta` near to zero indicate a
 high degree of wetting and values of :math:`\theta` near 180 ° indicate the opposite. This is mapped
 to a stress value by analogy with Navier’s slip relation,
 
-.. figure:: /figures/242_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \tau_w=\frac{V_{Hoffman}}{\beta}
 
 
 --------------
@@ -87,5 +87,3 @@ to a stress value by analogy with Navier’s slip relation,
 
 Stephan F. Kistler 1993. “Hydrodynamics of Wetting” in Wettability, edited by John
 Berg, Surfactant Science Series, 49, Marcel Dekker, NewYork, NY, pp. 311-429.
-
-.. TODO -Lines 70 and 79 have pictures that need to be swapped with the correct equations.

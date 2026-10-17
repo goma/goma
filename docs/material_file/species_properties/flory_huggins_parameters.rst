@@ -13,9 +13,9 @@
 This card specifies the Flory-Huggins binary interaction parameters. It is assumed that
 the binary parameters are symmetric; i.e.,
 
-.. figure:: /figures/462_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \gamma_{12}=\gamma_{21}
 
 Therefore, one set of i-j coefficients is sufficient to describe the binary interaction
 coefficients.

@@ -57,9 +57,9 @@ This applies the confined flow lubrication equation with all terms activated.
 
 The equation solved is as follows:
 
-.. figure:: /figures/310_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \frac{\partial(\rho h)}{\partial t}+\nabla_{II}\cdot\left(\frac{\rho h}{2}(U_A+U_B)-\frac{\rho h^3}{12\mu}\nabla_{II}p-\frac{\rho h^3}{12\mu}\sigma\kappa\delta(\phi)\boldsymbol{n}-\rho(\phi)\boldsymbol{g}\right)-(j_A+j_B)=0
 
 * The first term multiplier, activating the mass (time-derivative) term is not currently
   activated as the gap-height is user-prescribed.
@@ -68,9 +68,3 @@ The equation solved is as follows:
   tension terms).
 
 The third term multiplier activates the Couette flow terms.
-
-
-
-
-..
-	TODO - Line 60 contains a photo that needs to be written as an equation.

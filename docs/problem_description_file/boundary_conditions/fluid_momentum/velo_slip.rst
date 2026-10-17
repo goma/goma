@@ -73,9 +73,9 @@ Following is a sample card without the optional parameters:
 
 * The general form of this boundary condition is
 
-.. figure:: /figures/089_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot\boldsymbol{\tau}=\frac{1}{\beta}(\boldsymbol{v}-\boldsymbol{v}_s)
 
 where :math:`\tau` is the deviatoric portion of the fluid stress tensor, :math:`\beta` is the Navier slip
 coefficient and :math:`v_s` is the velocity of the solid surface. The velocity of the surface
@@ -102,4 +102,4 @@ will be in the tangential direction.
 
 
 
-.. TODO - In line 76, the photo needs to be repalced by the proper equation. Also, In line 96 the equation need to be written so it read correctly where it reads "EQUATION". 
+.. TODO - Write the missing expression currently marked "EQUATION".

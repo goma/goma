@@ -64,9 +64,9 @@ computational setting in a different way.
 In this case, the following vector constraint is added to fluid momentum equation on
 the sideset to which this boundary condition is applied:
 
-.. figure:: /figures/237_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   P\left(-\tau\frac{\partial\hat{\boldsymbol{v}}}{\partial t}+V_wf(\phi;w)\hat{\boldsymbol{t}}+\hat{\boldsymbol{v}}_s-\hat{\boldsymbol{v}}\right)
 
 The factor *P* is a large penalty parameter which swamps any contributions from the
 volumetric momentum equations. Thus, the velocity, :math:`\sec{v}` , on this boundary will be set
@@ -84,9 +84,10 @@ The masking function, f(:math:`\phi`;w) , is used to limit the application of th
 velocity to only that region of the boundary that is the in immediate vicinity of the
 contact line. We use a simple “hat” function:
 
-.. figure:: /figures/238_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   f(\phi;w)=\begin{cases}1+\left(\frac{\phi}{w}\right),&(-w<\phi\leq0)\\
+   1-\left(\frac{\phi}{w}\right),&(0<\phi\leq w)\end{cases}
 
 Needless to say, f(:math:`\phi`;w) is identically zero for level set values outside the 
 interval (-*w*,*w*).
@@ -114,9 +115,9 @@ The wetting speed model for this boundary condition is the same used by the
 WETTING_SPEED_BLAKE card:
 
 
-.. figure:: /figures/239_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   V_w=V_0\sinh(g(\cos\theta_s-\cos\theta))
 
 
 --------------
@@ -125,5 +126,3 @@ WETTING_SPEED_BLAKE card:
 
 T. D. Blake and J. De Coninck 2002. “The Influence of Solid-Liquid Interactions on
 Dynamic Wetting”, Advances in Colloid and Interface Science, 96, 21-36.
-
-.. TODO -Lines 67, 87 and 117 have pictures that need to be swapped with the correct equations.

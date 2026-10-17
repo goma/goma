@@ -14,9 +14,9 @@ This card specifies the specific volume of a species when the species is implici
 mixture. This means that in most problems involving n+1 species, only n species are
 independent; i.e.,
 
-.. figure:: /figures/461_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   y_{n+1}=1-\sum_{i=1}^ny_i
 
 It is required when Flory-Huggins vapor-liquid phase equilibrium is considered at the
 material boundaries, as used in *VL_POLY* and in **FLORY** under *FLUX_EQUIL*. This

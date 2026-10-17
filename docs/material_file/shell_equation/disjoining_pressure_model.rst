@@ -26,9 +26,9 @@ specifies the disjoining pressure in the unit of force per area. Currently four 
 (floats). This model only employs the repulsion part of the van der Waals force. The
 functional form is:
 
-.. figure:: /figures/495_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \Pi=B\left[\frac{h}{h_*}\right]^n\qquad\text{where }B=\frac{\sigma(1-\cos\theta_e)(n-1)}{h_*}
 
 * <float1> is the equilibrium liquid-solid contact angle θe
 
@@ -40,15 +40,15 @@ functional form is:
 (floats). Here, the model only employs both repulsion and attraction part of the van der
 Waals force. The functional form is:
 
-.. figure:: /figures/496_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \Pi=B\left\{\left[\frac{h}{h_*}\right]^n-\alpha\left[\frac{h}{h_*}\right]^m\right\}
 
 where
 
-.. figure:: /figures/497_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   B=\frac{\sigma(n-1)(m-1)(1-\cos\theta_e)}{\alpha(n-1)-(m-1)}
 
 * <float1> is the equilibrium liquid-solid contact angle 0e
 

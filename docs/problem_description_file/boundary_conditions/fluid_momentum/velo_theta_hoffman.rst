@@ -75,32 +75,32 @@ to the solid surface in contact with the free surface at this point.
 
 * The constraint that is imposed at the nodeset node is as follows:
 
-.. figure:: /figures/123_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   v=V_{old}+(v_{Hoffman}-V_{old})\left[1-\exp\left(-\frac{t}{t_{relax}}\right)\right]
 
 where :math:`v_{Hoffman}` is computed from the implicit solution of the Hoffman correlation;
 
-.. figure:: /figures/124_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \theta=f_{Hoff}[Ca+f_{Hoff}^{-1}(\theta_{eq})]
 
 or
 
-.. figure:: /figures/125_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   Ca\equiv\frac{\mu v_{Hoffman}}{\sigma}=g_{Hoff}(\theta)-g_{Hoff}(\theta_{eq})
 
 where the Hoffman functions, fHoff and gHoff, which are inverses of each other are
 given by;
 
-.. figure:: /figures/126_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-.. figure:: /figures/127_goma_physics.png
-	:align: center
-	:width: 90%
+   f_{Hoff}(Ca)=\arccos\left\{1-2\tanh\left[5.16\left(\frac{Ca}{1+1.31\,Ca^{0.99}}\right)^{0.706}\right]\right\}
+
+.. math::
+
+   g_{Hoff}(\theta)=(1+1.31\,g_{Hoff}(\theta)^{0.99})\left[\frac{1}{2(5.16)}\ln\frac{3-\cos\theta}{1+\cos\theta}\right]
 
 When smoothing is not used, i.e. :math:`t_{relax}` = 0 , the imposed velocity is equal 
 to that stipulated by the Hoffman correlation. Also see WETTING_SPEED_HOFFMAN
@@ -115,8 +115,3 @@ and SHARP_HOFFMAN_VELOCITY for level-set versions.
 
 * This condition was motivated by the Hoffman empirical correlation (cf. Stephan F.
   Kistler, “Hydrodynamics of Wetting,” in Wettability edited by John Berg, 1993).
-
-
-
-
-.. TODO - Lines 84, 90, 97, and 101 have photos that needs to be replaced with the real equation.

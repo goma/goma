@@ -15,9 +15,9 @@
 This boundary card is used when equilibrium-based mass transfer is occurring at an
 vapor-liquid external boundary; i.e.,
 
-.. figure:: /figures/142_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   J_i=k_i(w_i^v-w_i^{v,\infty})
 
 This is different from an internal boundary since only one phase is represented in the
 computational domain. This boundary condition then describes the rate of mass
@@ -66,5 +66,3 @@ only applied at an external boundary where vapor phase is not modeled in the pro
 
 GTM-007.1: New Multicomponent Vapor-Liquid Equilibrium Capabilities in GOMA,
 December 10, 1998, A. C. Sun
-
-.. TODO - Line 18 is a photo that needs to be replaced with the correct equation.

@@ -25,87 +25,83 @@ input parameters are as follows:
 
 Permeability model choices and their parameters are discussed below.
 
-+-----------------------------+-------------------------------------------------------------------------------------+
-|**CONSTANT** <float1>        |Model for constant permeability with a single parameter. This model is allowed for   |
-|                             |all Media Types (cf. *Media Type* card).                                             |
-|                             |                                                                                     |
-|                             | * <float1> - k, Permeability [L2]                                                   |
-+-----------------------------+-------------------------------------------------------------------------------------+
-|**TENSOR** <float1> <float2> |Model for a two dimensional, constant anisotropic permeability; it has not been      |
-|<float3> <float4>            |implemented in three dimensions. All media types (cf. Media Type card) except        |
-|                             |**POROUS_BRINKMAN** may use this model.                                              |
-|                             |                                                                                     |
-|                             | * <float1> - :math:`k_{xx}` permeability [L2]                                       |
-|                             | * <float2> - :math:`k_{yy}` permeability [L2]                                       |
-|                             | * <float3> - :math:`k_{xy}` permeability [L2]                                       |
-|                             | * <float4> - :math:`k_{yx}` permeability [L2]                                       |
-+-----------------------------+-------------------------------------------------------------------------------------+
-|**PSD_VOL** <float1> <float2>|This is a model of a deformable medium with a probabilistic distribution of pore     |
-|<float3> <float4>            |sizes; see Technical Discussion section. Four parameters are required for the        |
-|                             |**PSD_VOL** model:                                                                   |
-|                             |                                                                                     |
-|                             | * <float1> - φ0, porosity in undeformed state                                       |
-|                             | * <float2> - rmax(φ0), maximum pore radius in undeformed state                      |
-|                             | * <float3> - α, ratio of smallest pore size to largest pore size                    |
-|                             | * <float4> - 1 ⁄ τ2, a geometric tortuosity factor                                  |
-|                             |                                                                                     |
-|                             |All media types (cf. *Media Type* card) except **POROUS_BRINKMAN** may use this model|
-+-----------------------------+-------------------------------------------------------------------------------------+
-|**PSD_WEXP** <float1>        |Same <float> specifications as **PSD_VOL** model.                                    |
-|<float2> <float3> <float4>   |This model is allowed for all media types except **POROUS_BRINKMAN**                 |
-|                             |(cf. *Media Type* card).                                                             |
-+-----------------------------+-------------------------------------------------------------------------------------+
-|**PSD_SEXP** <float1>        |Same <float> specifications as **PSD_VOL** model.                                    |
-|<float2> <float3> <float4>   |This model is allowed for all media types except **POROUS_BRINKMAN**                 |
-|                             |(cf. *Media Type* card).                                                             |
-+-----------------------------+-------------------------------------------------------------------------------------+
-|**SOLIDIFICATION** <float1>  |Used to phase in a porous flow term in the liquid momentum equations for low volume  |
-|                             |fraction packing of particles in the Brinkman porous flow formulation (see discussion|
-|                             |below). Used for Phillip’s model of suspensions for the *Liquid Constitutive         |
-|                             |Equation*, viz. **CARREAU_SUSPENSION, SUSPENSION, FILLED_EPOXY** or                  |
-|                             |**POWER_LAW_SUSPENSION**.                                                            |
-|                             |                                                                                     |
-|                             | * <float1> - the species number of the suspension flow model; it is used to indicate|
-|                             |   that maximum packing, or solidification has occurred. (The float is converted to  |
-|                             |   an integer).                                                                      |
-|                             |                                                                                     |
-|                             |This model is **ONLY** allowed for media type **POROUS_BRINKMAN**                    |
-|                             |(cf. *Media Type* card). The functional form is:                                     |
-|                             |                                                                                     |
-|                             |.. figure:: /figures/402_goma_physics.png                                            |
-|                             |	  :align: center                                                                    |
-|                             |   :width: 90%                                                                       |
-|                             |                                                                                     |
-|                             |where μ0 is the clear fluid viscosity, φpart is the volume fraction of particles, or |
-|                             |concentration divided by the maximum packing (0.68 for monodisperse spheres), and    |
-|                             |havg is the average element size.                                                    |
-+-----------------------------+-------------------------------------------------------------------------------------+
-|**KOZENY_CARMAN** <float1>   |The Kozeny-Carman equation relates the permeability to the porosity for a porous     |
-|<float2>                     |medium and has been shown to fit well the experimental results in many cases. This.  |
-|                             |equation is easily derivable from the PSD_* models for the case of uniform           |
-|                             |pore-size distribution, viz. a delta distribution (cf. Cairncross, et. al., 1996 for |
-|                             |derivation). The model is currently implemented in the isotropic media case and is   |
-|                             |useful for deformable problems in which the porosity changes with deformation (cf.   |
-|                             |*Porosity* card DEFORM model). The functional form for this model is as follows:     |
-|                             |                                                                                     |
-|                             |.. figure:: /figures/403_goma_physics.png                                            |
-|                             |	  :align: center                                                                    |
-|                             |   :width: 90%                                                                       |
-|                             |                                                                                     |
-|                             |Here φ is the porosity, c0 is a constant consisting of tortuosity and shape factor of|
-|                             |the pores, and Sv is the surface area per solid volume. The float parameters are:    |
-|                             |                                                                                     |
-|                             | * <float1> - c0 , tortuosity and shape factor                                       |
-|                             | * <float2> - Sv , surface area per solid volume                                     |
-+-----------------------------+-------------------------------------------------------------------------------------+
-|**EXTERNAL_FIELD** <float1>  |This model reads in an array of values for the porosity from an initial exodus file. |
-|                             |This allows for spatial variations in the parameter value.                           |
-|                             |                                                                                     |
-|                             | * <float1> - Scale factor for converting/scaling exodusII field.                    |
-|                             |                                                                                     |
-|                             |The ExodusII field variable name should be “PERM”, viz. External Field = PERM Q1     |
-|                             |name.exoII (see this card)                                                           |
-+-----------------------------+-------------------------------------------------------------------------------------+
++-----------------------------+------------------------------------------------------------------------------------------------------------------------+
+|**CONSTANT** <float1>        |Model for constant permeability with a single parameter. This model is allowed for                                      |
+|                             |all Media Types (cf. *Media Type* card).                                                                                |
+|                             |                                                                                                                        |
+|                             | * <float1> - k, Permeability [L2]                                                                                      |
++-----------------------------+------------------------------------------------------------------------------------------------------------------------+
+|**TENSOR** <float1> <float2> |Model for a two dimensional, constant anisotropic permeability; it has not been                                         |
+|<float3> <float4>            |implemented in three dimensions. All media types (cf. Media Type card) except                                           |
+|                             |**POROUS_BRINKMAN** may use this model.                                                                                 |
+|                             |                                                                                                                        |
+|                             | * <float1> - :math:`k_{xx}` permeability [L2]                                                                          |
+|                             | * <float2> - :math:`k_{yy}` permeability [L2]                                                                          |
+|                             | * <float3> - :math:`k_{xy}` permeability [L2]                                                                          |
+|                             | * <float4> - :math:`k_{yx}` permeability [L2]                                                                          |
++-----------------------------+------------------------------------------------------------------------------------------------------------------------+
+|**PSD_VOL** <float1> <float2>|This is a model of a deformable medium with a probabilistic distribution of pore                                        |
+|<float3> <float4>            |sizes; see Technical Discussion section. Four parameters are required for the                                           |
+|                             |**PSD_VOL** model:                                                                                                      |
+|                             |                                                                                                                        |
+|                             | * <float1> - φ0, porosity in undeformed state                                                                          |
+|                             | * <float2> - rmax(φ0), maximum pore radius in undeformed state                                                         |
+|                             | * <float3> - α, ratio of smallest pore size to largest pore size                                                       |
+|                             | * <float4> - 1 ⁄ τ2, a geometric tortuosity factor                                                                     |
+|                             |                                                                                                                        |
+|                             |All media types (cf. *Media Type* card) except **POROUS_BRINKMAN** may use this model                                   |
++-----------------------------+------------------------------------------------------------------------------------------------------------------------+
+|**PSD_WEXP** <float1>        |Same <float> specifications as **PSD_VOL** model.                                                                       |
+|<float2> <float3> <float4>   |This model is allowed for all media types except **POROUS_BRINKMAN**                                                    |
+|                             |(cf. *Media Type* card).                                                                                                |
++-----------------------------+------------------------------------------------------------------------------------------------------------------------+
+|**PSD_SEXP** <float1>        |Same <float> specifications as **PSD_VOL** model.                                                                       |
+|<float2> <float3> <float4>   |This model is allowed for all media types except **POROUS_BRINKMAN**                                                    |
+|                             |(cf. *Media Type* card).                                                                                                |
++-----------------------------+------------------------------------------------------------------------------------------------------------------------+
+|**SOLIDIFICATION** <float1>  |Used to phase in a porous flow term in the liquid momentum equations for low volume                                     |
+|                             |fraction packing of particles in the Brinkman porous flow formulation (see discussion                                   |
+|                             |below). Used for Phillip’s model of suspensions for the *Liquid Constitutive                                            |
+|                             |Equation*, viz. **CARREAU_SUSPENSION, SUSPENSION, FILLED_EPOXY** or                                                     |
+|                             |**POWER_LAW_SUSPENSION**.                                                                                               |
+|                             |                                                                                                                        |
+|                             | * <float1> - the species number of the suspension flow model; it is used to indicate                                   |
+|                             |   that maximum packing, or solidification has occurred. (The float is converted to                                     |
+|                             |   an integer).                                                                                                         |
+|                             |                                                                                                                        |
+|                             |This model is **ONLY** allowed for media type **POROUS_BRINKMAN**                                                       |
+|                             |(cf. *Media Type* card). The functional form is:                                                                        |
+|                             |                                                                                                                        |
+|                             |:math:`\frac{k}{\mu}=\frac12h_{avg}^2\frac{\left(\frac{(1-\phi_{part})^2}{\phi_{part}(1.43-\phi_{part})}\right)}{\mu_0}`|
+|                             |                                                                                                                        |
+|                             |where μ0 is the clear fluid viscosity, φpart is the volume fraction of particles, or                                    |
+|                             |concentration divided by the maximum packing (0.68 for monodisperse spheres), and                                       |
+|                             |havg is the average element size.                                                                                       |
++-----------------------------+------------------------------------------------------------------------------------------------------------------------+
+|**KOZENY_CARMAN** <float1>   |The Kozeny-Carman equation relates the permeability to the porosity for a porous                                        |
+|<float2>                     |medium and has been shown to fit well the experimental results in many cases. This.                                     |
+|                             |equation is easily derivable from the PSD_* models for the case of uniform                                              |
+|                             |pore-size distribution, viz. a delta distribution (cf. Cairncross, et. al., 1996 for                                    |
+|                             |derivation). The model is currently implemented in the isotropic media case and is                                      |
+|                             |useful for deformable problems in which the porosity changes with deformation (cf.                                      |
+|                             |*Porosity* card DEFORM model). The functional form for this model is as follows:                                        |
+|                             |                                                                                                                        |
+|                             |:math:`k=\frac{\phi^3}{c_0S_v^2(1-\phi)^2}`                                                                             |
+|                             |                                                                                                                        |
+|                             |Here φ is the porosity, c0 is a constant consisting of tortuosity and shape factor of                                   |
+|                             |the pores, and Sv is the surface area per solid volume. The float parameters are:                                       |
+|                             |                                                                                                                        |
+|                             | * <float1> - c0 , tortuosity and shape factor                                                                          |
+|                             | * <float2> - Sv , surface area per solid volume                                                                        |
++-----------------------------+------------------------------------------------------------------------------------------------------------------------+
+|**EXTERNAL_FIELD** <float1>  |This model reads in an array of values for the porosity from an initial exodus file.                                    |
+|                             |This allows for spatial variations in the parameter value.                                                              |
+|                             |                                                                                                                        |
+|                             | * <float1> - Scale factor for converting/scaling exodusII field.                                                       |
+|                             |                                                                                                                        |
+|                             |The ExodusII field variable name should be “PERM”, viz. External Field = PERM Q1                                        |
+|                             |name.exoII (see this card)                                                                                              |
++-----------------------------+------------------------------------------------------------------------------------------------------------------------+
 
 ------------
 **Examples**
@@ -136,16 +132,16 @@ bundle of capillary tubes with a distribution of pores such that over a range of
 sizes the volume of pores is evenly distributed. For such a model, the maximum poresize
 varies with the porosity:
 
-.. figure:: /figures/404_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   r_{max}(\phi)=r_{max}(\phi_0)\left(\frac{\phi}{\phi_0}\right)^{1/2}\left(\frac{1-\phi_0}{1-\phi}\right)^{1/3}
 
 Then, the permeability is a function of the maximum pore-size and the pore-size
 distribution:
 
-.. figure:: /figures/405_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   k=\phi\frac{1}{60\tau^2}\frac{(1-\alpha^3)}{(1-\alpha)}r_{max}^2
 
 The input parameters for the PSD models are φ0, rmax(φ0), α, and 1 ⁄ τ2. More
 detail on the deformable porous medium models is given in Cairncross, et. al., 1996.
@@ -168,4 +164,3 @@ September 1, 2002, P. R. Schunk
 SAND96-2149: Drying in Deformable Partially-Saturated Porous Media: Sol-Gel
 Coatings, Cairncross, R. A., P. R. Schunk, K. S. Chen, S. S. Prakash, J. Samuel, A. J.
 Hurd and C. Brinker (September 1996)
-

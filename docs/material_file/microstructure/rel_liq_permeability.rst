@@ -76,15 +76,15 @@ Following is a sample card:
 The most often used model is that of VAN_GENUCHTEN. The functional form of
 this model is as follows:
 
-.. figure:: /figures/413_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   k_{rel}=\left[\frac{(S-S_{min})}{(S_{max}-S_{min})}\right]^{-1/2}\frac{\left(1-\left(1-S_{eff}^{1/\lambda}\right)^\lambda\right)^2}{\mu}
 
 where
 
-.. figure:: /figures/414_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   S_{eff}=\frac{(S-S_{min})}{(S_{max}-S_{min})}\qquad\lambda=1-\frac{1}{\beta}
 
 and is the viscosity. This function is clipped to zero as and clipped to one
 as Seff → 1.

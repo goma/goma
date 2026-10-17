@@ -66,12 +66,6 @@ Harmonic form of the wave equation with absorption (attenuation) included. P is 
 amplitude of the acoustic pressure (complex), k is the wavenumber, :math:`\alpha` is the absorption
 coefficient, and :math:`\omega` is the frequency (rad/sec).
 
-.. figure:: /figures/308_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-
-
-
-..
-	TODO - Line 69 contains a photo that needs to be written as an equation.
+   \nabla^2P+k^2\left(1-\frac{2\alpha i}{\omega}\right)P=0

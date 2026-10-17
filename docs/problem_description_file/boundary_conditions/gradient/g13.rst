@@ -60,9 +60,9 @@ We solve a simple least squares equation to determine the continuous velocity gr
 estimates of the second derivative of the velocity field for applications in complex
 rheology. The velocity gradient equation is:
 
-.. figure:: /figures/179_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   G=\nabla v
 
 Note, that boundary conditions are almost never set on the velocity gradient equation
 since it is just a least squares interpolation of the discontinuous velocity gradient
@@ -81,6 +81,3 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
 
 GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao
-
-.. 
-	TODO - Line 63 has a photo that needs to be put into equation form.

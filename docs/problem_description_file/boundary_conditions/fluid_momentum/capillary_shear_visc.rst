@@ -64,9 +64,9 @@ surface viscosity effect. Note that you must solve the shell equation
 
 The functional form of this boundary condition is
 
-.. figure:: /figures/117_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \left.\boldsymbol{n}\cdot\boldsymbol{T}\right|_{fluid}=-\boldsymbol{n}P_{ex}+2H\sigma\boldsymbol{n}+\nabla_s\cdot\boldsymbol{\sigma}
 
 where *n* is the outward normal to the surface, *T* is the fluid stress tensor, 
 :math:`\P_{ex}` is the
@@ -77,9 +77,13 @@ operator defined as :math:`\Delta_s` f = (I – nn) ⋅ :math:`\Delta` f .
 
 The Boussinesq-Scriven surface rheological constitutive equation is as follows:
 
-.. figure:: /figures/118_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   -(\boldsymbol{n}\cdot\boldsymbol{T})&=\boldsymbol{F}^w+2H\sigma\boldsymbol{n}+\nabla_s\sigma+(\kappa^s+\mu^s)\nabla_s(\nabla_s\cdot\boldsymbol{v})\\
+   &\quad+2\mu^s\boldsymbol{n}(\boldsymbol{b}-2H\boldsymbol{I}_s)\cdot\nabla_s\boldsymbol{v}+2\mu^s\boldsymbol{n}(\kappa^s+\mu^s)\nabla_s\cdot\boldsymbol{v}\\
+   &\quad+\mu^s\{\boldsymbol{n}\times\nabla_s[(\nabla_s\times\boldsymbol{v})\cdot\boldsymbol{n}]-2(\boldsymbol{b}-2H\boldsymbol{I}_s)\cdot(\nabla_s\boldsymbol{v})\cdot\boldsymbol{n}\}
+   \end{aligned}
 
 Here, :math:`\Delta_s` = ( :math:`\underline{I}` – :math:`\underline{nn}` ) ⋅ :math:`\Delta`  is the surface gradient operator, :math:`I_s` = (:math:`\underline{I}` - (:math:`\underline{nn}` )
 unit tensor. :math:`\mu_s` and :math:`\kappa_s` is the surface
@@ -97,8 +101,3 @@ terms actually represent additional dissipation caused by surface active species
 microstructures flowing in the surface. The best source of discussion of this equation
 is a book by Edwards et al. (1991. *Interfacial Transport Processes and Rheology*.
 Butterworth-Heinemann, Boston).
-
-
-
-
-.. TODO - Lines 67 and 80 have photos that needs to be replaced with the real equation.

@@ -63,9 +63,9 @@ The structural shell equation capability in Goma builds on the shell-element cap
 built by Pat Notz and Ed Wilkes in FY03. Basically we are solving the following
 equations for the shell tension and shell curvature (this card):
 
-.. figure:: /figures/304_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   -D\frac{d^2}{dS}K+KT+\boldsymbol{n}\cdot\boldsymbol{n}\cdot\boldsymbol{\sigma}=0\qquad\frac{dT}{dS}-DK\frac{dK}{dS}+\boldsymbol{t}\cdot\boldsymbol{n}\cdot\boldsymbol{\sigma}=0
 
 
 --------------
@@ -73,6 +73,3 @@ equations for the shell tension and shell curvature (this card):
 --------------
 
 GT-27
-
-..
-	TODO - Line 66 contains a photo that needs to be written as an equation.

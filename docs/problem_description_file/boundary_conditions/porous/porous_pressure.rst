@@ -49,9 +49,9 @@ EXODUS II file) in element block 2.
 
 The mathematical form for this boundary condition is as follows
 
-.. figure:: /figures/176_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   p_{pore}=p_{continous}
 
 but its implementation is not; a memo describing the details of this boundary condition
 and how it is applied is cited below. This continuity of pressure is critical for the
@@ -71,6 +71,3 @@ Porous Penetration Problems, August 11, 1999, P. R. Schunk
 
 GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
 September 1, 2002, P. R. Schunk
-
-.. 
-	TODO - Line 52 has a photo in which the equation that needs to be written.

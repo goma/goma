@@ -71,24 +71,25 @@ message.
 Derivation of the force condition for this boundary condition starts with a simple
 relation for wetting line velocity
 
-.. figure:: /figures/209_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   V_{wet}&=V_{old}+(V_{Blake}-V_{old})\left[1-\exp\left(-\frac{t}{t_{relax}}\right)\right]\\
+   V_{Blake}&=v_0\sinh[g(\cos\theta_s-\cos\theta)]
+   \end{aligned}
 
 Note that the convention for contact angles in this relation is that values of θ near to
 zero indicate a high degree of wetting and values of θ near 180 ° indicate the opposite.
 This is mapped to a stress value by analogy with Navier’s slip relation and has the
 following form when the velocity smoothing is not used,
 
-.. figure:: /figures/210_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \tau_w=\frac{V_{wet}}{\beta}=\frac{v_0}{\beta}\sinh[g(\cos\theta_s-\cos\theta)]
 
 
 --------------
 **References**
 --------------
 
-No References. 
-
-.. TODO -Lines 73 and 82 have pictures that need to be swapped with the correct equations.
+No References.

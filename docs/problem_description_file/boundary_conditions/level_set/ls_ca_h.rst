@@ -46,18 +46,18 @@ level set field is a Laplacian. It is standard to integrate these operators by p
 the process one always generates a boundary integral. In this case the integral takes the
 form:
 
-.. figure:: /figures/197_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int\boldsymbol{n}_w\cdot\boldsymbol{n}_{fs}\,d\Gamma
 
 where :math:`n_w` is the wall surface normal and :math:`n_{fs}` is the normal to free surface (zero contour
 of the level set function ). This is a convenient event because it allows us to impose a
 contact angle condition on a sideset using this boundary integral by making the
 assignment
 
-.. figure:: /figures/198_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}_w\cdot\boldsymbol{n}_{fs}=\cos(\theta)
 
 where :math:`\theta` is the contact angle specified on the card.
 
@@ -75,10 +75,4 @@ instantaneously jumped to the imposed value.
 **References**
 --------------
 
-No References. 
-
-..
-	TODO - Lines 49 and 58 have pictures that need to be exhanged with equations.
-
-
-
+No References.

@@ -33,9 +33,12 @@ velocity of the Lower channel wall as a function of time. Currently two models f
 |                          | * <float2-N> are the coefficients in front of the t^(i-2) term                      |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/490_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   v_x&=\sum_{i=2}^{i=N_{float}}\mathrm{float}_i t_s^{i-2}\\
+   t_s&=\mathrm{float}_1\times t
+   \end{aligned}
 
 +--------------------------+-------------------------------------------------------------------------------------+
 |**ROLL**                  |This model invokes a wall velocity which corresponds to a rolling-motion. This model |
@@ -84,6 +87,3 @@ to the substrate, thus generating a Couette component to the flow field.
 For non-curved shell meshes, most of the time they are oriented with the x-, y-, or zplane.
 This card is aimed at applying a tangential motion to that plane, and so one of
 the three components is usually zero.
-
-
-

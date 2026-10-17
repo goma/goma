@@ -68,9 +68,9 @@ file is used unmodified since the multiplying factor is 1.0.
   used to simplify the curvature term in the capillary stress jump condition. This
   produces integrals of the form:
 
-.. figure:: /figures/110_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_C\phi_i\sigma\boldsymbol{m}\,dC
 
 where *C* is the bounding curve of the capillary free surface, :math:`\sigma` is the surface
 tension, :math:`\phi_i` is a finite element shape function and **m** is the outward binormal vector
@@ -87,8 +87,3 @@ inclusion of all relevant surface tension terms is performed.
   preceding expression is the surface tension value obtained from the model
   specified in the material file multiplied by the value of <float>. Reasons for doing
   this are somewhat obscure but important to the practitioners of this art.
-
-
-
-
-.. TODO - Lines 71 has a photo that needs to be replaced with the real equation.

@@ -69,9 +69,9 @@ components are accounted for with individual Darcy flow equations. The conservat
 law which governs the porosity assumes there is an affine deformation of the pores
 with the overall deformation of the solid, and hence can be written as:
 
-.. figure:: /figures/401_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \det(\boldsymbol{F})=\frac{V}{V_0}=\frac{1-\phi_0}{1-\phi}
 
 where F˜ is the deformation gradient tensor, φ0 is the initial porosity, and φ is the
 porosity. This equation is invoked with the *porous_deform* option on the *EQ*

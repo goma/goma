@@ -69,9 +69,9 @@ should also be applied.
 
 The functional form of the boundary condition is:
 
-.. figure:: /figures/114_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot\boldsymbol{T}=(\boldsymbol{n}\cdot\boldsymbol{\sigma})\lambda
 
 where :math:`\underline{T}` is the fluid phase stress tensor given by any one of the specified fluid-phase
 constitutive equations, :math:`\underline{\sigma}` and is the solid-phase stress tensor, also given by any one of
@@ -116,5 +116,3 @@ GT-003.1: Roll coating templates and tutorial for GOMA and SEAMS, February 29,
 
 GT-006.3: Slot and Roll coating with remeshing templates and tutorial for GOMA and
 CUBIT/MAPVAR, August 3, 1999, R. R. Lober and P. R. Schunk
-
-.. TODO - Line 72 have photos that needs to be replaced with the real equation.

@@ -178,9 +178,9 @@ Following are some sample input cards:
   tracked with an explicit volume-of-fluid method. The value of density is defined
   from the following:
 
-.. figure:: /figures/341_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho(F)=\rho_1F+\rho_0(1-F)
 
 where :math:`\rho_1` and :math:`\rho_0` are the phase densities obtained from the FILL density card,
 F is the value of the fill color function. As can be seen, :math:`\rho_1` is the density value
@@ -192,9 +192,9 @@ of the two values.
   phase and the carrier fluid have different densities. The concentration of the
   continuum mixture is defined by the following relationship:
 
-.. figure:: /figures/342_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho=\rho_f+(\rho_s-\rho_f)\phi
 
 where :math:`\phi` is the volume fraction of the solid particulate phase, :math:`\rho_f` , is the density
 of the fluid in the carrier fluid and :math:`\rho_s`, is the density of the solid particulate
@@ -205,9 +205,9 @@ designates the species equation being solved for this component.
   variables such as mole fraction. A simple empirical form is used with the density
   of the system being specified by the following equation,:
 
-.. figure:: /figures/343_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho_i=\rho_0+ax_i
 
 where :math:`x_i` is the mole fraction of ionic species *i*, :math:`\rho_0` is the base electrolyte
 density and is *a* constant.
@@ -218,15 +218,17 @@ density and is *a* constant.
   density across the zero level set contour. The density as a function of the level set
   function value, :math:`\phi`, is as follows:
 
-.. figure:: /figures/344_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho(\phi)=\begin{cases}\rho_-,&\phi<-\alpha\\
+   {}[\rho_-+(\rho_+-\rho_-)H_\alpha(\phi)],&-\alpha<\phi<\alpha\\
+   \rho_+,&\phi>\alpha\end{cases}
 
 where
 
-.. figure:: /figures/345_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   H_\alpha(\phi)=(1+\phi/\alpha+\sin(\pi\phi/\alpha)/\pi)/2
 
 is a smooth Heaviside function, :math:`\phi` is the value of the level set function, :math:`\rho_+` and
 :math:`\rho_-` are density values of the fluids assigned positive or negative values of the
@@ -237,9 +239,9 @@ scale parameter set elsewhere.
 * The **CONST_PHASE_FUNCTION** model computes the density at a given point
   with the following relation:
 
-.. figure:: /figures/346_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho=\sum_{N_f}\rho_iH_\alpha(\phi_i)+\rho_\varnothing
 
 where :math:`\rho_i` are the individual phase function ( :math:`\phi_i` ) densities, :math:`H_a( \phi_i )` , is the
 smoothed Heaviside function using the length scale specified on the card.
@@ -249,9 +251,9 @@ happen for well posed problems, but in practice it is not uncommon.
 
 * The **SPECIES_SOURCE** and **REACTIVE_FOAM** models both employ the following density formula:
 
-.. figure:: /figures/347_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho_{mix}=\left[V_{N+1}+\sum_{j=1}^N W_j(V_j-V_{N+1})\right]^{-1}
 
 where :math:`w_j` is the mass fraction of component j and :math:`V_j` is the specific volume of
 species j; these two parameters are set by the Specific Volume cards in the
@@ -261,5 +263,4 @@ material file. The variable N is the total number of bulk species. The variable
 
 
 
-..
-	TODO - In line 7,35 when in says "[M/L3]" the 3 is supposed to be superscript but for some reason it will not allow me to no matter what I try. There are 7 photos of equations that need to be replaced with the real thing.
+.. TODO - Format the units "[M/L3]" with a superscript 3.

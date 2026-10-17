@@ -75,9 +75,9 @@ variable model is used.
 
 * The general form of this boundary condition is
 
-.. figure:: /figures/093_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \left(\left.\boldsymbol{t}\cdot\boldsymbol{v}\right|_{fluid}-\boldsymbol{t}\cdot\boldsymbol{v}_{sfs}\cdot\boldsymbol{F}_m-\boldsymbol{t}\cdot\frac{d\boldsymbol{x}_m}{dt}\right)=\left.\beta\boldsymbol{n}\cdot\boldsymbol{t}\cdot\boldsymbol{T}\right|_{fluid}
 
 where :math:`\tau` is the deviatoric portion of the fluid stress tensor,  :math:`\beta`
 is the Navier slip
@@ -94,8 +94,3 @@ any superimposed deformation velocity.
 
 * The reader is referred to the documentation of the variable slip coefficient model to
   apply slip near contact lines under the *VELO_SLIP* boundary condition.
-
-
-
-
-.. TODO - Line 78 contains a photo that needs to be exchanged for the equation.

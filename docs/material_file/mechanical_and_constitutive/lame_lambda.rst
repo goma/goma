@@ -14,9 +14,9 @@ This required card is used to specify the model for the Lame coefficient λ for 
 constitutive equation (see Sackinger, et. al., 1995). When using a nonlinear constitutive
 equation for ALE mesh motion, this coefficient is related to the bulk modulus:
 
-.. figure:: /figures/366_goma_physics.png                                                          
-   :align: center                                                                                  
-   :width: 90%
+.. math::
+
+   K=\lambda+\frac23\mu
 
 Definitions of the input parameters are as follows:
 
@@ -40,16 +40,12 @@ The models are described here.
 |                                                                                   |                                                                                                   |
 |                                                                                   | * <float1> - Poisson’s ratio nu.                                                                  |
 |                                                                                   |                                                                                                   |
-|                                                                                   |.. figure:: /figures/367_goma_physics.png                                                          |
-|                                                                                   |   :align: center                                                                                  |
-|                                                                                   |   :width: 90%                                                                                     |
+|                                                                                   |:math:`\lambda=\frac{2\mu\nu}{(1-2\nu)}`                                                           |
 +-----------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
 |**POWER_LAW** <float1> <float2> <float3>                                           |The **POWER_LAW** model can be used in deformable porous media where the Lame coefficient varies as|
 |                                                                                   |a power of the porosity, :math:`\phi` (Scherer, 1992):                                             |
 |                                                                                   |                                                                                                   |
-|                                                                                   |.. figure:: /figures/368_goma_physics.png                                                          |
-|                                                                                   |   :align: center                                                                                  |  
-|                                                                                   |   :width: 90%                                                                                     |
+|                                                                                   |:math:`\lambda=\lambda_0\left(\frac{1-\phi}{1-\phi_0}\right)^m`                                    |
 |                                                                                   |                                                                                                   |
 |                                                                                   |The {float_list} contains three values for this model, where:                                      |
 |                                                                                   |                                                                                                   |
@@ -106,7 +102,3 @@ and D. A. Labreche
 SAND96-2149: Drying in Deformable Partially-Saturated Porous Media: Sol-Gel
 Coatings, Cairncross, R. A., P. R. Schunk, K. S. Chen, S. S. Prakash, J. Samuel, A. J.
 Hurd and C. Brinker (September 1996)
-
-.. 
-	TODO - Lines 17, 43, and 50 are photos that need to be replaced with the correct equations. 
-

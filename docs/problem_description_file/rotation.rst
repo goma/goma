@@ -13,9 +13,12 @@ specify the exact implementation of the equations at any boundary with rotated c
   In some cases, a better way to apply a scalar condition is to use it to replace the normal or tangential contribution of the vector equations, while retaining the other portions of the equation (e.g., a no penetration condition could constrain the normal component of velocity
   but still allow the stress along the boundary to be shear-free). In *Goma*, this is done by rotating the vector equation into a normal-tangential form:
 
-.. figure:: /figures/256_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   R_i^{f,n}&=\boldsymbol{n}\cdot\boldsymbol{R}_i^f\\
+   R_i^{f,t}&=\boldsymbol{t}\cdot\boldsymbol{R}_i^f
+   \end{aligned}
 
 |
 
@@ -42,4 +45,3 @@ treat all boundaries so that the behavior is well defined. An important example 
    rotation/rot_edge
    rotation/rot_vertex
    rotation/end_of_rot
-

@@ -40,9 +40,9 @@ permissible:
 |                          | * <float5> is the length of the plate, L.                                           |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/486_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   h(t,x)=(v_{sq}t+h_A)\left(\frac{x-x_0}{L}\right)+h_{low}
 
 +--------------------------+-------------------------------------------------------------------------------------+
 |**ROLL**                  |This model is used for a roll coating geometry. This option requires 8 floats:       |
@@ -72,9 +72,9 @@ permissible:
 |                          | * <floati> value of Ci                                                              |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/487_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   h(t)=\sum_i^N C_it^i
 
 +--------------------------+-------------------------------------------------------------------------------------+
 |**JOURNAL**               |This model simulates a journal bearing. It is intended to be run on a cylindrical    |
@@ -116,6 +116,3 @@ is initial 0.001.
 
 The material function model ROLL_ON prescribes the squeezing/separation motion of
 two non-parallel flate plates about a hinge point, as shown in the figure below.
-
-
-

@@ -65,9 +65,9 @@ tangential velocity component perpendicular to the z-axis is set to 1.0.
 
 * The constraint applied to the velocity vector by this condition on the side set is:
 
-.. figure:: /figures/088_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \tilde{\boldsymbol{t}}\cdot\boldsymbol{v}=v_t
 
 where :math:`\tilde{t}` = n × t with the components of *t* supplied on the card. The advantages of
 introducing the normal vector is that it permits use of this card on curving surfaces
@@ -81,8 +81,3 @@ applied in the direction of the curvature.
   One application for this condition is in three-dimensional eccentric roll coating in
   which the roll speed can be set using this condition. The axis vectors of both roll
   coaters are supplied on the card.
-
-
-
-
-.. TODO - In line 68, the photo needs to be repalced by the proper equation.

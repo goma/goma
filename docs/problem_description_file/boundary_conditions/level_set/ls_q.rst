@@ -50,9 +50,9 @@ used quite often in non-level set problems. It applies a scalar heat flux at the
 curve as an embedded boundary condtion. It can be used in by subgrid and subelement
 methods. In the case of the former, a distributed volume integral of the form:
 
-.. figure:: /figures/206_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_V N_iq\delta_\alpha(\phi)\,dV
 
 where :math:`\Delta` ⋅ :math:`T_{cap}` is the familiar smoothed Dirac delta function with width parameter :math:`\alpha`.
 When subelement integration is used this width parameter goes to zero and the volume
@@ -73,7 +73,4 @@ the reader is referred to that card for a more detailed discussion.
 **References**
 --------------
 
-No References. 
-
-..
-	TODO - Line 53 has a picture that needs to be exhanged with an equation.
+No References.

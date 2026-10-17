@@ -41,13 +41,8 @@ The following is a sample card:
 
 The convective heat flux is defined as
 
-.. figure:: /figures/131_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot\boldsymbol{q}=h(T-T_s)
 
 where *h* and :math:`T_s` are the convective heat transfer coefficient and the sink temperature, respectively.
-
-
-
-
-.. TODO -Line 44 has a picture that needs to be changed out with the correct equation.

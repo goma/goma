@@ -42,11 +42,6 @@ The following is a sample card:
 
 The mathematical form of the boundary condition.
 
-.. figure:: /figures/133_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-
-
-
-.. TODO -Line 45 has a picture that needs to be changed out with the correct equation.
+   \boldsymbol{n}\cdot\boldsymbol{q}=q_o

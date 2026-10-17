@@ -50,9 +50,9 @@ species number is currently not used and ignored.
 
 This boundary condition has the following form
 
-.. figure:: /figures/174_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   (\boldsymbol{n}\cdot(\boldsymbol{v}_g\rho_{g_i}+\boldsymbol{v}_l\rho_{l_i}+\boldsymbol{J}_{g_i}+\boldsymbol{J}_{l_i}))=(\boldsymbol{n}\cdot\boldsymbol{v}_s)\rho_{g_i}
 
 where the left hand side is the total flux of the solvent i in the medium, which includes,
 in order, the flux due to Darcy flow of gas vapor, the Darcy flow of liquid solvent, the
@@ -74,6 +74,3 @@ Porous Penetration Problems, August 11, 1999, P. R. Schunk
 
 GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
 September 1, 2002, P. R. Schunk
-
-..
-	TODO _ Line 53 has a photo that needs to be changed into an equation.

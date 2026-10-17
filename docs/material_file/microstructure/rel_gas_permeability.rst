@@ -56,18 +56,18 @@ gas viscosity here is specified to be 0.0001, in the appropriate viscosity units
 This card is only required for *Media Type* **POROUS_TWO_PHASE**. Darcy’s law for
 gas flow is, in its simplest form:
 
-.. figure:: /figures/411_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{v}_g=k\frac{k_{rel}^g}{\mu_{gas}}\nabla p_{gas}
 
 where, the Darcy velocity is proportional to the gradient in gas pressure, with k being
 the permeability, krelg being the relative gas permeability and μgas the viscosity of the
 gas. For the **SUM_TO_ONE** option above, the floating point constant is the gas phase
 viscosity, and the gas-phase relative permeability is calculated using
 
-.. figure:: /figures/412_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \mu_{gas}k_{gas}^{rel}+\mu_{liq}k_{liq}^{rel}=1
 
 For the **CONSTANT** option the floating point constant must include the effect of
 viscosity, viz. the constant represents krelg/μgas

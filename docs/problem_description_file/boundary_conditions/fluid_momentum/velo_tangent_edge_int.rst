@@ -64,9 +64,9 @@ the curve itself.
 * This equation imposes the following constraint as a point collocated condition at
   the integration points of the elements along the curve:
 
-.. figure:: /figures/087_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_C\phi_i(\boldsymbol{t}_{cl}\cdot\boldsymbol{v}-\boldsymbol{t}_{cl}\cdot\boldsymbol{W})\,dC=0
 
 where :math:`t_{cl}` is a vector tangent to the curve, *v* is the fluid velocity, *W* is the (constant)
 velocity of the moving substrate, :math:`\phi_i` is the shape function each node along the curve
@@ -80,8 +80,3 @@ these vectors.
   allow more flexibility in situations involving many boundary conditions applied in
   close proximity. There may also be situations where an integrated constraint
   results in better matrix conditioning that a collocated constraint.
-
-
-
-
-.. TODO - In line 67, the photo needs to be repalced by the proper equation.

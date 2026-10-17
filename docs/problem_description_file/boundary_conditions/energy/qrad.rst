@@ -45,9 +45,9 @@ The following is a sample card:
 The heat flux definition for this card is a combined convective and radiative
 formulation:
 
-.. figure:: /figures/132_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot\boldsymbol{q}=h(T-T_s)+\varepsilon\sigma(T^4-T_s^4)
 
 where *h* and :math:`T_s` are the convective heat transfer coefficient and the sink temperature,
 and :math:`\varepsilon` and :math:`\sigma` are the total hemispherical emissivity and Stefan-Boltzmann constant,
@@ -57,8 +57,3 @@ being modeled.
 
 The *QRAD* boundary condition can be used in place of *QCONV* by simply setting the
 emissivity value to zero.
-
-
-
-
-.. TODO -Line 48 has a picture that needs to be changed out with the correct equation.

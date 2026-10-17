@@ -61,9 +61,9 @@ This applies the film flow equation with all terms activated.
 
 The equation solved is as follows:
 
-.. figure:: /figures/315_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   h\frac{\partial\varphi}{\partial t}+\left[\frac{h^3}{3\mu}(-\nabla_{II}p)+\boldsymbol{U}_Bh\right]\cdot\nabla_{II}\varphi-\nabla_{II}\cdot[Dh\nabla_{II}\varphi]-\varphi\dot{E}=0
 
 * The mass matrix multiplier activates the time-derivative term.
 
@@ -79,9 +79,3 @@ The equation solved is as follows:
 
 * This equation has to be used with the film profile equation describing
   SHELL_FILMP and SHELL_FILMH.
-
-
-
-
-..
-	TODO - Line 64 contains a photo that needs to be written as an equation.

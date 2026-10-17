@@ -14,9 +14,9 @@ The stream-wise normal stress, :math:`T_{tt}`, is defined as tt: :math:`\tau`, w
 to the streamlines computed as v ⁄ :math:`\mid` v :math:`\mid` and :math:`\tau` is the deviatoric part of the dissipative stress
 tensor,
 
-.. figure:: /figures/320_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{\tau}\equiv\mu[\nabla\boldsymbol{v}+(\nabla\boldsymbol{v})^T]
 
 associated with the Navier-Stokes equations. This variable is called SNS in the output
 EXODUS II file.
@@ -44,9 +44,3 @@ Following is a sample card:
 As of 2/9/02 this function is computed with the based viscosity, and not the strain-rate
 dependent viscosity as might be the case for viscosity models other than *NEWTONIAN*
 (see *Viscosity* card).
-
-
-
-
-..
-	TODO - Line 17 contains a photo that needs to be written as an equation.

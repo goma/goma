@@ -76,18 +76,18 @@ time.
 Derivation of this boundary condition starts with a simple relation for wetting line
 velocity
 
-.. figure:: /figures/227_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   V_{wet}=\frac{1}{c_T}(\cos((\theta)-\cos(\theta_s)))
 
 Note that the convention for contact angles in this relation is that values of 
 :math:`\theta` near to
 zero indicate a high degree of wetting and values of :math:`\theta` near 180 ° indicate the opposite.
 This is mapped to a stress value by analogy with Navier’s slip relation
 
-.. figure:: /figures/228_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \tau_w=\frac{V_{wet}}{\beta}=\frac{1}{\beta c_T}(\cos((\theta)-\cos(\theta_s)))
 
 It should be noted that there is no distinction for this model in the function of 
 :math:`\beta` or :math:`c_T`.
@@ -101,15 +101,13 @@ then weighted by smooth Dirac function to restrict its location to being near th
 interface, weighted by a FEM shape function, integrated over the boundary sideset and
 added to the fluid momentum equation for the corresponding node j, vis:
 
-.. figure:: /figures/229_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int N_j\tau_w\hat{\boldsymbol{t}}\delta_w(\phi)\,d\Gamma
 
 
 --------------
 **References**
 --------------
 
-No References. 
-
-.. TODO -Lines 79, 88 and 104 have pictures that need to be swapped with the correct equations.
+No References.

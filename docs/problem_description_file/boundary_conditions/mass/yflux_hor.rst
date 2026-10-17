@@ -59,9 +59,9 @@ For electrochemical reactions such as the hydrogen-oxidation reaction (HOR), sur
 overpotential is relatively small such that the Butler-Volmer kinetic model can be
 linearized to yield:
 
-.. figure:: /figures/151_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   r=\frac{ai_0H}{nRT}\left(\frac{c}{c_{ref}}\right)^\beta(\alpha_a+\alpha_c)(V-\Phi-U_0)
 
 where *r* is the surface reaction rate in units of *moles*/ :math:`cm^2-s`; 
 :math:`ai_0` denotes the product of
@@ -87,5 +87,3 @@ J. Newman, Electrochemical Systems, 2nd Edition, Prentice-Hall, NJ (1991).
 K. S. Chen and M. A. Hickner, “Modeling PEM fuel cell performance using the finiteelement
 method and a fully-coupled implicit solution scheme via Newton’s technique”,
 in ASME Proceedings of FUELCELL2006-97032 (2006).
-
-.. TODO - Line 62 has a photo that needs to be replaces with the proper equation.

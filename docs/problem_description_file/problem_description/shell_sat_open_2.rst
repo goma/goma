@@ -57,9 +57,13 @@ This applies the equation with all terms activated.
 
 The equation solved is as follows:
 
-.. figure:: /figures/318_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   \frac{dS}{dt}&=\frac{1}{\varphi}\nabla\cdot\left(-\frac{\kappa}{\mu}\nabla P\right)\\
+   \frac{dP}{dz}&=\frac{P_0-P_{lub}-2\sigma/r}{HS}\\
+   \nabla_{II}P&=\nabla_{II}P_{lub}
+   \end{aligned}
 
 * The mass matrix multiplier activates the time-derivative term.
 
@@ -72,9 +76,3 @@ The equation solved is as follows:
   lubrication layer by adding a sink term into the lubrication equations.
 
 * NOT FULLY IMPLEMENTED.
-
-
-
-
-..
-	TODO - Line 60 contains a photo that needs to be written as an equation.

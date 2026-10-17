@@ -53,9 +53,9 @@ sets the total liquid-solvent mass flux, in both gas and liquid phases, to 200.0
 
 This boundary condition is of the mathematical form:
 
-.. figure:: /figures/171_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho_l^T\boldsymbol{n}\cdot(\boldsymbol{v}_s)\phi-\left(-\frac{\rho_lkk_l}{\mu_l}\nabla p_l\right)=const
 
 where :math:`v_s` is the user supplied convection velocity of the stress-free state as defined on
 the *Convective Lagrangian Velocity* card (this is usually zero except in advanced
@@ -68,9 +68,9 @@ above (<float1>). Note that this sets the flux relative to the boundary motion t
 applied with *const* =0 if no boundary condition is applied at the boundary. In a saturated
 case, viz. *POROUS_SATURATED* media type, this condition is applied as
 
-.. figure:: /figures/172_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho_l\boldsymbol{n}\cdot(\boldsymbol{v}_s)\phi-\left(-\frac{\rho_lk}{\mu_l}\nabla p_l\right)=const
 
 
 
@@ -83,5 +83,3 @@ Porous Penetration Problems, August 11, 1999, P. R. Schunk
 
 GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
 September 1, 2002, P. R. Schunk
-
-.. TODO - Lines 56 and 71 have photos that need to be replaced with the proper equations.

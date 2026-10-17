@@ -47,9 +47,9 @@ quantity is used in the continuity equation for incompressible solid materials, 
 which is transported by a variety of diffusion models (see *Diffusivity* card). The
 continuity equation, viz., *EQ = continuity*, is applied as follows:
 
-.. figure:: /figures/369_goma_physics.png                                                          
-   :align: center                                                                                  
-   :width: 90%
+.. math::
+
+   \det\boldsymbol{F}=\frac{1-y^0}{1-\sum_i y^i}
 
 where the dependent variable is the solid phase pressure (see *Solid Constitutive
 Equation* card). Here *det* **F** is the determinant of the deformation gradient tensor, yi is
@@ -73,7 +73,3 @@ and Tutorial, P. R. Schunk, A. Sun, S. Y. Tam (Imation Corp.) and K. S. Chen, Ja
 SAND96-2149: Drying in Deformable Partially-Saturated Porous Media: Sol-Gel
 Coatings, Cairncross, R. A., P. R. Schunk, K. S. Chen, S. S. Prakash, J. Samuel, A. J.
 Hurd and C. Brinker (September 1996)
-
-.. 
-	TODO - Line 50 is a photo that needs to be replaced with the correct equation. 
-
