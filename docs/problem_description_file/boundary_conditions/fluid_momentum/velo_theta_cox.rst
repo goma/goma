@@ -91,11 +91,10 @@ where :math:`v_{Cox}` is computed from
 where the Cox functions, f and g, are given by;
 
 .. math::
-   :no-wrap:
 
    \begin{align}
-   f(\theta,\lambda)&\equiv\frac{2\sin\theta\{\lambda^2(\theta^2-(\sin\theta)^2)+2\lambda[\theta(\pi-\theta)+(\sin\theta)^2]+[(\pi-\theta)^2-(\sin\theta)^2]\}}{\lambda(\theta^2-(\sin\theta)^2)[\pi-\theta+\sin\theta\cos\theta]+[(\pi-\theta)^2-(\sin\theta)^2][\theta-\sin\theta\cos\theta]}\tag{4-102}\\
-   g(\theta,\lambda)&\equiv\int_0^\theta\frac{1}{f(\theta,\lambda)}\,d\beta\tag{4-103}
+   f(\theta,\lambda)&\equiv\frac{2\sin\theta\{\lambda^2(\theta^2-(\sin\theta)^2)+2\lambda[\theta(\pi-\theta)+(\sin\theta)^2]+[(\pi-\theta)^2-(\sin\theta)^2]\}}{\lambda(\theta^2-(\sin\theta)^2)[\pi-\theta+\sin\theta\cos\theta]+[(\pi-\theta)^2-(\sin\theta)^2][\theta-\sin\theta\cos\theta]}\\
+   g(\theta,\lambda)&\equiv\int_0^\theta\frac{1}{f(\theta,\lambda)}\,d\beta
    \end{align}
 
 * The parameters :math:`\lambda`, :math:`q_{inner}`, and :math:`q_{outer}` are currently not accessible from the input card
