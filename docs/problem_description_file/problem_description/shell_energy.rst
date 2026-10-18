@@ -65,7 +65,7 @@ The equation solved is as follows:
 
 .. math::
 
-   h\rho C_p\frac{\partial T}{\partial t}+h\rho C_p\underset{\%}{u_{II}}\cdot\nabla_{II}T-hK_{eff}\nabla_{II}\cdot\nabla_{II}T+Q_{surf}+Q_{VD}+Q_{Joule}=0
+   h\rho C_p\frac{\partial T}{\partial t}+h\rho C_p{u_{II}}\cdot\nabla_{II}T-hK_{eff}\nabla_{II}\cdot\nabla_{II}T+Q_{surf}+Q_{VD}+Q_{Joule}=0
 
 * Clearly this equation looks similar to the standard energy equation for continuum
   formulations, but the presence of the gap/film thickness h indications that the
