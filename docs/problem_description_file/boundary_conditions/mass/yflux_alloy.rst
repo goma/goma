@@ -49,11 +49,6 @@ The following is a sample input card:
 Basically the difference between this model and the simple convective mass transfer
 coefficient (say :math:`k_i` for *YFLUX*) is that the transfer coefficient here (the exponential term) has a cubic dependence on temperature.
 
-.. figure:: /figures/153_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-
-
-
-.. TODO - Line 52 has a photo that needs to be replaces with the proper equation.
+   \boldsymbol{n}\cdot\boldsymbol{j}_i=\exp[c_0+c_1(T-T_m)-c_2(T-T_m)^2+c_3(T-T_m)^3]\cdot(y_i-y_i^\infty)

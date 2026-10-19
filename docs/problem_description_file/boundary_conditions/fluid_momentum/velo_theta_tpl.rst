@@ -83,13 +83,13 @@ with the free surface at this point.
 
 * The constraint that is imposed at the nodeset node is as follows:
 
-.. figure:: /figures/128_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-.. figure:: /figures/129_goma_physics.png
-	:align: center
-	:width: 90%
+   v=V_{old}+(v_{Blake}-V_{old})\left[1-\exp\left(-\frac{t}{t_{relax}}\right)\right]
+
+.. math::
+
+   v_{Blake}=v_0\sinh[g(\cos\theta_{eq}-\cos\theta)]
 
 When smoothing is not used, i.e. :math:`t_{relax}` = 0 , the imposed velocity is equal to that
 stipulated by the Blake-DeConinck equation. Also see
@@ -132,8 +132,3 @@ other functional forms.
 .. figure:: /figures/130_goma_physics.png
 	:align: center
 	:width: 90%
-
-
-
-
-.. TODO - Lines 86, 90, and 132 have photos that needs to be replaced with the real equation.

@@ -78,29 +78,32 @@ surface at this point.
 
 * The constraint that is imposed at the nodeset node is as follows:
 
-.. figure:: /figures/119_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   v=V_{old}+(v_{Cox}-V_{old})\left[1-\exp\left(-\frac{t}{t_{relax}}\right)\right]
 
 where :math:`v_{Cox}` is computed from
 
-.. figure:: /figures/120_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   Ca\equiv\frac{\mu v_{Cox}}{\sigma}=\frac{g(\theta,\lambda)-g(\theta_{eq},\lambda)}{\left[\ln(\varepsilon_s^{-1})+\frac{q_{inner}}{f(\theta_{eq},\lambda)}-\frac{q_{outer}}{f(\theta,\lambda)}\right]}
 
 where the Cox functions, f and g, are given by;
 
-.. figure:: /figures/121_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{align}
+   f(\theta,\lambda)&\equiv\frac{2\sin\theta\{\lambda^2(\theta^2-(\sin\theta)^2)+2\lambda[\theta(\pi-\theta)+(\sin\theta)^2]+[(\pi-\theta)^2-(\sin\theta)^2]\}}{\lambda(\theta^2-(\sin\theta)^2)[\pi-\theta+\sin\theta\cos\theta]+[(\pi-\theta)^2-(\sin\theta)^2][\theta-\sin\theta\cos\theta]}\\
+   g(\theta,\lambda)&\equiv\int_0^\theta\frac{1}{f(\theta,\lambda)}\,d\beta
+   \end{align}
 
 * The parameters :math:`\lambda`, :math:`q_{inner}`, and :math:`q_{outer}` are currently not accessible from the input card
   and are hard-set to zero. :math:`\lambda` is the ratio of gas viscosity to liquid viscosity whereas
   :math:`q_{inner}` and :math:`q_{outer}` represent influences from the inner and outer flow regions
 
-.. figure:: /figures/122_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   f(\theta,0)\equiv\frac{2\sin\theta}{[\theta-\sin\theta\cos\theta]}
 
 When smoothing is not used, i.e. :math:`t_{relax}` = 0 , the imposed velocity is equal to that
 stipulated by the Hoffman correlation. Also see WETTING_SPEED_COX and
@@ -120,8 +123,3 @@ SHARP_COX_VELOCITY for level-set versions.
 * This condition was motivated by the Cox hydrodynamic theory of wetting (cf.
   Stephan F. Kistler, “Hydrodynamics of Wetting,” in Wettability edited by John
   Berg, 1993 ).
-
-
-
-
-.. TODO - Lines 81, 87, 93, and 101 have photos that needs to be replaced with the real equation.

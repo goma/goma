@@ -13,9 +13,12 @@ Polymer Shift Function
 This optional card is used to specify the temperature shift function for the polymer
 relaxation times and viscosities in the polymer stress equation(s);
 
-.. figure:: /figures/391_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   \lambda_k(T)&=a(T)\lambda_k'\\
+   \eta_k(T)&=a(T)\eta_k'
+   \end{aligned}
 
 Valid options are
 
@@ -34,9 +37,7 @@ all viscoelastic modes.
 |**MODIFIED_WLF** |Applies a temperature shift factor which is a modified version of the Williams-Landel-Ferry shift model (cf.|
 |                 |Bird, Armstrong, and Hassager 1987, pp.139-143);                                                            |
 |                 |                                                                                                            |
-|                 |.. figure:: /figures/392_goma_physics.png                                                                   |
-|                 | :align: center                                                                                             |
-|                 | :width: 90%                                                                                                |
+|                 |:math:`a(T)=\exp\left[\frac{C_1(T_{ref}-T)}{C_2+T-T_{ref}}\right]`                                          |
 |                 |                                                                                                            |
 |                 |The reference temperature, Tref, is taken from the Reference Temperature card. Note that if C2 is chosen    |
 |                 |equal to Tref, this model reduces to an Arrhenius form where C1 = Eμ/RTref. Also note that this form is     |

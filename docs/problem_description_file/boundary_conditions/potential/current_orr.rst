@@ -59,9 +59,9 @@ overpotential is large and negative such that the first exponential term in the 
 Volmer kinetic model is much smaller than the second term and thus can be dropped to
 yield the Tafel kinetic model for computing current density:
 
-.. figure:: /figures/187_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   j=-ai_0H\left(\frac{c}{c_{ref}}\right)^\beta e^{-\frac{\alpha_cF}{RT}(V-\Phi-U_0)}
 
 here *j* is current density in units of A/ :math:`cm^2`; :math:`ai_0` denotes the product of interfacial area
 per unit volume by exchange current density, which has units of A/ :math:`cm^3`; *H* is the

@@ -38,17 +38,17 @@ The momentum equation is modified with the addition of a numerical adaptive
 viscosity to help maintain the elliptic character of the equation set as stress and velocity
 gradient increase
 
-.. figure:: /figures/393_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \nabla\cdot(\eta_s+\eta_p)\eta_a\gamma+\nabla\cdot\boldsymbol{\tau}-\nabla p-\nabla\cdot(\eta_s+\eta_p)\eta_a(G+G^t)=0
 
 where ηs is the solvent viscosity and ηp is the polymer viscosity. If we set the adaptive
 viscosity to zero (ηa= 0), we obtain the Standard EVSS Formulation of Guenette and
 Fortin (1995). For adaptive viscosity, we use the following definition
 
-.. figure:: /figures/394_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \eta_a=\frac{\sqrt{1+\frac{\varepsilon}{2}\boldsymbol{\tau}\cdot\boldsymbol{\tau}}}{\sqrt{1+\frac{\varepsilon}{2}(G+G^t)\cdot(G+G^t)}}
 
 with 0<ε<1.
 

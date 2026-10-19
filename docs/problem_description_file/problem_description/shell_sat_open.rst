@@ -55,9 +55,13 @@ This applies the equation with all terms activated.
 
 The equation solved is as follows:
 
-.. figure:: /figures/317_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   \frac{dS}{dt}&=\frac{1}{\varphi}\nabla\cdot\left(-\frac{\kappa}{\mu}\nabla P\right)\\
+   \frac{dP}{dz}&=\frac{P_0-P_{lub}-2\sigma/r}{HS}\\
+   \nabla_{II}P&=\nabla_{II}P_{lub}
+   \end{aligned}
 
 * The mass matrix multiplier activates the time-derivative term.
 
@@ -107,9 +111,3 @@ needs in the thin-shell material inputs the following section:
    Porous Shell Initial Pore Pressure = CONSTANT 0.
 
 Please read the associated material property cards sections for details.
-
-
-
-
-..
-	TODO - Line 58 contains a photo that needs to be written as an equation.

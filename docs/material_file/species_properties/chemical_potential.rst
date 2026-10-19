@@ -36,9 +36,9 @@ Following is a sample card:
 The chemical potential of species k in an ideal solution is given by the expression,
 [Denbigh, p. 249],
 
-.. figure:: /figures/457_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \mu_k=RT\ln(X_k)+\mu_k^*(T,P)
 
 where μk*(T, P) is defined as the chemical potential of species k in its pure state (or a
 hypothetical pure state if a real pure state doesn’t exist) at temperature T and pressure
@@ -49,9 +49,9 @@ pure species k. Xk is the mole fraction of species k in the phase.
 The chemical potential of species k (actually there is only one species!) in a
 stoichiometric phase is equal to
 
-.. figure:: /figures/458_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \mu_k=\mu_k^*(T,P)
 
 
 

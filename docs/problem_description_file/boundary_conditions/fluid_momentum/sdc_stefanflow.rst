@@ -23,9 +23,9 @@ The *SURFDOMAINCHEMKIN_STEFAN_FLOW* (shortened to *SDC_STEFANFLOW*
 in the *name2* member of the *BC_descriptions* struct in mm_names.h) boundary
 condition solves the following equation representing Stefan flow at a boundary.
 
-.. figure:: /figures/113_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}_l\cdot[\rho^l(\boldsymbol{u}^l-\boldsymbol{u}_s)]=\sum_{k=1}^N-W_kS_k^l
 
 where :math:`n_l` is the outward facing normal to the liquid material, :math:`p^l` is the liquid density, :math:`u^l`
 is the (mass average) velocity at the current surface quadrature point, and 
@@ -105,5 +105,3 @@ interface. The source term to be used will be taken from multiple previously spe
 
 GTM-015.1: Implementation Plan for Upgrading Boundary Conditions at
 Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat
-
-.. TODO - Line 26 have photos that needs to be replaced with the real equation.

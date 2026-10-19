@@ -250,7 +250,6 @@ Following is a sample section of the material file for the
 
    Diffusivity = GENERALIZED_FREE_VOL 1 0.943 1.004 0.000983 0.000239 -12.12 -96.4 0.395 0.266 0.00143 0 1.265983036 0.9233610342
 
-
 Sample section of the material file for the **STEFAN_MAXWELL_CHARGED**
 *Diffusion Constitutive Equation* with the CONSTANT *Diffusivity* model:
 
@@ -341,15 +340,18 @@ formulation can be both positive and negative, and are constant values.
 In mathematical form, the binary mutual diffusion coefficient (solvent diffusion in a
 polymeric solution), using the free volume theory, is given by:
 
-.. figure:: /figures/431_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   D=D_{01}(1-\phi_1)^2(1-2\chi\phi_1)\exp\left[-\frac{(\omega_1V_1^*+\omega_2\xi V_2^*)}{V_{FH}/\gamma}\right]
 
 where
 
-.. figure:: /figures/432_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   \frac{V_{FH}}{\gamma}&=\frac{K_{11}}{\gamma}\omega_1(K_{21}+T-T_{g1})+\frac{K_{12}}{\gamma}\omega_2(K_{22}+T-T_{g2})\\
+   \phi_1&=\frac{\omega_1V_1^0}{\omega_1V_1^0+\omega_2V_2^0}
+   \end{aligned}
 
 Here, ω1 is the solvent weight fraction, ω2 polymer weight fraction; V0
 1 and V02 are, respectively, solvent and polymer specific volumes; φ1 solvent volume fraction, φ2
@@ -372,15 +374,15 @@ theory and the generalized Fick’s law. For a ternary mixture of solvent (1), s
 and polymer (3), the concentration-dependent self-diffusivity is given by (Vrentas, et.
 al., 1984):
 
-.. figure:: /figures/433_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   D_{11}=D_{01}\exp\left[-\frac{\left(\omega_1V_1^*+\omega_2V_2^*\frac{\xi_{13}}{\xi_{23}}+\omega_3V_3^*\xi_{13}\right)}{V_{FH}/\gamma}\right]
 
 where
 
-.. figure:: /figures/434_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \frac{V_{FH}}{\gamma}=\frac{K_{11}}{\gamma}\omega_1(K_{21}+T-T_{g1})+\frac{K_{12}}{\gamma}\omega_2(K_{22}+T-T_{g2})+\frac{K_{13}}{\gamma}\omega_2(K_{23}+T-T_{g3})
 
 The parameters for this model are the same twelve parameters as for the binary
 **FREE_VOL** model and so can be specified in the exact same order. The mutual
@@ -388,9 +390,9 @@ diffusivities required to fill the cross-terms are also concentration-dependent.
 addition, the gradient in chemical potential is also accounted for (Alsoy and Duda,
 1999; Zielinski and Hanley, 1999).
 
-.. figure:: /figures/435_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   D_{ij}=D_{ii}\rho_i\frac{\partial\ln a_i}{\partial\rho_j}\qquad\ln a_i=\ln\gamma_i\phi_i
 
 ai is the activity of species i, which can be written in terms of the activity coefficient,
 γi, and volume fraction, φi. The current implementation of species activity is based on
@@ -405,15 +407,20 @@ acceleration vector (Krishnan, et. al., 1996). This model is used in predicting 
 particle distributions of particulate suspensions undergoing flow. For this model, the
 mass flux vector J is given by the following:
 
-.. figure:: /figures/436_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   J=J_c+J_\mu+J_r+J_g
 
 where
 
-.. figure:: /figures/437_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   J_c&=-C_iD_c\nabla(\dot{\gamma}C_i),\\
+   J_\mu&=C_i^2\dot{\gamma}D_\mu\nabla(\ln\mu),\\
+   J_r&=C_i\dot{\gamma}^2D_r\frac{\hat{\boldsymbol{n}}}{r},\\
+   J_g&=D_g\frac{(\rho_s-\rho_f)}{\mu}C_i(1-C_i)\hat{\boldsymbol{g}}
+   \end{aligned}
 
 where Ci is the particulate phase volume fraction, i is the species number designation of
 the particulate phase, the shear rate, μ the viscosity, the normal unit acceleration
@@ -425,9 +432,9 @@ acceleration vector.
 such as thermal batteries. Such temperature dependency can be described using the
 following constitutive model that makes use of Arrhenius temperature dependency:
 
-.. figure:: /figures/438_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   D_{ij}=D_{ij}^0e^{-\frac{E_D}{R}\left(\frac{1}{T}-\frac{1}{T_0}\right)}
 
 where Dij are the Stefan-Maxwell diffusivities as defined in Equations 13 and 14.
 are the reference Stefan-Maxwell diffusivities at reference temperature T0; ED is the
@@ -439,9 +446,9 @@ dimensionless.
 concentrated solutions. The Stefan-Maxwell diffusivities, Dij, as defined in the
 following Stefan-Maxwell flux model (cf. Chen, et. al., 2000, Chen, et. al., 1998):
 
-.. figure:: /figures/439_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \nabla x_i=\sum_{j\ne i}\frac{x_iJ_j-x_jJ_i}{cD_{ij}}
 
 are taken to be constant. Here, xi is mole fraction of species i, Ji the molar flux of
 species i, and c the total molar concentration. Since Dij = Dji and Dii are not defined,
@@ -454,9 +461,9 @@ migration) of charged species in concentrated electrolyte solutions. The Stefan-
 Maxwell diffusivities, Dij, as defined in the following Stefan-Maxwell flux model (cf.
 Chen et al. 2002, Chen, et. al., 2000, Chen, et. al., 1998):
 
-.. figure:: /figures/440_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \nabla x_i+\frac{F}{RT}z_ix_i\nabla\Phi=\sum_{j\ne i}\frac{x_iJ_j-x_jJ_i}{cD_{ij}}
 
 are taken to be constant, as in the case of multicomponent diffusion of neutral species
 in concentrated solutions. Here, Φ is electrical potential in electrolyte solution, zi
@@ -467,9 +474,9 @@ constant (8.314 J/mole-K), and T electrolyte solution temperature.
 charged species in dilute electrolyte solutions. The Fickian diffusivity of species i, Di,
 as defined in the following Fickian flux model (cf. Newman, 1991; Chen, et. al., 2000):
 
-.. figure:: /figures/441_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   J_i=-D_i\nabla c_i-\frac{F}{RT}z_iD_ic_i\nabla\Phi
 
 is taken to be constant. Here, ci is molar concentration of species i.
 
@@ -517,30 +524,30 @@ Concerning the units of the mass transfer coefficient on the YFLUX boundary
 condition, the above discussion now sets those. *Goma* clearly needs the flux in the
 following form:
 
-.. figure:: /figures/442_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot D\nabla Y=K\cdot(y_i-y_i^\infty)
 
 and dimensionally for the left hand side
 
-.. figure:: /figures/443_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   (L^2/t)\cdot(1/L)=L/t
 
 where D is in units L2 ⁄ t, the gradient operator has units of 1 ⁄ L so K has to be in units
 of L ⁄ t (period!) because yi is a fraction.
 
-.. figure:: /figures/444_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot D\nabla Y=\hat{K}(p_i-p_i^\infty)
 
 then K’s units will have to accommodate for the relationship between p1 and y1 in the
 liquid, hopefully a linear one as in Raoult’s law, i.e. if pi = PVyi where pv is the vapor
 pressure, then
 
-.. figure:: /figures/445_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot D\nabla Y=KP_V(y_i-y_i^\infty)
 
 and so K on the YFLUX command has to be KPv ....and so on.
 
@@ -548,9 +555,9 @@ Finally, you will note, since we do not multiply through by density, you will ha
 take care of that, i. e., in the Price paper (viz., Price, et. al., 1997) he gives K in units of
 t ⁄ L. So, that must be converted as follows:
 
-.. figure:: /figures/446_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   K_{price}(P_V/\rho)=K_{goma}:\quad(t/L)(M/Lt^2)(L^3/M)=L/t
 
 This checks out!
 

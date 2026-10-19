@@ -89,9 +89,9 @@ contact angle is not 180 degrees (viz. rolling motion condition). The slippage
 mechanism was deployed through the use of Navier’s slip condition, which basically
 goes as
 
-.. figure:: /figures/243_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot\boldsymbol{T}=\frac{\boldsymbol{v}-\boldsymbol{v}_s}{\beta}
 
 Here :math:`\beta` is the slip coefficient, which is taken to be variable depending on its proximity
 to the contact line (through the “slip_width” parameter). Note that the smaller the :math:`\beta`, the
@@ -141,8 +141,3 @@ Some more usage notes as follows:
 .. figure:: /figures/244_goma_physics.png
 	:align: center
 	:width: 90%
-
-
-
-
-.. TODO -Lines 92 and 141 have pictures that need to be swapped with the correct equations.

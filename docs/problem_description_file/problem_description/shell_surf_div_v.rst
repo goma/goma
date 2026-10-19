@@ -59,9 +59,13 @@ surface rheological constitutive equation (namely the surface divergence of the 
 field in the 4th and 6th terms on the right of the following equation). The functional
 form of this equation is as follows:
 
-.. figure:: /figures/305_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   -(\boldsymbol{n}\cdot\boldsymbol{T})&=\boldsymbol{F}^w+2H\sigma\boldsymbol{n}+\nabla_s\sigma+(\kappa^s+\mu^s)\nabla_s(\nabla_s\cdot\boldsymbol{v})\\
+   &\quad+2\mu^s\boldsymbol{n}(\boldsymbol{b}-2H\boldsymbol{I}_s)\cdot\nabla_s\boldsymbol{v}+2\mu^s\boldsymbol{n}(\kappa^s+\mu^s)\nabla_s\cdot\boldsymbol{v}\\
+   &\quad+\mu^s\{\boldsymbol{n}\times\nabla_s[(\nabla_s\times\boldsymbol{v})\cdot\boldsymbol{n}]-2(\boldsymbol{b}-2H\boldsymbol{I}_s)\cdot(\nabla_s\boldsymbol{v})\cdot\boldsymbol{n}\}
+   \end{aligned}
 
 Here, :math:`\Delta_s` :math:`\equiv` (:math:`\underline{I}` – :math:`\underline{n}` :math:`\underline{n}`) ⋅ :math:`\Delta` is the surface gradient operator, and :math:`I_s` :math:`\equiv` (:math:`\underline{I}` – :math:`\underline{n}` :math:`\underline{n}`) is the surface
 unit tensor. :math:`\mu_s` and :math:`\kappa_s` are the surface shear viscosity and surface extensional viscosity, respectively. Note that the first three terms on the right are balance of the stress in the standard Goma CAPILLARY condition, with surface tension gradients being
@@ -83,6 +87,3 @@ Butterworth-Heinemann, Boston).
 
 Edwards, D. A., Brenner, H., Wasan, D. T., 1991. Interfacial Transport Processes and
 Rheology. Butterworth-Heinemann, Boston.
-
-..
-	TODO - Line 62 contains a photo that needs to be written as an equation.

@@ -74,9 +74,9 @@ Continuing in the flowrate by reading the last pressure value from *GUESS file*:
 * The requirement that is imposed by this boundary condition is the following
   integral:
 
-.. figure:: /figures/099_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_\Gamma(\boldsymbol{u}\cdot\boldsymbol{n})\,d\Gamma=U
 
 where *U* is the flowrate value supplied on the card. It is imposed by the addition of
 a Lagrange multiplier unknown on the boundary in question which will be

@@ -72,15 +72,15 @@ time.
 Derivation of this boundary condition starts with a relation propose by Blake and
 DeConinck for wetting line motion
 
-.. figure:: /figures/221_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   V_{wet}=V_0\sinh(g(\cos\theta-\cos\theta_s))
 
 This is mapped to a stress value by analogy with Navier’s slip relation,
 
-.. figure:: /figures/222_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \tau_w=\frac{V_{wet}}{\beta}=\frac{v_0}{\beta}\sinh[g(\cos\theta_s-\cos\theta)]
 
 This relation contrasts with the “linear” relation applied by the
 WETTING_SPEED_LINEAR relation in that the rate of change of the wetting velocity
@@ -94,15 +94,13 @@ then weighted by smooth Dirac function to restrict its location to being near th
 interface, weighted by a FEM shape function, integrated over the boundary sideset and
 added to the fluid momentum equation for the corresponding node j, vis:
 
-.. figure:: /figures/223_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int N_j\tau_w\hat{\boldsymbol{t}}\delta_w(\phi)\,d\Gamma
 
 
 --------------
 **References**
 --------------
 
-No References. 
-
-.. TODO -Lines 75, 81 and 97 have pictures that need to be swapped with the correct equations.
+No References.

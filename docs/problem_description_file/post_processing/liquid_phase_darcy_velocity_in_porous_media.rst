@@ -40,9 +40,9 @@ This input example turns on calculation of the liquid phase velocity components:
 The liquid-phase Darcy velocity is given by the extended Darcy law, which accounts
 for the relative reduced flow due to the presence of another phase, viz.
 
-.. figure:: /figures/332_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{F}_l=\rho_{lw}\boldsymbol{v}_l=-\frac{\rho_lkk_l}{\mu_l}(\nabla p_l-\rho_l\boldsymbol{g})
 
 Here :math:`v_l` represents the Darcy flux, or Darcy velocity, in the gas phase, k is the
 permeability of the porous medium, :math:`k_l` is the relative permeabilities for the liquid and
@@ -56,6 +56,3 @@ liquid phases respectively, :math:`\mu_l` are the liquid viscosity, :math:`p_l` 
 
 GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
 September 1, 2002, P. R. Schunk
-
-.. 
-	TODO - Line 43 is a photo that needs to be swapped with the equation.

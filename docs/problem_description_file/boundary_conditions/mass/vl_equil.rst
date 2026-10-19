@@ -69,9 +69,9 @@ portion of the gas phase, 1800 and 18, respectively.
 One of the simplest forms of the equilibrium relation is the Raoult’s law, where the
 mole fraction of a species is equal to its mole fraction in the liquid multiplied by the ratio of its pure component vapor pressure to the total pressure in the system.
 
-.. figure:: /figures/154_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   y_iP^{total}=x_iP_i^v\quad\forall\ i
 
 where :math:`y_i` are the mole fraction of species *i* in the gas phase and 
 :math:`x_i` is the mole fraction in
@@ -92,5 +92,3 @@ December 10, 1998, A. C. Sun
 
 Schunk, P.R. and Rao, R.R. 1994. “Finite element analysis of multicomponent twophase
 flows with interphase mass and momentum transport,” IJNMF, 18, 821-842.
-
-.. TODO - Line 72 has a photo that needs to be replaces with the proper equation.

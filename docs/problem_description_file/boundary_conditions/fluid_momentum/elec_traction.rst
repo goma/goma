@@ -70,9 +70,9 @@ the material property file.
 
 In its most general form, the traction condition is written
 
-.. figure:: /figures/104_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot[\boldsymbol{T}^{(o)}-\boldsymbol{T}^{(i)}]=-2H\sigma\boldsymbol{n}-\nabla\sigma
 
 where **T** is the stress tensor, the superscripts ( *o* ) and ( *i* ) denote the outer and inner
 phases, *n* is a unit normal pointing into the outer phase, -*H* is the local mean curvature,
@@ -84,9 +84,9 @@ Newtonian stress tensor) and an electrical stress
 stress tensor provided through this boundary condition applies to incompressible,
 polarizable materials:
 
-.. figure:: /figures/105_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{T}_e=\varepsilon\boldsymbol{E}\boldsymbol{E}-\frac12\varepsilon\boldsymbol{E}\cdot\boldsymbol{E}\boldsymbol{I}
 
 where :math:`\varepsilon` is the electrical permittivity, 
 **E** **=** – :math:`\Delta` *V* is the electric field and *V* is the voltage
@@ -94,9 +94,9 @@ or electric potential.
 
 In expanded form, the traction condition becomes
 
-.. figure:: /figures/106_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot[\boldsymbol{T}_m^{(o)}-\boldsymbol{T}_m^{(i)}]=-\boldsymbol{n}\cdot\boldsymbol{T}_e^{(o)}+\boldsymbol{n}\cdot\boldsymbol{T}_e^{(i)}-2H\sigma\boldsymbol{n}-\nabla\sigma
 
 The *ELEC_TRACTION* boundary condition is responsible for applying either the first
 or second terms on the right hand side (specified through the element block ID
@@ -108,8 +108,3 @@ function (*mm_ns_bc.c*) which applies the *ELEC_TRACTION* boundary condition. It
 the etm function argument. The normal term multipliers couldn’t be used because this
 boundary condition can be applied from within a material that doesn’t have the
 momentum equations defined (or properly set).
-
-
-
-
-.. TODO - Lines 87 and 97 have photos that needs to be replaced with the real equation.

@@ -43,9 +43,9 @@ This boundary condition is applied at sideset 100.
 
 * The mathematical form of the boundary condition is
 
-.. figure:: /figures/253_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot\boldsymbol{\sigma}=\boldsymbol{k}P_{lub}+\boldsymbol{i}\left(\frac{h}{12}\frac{\partial P}{\partial x}+\frac{u\mu}{h}\right)+\boldsymbol{j}\left(\frac{h}{12}\frac{\partial P}{\partial x}+\frac{v\mu}{h}\right)
 
 * This condition is similar to FLUID_SOLID and SOLID_FLUID boundary
   conditions for the case of fluid-structure interaction between two continuum
@@ -53,8 +53,3 @@ This boundary condition is applied at sideset 100.
 
 * Note that the sideset as generated in CUBIT or related software is actually 
   attached to the continuum domain and not the shell face, as those faces (top and bottom of sheet and not the edges) are not true finite element sides. Most mesh generators will not allow sidesets to be include shell element faces. GOMA figures out the right thing to do.
-
-
-
-
-.. TODO - Line 46 has an image that needs to be replaced with the equation. 

@@ -46,9 +46,9 @@ the boundary defined by sideset 23:
 
 * The actual boundary condition that is applied to the fluid is given as follows:
 
-.. figure:: /figures/095_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \left.\boldsymbol{n}\cdot\boldsymbol{T}\right|_{fluid}=-\boldsymbol{n}P
 
 where *n* is the outward normal vector to the boundary, *T* is the total fluid stress
 tensor, and *P* is the applied pressure equal to <float1> above. From this the user
@@ -81,8 +81,3 @@ should be able to deduce the appropriate sign for his/her pressure value.
   inlet velocity profile will be determined implicitly. Augmenting conditions can
   then be used to couple the imposed pressure to the average flow rate over the
   boundary for an even more advanced capability.
-
-
-
-
-.. TODO - Line 49 contains a photo that needs to be exchanged for the equation.

@@ -47,9 +47,9 @@ according to the equation above.
 Using the concentration of solvent species as the independent variable in the *LINEAR*
 model, the viscosity *y* at a certain concentration *c* is:
 
-.. figure:: /figures/373_goma_physics.png                                                          
-   :align: center                                                                                  
-   :width: 90%
+.. math::
+
+   y=y_1+\left(\frac{V_{sf}-c}{V_{sf}}\right)(y_2-y_1)
 
 where :math:`V_{sf}` is the stress-free solvent volume fraction and the solvent volume fraction at
 solidification, which is set by the *Stress Free Solvent Vol Fraction* card in the
@@ -102,6 +102,3 @@ Tam, A. Sun, P. R. Schunk and C. J. Brinker, 2000.
 
 S.Y. Tam’s thesis: “Stress Effects in Drying Coatings,” Ph.D Dissertation, University of
 Minnesota, 1997
-
-.. 
-	TODO - Line 50 is photo that needs to be replaced with the correct equations. 

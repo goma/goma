@@ -52,14 +52,9 @@ a sample usage:
 This boundary condition applies a surface charge balance along the shell
  surface.. In its most general form, this balance is written
 
-.. figure:: /figures/246_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   (\varepsilon\boldsymbol{n}\cdot[\boldsymbol{E}^{(o)}-\boldsymbol{E}^{(i)}])=-\frac{\sigma}{2}
 
 where **E** is the electric field vector, the superscripts (*o*) and (*i*) denote the outer and inner phases, *n* is a unit normal pointing into the outer phase, :math:`\varepsilon` is the electrical permittivity, 
 :math:`\underline{E}` = –:math:`\Delta` *V*  is the electric field and *V* is the voltage or electric potential.
-
-
-
-
-.. TODO -Line 55 has a photo hat needs to be replaces with an equation.

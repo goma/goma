@@ -58,21 +58,21 @@ The generalized flux of liquid phase solvent, in both gas and liquid phases, con
 term that accounts for diffusion of the liquid solvent species as gas vapor (see
 references below). That flux is as follows:
 
-.. figure:: /figures/418_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   D_{gv}=D_v^0\left(\frac{\phi(1-S)}{\tau}\right)
 
 If the media type is **POROUS_TWO_PHASE**, this expression is divided by
 
-.. figure:: /figures/419_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   p_{gas}/P_{gas}^*
 
 and if in addition it is temperature dependent, this expression is multiplied by
 
-.. figure:: /figures/420_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \left(\frac{T}{T^0}\right)^n
 
 
 

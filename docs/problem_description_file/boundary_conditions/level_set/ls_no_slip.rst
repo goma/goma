@@ -57,9 +57,9 @@ coupling only proceeds in one direction : solid to fluid.
 
 This boundary condition concerns itself with enforcing the kinematic constraint:
 
-.. figure:: /figures/204_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_\Gamma\phi_\gamma^i[\dot{\boldsymbol{x}}-\boldsymbol{v}]\,d\Gamma=0
 
 between the solid material with prescribed motion, :math:`\underline {\dot{x}}` , and the fluid whose velocity is, :math:`\gamma`. This kinematic constraint represents a new set of equations in the model for which
 unknowns must be associated. In this case, we introduce a Lagrange multiplier vector
@@ -69,9 +69,9 @@ for those fluid elements that are crossed by the fluid/solid boundary. These Lag
 multiplier fields couple the influence of the solid material on the fluid through body
 force terms in the fluid momentum equations of the form:
 
-.. figure:: /figures/205_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_\Gamma\phi_v^i\boldsymbol{\gamma}\,d\Gamma
 
 When applying this boundary condition it is necessary to include Lagrange multiplier
 equations equal to the number of dimensions in the problem. These are specified in the
@@ -95,7 +95,4 @@ solid interface.
 **References**
 --------------
 
-No References. 
-
-..
-	TODO - Lines 60 and 72 have pictures that needs to be exhanged with equations.
+No References.

@@ -45,9 +45,9 @@ Definitions of the input parameters are as follows:
 |                       |determined by the selection for {model_name}.                                        |
 +-----------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/454_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   p_v=p_v^*\exp\left[-\frac{p_cM_w}{\rho_lRT}\right]
 
 Vapor pressure model choices and their parameters are discussed below.
 
@@ -122,13 +122,13 @@ Vapor pressure model choices and their parameters are discussed below.
 |                       | * <float8> - Tmax, Maximum temperature of the range over which the relation will hold    |
 +-----------------------+------------------------------------------------------------------------------------------+
 
-.. figure:: /figures/455_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-.. figure:: /figures/456_goma_physics.png
-	:align: center
-	:width: 90%
+   P_i^{vap}=A\exp\left(B_i+\frac{C_i}{(T+D_i)}\right)\qquad T_{min}<T<T_{max}
+
+.. math::
+
+   P_i^{vap}=A\exp\left(B_i+\frac{C_i}{T}+D_i\ln T+E_iT^{F_i}\right)\qquad T_{min}<T<T_{max}
 
 ------------
 **Examples**

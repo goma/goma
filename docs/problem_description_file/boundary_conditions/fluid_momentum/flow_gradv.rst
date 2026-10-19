@@ -66,9 +66,9 @@ In the preceding example, the pressure value used is obtained from the solution 
   integration by parts and the divergence theorem. In this boundary condition, the
   following integral is included with the momentum equation:
 
-.. figure:: /figures/097_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_A\phi_i\boldsymbol{n}\cdot(-P\boldsymbol{\delta}+\mu\nabla\boldsymbol{v})\,dA
 
 where :math:`\mu` is the viscosity of a Newtonian or generalized Newtonian fluid. As in the
 case of the *FLOW_STRESSNOBC* condition the preceding integral appears as a
@@ -77,8 +77,3 @@ function of pressure and velocity unknowns as any other term.
 * The pressure term in the preceding may be replaced by a fixed, imposed pressure
   value. This is done by setting the optional input integer to -1 and providing the
   imposed value in :math:`P_{applied}` ; otherwise, the value set in :math:`P_{applied}` is ignored.
-
-
-
-
-.. TODO - Line 68 contains a photo that needs to be exchanged for the equation.

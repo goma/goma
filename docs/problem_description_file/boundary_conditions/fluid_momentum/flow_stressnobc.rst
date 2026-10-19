@@ -59,9 +59,9 @@ required.
 * The finite element formulation of the fluid momentum equations generates
   boundary integrals of the form:
 
-.. figure:: /figures/096_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_A\phi_i\boldsymbol{n}\cdot(-P\boldsymbol{\delta}+\boldsymbol{\tau})\,dA
 
 where *P* is the isotropic pressure and :math:`\tau` the viscous stress. Often this boundary term
 is left off entirely on a particular boundary with the result that a zero normal force
@@ -118,5 +118,3 @@ IJNMF, 24, 413-417, (1997).
 
 Sani, R.L., and P.M. Gresho, “Resume and remarks on the open boundary condition
 minisymposium,” IJNMF, 18, 983-1008, (1994).
-
-.. TODO - Line 62 contains a photo that needs to be exchanged for the equation.

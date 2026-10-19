@@ -61,9 +61,9 @@ The *DARCY_CONTINUOUS* boundary condition imposes the following requirement at
 the interface between a continuous medium and a saturated or partially saturated
 porous medium:
 
-.. figure:: /figures/115_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot\boldsymbol{q}=\rho_l\boldsymbol{n}\cdot(\boldsymbol{v}-\boldsymbol{v}_s)
 
 where :math:`\underline{n}` is the outward-pointing normal to the surface, 
 :math:`\underline{q}` is the Darcy flux, :math:`p_l` is the
@@ -99,5 +99,3 @@ September 1, 2002, P. R. Schunk
 
 GT-028.0: Liquid Drop Impact on a Porous Substrate: a level-set tutorial, August 15,
 2005.
-
-.. TODO - Line 64 have photos that needs to be replaced with the real equation.

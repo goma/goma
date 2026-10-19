@@ -71,18 +71,18 @@ current time.
 Derivation of this boundary condition starts with a relation that represents the Hoffman
 wetting correlation
 
-.. figure:: /figures/230_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   Ca\equiv\frac{\mu V_{Hoffman}}{\sigma}=g_{Hoff}(\theta)-g_{Hoff}(\theta_s)
 
 See VELO_THETA_HOFFMAN for details of the Hoffman function g. Note that the
 convention for contact angles in this relation is that values of :math:`\theta` near to zero indicate a
 high degree of wetting and values of :math:`\theta` near 180 ° indicate the opposite. This is mapped
 to a stress value by analogy with Navier’s slip relation,
 
-.. figure:: /figures/231_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \tau_w=\frac{V_{Hoffman}}{\beta}
 
 This relation contrasts with the “linear” relation applied by the
 WETTING_SPEED_LINEAR relation in that more consistent physical behavior
@@ -95,9 +95,9 @@ then weighted by smooth Dirac function to restrict its location to being near th
 interface, weighted by a FEM shape function, integrated over the boundary sideset and
 added to the fluid momentum equation for the corresponding node j, vis:
 
-.. figure:: /figures/232_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int N_j\tau_w\hat{\boldsymbol{t}}\delta_w(\phi)\,d\Gamma
 
 
 --------------
@@ -106,5 +106,3 @@ added to the fluid momentum equation for the corresponding node j, vis:
 
 Stephan F. Kistler 1993. “Hydrodynamics of Wetting” in Wettability, edited by John
 Berg, Surfactant Science Series, 49, Marcel Dekker, NewYork, NY, pp. 311-429.
-
-.. TODO -Lines 74, 83 and 98 have pictures that need to be swapped with the correct equations.

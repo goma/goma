@@ -42,15 +42,10 @@ This condition applied at sideset 100. and sets a particle flux to 1.0
 * The actual weighted residual equation that is applied to node on the surface 
   is
 
-.. figure:: /figures/252_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int\phi_i\{[\boldsymbol{n}\cdot Dh\nabla_{II}\varphi-J_p]\}\,d\Gamma=0
 
 where :math:`\phi_i` is the finite element trial function, **n** is the outward-pointing normal to the surface, :math:`J_p` and is the particles flux specified in the <float1>.
 
 * The condition replaces the residual equation shell_partc at the boundary.
-
-
-
-
-.. TODO - Line 45 has an image that needs to be replaced with the equation. 

@@ -41,16 +41,11 @@ This condition applied at sideset 100.
 * The finite element formulation of the second equation of film profile 
   equation generates boundary integral in the form of
 
-.. figure:: /figures/251_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int\phi_i\boldsymbol{n}\cdot\nabla_{II}h\,d\Gamma=0
 
 * This condition is similar to the SHELL_GRAD_FH boundary condition, except
   that the condition is now a weak integrated condition that is *added* to the 
   residual equations, instead of replacing them and the flux is no longer 
   specified.
-
-
-
-
-.. TODO - Line 44 has an image that needs to be replaced with the equation. 

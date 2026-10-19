@@ -53,9 +53,9 @@ Two more detailed examples are contained in the Technical Discussion section.
 
 The *LATENT_HEAT* boundary condition has the form
 
-.. figure:: /figures/135_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot\boldsymbol{q}=\sum_{i=1}^{Numspec}\Delta H_v\rho h_i(y_i-y_i^0)
 
 where :math:`\underline{n}` is the outward normal to the surface, :math:`\underline{q}` is the heat flux vector, :math:`\Delta` :math:`H_\nu` is the 
 heat of vaporization, :math:`\rho` is density, :math:`h_i` is the heat-transfer coefficient for species *i*, and :math:`y^0_i`
@@ -126,7 +126,6 @@ plus, in the corresponding material file:
    Vapor Pressure = CONSTANT   1   0.
    Species Volume Expansion = CONSTANT   1   1.
    Reference Concentration = CONSTANT   1   0.
-
 
 
 --------------

@@ -63,9 +63,12 @@ number is currently not used and ignored.
 
 The mathematical form for this boundary condition is as follows
 
-.. figure:: /figures/175_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   \boldsymbol{n}\cdot(\boldsymbol{v}_g\rho_{g_i}+\boldsymbol{v}_l\rho_{l_i}+\boldsymbol{J}_{g_i}+\boldsymbol{J}_{l_i})&={}\\
+   &=h_1\phi(\rho_{g_i}-\rho_{g_i}^0)+H(p_{liq}-p_{liq}^0)h_2\phi(p_{liq}-p_{liq}^0)-(\boldsymbol{n}\cdot\boldsymbol{v}_s)\rho_{g_i}
+   \end{aligned}
 
 where the left hand side is the total flux of the liquid solvent i in the medium, which
 includes, in order, the flux due to Darcy flow of gas vapor, the Darcy flow of liquid

@@ -52,9 +52,9 @@ The following is a sample input card using several APREPRO variables:
   curvature term in the capillary stress jump condition. This produces integrals of the
   form:
 
-.. figure:: /figures/107_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_C\phi_i\sigma\boldsymbol{m}\,dC
 
 where *C* is the bounding curve of the capillary free surface, :math:`\sigma` is the surface
 tension, :math:`\phi_i` is a finite element shape function and *m* is a vector that is at once
@@ -77,8 +77,3 @@ divergence theorem still applies (for this boundary condition).
 * This card was previously called *SURFTANG* for the surface tangent component of
   the capillary force. Old input decks can be updated simply by changing the name
   of the boundary condition without changing the parameters.
-
-
-
-
-.. TODO - Lines 55 has a photo that needs to be replaced with the real equation.

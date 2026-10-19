@@ -56,18 +56,18 @@ The following is a sample input card:
 * This boundary condition applies a point collocated constraint on the angle between
   the solid surface vector and the free-surface normal of the form:
 
-.. figure:: /figures/111_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot\boldsymbol{n}_{fs}=\cos(\theta)
 
 where *n* is the solid surface vector specified on the card and :math:`n_{fs}` is the free-surface
 normal computed automatically by *Goma*. The contact angle is variable depending
 upon the relative velocity of the mesh speed, :math:`\dot{x}` , and the substrate speed, :math:`v_w`
 specified on the card float_list:
 
-.. figure:: /figures/112_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \theta=\theta_{stc}+(\theta_{adv}-\theta_{stc})\tanh(\alpha(\dot{\boldsymbol{x}}-\boldsymbol{v}_w)\cdot\boldsymbol{n}_{fs})
 
 * This constraint on the moving contact angle replaces a rotated component of the
   momentum equation. In effect a wetting force is applied at the contact line whose
@@ -83,8 +83,3 @@ specified on the card float_list:
 
 * Users are again cautioned that this boundary condition is untested and potentially
   inconsistent. It may not work.
-
-
-
-
-.. TODO - Lines 59 and 68 have photos that needs to be replaced with the real equation.

@@ -52,18 +52,18 @@ as the WETTING_SPEED_LINEAR boundary condition. However, its application in
 the FEM context is different. Instead of the wetting stress, 
 :math:`\tau_w`, being applied according to the formula:
 
-.. figure:: /figures/217_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int N_j\tau_w\hat{\boldsymbol{t}}\delta_w(\phi)\,d\Gamma
 
 as is the case for the WETTING_SPEED_LINEAR condition, the Dirac function is
 used to remove the integral and replace it with a point stress at the location where
 :math:`\phi` = 0 on the boundary. Designating this point as
 :math:`X_{cl}`, the vector applied to the momentum equation is given by
 
-.. figure:: /figures/218_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   N_j(X_{cl})\tau_w(X_{cl})\hat{\boldsymbol{t}}(X_{cl})
 
 Because the wetting stress is not applied at a point, it is most appropriate for use when
 using subelement integration which similarly collapses the surface tension sources
@@ -82,18 +82,18 @@ message.
 Derivation of the force condition for this boundary condition starts with a simple
 relation for wetting line velocity
 
-.. figure:: /figures/219_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   V_{wet}=\frac{1}{c_T}(\cos((\theta)-\cos(\theta_s)))
 
 Note that the convention for contact angles in this relation is that values of 
 :math:`\theta` near to
 zero indicate a high degree of wetting and values of :math:`\theta` near 180 ° indicate the opposite.
 This is mapped to a stress value by analogy with Navier’s slip relation,
 
-.. figure:: /figures/220_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \tau_w=\frac{V_{wet}}{\beta}=\frac{1}{\beta c_T}(\cos((\theta)-\cos(\theta_s)))
 
 It should be noted that there is no distinction for this model in the function of 
 :math:`\beta` or :math:`c_T`.
@@ -105,6 +105,4 @@ WETTING_SPEED_BLAKE) this is no longer true.
 **References**
 --------------
 
-No References. 
-
-.. TODO -Lines 55, 64, 85 and 94 have pictures that need to be swapped with the correct equations.
+No References.

@@ -42,9 +42,9 @@ The air and solid components are insoluble in the gas phase so the **RhoSolv_g_a
 **(RhoSolv_g_liq)** is determined from the vapor-liquid equilibrium relationship at a
 liquid-vapor meniscus. Specifically,
 
-.. figure:: /figures/327_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho_{gv}=\frac{M_wp_v}{RT}
 
 where :math:`M_w` is the average molecular weight of solvents in the mixture, R is the ideal gas
 constant, T is the temperature, and :math:`\rho_v` is the equilibrium vapor pressure. Note that this
@@ -59,6 +59,3 @@ vapor pressure can be affected by local meniscus curvature through the Kelvin eq
 
 GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
 September 1, 2002, P. R. Schunk
-
-..
-	TODo - Line 45 is a photo that needs to be exchanged with the correct equation.

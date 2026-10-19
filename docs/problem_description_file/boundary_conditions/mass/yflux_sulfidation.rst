@@ -105,9 +105,9 @@ Key word **SOLID_DIFFUSION_SIMPLIFIED** refers to the following simplified
 kinetic model of copper sulfidation in which gas-phase diffusion is neglected and Cu 
 is taken to be the diffusing species:
 
-.. figure:: /figures/143_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   r=ke^{-E/(RT)}c_{H_2S}c_{Cu}
 
 where *r* is molar rate of formation of sulfidation-corrosion product, :math:`Cu^2S`, per unit area, :math:`^cH_2S`
 is the molar concentration of :math:`H_2S` taken to be fixed at its bulk value,
@@ -119,9 +119,9 @@ Key word **SOLID_DIFFUSION** refers to the following kinetic model of copper
 sulfidation in which gas-phase diffusion is neglected and Cu vacancies and electron
 holes are taken as the diffusing species:
 
-.. figure:: /figures/144_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   r=k_1e^{-E_1/(RT)}c_{H_2S}\sqrt{c_{O_2}}-k_{-1}e^{-E_{-1}/(RT)}c_V^2c_h^2
 
 where *r* is molar rate of formation of :math:`Cu_2S` per unit area, :math:`^cH_2S` and :math:`^cO_2` are the molar
 concentrations of :math:`H_2S` and :math:`O_2`, respectively, taken to be fixed at their bulk values, :math:`^c_V`
@@ -135,32 +135,32 @@ kinetic model of copper sulfidation in which Cu vacancies and electron holes are
 as the diffusing species and the electroneutrality approximation is applied such that
 concentrations of Cu vacancies and electron holes are equal to each other:
 
-.. figure:: /figures/145_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   r=k_1e^{-E_1/(RT)}c_{H_2S}\sqrt{c_{O_2}}-k_{-1}e^{-E_{-1}/(RT)}c_V^4
 
 Key word **SOLID_DIFFUSION_ELECTRONEUTRALITY_LINEAR** refers to the
 following kinetic model of copper sulfidation:
 
-.. figure:: /figures/146_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   r=k_1e^{-E_1/(RT)}c_{H_2S}\sqrt{c_{O_2}}-k_{-1}e^{-E_{-1}/(RT)}c_Vc_h
 
 Key word **GAS_DIFFUSION** refers to the following simplified kinetic model of
 copper sulfidation in which solid-phase diffusion is neglected, and :math:`H_2S` and 
 :math:`O_2` are taken to be the diffusing species:
 
-.. figure:: /figures/147_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   r=ke^{-E/(RT)}c_{H_2S}\sqrt{c_{O_2}}
 
 Key word **FULL** refers to the following kinetic model in which diffusion in both the
 gas phase and the solid phase are important, and :math:`H_2S`, :math:`O_2`,
 Cu vacancies, and electron holes are taken as the diffusing species:
 
-.. figure:: /figures/148_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   r=k_1e^{-E_1/(RT)}c_{H_2S}\sqrt{c_{O_2}}-k_{-1}e^{-E_{-1}/(RT)}c_V^2c_h^2
 
 where :math:`^cH_2S` and :math:`^cO_2` are the time-dependent molar concentrations of 
 :math:`H_2S` and :math:`O_2`, respectively, at the sulfidation surface.
@@ -170,9 +170,9 @@ in both the gas phase and the solid phase are important, and
 :math:`H_2S`, :math:`O_2`, Cu vacancies, and
 electron holes are taken as the diffusing species:
 
-.. figure:: /figures/149_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   r=k_2e^{-E_2/(RT)}c_Vc_h
 
 where :math:`k_2` are :math:`E_2` are the rate constant and activation energy, 
 respectively, for the annihilation reaction.
@@ -181,11 +181,6 @@ Key word **ANNIHILATION_ELECTRONEUTRALITY** is similar to
 **ANNIHILATION** except that, here, the electroneutrality approximation is applied and
 concentrations of Cu vacancies and electron holes are taken to be equal to each other:
 
-.. figure:: /figures/150_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-
-
-
-.. TODO - Lines 108, 122, 138, 145, 153, 161, 173, and 184 is a photo that needs to be replaced with the correct equation.
+   r=k_2e^{-E_2/(RT)}c_V^2

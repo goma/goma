@@ -52,15 +52,10 @@ contact angle is not 180 degrees (viz. rolling motion condition). The slippage
 mechanism was deployed through the use of Navier’s slip condition, which basically
 goes as
 
-.. figure:: /figures/245_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   (\varepsilon\boldsymbol{n}\cdot[\boldsymbol{E}^{(o)}-\boldsymbol{E}^{(i)}])=-\frac{\sigma}{2}
 
 where **E** is the electric field vector, the superscripts (*o*) and (*i*) denote the outer and inner phases, *n* is a unit normal pointing into the outer phase,
 :math:`\varepsilon` is the electrical permittivity, 
 E = –:math:`\Delta` V is the electric field and *V* is the voltage or electric potential.
-
-
-
-
-.. TODO -Line 55 has a photo hat needs to be replaces with an equation.

@@ -65,9 +65,9 @@ the curve itself.
 * This equation imposes the following constraint as a point collocated condition at
   the integration points of the elements along the curve:
 
-.. figure:: /figures/086_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{t}_{cl}\cdot\boldsymbol{v}=\boldsymbol{t}_{cl}\cdot\boldsymbol{W}
 
 where :math:`t_{cl}` is a vector tangent to the curve, *v* is the fluid velocity, and *W* is the
 (constant) velocity of the moving substrate. The reader is referred to the sketch
@@ -95,8 +95,3 @@ elements along the curve.
   model. It makes no sense that the tangential motion of nodes along the contact line
   should induce velocity in the fluid and vice versa. As a result, mesh motion is left
   out of the preceding relation.
-
-
-
-
-.. TODO - In line 68, the photo needs to be repalced by the proper equation.

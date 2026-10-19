@@ -64,9 +64,9 @@ built by Pat Notz and Ed Wilkes in FY03. Basically we are solving the following
 equations for the shell tension (this card) and shell curvature (see shell_curvature
 equation):
 
-.. figure:: /figures/303_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   -D\frac{d^2}{dS}K+KT+\boldsymbol{n}\cdot\boldsymbol{n}\cdot\boldsymbol{\sigma}=0\qquad\frac{dT}{dS}-DK\frac{dK}{dS}+\boldsymbol{t}\cdot\boldsymbol{n}\cdot\boldsymbol{\sigma}=0
 
 
 --------------
@@ -74,6 +74,3 @@ equation):
 --------------
 
 GT-27
-
-..
-	TODO - Line 67 contains a photo that needs to be written as an equation.

@@ -73,18 +73,18 @@ current time.
 Derivation of this boundary condition starts with a relation that represents the Cox
 hydrodynamic wetting model
 
-.. figure:: /figures/224_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   Ca\equiv\frac{\mu V_{Cox}}{\sigma}=\frac{g(\theta,\lambda)-g(\theta_s,\lambda)}{\left[\ln(\varepsilon_s^{-1})+\frac{q_{inner}}{f(\theta_s,\lambda)}-\frac{q_{outer}}{f(\theta,\lambda)}\right]}
 
 See VELO_THETA_HOFFMAN for details of the Hoffman function g. Note that the
 convention for contact angles in this relation is that values of :math:`\theta` near to zero indicate a
 high degree of wetting and values of :math:`\theta` near 180 ° indicate the opposite. This is mapped
 to a stress value by analogy with Navier’s slip relation,
 
-.. figure:: /figures/225_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \tau_w=\frac{V_{Cox}}{\beta}
 
 This relation contrasts with the “linear” relation applied by the
 WETTING_SPEED_LINEAR relation in that more consistent physical behavior
@@ -97,15 +97,13 @@ then weighted by smooth Dirac function to restrict its location to being near th
 interface, weighted by a FEM shape function, integrated over the boundary sideset and
 added to the fluid momentum equation for the corresponding node j, vis:
 
-.. figure:: /figures/226_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int N_j\tau_w\hat{\boldsymbol{t}}\delta_w(\phi)\,d\Gamma
 
 
 --------------
 **References**
 --------------
 
-No References. 
-
-.. TODO -Lines 76, 85 and 100 have pictures that need to be swapped with the correct equations.
+No References.

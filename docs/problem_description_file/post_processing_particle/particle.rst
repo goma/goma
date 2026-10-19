@@ -74,27 +74,37 @@ Here is an example of an input deck with 6 trajectory cards.
 
 The vorticity vector function, :math:`\underline\omega` , is defined in terms of the velocity :math:`\underline\upsilon` as:
 
-.. figure:: /figures/337_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   \frac{d\boldsymbol{x}}{dt}&=\boldsymbol{v}(\boldsymbol{x})\\
+   \boldsymbol{x}(t=t_0)&=\boldsymbol{x}_0
+   \end{aligned}
 
 Trapezoidal rule time integration is utilized with Euler prediction.
 
 For trajectories with particle inertia (i.e. when the product of mass and mobility is
 greater than zero), the following evolution equation is used:
 
-.. figure:: /figures/338_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \frac{d\boldsymbol{x}}{dt}=\boldsymbol{v}+\omega\left(-m\frac{d^2\boldsymbol{x}}{dt^2}+\boldsymbol{f}\right)
 
 where :math:`\omega` is the particle mobility (e.g. 1 ⁄ (:math:`6\pi\mu r`)  for a sphere of radius *r*
 in a liquid of viscosity :math:`\mu` ), m is the particle mass, and **f** is the external force vector acting on the particle.
 
 The trajectory is computed using a coupled set of ordinary differential equations:
 
-.. figure:: /figures/339_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   \boldsymbol{u}_1&=\boldsymbol{x}(t)\\
+   \boldsymbol{u}_2&=\frac{d\boldsymbol{x}}{dt}\\
+   \frac{d\boldsymbol{u}_1}{dt}&=\boldsymbol{u}_2\\
+   m\omega\frac{d\boldsymbol{u}_2}{dt}&=\boldsymbol{v}-\boldsymbol{u}_2+\omega\boldsymbol{f}\\
+   \boldsymbol{u}_1(t=0)&=\boldsymbol{x}_0\\
+   \boldsymbol{u}_2(t=0)&=\boldsymbol{v}(\boldsymbol{x}_0)
+   \end{aligned}
 
 
 
@@ -103,6 +113,3 @@ The trajectory is computed using a coupled set of ordinary differential equation
 --------------
 
 Russel, Saville, and Schowalter, Colloidal Dispersions, pp. 374-377.
-
-.. 
-	TODO - Lines 77, 86, and 95 are photos that need to be replaced with the correct equations. 

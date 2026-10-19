@@ -95,24 +95,24 @@ in poroelastic problems is leading to liquid tension, etc.
 
 The Van Genuchten model has the following functional form:
 
-.. figure:: /figures/415_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   S=\theta_w+(1-\theta_w-\theta_{air})\left(\frac{1}{1+(\alpha P_c)^\beta}\right)^m
 
 Here the irreducible water saturation is θw, the irreducible air saturation 0air, the
 suction factor is α, and the exponents β and m, the latter of which is 1 – 1 ⁄ β.
 
 The **TANH** model has the following functional form:
 
-.. figure:: /figures/416_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   S=a-b\tanh\left(c-\frac{d}{P_c}\right)
 
 where *a* and *b* are automatically calculated from
 
-.. figure:: /figures/417_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   a=0.5+\frac{\theta_w}{2}-\frac{\theta_{air}}{2}\quad\text{and}\quad b=0.5-\frac{\theta_w}{2}-\frac{\theta_{air}}{2}
 
 and *c* and *d* are two fitted coefficients provided as input parameters. Here the
 irreducible water saturation is 0w, the irreducible air saturation 0air, and are also

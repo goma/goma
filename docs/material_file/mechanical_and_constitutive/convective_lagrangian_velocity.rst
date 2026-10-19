@@ -95,18 +95,18 @@ source (see references below).
 Specification of any model but **NONE** on this card produces the left-hand-side term in
 the equation for quasi static equilibrium:
 
-.. figure:: /figures/358_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \nabla\cdot\rho\boldsymbol{v}_m^0\boldsymbol{v}_m^0=\nabla\cdot\boldsymbol{\sigma}
 
 :math:`\sigma` is the Cauchy stress tensor of the solid material, and f is the body force per unit
 volume. The first term is a result of the specified advection of the stress-free state. :math:`v_m^0`,
 which depends solely on the user-prescribed velocity and the current state of
 deformation, is by definition
 
-.. figure:: /figures/359_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{v}_m^0=\frac{\partial\boldsymbol{x}_m}{\partial\boldsymbol{X}}\cdot\frac{\partial\boldsymbol{X}}{\partial t}=\boldsymbol{F}_m\cdot\boldsymbol{v}_{sfs}
 
 where :math:`F_m` is the material deformation gradient tensor (computed somewhat differently
 depending on the formulation, as described in the references below), and :math:`v_sfs` is the
@@ -128,8 +128,3 @@ CAPABILITY and its applicability to coating with/on deformable media, August 6,
 
 SAND2000-0807: TALE: An Arbitrary Lagrangian-Eulerian Approach to Fluid-
 Structure Interaction Problems, P. R. Schunk (May 2000)
-
-..
-	TODO - Line 97 and 106 are photos need to be replaced with the actual equations.
-
-

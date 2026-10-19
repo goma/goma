@@ -62,9 +62,9 @@ the liquid side; the block 2 side is the gas side.
 
 The *DISCONTINUOUS_VELO* boundary condition applies the following equation:
 
-.. figure:: /figures/094_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_\Gamma\left[\boldsymbol{n}_s\cdot\rho^+\left(1-\sum_{i=1}^{N-1}Y_i^+\right)(\boldsymbol{u}^+-\boldsymbol{u}_s)-\sum_{i=1}^{N-1}\boldsymbol{j}_i^+\right]\phi_{\boldsymbol{u}}^i\,d\Gamma=0
 
 It specifies the diffusive flux of the last species in the mechanism, i.e., the one for
 which no explicit continuity equation exists, to be equal to zero. This is done via a
@@ -80,8 +80,3 @@ with the total mass balance across a phase, since the expression for
 :math:`j_i^+` is substituted for
 in some places, the *YFLUX_SPECIES* boundary condition, but used in the
 *DISCONTINUOUS_VELO* boundary condition.
-
-
-
-
-.. TODO - Line 65 contains a photo that needs to be exchanged for the equation.

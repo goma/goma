@@ -70,15 +70,15 @@ message.
 Derivation of the force condition for this boundary condition starts with a relation for
 wetting line velocity
 
-.. figure:: /figures/211_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   V_{wet}=V_{old}+(V_{Cox}-V_{old})\left[1-\exp\left(-\frac{t}{t_{relax}}\right)\right]
 
 where :math:`V_{Cox}` is computed from the Cox hydrodynamic wetting theory;
 
-.. figure:: /figures/212_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   Ca\equiv\frac{\mu V_{Cox}}{\sigma}=\frac{g(\theta,\lambda)-g(\theta_s,\lambda)}{\left[\ln(\varepsilon_s^{-1})+\frac{q_{inner}}{f(\theta_s,\lambda)}-\frac{q_{outer}}{f(\theta,\lambda)}\right]}
 
 See VELO_THETA_COX for details of the Cox functions f and g. Note that the
 parameters :math:`\lambda`, :math:`q_{inner}`, and :math:`q_{outer}` are currently not accessible from the input card and are
@@ -90,9 +90,9 @@ zero indicate a high degree of wetting and values of :math:`\theta` near 180 ° 
 This is mapped to a stress value by analogy with Navier’s slip relation and has the
 following form when the velocity smoothing is not used, 
 
-.. figure:: /figures/213_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \tau_w=\frac{V_{Cox}}{\beta}
 
 The Cox wetting velocity requires evaluation of integrals for the function 
 g(:math:`\theta`, :math:`\lambda`) which
@@ -106,6 +106,4 @@ zero or :math:`\theta` tends toward 180 degrees. Note that the integrand becomes
 **References**
 --------------
 
-No References. 
-
-.. TODO -Lines 73, 79 and 93 have pictures that need to be swapped with the correct equations.
+No References.

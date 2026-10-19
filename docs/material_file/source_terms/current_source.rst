@@ -124,9 +124,9 @@ BUTLER_VOLMER model: for the Butler-Volmer kinetic model with the exchange
 current density being dependent on a single species is given by (cf. Newman 1991,
 Chen et al. 2000, Chen and Hickner 2006):
 
-.. figure:: /figures/484_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   j=sai_0\left(\frac{c}{c_{ref}}\right)^\beta\left[e^{\frac{\alpha_aF(\Phi_1-\Phi_2-U_0)}{RT}}-e^{\frac{-\alpha_cF(\Phi_1-\Phi_2-U_0)}{RT}}\right]
 
 where j is the homogeneous current source or sink in units of A/cm3; s is the
 stoichiometric coefficient with a sign convention such that j represents a source when s
@@ -142,9 +142,9 @@ NET_CHARGE model: The net charge or current source in a region with charge
 separation (e.g., in a space charge layer in which hole and vacancy concentrations
 differ as in the atmospheric copper sulfidation corrosion process) is given by
 
-.. figure:: /figures/485_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   j=F\sum_{i=1}^n z_ic_i
 
 where j is the net charge or current source in units of A/cm3; zi is the charge number and
 ci is the molar concentration in units of moles/cm3, respectively, of species i; F is the

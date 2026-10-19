@@ -67,15 +67,15 @@ message.
 Derivation of the force condition for this boundary condition starts with a relation for
 wetting line velocity
 
-.. figure:: /figures/214_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   V_{wet}=V_{old}+(V_{Hoffman}-V_{old})\left[1-\exp\left(-\frac{t}{t_{relax}}\right)\right]
 
 where :math:`V_{Hoffman}` is computed from the Hoffman correlation;
 
-.. figure:: /figures/215_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   Ca\equiv\frac{\mu V_{Hoffman}}{\sigma}=g_{Hoff}(\theta)-g_{Hoff}(\theta_s)
 
 See VELO_THETA_HOFFMAN for details of the Hoffman function g. Note that the
 convention for contact angles in this relation is that values of :math:`\theta` near to zero indicate a
@@ -83,9 +83,9 @@ high degree of wetting and values of :math:`\theta` near 180 ° indicate the opp
 to a stress value by analogy with Navier’s slip relation and has the following form
 when the velocity smoothing is not used,
 
-.. figure:: /figures/216_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \tau_w=\frac{V_{Hoffman}}{\beta}
 
 Because the Hoffman functions are implicit, iteration is required in the determination
 of the wetting velocity. As a result, for very high Capillary numbers, i.e. 
@@ -97,6 +97,4 @@ iteration procedure in Goma may need to be modified.
 **References**
 --------------
 
-No References. 
-
-.. TODO -Lines 70, 76 and 86 have pictures that need to be swapped with the correct equations.
+No References.

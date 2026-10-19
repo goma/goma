@@ -127,9 +127,9 @@ The following is a sample input card:
 The energy equation solved by *Goma*, which can be found elsewhere, is a convectionconduction
 equation given by
 
-.. figure:: /figures/471_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \frac{d(\rho C_pT)}{dt}=-(\boldsymbol{v}-\boldsymbol{v}_m)\cdot\nabla(\rho C_pT)-\nabla\cdot\boldsymbol{q}+H
 
 The heat source-term model represented by H is specified by this input record. The
 **CONSTANT, USER** and **USER_GEN** options provide the standard means of
@@ -139,9 +139,9 @@ specifying model input and will not be discussed.
 on heat generation in a medium of specified electrical resistance subjected to an
 electrical voltage potential. It computes the heat source as:
 
-.. figure:: /figures/472_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   h(\phi)=\frac{1}{\sigma}\boldsymbol{J}\cdot\boldsymbol{J}=\nabla\phi\cdot\sigma\nabla\phi
 
 where *J* is the current flux density which is represented as –σ∇φ and φ is represented
 using the voltage equation. No input is required for this model since the *Electrical
@@ -151,16 +151,16 @@ Conductivity* is specified in the material file for the voltage equation.
 condensation reaction, which is the heat of reaction, ΔHrxn, multiplied by the reaction
 rate as measured by the extent of reaction. The form of the equation is:
 
-.. figure:: /figures/473_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   h(\alpha)=\Delta H_{rxn}\cdot R_\alpha
 
 This card is used in conjunction with the EPOXY Species Source so that the reaction
 rate Rα can be determined.
 
-.. figure:: /figures/474_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   R_\alpha=(k_1+k_2\alpha^m)(1-\alpha)^n
 
 **VISC_DISS Model**: In heat transfer problems that are accompanied by fluid flow, the
 energy balance equation contains a term which represents the (rate of) work done on
@@ -173,9 +173,9 @@ viscous heating relative to the heat flow caused by temperature gradients.
 
 Mathematically, the Heat Source term, *H*, in the energy equation is given by
 
-.. figure:: /figures/475_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   H=(\boldsymbol{\tau}\cdot\nabla\boldsymbol{v})
 
 where (( •) indicates a double dot product. This mechanism is an irreversible
 process whereby mechanical energy is degraded into thermal energy, as the right hand
@@ -183,9 +183,9 @@ side expands to the sum of quadratic terms which will always be positive, at lea
 Newtonian fluids. In *Goma*, the **VISC_DISS** model computes the source term in
 function **visc_diss_heat_source** in *mm_std_models.c*; the expression looks like
 
-.. figure:: /figures/476_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   multiplier\times\mu\dot{\gamma}^2
 
 where μ is the viscosity and γ is the shear rate.
 

@@ -62,9 +62,9 @@ This applies the film flow equation with all terms activated.
 
 The equation solved is as follows:
 
-.. figure:: /figures/313_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \frac{\partial h}{\partial t}+\nabla_{II}\cdot\left[\frac{h^3}{3\mu}(-\nabla_{II}p+\nabla_{II}\Pi+\boldsymbol{f})+\boldsymbol{U}_Bh\right]+\dot{E}=0
 
 * The mass matrix multiplier activates the time-derivative term.
 
@@ -74,9 +74,3 @@ The equation solved is as follows:
 * The source (or sink, in this case,) activates the last term, rate of evaporation.
 
 * This equation has to be used with the equation describing SHELL_FILMH.
-
-
-
-
-..
-	TODO - Line 65 contains a photo that needs to be written as an equation.

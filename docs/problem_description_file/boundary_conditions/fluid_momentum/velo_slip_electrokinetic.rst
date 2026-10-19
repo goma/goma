@@ -43,14 +43,9 @@ Following is a sample card:
 
 * The general form of this boundary condition is
 
-.. figure:: /figures/090_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   v_s=-\frac{\varepsilon\zeta E_t}{\mu}
 
 where :math:`\varepsilon` is the absolute permittivity of the medium, :math:`\zeta` is the zeta potential, :math:`E_t` is the
 electric field tangent to the solid surface, and :math:`v_s` is the slip velocity.
-
-
-
-
-.. TODO - Line 46 contains a photo that needs to be exchanged for the equation.

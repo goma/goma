@@ -37,9 +37,7 @@ The details of each model option are given below:
 |                                                                                   |allowed to vary as a power of the porosity, :math:`\phi` (see Scherer, 1992):                      |
 |                                                                                   |                                                                                                   |
 |                                                                                   |The {float_list} contains three values for this model, where:                                      |
-|                                                                                   |.. figure:: /figures/360_goma_physics.png                                                          |
-|                                                                                   |:align: center                                                                                     |
-|                                                                                   |:width: 90%                                                                                        |
+|                                                                                   |:math:`G=G_0\left(\frac{1-\phi}{1-\phi_0}\right)^m`                                                |
 |                                                                                   |                                                                                                   |
 |                                                                                   | * <float1> - :math:`G_0` is the base shear modulus at the initial porosity (or μ0)                |
 |                                                                                   | * <float2> - :math:`\phi_0` is the porosity in the stress free state                              |
@@ -51,12 +49,10 @@ The details of each model option are given below:
 |                                                                                   |so that elements near the contact line are forced to retain their shape. The shear modulus in this |
 |                                                                                   |model varies inversely with distance from the contact line:                                        |
 |                                                                                   |                                                                                                   |
-|                                                                                   |.. figure:: /figures/361_goma_physics.png                                                          |
-|                                                                                   |   :align: center                                                                                  |
-|                                                                                   |   :width: 90%                                                                                     |
+|                                                                                   |:math:`G=G_0+\frac{0.1}{((r/r_0)^3+0.1/G_1)}`                                                      |
 |                                                                                   |                                                                                                   |
-|                                                                                   |*r* is the distance from the fixed point, :math:`r_0` is a decay length, :math:`G_0`is the modulus |
-|                                                                                   |far from the contact line, and :math:`G_0 + G_1` is the modulus at the contact line.               |
+|                                                                                   |*r* is the distance from the fixed point, :math:`r_0` is a decay length, :math:`G_0` is the        |
+|                                                                                   |modulus far from the contact line, and :math:`G_0 + G_1` is the modulus at the contact line.       |
 |                                                                                   |                                                                                                   |
 |                                                                                   |The {float_list} contains four values for this model, where:                                       |
 |                                                                                   |                                                                                                   |
@@ -67,12 +63,10 @@ The details of each model option are given below:
 +-----------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
 |**MULTI_CONTACT_LINE** <float1> <float2> <float3> <ns1> ... <nsN>                  |The **MULTI_CONTACT_LINE** model is a based on the CONTACT_LINE model and allows multiple nodesets |
 |                                                                                   |                                                                                                   |
-|                                                                                   |.. figure:: /figures/361_goma_physics.png                                                          |
-|                                                                                   |   :align: center                                                                                  |
-|                                                                                   |   :width: 90%                                                                                     |
+|                                                                                   |:math:`G=G_0+\frac{0.1}{((r/r_0)^3+0.1/G_1)}`                                                      |
 |                                                                                   |                                                                                                   |
-|                                                                                   |*r* is the distance from the fixed point, :math:`r_0` is a decay length, :math:`G_0`is the modulus |
-|                                                                                   |far from the contact line, and :math:`G_0 + G_1` is the modulus at the contact line.               |
+|                                                                                   |*r* is the distance from the fixed point, :math:`r_0` is a decay length, :math:`G_0` is the        |
+|                                                                                   |modulus far from the contact line, and :math:`G_0 + G_1` is the modulus at the contact line.       |
 |                                                                                   |                                                                                                   |
 |                                                                                   |The {float_list} contains four values for this model, where:                                       |
 |                                                                                   |                                                                                                   |
@@ -85,9 +79,7 @@ The details of each model option are given below:
 +-----------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
 |**SHEAR_HARDEN** <float1> <float2>                                                 |The **SHEAR_HARDEN** model is:                                                                     |
 |                                                                                   |                                                                                                   |
-|                                                                                   |.. figure:: /figures/362_goma_physics.png                                                          |
-|                                                                                   |   :align: center                                                                                  |
-|                                                                                   |   :width: 90%                                                                                     |
+|                                                                                   |:math:`G=G_0+\chi(II_E)^2`                                                                         |
 |                                                                                   |                                                                                                   |
 |                                                                                   |where :math:`\chi` is the coefficient of variation, :math:`II_E` is the second invariant of the    |
 |                                                                                   |strain tensor (see *Solid Constitutive Equation* card), :math:`G_0` is the modulus at zero shear.  |
@@ -100,9 +92,7 @@ The details of each model option are given below:
 |**EXPONENTIAL** <float1> <float2> <float3>                                         |The **EXPONENTIAL** model is used exclusively for poroelastic problems, and allows for an          |
 |                                                                                   |exponential dependence of the shear modulus :math:`\mu` (or G) on porosity:                        |
 |                                                                                   |                                                                                                   |
-|                                                                                   |.. figure:: /figures/363_goma_physics.png                                                          |
-|                                                                                   |   :align: center                                                                                  |
-|                                                                                   |   :width: 90%                                                                                     |
+|                                                                                   |:math:`G=G_0e^{\lambda(\phi_0-\phi)}`                                                              |
 |                                                                                   |                                                                                                   |
 |                                                                                   |where :math:`\lambda` is the rate of decay, :math:`\phi_0` is the porosity in the stress-free      |
 |                                                                                   |state, :math:`G_0` is the modulus at zero shear.                                                   |
@@ -116,9 +106,7 @@ The details of each model option are given below:
 |                                                                                   |Free Solvent Vol Frac* card (:math:`y_0` in equation below), and is used for solvent drying from a |
 |                                                                                   |condensed, gelled phase. The functional form for the shear modulus is                              |
 |                                                                                   |                                                                                                   |
-|                                                                                   |.. figure:: /figures/364_goma_physics.png                                                          |
-|                                                                                   |   :align: center                                                                                  |
-|                                                                                   |   :width: 90%                                                                                     |
+|                                                                                   |:math:`G=G_0\left(\frac{1-\det(\boldsymbol{F})}{1-y_0}\right)^m`                                   |
 |                                                                                   |                                                                                                   |
 |                                                                                   |where *m* is the power law exponent, *F* is deformation gradient tensor (see *Solid Constitutive   |
 |                                                                                   |Equation* card), and :math:`G_0` is the modulus at zero shear. This function is truncated or       |
@@ -154,9 +142,9 @@ The following is a sample card:
 
 Note that :math:`\mu` and :math:`\lambda`, (see the *Lame LAMBDA* card) are related to the more often used Young’s Modulus and Poisson’s Ratio by the following standard expressions:
 
-.. figure:: /figures/365_goma_physics.png                                                          
-   :align: center                                                                                  
-   :width: 90%
+.. math::
+
+   E=\frac{\mu(3\lambda+2\mu)}{\lambda+\mu}\qquad\nu=\frac{\lambda}{2(\lambda+\mu)}
 
 where E is the Young’s modulus and υ is Poisson’s ratio. A significant limiting case is approached as :math:`\nu` approaches 0.5, in which case the solid becomes incompressible.
 
@@ -193,9 +181,3 @@ Tam, A. Sun, P. R. Schunk and C. J. Brinker, 2000
 SAND96-2149: Drying in Deformable Partially-Saturated Porous Media: Sol-Gel
 Coatings, Cairncross, R. A., P. R. Schunk, K. S. Chen, S. S. Prakash, J. Samuel, A. J.
 Hurd and C. Brinker (September 1996)
-
-.. 
-	TODO - Lines 39, 54, 70, 85, 101 and 139 are photos that need to be replaced with the correct equations. 
-
-
-

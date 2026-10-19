@@ -51,9 +51,9 @@ interfacial curve as an embedded boundary condtion. It can be used in by subgrid
 subelement methods. In the case of the former, a distributed volume integral of the
 form:
 
-.. figure:: /figures/201_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_V N_i\hat{\boldsymbol{n}}_{fs}P\delta_\alpha(\phi)\,dV
 
 where :math:`\vec{n}_{fs}` is the normal to the level set contour 
 :math:`\delta_\alpha` (:math:`\phi`) and is the familiar smoothed
@@ -76,7 +76,4 @@ condition and the reader is referred to that card for a more detailed discussion
 **References**
 --------------
 
-No References. 
-
-..
-	TODO - Line 54 has a picture that needs to be exhanged with equation.
+No References.

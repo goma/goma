@@ -51,9 +51,9 @@ material in element block 2 and the liquid material in element block 1.
 
 The boundary condition being applied is the strong integrated condition:
 
-.. figure:: /figures/092_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \left.\boldsymbol{t}\cdot\boldsymbol{v}_m\right|_{fluid}=\boldsymbol{t}\cdot\boldsymbol{v}_{sfs}\cdot\boldsymbol{F}_m+\boldsymbol{t}\cdot\frac{d\boldsymbol{x}_m}{dt}
 
 where :math:`v_m` is the fluid velocity, :math:`v_{sfs}` is the velocity of the solid material stress-free-state
 (usually solid-body translation, or rotation..see *Advected Langragian Velocity* card)
@@ -62,8 +62,3 @@ set. :math:`F_m` is the deformation gradient tensor and the time derivative term
 the deformed state tangential to the surface in question.
 
 This condition is advocated for use with the TALE algorithm (see GT-005.3).
-
-
-
-
-.. TODO - Line 54 contains a photo that needs to be exchanged for the equation.

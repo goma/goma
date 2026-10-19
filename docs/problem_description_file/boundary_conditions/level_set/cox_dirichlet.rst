@@ -71,9 +71,9 @@ reference.
 This boundary condition uses this relation that represents the Cox hydrodynamic
 wetting model
 
-.. figure:: /figures/240_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   Ca\equiv\frac{\mu V_w}{\sigma}=\frac{g(\theta,\lambda)-g(\theta_s,\lambda)}{\left[\ln(\varepsilon_s^{-1})+\frac{q_{inner}}{f(\theta_s,\lambda)}-\frac{q_{outer}}{f(\theta,\lambda)}\right]}
 
 See VELO_THETA_COX for details of the Cox functions f and g. Note that the
 parameters :math:`\lambda`, :math:`q_{inner}`, and :math:`q_{outer}` are currently not accessible from the input card and are
@@ -87,5 +87,3 @@ hard-set to zero. :math:`\lambda` is the ratio of gas viscosity to liquid viscos
 
 Stephan F. Kistler 1993. “Hydrodynamics of Wetting” in Wettability, edited by John
 Berg, Surfactant Science Series, 49, Marcel Dekker, NewYork, NY, pp. 311-429.
-
-.. TODO -Line 74 has am image that needs to be switched with the equation.

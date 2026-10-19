@@ -54,16 +54,16 @@ them. Equations have concentration units attached to them for settings of
 **SPECIES_MASS_FRACTION**, each volumetric term in the species conservation
 equation has units of mass per time, i.e., the time derivative term is written as
 
-.. figure:: /figures/257_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int\frac{d}{dt}(\rho Y_k)\phi_i\,d\Omega
 
 For a setting of **SPECIES_MOLE_FRACTION**, each volumetric term would have
 units of moles per time, i.e., the time derivative term is written out as
 
-.. figure:: /figures/258_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int\frac{d}{dt}(cX_k)\phi_i\,d\Omega
 
 All this is necessary in order to handle cases where the total density or total
 concentration of a phase is spatially variable. In that case, it can’t just be divided out as in earlier versions of *Goma* but must be included in the conservation equations, and therefore the units of the conservation equation must reflect this.
@@ -84,9 +84,3 @@ variable, then the first unknown in the EXODUS file will be named **Y1**.
 Additionally, some boundary conditions and inputs from the material file section will
 set the species variable type on their own without the benefit of this card, if the species variable type is the default undefined form. Some internal checks are done; if an
 inconsistency is caught, *Goma* will abort with an informative error message.
-
-
-
-
-..
-	TODO - Lines 57 and 64 contain pictures that need to be changed into the equations. 

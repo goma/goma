@@ -27,9 +27,7 @@ follows:
 |                      | * <float2> - specifies the change of molar volume in the anode or cathode electrode |
 |                      |   material per electron transferred, as stated in                                   |
 |                      |                                                                                     |
-|                      |   .. figure:: /figures/430_goma_physics.png                                         |
-|                      |      :align: center                                                                 |
-|                      |      :width: 90%                                                                    |
+|                      |   :math:`\sum_{\text{solid phases }i}\frac{s_i\tilde{V}_i}{n}`                      |
 |                      |                                                                                     |
 |                      |   where si is stoichiometric coefficient of species or phase i, V is molar volume of|
 |                      |   species or phase i, n is the number of electrons transfer in the anodic or        |

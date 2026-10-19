@@ -63,26 +63,26 @@ The *IS_EQUIL_PSEUDORXN* boundary condition uses the following equations
 representing a kinetic approach to equilibrium expressed by an ideal solution model for
 thermodynamics on either side of the interface. Initially, we relate species *k* on the + side to species *k* on the - side of the interface via a kinetic formulation, whose rate constant is fast enough to ensure equilibrium in practice. However, later we may extend the capability to more complicated stoichiometric formulations for equilibrium, since the formulation for the equilibrium expression is readily extensible, unlike *Goma’s* previous treatment.
 
-.. figure:: /figures/163_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-.. figure:: /figures/164_goma_physics.png
-	:align: center
-	:width: 90%
+   \boldsymbol{n}^+\cdot[\rho^+Y_k^+(\boldsymbol{u}^+-\boldsymbol{u}_s)+\boldsymbol{j}_{kl}^+]=-W_k^+S_k^+
+
+.. math::
+
+   \boldsymbol{n}^-\cdot[\rho^-Y_k^-(\boldsymbol{u}^--\boldsymbol{u}_s)+\boldsymbol{j}_{kl}^-]=-W_k^-S_k^-
 
 where
 
-.. figure:: /figures/165_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   S_k^+=k^f\left[C_k^--\frac{C_k^+}{K_k^c}\right]\quad\text{and}\quad S_k^-=-S_k^+
 
 The “-” phase is defined as the reactants, while the “+” phase is defined to be the
 products. The expression for the concentration equilibrium constant, :math:`K_k^c` , is based on the ideal solution expression for the chemical potentials for species *k* in the two phases [Denbigh, p. 249],
 
-.. figure:: /figures/166_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \mu_k^+=RT\ln(X_k^+)+\mu_k^{+*}(T,P)
 
 where :math:`\mu_k^{+*}` (T,P) is defined as the chemical potential of species *k* in its pure state (or a
 hypothetical pure state if a real pure state doesn’t exist) at temperature *T* and pressure
@@ -90,25 +90,25 @@ hypothetical pure state if a real pure state doesn’t exist) at temperature *T*
 independent of pressure, through specification of the pressure dependence of the pure
 species k. Two pressure dependencies are initially supported:
 
-.. figure:: /figures/167_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-.. figure:: /figures/168_goma_physics.png
-	:align: center
-	:width: 90%
+   \text{PRESSURE\_INDEPENDENT}\qquad\mu_k^{+*}(T,P)=\mu_{k,o}^+(T)
+
+.. math::
+
+   \text{IDEAL\_GAS}\qquad\mu_k^{+*}(T,P)=\mu_{k,o}^+(T)+RT\ln(P/1\text{ atm})
 
 With these definitions, :math:`K_k^c` can be seen to be equal to
 
-.. figure:: /figures/169_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   K_k^c=\frac{C^+}{C^-}\exp\left[\frac{-\Delta G_k^*}{RT}\right]
 
 where
 
-.. figure:: /figures/170_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \Delta G_k^*=\mu_k^{+*}(T,P)-\mu_k^{-*}(T,P)
 
 The chemical potential for a species in a phase will be calculated either from
 CHEMKIN or from the *Chemical Potential, Pure Species Chemical Potential, and
@@ -140,5 +140,3 @@ coefficient of 0.01 at 1 atm and 300 K for a molecule whose molecular weight is 
 
 Denbigh, K., The Principles of Chemical Equilibrium, Cambridge University Press,
 Cambridge, 1981
-
-.. TODO - Lines 66, 70, 76, 83, 93, 97, 103, and 109 have photos that need to be replaced with the proper equations.

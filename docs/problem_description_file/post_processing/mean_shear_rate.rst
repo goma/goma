@@ -12,15 +12,15 @@
 
 The mean shear rate is defined as
 
-.. figure:: /figures/321_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   4\sqrt{II_D}
 
 where :math:`II_D` is the second invariant of **D**, the strain-rate tensor,
 
-.. figure:: /figures/322_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{D}\equiv[\nabla\boldsymbol{v}+(\nabla\boldsymbol{v})^T]
 
 associated with the Navier-Stokes equations. This variable is called **SHEAR** in the
 output EXODUS II file.
@@ -46,6 +46,3 @@ Following is a sample card:
 -------------------------
 
 No Discussion.
-
-
-

@@ -60,19 +60,23 @@ normal component of the acceleration vector (Krishnan et al., 1996). This model 
 used in predicting the particle distributions of particulate suspensions undergoing flow.
 For this model, the mass flux vector J is given by the following:
 
-.. figure:: /figures/423_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   J=J_c+J_\mu+J_r+J_g
 
 where
 
-.. figure:: /figures/424_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-.. figure:: /figures/425_goma_physics.png
-	:align: center
-	:width: 90%
+   \begin{aligned}
+   J_c&=-C_iD_c\nabla(\dot{\gamma}C_i),\\
+   J_\mu&=C_i^2\dot{\gamma}D_\mu\nabla(\ln\mu),\\
+   J_r&=C_i\dot{\gamma}^2D_r\frac{\hat{\boldsymbol{n}}}{r}
+   \end{aligned}
+
+.. math::
+
+   J_g=D_g\frac{(\rho_s-\rho_f)}{\mu}C_i(1-C_i)\hat{\boldsymbol{g}}
 
 where Ci is the particulate phase volume fraction, i is the species number designation of
 the particulate phase, the shear rate, μ the viscosity, the normal unit acceleration
@@ -84,9 +88,12 @@ acceleration vector.
 Krishna, 1993). The mass transport of each species is influenced by all of the species in
 the mixture.
 
-.. figure:: /figures/426_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   J&=\rho D(\nabla w)\\
+   J&=D(\nabla\rho)
+   \end{aligned}
 
 ρ is the mass-concentration of species. The elements along the diagonal, Dii, are selfdiffusivities,
 while Dij are mutual-diffusivities between species i and j. Note that
@@ -97,9 +104,9 @@ and migration) of charged species in dilute electrolyte solutions will be used. 
 Fickian diffusivity of species i, Di, as defined in the following Fickian flux model (cf.
 Newman 1991; Chen 2000)
 
-.. figure:: /figures/427_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   J_i=-D_i\nabla c_i-\frac{F}{RT}z_iD_ic_i\nabla\Phi
 
 is taken to be constant. Here, ci is molar concentration of species i, Φ is electrical
 potential in electrolyte solution, zi is charge number of species i, F is the Faraday
@@ -110,9 +117,9 @@ electrolyte solution temperature.
 species in concentrated solutions. The Stefan-Maxwell diffusivities, Dij, as defined in
 the following Stefan-Maxwell flux model (cf. Chen et al. 2000, Chen et al. 1998):
 
-.. figure:: /figures/428_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \nabla x_i=\sum_{j\ne i}\frac{x_iJ_j-x_jJ_i}{cD_{ij}}
 
 are taken to be constant. Here, xi is mole fraction of species i, Ji the molar flux of
 species i, and c the total molar concentration. Since Dij = Dji and Dii are not defined,
@@ -125,9 +132,9 @@ migration) of charged species in concentrated electrolyte solutions. The Stefan-
 Maxwell diffusivities, Dij, as defined in the following Stefan-Maxwell flux model (cf.
 Chen et al. 2000, Chen et al. 1998)
 
-.. figure:: /figures/429_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \nabla x_i+\frac{F}{RT}z_ix_i\nabla\Phi=\sum_{j\ne i}\frac{x_iJ_j-x_jJ_i}{cD_{ij}}
 
 are taken to be constant, as in the case of multicomponent diffusion of neutral species
 in concentrated solutions. Here, the charged species definitions are the same as for the

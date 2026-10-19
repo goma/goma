@@ -243,9 +243,9 @@ each of the options for Navier-Stokes Source models.
 |                          |formulation. T0 is set on the Reference Temperature card.                            |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/463_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   g(T)=\rho_0(1-\beta[T-T_0]-\beta_c[C-C_0])a_0
 
 +--------------------------+-------------------------------------------------------------------------------------+
 |**BOUSSINESQ**            |This model prescribes a body force source term that is very similar to the BOUSS     |
@@ -263,17 +263,17 @@ each of the options for Navier-Stokes Source models.
 |                          |is set on the Reference Temperature card.                                            |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/464_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-.. figure:: /figures/465_goma_physics.png
-	:align: center
-	:width: 90%
+   g(T)=-\rho_0\{\beta[T-T_0]+\beta_c[C-C_0]\}a_0
 
-.. figure:: /figures/466_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \beta=-\left(\frac{\partial\rho}{\partial T}\right)_{T=T_0}
+
+.. math::
+
+   a_0=-g\boldsymbol{e}_y
 
 +--------------------------+-------------------------------------------------------------------------------------+
 |**BOUSS_JXB**             |This model is a generalized Boussinesq source term, as above, but also includes      |
@@ -299,9 +299,9 @@ each of the options for Navier-Stokes Source models.
 |                          |the Reference Temperature card.                                                      |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/467_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   g(T)=\rho_0(1-\beta[T-T_0])a_0+lsf\boldsymbol{J}\times\boldsymbol{B}
 
 +--------------------------+-------------------------------------------------------------------------------------+
 |**FILL**                  |The body force applied when using this momentum source model is as follows:          |
@@ -310,9 +310,9 @@ each of the options for Navier-Stokes Source models.
 |                          |the three entries in the {float_list} of the FILL momentum source card.              |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/468_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   g(F)=[\rho_1F+\rho_0(1-F)]a_0
 
 +--------------------------+-------------------------------------------------------------------------------------+
 |**LEVEL_SET**             |The body force applied when this model is used is given by the following function of |
@@ -324,9 +324,14 @@ each of the options for Navier-Stokes Source models.
 |                          |following the LEVEL_SET model name.                                                  |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/469_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   g(\phi)&=\begin{cases}\rho_-a_0,&\phi<-\alpha\\
+   {}[\rho_-+(\rho_+-\rho_-)H_\alpha(\phi)]a_0,&-\alpha<\phi<\alpha\\
+   \rho_+a_0,&\phi>\alpha\end{cases}\\
+   \text{where }H_\alpha(\phi)&=(1+\phi/\alpha+\sin(\pi\phi/\alpha)/\pi)/2
+   \end{aligned}
 
 +--------------------------+-------------------------------------------------------------------------------------+
 |**PHASE_FUNCTION**        |The body force applied when this model is specified is identical in concept to that  |
@@ -350,9 +355,9 @@ each of the options for Navier-Stokes Source models.
 |                          |flux option, only one species can use the HYDRO diffusivity model.                   |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/470_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   g(C_i)=-(C_i-C_{ref})[\rho_f-\rho_s]a_0
 
 +--------------------------+-------------------------------------------------------------------------------------+
 |**SUSPENSION**            |This model is identical to the SUSPEND momentum source model in terms of the assembly|

@@ -160,7 +160,7 @@ CARREAU_ARRHENIUS
 
     .. math::
       
-       a_T = exp\left[\frac{A_T}{T - T_{shift}}\right - \frac{A_T}{T_{ref} - T_{shift}}]
+       a_T = exp\left[\frac{A_T}{T - T_{shift}} - \frac{A_T}{T_{ref} - T_{shift}}\right]
                                                                                                    
     Here :math:`A_T` is a thermal exponential factor (can be Arrhenius) and is
     input by the *Thermal Exponent* card; :math:`T_{shift}` is the temperature
@@ -187,7 +187,7 @@ ARRHENIUS
 
     .. math::
       
-       a_T = exp\left[\frac{A_T}{T - T_{shift}}\right - \frac{A_T}{T_{ref} - T_{shift}}]
+       a_T = exp\left[\frac{A_T}{T - T_{shift}} - \frac{A_T}{T_{ref} - T_{shift}}\right]
 
     Here :math:`A_T` is a thermal exponential factor (can be Arrhenius) and is
     input by the *Thermal Exponent* card; :math:`T_{shift}` is the temperature
@@ -218,9 +218,10 @@ CURE
     to represent polymerizing systems whose viscosity depends on the extent of reaction. The form  
     of the equation is                                                                             
                                                                                                    
-    .. figure:: /figures/382_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 90%                                                                                 
+    .. math::
+
+       \mu=\mu_0\left(\frac{\alpha_g}{\alpha_g-\alpha}\right)^{A+B\alpha}
+
                                                                                                    
     This option requires four floating point values. The first, μ0, is the reference state         
     viscosity and is entered with the *Low Rate Viscosity* card. The constant, :math:`α_g`, is     
@@ -232,9 +233,10 @@ THERMAL
     can be used to represent fluids that change viscosity with temperature. The form of the        
     equation is                                                                                    
                                                                                                    
-    .. figure:: /figures/383_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 40%                                                                                 
+    .. math::
+
+       \mu=\mu_0e^{E_\mu/(RT)}
+
                                                                                                    
     where the reference state viscosity, μ0, is entered with the *Low Rate Viscosity* card. The    
     exponent, Eμ/R, is specified using the *Thermal Exponent* card.                                
@@ -243,9 +245,10 @@ EPOXY
     **THERMAL** option with the extent of reaction dependence of the **CURE** option. The          
     functional form of the equation is:                                                            
                                                                                                    
-    .. figure:: /figures/384_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 40%                                                                                 
+    .. math::
+
+       \mu=\mu_0e^{E_\mu/(RT)}\left(\frac{\alpha_g}{\alpha_g-\alpha}\right)^{A+B\alpha}
+
                                                                                                    
     Five cards must be used to specify all the parameters for this model. The first, μ0, is the    
     reference state viscosity and is entered with the *Low Rate Viscosity* card. The thermal       
@@ -258,9 +261,10 @@ SUSPENSION
     concentrationdependent viscosity model useful in modeling solid suspensions. The functional    
     form associated with this option is,                                                           
                                                                                                    
-    .. figure:: /figures/385_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 40%                                                                                 
+    .. math::
+
+       \mu=\mu_0\left(1-\frac{C_i}{C_{max}}\right)^n
+
                                                                                                    
     where μ0 is effectively the viscosity of the suspending fluid specified with the               
     *Low Rate Viscosity* card, n is an exponent specified by the *Power Law Exponent* card and is  
@@ -275,15 +279,17 @@ FILLED_EPOXY
     This option combines the cure and thermal dependence of the **EPOXY** model with the solid     
     volume fraction dependence of the **SUSPENSION** model. The functional form of this equation is
                                                                                                    
-    .. figure:: /figures/386_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 90%                                                                                 
+    .. math::
+
+       \mu=\mu_0\left(1-\frac{C_i}{C_{max}}\right)^n\left(10^{\frac{-C_1(T-T_g)}{C_2+T-T_g}}\right)\left(1-\left(\frac{\alpha}{\alpha_g}\right)^2\right)^{-1.333}
+
                                                                                                    
     with the temperature :math:`T_g` being calculated from                                         
                                                                                                    
-    .. figure:: /figures/387_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 90%                                                                                 
+    .. math::
+
+       T_g=\frac{T_g^0}{1-A\alpha}
+
                                                                                                    
     Here the viscosity now depends on extent of reaction, temperature and solid volume fraction.   
     Nine cards must be specified to define the parameters for this option and are entered in the   
@@ -316,9 +322,10 @@ POWERLAW_SUSPENSION
     correct species number “i” is identified with the *Suspension Species Number* card. The form of
     the equation is                                                                                
                                                                                                    
-    .. figure:: /figures/388_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 40%                                                                                 
+    .. math::
+
+       \mu=\mu_0\dot{\gamma}^{n-1}\left(1-\frac{C_i}{C_{max}}\right)^m
+
                                                                                                    
     where y is the second invariant of the shear-rate tensor. It is best to start with a Newtonian 
     initial guess for the power law suspension model, since the viscosity for the power law model  
@@ -342,9 +349,10 @@ CARREAU_SUSPENSION
     equation specified in the equation section of the previous chapter. The correct species number 
     “i” is identified with the *Suspension Species Number* card.The form of the equation is        
                                                                                                    
-    .. figure:: /figures/389_goma_physics.png                                                      
-       :align: center                                                                              
-       :width: 90%                                                                                 
+    .. math::
+
+       \mu=\left(\mu_{inf}+(\mu_0-\mu_{inf})(1+(\lambda\dot{\gamma})^a)^{(n-1)/a}\right)\left(1-\frac{C_i}{C_{max}}\right)^m
+
                                                                                                    
     where y is the second invariant of the shear-rate tensor.                                      
 
@@ -378,7 +386,6 @@ HERSCHEL_BULKLEY
     regularization. It is set to 1e-5 by default.
 
 HERSCHEL_BULKLEY_PAPANASTASIOU
-    
     See Regularization Model card for more options
 
     This is a variant on the power law model that includes a yield stress. It
@@ -622,7 +629,6 @@ The following card gives an example of the **HERSCHEL_BULKLEY_PAPANASTASIOU** mo
    Yield Stress                 = CONSTANT 1.39
    Yield Exponent               = CONSTANT 100
 
-
 --------------------
 Technical Discussion
 --------------------
@@ -654,4 +660,3 @@ Papanastasiou, T. C., 1987. "Flows of Materials with Yield," Journal of Rheology
 
 Papananstasiou, T. C., and Boudouvis, A. G., 1997. "Flows of Viscoplastic Materials:
 Models and Computation," Computers & Structures, Vol 64, No 1-4, pp 677-694.
-

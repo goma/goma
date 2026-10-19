@@ -14,9 +14,9 @@ This boundary condition card is used to specify a normal velocity boundary condi
 with mass transfer on momentum equations. The flux quantity is specified on a per
 mass basis so the heat and mass transfer coefficients are in units of L/t.
 
-.. figure:: /figures/100_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot(\boldsymbol{v}-\boldsymbol{v}_s)=\sum_i h_i(y_i-y_i^0)
 
 Definitions of the input parameters are as follows:
 
@@ -49,8 +49,3 @@ This card is the equivalent of *KIN_LEAK* except it is solved for the normal com
 of the momentum equation. Similar to *KIN_LEAK*, this flux provides an overall mass
 transfer balance at an interface. Please refer to the technical discussion of *KIN_LEAK*
 boundary card.
-
-
-
-
-.. TODO - Line 17 has a photo that needs to be replaced with the real equation.

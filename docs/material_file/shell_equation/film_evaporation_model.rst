@@ -30,9 +30,9 @@ of evaporation in the unit of length per time. Currently two models for
 |                          | * <float3> is the maximum packing volume fraction 0max                              |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/494_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \dot{E}=\dot{E}_0\left[1-\frac{\varphi}{\varphi_{max}}\right]^\nu
 
 ------------
 **Examples**

@@ -67,12 +67,6 @@ acoustic pressure and its gradient. P is the amplitude of the acoustic pressure
 (complex), k is the wavenumber, R is the acoustic impedance, and :math:`\omega` is the frequency
 (rad/sec).
 
-.. figure:: /figures/309_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-
-
-
-..
-	TODO - Line 64 contains a photo that needs to be written as an equation.
+   ARS=\langle\rho\boldsymbol{u}\boldsymbol{u}\rangle=\left\langle\frac{P^2}{2\rho_0c^2}\right\rangle-\left\langle\frac{\rho_0}{2}\boldsymbol{u}\cdot\boldsymbol{u}\right\rangle=\frac{k}{4R\omega}P^2+\frac{\nabla P\cdot\nabla P}{4kR\omega}

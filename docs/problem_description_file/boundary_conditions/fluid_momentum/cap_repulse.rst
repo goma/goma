@@ -78,20 +78,15 @@ equation *x + y = -2.0*.
 * This boundary condition applies the following force term to the fluid momentum 
   equation:
 
-.. figure:: /figures/102_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \left.\boldsymbol{n}\cdot\boldsymbol{T}\right|_{fluid}=-\boldsymbol{n}P_{ex}+2H\sigma\boldsymbol{n}+\nabla_s\cdot\boldsymbol{\sigma}+P_{rep}/d^2
 
 which is almost identical to the force applied by the *CAPILLARY* card. The only
 difference is the last term on the right in which *d* is the normal distance from a
 given point on the free-surface side set and the planar surface defined by the
 equation:
 
-.. figure:: /figures/103_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-
-
-
-.. TODO - Lines 81 and 90 have photos that needs to be replaced with the real equation.
+   ax+by+cz=-d

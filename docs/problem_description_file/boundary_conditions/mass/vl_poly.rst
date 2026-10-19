@@ -65,13 +65,13 @@ This is a sample input card for this boundary condition:
 One of the simplest forms of the equilibrium relation is the Raoult’s law, where the
 mole fraction of a species is equal to its mole fraction in the liquid multiplied by the ratio of its pure component vapor pressure to the total pressure in the system.
 
-.. figure:: /figures/155_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-.. figure:: /figures/156_goma_physics.png
-	:align: center
-	:width: 90%
+   y_iP^{total}=\phi_i\gamma_iP_i^v\quad\forall i
+
+.. math::
+
+   \sum_{i=1}^N\phi_i=1
 
 :math:`\gamma_i` is defined as the activity coefficient of species *i* and is considered a departure
 function from the Raoult’s law. The fugacity in the liquid is reformulated in terms of
@@ -82,18 +82,18 @@ activity coefficient model of Flory-Huggins is widely used for polymer-solvent
 mixtures (Flory, 1953). The general form of the Flory-Huggins model for
 multicomponent mixtures is a summation of binary interactions terms; i.e.,
 
-.. figure:: /figures/157_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \ln\gamma_i=\sum_{k=1}^N\left[\left(\frac{\tilde{v}_i}{\tilde{v}_k}\right)(\delta_{ki}-\phi_i)\right]+\sum_{k=2}^N\sum_{j=1}^{k-1}\left[\delta_{ij}\phi_k\chi_{jk}+\left(\frac{\tilde{v}_i}{\tilde{v}_j}\right)\phi_j(\delta_{ki}-\phi_k)\chi_{jk}\right]
 
 :math:`v_i` is the molar volume of component *i* (or the average-number molar volume if *i* is a polymer). :math:`\zeta_{ki}` is the Dirac delta. :math:`\chi_{jk}` is known as the Flory-Huggins interaction
 parameter between components *j* and *k*, and is obtainable by fitting the solubility data
 to the above model. For a simple binary pair (solvent (1)-polymer (2)) and assuming
 :math:`v_2` » :math:`v_1`, the above model reduces to a simpler form.
 
-.. figure:: /figures/158_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \ln\gamma_1=\phi_2+\chi_{12}\phi_2^2
 
 
 
@@ -109,5 +109,3 @@ Chromatography to the Thermodynamics of Polymer Solutions,"Macromolecules, 4, 3,
 
 GTM-007.1: New Multicomponent Vapor-Liquid Equilibrium Capabilities in GOMA,
 December 10, 1998, A. C. Sun
-
-.. TODO - Lines 68, 72, 85, and 92 have photos that need to be replaced with the proper equations.

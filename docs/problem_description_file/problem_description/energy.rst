@@ -119,27 +119,30 @@ with the energy equation.
 
 **Enrichment:**
 
-.. figure:: /figures/259_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \begin{aligned}
+   T(x)&=\sum_iN_i(x)T_i+\sum_iN_i(x)g_i(x)a_i\\
+   g_i(x)&=H[\phi(x)]-H[\phi_i(x)]
+   \end{aligned}
 
 **Related “Ghost” Enrichment:**
 
-.. figure:: /figures/300_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
 
-.. figure:: /figures/301_goma_physics.png
-	:align: center
-	:width: 90%
+   \begin{aligned}
+   T(x)&=\sum_iN_i(x)T_i+\sum_iN_i(x)g_i(x)a_i\\
+   g_i(x)&=H[-\phi(x)\phi(x_i)]
+   \end{aligned}
+
+.. math::
+
+   \begin{aligned}
+   T(x)&=\sum_iN_i(x)(1-g_i(x))T_i+\sum_iN_i(x)g_i(x)\hat{T}_i\\
+   g_i(x)&=H[-\phi(x)\phi(x_i)]
+   \end{aligned}
 
 
 **Advantages:**
 
 This enrichment function allows discontinuity in value and gradient along interface but maintains continuity at element edges/faces. Appears to be method of choice for Pressure discontinuity. Produces interface integral for terms integrated by parts that allows for specifying a weak integrated conditions. This is needed in the laser welding heat transfer problem.
-
-
-
-
-..
-	TODO - Lined 122, 128, and 132 contain photos that need to be exchnaged with the equations. 

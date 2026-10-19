@@ -44,14 +44,9 @@ Following is a sample card:
 
 This condition should be used to account for transmission/reflection conditions for the external boundaries when the acoustic wave equation is used. It reflects characteristics for an acoustic wave encountering a planar interface between two materials;
 
-.. figure:: /figures/255_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{n}\cdot\nabla P=-i\frac{k_1R_1}{R_2}P
 
 where k is the acoustic wavenumber and R is the acoustic impedance. The subscript 1 refers to the material inside the external boundary and is the material which is meshed. Subscript 2 refers to the material outside of the external boundary. If :math:`R_2` is set equal to
 :math:`R_1`, then this condition mimics an infinite boundary condition, i.e. no reflection at the external boundary.
-
-
-
-
-.. TODO - Line 45 has an image that needs to be replaced with the equation. 

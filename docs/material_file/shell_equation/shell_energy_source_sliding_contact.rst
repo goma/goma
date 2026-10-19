@@ -35,9 +35,9 @@ are permissible:
 |                          | * <float7> - Leading edge coordinate of slider.                                     |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/492_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \left.K\frac{dT}{dz}\right|_0=\frac{2K(T-T_0)}{\sqrt{\pi\kappa\left(\frac{1}{u_{slider}}\right)}}\left[\frac{\sqrt{L2}-\sqrt{L1}}{L2-L1}\right]
 
 +--------------------------+-------------------------------------------------------------------------------------+
 |**AVERAGE_CONTACT**       |This model invokes the following functional form:                                    |
@@ -51,9 +51,9 @@ are permissible:
 |                          | * <float5> - Heat capacity of substrate.                                            |
 +--------------------------+-------------------------------------------------------------------------------------+
 
-.. figure:: /figures/493_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \left.K\frac{dT}{dz}\right|_0=\frac{2K(T-T_0)}{\sqrt{\pi\kappa\left(\frac{L}{u_{slider}}\right)}}
 
 ------------
 **Examples**
@@ -78,6 +78,3 @@ derived.
 
 NOTE: If this card is used and there is no upper-wall or lower wall sliding motion, and
 error is thrown.
-
-
-

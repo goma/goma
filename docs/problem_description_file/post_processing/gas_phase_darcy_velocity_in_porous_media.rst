@@ -41,17 +41,17 @@ This input example turns on calculation of the gas phase velocity components:
 The gas-phase Darcy velocity is given by the extended Darcy law, which accounts for
 the relative reduced flow due to the presence of another phase, viz.
 
-.. figure:: /figures/330_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \boldsymbol{F}_g=\rho_g\boldsymbol{v}_g=-\frac{\rho_gkk_g}{\mu_g}(\nabla p_g-\rho_g\boldsymbol{g})
 
 Here :math:`\nu_g` represents the Darcy flux, or Darcy velocity, in the gas phase, k is the
 permeability of the porous medium, :math:`k_g` is the relative permeabilities for the gas and
 liquid phases respectively, :math:`\mu_g` are the gas viscosity, :math:`p_g` is the pressure in the gas phase, and g is the gravitational force vector. :math:`\rho_g` is the density of the gas phase and is equal to the sum of the partial densities of air and solvent vapor,
 
-.. figure:: /figures/331_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \rho_g=\rho_{gv}+\rho_{ga}
 
 
 
@@ -61,6 +61,3 @@ liquid phases respectively, :math:`\mu_g` are the gas viscosity, :math:`p_g` is 
 
 GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
 September 1, 2002, P. R. Schunk
-
-.. 
-	TODO - Lines 48 and 52 are photos that need to be swapped with the equations.

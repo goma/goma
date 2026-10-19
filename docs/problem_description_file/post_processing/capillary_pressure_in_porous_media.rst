@@ -40,9 +40,9 @@ The capillary pressure is a critical variable for partially saturated porous med
 in fact the dependent variable for unsaturated (not two-phase) flows for which the gasphase
 pressure is taken as constant. It is simply defined as
 
-.. figure:: /figures/335_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   p_c=p_g-p_l
 
 As such, positive capillary pressures imply liquid phase pressure being greater than gas
 phase pressure. Because liquid phase saturation strongly correlates to capillary
@@ -59,6 +59,3 @@ relevant when the skeleton is taken as deformable.
 
 GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
 September 1, 2002, P. R. Schunk
-
-.. 
-	TODO - Line 43 is a photo that needs to be swapped with the equation.

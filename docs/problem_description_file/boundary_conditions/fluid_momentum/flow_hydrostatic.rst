@@ -57,9 +57,9 @@ is 10.0. Note that (0,0,0) does not necessarily have to be on side set 15.
 * The mathematical form of the boundary condition imposed by this card is as
   follows:
 
-.. figure:: /figures/098_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \left.\boldsymbol{n}\cdot\boldsymbol{T}\right|_{fluid}=-\boldsymbol{n}(x\delta P_x+y\delta P_y+z\delta P_z+P_0)
 
 where *n* is the outward normal vector to the boundary, *T* is the total fluid stress
 tensor, and *x, y, z* are the global coordinate positions.

@@ -144,7 +144,6 @@ not be repeated.
 	  
    	  n = A_n T + B_n
 
-
 **EPOXY_ARRHENIUS_EXP** <species> <floatlist>
    Similar to the **EPOXY_DEA** model, but uses a Arrhenius equations in the exponents
 
@@ -231,16 +230,16 @@ reaction based on an extent of reaction variable. The extent of reaction is trac
 convection equation with a reaction source term. The form of the EPOXY species
 source term is
 
-.. figure:: /figures/477_goma_physics.png
-	:align: center
-	:width: 90
+.. math::
+
+   R_\alpha=(k_1+k_2\alpha^m)(1-\alpha)^n
 
 where α is the extent of reaction, the rate constants, k1 and k2, can depend on
 temperature in the Arrhenius manner, and m and n are exponents.
 
-.. figure:: /figures/478_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   k_i=A_ie^{E_i/(RT)}
 
 where R is the gas constant in the appropriate units, Ai is the prefactor, and Ei is the
 activation energy for reaction. Six parameters are required to define the model: A1 and
@@ -251,31 +250,31 @@ The **EPOXY_DEA** model was created specifically for diethanolamine-epoxy curing
 reaction. While the expression for the source term is identical to the **EPOXY** model
 (with n=1.6),
 
-.. figure:: /figures/479_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   R_\alpha=(k_1+k_2\alpha^m)(1-\alpha)^{1.6}
 
 the reaction kinetics differs, having three reaction regimes for exponent m and rate
 constant k2. For T< 65 C, m = 2 and
 
-.. figure:: /figures/480_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   k_2=A_2e^{E_2/(RT)}
 
 for 65 C < T< 90C, m = 74*k2 and
 
-.. figure:: /figures/481_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   k_2=A_2\left(\frac{90-T}{T^6}\right)\quad\text{where }T\text{ in C}
 
 and for T > 90C, m = k2 = 0. Rate constant k1 is fixed for all these regimes and is
 determined from the prefactor A1 and activation energy E1.
 
 The **FOAM** model computes the mixture volume change rate as:
 
-.. figure:: /figures/482_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \frac{\partial\rho}{\partial t}=\rho_{mix}\sum_{i=0}^N(V_i-V_{N+1})r_i
 
 where ρmix is the mixture density as defined in the REACTIVE_FOAM density model
 (which is required for this model) and Vi is the specific volume of component i.
@@ -293,9 +292,9 @@ single species such as polymer-electrolyte-membrane fuel cells can be computed u
 the Butler-Volmer kinetic model and the Faraday’s law (cf. Newman 1991, Chen et al.
 2000, Chen and Hickner 2006):
 
-.. figure:: /figures/483_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   r=\frac{sai_0}{nF}\left(\frac{c}{c_{ref}}\right)^\beta\left[e^{\frac{\alpha_aF(\Phi_1-\Phi_2-U_0)}{RT}}-e^{\frac{-\alpha_cF(\Phi_1-\Phi_2-U_0)}{RT}}\right]
 
 where r is the homogeneous species source or sink in units of moles/cm3-s; s is the
 stoichiometric coefficient with a sign comvention such that r represents a source when
@@ -330,4 +329,3 @@ SAND2000-0207 (2000).
 K. S. Chen and M. A. Hickner, “Modeling PEM fuel cell performance using the finiteelement
 method and a fully-coupled implicit solution scheme via Newton’s technique”,
 in ASME Proceedings of FUELCELL2006-97032 (2006).
-

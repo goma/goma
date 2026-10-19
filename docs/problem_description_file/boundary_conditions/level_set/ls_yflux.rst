@@ -56,15 +56,15 @@ defined by a side set. It applies a scalar mass transfer flux at the interfacial
 embedded boundary condtion. It can be used in by subgrid and subelement methods.
 In the case of the former, a distributed volume integral of the form:
 
-.. figure:: /figures/207_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   \int_V N_iJ\delta_\alpha(\phi)\,dV
 
 where :math:`\delta_\alpha` (:math:`\phi`) is the familiar smoothed Dirac delta function with width parameter :math:`\alpha` and the mass flux , J, is given by the typical relation:
 
-.. figure:: /figures/208_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   J=h_c(Y_w-Y_c)
 
 When subelement integration is used this width parameter goes to zero and the volume
 integral becomes a surface integral along the zero level set contour (Note: as of Oct
@@ -84,6 +84,4 @@ the reader is referred to that card for a more detailed discussion.
 **References**
 --------------
 
-No References. 
-
-.. TODO -Lines 59 and 64 have pictures that need to be swapped with the correct equations.
+No References.

@@ -55,15 +55,15 @@ magnitudes should remain small relative to shear rate and viscosity diffusivitie
 As the name implied, anisotropic Fickian diffusivity defines an additional flux
 contribution much like a classic Fickian diffusion term; i.e.,
 
-.. figure:: /figures/450_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   J_x=D_x\frac{\partial C}{\partial x},\quad J_y=D_y\frac{\partial C}{\partial y},\quad J_z=D_z\frac{\partial C}{\partial z}
 
 If the exponential decay option is used, the flux vector has the form,
 
-.. figure:: /figures/451_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+   J_i=D_o(\exp(-D_1C)+\exp(-D_1(C_{max}-C)))
 
 where C and Cmax are volume fractions of suspension locally and at maximum packing.
 

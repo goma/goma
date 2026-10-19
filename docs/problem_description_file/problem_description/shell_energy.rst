@@ -60,9 +60,12 @@ mesh.
 
 The equation solved is as follows:
 
-.. figure:: /figures/312_goma_physics.png
-	:align: center
-	:width: 90%
+.. The percent-shaped mark beneath the in-plane velocity is reproduced from the
+   original equation image. Its intended notation is unclear.
+
+.. math::
+
+   h\rho C_p\frac{\partial T}{\partial t}+h\rho C_p{u_{II}}\cdot\nabla_{II}T-hK_{eff}\nabla_{II}\cdot\nabla_{II}T+Q_{surf}+Q_{VD}+Q_{Joule}=0
 
 * Clearly this equation looks similar to the standard energy equation for continuum
   formulations, but the presence of the gap/film thickness h indications that the
@@ -74,9 +77,3 @@ The equation solved is as follows:
   the Energy Weight Function card in the companion material file is set to SUPG,
   then the advection term is stabilized with standard streamwise-upwinding-Petrov-
   Galerkin approach.
-
-
-
-
-..
-	TODO - Line 63 contains a photo that needs to be written as an equation.
