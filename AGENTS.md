@@ -45,6 +45,10 @@ numerical behavior changes. Initialize GUTS with `git submodule update --init
 guts`, then run `python3 scripts/guts.py -g ../build/goma -v --json
 results.json` from `guts/`. No numeric coverage threshold is configured.
 
+`guts/` is an extremely expensive regression suite it is better to do a quick check
+with a small problem  `python3 scripts/guts.py -g ../build/goma -v --json
+results.json -p p_C_T_U` before running the whole suite.
+
 ## Commit & Pull Request Guidelines
 
 Recent commits use short, action-oriented subjects such as “Cleanup AutoDiff
