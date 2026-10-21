@@ -42,3 +42,6 @@ cmake-debug
 .vscode/
 compile_commands.json
 CMakeUserPresets.json
+.claude/
+.opencode-workspace/
+.codex/
