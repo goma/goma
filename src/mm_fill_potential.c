@@ -248,6 +248,7 @@ int assemble_potential(double time, /* present time value */
   memset(dhdT, 0, sizeof(double) * MDE);
   memset(dhdV, 0, sizeof(double) * MDE);
   memset(dhdX, 0, sizeof(double) * DIM * MDE);
+  memset(dhdv, 0, sizeof(double) * DIM * MDE);
   memset(dhdC, 0, sizeof(double) * MAX_CONC * MDE);
   if (mp->CurrentSourceModel == USER) {
     (void)usr_current_source(mp->u_current_source);
@@ -1123,9 +1124,7 @@ void current_BV_surf(double func[DIM],
 
       d_func[0][var][j_id] -= d_i[VOLTAGE] * phi_j;
 
-      for (kdir = 0; kdir < dim; kdir++) {
-        d_func[0][var][j_id] += c * d_vconv->T[kdir][j_id] * fv->snormal[kdir];
-      }
+      /* the convection velocity does not depend on the voltage */
     }
   }
 

@@ -4113,9 +4113,7 @@ void mass_flux_surf_bc(double func[],
 
         d_func[0][var][j_id] -= mp->d_mass_flux[wspec][VOLTAGE] * phi_j;
 
-        for (kdir = 0; kdir < dim; kdir++) {
-          d_func[0][var][j_id] += Y_w * d_vconv->T[kdir][j_id] * fv->snormal[kdir];
-        }
+        /* the convection velocity does not depend on the voltage */
       }
     }
 
@@ -4303,9 +4301,7 @@ void yflux_disc_rxn_bc(double func[],
 
         d_func[0][var][j_id] -= mp->d_mass_flux[wspec][VOLTAGE] * phi_j;
 
-        for (kdir = 0; kdir < dim; kdir++) {
-          d_func[0][var][j_id] += Y_w * d_vconv->T[kdir][j_id] * fv->snormal[kdir];
-        }
+        /* the convection velocity does not depend on the voltage */
       }
     }
 
@@ -4815,9 +4811,7 @@ void mass_flux_BV_surf_bc(double func[],
 
         d_func[0][var][j_id] -= d_mass_flux[wspec][VOLTAGE] * phi_j;
 
-        for (kdir = 0; kdir < dim; kdir++) {
-          d_func[0][var][j_id] += Y_w * d_vconv->T[kdir][j_id] * fv->snormal[kdir];
-        }
+        /* the convection velocity does not depend on the voltage */
       }
     }
 
