@@ -1343,7 +1343,8 @@ free_and_clear:
   safer_free((void **)&Local_Offset);
   safer_free((void **)&Dolphin);
 
-  free(pg->matrices);
+  safer_free((void **)&ija_attic);
+  safer_free((void **)&pg->matrices);
 
   if (file != NULL)
     fclose(file);

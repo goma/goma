@@ -2922,6 +2922,8 @@ int rd_trans_vectors_from_exoII(double u[],
         }
       }
     }
+    safer_free((void **)&val_low);
+    safer_free((void **)&val_high);
   }
 
   safer_free((void **)&var_names);
