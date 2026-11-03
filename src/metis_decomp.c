@@ -994,6 +994,7 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
           free(eb_local_to_global[i]);
         }
         free(eb_local_to_global);
+        free(local_to_global);
       }
 
       free(times);

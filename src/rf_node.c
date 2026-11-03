@@ -588,14 +588,11 @@ void nodal_resid_wksp_free(NODAL_RESID_WKSP_STRUCT *residWksp)
  *  that structure.
  *******************************************************************/
 {
-  VCRR_STRUCT *next;
-  /*
-   *  Look at each pointer entry to see if a subroutine needs to be
-   *  called to clear it.
-   *
-   */
-  for (next = *(residWksp->Vcrr); next == NULL; next++) {
-    safer_free((void **)&next);
+  /* Vcrr is a NULL-terminated list (see vcrr_add()) */
+  if (residWksp->Vcrr != NULL) {
+    for (VCRR_STRUCT **v = residWksp->Vcrr; *v != NULL; v++) {
+      safer_free((void **)v);
+    }
   }
   safer_free((void **)&(residWksp->Vcrr));
 }
