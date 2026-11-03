@@ -15,6 +15,6 @@ jobs:
 
       - name: Run clang-format style check for C/C++
         run: |
-            uvx clang-format@21 --version
-            CLANG_FORMAT="uvx clang-format@21" scripts/run-clang-format.sh
+            uvx clang-format@21.1.8 --version
+            CLANG_FORMAT="uvx clang-format@21.1.8" scripts/run-clang-format.sh
             git diff --exit-code
