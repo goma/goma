@@ -998,7 +998,7 @@ static int calc_standard_fields(double **post_proc_vect,
         at = 1.;
       }
       for (mode = 0; mode < vn->modes; mode++) {
-	mup = 0;
+        mup = 0;
         /* get polymer viscosity */
         if (upd->AutoDiff) {
 #ifdef GOMA_ENABLE_SACADO
