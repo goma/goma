@@ -2463,8 +2463,9 @@ void calculate_2D_rotation_vectors(Exo_DB *exo, /* the mesh */
               if (rotation[inode][jvar] == NULL) {
                 rotation[inode][jvar] = (struct Rotation_Vectors **)smalloc(
                     pd->Num_Dim * sizeof(struct Rotation_Vectors *));
-                rotation[inode][jvar][0] = NULL;
-                rotation[inode][jvar][1] = NULL;
+                for (int kdir = 0; kdir < pd->Num_Dim; kdir++) {
+                  rotation[inode][jvar][kdir] = NULL;
+                }
               }
 
               append_vectors(inode, num_nodes_on_side, iconnect_ptr, local_node_side_list,

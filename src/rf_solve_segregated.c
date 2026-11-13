@@ -2465,6 +2465,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
               last_renorm_nt = nt;
               if (delta_t_new > fabs(delta_t0))
                 delta_t_new *= tran->time_step_decelerator;
+              // the restart loop leaves pg->imtrx == Total_Num_Matrices
+              pg->imtrx = Fill_Matrix;
             }
             exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
             pg->imtrx = 0;
