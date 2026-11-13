@@ -709,8 +709,8 @@ void convert_omega_h_to_goma(
         if (global_node_to_local.find(gnode) != global_node_to_local.end()) {
           auto it = std::find(neighbor_list.begin(), neighbor_list.end(), proc);
           if (it == neighbor_list.end()) {
-            GOMA_EH(GOMA_ERROR, "Omega_h conversion: processor %d shares nodes but is not a neighbor",
-                    proc);
+            GOMA_EH(GOMA_ERROR,
+                    "Omega_h conversion: processor %d shares nodes but is not a neighbor", proc);
           }
           int index = it - neighbor_list.begin();
           proc_node_list[index].push_back(global_node_to_local[gnode]);
