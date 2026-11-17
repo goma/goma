@@ -1016,12 +1016,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           break;
 
         case FLOW_STRESSNOBC_BC: {
-          if (pd->gv[FILM_HEIGHT]) {
-            ad_film_flow_n_dot_T_nobc(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0],
-                                      time_value);
-          } else {
-            flow_n_dot_T_nobc(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0], time_value);
-          }
+          flow_n_dot_T_nobc(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0], time_value);
         } break;
 
         case FLOW_GRADV_BC:
