@@ -428,30 +428,6 @@ void ad_ve_polymer_stress(ADType gamma[DIM][DIM], ADType stress[DIM][DIM]) {
     }
   }
   switch (vn->evssModel) {
-  case LOG_CONF:
-  case LOG_CONF_GRADV:
-  case LOG_CONF_TRANSIENT_GRADV:
-  case LOG_CONF_TRANSIENT: {
-    ADType exp_s[DIM][DIM];
-    ADType R1[DIM][DIM];
-    ADType eig_values[DIM];
-
-    for (int mode = 0; mode < vn->modes; mode++) {
-      ADType mup = viscosity(ve[mode]->gn, dgamma, NULL);
-      ADType lambda = polymer_time_const(ve[mode]->time_const_st, dgamma, NULL);
-      if (pd->Num_Dim == 2) {
-        ad_analytic_eig_2_5D(mode, R1, exp_s, eig_values);
-      } else {
-        GOMA_EH(GOMA_ERROR, "ad_ve_polymer_stress for log conf not implemented in dim == 3");
-      }
-
-      for (int i = 0; i < sdim; i++) {
-        for (int j = 0; j < sdim; j++) {
-          stress[i][j] += mup / lambda * (exp_s[i][j] - (double)delta(i, j));
-        }
-      }
-    }
-  } break;
   case EVSS_FILM_HEIGHT_SQRT_CONF:
   case SQRT_CONF: {
     for (int mode = 0; mode < vn->modes; mode++) {

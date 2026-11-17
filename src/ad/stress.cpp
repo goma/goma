@@ -415,57 +415,6 @@ void ad_load_modal_pointers(
   }
 }
 
-int ad_analytic_eig_2_5D(int mode,
-                         ADType v[DIM][DIM],
-                         ADType exp_s[DIM][DIM],
-                         ADType eig_values[DIM]) {
-  for (int i = 0; i < DIM; i++) {
-    for (int j = 0; j < DIM; j++) {
-      v[i][j] = 0.;
-      exp_s[i][j] = 0;
-    }
-  }
-
-  ADType s11 = fv_old->S[mode][0][0];
-  ADType s12 = fv_old->S[mode][0][1];
-  ADType s22 = fv_old->S[mode][1][1];
-  ADType s33 = fv_old->S[mode][2][2];
-
-  ADType lambda[DIM];
-  lambda[0] = 0.5 * (s22 + s11 - std::safe_sqrt((s22 - s11) * (s22 - s11) + 4 * s12 * s12));
-  lambda[1] = 0.5 * (s22 + s11 + std::safe_sqrt((s22 - s11) * (s22 - s11) + 4 * s12 * s12));
-  lambda[2] = s33;
-
-  eig_values[0] = std::exp(lambda[0]);
-  eig_values[1] = std::exp(lambda[1]);
-  eig_values[2] = std::exp(lambda[2]);
-
-  if (fabs(ad_fv->S[mode][0][1]) < 1e-12) {
-    // simple case R = I
-    for (int i = 0; i < DIM; i++) {
-      v[i][i] = 1.;
-    }
-  } else {
-    ADType v1 = lambda[0] - s22;
-    ADType v2 = s12;
-    ADType mag = std::safe_sqrt(v1 * v1 + v2 * v2);
-    v[0][0] = v1 / mag;
-    v[1][0] = v2 / mag;
-    v[1][0] = -v2 / mag;
-    v[1][1] = v1 / mag;
-    v[2][2] = 1.0;
-  }
-
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      for (int k = 0; k < 3; k++) {
-        exp_s[i][j] += v[i][k] * eig_values[k] * v[j][k];
-      }
-    }
-  }
-  return 0;
-}
-
 int ad_assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                                           * explicit (tt = 1) to implicit (tt = 0) */
                                  dbl dt, /* current time step size */
