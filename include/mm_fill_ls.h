@@ -40,23 +40,24 @@ GOMA_EXTERN int apply_ls_inlet_bc(double[], /* afill - Jacobian matrix fill equa
                                   struct elem_side_bc_struct *,
                                   Exo_DB *);
 
-GOMA_EXTERN int apply_strong_fill_ca_bc(double[],     /* afill - Jacobian matrix fill equation */
-                                   int[],        /* ijaf - ptr to nonzeros Jacobian matrix */
-                                   double[],     /* x - global vector containing all unknowns */
-                                   double[],     /* rf - rhs vector   */
-                                   const double, /* delta_t - current time step size */
-                                   const double, /* theta - parameter to vary time integration
-                                                  * explicit (theta = 1) implicit (theta = 0) */
-                                   int[],        /* node_to_fill  */
-                                   const int,    /* ielem - current element */
-                                   int,          /* ielem_type - element type  */
-                                   const int,    /* num_local_nodes - number of nodes per element */
-                                   const int,    /* ielem_dim */
-                                   const int,    /* iconnect_ptr */
-                                   struct elem_side_bc_struct *,
-                                   const int,       /* num_total_nodes */
-                                   const double,    /* contact angle */
-                                   const Exo_DB *); /* exo - ptr to basic exodus ii mesh info */
+GOMA_EXTERN int
+apply_strong_fill_ca_bc(double[],     /* afill - Jacobian matrix fill equation */
+                        int[],        /* ijaf - ptr to nonzeros Jacobian matrix */
+                        double[],     /* x - global vector containing all unknowns */
+                        double[],     /* rf - rhs vector   */
+                        const double, /* delta_t - current time step size */
+                        const double, /* theta - parameter to vary time integration
+                                       * explicit (theta = 1) implicit (theta = 0) */
+                        int[],        /* node_to_fill  */
+                        const int,    /* ielem - current element */
+                        int,          /* ielem_type - element type  */
+                        const int,    /* num_local_nodes - number of nodes per element */
+                        const int,    /* ielem_dim */
+                        const int,    /* iconnect_ptr */
+                        struct elem_side_bc_struct *,
+                        const int,       /* num_total_nodes */
+                        const double,    /* contact angle */
+                        const Exo_DB *); /* exo - ptr to basic exodus ii mesh info */
 
 GOMA_EXTERN int huygens_renormalization(
     double *, double *, const int, Exo_DB *, Comm_Ex *, Dpi *, int, int, double, int);

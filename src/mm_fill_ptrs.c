@@ -2836,10 +2836,10 @@ int load_elem_dofptr_all(const int ielem, const Exo_DB *exo) {
       /* This should loop through all the velocity gradient
        * components of the tensor
        */
-    int sdim = VIM;
-    if (pd->gv[FILM_HEIGHT]) {
-      sdim = 3;
-    }
+      int sdim = VIM;
+      if (pd->gv[FILM_HEIGHT]) {
+        sdim = 3;
+      }
       for (b = 0; b < sdim; b++) {
         for (c = 0; c < sdim; c++) {
           eqn = R_g[b][c];

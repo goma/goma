@@ -230,6 +230,12 @@ int ad_assemble_momentum(dbl time,       /* current time */
     }
   }
 
+  ADType div_v = 0;
+
+  for (a = 0; a < 2; a++) {
+    div_v += ad_fv->grad_v[a][a];
+  }
+
   if (af->Assemble_Residual) {
     /*
      * Assemble each component "a" of the momentum equation...
@@ -306,6 +312,7 @@ int ad_assemble_momentum(dbl time,       /* current time */
               advection += (ad_fv->v[2] - ad_fv->x_dot[2]) * ad_fv->grad_v[2][a];
 #endif
 
+            advection += div_v * ad_fv->v[a];
             advection *= rho;
             advection *= -wt_func * d_area;
             advection *= advection_etm;
@@ -421,6 +428,31 @@ void ad_ve_polymer_stress(ADType gamma[DIM][DIM], ADType stress[DIM][DIM]) {
     }
   }
   switch (vn->evssModel) {
+  case EVSS_FILM_HEIGHT_LOG_CONF:
+  case LOG_CONF:
+  case LOG_CONF_GRADV:
+  case LOG_CONF_TRANSIENT_GRADV:
+  case LOG_CONF_TRANSIENT: {
+    ADType exp_s[DIM][DIM];
+    ADType R1[DIM][DIM];
+    ADType eig_values[DIM];
+
+    for (int mode = 0; mode < vn->modes; mode++) {
+      ADType mup = viscosity(ve[mode]->gn, dgamma, NULL);
+      ADType lambda = polymer_time_const(ve[mode]->time_const_st, dgamma, NULL);
+      if (pd->Num_Dim == 2) {
+        ad_analytic_eig_2_5D(mode, R1, exp_s, eig_values);
+      } else {
+        GOMA_EH(GOMA_ERROR, "ad_ve_polymer_stress for log conf not implemented in dim == 3");
+      }
+
+      for (int i = 0; i < sdim; i++) {
+        for (int j = 0; j < sdim; j++) {
+          stress[i][j] += mup / lambda * (exp_s[i][j] - (double)delta(i, j));
+        }
+      }
+    }
+  } break;
   case EVSS_FILM_HEIGHT_SQRT_CONF:
   case SQRT_CONF: {
     for (int mode = 0; mode < vn->modes; mode++) {
@@ -1391,6 +1423,17 @@ int ad_assemble_momentum_film_cast(dbl time,       /* current time */
                  evss_f * mu_num * mup * gamma_cont[a][b] - p * delta(a, b) + stress[a][b];
     }
   }
+  dbl supg = 0;
+  if (mp->Mwt_funcModel == GALERKIN) {
+    supg = 0.;
+  } else if (mp->Mwt_funcModel == SUPG || mp->Mwt_funcModel == SUPG_GP ||
+             mp->Mwt_funcModel == SUPG_SHAKIB) {
+    supg = mp->Mwt_func;
+  }
+  ADType tau;
+  if (supg != 0.) {
+    ad_only_tau_momentum_shakib(tau, 2, dt, FALSE);
+  }
 
   if (af->Assemble_Residual) {
     /*
@@ -1429,7 +1472,11 @@ int ad_assemble_momentum_film_cast(dbl time,       /* current time */
           dbl phi_i = bf[eqn]->phi[i];
           /* only use Petrov Galerkin on advective term - if required */
           ADType wt_func = phi_i;
-
+          if (supg != 0.) {
+            for (int p = 0; p < 2; p++) {
+              wt_func += supg * tau * ad_fv->v[p] * ad_fv->basis[eqn].grad_phi[i][p];
+            }
+          }
           ADType mass = 0.;
           if (mass_on) {
             mass = rho * ad_fv->film_height * ad_fv->v_dot[a];
@@ -1567,9 +1614,13 @@ int ad_assemble_film_height(dbl time, /* current time */
   if (!pd->e[pg->imtrx][eqn]) {
     return (status);
   }
+  dbl diffusivity = 0.;
+  if (mp->film_height_diffusivityModel == CONSTANT) {
+    diffusivity = mp->film_height_diffusivity;
+  }
 
   ADType supg_tau = 0;
-  ad_supg_tau_shakib(supg_tau, 2, dt, 1e-9, eqn);
+  ad_supg_tau_shakib(supg_tau, 2, dt, diffusivity, eqn);
 
   wt = fv->wt;
   det_J = ad_fv->detJ; /* Really, ought to be mesh eqn. */
@@ -1583,10 +1634,6 @@ int ad_assemble_film_height(dbl time, /* current time */
   dbl mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
   dbl advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
   dbl diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
-  dbl diffusivity = 0.;
-  if (mp->film_height_diffusivityModel == CONSTANT) {
-    diffusivity = mp->film_height_diffusivity;
-  }
   if (af->Assemble_Residual) {
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
@@ -1973,7 +2020,7 @@ extern "C" void ad_film_flow_n_dot_T_nobc(double func[DIM],
 
   for (int a = 0; a < 3; a++) {
     for (int b = 0; b < 3; b++) {
-      gamma_cont[a][b] = 0;//ad_fv->G[a][b] + ad_fv->G[b][a];
+      gamma_cont[a][b] = 0; // ad_fv->G[a][b] + ad_fv->G[b][a];
       stress[a][b] = 0.;
     }
   }
@@ -2032,8 +2079,10 @@ extern "C" void ad_film_flow_n_dot_T_nobc(double func[DIM],
               for (int b = 0; b < VIM; b++) {
                 var = MESH_DISPLACEMENT1 + b;
                 for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-                  d_func[p][var][j] += fv->snormal[q] * Pi[p][q].dx(ad_fv->offset[var] + j) * ad_fv->film_height.val() +
-                                       fv->dsnormal_dx[q][b][j] * Pi[p][q].val() * ad_fv->film_height.val();
+                  d_func[p][var][j] +=
+                      fv->snormal[q] * Pi[p][q].dx(ad_fv->offset[var] + j) *
+                          ad_fv->film_height.val() +
+                      fv->dsnormal_dx[q][b][j] * Pi[p][q].val() * ad_fv->film_height.val();
                 }
               }
             }

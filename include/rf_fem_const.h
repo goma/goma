@@ -99,6 +99,7 @@
 #define CONF                       10 /* Log-conformation tensor formulation using */
 #define EVSS_FILM_HEIGHT           11
 #define EVSS_FILM_HEIGHT_SQRT_CONF 12
+#define EVSS_FILM_HEIGHT_LOG_CONF  13
 
 /* Discontinuous Galerkin viscoelastic jacobian options */
 #define EXPLICIT_DG 1

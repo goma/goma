@@ -57,10 +57,10 @@ int ad_assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration f
 dbl ad_viscosity_wrap(struct Generalized_Newtonian *gn_local);
 int ad_assemble_film_height_grad_v(void);
 void ad_film_flow_n_dot_T_nobc(double func[DIM],
-                       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                       const double pdatum, /* pressure datum from input card */
-                       const int iflag,     /* -1 to use pdatum, otherwise use P */
-                       const double time);  /* time value if needed	*/
+                               double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                               const double pdatum, /* pressure datum from input card */
+                               const int iflag,     /* -1 to use pdatum, otherwise use P */
+                               const double time);  /* time value if needed	*/
 
 #ifdef __cplusplus
 }

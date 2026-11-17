@@ -12,11 +12,12 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
+#include "ad/structs.h"
 #ifdef GOMA_ENABLE_SACADO
 
-#include "ad/stress.h"
 #include "ad/momentum.h"
 #include "ad/stabilization.h"
+#include "ad/stress.h"
 
 extern "C" {
 
@@ -87,7 +88,8 @@ int ad_tensor_dot(ADType t1[DIM][DIM],
 }
 void ad_compute_a_dot_b(ADType b[DIM][DIM], ADType G[DIM][DIM], ADType a_dot_b[DIM][DIM]) {
   int sdim = VIM;
-  if (pd->gv[FILM_HEIGHT]) sdim = 3;
+  if (pd->gv[FILM_HEIGHT])
+    sdim = 3;
 
   if (sdim == 2) {
 
@@ -202,7 +204,7 @@ int ad_film_height_stress_source(int mode,
     ADType coeff = alpha * lambda / mup;
     for (int ii = 0; ii < 3; ii++) {
       for (int jj = 0; jj < 3; jj++) {
-        source_term[ii][jj] += S[ii][jj] + coeff  * S_dot_S[ii][jj];
+        source_term[ii][jj] += S[ii][jj] + coeff * S_dot_S[ii][jj];
       }
     }
 
@@ -226,7 +228,10 @@ int ad_film_height_stress_source(int mode,
       const double exp_max = 700;
       ADType inner = eps * lambda / mup * trace;
       if ((inner > exp_max) || (inner < -exp_max)) {
-        GOMA_WH_MANY(GOMA_ERROR, "Exponential overflow in PTT_EXPONENTIAL");
+        GOMA_WH_MANY(GOMA_ERROR,
+                     "Exponential overflow in PTT_EXPONENTIAL, trace %g, eps %g, lambda %g, mup "
+                     "%g, inner %g",
+                     trace.val(), eps, lambda, mup.val(), inner.val());
         return GOMA_ERROR;
       }
       Z = exp(inner);
@@ -325,8 +330,8 @@ int ad_sqrt_conf_source(int mode, ADType b[DIM][DIM], ADType source_term[DIM][DI
             // ((C-I) + alpha * (C . C - 2 C + I))
             // 0.5 b^-1 ((b . b-I) + alpha * (b . b . b . b - 2 b . b + I))
             // 0.5 ((b - b^-1) + alpha * (b . b . b - 2 b + b^-1))
-            0.5 * (((b[ii][jj] - binv[ii][jj])) +
-                   (alpha * (bdotbdotb[ii][jj] - 2.0 * b[ii][jj] + binv[ii][jj])));
+            -0.5 * (((b[ii][jj] - binv[ii][jj])) +
+                    (alpha * (bdotbdotb[ii][jj] - 2.0 * b[ii][jj] + binv[ii][jj])));
       }
     }
   } break;
@@ -334,9 +339,7 @@ int ad_sqrt_conf_source(int mode, ADType b[DIM][DIM], ADType source_term[DIM][DI
 
     ADType trace = 0;
     for (int i = 0; i < sdim; i++) {
-      for (int j = 0; j < sdim; j++) {
-        trace += b[i][j] * b[i][j];
-      }
+      trace += b[i][i] * b[i][i];
     }
 
     ADType Z = 1.0;
@@ -351,7 +354,10 @@ int ad_sqrt_conf_source(int mode, ADType b[DIM][DIM], ADType source_term[DIM][DI
       const double exp_max = 700;
       ADType inner = eps * (trace - (double)sdim);
       if ((inner > exp_max) || (inner < -exp_max)) {
-        GOMA_WH_MANY(GOMA_ERROR, "Exponential overflow in PTT_EXPONENTIAL");
+        GOMA_WH_MANY(
+            GOMA_ERROR,
+            "Exponential overflow in PTT_EXPONENTIAL, inner %g, eps %g, trace %g, tc [ %g %g %g ]",
+            inner.val(), eps, trace.val(), b[0][0].val(), b[1][1].val(), b[2][2].val());
         return GOMA_ERROR;
       }
       Z = exp(eps * (trace - (double)sdim));
@@ -407,6 +413,57 @@ void ad_load_modal_pointers(
       }
     }
   }
+}
+
+int ad_analytic_eig_2_5D(int mode,
+                         ADType v[DIM][DIM],
+                         ADType exp_s[DIM][DIM],
+                         ADType eig_values[DIM]) {
+  for (int i = 0; i < DIM; i++) {
+    for (int j = 0; j < DIM; j++) {
+      v[i][j] = 0.;
+      exp_s[i][j] = 0;
+    }
+  }
+
+  ADType s11 = fv_old->S[mode][0][0];
+  ADType s12 = fv_old->S[mode][0][1];
+  ADType s22 = fv_old->S[mode][1][1];
+  ADType s33 = fv_old->S[mode][2][2];
+
+  ADType lambda[DIM];
+  lambda[0] = 0.5 * (s22 + s11 - std::safe_sqrt((s22 - s11) * (s22 - s11) + 4 * s12 * s12));
+  lambda[1] = 0.5 * (s22 + s11 + std::safe_sqrt((s22 - s11) * (s22 - s11) + 4 * s12 * s12));
+  lambda[2] = s33;
+
+  eig_values[0] = std::exp(lambda[0]);
+  eig_values[1] = std::exp(lambda[1]);
+  eig_values[2] = std::exp(lambda[2]);
+
+  if (fabs(ad_fv->S[mode][0][1]) < 1e-12) {
+    // simple case R = I
+    for (int i = 0; i < DIM; i++) {
+      v[i][i] = 1.;
+    }
+  } else {
+    ADType v1 = lambda[0] - s22;
+    ADType v2 = s12;
+    ADType mag = std::safe_sqrt(v1 * v1 + v2 * v2);
+    v[0][0] = v1 / mag;
+    v[1][0] = v2 / mag;
+    v[1][0] = -v2 / mag;
+    v[1][1] = v1 / mag;
+    v[2][2] = 1.0;
+  }
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      for (int k = 0; k < 3; k++) {
+        exp_s[i][j] += v[i][k] * eig_values[k] * v[j][k];
+      }
+    }
+  }
+  return 0;
 }
 
 int ad_assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
@@ -1096,7 +1153,11 @@ extern "C" int ad_assemble_film_height_stress(dbl tt, /* parameter to vary time 
   }
 
   grad_v[2][2] = -(grad_v[0][0] + grad_v[1][1]);
+  ADType div_v = 0;
 
+  for (int a = 0; a < 2; a++) {
+    div_v += ad_fv->grad_v[a][a];
+  }
   /* load up shearrate tensor based on velocity */
   for (int a = 0; a < 3; a++) {
     for (int b = 0; b < 3; b++) {
@@ -1282,6 +1343,8 @@ extern "C" int ad_assemble_film_height_stress(dbl tt, /* parameter to vary time 
                     advection -= ucwt * (gt_dot_S[ii][jj] + S_dot_g[ii][jj]);
                   if (lcwt != 0.)
                     advection += lcwt * (S_dot_gt[ii][jj] + g_dot_S[ii][jj]);
+
+                  advection += div_v * S[ii][jj];
 
                   advection *= wt_func * at * lambda * det_J * wt * h3;
                   advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
@@ -1529,6 +1592,11 @@ ad_assemble_film_height_sqrt_conf_stress(dbl tt, /* parameter to vary time integ
       }
     }
   }
+  ADType div_v = 0;
+
+  for (int a = 0; a < 2; a++) {
+    div_v += ad_fv->grad_v[a][a];
+  }
 
   if (vn->wt_funcModel == GALERKIN) {
     supg = 0.;
@@ -1706,6 +1774,7 @@ ad_assemble_film_height_sqrt_conf_stress(dbl tt, /* parameter to vary time integ
                   advection += v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
                   advection -= b_dot_g[ii][jj];
                   advection -= a_dot_b[ii][jj];
+                  advection += div_v * b[ii][jj];
                   advection *= wt_func * at * lambda * det_J * wt * h3;
                   advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                 }
@@ -1903,6 +1972,544 @@ ad_assemble_film_height_sqrt_conf_stress(dbl tt, /* parameter to vary time integ
 
   } /* End loop over modes */
 
+  return (status);
+}
+int ad_assemble_film_height_log_conf_stress(dbl tt, dbl dt, PG_DATA *pg_data) {
+  int dim, q, a, b, w;
+  int eqn, siz;
+
+  int i, j, status, mode;
+  int logc_gradv = 0;
+  ADType v[DIM];
+  ADType x_dot[DIM];
+  ADType h3;
+
+  ADType grad_v[DIM][DIM];
+  ADType gamma[DIM][DIM];
+  ADType det_J;
+
+  ADType mass;
+  ADType advection;
+  ADType source;
+  ADType source_term1[DIM][DIM];
+
+  ADType wt_func;
+  ADType wt;
+  ADType tmp1[DIM][DIM], tmp2[DIM][DIM], tmp3[DIM][DIM];
+  ADType advection_term1[DIM][DIM];
+
+  // Variables for stress, velocity gradient
+  int R_s[MAX_MODES][DIM][DIM];
+  int v_s[MAX_MODES][DIM][DIM];
+  ADType s[DIM][DIM], exp_s[DIM][DIM];
+  ADType s_dot[DIM][DIM];
+  ADType grad_s[DIM][DIM][DIM];
+  ADType d_grad_s_dmesh[DIM][DIM][DIM][DIM][MDE];
+  ADType gt[DIM][DIM];
+
+  // Temperature shift
+  dbl at = 0.0;
+  dbl wlf_denom;
+
+  // Consitutive prameters
+  dbl alpha;
+  dbl lambda = 0;
+  ADType d_lambda;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT d_lam_struct;
+  POLYMER_TIME_CONST_DEPENDENCE_STRUCT *d_lam = &d_lam_struct;
+  dbl eps;
+  ADType Z = 1.0;
+
+  // Decomposition of velocity vector
+  ADType M1[DIM][DIM];
+  ADType eig_values[DIM];
+  ADType R1[DIM][DIM];
+  ADType R1_T[DIM][DIM];
+  ADType Rt_dot_gradv[DIM][DIM];
+  ADType D[DIM][DIM];
+  ADType D_dot_D[DIM][DIM];
+
+  // Advective terms
+  ADType v_dot_del_s[DIM][DIM];
+  ADType x_dot_del_s[DIM][DIM];
+
+  // Trace of stress
+  ADType trace = 0.0;
+
+  // SUPG terms
+  ADType supg = 0;
+
+  status = 0;
+  if (vn->evssModel == LOG_CONF_GRADV) {
+    logc_gradv = 1;
+  }
+
+  eqn = R_STRESS11;
+  // Check if we are actually needed
+  if (!pd->e[pg->imtrx][eqn]) {
+    return (status);
+  }
+
+  dim = pd->Num_Dim;
+  wt = fv->wt;
+  det_J = ad_fv->detJ;
+  h3 = fv->h3;
+
+  // Load pointers
+  (void)stress_eqn_pointer(v_s);
+  (void)stress_eqn_pointer(R_s);
+
+  for (int i = 0; i < DIM; i++) {
+    for (int j = 0; j < DIM; j++) {
+      s[i][j] = 0;
+      exp_s[i][j] = 0;
+    }
+  }
+
+  // Load up field variables
+  for (a = 0; a < WIM; a++) {
+    // Velocity
+    v[a] = fv->v[a];
+    //
+    if (pd->TimeIntegration != STEADY && pd->gv[MESH_DISPLACEMENT1 + a]) {
+      x_dot[a] = ad_fv->x_dot[a];
+    } else {
+      x_dot[a] = 0.0;
+    }
+  }
+
+  // Velocity gradient
+  for (a = 0; a < 3; a++) {
+    for (b = 0; b < 3; b++) {
+      if (a < 2 || b < 2) {
+        grad_v[a][b] = ad_fv->grad_v[a][b];
+      } else {
+        grad_v[a][b] = 0.;
+      }
+    }
+  }
+  grad_v[2][2] = -(grad_v[0][0] + grad_v[1][1]);
+
+  // Shear rate
+  dbl dgamma[DIM][DIM];
+  for (a = 0; a < 3; a++) {
+    for (b = 0; b < 3; b++) {
+      gamma[a][b] = grad_v[a][b] + grad_v[b][a];
+      dgamma[a][b] = gamma[a][b].val();
+    }
+  }
+
+  // Velocity gradient projection
+  for (a = 0; a < 3; a++) {
+    for (b = 0; b < 3; b++) {
+      gt[a][b] = fv->G[b][a];
+    }
+  }
+
+  if (vn->wt_funcModel == GALERKIN) {
+    supg = 0.0;
+  } else if (vn->wt_funcModel == SUPG) {
+    supg = vn->wt_func;
+  }
+
+  ADType supg_tau;
+  if (supg > 0.0) {
+    ad_supg_tau_shakib(supg_tau, dim, dt, 1e-8, eqn);
+  }
+
+  dbl dcdd_factor = 0.0;
+  if (vn->shockcaptureModel == SC_DCDD) {
+    dcdd_factor = vn->shockcapture;
+  } else if (vn->shockcaptureModel == SC_CONSTANT) {
+    dcdd_factor = 0;
+  } else if (vn->shockcaptureModel != SC_NONE) {
+    GOMA_EH(GOMA_ERROR, "Unknown shock capture model, only DCDD supported for LOG_CONF");
+  }
+
+  // Shift factor
+  if (pd->gv[TEMPERATURE]) {
+    if (vn->shiftModel == CONSTANT) {
+      at = vn->shift[0];
+    } else if (vn->shiftModel == MODIFIED_WLF) {
+      wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
+      if (wlf_denom != 0.0) {
+        at = exp(vn->shift[0] * (mp->reference[TEMPERATURE] - fv->T) / wlf_denom);
+      } else {
+        at = 1.0;
+      }
+    }
+  } else {
+    at = 1.0;
+  }
+
+  ADType div_v = 0;
+
+  for (a = 0; a < 2; a++) {
+    div_v += ad_fv->grad_v[a][a];
+  }
+  // Loop over modes
+  for (mode = 0; mode < vn->modes; mode++) {
+    ad_load_modal_pointers(mode, tt, dt, s, s_dot, grad_s);
+
+    // Giesekus mobility parameter
+    alpha = ve[mode]->alpha;
+
+    // Polymer time constant
+    lambda = polymer_time_const(ve[mode]->time_const_st, dgamma, NULL);
+
+    dbl xi = 0;
+    if (ve[mode]->xiModel == CONSTANT) {
+      xi = ve[mode]->xi;
+    } else if (ls != NULL && ve[mode]->xiModel == VE_LEVEL_SET) {
+      double pos_xi = ve[mode]->pos_ls.xi;
+      double neg_xi = ve[mode]->xi;
+      double width = ls->Length_Scale;
+      int err = level_set_property(neg_xi, pos_xi, width, &xi, NULL);
+      GOMA_EH(err, "level_set_property() failed for ptt xi parameter.");
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown PTT Xi parameter model");
+    }
+
+    if (lambda <= 0.) {
+      GOMA_WH(-1, "Trouble: Zero relaxation time with LOG_CONF");
+      return -1;
+    }
+
+    ad_analytic_eig_2_5D(mode, R1, exp_s, eig_values);
+
+    /* Check to make sure eigenvalues are positive (negative eigenvalues will not
+       work for log-conformation formulation). These eigenvalues are for the
+       conformation tensor, not the log-conformation tensor. */
+    if (eig_values[0] < 0. || eig_values[1] < 0. || (3 > 2 && eig_values[2] < 0.)) {
+      GOMA_WH(-1, "Error: Negative eigenvalue for conformation tensor");
+      return -1;
+    }
+
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        D[i][j] = 0;
+      }
+    }
+    D[0][0] = eig_values[0];
+    D[1][1] = eig_values[1];
+    if (3 > 2) {
+      D[2][2] = eig_values[2];
+    }
+    (void)ad_tensor_dot(D, D, D_dot_D, 3);
+
+    // Decompose velocity gradient
+
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        M1[i][j] = 0;
+        R1_T[i][j] = 0;
+      }
+    }
+    for (i = 0; i < 3; i++) {
+      for (j = 0; j < 3; j++) {
+        R1_T[i][j] = R1[j][i];
+      }
+    }
+
+    for (i = 0; i < 3; i++) {
+      for (j = 0; j < 3; j++) {
+        Rt_dot_gradv[i][j] = 0.;
+        for (w = 0; w < 3; w++) {
+          if (DOUBLE_NONZERO(xi)) {
+            if (logc_gradv) {
+              Rt_dot_gradv[i][j] +=
+                  R1_T[i][w] * (grad_v[j][w] - 0.5 * xi * (grad_v[j][w] + grad_v[w][j]));
+            } else {
+              Rt_dot_gradv[i][j] += R1_T[i][w] * (gt[w][j] - 0.5 * xi * (gt[j][w] + gt[w][j]));
+            }
+          } else {
+            if (logc_gradv) {
+              Rt_dot_gradv[i][j] += R1_T[i][w] * grad_v[j][w];
+            } else {
+              Rt_dot_gradv[i][j] += R1_T[i][w] * gt[w][j];
+            }
+          }
+        }
+      }
+    }
+
+    for (i = 0; i < 3; i++) {
+      for (j = 0; j < 3; j++) {
+        M1[i][j] = 0.;
+        for (w = 0; w < 3; w++) {
+          M1[i][j] += Rt_dot_gradv[i][w] * R1[w][j];
+        }
+      }
+    }
+
+    // Predetermine advective terms
+    trace = exp_s[0][0] + exp_s[1][1];
+    if (3 > 2) {
+      trace += exp_s[2][2];
+    }
+
+    for (a = 0; a < 3; a++) {
+      for (b = 0; b < 3; b++) {
+        v_dot_del_s[a][b] = 0.0;
+        x_dot_del_s[a][b] = 0.0;
+        for (q = 0; q < dim; q++) {
+          v_dot_del_s[a][b] += v[q] * grad_s[q][a][b];
+          x_dot_del_s[a][b] += x_dot[q] * grad_s[q][a][b];
+        }
+      }
+    }
+
+    // PTT exponent
+    eps = ve[mode]->eps;
+
+    // PTT
+    Z = 1;
+    if (vn->ConstitutiveEquation == PTT) {
+      if (vn->ptt_type == PTT_LINEAR) {
+        Z = 1 + eps * (trace - (double)3);
+      } else if (vn->ptt_type == PTT_EXPONENTIAL) {
+        Z = exp(eps * (trace - (double)3));
+      } else {
+        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
+      }
+    }
+
+    siz = sizeof(double) * DIM * DIM;
+    for (int i = 0; i < DIM; i++) {
+      for (int j = 0; j < DIM; j++) {
+        tmp1[i][j] = 0;
+        tmp2[i][j] = 0;
+        tmp3[i][j] = 0;
+        advection_term1[i][j] = 0;
+        source_term1[i][j] = 0;
+      }
+    }
+
+    for (a = 0; a < 3; a++) {
+      for (b = 0; b < 3; b++) {
+        if (a != b) {
+          d_lambda = eig_values[b] - eig_values[a];
+          if (DOUBLE_NONZERO(d_lambda)) {
+            ADType eiglog_a = std::log(DBL_SMALL), eiglog_b = std::log(DBL_SMALL);
+            if (DOUBLE_NONZERO(eig_values[b])) {
+              eiglog_b = std::max(eiglog_b, std::log(eig_values[b]));
+            }
+            if (DOUBLE_NONZERO(eig_values[a])) {
+              eiglog_a = std::max(eiglog_a, std::log(eig_values[a]));
+            }
+            tmp1[a][b] += (eiglog_b - eiglog_a) / d_lambda;
+            tmp1[a][b] *= (eig_values[a] * M1[b][a] + eig_values[b] * M1[a][b]);
+          } else {
+            tmp1[a][b] += eig_values[b] * (M1[a][b] + M1[b][a]);
+          }
+        }
+        if (a == b) {
+          source_term1[a][b] += Z * (1.0 - D[a][a]) / lambda;
+          if (DOUBLE_NONZERO(alpha)) {
+            source_term1[a][b] += alpha * (2.0 * D[a][a] - 1.0 - D_dot_D[a][a]) / lambda;
+          }
+          source_term1[a][b] /= std::max(DBL_SMALL, eig_values[a]);
+          source_term1[a][b] += 2.0 * M1[a][a];
+        }
+      }
+    }
+
+    (void)ad_tensor_dot(R1, tmp1, tmp2, 3);
+    (void)ad_tensor_dot(tmp2, R1_T, advection_term1, 3);
+    (void)ad_tensor_dot(R1, source_term1, tmp3, 3);
+    (void)ad_tensor_dot(tmp3, R1_T, source_term1, 3);
+
+    std::vector<std::vector<std::vector<ADType>>> resid(3);
+    for (int a = 0; a < 3; a++) {
+      resid[a].resize(3);
+      for (int b = 0; b < 3; b++) {
+        resid[a][b].resize(ei[pg->imtrx]->dof[v_s[mode][a][b]]);
+        for (i = 0; i < ei[pg->imtrx]->dof[v_s[mode][a][b]]; i++) {
+          resid[a][b][i] = 0;
+        }
+      }
+    }
+    if (af->Assemble_Residual) {
+      for (a = 0; a < 3; a++) {
+        for (b = 0; b < 3; b++) {
+          if (a <= b) {
+            if ((a == 2 || b == 2) && a != b)
+              continue;
+            eqn = R_s[mode][a][b];
+
+            for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+              wt_func = bf[eqn]->phi[i];
+
+              // SUPG weighting, this is SUPG with s, not e^s
+              if (DOUBLE_NONZERO(supg)) {
+                for (w = 0; w < dim; w++) {
+                  wt_func += supg * supg_tau * v[w] * bf[eqn]->grad_phi[i][w];
+                }
+              }
+
+              mass = 0.0;
+              if (pd->TimeIntegration != STEADY) {
+                if (pd->e[pg->imtrx][eqn] & T_MASS) {
+                  mass = s_dot[a][b];
+                  mass *= wt_func * at * det_J * wt * h3;
+                  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                }
+              }
+
+              advection = 0.;
+              if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+                advection += v_dot_del_s[a][b] - x_dot_del_s[a][b];
+                advection -= advection_term1[a][b];
+                advection += div_v * s[a][b];
+                advection *= wt_func * at * det_J * wt * h3;
+                advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+              }
+
+              ADType diffusion = 0.;
+              if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+                if (vn->shockcaptureModel == SC_CONSTANT) {
+                  for (int w = 0; w < dim; w++) {
+                    diffusion += ad_fv->grad_S[mode][a][b][w] * ad_fv->basis[eqn].grad_phi[i][w];
+                  }
+                  diffusion *= vn->shockcapture * det_J * wt * h3;
+
+                } else if (vn->shockcaptureModel == SC_DCDD)
+                  if (DOUBLE_NONZERO(dcdd_factor)) {
+                    ADType tmp = 0.0;
+                    ADType s[DIM] = {0.0};
+                    ADType r[DIM] = {0.0};
+                    for (int w = 0; w < dim; w++) {
+                      tmp += (v[w] - x_dot[w]) * (v[w] - x_dot[w]);
+                    }
+                    tmp = 1.0 / (sqrt(tmp) + 1e-16);
+                    for (int w = 0; w < dim; w++) {
+                      s[w] = (v[w] - x_dot[w]) * tmp;
+                    }
+                    ADType mags = 0;
+                    for (int w = 0; w < dim; w++) {
+                      mags += (grad_s[w][a][b] * grad_s[w][a][b]);
+                    }
+                    mags = 1.0 / (sqrt(mags) + 1e-14);
+                    for (int w = 0; w < dim; w++) {
+                      r[w] = grad_s[w][a][b] * mags;
+                    }
+
+                    ADType he = 0.0;
+                    for (int q = 0; q < ei[pg->imtrx]->dof[eqn]; q++) {
+                      ADType tmp = 0;
+                      for (int w = 0; w < dim; w++) {
+                        tmp += bf[eqn]->grad_phi[q][w] * bf[eqn]->grad_phi[q][w];
+                      }
+                      he += 1.0 / sqrt(tmp);
+                    }
+
+                    ADType G[DIM][DIM];
+                    ad_get_metric_tensor(ad_fv->B, dim, ei[pg->imtrx]->ielem_type, G);
+
+                    ADType hrgn = 0.0;
+                    // for (int w = 0; w < dim; w++) {
+                    //   for (int z = 0; z < dim; z++) {
+                    //     //tmp += fabs(r[w] * G[w][z] * r[z]);
+                    //   }
+                    // }
+                    tmp = 0;
+                    for (int q = 0; q < ei[pg->imtrx]->dof[eqn]; q++) {
+                      for (int w = 0; w < dim; w++) {
+                        tmp += fabs(r[w] * bf[eqn]->grad_phi[q][w]);
+                      }
+                    }
+                    hrgn = 1.0 / (tmp + 1e-14);
+
+                    ADType magv = 0.0;
+                    for (int q = 0; q < 3; q++) {
+                      magv += v[q] * v[q];
+                    }
+                    magv = sqrt(magv);
+
+                    ADType tau_dcdd =
+                        0.5 * he * magv * magv * pow((1.0 / (mags + 1e-16)) * hrgn, 1.0);
+                    // ADType tau_dcdd = (1.0 / mags) * hrgn * hrgn;
+                    tau_dcdd = 1 / sqrt(1.0 / (supg_tau * supg_tau + 1e-32) +
+                                        (supg_tau * supg_tau * supg_tau * supg_tau + 1e-32) +
+                                        1.0 / (tau_dcdd * tau_dcdd + 1e-32));
+                    ADType ss[DIM][DIM] = {{0.0}};
+                    ADType rr[DIM][DIM] = {{0.0}};
+                    ADType rdots = 0.0;
+                    for (int w = 0; w < dim; w++) {
+                      for (int z = 0; z < dim; z++) {
+                        ss[w][z] = s[w] * s[z];
+                        rr[w][z] = r[w] * r[z];
+                      }
+                      rdots += r[w] * s[w];
+                    }
+
+                    ADType inner_tensor[DIM][DIM] = {{0.0}};
+                    for (int w = 0; w < dim; w++) {
+                      for (int z = 0; z < dim; z++) {
+                        inner_tensor[w][z] = rr[w][z] - rdots * rdots * ss[w][z];
+                      }
+                    }
+
+                    ADType gs_inner_dot[DIM] = {0.0};
+                    for (int w = 0; w < dim; w++) {
+                      ADType tmp = 0.;
+                      for (int z = 0; z < dim; z++) {
+                        tmp += grad_s[w][a][b] * inner_tensor[w][z];
+                      }
+                      gs_inner_dot[w] = tmp;
+                      // gs_inner_dot[w] = grad_s[w][a][b];
+                    }
+
+                    for (int w = 0; w < dim; w++) {
+                      diffusion += tau_dcdd * gs_inner_dot[w] * bf[eqn]->grad_phi[i][w];
+                    }
+                    diffusion *= dcdd_factor * det_J * wt * h3;
+                  }
+                diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+              }
+
+              source = 0.0;
+              if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+                source -= source_term1[a][b];
+                source *= wt_func * det_J * h3 * wt;
+                source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+              }
+              lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][eqn], i)] +=
+                  mass.val() + advection.val() + diffusion.val() + source.val();
+              resid[a][b][i] += mass + advection + diffusion + source;
+            } // i loop
+          } // if a<=b
+        } // b loop
+      } // a loop
+    } // if Residual
+    /*
+     * Jacobian terms...
+     */
+
+    if (af->Assemble_Jacobian) {
+      for (int ii = 0; ii < 3; ii++) {
+        for (int jj = 0; jj < 3; jj++) {
+          if (ii <= jj) /* since the stress tensor is symmetric, only assemble the upper half */
+          {
+            eqn = R_s[mode][ii][jj];
+            int peqn = upd->ep[pg->imtrx][eqn];
+
+            for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+              for (int var = V_FIRST; var < V_LAST; var++) {
+                if (pd->v[pg->imtrx][var]) {
+                  int pvar = upd->vp[pg->imtrx][var];
+                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                    lec->J[LEC_J_INDEX(peqn, pvar, i, j)] +=
+                        resid[ii][jj][i].dx(ad_fv->offset[var] + j);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
   return (status);
 }
 

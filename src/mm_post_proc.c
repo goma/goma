@@ -1505,7 +1505,8 @@ static int calc_standard_fields(double **post_proc_vect,
   if (STRESS_CONT != -1 && pd->v[pg->imtrx][POLYMER_STRESS11]) {
     index = 0;
     int sdim = VIM;
-    if (pd->gv[FILM_HEIGHT]) sdim = 3;
+    if (pd->gv[FILM_HEIGHT])
+      sdim = 3;
     for (mode = 0; mode < vn->modes; mode++) {
       if (pd->v[pg->imtrx][v_s[mode][0][0]]) {
         for (a = 0; a < sdim; a++) {
@@ -3527,7 +3528,8 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] &&
       (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF ||
-       vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)) {
+       vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV ||
+       vn->evssModel == EVSS_FILM_HEIGHT_LOG_CONF)) {
     index = 0;
     double lambda;
     double R1[DIM][DIM];
@@ -9955,7 +9957,8 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     }
 
     int sdim = VIM;
-    if (pd->gv[FILM_HEIGHT]) sdim = 3;
+    if (pd->gv[FILM_HEIGHT])
+      sdim = 3;
 
     for (mode = 0; mode < MAX_MODES; mode++) {
       for (a = 0; a < sdim; a++) {
