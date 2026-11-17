@@ -5,11 +5,11 @@ import os
 class Package(packages.CMakePackage):
     def __init__(self):
         self.name = "omega-h"
-        self.version = "9.34.13"
-        self.sha256 = "2eadfd6d634abc0b50396a82fd446f8f0b586ba6e64788c47827162c2aadec02"
-        self.filename = "omega-h-" + self.version + ".tar.gz"
+        self.version = "11.2.0"
+        self.sha256 = "741fc5c911682e2d46b6726ae48216e213ae5d5d1d1875d900ea26d636f8fb0b"
+        self.filename = "omega-h-scorec-v" + self.version + ".tar.gz"
         self.url = (
-            "https://github.com/sandialabs/omega_h/archive/refs/tags/v"
+            "https://github.com/SCOREC/omega_h/archive/refs/tags/scorec-v"
             + self.version
             + ".tar.gz"
         )
@@ -36,6 +36,9 @@ class Package(packages.CMakePackage):
         builder.add_option("-DCMAKE_C_COMPILER=" + CC)
         builder.add_option("-DCMAKE_CXX_COMPILER=" + CXX)
         builder.add_option("-DCMAKE_Fortran_COMPILER=" + FC)
+        # Goma adapts distributed meshes; a non-MPI Omega_h crashes in parallel
+        builder.add_option("-DOmega_h_USE_MPI:BOOL=ON")
+        builder.add_option("-DBUILD_TESTING:BOOL=OFF")
 
     def register(self, builder):
         registry = builder._registry

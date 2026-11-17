@@ -362,6 +362,13 @@ if(ENABLE_OMEGA_H)
                                                       "")
     set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} Omega_h::omega_h)
     list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_OMEGA_H)
+    if(NOT Omega_h_USE_MPI)
+      message(
+        WARNING
+          "Omega_h was built without MPI (Omega_h_USE_MPI=OFF): mesh adaptation "
+          "will only work in serial. Rebuild Omega_h with -DOmega_h_USE_MPI=ON "
+          "for parallel adaptivity.")
+    endif()
   else()
     message(STATUS "Omega_h not found")
   endif()

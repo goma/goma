@@ -675,57 +675,24 @@ void convert_omega_h_to_goma(
   MPI_Allgather(updated_comm_nodes.data(), max_comm_size, MPI_INT, all_neighbors_comm_nodes.data(),
                 max_comm_size, MPI_INT, MPI_COMM_WORLD);
 
-  // all_nodes_set
-  std::set<int> all_comm_nodes_set;
-  for (unsigned int i = 0; i < all_neighbors_comm_nodes.size(); i++) {
-    int gnode = all_neighbors_comm_nodes[i];
-    if (gnode != -1) {
-      all_comm_nodes_set.insert(all_neighbors_comm_nodes[i]);
-    }
-  }
-
-  std::vector<int> all_comm_nodes(all_comm_nodes_set.begin(), all_comm_nodes_set.end());
-  std::sort(all_comm_nodes.begin(), all_comm_nodes.end());
-
-  std::vector<int> all_comm_owners(all_comm_nodes.size());
-  std::fill(all_comm_owners.begin(), all_comm_owners.end(), Num_Proc);
-
-  for (unsigned int i = 0; i < all_comm_nodes.size(); i++) {
-    if (global_node_to_local.find(all_comm_nodes[i]) != global_node_to_local.end()) {
-      all_comm_owners[i] = ProcID;
-    }
-  }
-
-  std::vector<int> global_comm_owners(all_comm_owners.size());
-  MPI_Allreduce(all_comm_owners.data(), global_comm_owners.data(), all_comm_owners.size(), MPI_INT,
-                MPI_MIN, MPI_COMM_WORLD);
-
-  std::unordered_map<int, int> global_to_owner;
-  for (unsigned int i = 0; i < global_comm_owners.size(); i++) {
-    global_to_owner[all_comm_nodes[i]] = global_comm_owners[i];
-  }
-
+  // With element based parting every shared node is a border node on each
+  // processor that has it, so a neighbor is any other processor that shares at
+  // least one node with us. This must match the node comm map construction below.
+  // (Selecting neighbors by node owner misses processors that only share a node
+  // whose owner is a third processor, e.g. at partition triple points.)
   std::vector<int> neighbor_list;
-  // look for neighbors in other neighbors comm nodes
   for (int proc = 0; proc < Num_Proc; proc++) {
+    if (proc == ProcID)
+      continue;
     int offset = proc * max_comm_size;
     for (int i = 0; i < max_comm_size; i++) {
       int gnode = all_neighbors_comm_nodes[offset + i];
-      if (gnode != -1) {
-        int owner = global_to_owner.at(gnode);
-        if (proc != ProcID && owner == ProcID &&
-            std::find(neighbor_list.begin(), neighbor_list.end(), proc) == neighbor_list.end()) {
-          neighbor_list.push_back(proc);
-        } else if ((owner != ProcID &&
-                    global_node_to_local.find(gnode) != global_node_to_local.end()) &&
-                   (std::find(neighbor_list.begin(), neighbor_list.end(), owner) ==
-                    neighbor_list.end())) {
-          neighbor_list.push_back(owner);
-        }
+      if (gnode != -1 && global_node_to_local.find(gnode) != global_node_to_local.end()) {
+        neighbor_list.push_back(proc);
+        break;
       }
     }
   }
-  std::sort(neighbor_list.begin(), neighbor_list.end());
 
   std::vector<int> proc_node_counts(neighbor_list.size());
   std::vector<std::vector<int>> proc_node_list(neighbor_list.size());
@@ -741,7 +708,10 @@ void convert_omega_h_to_goma(
       if (gnode != -1) {
         if (global_node_to_local.find(gnode) != global_node_to_local.end()) {
           auto it = std::find(neighbor_list.begin(), neighbor_list.end(), proc);
-          assert(it != neighbor_list.end());
+          if (it == neighbor_list.end()) {
+            GOMA_EH(GOMA_ERROR,
+                    "Omega_h conversion: processor %d shares nodes but is not a neighbor", proc);
+          }
           int index = it - neighbor_list.begin();
           proc_node_list[index].push_back(global_node_to_local[gnode]);
           proc_node_counts[index] += 1;
@@ -1113,6 +1083,12 @@ void convert_omega_h_to_goma(
   free(idv);
   idv = NULL;
 
+  // Sizes of the old mesh, needed to free per node arrays below; exo and dpi
+  // are reset before those arrays are freed.
+  const int old_num_nodes = exo->num_nodes;
+  const int old_num_total_nodes =
+      dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes;
+
   free_Surf_BC(First_Elem_Side_BC_Array, exo);
   free_Edge_BC(First_Elem_Edge_BC_Array, exo, dpi);
   free_nodes();
@@ -1126,12 +1102,21 @@ void convert_omega_h_to_goma(
   init_dpi_struct(dpi);
 
   if (rotation_allocated) {
-    for (int i = 0; i < exo->num_nodes; i++) {
+    // rotation is allocated per node in rotate.c with num_total_nodes entries,
+    // local_ROT_list is only allocated by one of the two allocation paths
+    for (int i = 0; i < old_num_total_nodes; i++) {
       for (int j = 0; j < NUM_VECTOR_EQUATIONS; j++) {
-        free(rotation[i][j]);
+        if (rotation[i][j] != NULL) {
+          for (int k = 0; k < pd_glob[0]->Num_Dim; k++) {
+            free(rotation[i][j][k]);
+          }
+          free(rotation[i][j]);
+        }
       }
       free(rotation[i]);
-      free(local_ROT_list[i]);
+      if (local_ROT_list != NULL) {
+        free(local_ROT_list[i]);
+      }
     }
     free(rotation);
     rotation = NULL;
@@ -1141,7 +1126,7 @@ void convert_omega_h_to_goma(
   }
 
   if (goma_automatic_rotations.rotation_nodes != NULL) {
-    for (int i = 0; i < exo->num_nodes; i++) {
+    for (int i = 0; i < old_num_nodes; i++) {
       // for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
       //   gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].normals[j]);
       //   gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].average_normals[j]);
@@ -1161,10 +1146,9 @@ void convert_omega_h_to_goma(
   strncpy(ExoFileOutMono, path, 127);
   strncpy(ExoFileOut, path, 127);
   multiname(ExoFileOut, ProcID, Num_Proc);
-  int num_total_nodes = dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes;
 
   for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-    for (int i = 0; i < num_total_nodes; i++) {
+    for (int i = 0; i < old_num_total_nodes; i++) {
       free(Local_Offset[imtrx][i]);
       free(Dolphin[imtrx][i]);
     }
@@ -1191,12 +1175,13 @@ void convert_omega_h_to_goma(
   if (dpi->num_neighbors > 0) {
     for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
       free(cx[imtrx]);
-      free(Request);
-      free(Status);
       cx[imtrx] = alloc_struct_1(Comm_Ex, DPI_ptr->num_neighbors);
-      Request = alloc_struct_1(MPI_Request, Num_Requests * DPI_ptr->num_neighbors);
-      Status = alloc_struct_1(MPI_Status, Num_Requests * DPI_ptr->num_neighbors);
     }
+    // Request and Status are shared by all matrices
+    free(Request);
+    free(Status);
+    Request = alloc_struct_1(MPI_Request, Num_Requests * DPI_ptr->num_neighbors);
+    Status = alloc_struct_1(MPI_Status, Num_Requests * DPI_ptr->num_neighbors);
   }
 
   end_code();
@@ -1338,6 +1323,12 @@ void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
 
   static std::string base_name;
   static bool first_call = true;
+#ifndef OMEGA_H_USE_MPI
+  if (Num_Proc > 1) {
+    GOMA_EH(GOMA_ERROR, "Parallel mesh adaptation requires Omega_h built with "
+                        "-DOmega_h_USE_MPI=ON; rebuild Omega_h or run in serial");
+  }
+#endif
   int argc = 0;
   char argv[1][8];
   char **argvptr = (char **)argv;

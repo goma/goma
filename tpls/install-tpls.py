@@ -271,7 +271,7 @@ if __name__ == "__main__":
         package_timings[p] = 0.0
         package_start_time = time.perf_counter()
         if getattr(args, pc.name.replace("-", "_") + "_dir"):
-            package_dir = getattr(args, pc.name + "_dir")
+            package_dir = getattr(args, pc.name.replace("-", "_") + "_dir")
 
             build = Builder(
                 pc,

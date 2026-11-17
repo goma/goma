@@ -1,17 +1,16 @@
 FROM rockylinux:8.9
 
-RUN dnf update -y
-RUN dnf install -y git patch gcc-toolset-14 m4 make bzip2 tar zlib-devel openssl-devel pkgconfig python3-devel findutils
+RUN dnf update -y && \
+    dnf install -y git patch gcc-toolset-14 m4 make bzip2 tar zlib-devel openssl-devel pkgconfig python3-devel findutils && \
+    dnf clean all && rm -rf /var/cache/dnf
+
+ARG JOBS=8
 
 COPY . /opt/goma
 
 RUN . /opt/rh/gcc-toolset-14/enable && \
-    PYTHONUNBUFFERED=1 /opt/goma/install-tpls.py --cc=gcc --cxx=g++ --fc=gfortran --build-static --download-dir=/tmp/downloads -j 32 --extract-dir=/tmp/extract /opt/goma-libs
-
-RUN rm -r /opt/goma
-RUN rm -r /tmp/downloads
-RUN rm -r /tmp/extract
-RUN rm -r /opt/goma-libs/logs
+    PYTHONUNBUFFERED=1 /opt/goma/install-tpls.py --cc=gcc --cxx=g++ --fc=gfortran --build-static --download-dir=/tmp/downloads -j ${JOBS} --extract-dir=/tmp/extract /opt/goma-libs && \
+    rm -rf /opt/goma /tmp/downloads /tmp/extract /opt/goma-libs/logs
 
 RUN { \
       echo '#!/usr/bin/env bash' \

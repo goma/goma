@@ -1750,7 +1750,9 @@ void add_info_stamp(Exo_DB *exo) {
     strcpy(buf, ".");
   }
 
-  strncpy(I[n + 3], buf, MAX_LINE_LENGTH + 1);
+  /* Like the records below, leave room so the record is shorter than MAX_LINE_LENGTH;
+   * a full-length record corrupts the heap when the file is read back (e.g. by fix). */
+  snprintf(I[n + 3], MAX_LINE_LENGTH, "%s", buf);
 
   /*
    * -6 -- the name of the user

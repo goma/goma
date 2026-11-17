@@ -1433,7 +1433,8 @@ free_and_clear:
   }
 
   free(gv);
-  free(pg->matrices);
+  safer_free((void **)&ija_attic);
+  safer_free((void **)&pg->matrices);
 
   return;
 
