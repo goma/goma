@@ -427,9 +427,6 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case KINEMATIC_XI_BC:
     case KINEMATIC_ETA_BC:
     case KINEMATIC_ZETA_BC:
-    case KINEMATIC_XI_PETROV_BC:
-    case KINEMATIC_ETA_PETROV_BC:
-    case KINEMATIC_ZETA_PETROV_BC:
     case LUB_KINEMATIC_BC:
     case KIN_LEAK_HEAT_BC:
     case KINEMATIC_PETROV_BC:

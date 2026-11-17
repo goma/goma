@@ -490,9 +490,6 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
         case KINEMATIC_XI_BC:
         case KINEMATIC_ETA_BC:
         case KINEMATIC_ZETA_BC:
-        case KINEMATIC_XI_PETROV_BC:
-        case KINEMATIC_ETA_PETROV_BC:
-        case KINEMATIC_ZETA_PETROV_BC:
         case VELO_NORMAL_BC:
         case VELO_NORMAL_LS_BC:
         case VELO_NORMAL_LS_PETROV_BC: {
@@ -2115,26 +2112,6 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                                bc->BC_Name == ELLIPTIC_ZETA_REGULARIZATION_BC) {
                       i_basis = (bc->BC_Name - ELLIPTIC_XI_REGULARIZATION_BC);
                       phi_i = bf[eqn]->dphidxi[ldof_eqn][i_basis];
-                      weight *= phi_i;
-                    } else if (bc->BC_Name == KINEMATIC_XI_PETROV_BC ||
-                               bc->BC_Name == KINEMATIC_ETA_PETROV_BC ||
-                               bc->BC_Name == KINEMATIC_ZETA_PETROV_BC) {
-                      i_basis = (bc->BC_Name - KINEMATIC_XI_PETROV_BC);
-                      phi_i = bf[eqn]->phi[i];
-                      SUPG_terms supg_terms;
-                      supg_tau(&supg_terms, pd->Num_Dim, 0.0, pg_data, tran->delta_t, TRUE, eqn);
-                      dbl invmag = 0;
-                      for (int i = 0; i < pd->Num_Dim; i++) {
-                        invmag += fv->v[i] * fv->v[i];
-                      }
-                      if (invmag == 0) {
-                        invmag = 1;
-                      } else {
-                        invmag = 1 / sqrt(invmag);
-                      }
-                      for (int w = 0; w < pd->Num_Dim; w++) {
-                        phi_i += supg_terms.supg_tau * fv->v[w] * invmag * bf[eqn]->grad_phi[i][w];
-                      }
                       weight *= phi_i;
                     } else {
                       phi_i = bf[eqn]->phi[ldof_eqn];

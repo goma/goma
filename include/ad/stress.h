@@ -64,9 +64,6 @@ int ad_tensor_dot(ADType t1[DIM][DIM],
                   ADType t2[DIM][DIM],
                   ADType t1_dot_t2[DIM][DIM],
                   const int dim);
-int ad_analytic_eig_2_5D(int mode,
-                         ADType v[DIM][DIM],
-                         ADType exp_s[DIM][DIM],
-                         ADType eig_values[DIM]);
+
 #endif
 #endif
