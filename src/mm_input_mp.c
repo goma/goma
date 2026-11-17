@@ -2580,8 +2580,6 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       vn_glob[mn]->evssModel = EVSS_FILM_HEIGHT;
     } else if (!strcmp(model_name, "EVSS_FILM_HEIGHT_SQRT_CONF")) {
       vn_glob[mn]->evssModel = EVSS_FILM_HEIGHT_SQRT_CONF;
-    } else if (!strcmp(model_name, "EVSS_FILM_HEIGHT_LOG_CONF")) {
-      vn_glob[mn]->evssModel = EVSS_FILM_HEIGHT_LOG_CONF;
     } else {
       if (vn_glob[mn]->ConstitutiveEquation == PTT ||
           vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT)

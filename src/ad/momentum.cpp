@@ -428,7 +428,6 @@ void ad_ve_polymer_stress(ADType gamma[DIM][DIM], ADType stress[DIM][DIM]) {
     }
   }
   switch (vn->evssModel) {
-  case EVSS_FILM_HEIGHT_LOG_CONF:
   case LOG_CONF:
   case LOG_CONF_GRADV:
   case LOG_CONF_TRANSIENT_GRADV:

@@ -3528,8 +3528,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] &&
       (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF ||
-       vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV ||
-       vn->evssModel == EVSS_FILM_HEIGHT_LOG_CONF)) {
+       vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)) {
     index = 0;
     double lambda;
     double R1[DIM][DIM];
