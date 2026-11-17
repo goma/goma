@@ -12,11 +12,12 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
+#include "ad/structs.h"
 #ifdef GOMA_ENABLE_SACADO
 
-#include "ad/stress.h"
 #include "ad/momentum.h"
 #include "ad/stabilization.h"
+#include "ad/stress.h"
 
 extern "C" {
 
@@ -86,8 +87,11 @@ int ad_tensor_dot(ADType t1[DIM][DIM],
   return (status);
 }
 void ad_compute_a_dot_b(ADType b[DIM][DIM], ADType G[DIM][DIM], ADType a_dot_b[DIM][DIM]) {
+  int sdim = VIM;
+  if (pd->gv[FILM_HEIGHT])
+    sdim = 3;
 
-  if (VIM == 2) {
+  if (sdim == 2) {
 
     ADType a12 =
         ((b[0][1] * G[0][0] - b[0][0] * G[0][1]) + (b[1][1] * G[1][0] - b[1][0] * G[1][1])) /
@@ -179,13 +183,37 @@ int ad_film_height_stress_source(int mode,
       }
     }
   } break;
+  case GIESEKUS: {
+    dbl alpha = 0;
+
+    if (ve[mode]->alphaModel == CONSTANT) {
+      alpha = ve[mode]->alpha;
+    } else if (ls != NULL && ve[mode]->alphaModel == VE_LEVEL_SET) {
+      double pos_alpha = ve[mode]->pos_ls.alpha;
+      double neg_alpha = ve[mode]->alpha;
+      double width = ls->Length_Scale;
+      goma_error err = level_set_property(neg_alpha, pos_alpha, width, &alpha, NULL);
+      GOMA_EH(err, "level_set_property() failed for mobility parameter.");
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown mobility parameter model");
+    }
+
+    ADType S_dot_S[DIM][DIM];
+    ad_tensor_dot(S, S, S_dot_S, 3);
+
+    ADType coeff = alpha * lambda / mup;
+    for (int ii = 0; ii < 3; ii++) {
+      for (int jj = 0; jj < 3; jj++) {
+        source_term[ii][jj] += S[ii][jj] + coeff * S_dot_S[ii][jj];
+      }
+    }
+
+  } break;
   case PTT: {
 
     ADType trace = 0;
     for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 3; j++) {
-        trace += S[i][j];
-      }
+      trace += S[i][i];
     }
 
     ADType Z = 1.0;
@@ -200,7 +228,10 @@ int ad_film_height_stress_source(int mode,
       const double exp_max = 700;
       ADType inner = eps * lambda / mup * trace;
       if ((inner > exp_max) || (inner < -exp_max)) {
-        GOMA_WH_MANY(GOMA_ERROR, "Exponential overflow in PTT_EXPONENTIAL");
+        GOMA_WH_MANY(GOMA_ERROR,
+                     "Exponential overflow in PTT_EXPONENTIAL, trace %g, eps %g, lambda %g, mup "
+                     "%g, inner %g",
+                     trace.val(), eps, lambda, mup.val(), inner.val());
         return GOMA_ERROR;
       }
       Z = exp(inner);
@@ -215,7 +246,7 @@ int ad_film_height_stress_source(int mode,
     }
   } break;
   default:
-    GOMA_EH(GOMA_ERROR, "Unknown Constitutive equation form for SQRT_CONF");
+    GOMA_EH(GOMA_ERROR, "Unknown Constitutive equation form for AD Film Height");
     break;
   }
 
@@ -271,13 +302,44 @@ int ad_sqrt_conf_source(int mode, ADType b[DIM][DIM], ADType source_term[DIM][DI
       }
     }
   } break;
+  case GIESEKUS: {
+    double alpha = 0;
+    /* get Geisekus mobility parameter */
+    if (ve[mode]->alphaModel == CONSTANT) {
+      alpha = ve[mode]->alpha;
+    } else if (ls != NULL && ve[mode]->alphaModel == VE_LEVEL_SET) {
+      double pos_alpha = ve[mode]->pos_ls.alpha;
+      double neg_alpha = ve[mode]->alpha;
+      double width = ls->Length_Scale;
+      goma_error err = level_set_property(neg_alpha, pos_alpha, width, &alpha, NULL);
+      GOMA_EH(err, "level_set_property() failed for mobility parameter.");
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown mobility parameter model");
+    }
+    ADType bdotb[DIM][DIM];
+    ad_tensor_dot(b, b, bdotb, sdim);
+    ADType bdotbdotb[DIM][DIM];
+    ad_tensor_dot(b, bdotb, bdotbdotb, sdim);
+
+    for (int ii = 0; ii < sdim; ii++) {
+      for (int jj = 0; jj < sdim; jj++) {
+        source_term[ii][jj] =
+            // (I + alpha * (C - I)) * (C - I)
+            // ((C-I) + alpha * (C - I)^2)
+            // ((C-I) + alpha * (C . C - 2 C + I . I))
+            // ((C-I) + alpha * (C . C - 2 C + I))
+            // 0.5 b^-1 ((b . b-I) + alpha * (b . b . b . b - 2 b . b + I))
+            // 0.5 ((b - b^-1) + alpha * (b . b . b - 2 b + b^-1))
+            -0.5 * (((b[ii][jj] - binv[ii][jj])) +
+                    (alpha * (bdotbdotb[ii][jj] - 2.0 * b[ii][jj] + binv[ii][jj])));
+      }
+    }
+  } break;
   case PTT: {
 
     ADType trace = 0;
     for (int i = 0; i < sdim; i++) {
-      for (int j = 0; j < sdim; j++) {
-        trace += b[i][j] * b[i][j];
-      }
+      trace += b[i][i] * b[i][i];
     }
 
     ADType Z = 1.0;
@@ -292,7 +354,10 @@ int ad_sqrt_conf_source(int mode, ADType b[DIM][DIM], ADType source_term[DIM][DI
       const double exp_max = 700;
       ADType inner = eps * (trace - (double)sdim);
       if ((inner > exp_max) || (inner < -exp_max)) {
-        GOMA_WH_MANY(GOMA_ERROR, "Exponential overflow in PTT_EXPONENTIAL");
+        GOMA_WH_MANY(
+            GOMA_ERROR,
+            "Exponential overflow in PTT_EXPONENTIAL, inner %g, eps %g, trace %g, tc [ %g %g %g ]",
+            inner.val(), eps, trace.val(), b[0][0].val(), b[1][1].val(), b[2][2].val());
         return GOMA_ERROR;
       }
       Z = exp(eps * (trace - (double)sdim));
@@ -1037,7 +1102,11 @@ extern "C" int ad_assemble_film_height_stress(dbl tt, /* parameter to vary time 
   }
 
   grad_v[2][2] = -(grad_v[0][0] + grad_v[1][1]);
+  ADType div_v = 0;
 
+  for (int a = 0; a < 2; a++) {
+    div_v += ad_fv->grad_v[a][a];
+  }
   /* load up shearrate tensor based on velocity */
   for (int a = 0; a < 3; a++) {
     for (int b = 0; b < 3; b++) {
@@ -1223,6 +1292,8 @@ extern "C" int ad_assemble_film_height_stress(dbl tt, /* parameter to vary time 
                     advection -= ucwt * (gt_dot_S[ii][jj] + S_dot_g[ii][jj]);
                   if (lcwt != 0.)
                     advection += lcwt * (S_dot_gt[ii][jj] + g_dot_S[ii][jj]);
+
+                  advection += div_v * S[ii][jj];
 
                   advection *= wt_func * at * lambda * det_J * wt * h3;
                   advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
@@ -1470,6 +1541,11 @@ ad_assemble_film_height_sqrt_conf_stress(dbl tt, /* parameter to vary time integ
       }
     }
   }
+  ADType div_v = 0;
+
+  for (int a = 0; a < 2; a++) {
+    div_v += ad_fv->grad_v[a][a];
+  }
 
   if (vn->wt_funcModel == GALERKIN) {
     supg = 0.;
@@ -1647,6 +1723,7 @@ ad_assemble_film_height_sqrt_conf_stress(dbl tt, /* parameter to vary time integ
                   advection += v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
                   advection -= b_dot_g[ii][jj];
                   advection -= a_dot_b[ii][jj];
+                  advection += div_v * b[ii][jj];
                   advection *= wt_func * at * lambda * det_J * wt * h3;
                   advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                 }

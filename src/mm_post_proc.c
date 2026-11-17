@@ -1505,10 +1505,13 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (STRESS_CONT != -1 && pd->v[pg->imtrx][POLYMER_STRESS11]) {
     index = 0;
+    int sdim = VIM;
+    if (pd->gv[FILM_HEIGHT])
+      sdim = 3;
     for (mode = 0; mode < vn->modes; mode++) {
       if (pd->v[pg->imtrx][v_s[mode][0][0]]) {
-        for (a = 0; a < VIM; a++) {
-          for (b = 0; b < VIM; b++) {
+        for (a = 0; a < sdim; a++) {
+          for (b = 0; b < sdim; b++) {
             /* since the stress tensor is symmetric,
                only assemble the upper half */
             if (a <= b) {
@@ -1525,8 +1528,8 @@ static int calc_standard_fields(double **post_proc_vect,
 
     /* Get total stress tensor for multi mode calculations */
     if (vn->modes > 1) {
-      for (a = 0; a < VIM; a++) {
-        for (b = 0; b < VIM; b++) {
+      for (a = 0; a < sdim; a++) {
+        for (b = 0; b < sdim; b++) {
           /* since the stress tensor is symmetric, only assemble the
              upper half */
           if (a <= b) {
@@ -9953,9 +9956,13 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
       GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
     }
 
+    int sdim = VIM;
+    if (pd->gv[FILM_HEIGHT])
+      sdim = 3;
+
     for (mode = 0; mode < MAX_MODES; mode++) {
-      for (a = 0; a < VIM; a++) {
-        for (b = 0; b < VIM; b++) {
+      for (a = 0; a < sdim; a++) {
+        for (b = 0; b < sdim; b++) {
           /* stress tensor is symmetric */
           if (a <= b) {
             if (Num_Var_In_Type[pg->imtrx][v_s[mode][a][b]]) {
@@ -9984,8 +9991,8 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
 
     /* write out total stress if we have more than one mode */
     if (check) {
-      for (a = 0; a < VIM; a++) {
-        for (b = 0; b < VIM; b++) {
+      for (a = 0; a < sdim; a++) {
+        for (b = 0; b < sdim; b++) {
           /* stress tensor is symmetric */
           if (a <= b) {
             if (Num_Var_In_Type[pg->imtrx][v_s[0][a][b]]) {

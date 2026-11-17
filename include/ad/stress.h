@@ -51,6 +51,7 @@ int ad_assemble_film_height_sqrt_conf_stress(dbl tt, /* parameter to vary time i
                                                       * explicit (tt = 1) to implicit (tt = 0) */
                                              dbl dt, /* current time step size */
                                              PG_DATA *pg_data);
+int ad_assemble_film_height_log_conf_stress(dbl tt, dbl dt, PG_DATA *pg_data);
 #ifdef __cplusplus
 }
 #endif
@@ -63,5 +64,6 @@ int ad_tensor_dot(ADType t1[DIM][DIM],
                   ADType t2[DIM][DIM],
                   ADType t1_dot_t2[DIM][DIM],
                   const int dim);
+
 #endif
 #endif

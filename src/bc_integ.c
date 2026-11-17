@@ -28,9 +28,9 @@
 #include <string.h>
 
 /* GOMA include files */
-
 #include "ac_stability.h"
 #include "ac_stability_util.h"
+#include "ad/momentum.h"
 #include "bc/rotate_coordinates.h"
 #include "bc_colloc.h"
 #include "bc_integ.h"
@@ -1012,9 +1012,9 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           flow_n_dot_T_var_density(func, d_func, bc->BC_Data_Float[0], time_value);
           break;
 
-        case FLOW_STRESSNOBC_BC:
+        case FLOW_STRESSNOBC_BC: {
           flow_n_dot_T_nobc(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0], time_value);
-          break;
+        } break;
 
         case FLOW_GRADV_BC:
           flow_n_dot_T_gradv(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0]);
