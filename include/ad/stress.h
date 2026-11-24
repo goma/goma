@@ -63,5 +63,6 @@ int ad_tensor_dot(ADType t1[DIM][DIM],
                   ADType t2[DIM][DIM],
                   ADType t1_dot_t2[DIM][DIM],
                   const int dim);
+
 #endif
 #endif
